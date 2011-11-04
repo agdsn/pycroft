@@ -17,7 +17,7 @@ from sqlalchemy import create_engine
 class SessionWrapper(object):
     def __init__(self):
         self._engine = create_engine("sqlite:///test_db.sqlite", echo=False)
-        self._scoped_session = scoped_session(sessionmaker(bind=_engine))
+        self._scoped_session = scoped_session(sessionmaker(bind=self._engine))
 
     def __getattr__(self, item):
         return getattr(self._scoped_session(), item)
