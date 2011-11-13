@@ -39,7 +39,7 @@ class _ModelMeta(DeclarativeMeta):
 
 
 class _Base(object):
-    """Baseclass sor all database models.
+    """Baseclass for all database models.
     
     """
 
@@ -82,3 +82,7 @@ class User(ModelBase):
     room_id = Column(Integer, ForeignKey("room.id"))
 
     room = relation("Room", backref=backref("users", order_by=id))
+
+class Host(ModelBase):
+    id = Column(Integer, primary_key=True)
+    hostname = Column(String(255))    
