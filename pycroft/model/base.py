@@ -74,6 +74,19 @@ class Room(ModelBase):
                                                       order_by=number))
 
 
+class PatchPort(ModelBase):
+    name = Column(String(4))
+    id = Column(Integer, primary_key=True)
+
+
+class NetDevice(ModelBase):
+    id = Column(Integer, primary_key=True)
+    ipv4 = Column(Sring(12), unique=True)
+    ipv6 = Column(String(51), unique=True)
+    mac = Column(String(13))
+    patch_port_id = Column(Integer, ForeignKey("patchPort.id"))
+
+
 class User(ModelBase):
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
