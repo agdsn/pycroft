@@ -98,4 +98,8 @@ class User(ModelBase):
 
 class Host(ModelBase):
     id = Column(Integer, primary_key=True)
-    hostname = Column(String(255))    
+    id = Column(Integer, primary_key=True)
+    hostname = Column(String(255))
+
+
+#dummy comment, so i can make a commit
