@@ -95,7 +95,6 @@ class User(ModelBase):
 
 class Host(ModelBase):
     id = Column(Integer, primary_key=True)
-    id = Column(Integer, primary_key=True)
     hostname = Column(String(255))  
 
 class Membership(ModelBase):
