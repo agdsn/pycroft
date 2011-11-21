@@ -95,5 +95,23 @@ class User(ModelBase):
 
 class Host(ModelBase):
     id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    hostname = Column(String(255))  
 
+class Membership(ModelBase):
+    hostname = Column(String(255))
+    id = Column(Integer, primary_key=True)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+
+    user = relation("User", backref=backref("memberships", order_by=id))
+    group = relation("Group", backref=backref("memberships", order_by=id))
+
+class Group(ModelBase):
+    id = Column(Integer, primarky_key=True)
+    name = Column(String(255)
+
+class Rights(ModelBase):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255)
 
