@@ -62,11 +62,17 @@ class Dormitory(ModelBase):
     # one to one from Dormitory to VLan
     v_lan = relationship("VLan", uselist=False, backref="dormitory")
 
+
+class Group(ModelBase):
+    name = Column(String(255)
+
+
 class Host(ModelBase):
     hostname = Column(String(255))
     
     # one to many from User to Host
     user_id = Column(Integer, ForeignKey("user.id"))
+
 
 class LogEntry(ModelBase):
     # variably sized string
@@ -76,6 +82,32 @@ class LogEntry(ModelBase):
     
     # many to one from User to LogEntry
     author_id = Column(Integer, ForeignKey("user.id"))
+
+
+class Membership(ModelBase):
+    hostname = Column(String(255))
+    id = Column(Integer, primary_key=True)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+
+    user = relationship("User", backref=backref("memberships", order_by=id))
+    group = relationship("Group", backref=backref("memberships", order_by=id))
+
+
+class NetDevice(ModelBase):
+    ipv4 = Column(Sring(12), unique=True)
+    ipv6 = Column(String(51), unique=True)
+    mac = Column(String(13))
+    patch_port_id = Column(Integer, ForeignKey("patchport.id"))
+
+
+class PatchPort(ModelBase):
+    name = Column(String(4))
+
+
+class Rights(ModelBase):
+    name = Column(String(255)
+
 
 class Room(ModelBase):
     number = Column(String(36))
@@ -90,8 +122,9 @@ class Subnet(ModelBase):
     address = Column(String(48))
     #address = Column(postgresql.INET)
    
-   # one to one from Subnet to VLan
+    # one to one from Subnet to VLan
     v_lan = relationship("VLan", uselist=False, backref="subnet")
+
 
 class TrafficVolume(ModelBase):
     # 1 (true) for in, 0 (false) for out
@@ -103,22 +136,24 @@ class TrafficVolume(ModelBase):
  
     # one to many from User to TrafficVolume
     user_id = Column(Integer, ForeignKey("user.id"))
-   
+
+
 class User(ModelBase):
     login = Column(String(40))
     name = Column(String(255))
     registration_date = Column(DateTime)
-    room_id = Column(Integer, ForeignKey("room.id"))
-    
+  
     # one to many from User to Host
     hosts = relationship("Host")
     # one to many from User to LogEntry
     log_entries = relationship("LogEntry")
     #
     room = relationship("Room", backref=backref("users", order_by=id))
+    room_id = Column(Integer, ForeignKey("room.id"))
     # one to many from User to TrafficVolume
     traffic_volumes = relationship("TrafficVolume")
  
+
 class VLan(ModelBase):
     name = Column(String(127))
     tag = Column(Integer)
