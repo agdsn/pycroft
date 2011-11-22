@@ -10,17 +10,18 @@
 from sqlalchemy import ForeignKey, MetaData
 from sqlalchemy import Table, Column
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base, declared_attr
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer
 from sqlalchemy.types import Text, String
 
 _session = None
 
+
 class _ModelMeta(DeclarativeMeta):
     """Metaclass for all mapped Database objects.
     """
-    
     @property
     def q(cls):
         """This is a shortcut for easy querying of whole objects.
@@ -35,10 +36,8 @@ class _ModelMeta(DeclarativeMeta):
         return _session.query(cls)
 
 
-
 class _Base(object):
     """Baseclass for all database models.
-    
     """
     id = Column(Integer, primary_key=True)
 
@@ -50,7 +49,6 @@ class _Base(object):
         return cls.__name__.lower()
 
 
-
 ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)
 
 
@@ -58,7 +56,7 @@ class Dormitory(ModelBase):
     number = Column(String(3), unique=True)
     street = Column(String(20))
     short_name = Column(String(5), unique=True)
-    
+
     # one to one from Dormitory to VLan
     v_lan = relationship("VLan", uselist=False, backref="dormitory")
 
@@ -69,7 +67,7 @@ class Group(ModelBase):
 
 class Host(ModelBase):
     hostname = Column(String(255))
-    
+
     # one to many from User to Host
     user_id = Column(Integer, ForeignKey("user.id"))
 
@@ -79,7 +77,7 @@ class LogEntry(ModelBase):
     message = Column(Text)
     # created
     timestamp = Column(DateTime)
-    
+
     # many to one from User to LogEntry
     author_id = Column(Integer, ForeignKey("user.id"))
 
@@ -116,10 +114,11 @@ class Room(ModelBase):
     dormitory = relationship("Dormitory", backref=backref("rooms",
                                                       order_by=number))
 
+
 class Subnet(ModelBase):
     address = Column(String(48))
     #address = Column(postgresql.INET)
-   
+
     # one to one from Subnet to VLan
     v_lan = relationship("VLan", uselist=False, backref="subnet")
 
@@ -131,7 +130,7 @@ class TrafficVolume(ModelBase):
     size = Column(BigInteger)
     # when this was logged
     timestamp = Column(DateTime)
- 
+
     # one to many from User to TrafficVolume
     user_id = Column(Integer, ForeignKey("user.id"))
 
@@ -140,7 +139,7 @@ class User(ModelBase):
     login = Column(String(40))
     name = Column(String(255))
     registration_date = Column(DateTime)
-  
+
     # one to many from User to Host
     hosts = relationship("Host")
     # one to many from User to LogEntry
@@ -150,7 +149,7 @@ class User(ModelBase):
     room_id = Column(Integer, ForeignKey("room.id"))
     # one to many from User to TrafficVolume
     traffic_volumes = relationship("TrafficVolume")
- 
+
 
 class VLan(ModelBase):
     name = Column(String(127))
