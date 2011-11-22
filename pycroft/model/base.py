@@ -67,7 +67,7 @@ class Dormitory(ModelBase):
 
 
 class Group(ModelBase):
-    name = Column(String(255)
+    name = Column(String(255))
 
 
 class Host(ModelBase):
@@ -88,8 +88,6 @@ class LogEntry(ModelBase):
 
 
 class Membership(ModelBase):
-    hostname = Column(String(255))
-    id = Column(Integer, primary_key=True)
     start_date = Column(DateTime)
     end_date = Column(DateTime)
 
@@ -109,7 +107,7 @@ class PatchPort(ModelBase):
 
 
 class Rights(ModelBase):
-    name = Column(String(255)
+    name = Column(String(255))
 
 
 class Room(ModelBase):
