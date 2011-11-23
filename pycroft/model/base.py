@@ -93,7 +93,8 @@ class Membership(ModelBase):
 class NetDevice(ModelBase):
     ipv4 = Column(Sring(12), unique=True)
     ipv6 = Column(String(51), unique=True)
-    mac = Column(String(13))
+    mac = Column(String(12))
+    #mac = Column(postgresql.MACADDR)
     patch_port_id = Column(Integer, ForeignKey("patchport.id"))
 
 
