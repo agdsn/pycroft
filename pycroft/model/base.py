@@ -68,7 +68,8 @@ class Group(ModelBase):
 class Host(ModelBase):
     hostname = Column(String(255))
 
-    # one to many from User to Host
+    # many to one from Host to User
+    user = relationship("User", backref=backref("hosts", order_by=id))
     user_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -78,7 +79,9 @@ class LogEntry(ModelBase):
     # created
     timestamp = Column(DateTime)
 
-    # many to one from User to LogEntry
+    # many to one from LogEntry to User
+    author = relationship("User", \
+                backref=backref("log_entries", order_by=timestamp))
     author_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -92,7 +95,7 @@ class Membership(ModelBase):
 
 class NetDevice(ModelBase):
     #ipv4 = Column(postgresql.INET);
-    ipv4 = Column(Sring(12), unique=True)
+    ipv4 = Column(String(12), unique=True)
     #ipv6 = Column(postgresql.INET);
     ipv6 = Column(String(51), unique=True)
     mac = Column(String(12))
@@ -134,7 +137,9 @@ class TrafficVolume(ModelBase):
     # when this was logged
     timestamp = Column(DateTime)
 
-    # one to many from User to TrafficVolume
+    # many to one from LogEntry to User
+    user = relationship("User", \
+                backref=backref("traffic_volumes", order_by=timestamp))
     user_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -143,15 +148,9 @@ class User(ModelBase):
     name = Column(String(255))
     registration_date = Column(DateTime)
 
-    # one to many from User to Host
-    hosts = relationship("Host")
-    # one to many from User to LogEntry
-    log_entries = relationship("LogEntry")
-    #
+    # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
     room_id = Column(Integer, ForeignKey("room.id"))
-    # one to many from User to TrafficVolume
-    traffic_volumes = relationship("TrafficVolume")
 
 
 class VLan(ModelBase):
