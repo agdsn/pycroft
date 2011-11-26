@@ -55,6 +55,15 @@ class _Base(object):
 ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)
 
 
+class DestinationPort(ModelBase):
+    name = Column(String(4))
+
+    # review relation destinationport-patchport
+    # and double-relation switchport
+    switchport_id = Column(Integer, ForeignKey("switchport.id"))
+    phoneport_id = Column(Integer, ForeignKey("phoneport.id"))
+    
+
 class Dormitory(ModelBase):
     number = Column(String(3), unique=True)
     street = Column(String(20))
@@ -74,6 +83,8 @@ class Host(ModelBase):
     # many to one from Host to User
     user = relationship("User", backref=backref("hosts", order_by=id))
     user_id = Column(Integer, ForeignKey("user.id"))
+
+    switch_id = Column(Integer, ForeignKey("switch.id"))
 
 
 class LogEntry(ModelBase):
@@ -110,6 +121,10 @@ class PatchPort(ModelBase):
     name = Column(String(4))
 
 
+class PhonePort(ModelBase):
+    name = Column(String(4))
+
+
 class Rights(ModelBase):
     name = Column(String(255))
 
@@ -130,6 +145,17 @@ class Subnet(ModelBase):
 
     # one to one from Subnet to VLan
     v_lan = relationship("VLan", uselist=False, backref="subnet")
+
+
+class Switch(ModelBase):
+    name = Column(String(4))
+
+    # review double-relation switchport (variable?)
+    switchport_id = Column(Integer, ForeignKey("switchport.id"))
+
+
+class SwitchPort(ModelBase):
+    name = Column(String(4))
 
 
 class TrafficVolume(ModelBase):
