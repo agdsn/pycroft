@@ -11,6 +11,7 @@
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
 
+
 class SessionWrapper(object):
     def __init__(self):
         self._engine = create_engine("sqlite:///test_db.sqlite", echo=False)
@@ -22,5 +23,5 @@ class SessionWrapper(object):
     def get_engine(self):
         return self._engine
 
-    
+
 session = SessionWrapper()

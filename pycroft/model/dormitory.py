@@ -1,0 +1,69 @@
+# -*- coding: utf-8 -*-
+"""
+    pycroft.model.dormitory
+    ~~~~~~~~~~~~~~
+
+    This module contains the classes Dormitory, Room, Subnet, VLan.
+
+    :copyright: (c) 2011 by AG DSN.
+"""
+from base import ModelBase
+from sqlalchemy import ForeignKey
+from sqlalchemy import Table, Column
+#from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.types import Boolean, Integer
+from sqlalchemy.types import String
+
+
+association_table_dormitory_vlan = Table('association_dormitory_vlan',
+                                         ModelBase.metadata,
+                                         Column('dormitory_id', Integer,
+                                                ForeignKey('dormitory.id')),
+                                         Column('vlan_id', Integer,
+                                                ForeignKey('vlan.id')))
+
+
+association_table_subnet_vlan = Table("association_subnet_vlan",
+                                        ModelBase.metadata,
+                                        Column("subnet_id", Integer,
+                                                ForeignKey("subnet.id")),
+                                        Column("vlan_id", Integer,
+                                                ForeignKey("vlan.id")))
+
+
+class Dormitory(ModelBase):
+    number = Column(String(3), unique=True)
+    street = Column(String(20))
+    short_name = Column(String(5), unique=True)
+
+    #many to many from Dormitory to VLan
+    vlans = relationship("VLan",
+                            backref=backref("dormitories",
+                            secondary=association_table_dormitory_vlan))
+
+
+class Room(ModelBase):
+    number = Column(String(36))
+    level = Column(Integer)
+    inhabitable = Column(Boolean)
+
+    # many to one from Room to Dormitory
+    dormitory_id = Column(Integer, ForeignKey("dormitory.id"))
+    dormitory = relationship("Dormitory", backref=backref("rooms",
+                                                      order_by=number))
+
+
+class Subnet(ModelBase):
+    #address = Column(postgresql.INET)
+    address = Column(String(48))
+
+    #many to many from Subnet to VLan
+    vlans = relationship("VLan",
+                            backref=backref("subnets",
+                            secondary=association_table_subnet_vlan))
+
+
+class VLan(ModelBase):
+    name = Column(String(127))
+    tag = Column(Integer)
