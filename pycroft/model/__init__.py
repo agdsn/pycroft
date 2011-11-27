@@ -21,6 +21,7 @@ from pycroft.model import ports
 from pycroft.model import rights
 from pycroft.model import user
 
+
 def create_db_model():
     """Create all models in the database.
 
