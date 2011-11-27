@@ -54,6 +54,20 @@ class _Base(object):
 
 ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)
 
+association_table_dormitory_vlan = Table('association_dormitory_vlan',
+                                         ModelBase.metadata,
+                                         Column('dormitory_id', Integer,
+                                                ForeignKey('dormitory.id')),
+                                         Column('vlan_id', Integer,
+                                                ForeignKey('vlan.id')))
+
+association_table_subnet_vlan = Table('association_subnet_vlan',
+                                        ModelBase.metadata,
+                                        Column('subnet_id', Integer,
+                                                ForeignKey('subnet.id')),
+                                        Column("vlan_id", Integer,
+                                                ForeignKey('vlan.id')))
+
 
 class DestinationPort(ModelBase):
     name = Column(String(4))
@@ -69,8 +83,10 @@ class Dormitory(ModelBase):
     street = Column(String(20))
     short_name = Column(String(5), unique=True)
 
-    # one to one from Dormitory to VLan
-    v_lan = relationship("VLan", uselist=False, backref="dormitory")
+    #many to many from Dormitory to VLan
+    vlans = relationship("VLan",
+                            backref=backref("dormitories",
+                            secondary=association_table_dormitory_vlan))
 
 
 class Group(ModelBase):
@@ -81,7 +97,7 @@ class Host(ModelBase):
     hostname = Column(String(255))
 
     # many to one from Host to User
-    user = relationship("User", backref=backref("hosts", order_by=id))
+    user = relationship("User", backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"))
 
     switch_id = Column(Integer, ForeignKey("switch.id"))
@@ -94,8 +110,8 @@ class LogEntry(ModelBase):
     timestamp = Column(DateTime)
 
     # many to one from LogEntry to User
-    author = relationship("User", \
-                backref=backref("log_entries", order_by=timestamp))
+    author = relationship("User",
+                backref=backref("log_entries"))
     author_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -140,11 +156,13 @@ class Room(ModelBase):
 
 
 class Subnet(ModelBase):
-    address = Column(String(48))
     #address = Column(postgresql.INET)
+    address = Column(String(48))
 
-    # one to one from Subnet to VLan
-    v_lan = relationship("VLan", uselist=False, backref="subnet")
+    #many to many from Subnet to VLan
+    vlans = relationship("VLan",
+                            backref=backref("subnets",
+                            secondary=association_table_subnet_vlan))
 
 
 class Switch(ModelBase):
@@ -159,16 +177,15 @@ class SwitchPort(ModelBase):
 
 
 class TrafficVolume(ModelBase):
-    # 1 (true) for in, 0 (false) for out
-    direction = Column(Boolean)
+    incoming = Column(Boolean)
     # how many bytes
     size = Column(BigInteger)
     # when this was logged
     timestamp = Column(DateTime)
 
     # many to one from LogEntry to User
-    user = relationship("User", \
-                backref=backref("traffic_volumes", order_by=timestamp))
+    user = relationship("User",
+                backref=backref("traffic_volumes"))
     user_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -185,8 +202,3 @@ class User(ModelBase):
 class VLan(ModelBase):
     name = Column(String(127))
     tag = Column(Integer)
-
-    # one to one from Dormitory to VLan
-    dormitory_id = Column(Integer, ForeignKey("dormitory.id"))
-    # one to one from Subnet to VLan
-    subnet_id = Column(Integer, ForeignKey("subnet.id"))
