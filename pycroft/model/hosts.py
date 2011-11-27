@@ -39,6 +39,6 @@ class NetDevice(ModelBase):
 
 class Switch(Host):
     # Concrete Table Inheritance
-    __mapper_args__ = {'concrete':True}
+    __mapper_args__ = {"concrete": True}
 
     name = Column(String(127))
