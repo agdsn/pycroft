@@ -17,7 +17,8 @@ from sqlalchemy.types import String
 
 class Group(ModelBase):
     name = Column(String(255))
-
+    traffic_limit_id = Column(Integer, ForeignKey("trafficlimit.id")
+    traffic_limit = relationship("TrafficLimit", backref=backref("groups"))
 
 class Membership(ModelBase):
     start_date = Column(DateTime)

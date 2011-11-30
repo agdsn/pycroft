@@ -27,19 +27,6 @@ class LogEntry(ModelBase):
     author_id = Column(Integer, ForeignKey("user.id"))
 
 
-class TrafficVolume(ModelBase):
-    incoming = Column(Boolean)
-    # how many bytes
-    size = Column(BigInteger)
-    # when this was logged
-    timestamp = Column(DateTime)
-
-    # many to one from LogEntry to User
-    user = relationship("User",
-                backref=backref("traffic_volumes"))
-    user_id = Column(Integer, ForeignKey("user.id"))
-
-
 class UserLogEntry(ModelBase):
     # many to one from UserLogEntry to User
     user = relationship("User",
