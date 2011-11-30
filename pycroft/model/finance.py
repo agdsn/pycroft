@@ -21,6 +21,8 @@ class FinanceAccountType(ModelBase):
 
 class FinanceAccount(ModelBase):
     name = Column(String(127))
+    type_id = Column(Integer(), ForeignKey("financeaccounttype.id"))
+    type = relationship("FinanceAccountType")
 
 class Journal(ModelBase):
     account = Column(String(255))
@@ -31,6 +33,7 @@ class Journal(ModelBase):
 class JournalEntry(ModelBase):
     message = Column(Text())
     journal_id = Column(Integer(), ForeignKey("journal.id"))
+    journal = relationship("Journal", backref=backref("entries"))
     other_account = Column(String(255))
     other_bank = Column(String(255))
     other_person = Column(String(255))
@@ -44,7 +47,9 @@ class Transaction(ModelBase):
 	
 class Split(ModelBase):
     amount = Column(Integer())
-    from_account = Column(Integer(), ForeignKey("financeaccount.id"))
-    to_account = Column(Integer(), ForeignKey("financeaccount.id"))
+    from_account_id  = Column(Integer(), ForeignKey("financeaccount.id"))
+    from_account = relationship("FinanceAccount")
+    to_account_id = Column(Integer(), ForeignKey("financeaccount.id"))
+    to_account = relationship("FinanceAccount")
     transaction_id = Column(Integer(), ForeignKey("transaction.id"))
     transaction = relationship("Transaction", backref=backref("splits"))
