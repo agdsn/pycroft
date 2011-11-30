@@ -19,6 +19,8 @@ from sqlalchemy.types import String
 class Host(ModelBase):
     hostname = Column(String(255))
 
+    # one to one from NetDevice to PatchPort
+
     # many to one from Host to User
     user = relationship("User", backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"))
