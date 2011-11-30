@@ -24,21 +24,16 @@ class Port(object):
 
 
 class DestinationPort(Port):
-    #does nothing
     pass
 
     # one to one from DestinationPort to PatchPort
 
 
 class PatchPort(Port, ModelBase):
-    #does nothing
     pass
-
-    # one to one from PatchPort to NetDevice
 
 
 class PhonePort(DestinationPort, ModelBase):
-    #does nothing
     pass
 
 
