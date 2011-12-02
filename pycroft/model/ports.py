@@ -20,14 +20,19 @@ class Port(object):
     name = Column(String(4))
 
 
-class DestinationPort(Port):
+class DestinationPort(Port, ModelBase):
     pass
-
-    # one to one from DestinationPort to PatchPort
 
 
 class PatchPort(Port, ModelBase):
-    pass
+
+    destinationport_id = Column(Integer, ForeignKey('destinationport.id'))
+    destinationport = relationship("DestinationPort", backref=backref(
+        "patchport", uselist=False))
+
+    netdevice_id = Column(Integer, ForeignKey('netdevice.id'))
+    netdevice = relationship("NetDevice", backref=backref("patchport",
+                                                          uselist=False))
 
 
 class PhonePort(DestinationPort, ModelBase):
