@@ -36,7 +36,6 @@ class NetDevice(ModelBase):
     ipv6 = Column(String(51), unique=True)
     #mac = Column(postgresql.MACADDR)
     mac = Column(String(12))
-    patch_port_id = Column(Integer, ForeignKey("patchport.id"))
 
 
 class Switch(Host):
