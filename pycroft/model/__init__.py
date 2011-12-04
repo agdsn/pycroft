@@ -10,6 +10,7 @@
 
 from pycroft.model import base, session
 # this imports are needed!!!
+from pycroft.model import accounting
 from pycroft.model import dormitory
 from pycroft.model import finance
 from pycroft.model import hosts
@@ -21,13 +22,11 @@ from pycroft.model import user
 
 def create_db_model():
     """Create all models in the database.
-
     """
     base.ModelBase.metadata.create_all(session.session.get_engine())
 
 
 def drop_db_model():
     """Drop all models from the database.
-
     """
     base.ModelBase.metadata.drop_all(session.session.get_engine())

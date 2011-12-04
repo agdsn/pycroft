@@ -32,7 +32,7 @@ class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR)
     mac = Column(String(12))
 
-    # one to one from NetDevice to PatchPort
+    # one to one from PatchPort to NetDevice
     patch_port_id = Column(Integer, ForeignKey('patchport.id'))
     patch_port = relationship("PatchPort", backref=backref("net_device",
                                                           uselist=False))
