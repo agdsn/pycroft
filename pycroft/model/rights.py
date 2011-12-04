@@ -20,8 +20,9 @@ from sqlalchemy.types import String
 
 class Group(ModelBase):
     name = Column(String(255))
-    traffic_limit_id = Column(Integer, ForeignKey("trafficlimit.id")
-    traffic_limit = relationship("TrafficLimit", backref=backref("groups"))
+    discriminator = Column('type', String(17))
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
 
 class Membership(ModelBase):
     start_date = Column(DateTime)
@@ -41,3 +42,15 @@ class Right(ModelBase):
     # many to one from Right to Group
     group_id = Column(Integer, ForeignKey("group.id"))
     group = relationship("Group", backref=backref("rights"))
+
+
+class RightGroup(Group):
+    __mapper_args__ = {'polymorphic_identity': 'rightgroup'}
+    id = Column(Integer, ForeignKey('group.id'), primary_key=True)
+
+
+class TrafficGroup(Group):
+    __mapper_args__ = {'polymorphic_identity': 'trafficgroup'}
+    id = Column(Integer, ForeignKey('group.id'), primary_key=True)
+    # in megabyte
+    traffic_limit = Column(Integer)

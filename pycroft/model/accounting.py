@@ -29,8 +29,3 @@ class TrafficVolume(ModelBase):
     user = relationship("User",
                 backref=backref("traffic_volumes"))
     user_id = Column(Integer, ForeignKey("user.id"))
-
-
-class TrafficLimit(ModelBase):
-    # in megabyte
-    size = Column(Integer)
