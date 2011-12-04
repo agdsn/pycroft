@@ -23,6 +23,10 @@ class FinanceAccount(ModelBase):
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
                         name="financeaccounttypes"))
 
+    # many to one from FinanceAccount to User
+    user = relationship("User", backref=backref("finance_accounts"))
+    user_id = Column(Integer, ForeignKey("user.id"))
+
 
 class Journal(ModelBase):
     account = Column(String(255))
