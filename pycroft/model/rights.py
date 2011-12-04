@@ -39,9 +39,9 @@ class Membership(ModelBase):
 class Right(ModelBase):
     name = Column(String(255))
 
-    # many to one from Right to Group
-    group_id = Column(Integer, ForeignKey("group.id"))
-    group = relationship("Group", backref=backref("rights"))
+    # many to one from Right to RightGroup
+    right_group_id = Column(Integer, ForeignKey("rightgroup.id"))
+    right_group = relationship("RightGroup", backref=backref("rights"))
 
 
 class RightGroup(Group):
