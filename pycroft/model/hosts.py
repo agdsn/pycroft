@@ -19,8 +19,6 @@ from sqlalchemy.types import String
 class Host(ModelBase):
     hostname = Column(String(255))
 
-    # one to one from NetDevice to PatchPort
-
     # many to one from Host to User
     user = relationship("User", backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"))
@@ -33,6 +31,11 @@ class NetDevice(ModelBase):
     ipv6 = Column(String(51), unique=True)
     #mac = Column(postgresql.MACADDR)
     mac = Column(String(12))
+
+    # one to one from NetDevice to PatchPort
+    patch_port_id = Column(Integer, ForeignKey('patchport.id'))
+    patch_port = relationship("PatchPort", backref=backref("net_device",
+                                                          uselist=False))
 
 
 class Switch(Host):
