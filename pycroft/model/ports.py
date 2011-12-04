@@ -24,25 +24,29 @@ class Port(object):
 
 
 class DestinationPort(Port, ModelBase):
-    pass
+    # Joined table inheritance
+    discriminator = Column('type', String(15))
+    __mapper_args__ = {'polymorphic_on': discriminator}
 
 
 class PatchPort(Port, ModelBase):
 
-    destinationport_id = Column(Integer, ForeignKey('destinationport.id'))
-    destinationport = relationship("DestinationPort", backref=backref(
-        "patchport", uselist=False))
-
-    netdevice_id = Column(Integer, ForeignKey('netdevice.id'))
-    netdevice = relationship("NetDevice", backref=backref("patchport",
-                                                          uselist=False))
+    # one to one from PatchPort to DestinationPort
+    destination_port_id = Column(Integer, ForeignKey('destinationport.id'))
+    destination_port = relationship("DestinationPort", backref=backref(
+                                    "patch_port", uselist=False))
 
 
-class PhonePort(DestinationPort, ModelBase):
-    pass
+class PhonePort(DestinationPort):
+    # Joined table inheritance
+    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'phone_port'}
 
 
-class SwitchPort(DestinationPort, ModelBase):
+class SwitchPort(DestinationPort):
+    # Joined table inheritance
+    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'switch_port'}
 
     # many to one from SwitchPort to Switch
     switch_id = Column(Integer, ForeignKey("switch.id"))
