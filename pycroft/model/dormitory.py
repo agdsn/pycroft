@@ -53,10 +53,9 @@ class Room(ModelBase):
     dormitory = relationship("Dormitory", backref=backref("rooms",
                                                       order_by=number))
 
-    # one to one from PatchPort to Room
+    # many to one from PatchPort to Room
     patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=False)
-    patch_port = relationship("PatchPort", backref=backref("room",
-                                                          uselist=False))
+    patch_port = relationship("PatchPort", backref=backref("room"))
 
 
 class Subnet(ModelBase):
