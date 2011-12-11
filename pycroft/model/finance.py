@@ -16,45 +16,50 @@ from sqlalchemy.types import String
 
 
 class FinanceAccount(ModelBase):
-    name = Column(String(127))
+    name = Column(String(127), nullable=False)
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
-                        name="financeaccounttypes"))
+                        name="financeaccounttypes"), nullable=False)
 
     # many to one from FinanceAccount to User
     user = relationship("User", backref=backref("finance_accounts"))
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
 
 
 class Journal(ModelBase):
-    account = Column(String(255))
-    bank = Column(String(255))
-    hbci_url = Column(String(255))
-    last_update = Column(DateTime())
+    account = Column(String(255), nullable=False)
+    bank = Column(String(255), nullable=False)
+    hbci_url = Column(String(255), nullable=False)
+    last_update = Column(DateTime(), nullable=False)
 
 
 class JournalEntry(ModelBase):
-    message = Column(Text())
-    journal_id = Column(Integer(), ForeignKey("journal.id"))
+    amount = Column(Integer(), nullable=False)
+    message = Column(Text(), nullable=True)
+    journal_id = Column(Integer(), ForeignKey("journal.id"), nullable=False)
     journal = relationship("Journal", backref=backref("entries"))
-    other_account = Column(String(255))
-    other_bank = Column(String(255))
-    other_person = Column(String(255))
-    original_message = Column(Text())
-    timestamp = Column(DateTime())
+    other_account = Column(String(255), nullable=False)
+    other_bank = Column(String(255), nullable=False)
+    other_person = Column(String(255), nullable=False)
+    original_message = Column(Text(), nullable=False)
+    timestamp = Column(DateTime(), nullable=False)
 
 
 class Transaction(ModelBase):
-    message = Column(Text())
-    journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"))
+    message = Column(Text(), nullable=False)
+    journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
+                                                            nullable=True)
     journal_entry = relationship("JournalEntry",
                                     backref=backref("transaction"))
 
 
 class Split(ModelBase):
-    amount = Column(Integer())
-    from_account_id = Column(Integer(), ForeignKey("financeaccount.id"))
+    amount = Column(Integer(), nullable=False)
+    from_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
+                                nullable=False)
     from_account = relationship("FinanceAccount")
-    to_account_id = Column(Integer(), ForeignKey("financeaccount.id"))
+    to_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
+                                nullable=False)
     to_account = relationship("FinanceAccount")
-    transaction_id = Column(Integer(), ForeignKey("transaction.id"))
+    transaction_id = Column(Integer(), ForeignKey("transaction.id"),
+                                nullable=False)
     transaction = relationship("Transaction", backref=backref("splits"))
