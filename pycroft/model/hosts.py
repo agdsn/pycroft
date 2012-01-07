@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -18,12 +18,14 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
+from pycroft.model.user import User
+
 
 class Host(ModelBase):
     hostname = Column(String(255))
 
     # many to one from Host to User
-    user = relationship("User", backref=backref("hosts"))
+    user = relationship(User, backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"))
 
 

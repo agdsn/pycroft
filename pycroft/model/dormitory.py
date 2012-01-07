@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -17,6 +17,8 @@ from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Boolean, Integer
 from sqlalchemy.types import String
+
+from pycroft.model.ports import PatchPort
 
 
 association_table_dormitory_vlan = Table('association_dormitory_vlan',
@@ -37,13 +39,24 @@ association_table_subnet_vlan = Table("association_subnet_vlan",
 
 class Dormitory(ModelBase):
     number = Column(String(3), unique=True)
-    street = Column(String(20))
     short_name = Column(String(5), unique=True)
+    street = Column(String(20))
 
     #many to many from Dormitory to VLan
     vlans = relationship("VLan",
-                            backref=backref("dormitories",
-                            secondary=association_table_dormitory_vlan))
+                            backref=backref("dormitories"),
+                            secondary=association_table_dormitory_vlan)
+
+    def __init__(self, number, short_name, street):
+
+        super(Dormitory,self).__init__()
+
+        self.number = number
+        self.short_name = short_name
+        self.street = street
+
+    def __str__(self):
+        print self.short_name + " " + self.street + " " + self.number
 
 
 class Room(ModelBase):
@@ -58,7 +71,7 @@ class Room(ModelBase):
 
     # one to one from PatchPort to Room
     patch_port_id = Column(Integer, ForeignKey('patchport.id'))
-    patch_port = relationship("PatchPort", backref=backref("room",
+    patch_port = relationship(PatchPort, backref=backref("room",
                                                           uselist=False))
 
 
@@ -68,8 +81,8 @@ class Subnet(ModelBase):
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
-                            backref=backref("subnets",
-                            secondary=association_table_subnet_vlan))
+                            backref=backref("subnets"),
+                            secondary=association_table_subnet_vlan)
 
 
 class VLan(ModelBase):
