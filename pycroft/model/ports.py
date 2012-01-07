@@ -18,34 +18,37 @@ from sqlalchemy.types import String
 from pycroft.model.hosts import Switch
 
 class Port(object):
-    name = Column(String(4))
+    name = Column(String(4), nullable=False)
 
 
 class DestinationPort(Port, ModelBase):
     # Joined table inheritance
-    discriminator = Column('type', String(15))
+    discriminator = Column('type', String(15), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
 
 class PatchPort(Port, ModelBase):
 
     # one to one from PatchPort to DestinationPort
-    destination_port_id = Column(Integer, ForeignKey('destinationport.id'))
+    destination_port_id = Column(Integer, ForeignKey('destinationport.id'),
+                                    nullable=True)
     destination_port = relationship("DestinationPort", backref=backref(
                                     "patch_port", uselist=False))
 
 
 class PhonePort(DestinationPort):
     # Joined table inheritance
-    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
+                    nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'phone_port'}
 
 
 class SwitchPort(DestinationPort):
     # Joined table inheritance
-    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
+                    nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'switch_port'}
 
     # many to one from SwitchPort to Switch
-    switch_id = Column(Integer, ForeignKey("switch.id"))
+    switch_id = Column(Integer, ForeignKey("switch.id"), nullable=False)
     switch = relationship(Switch, backref=backref("ports"))

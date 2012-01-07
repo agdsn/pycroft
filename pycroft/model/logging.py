@@ -17,18 +17,18 @@ from sqlalchemy.types import Text
 
 class LogEntry(ModelBase):
     # variably sized string
-    message = Column(Text)
+    message = Column(Text, nullable=False)
     # created
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, nullable=False)
 
     # many to one from LogEntry to User
     author = relationship("User",
                 backref=backref("log_entries"))
-    author_id = Column(Integer, ForeignKey("user.id"))
+    author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
 
 class UserLogEntry(ModelBase):
     # many to one from UserLogEntry to User
     user = relationship("User",
                 backref=backref("user_log_entries"))
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)

@@ -19,23 +19,23 @@ from pycroft.model.user import User
 
 
 class Host(ModelBase):
-    hostname = Column(String(255))
+    hostname = Column(String(255), nullable=False)
 
     # many to one from Host to User
     user = relationship(User, backref=backref("hosts"))
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
 
 
 class NetDevice(ModelBase):
-    #ipv4 = Column(postgresql.INET);
-    ipv4 = Column(String(12), unique=True)
-    #ipv6 = Column(postgresql.INET);
-    ipv6 = Column(String(51), unique=True)
-    #mac = Column(postgresql.MACADDR)
-    mac = Column(String(12))
+    #ipv4 = Column(postgresql.INET, nullable=True)
+    ipv4 = Column(String(12), unique=True, nullable=True)
+    #ipv6 = Column(postgresql.INET, nullable=True)
+    ipv6 = Column(String(51), unique=True, nullable=True)
+    #mac = Column(postgresql.MACADDR, nullable=False)
+    mac = Column(String(12), nullable=False)
 
     # one to one from PatchPort to NetDevice
-    patch_port_id = Column(Integer, ForeignKey('patchport.id'))
+    patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=True)
     patch_port = relationship("PatchPort", backref=backref("net_device",
                                                           uselist=False))
 
@@ -44,4 +44,4 @@ class Switch(Host):
     # Concrete Table Inheritance
     __mapper_args__ = {"concrete": True}
 
-    name = Column(String(127))
+    name = Column(String(127), nullable=False)

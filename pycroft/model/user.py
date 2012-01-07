@@ -16,15 +16,10 @@ from sqlalchemy.types import String
 
 
 class User(ModelBase):
-    login = Column(String(40))
-    name = Column(String(255))
-    registration_date = Column(DateTime)
+    login = Column(String(40), nullable=False)
+    name = Column(String(255), nullable=False)
+    registration_date = Column(DateTime, nullable=False)
 
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
-    room_id = Column(Integer, ForeignKey("room.id"))
-
-    def __str__(self):
-        print "user id :" + str(id)
-        print "name :" + self.name
-        print "registration_date :" + str(self.registration_date)
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
