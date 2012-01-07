@@ -15,12 +15,14 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
+from pycroft.model.user import User
+
 
 class Host(ModelBase):
     hostname = Column(String(255))
 
     # many to one from Host to User
-    user = relationship("User", backref=backref("hosts"))
+    user = relationship(User, backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"))
 
 

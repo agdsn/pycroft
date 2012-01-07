@@ -23,3 +23,8 @@ class User(ModelBase):
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
     room_id = Column(Integer, ForeignKey("room.id"))
+
+    def __str__(self):
+        print "user id :" + str(id)
+        print "name :" + self.name
+        print "registration_date :" + str(self.registration_date)
