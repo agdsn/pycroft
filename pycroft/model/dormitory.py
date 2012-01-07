@@ -38,9 +38,9 @@ association_table_subnet_vlan = Table("association_subnet_vlan",
 
 
 class Dormitory(ModelBase):
-    number = Column(String(3), unique=True)
-    short_name = Column(String(5), unique=True)
-    street = Column(String(20))
+    number = Column(String(3), unique=True, nullable=False)
+    short_name = Column(String(5), unique=True, nullable=False)
+    street = Column(String(20), nullable=False)
 
     #many to many from Dormitory to VLan
     vlans = relationship("VLan",
@@ -60,24 +60,24 @@ class Dormitory(ModelBase):
 
 
 class Room(ModelBase):
-    number = Column(String(36))
-    level = Column(Integer)
-    inhabitable = Column(Boolean)
+    number = Column(String(36), nullable=False)
+    level = Column(Integer, nullable=False)
+    inhabitable = Column(Boolean, nullable=False)
 
     # many to one from Room to Dormitory
-    dormitory_id = Column(Integer, ForeignKey("dormitory.id"))
+    dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
     dormitory = relationship("Dormitory", backref=backref("rooms",
                                                       order_by=number))
 
     # one to one from PatchPort to Room
-    patch_port_id = Column(Integer, ForeignKey('patchport.id'))
+    patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=False)
     patch_port = relationship(PatchPort, backref=backref("room",
                                                           uselist=False))
 
 
 class Subnet(ModelBase):
-    #address = Column(postgresql.INET)
-    address = Column(String(48))
+    #address = Column(postgresql.INET, nullable=False)
+    address = Column(String(48), nullable=False)
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
@@ -86,5 +86,5 @@ class Subnet(ModelBase):
 
 
 class VLan(ModelBase):
-    name = Column(String(127))
-    tag = Column(Integer)
+    name = Column(String(127), nullable=False)
+    tag = Column(Integer, nullable=False)
