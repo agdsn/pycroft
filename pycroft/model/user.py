@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -26,3 +26,8 @@ class User(ModelBase):
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
     room_id = Column(Integer, ForeignKey("room.id"))
+
+    def __str__(self):
+        print "user id :" + str(id)
+        print "name :" + self.name
+        print "registration_date :" + str(self.registration_date)
