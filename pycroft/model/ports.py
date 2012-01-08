@@ -20,6 +20,7 @@ from sqlalchemy.types import String
 
 from pycroft.model.hosts import Switch
 
+
 class Port(object):
     name = Column(String(4), nullable=False)
 

@@ -3,10 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.views
+    console
     ~~~~~~~~~~~~~~
 
-    This package contains interfaces
+    This package contains a simple console interface
 
     :copyright: (c) 2012 by AG DSN.
 """
