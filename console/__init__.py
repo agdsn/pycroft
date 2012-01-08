@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    pycroft.console
+    console
     ~~~~~~~~~~~~~~
 
-    This package contains a console interface
+    This package contains a simple console interface
 
     :copyright: (c) 2012 by AG DSN.
 """
