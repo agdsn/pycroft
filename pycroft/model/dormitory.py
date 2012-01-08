@@ -10,10 +10,11 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+
+#from sqlalchemy.dialects import postgresql
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
-#from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Boolean, Integer
 from sqlalchemy.types import String
@@ -47,9 +48,10 @@ class Dormitory(ModelBase):
                             backref=backref("dormitories"),
                             secondary=association_table_dormitory_vlan)
 
+    # methods
     def __init__(self, number, short_name, street):
 
-        super(Dormitory,self).__init__()
+        super(Dormitory, self).__init__()
 
         self.number = number
         self.short_name = short_name
