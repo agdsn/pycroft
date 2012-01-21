@@ -12,7 +12,7 @@
 """
 
 import sys
-#from pycroft.controller.user_controller import UserController
+#from pycroft.helpers.user_controller import UserController
 from pycroft.model.dormitory import Dormitory
 
 
