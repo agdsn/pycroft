@@ -3,17 +3,17 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.controller.user_controller
+    pycroft.helpers.user_helper
     ~~~~~~~~~~~~~~
 
-    This package contains the classes UserController.
+    This package contains the classes UserHelper
 
     :copyright: (c) 2011 by AG DSN.
 """
 #from pycroft.model import user
 
 
-class UserController:
+class UserHelper:
 
     pass
     #def new_user(name, dorm_short_name, floor_no, room_no, login, mac):
