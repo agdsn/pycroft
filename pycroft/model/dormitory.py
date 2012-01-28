@@ -55,7 +55,7 @@ class Dormitory(ModelBase):
         self.street = street
 
     def __str__(self):
-        print self.short_name + " " + self.street + " " + self.number
+        return self.short_name + " " + self.street + " " + self.number
 
 
 class Room(ModelBase):
