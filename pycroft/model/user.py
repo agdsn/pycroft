@@ -21,5 +21,5 @@ class User(ModelBase):
     registration_date = Column(DateTime, nullable=False)
 
     # many to one from User to Room
-    room = relationship("Room", backref=backref("users", order_by=id))
+    room = relationship("Room", backref=backref("users", order_by='User.id'))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)

@@ -28,11 +28,13 @@ class Membership(ModelBase):
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey('group.id'), primary_key=True,
                         nullable=False)
-    group = relationship("Group", backref=backref("memberships", order_by=id))
+    group = relationship("Group", backref=backref("memberships",
+                                                  order_by='Membership.id'))
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True,
                         nullable=False)
-    user = relationship("User", backref=backref("memberships", order_by=id))
+    user = relationship("User", backref=backref("memberships",
+                                                order_by='Membership.id'))
 
 
 class Right(ModelBase):
