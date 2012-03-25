@@ -13,9 +13,9 @@
 """
 
 import code
-import sys
 #from pycroft.helpers.user_controller import UserController
 from pycroft.model.dormitory import Dormitory
+from pycroft.model.session import session
 
 
 def createDB():
@@ -31,22 +31,70 @@ def dropDB():
 
 
 def newDorm():
+    """Make a new dormitory"""
 
-    street = raw_input("street: ")
-    number = raw_input("number: ")
-    short_name = raw_input("short_name: ")
+    street = u_input("street: ")
+    number = u_input("number: ")
+    short_name = u_input("short_name: ")
 
     try:
         new_dormitory = Dormitory(number=number, short_name=short_name,
             street=street)
     except:
-        print "Unexpected error:", sys.exc_info()[0]
+        print("could not create dormitory")
         raise
 
-    print str(new_dormitory)
+    print(str(new_dormitory))
+
+    confirm = raw_input("do you want to save? (y/n): ")
+
+    if confirm == "y":
+        try:
+            session.add(new_dormitory)
+            session.commit()
+        except:
+            session.rollback()
+            raise
+
+
+def deleteDorm():
+    """Delete a existing dormitory from the list"""
+
+    dormitories = session.query(Dormitory).all()
+
+    if not len(dormitories):
+        print("no dormitories")
+        return
+
+    for i in range(len(dormitories)):
+        print(i)
+        print(dormitories[i])
+
+    try:
+        delete = int(raw_input("(you have to confirm) delete No. : "))
+    except:
+        print("is not a number")
+        raise
+
+    if not delete >= 0 or not delete < len(dormitories):
+        print(str(delete) + " is not a dormitory")
+        return
+
+    print(dormitories[delete])
+    confirm = raw_input("do you want to delete this dormitory? (y/n): ")
+
+    if confirm == "y":
+        try:
+            session.delete(dormitories[delete])
+            session.commit()
+        except:
+            session.rollback()
+            raise
+
 
 def newRoom():
     pass
+
 
 def newUser():
 
@@ -75,22 +123,26 @@ def newUser():
     pass
 
 
+def h():
+    print "\nCommands:"
+    print "createDB()   - create database"
+    print "dropDB()     - delete database"
+    print "h()          - shows this help"
+    print "newDorm()    - new dormitory"
+    print "deleteDorm() - delete a dormitory"
+    #print "newRoom()    - new room"
+    #print "newUser()    - new user"
+    print "quit()       - quits the program"
+    print ""
 
 
-def help():
-    print '\nCommands:'
-    print 'createDB() - create database'
-    print 'dropDB() - delete database'
-    print '\thelp() - shows this help'
-    print '\tnewDorm() - new dormitory'
-    print '\tnewRoom() - new room'
-    print '\tnewUser() - new user'
-    print '\tquit() - quits the program'
-    print ''
+def u_input(promt):
+    """promt for utf-8 unicode object"""
+    return unicode(raw_input(promt), "utf-8")
 
-################################################################################
+###############################################################################
 
 # start the interpreter
 code.interact(
-    banner='Pycroft 0.1 \n# type help() for help #',
+    banner="Pycroft 0.1 \n# type h() for help #",
     local=locals())
