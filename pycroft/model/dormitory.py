@@ -53,12 +53,15 @@ class Dormitory(ModelBase):
 
         super(Dormitory, self).__init__()
 
+        # must be unicode strings
         self.number = number
         self.short_name = short_name
         self.street = street
 
     def __str__(self):
-        print self.short_name + " " + self.street + " " + self.number
+        return "dormitory - " + self.short_name.encode("utf8") + \
+               "\n\tstreet: " + self.street.encode("utf8") + \
+               "\n\tnumber: " + self.number.encode("utf8")
 
 
 class Room(ModelBase):
