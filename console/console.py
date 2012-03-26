@@ -68,7 +68,7 @@ def deleteDorm():
 
     for i in range(len(dormitories)):
         print(i)
-        print(dormitories[i])
+        print u'%s' % dormitories[i]
 
     try:
         delete = int(raw_input("(you have to confirm) delete No. : "))
@@ -80,7 +80,7 @@ def deleteDorm():
         print(str(delete) + " is not a dormitory")
         return
 
-    print(dormitories[delete])
+    print u'%s' % dormitories[delete]
     confirm = raw_input("do you want to delete this dormitory? (y/n): ")
 
     if confirm == "y":
