@@ -55,10 +55,10 @@ class Dormitory(ModelBase):
         self.short_name = short_name
         self.street = street
 
-    def __str__(self):
-        return "dormitory - " + self.short_name.encode("utf8") + \
-               "\n\tstreet: " + self.street.encode("utf8") + \
-               "\n\tnumber: " + self.number.encode("utf8")
+    def __unicode__(self):
+        return "dormitory - " + self.short_name + \
+               "\n\tstreet: " + self.street + \
+               "\n\tnumber: " + self.number
 
 
 class Room(ModelBase):
