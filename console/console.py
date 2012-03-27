@@ -42,9 +42,8 @@ def newDorm():
             street=street)
     except:
         print("could not create dormitory")
-        raise
 
-    print(str(new_dormitory))
+    print new_dormitory
 
     confirm = raw_input("do you want to save? (y/n): ")
 
@@ -63,33 +62,35 @@ def deleteDorm():
     dormitories = session.query(Dormitory).all()
 
     if not len(dormitories):
-        print("no dormitories")
+        print "no dormitories"
         return
 
     for i in range(len(dormitories)):
-        print(i)
-        print u'%s' % dormitories[i]
+        print i
+        print dormitories[i]
 
-    try:
-        delete = int(raw_input("(you have to confirm) delete No. : "))
-    except:
-        print("is not a number")
-        raise
+    while True:
+        try:
+            delete = int(raw_input("(you have to confirm) delete No. : "))
+            break
+        except ValueError:
+            print "you have to type a number"
 
     if not delete >= 0 or not delete < len(dormitories):
-        print(str(delete) + " is not a dormitory")
+        print "{} is not a dormitory".format(delete)
         return
 
-    print u'%s' % dormitories[delete]
+    print dormitories[delete]
     confirm = raw_input("do you want to delete this dormitory? (y/n): ")
 
     if confirm == "y":
         try:
             session.delete(dormitories[delete])
             session.commit()
+            print "deleted"
+            return
         except:
             session.rollback()
-            raise
 
 
 def newRoom():
