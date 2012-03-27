@@ -49,19 +49,10 @@ class Dormitory(ModelBase):
                             secondary=association_table_dormitory_vlan)
 
     # methods
-    def __init__(self, number, short_name, street):
 
-        super(Dormitory, self).__init__()
-
-        # must be unicode strings
-        self.number = number
-        self.short_name = short_name
-        self.street = street
-
-    def __unicode__(self):
-        return "dormitory - " + self.short_name + \
-               "\n\tstreet: " + self.street + \
-               "\n\tnumber: " + self.number
+    def __repr__(self):
+        return "Dormitory(number={}, short_name={}, street={})".format(
+               self.number, self.short_name, self.street)
 
 
 class Room(ModelBase):
