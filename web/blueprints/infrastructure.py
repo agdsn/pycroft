@@ -16,27 +16,27 @@ bp = Blueprint('bp_infrastructure', __name__, )
 
 @bp.route('/infrastructure')
 @bp.route('/infrastructure/rooms')
-def infrastructure_rooms():
+def rooms():
     return render_template('test.html', page_title = u"Räume", subnav = 'nav/infrastructure.html')
 
 
 @bp.route('/infrastructure/subnets')
-def infrastructure_subnets():
+def subnets():
     return render_template('test.html', page_title = u"Subnetze", subnav = 'nav/infrastructure.html')
 
 
 @bp.route('/infrastructure/switches')
-def infrastructure_switches():
+def switches():
     return render_template('test.html', page_title = u"Switches", subnav = 'nav/infrastructure.html')
 
 
 @bp.route('/infrastructure/vlans')
-def infrastructure_vlans():
+def vlans():
     return render_template('test.html', page_title = u"VLans", subnav = 'nav/infrastructure.html')
 
 
 @bp.route('/infrastructure/dormitories')
-def infrastructure_dormitories():
+def dormitories():
     return render_template('test.html', page_title = u"Wohnheime", subnav = 'nav/infrastructure.html')
 
 
