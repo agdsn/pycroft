@@ -1,0 +1,26 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% block pagetitle %}
+    Neuer Nutzer
+{% endblock %}
+
+{% block content %}
+    <form method="post" action="{{url_for('new_user')}}">
+        <div>Name: <input type="text" name="newuser_name"></div>
+        <div>Pass: <input type="text" name="newuser_pass"></div>
+        <div><button type="submit" style="border: 1px solid black; ">Nutzer anlegen</button> 
+            <button type="reset" style="border: 1px solid black;">Reset</button></div>
+    </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+{% endblock %}
