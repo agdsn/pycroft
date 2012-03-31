@@ -2,13 +2,13 @@
 <html lang="de">
 <head>
     <meta charset="utf-8">​
-    <title>Userman – {% block pagetitle %}{% endblock %}</title>
+    <title>Userman – {{ page_title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Le styles -->
-    <link rel="stylesheet" href="static/style.css">
-    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.css">​
-    <link rel="stylesheet" href="static/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.css">​
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap-responsive.css">
     <style>
         body {
             padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
@@ -16,7 +16,7 @@
     </style>
 
     <!-- Le fav icon -->
-    <link rel="shortcut icon" href="static/images/favicon.ico">​
+    <link rel="shortcut icon" href="/static/images/favicon.ico">​
 </head>
 
 <body>
@@ -34,10 +34,10 @@
             <a class="brand" href="/">Userman</a>
             <div class="nav-collapse">
                 <ul class="nav">
-                    <li class="active"><a href="/user">Nutzer</a></li>
+                    <li><a href="/user">Nutzer</a></li>
                     <li><a href="/finance">Finanzen</a></li>
-                    <li><a href="/infrastructure">Infrastruktur</a></li>
                     <li><a href="/rights">Rechte</a></li>
+                    <li><a href="/infrastructure">Infrastruktur</a></li>
                 </ul>
                 <p class="navbar-text pull-right">Logged in as <a href="#">username</a></p>
             </div><!--/.nav-collapse -->
