@@ -17,4 +17,4 @@ app = Flask(__name__)
 #initialization code
 app.secret_key = str(time.time())
 
-from blueprints import finance, infrastructure, layout, rights, user
+from blueprints import finance, infrastructure, rights, user
