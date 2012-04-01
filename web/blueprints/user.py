@@ -8,7 +8,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, flash
 
 bp = Blueprint('user', __name__, )
 
@@ -20,6 +20,10 @@ def overview():
 
 @bp.route('/new')
 def create():
+    flash("Test1", "info")
+    flash("Test2", "warning")
+    flash("Test3", "error")
+    flash("Test4", "success")
     return render_template('user/user_base.html', page_title = u"Neuer Nutzer")
 
 
