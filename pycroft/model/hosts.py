@@ -19,6 +19,7 @@ from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
 from pycroft.model.user import User
+from pycroft.model.dormitory import Room
 
 
 class Host(ModelBase):
@@ -27,6 +28,10 @@ class Host(ModelBase):
     # many to one from Host to User
     user = relationship(User, backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+
+    # many to one from Host to Room
+    room = relationship(Room, backref=backref("hosts"))
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=True)
 
 
 class NetDevice(ModelBase):
