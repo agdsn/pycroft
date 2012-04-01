@@ -12,7 +12,7 @@
 
     <!-- Le styles -->
     <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
-    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap-responsive.min.css") }}">
+    {# do we need this really: <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap-responsive.min.css") }}"> #}
     <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
     <style>
         body {
@@ -21,7 +21,7 @@
     </style>
 
     <!-- Le fav icon -->
-    <link rel="shortcut icon" href="/static/images/favicon.ico">​
+    <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}">​
 </head>
 
 <body>
@@ -53,8 +53,23 @@
 </div>
 
 <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) -%}
+        {% if messages -%}
+            {% for category, message in messages -%}
+                <div class="alert fade in alert-{{ category }}">
+                    <a class="close" data-dismiss="alert" href="#">×</a>
+                    <strong>{{ category|pretty_category }}:</strong> {{ message }}
+                </div>
+            {%- endfor %}
+            <p>&nbsp;</p>
+        {%- endif %}
+    {%- endwith %}
+
     {% block content %}{% endblock %}
 </div> <!-- /container -->
+
+<script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery-1.7.2.min.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="bootstrap/js/bootstrap.js") }}"></script>
 
 </body>
 </html>
