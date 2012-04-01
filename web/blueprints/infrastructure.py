@@ -12,7 +12,6 @@
 """
 
 from flask import Blueprint, render_template
-from web import app
 
 bp = Blueprint('bp_infrastructure', __name__, )
 
@@ -43,4 +42,3 @@ def dormitories():
     return render_template('test.html', page_title = u"Wohnheime", subnav = 'nav/infrastructure.html')
 
 
-app.register_blueprint(bp)
