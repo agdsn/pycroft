@@ -15,16 +15,16 @@ bp = Blueprint('user', __name__, )
 
 @bp.route('/')
 def overview():
-    return render_template('test.html', page_title = u"Übersicht", subnav = 'nav/user.html')
+    return render_template('user/user_base.html', page_title = u"Übersicht")
 
 
 @bp.route('/new')
-def new():
-    return render_template('test.html', page_title = u"Neuer Nutzer", subnav = 'nav/user.html')
+def create():
+    return render_template('user/user_base.html', page_title = u"Neuer Nutzer")
 
 
 @bp.route('/search')
 def search():
-    return render_template('test.html', page_title = u"Nutzer Suchen", subnav = 'nav/user.html')
+    return render_template('user/user_base.html', page_title = u"Nutzer Suchen")
 
 
