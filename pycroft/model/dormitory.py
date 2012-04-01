@@ -16,8 +16,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Boolean, Integer
 from sqlalchemy.types import String
 
-from pycroft.model.ports import PatchPort
-
 
 association_table_dormitory_vlan = Table('association_dormitory_vlan',
                                          ModelBase.metadata,
@@ -61,11 +59,6 @@ class Room(ModelBase):
     dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
     dormitory = relationship("Dormitory", backref=backref("rooms",
                                                       order_by=number))
-
-    # one to one from PatchPort to Room
-    patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=False)
-    patch_port = relationship(PatchPort, backref=backref("room",
-                                                          uselist=False))
 
 
 class Subnet(ModelBase):

@@ -36,6 +36,11 @@ class PatchPort(Port, ModelBase):
     destination_port = relationship("DestinationPort", backref=backref(
                                     "patch_port", uselist=False))
 
+    # many to one from PatchPort to Room
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room = relationship("Room", backref=backref("patch_ports",
+        order_by="name"))
+
 
 class PhonePort(DestinationPort):
     # Joined table inheritance
