@@ -11,6 +11,8 @@
 from flask import Flask
 from blueprints import finance, infrastructure, rights, user
 
+from pycroft.model.session import session
+
 
 def make_app():
     """  Create and configure the main? Flask app object
@@ -26,6 +28,10 @@ def make_app():
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(rights.bp, url_prefix="/rights")
     app.register_blueprint(finance.bp, url_prefix="/finance")
+
+    @app.teardown_request
+    def shutdown_session(exception=None):
+        session.remove()
 
     return app
 
