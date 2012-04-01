@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Flask
+from flask import Flask, redirect, url_for
 from blueprints import finance, infrastructure, rights, user, housing
 import template_filters
 
@@ -35,6 +35,10 @@ def make_app():
     app.register_blueprint(finance.bp, url_prefix="/finance")
 
     template_filters.register_filters(app)
+
+    @app.route('/')
+    def redirect_to_index():
+        return redirect(url_for('user.overview'))
 
     @app.teardown_request
     def shutdown_session(exception=None):
