@@ -11,9 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Le styles -->
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.css">​
-    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap-responsive.min.css") }}">
+    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
     <style>
         body {
             padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
@@ -28,6 +28,7 @@
 
 <!-- Navbar
     ================================================== -->
+{% import "macros/navigation.html" as navigation with context %}
 <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
         <div class="container">
@@ -39,10 +40,10 @@
             <a class="brand" href="/">Userman</a>
             <div class="nav-collapse">
                 <ul class="nav">
-                    <li><a href="{{ url_for("user.overview") }}">Nutzer</a></li>
-                    <li><a href="{{ url_for("finance.journals") }}">Finanzen</a></li>
-                    <li><a href="{{ url_for("rights.groups") }}">Rechte</a></li>
-                    <li><a href="{{ url_for("infrastructure.rooms") }}">Infrastruktur</a></li>
+                    {{ navigation.topnav_link("user", ".overview", "Nutzer") }}
+                    {{ navigation.topnav_link("finance", ".journals", "Finanzen") }}
+                    {{ navigation.topnav_link("rights", ".groups", "Rechte") }}
+                    {{ navigation.topnav_link("infrastructure", ".rooms", "Infrastruktur") }}
                 </ul>
                 <p class="navbar-text pull-right">Logged in as <a href="#">username</a></p>
             </div><!--/.nav-collapse -->
@@ -51,14 +52,6 @@
 </div>
 
 <div class="container">
-    {% if subnav %}
-    <div class="row">
-        <ul class="nav nav-tabs">
-            {% include subnav %}
-        </ul>
-    </div>
-    {% endif %}
-
     {% block content %}{% endblock %}
 </div> <!-- /container -->
 
