@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-import flask
+from flask import Flask, redirect
 from blueprints import finance, infrastructure, rights, user, housing
 import template_filters
 
@@ -23,7 +23,7 @@ def make_app():
 
     :return: The fully configured app object
     """
-    app = flask.Flask(__name__)
+    app = Flask(__name__)
 
     #initialization code
     app.secret_key = r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
@@ -38,7 +38,7 @@ def make_app():
 
     @app.route('/')
     def redirect_to_index():
-        return flask.redirect('user')
+        return redirect('user')
 
     @app.teardown_request
     def shutdown_session(exception=None):
