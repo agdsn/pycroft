@@ -13,6 +13,7 @@
 
 from flask import Flask
 from blueprints import finance, infrastructure, rights, user, housing
+import template_filters
 
 from pycroft.model.session import session
 
@@ -32,6 +33,8 @@ def make_app():
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(rights.bp, url_prefix="/rights")
     app.register_blueprint(finance.bp, url_prefix="/finance")
+
+    template_filters.register_filters(app)
 
     @app.teardown_request
     def shutdown_session(exception=None):
