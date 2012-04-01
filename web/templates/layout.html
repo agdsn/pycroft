@@ -39,10 +39,10 @@
             <a class="brand" href="/">Userman</a>
             <div class="nav-collapse">
                 <ul class="nav">
-                    <li><a href="/user">Nutzer</a></li>
-                    <li><a href="/finance">Finanzen</a></li>
-                    <li><a href="/rights">Rechte</a></li>
-                    <li><a href="/infrastructure">Infrastruktur</a></li>
+                    <li><a href="{{ url_for("user.overview") }}">Nutzer</a></li>
+                    <li><a href="{{ url_for("finance.journals") }}">Finanzen</a></li>
+                    <li><a href="{{ url_for("rights.groups") }}">Rechte</a></li>
+                    <li><a href="{{ url_for("infrastructure.rooms") }}">Infrastruktur</a></li>
                 </ul>
                 <p class="navbar-text pull-right">Logged in as <a href="#">username</a></p>
             </div><!--/.nav-collapse -->
