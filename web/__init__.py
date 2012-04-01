@@ -12,7 +12,7 @@
 """
 
 from flask import Flask
-from blueprints import finance, infrastructure, rights, user
+from blueprints import finance, infrastructure, rights, user, housing
 
 from pycroft.model.session import session
 
@@ -28,6 +28,7 @@ def make_app():
     app.secret_key = r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
     app.register_blueprint(user.bp, url_prefix="/user")
+    app.register_blueprint(housing.bp, url_prefix="/housing")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(rights.bp, url_prefix="/rights")
     app.register_blueprint(finance.bp, url_prefix="/finance")
