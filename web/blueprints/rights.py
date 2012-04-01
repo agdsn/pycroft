@@ -18,11 +18,11 @@ bp = Blueprint('rights', __name__, )
 
 @bp.route('/groups')
 def groups():
-    return render_template('test.html', page_title = u"Gruppen", subnav = 'nav/rights.html')
+    return render_template('rights/rights_base.html', page_title = u"Gruppen")
 
 
 @bp.route('/rights')
 def rights():
-    return render_template('test.html', page_title = u"Rechte", subnav = 'nav/rights.html')
+    return render_template('rights/rights_base.html', page_title = u"Rechte")
 
 

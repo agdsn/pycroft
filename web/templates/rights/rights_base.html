@@ -1,0 +1,18 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% import "macros/navigation.html" as navigation with context %}
+
+{% block content -%}
+    {% call navigation.nav_tabs() %}
+        {{ navigation.nav_tab_card(".groups", "Gruppen") }}
+        {{ navigation.nav_tab_card(".rights", "Rechte") }}
+    {% endcall %}
+    {% block tabcontent%}
+        <h2>{{ page_title }}</h2>
+    {% endblock %}
+{%- endblock %}
+
