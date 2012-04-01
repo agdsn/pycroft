@@ -9,35 +9,33 @@
 """
 
 from flask import Blueprint, render_template
-from web import app
 
-bp = Blueprint('bp_infrastructure', __name__, )
+bp = Blueprint('infrastructure', __name__, )
 
 
-@bp.route('/infrastructure')
-@bp.route('/infrastructure/rooms')
+@bp.route('/')
+@bp.route('/rooms')
 def rooms():
     return render_template('test.html', page_title = u"Räume", subnav = 'nav/infrastructure.html')
 
 
-@bp.route('/infrastructure/subnets')
+@bp.route('/subnets')
 def subnets():
     return render_template('test.html', page_title = u"Subnetze", subnav = 'nav/infrastructure.html')
 
 
-@bp.route('/infrastructure/switches')
+@bp.route('/switches')
 def switches():
     return render_template('test.html', page_title = u"Switches", subnav = 'nav/infrastructure.html')
 
 
-@bp.route('/infrastructure/vlans')
+@bp.route('/vlans')
 def vlans():
     return render_template('test.html', page_title = u"VLans", subnav = 'nav/infrastructure.html')
 
 
-@bp.route('/infrastructure/dormitories')
+@bp.route('/dormitories')
 def dormitories():
     return render_template('test.html', page_title = u"Wohnheime", subnav = 'nav/infrastructure.html')
 
 
-app.register_blueprint(bp)

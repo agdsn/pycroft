@@ -13,12 +13,14 @@ from sqlalchemy import create_engine
 
 
 class SessionWrapper(object):
-    def __init__(self):
+    def __init__(self, autocommit=False, autoflush=True):
         self._engine = create_engine("sqlite:///test_db.sqlite", echo=False)
-        self._scoped_session = scoped_session(sessionmaker(bind=self._engine))
+        self._scoped_session = scoped_session(sessionmaker(bind=self._engine,
+                                                           autocommit=autocommit,
+                                                           autoflush=autoflush))
 
     def __getattr__(self, item):
-        return getattr(self._scoped_session(), item)
+        return getattr(self._scoped_session, item)
 
     def get_engine(self):
         return self._engine
