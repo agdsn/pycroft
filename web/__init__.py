@@ -8,7 +8,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Flask, redirect
+from flask import Flask, redirect, url_for
 from blueprints import finance, infrastructure, rights, user, housing
 import template_filters
 
@@ -35,7 +35,7 @@ def make_app():
 
     @app.route('/')
     def redirect_to_index():
-        return redirect('user')
+        return redirect(url_for('user.overview'))
 
     @app.teardown_request
     def shutdown_session(exception=None):
