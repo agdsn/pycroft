@@ -1,3 +1,5 @@
 {% macro topnav_link(blueprint_name, endpoint_name, text) -%}
-    <li{% if request.blueprint == blueprint_name %} class="active"{% endif %}><a href="{{ url_for(blueprint_name + endpoint_name) }}">{{ text }}</a></li>
+    <li{% if request.blueprint == blueprint_name %} class="active"{% endif %}>
+        <a href="{{ url_for(blueprint_name + endpoint_name) }}">{{ text }}</a>
+    </li>
 {%- endmacro %}

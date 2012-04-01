@@ -13,12 +13,6 @@ from flask import Blueprint, render_template
 bp = Blueprint('infrastructure', __name__, )
 
 
-@bp.route('/')
-@bp.route('/rooms')
-def rooms():
-    return render_template('test.html', page_title = u"Räume", subnav = 'nav/infrastructure.html')
-
-
 @bp.route('/subnets')
 def subnets():
     return render_template('test.html', page_title = u"Subnetze", subnav = 'nav/infrastructure.html')
@@ -33,9 +27,5 @@ def switches():
 def vlans():
     return render_template('test.html', page_title = u"VLans", subnav = 'nav/infrastructure.html')
 
-
-@bp.route('/dormitories')
-def dormitories():
-    return render_template('test.html', page_title = u"Wohnheime", subnav = 'nav/infrastructure.html')
 
 
