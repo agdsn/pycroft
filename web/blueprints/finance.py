@@ -16,18 +16,18 @@ from flask import Blueprint, render_template
 bp = Blueprint('bp_finance', __name__, )
 
 
-@bp.route('/finance')
-@bp.route('/finance/journals')
+@bp.route('/')
+@bp.route('/journals')
 def journals():
     return render_template('test.html', page_title = u"Journals", subnav = 'nav/finance.html')
 
 
-@bp.route('/finance/accounts')
+@bp.route('/accounts')
 def accounts():
     return render_template('test.html', page_title = u"Konten", subnav = 'nav/finance.html')
 
 
-@bp.route('/finance/transactions')
+@bp.route('/transactions')
 def transactions():
     return render_template('test.html', page_title = u"Transaktionen", subnav = 'nav/finance.html')
 
