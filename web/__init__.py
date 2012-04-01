@@ -35,3 +35,5 @@ def make_app():
 
     return app
 
+from blueprints.user import *
+

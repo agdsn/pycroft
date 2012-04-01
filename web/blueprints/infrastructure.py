@@ -10,7 +10,7 @@
 
 from flask import Blueprint, render_template
 
-bp = Blueprint('bp_infrastructure', __name__, )
+bp = Blueprint('infrastructure', __name__, )
 
 
 @bp.route('/')
