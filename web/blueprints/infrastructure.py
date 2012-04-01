@@ -15,17 +15,17 @@ bp = Blueprint('infrastructure', __name__, )
 
 @bp.route('/subnets')
 def subnets():
-    return render_template('test.html', page_title = u"Subnetze", subnav = 'nav/infrastructure.html')
+    return render_template('infrastructure/infrastructure_base.html', page_title = u"Subnetze")
 
 
 @bp.route('/switches')
 def switches():
-    return render_template('test.html', page_title = u"Switches", subnav = 'nav/infrastructure.html')
+    return render_template('infrastructure/infrastructure_base.html', page_title = u"Switches")
 
 
 @bp.route('/vlans')
 def vlans():
-    return render_template('test.html', page_title = u"VLans", subnav = 'nav/infrastructure.html')
+    return render_template('infrastructure/infrastructure_base.html', page_title = u"VLans")
 
 
 

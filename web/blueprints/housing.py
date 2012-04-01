@@ -16,10 +16,10 @@ bp = Blueprint('housing', __name__, )
 @bp.route('/')
 @bp.route('/rooms')
 def rooms():
-    return render_template('test.html', page_title = u"Räume", subnav = 'nav/infrastructure.html')
+    return render_template('housing/housing_base.html', page_title = u"Räume")
 
 
 @bp.route('/dormitories')
 def dormitories():
-    return render_template('test.html', page_title = u"Wohnheime", subnav = 'nav/infrastructure.html')
+    return render_template('housing/housing_base.html', page_title = u"Wohnheime")
 
