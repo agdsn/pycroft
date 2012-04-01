@@ -9,6 +9,7 @@
 """
 
 from flask import Flask
+from blueprints import finance, infrastructure, rights, user
 
 
 def make_app():
@@ -21,6 +22,10 @@ def make_app():
     #initialization code
     app.secret_key = "eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
+    app.register_blueprint(user.bp)
+    app.register_blueprint(infrastructure.bp)
+    app.register_blueprint(rights.bp)
+    app.register_blueprint(finance.bp)
+
     return app
 
-from blueprints import finance, infrastructure, rights, user

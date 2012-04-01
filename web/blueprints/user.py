@@ -9,7 +9,6 @@
 """
 
 from flask import Blueprint, render_template
-from web import app
 
 bp = Blueprint('bp_user', __name__, )
 
@@ -30,4 +29,3 @@ def search():
     return render_template('test.html', page_title = u"Nutzer Suchen", subnav = 'nav/user.html')
 
 
-app.register_blueprint(bp)

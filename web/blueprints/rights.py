@@ -9,7 +9,6 @@
 """
 
 from flask import Blueprint, render_template
-from web import app
 
 bp = Blueprint('bp_rights', __name__, )
 
@@ -25,4 +24,3 @@ def rights():
     return render_template('test.html', page_title = u"Rechte", subnav = 'nav/rights.html')
 
 
-app.register_blueprint(bp)

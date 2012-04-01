@@ -9,7 +9,6 @@
 """
 
 from flask import Blueprint, render_template
-from web import app
 
 bp = Blueprint('bp_finance', __name__, )
 
@@ -30,4 +29,3 @@ def transactions():
     return render_template('test.html', page_title = u"Transaktionen", subnav = 'nav/finance.html')
 
 
-app.register_blueprint(bp)
