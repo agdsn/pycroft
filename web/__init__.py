@@ -18,6 +18,6 @@ import time
 ### Configurations
 app = Flask(__name__)
 #initialization code
-app.secret_key = str(time.time())
+app.secret_key = "eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
 from blueprints import finance, infrastructure, rights, user
