@@ -23,7 +23,7 @@ class SessionWrapper(object):
                                                            autoflush=autoflush))
 
     def __getattr__(self, item):
-        return getattr(self._scoped_session(), item)
+        return getattr(self._scoped_session, item)
 
     def get_engine(self):
         return self._engine

@@ -13,7 +13,7 @@
 
 from flask import Blueprint, render_template
 
-bp = Blueprint('bp_rights', __name__, )
+bp = Blueprint('rights', __name__, )
 
 
 @bp.route('/groups')
