@@ -1,0 +1,9 @@
+{% extends "housing/housing_base.html" %}
+
+{% block tabcontent %}
+    <ul>
+    {% for house in dormitories %}
+        <li>{{ house }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}
