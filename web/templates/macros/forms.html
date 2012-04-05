@@ -1,22 +1,22 @@
-{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen") %}
+{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen") -%}
     <div class="form-actions">
         <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
         <a href="{{ cancel_to }}" class="btn">{{ cancel_text }}</a>
     </div>
-{% endmacro %}
+{%- endmacro %}
 
 
-{% macro bootstrap_simple_field(field) %}
+{% macro bootstrap_simple_field(field) -%}
     <div class="control-group{% if field.errors %} error{% endif %}">
         {{ field.label(class="control-label") }}
         <div class="controls">
             {{ field }}
-            {% if field.errors %}
+            {% if field.errors -%}
                 <span class="help-inline">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
-            {% endif %}
+            {%- endif %}
         </div>
     </div>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro simple_form(form, submit_to, cancel_to) -%}
     <form method="POST" action="{{ submit_to }}" class="form-horizontal">
