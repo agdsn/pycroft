@@ -14,12 +14,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flaskext.wtf import Form, TextField, validators
 from pycroft.model import dormitory, session
+from web.blueprints import BlueprintNavigation
 
 bp = Blueprint('housing', __name__, )
+nav = BlueprintNavigation(bp, "Wohnheime")
 
 
 @bp.route('/')
 @bp.route('/rooms')
+@nav.navigate(u"Zimmer")
 def rooms():
     return render_template('housing/housing_base.html', page_title = u"Räume")
 
@@ -29,6 +32,7 @@ class DormitoryForm(Form):
     street = TextField(u"Straße", validators=[validators.Length(min=5)])
 
 @bp.route('/dormitories')
+@nav.navigate(u"Häuser")
 def dormitories():
     dormi = dormitory.Dormitory.q.all()
     return render_template('housing/dormitory_list.html',
