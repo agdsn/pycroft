@@ -22,7 +22,7 @@
 {% macro blueprint_element(bp_nav) -%}
     <li class="{{ bp_nav.css_classes|join(" ") }}">
         {%- if bp_nav.dropdown -%}
-            <a  href="#" class="dropdown-toggle" data-toggle="dropdown">{{ bp_nav.text }}</a>
+            <a  href="#" class="dropdown-toggle" data-toggle="dropdown"{% if bp_nav.is_active %} style="background-color: #222"{% endif %}>{{ bp_nav.text }}</a>
         {%- else -%}
             <a  href="{{ url_for(bp_nav.first.endpoint) }}">{{ bp_nav.text }}</a>
         {%- endif -%}
