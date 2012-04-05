@@ -12,16 +12,19 @@
 """
 
 from flask import Blueprint, render_template, flash
+from web.blueprints import BlueprintNavigation
 
 bp = Blueprint('user', __name__, )
-
+nav = BlueprintNavigation(bp, "Nutzer")
 
 @bp.route('/')
+@nav.navigate(u"Übersicht")
 def overview():
     return render_template('user/user_base.html', page_title = u"Übersicht")
 
 
 @bp.route('/new')
+@nav.navigate("Anlegen")
 def create():
     flash("Test1", "info")
     flash("Test2", "warning")
@@ -31,6 +34,7 @@ def create():
 
 
 @bp.route('/search')
+@nav.navigate("Suchen")
 def search():
     return render_template('user/user_base.html', page_title = u"Nutzer Suchen")
 
