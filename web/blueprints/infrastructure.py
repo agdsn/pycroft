@@ -9,21 +9,26 @@
 """
 
 from flask import Blueprint, render_template
+from web.blueprints import BlueprintNavigation
 
 bp = Blueprint('infrastructure', __name__, )
+nav = BlueprintNavigation(bp, "Infrastruktur")
 
 
 @bp.route('/subnets')
+@nav.navigate(u"Subnetze")
 def subnets():
     return render_template('infrastructure/infrastructure_base.html', page_title = u"Subnetze")
 
 
 @bp.route('/switches')
+@nav.navigate(u"Switche")
 def switches():
     return render_template('infrastructure/infrastructure_base.html', page_title = u"Switches")
 
 
 @bp.route('/vlans')
+@nav.navigate(u"Vlans")
 def vlans():
     return render_template('infrastructure/infrastructure_base.html', page_title = u"VLans")
 
