@@ -36,6 +36,12 @@ def make_app():
 
     template_filters.register_filters(app)
 
+    user.nav.register_on(app)
+    finance.nav.register_on(app)
+    housing.nav.register_on(app)
+    infrastructure.nav.register_on(app)
+    rights.nav.register_on(app)
+
     @app.route('/')
     def redirect_to_index():
         return redirect(url_for('user.overview'))
