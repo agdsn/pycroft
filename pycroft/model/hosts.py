@@ -55,3 +55,7 @@ class Switch(Host):
     id = Column(Integer, ForeignKey('host.id'), primary_key=True)
 
     name = Column(String(127), nullable=False)
+
+    #management_ip = Column(postgresql.INET, nullable=False)
+    management_ip = Column(String(51), unique=True, nullable=False)
+
