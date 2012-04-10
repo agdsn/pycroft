@@ -36,7 +36,7 @@ def do_convert():
             if port.ip not in switches:
                 pub_ip = port.ip.replace("10.10", "141.30")
                 hostname = my_session.query(Computer.c_hname.label("hname")).filter(Computer.c_ip == pub_ip).first().hname
-                new_switch = hosts.Switch(hostname=port.ip.split(".")[3], name=hostname)
+                new_switch = hosts.Switch(hostname=port.ip.split(".")[3], name=hostname, management_ip=port.ip)
                 switches[port.ip] = new_switch
             new_swport = ports.SwitchPort(name=port.port, switch=switches[port.ip])
             switch_ports.append(new_swport)
