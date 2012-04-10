@@ -4,13 +4,9 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/navigation.html" as navigation %}
+{% import "macros/navigation.html" as navigation with context %}
 
 {% block content -%}
-    {% call navigation.nav_tabs() %}
-        {{ navigation.nav_tab_card(".rooms", "Räume") }}
-        {{ navigation.nav_tab_card(".dormitories", "Wohnheime") }}
-    {% endcall %}
     {% block tabcontent%}
         <h2>{{ page_title }}</h2>
     {% endblock %}

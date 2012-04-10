@@ -7,11 +7,6 @@
 {% import "macros/navigation.html" as navigation %}
 
 {% block content -%}
-    {% call navigation.nav_tabs() %}
-        {{ navigation.nav_tab_card(".subnets", "Subnetze") }}
-        {{ navigation.nav_tab_card(".switches", "Switches") }}
-        {{ navigation.nav_tab_card(".vlans", "Vlans") }}
-    {% endcall %}
     {% block tabcontent%}
         <h2>{{ page_title }}</h2>
     {% endblock %}
