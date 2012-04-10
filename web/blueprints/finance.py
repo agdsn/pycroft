@@ -19,18 +19,16 @@ nav = BlueprintNavigation(bp, "Finanzen")
 @bp.route('/journals')
 @nav.navigate(u"Journale")
 def journals():
-    return render_template('finance/finance_base.html', page_title = u"Journals")
+    return render_template('finance/base.html', page_title=u"Journals")
 
 
 @bp.route('/accounts')
 @nav.navigate(u"Konten")
 def accounts():
-    return render_template('finance/finance_base.html', page_title = u"Konten")
+    return render_template('finance/base.html', page_title=u"Konten")
 
 
 @bp.route('/transactions')
 @nav.navigate(u"Transaktionen")
 def transactions():
-    return render_template('finance/finance_base.html', page_title = u"Transaktionen")
-
-
+    return render_template('finance/base.html', page_title=u"Transaktionen")

@@ -18,12 +18,10 @@ nav = BlueprintNavigation(bp, "Rechte")
 @bp.route('/groups')
 @nav.navigate(u"Gruppen")
 def groups():
-    return render_template('rights/rights_base.html', page_title = u"Gruppen")
+    return render_template('rights/base.html', page_title=u"Gruppen")
 
 
 @bp.route('/rights')
 @nav.navigate(u"Rechte")
 def rights():
-    return render_template('rights/rights_base.html', page_title = u"Rechte")
-
-
+    return render_template('rights/base.html', page_title=u"Rechte")

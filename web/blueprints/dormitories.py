@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    web.blueprints.infrastructure
+    web.blueprints.dormitories
     ~~~~~~~~~~~~~~
 
-    This module defines view functions for /infrastructure
-
+    This module defines view functions for /dormitories
     :copyright: (c) 2012 by AG DSN.
 """
 
@@ -13,38 +12,34 @@ from flaskext.wtf import Form, TextField, validators
 from pycroft.model import dormitory, session
 from web.blueprints import BlueprintNavigation
 
-bp = Blueprint('housing', __name__, )
+bp = Blueprint('dormitories', __name__, )
 nav = BlueprintNavigation(bp, "Wohnheime")
 
 
 @bp.route('/')
-@bp.route('/rooms')
-@nav.navigate(u"Zimmer")
-def rooms():
-    return render_template('housing/housing_base.html', page_title = u"Räume")
+@nav.navigate(u"Wohnheime")
+def dormitories():
+    dormitories_list = dormitory.Dormitory.q.all()
+    return render_template('dormitories/dormitories_list.html',
+        page_title=u"Wohnheime", dormitories=dormitories_list)
+
 
 class DormitoryForm(Form):
     short_name = TextField(u"Kürzel")
     number = TextField(u"Nummer")
     street = TextField(u"Straße", validators=[validators.Length(min=5)])
 
-@bp.route('/dormitories')
-@nav.navigate(u"Häuser")
-def dormitories():
-    dormi = dormitory.Dormitory.q.all()
-    return render_template('housing/dormitory_list.html',
-                           page_title = u"Wohnheime", dormitories=dormi)
 
-
-@bp.route('/dormitories/new', methods=['GET', 'POST'])
-def dormitory_new():
+@bp.route('/create', methods=['GET', 'POST'])
+@nav.navigate(u"Neues Wohnheim")
+def dormitory_create():
     form = DormitoryForm()
     if form.validate_on_submit():
         myDormitory = dormitory.Dormitory(short_name=form.short_name.data,
             street=form.street.data, number=form.number.data)
         session.session.add(myDormitory)
         session.session.commit()
-        flash('Haus angelegt', 'success')
+        flash('Wohnheim angelegt', 'success')
         return redirect(url_for('.dormitories'))
-    return render_template('housing/dormitory_new.html',
-                           page_title = u"Neues Wohnheim", form=form)
+    return render_template('dormitories/dormitory_create.html',
+                           page_title=u"Neues Wohnheim", form=form)

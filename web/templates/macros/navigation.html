@@ -10,9 +10,11 @@
     </ul>
 {% endmacro %}
 
+
 {% macro nav_tab_card(endpoint, text, active=False) %}
     <li {% if request.endpoint.endswith(endpoint) %} class="active"{% endif %}><a href="{{ url_for(endpoint) }}">{{ text }}</a></li>
 {% endmacro %}
+
 
 {% macro blueprint_element(bp_nav) -%}
     <li class="{{ bp_nav.css_classes|join(" ") }}">
