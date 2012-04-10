@@ -37,7 +37,6 @@ def pretty_category_filter(category):
     return _category_map.get(category, "Hinweis")
 
 
-
 def register_filters(app):
     for name in _filter_registry:
         app.jinja_env.filters[name] = _filter_registry[name]

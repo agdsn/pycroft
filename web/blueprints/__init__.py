@@ -13,6 +13,7 @@
 
 from flask import request
 
+
 class BlueprintNavigation(object):
     """This is the blueprint navigation mechanism.
 
@@ -21,7 +22,7 @@ class BlueprintNavigation(object):
     within the top navigation bar.
 
     The usage is very simple: first you instantiate a `flask.Blueprint`, and
-    a `BlueprintNavigation`. Then write a view function and register it on both:
+    a `BlueprintNavigation`.Then write a view function and register it on both:
 
         my_bp = Blueprint("test", __name__)
         my_nav = BlueprintNavigation(my_bp, "Test")
@@ -71,9 +72,11 @@ class BlueprintNavigation(object):
         :param description: a anchor title.
         """
         def decorator(f):
-            element = self._navigation_item("%s.%s" % (self.blueprint.name, f.__name__),
-                                                text,
-                                                description)
+            element = self._navigation_item(
+                "%s.%s" % (self.blueprint.name, f.__name__),
+                text,
+                description)
+
             self._elements.append(element)
             return f
         return decorator
@@ -146,9 +149,13 @@ class BlueprintNavigation(object):
         """
 
         if self.blueprint.name not in app.blueprints:
-            raise Exception("Blueprint %s is not registred in Flask app" % self.blueprint.name)
+            raise Exception("Blueprint %s is not registred in Flask app" %
+                            self.blueprint.name)
         else:
-            assert app.blueprints[self.blueprint.name] is self.blueprint, "Blueprint resistred as %s in Flask app is not the one you register navigation for!"
+            assert app.blueprints[self.blueprint.name] is self.blueprint, \
+            "Blueprint resistred as %s in Flask app is not the one you " \
+            "register navigation for!"
+
             if "blueprint_navigation" not in app.config:
                 app.config["blueprint_navigation"] = list()
             app.config["blueprint_navigation"].append(self)
