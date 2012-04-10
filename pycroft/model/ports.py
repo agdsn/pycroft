@@ -39,7 +39,7 @@ class PatchPort(Port, ModelBase):
     # many to one from PatchPort to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
     room = relationship("Room", backref=backref("patch_ports",
-        order_by="name"))
+        order_by=Port.name))
 
 
 class PhonePort(DestinationPort):
