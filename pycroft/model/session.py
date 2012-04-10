@@ -17,7 +17,7 @@ from sqlalchemy import create_engine
 
 class SessionWrapper(object):
     def __init__(self, autocommit=False, autoflush=True):
-        self._engine = create_engine("sqlite:///test_db.sqlite", echo=False)
+        self._engine = create_engine("sqlite:////tmp/test.db", echo=False)
         self._scoped_session = scoped_session(sessionmaker(bind=self._engine,
                                                            autocommit=autocommit,
                                                            autoflush=autoflush))
