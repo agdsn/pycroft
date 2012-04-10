@@ -4,6 +4,7 @@
     </li>
 {%- endmacro %}
 
+
 {% macro nav_tabs() %}
     <ul class="nav nav-tabs">
         {{ caller() }}
@@ -33,3 +34,9 @@
     </li>
 {%- endmacro %}
 
+
+{% macro breadcrumbs() -%}
+    <li class="active">
+        <a href="#">Breadcrumb</a> <span class="divider">/</span>
+    </li>
+{%- endmacro %}

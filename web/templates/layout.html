@@ -7,13 +7,7 @@
 
     <!-- Le styles -->
     <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
-    {# do we need this really: <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap-responsive.min.css") }}"> #}
     <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
-    <style>
-        body {
-            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-        }
-    </style>
 
     <!-- Le fav icon -->
     <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}">​
@@ -43,6 +37,10 @@
 </div>
 
 <div class="container">
+    <ul class="breadcrumb">
+        {{ navigation.breadcrumbs() }}
+    </ul>
+
     {% with messages = get_flashed_messages(with_categories=true) -%}
         {% if messages -%}
             {% for category, message in messages -%}
