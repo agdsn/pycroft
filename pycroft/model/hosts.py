@@ -24,6 +24,8 @@ from pycroft.model.dormitory import Room
 
 class Host(ModelBase):
     hostname = Column(String(255), nullable=False)
+    discriminator = Column('type', String(50))
+    __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
     user = relationship(User, backref=backref("hosts"))
@@ -47,9 +49,12 @@ class NetDevice(ModelBase):
     patch_port = relationship("PatchPort", backref=backref("net_device",
                                                           uselist=False))
 
+    host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
+    host = relationship("Host", backref=backref("net_devices"))
+
 
 class Switch(Host):
-    # Concrete Table Inheritance
-    __mapper_args__ = {"concrete": True}
+    __mapper_args__ = {'polymorphic_identity': 'switch'}
+    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
 
     name = Column(String(127), nullable=False)
