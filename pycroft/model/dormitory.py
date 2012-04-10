@@ -16,8 +16,8 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Boolean, Integer
-from sqlalchemy.types import String
+from sqlalchemy.types import Boolean, Integer, String, Enum
+import ipaddr
 
 
 association_table_dormitory_vlan = Table('association_dormitory_vlan',
@@ -66,12 +66,24 @@ class Room(ModelBase):
 
 class Subnet(ModelBase):
     #address = Column(postgresql.INET, nullable=False)
-    address = Column(String(48), nullable=False)
+    address = Column(String(51), nullable=False)
+    #gateway = Column(postgresql.INET, nullable=False)
+    gateway = Column(String(51), nullable=False)
+    dns_domain = Column(String)
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
                             backref=backref("subnets"),
                             secondary=association_table_subnet_vlan)
+
+    @property
+    def netmask(self):
+        net = ipaddr.IPNetwork(self.address)
+        return str(net.netmask)
+
+    @property
+    def ip_version(self):
+        return ipaddr.IPNetwork(self.address).version
 
 
 class VLan(ModelBase):
