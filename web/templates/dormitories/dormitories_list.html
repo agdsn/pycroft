@@ -5,10 +5,10 @@
 #}
 {% extends "dormitories/base.html" %}
 
-{% block tabcontent %}
+{% block basecontent %}
     <ul>
-    {% for house in dormitories %}
-        <li><a href="{{ url_for(".dormitory_show", dormitory_id=house.id) }}">{{ house.short_name }}</a></li>
+    {% for dormitory in dormitories %}
+        <li><a href="{{ url_for(".dormitory_show", dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
     {% endfor %}
     </ul>
 {% endblock %}

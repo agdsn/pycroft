@@ -7,6 +7,10 @@ body {
     padding-top: 40px;
 }
 
+h2 {
+    margin-bottom: 1em;
+}
+
 .dropdown:hover .dropdown-menu {
     display: block;
 }

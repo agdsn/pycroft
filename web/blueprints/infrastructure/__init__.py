@@ -21,19 +21,16 @@ nav = BlueprintNavigation(bp, "Infrastruktur")
 @bp.route('/subnets')
 @nav.navigate(u"Subnetze")
 def subnets():
-    return render_template('infrastructure/base.html',
-        page_title=u"Subnetze")
+    return render_template('infrastructure/base.html')
 
 
 @bp.route('/switches')
 @nav.navigate(u"Switche")
 def switches():
-    return render_template('infrastructure/base.html',
-        page_title=u"Switches")
+    return render_template('infrastructure/base.html')
 
 
 @bp.route('/vlans')
 @nav.navigate(u"Vlans")
 def vlans():
-    return render_template('infrastructure/base.html',
-        page_title=u"VLans")
+    return render_template('infrastructure/base.html')
