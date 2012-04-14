@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import request
+from flask import request, url_for
 
 
 class BlueprintNavigation(object):
@@ -111,6 +111,14 @@ class BlueprintNavigation(object):
         :return: True if active, False else.
         """
         return self.blueprint.name == request.blueprint
+
+    @property
+    def get_page_title(self):
+        """Returns the active element of the instance, or nil"""
+
+        for element in self._elements:
+            if url_for(element["endpoint"]) == request.path:
+                return element["text"]
 
     @property
     def first(self):

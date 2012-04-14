@@ -39,6 +39,25 @@
     </li>
 {%- endmacro %}
 
+{% macro get_page_title(config) -%}
+    {%- if page_title -%}
+        {{ page_title }}
+    {%- else -%}
+        {%- for navigation in config.blueprint_navigation -%}
+            {%- if navigation.is_active -%}
+                {{ navigation.get_page_title }}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+{%- endmacro %}
+
+{% macro get_blueprint_title(config) -%}
+    {%- for navigation in config.blueprint_navigation -%}
+        {%- if navigation.is_active -%}
+            {{ navigation.text }}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endmacro %}
 
 {% macro breadcrumbs() -%}
     <li class="active">

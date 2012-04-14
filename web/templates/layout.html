@@ -3,11 +3,13 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+{% import "macros/navigation.html" as navigation with context %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="utf-8">​
-    <title>Userman – {{ page_title }}</title>
+    <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config) -}}
+    </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Le styles -->
@@ -22,8 +24,6 @@
 
 <!-- Navbar
     ================================================== -->
-{% import "macros/navigation.html" as navigation with context %}
-
 
 <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
