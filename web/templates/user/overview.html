@@ -1,0 +1,9 @@
+{% extends "user/base.html" %}
+
+{% block basecontent %}
+    <ul>
+    {% for dormitory in dormitories %}
+        <li>{{ dormitory }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

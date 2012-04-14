@@ -1,9 +1,8 @@
 {% extends "layout.html" %}
-{% import "macros/navigation.html" as navigation with context %}
 
 {% block content -%}
-    {% block tabcontent%}
-        <h2>{{ page_title }}</h2>
+    <h2>{{ navigation.get_page_title(config) }}</h2>
+    {% block basecontent%}
     {% endblock %}
 {%- endblock %}
 
