@@ -11,7 +11,7 @@
 """
 
 from flask import Blueprint, render_template, redirect, url_for, flash
-from flaskext.wtf import Form, TextField, validators, BooleanField
+from flaskext.wtf import Form, TextField, validators, BooleanField, SubmitField
 from pycroft.model import dormitory, session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints import BlueprintNavigation
@@ -54,6 +54,11 @@ def dormitory_create():
     return render_template('dormitories/dormitory_create.html',
                            page_title=u"Neues Wohnheim", form=form)
 
+@bp.route('/room/delete/<room_id>')
+def room_delete(room_id):
+    dormitory.Room.q.filter(Room.id == room_id).delete(synchronize_session='fetch')
+    session.session.commit()
+    return redirect(url_for('.dormitories'))
 
 @bp.route('/room/show/<room_id>')
 def room_show(room_id):
