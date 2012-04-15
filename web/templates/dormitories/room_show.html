@@ -7,8 +7,9 @@
 
 {% block tabcontent %}
     <ul>
-    {% for house in dormitories %}
-        <li><a href="{{ url_for(".dormitory_show", dormitory_short_name=house.short_name) }}">{{ house.short_name }}</a></li>
-    {% endfor %}
+        <li>Nummer: {{ room[0].number }}</li>
+        <li>Etage: {{ room[0].level }}</li>
+        <li>Bewohnbar: {{ room[0].inhabitable }}</li>
+        <li>Wohnheim: {{ room[0].dormitory_id }}</li>
     </ul>
 {% endblock %}
