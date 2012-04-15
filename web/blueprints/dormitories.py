@@ -8,7 +8,7 @@
 """
 
 from flask import Blueprint, render_template, redirect, url_for, flash
-from flaskext.wtf import Form, TextField, validators, BooleanField, SubmitField
+from flaskext.wtf import Form, TextField, validators, BooleanField, QuerySelectField
 from pycroft.model import dormitory, session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints import BlueprintNavigation
@@ -55,6 +55,7 @@ def dormitory_create():
 def room_delete(room_id):
     dormitory.Room.q.filter(Room.id == room_id).delete(synchronize_session='fetch')
     session.session.commit()
+    flash('Raum gelöscht', 'success')
     return redirect(url_for('.dormitories'))
 
 @bp.route('/room/show/<room_id>')
@@ -63,18 +64,21 @@ def room_show(room_id):
     return render_template('dormitories/room_show.html',
         page_title=u"Raum "+room_id, room=room_list)
 
+def dormitory_query():
+    return dormitory.Dormitory.q
+
 class RoomForm(Form):
     number = TextField(u"Nummer")
     level = TextField(u"Etage")
     inhabitable = BooleanField(u"Bewohnbar")
-    dormitory_id = TextField(u'Wohnheim')
+    dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name', query_factory=dormitory_query)
 
 @bp.route('/room/create', methods=['GET', 'POST'])
 @nav.navigate(u"Neuer Raum")
 def room_create():
     form = RoomForm()
     if form.validate_on_submit():
-        myRoom = dormitory.Room(number=form.number.data, level=form.level.data, inhabitable=form.inhabitable.data, dormitory_id=form.dormitory_id.data)
+        myRoom = dormitory.Room(number=form.number.data, level=form.level.data, inhabitable=form.inhabitable.data, dormitory_id=form.dormitory_id.data.id)
         session.session.add(myRoom)
         session.session.commit()
         flash('Raum angelegt', 'success')
