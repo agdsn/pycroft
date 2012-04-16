@@ -1,0 +1,11 @@
+Flask>=0.8
+Flask-WTF>=0.6
+Jinja2>=2.6
+MySQL-python>=1.2.3
+PyMySQL>=0.5
+SQLAlchemy>=0.7.6
+WTForms>=1.0.1
+Werkzeug>=0.8.3
+ipaddr>=2.1.10
+pysqlite>=2.6.3
+wsgiref>=0.1.2
