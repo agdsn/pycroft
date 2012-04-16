@@ -24,11 +24,11 @@ def dormitories():
     return render_template('dormitories/dormitories_list.html',
         page_title=u"Wohnheime", dormitories=dormitories_list)
 
-@bp.route('/show/<dormitory_short_name>')
-def dormitory_show(dormitory_short_name):
-    rooms_list = dormitory.Room.q.join(Dormitory).filter(Dormitory.short_name == dormitory_short_name).all()
+@bp.route('/show/<dormitory_id>')
+def dormitory_show(dormitory_id):
+    rooms_list = dormitory.Room.q.join(Dormitory).filter(Dormitory.id == dormitory_id).all()
     return render_template('dormitories/dormitory_show.html',
-        page_title=u"Wohnheim "+dormitory_short_name, rooms=rooms_list)
+        page_title=u"Wohnheim", rooms=rooms_list)
 
 
 class DormitoryForm(Form):
