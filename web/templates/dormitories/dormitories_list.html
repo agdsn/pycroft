@@ -8,7 +8,7 @@
 {% block tabcontent %}
     <ul>
     {% for house in dormitories %}
-        <li><a href="{{ url_for(".dormitory_show", dormitory_short_name=house.short_name) }}">{{ house.short_name }}</a></li>
+        <li><a href="{{ url_for(".dormitory_show", dormitory_id=house.id) }}">{{ house.short_name }}</a></li>
     {% endfor %}
     </ul>
 {% endblock %}
