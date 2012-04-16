@@ -8,10 +8,10 @@
 """
 
 from flask import Blueprint, render_template, redirect, url_for, flash
-from flaskext.wtf import Form, TextField, validators, BooleanField, QuerySelectField
 from pycroft.model import dormitory, session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints import BlueprintNavigation
+from web.blueprints.dormitories.forms import RoomForm, DormitoryForm
 
 bp = Blueprint('dormitories', __name__, )
 nav = BlueprintNavigation(bp, "Wohnheime")
@@ -24,17 +24,12 @@ def dormitories():
     return render_template('dormitories/dormitories_list.html',
         page_title=u"Wohnheime", dormitories=dormitories_list)
 
+
 @bp.route('/show/<dormitory_id>')
 def dormitory_show(dormitory_id):
     rooms_list = dormitory.Room.q.join(Dormitory).filter(Dormitory.id == dormitory_id).all()
     return render_template('dormitories/dormitory_show.html',
         page_title=u"Wohnheim", rooms=rooms_list)
-
-
-class DormitoryForm(Form):
-    short_name = TextField(u"Kürzel")
-    number = TextField(u"Nummer")
-    street = TextField(u"Straße", validators=[validators.Length(min=5)])
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -49,7 +44,8 @@ def dormitory_create():
         flash('Wohnheim angelegt', 'success')
         return redirect(url_for('.dormitories'))
     return render_template('dormitories/dormitory_create.html',
-                           page_title=u"Neues Wohnheim", form=form)
+        page_title=u"Neues Wohnheim", form=form)
+
 
 @bp.route('/room/delete/<room_id>')
 def room_delete(room_id):
@@ -58,20 +54,13 @@ def room_delete(room_id):
     flash('Raum gelöscht', 'success')
     return redirect(url_for('.dormitories'))
 
+
 @bp.route('/room/show/<room_id>')
 def room_show(room_id):
     room_list = dormitory.Room.q.filter(Room.id == room_id).all()
     return render_template('dormitories/room_show.html',
         page_title=u"Raum "+room_id, room=room_list)
 
-def dormitory_query():
-    return dormitory.Dormitory.q
-
-class RoomForm(Form):
-    number = TextField(u"Nummer")
-    level = TextField(u"Etage")
-    inhabitable = BooleanField(u"Bewohnbar")
-    dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name', query_factory=dormitory_query)
 
 @bp.route('/room/create', methods=['GET', 'POST'])
 @nav.navigate(u"Neuer Raum")
