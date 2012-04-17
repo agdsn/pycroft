@@ -1,0 +1,9 @@
+{% extends "user/base.html" %}
+
+{% block basecontent %}
+    <div>
+    {%- for foor in floors %}
+        <div class="row"><a class="btn btn-primary btn-large">{{ foor }}</a></div>
+    {%- endfor %}
+    </div>
+{% endblock %}
