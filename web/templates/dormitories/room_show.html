@@ -6,12 +6,11 @@
 {% extends "dormitories/base.html" %}
 
 {% block tabcontent %}
-    <ul>
+    <ul class="showList">
         <li>Nummer: {{ room[0].number }}</li>
         <li>Etage: {{ room[0].level }}</li>
         <li>Bewohnbar: {{ room[0].inhabitable }}</li>
         <li>Wohnheim: {{ room[0].dormitory_id }}</li>
-        <br>
-        <a href="{{ url_for('.room_delete', room_id=room[0].id) }}" class="btn">Löschen</a>
     </ul>
+    <div><a href="{{ url_for('.room_delete', room_id=room[0].id) }}" class="btn">Löschen</a></div>
 {% endblock %}
