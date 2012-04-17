@@ -1,0 +1,19 @@
+{% extends "user/base.html" %}
+
+{% import "macros/forms.html" as forms %}
+{% block tabcontent %}
+    {{ forms.simple_form(form, '', url_for('.search')  ) }}
+
+    <ul class="showList">
+        {% for id_result in result_id %}
+            <li>{{ id_result.id }} - {{ id_result.name }} ({{ id_result.login }})</li>
+        {% endfor %}
+        {% for user in result_name %}
+            <li>{{ user.id }} - {{ user.name }} ({{ user.login }})</li>
+        {% endfor %}
+        {% for user in result_login %}
+            <li>{{ user.id }} - {{ user.name }} ({{ user.login }})</li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
