@@ -15,7 +15,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for
 from pycroft.model import user, session
 from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
-from web.blueprints.user.forms import UserCreateForm
+from web.blueprints.user.forms import UserSearchForm, UserCreateForm
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -26,7 +26,7 @@ nav = BlueprintNavigation(bp, "Nutzer")
 def overview():
     user_list = user.User.q.all()
     return render_template('user/user_list.html',
-        page_title=u"Nutzerübersicht", users=user_list)
+                           page_title=u"Nutzerübersicht", users=user_list)
 
 
 @bp.route('/show/<user_id>')
@@ -53,7 +53,24 @@ def create():
         page_title=u"Neuer Nutzer", form=form)
 
 
-@bp.route('/search')
+@bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate("Suchen")
 def search():
-    return render_template('user/base.html', page_title=u"Nutzer Suchen")
+    form = UserSearchForm()
+    if form.validate_on_submit():
+        # Check: with_entities
+        #userResult = user.User.q.with_entities()
+        userResult_id = user.User.q.filter(User.id.like(form.userid.data))\
+        .all()
+        userResult_name = user.User.q.filter(User.name.like('%' + form.name\
+        .data + '%')).all()
+        userResult_login = user.User.q.filter(User.login.like(form.login
+        .data)).all()
+        return render_template('user/user_search.html',
+                               page_title=u"Nutzer Suchergebnis",
+                               result_id=userResult_id,
+                               result_name=userResult_name,
+                               result_login=userResult_login,
+                               form=form)
+    return render_template('user/user_search.html',
+                           page_title=u"Nutzer Suchen", form=form)
