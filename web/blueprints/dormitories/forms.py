@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-from flaskext.wtf import Form, TextField, validators, BooleanField, QuerySelectField
+from flaskext.wtf import Form, TextField, validators, BooleanField, \
+    QuerySelectField
 from pycroft.model.dormitory import Dormitory
 
 
 def dormitory_query():
     return Dormitory.q.order_by(Dormitory.short_name)
+
 
 class RoomForm(Form):
     number = TextField(u"Nummer")

@@ -25,6 +25,7 @@ def sort_key(dormitory):
 
     return key
 
+
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
@@ -35,11 +36,13 @@ def overview():
     return render_template('user/overview.html',
         dormitories=dormitories_list)
 
+
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_floors(dormitory_id):
-    floors_list = ["dummy 1","dummy 2", "dummy 3"]
+    floors_list = ["dummy 1", "dummy 2", "dummy 3"]
     return render_template('user/floors.html',
         floors=floors_list, page_title=u"Etagen Wohnheim XY")
+
 
 @bp.route('/create')
 @nav.navigate("Anlegen")

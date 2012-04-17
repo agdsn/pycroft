@@ -1,6 +1,6 @@
 {% extends "dormitories/base.html" %}
 
-{% block tabcontent %}
+{% block basecontent %}
     <ul>
         {% for room in rooms %}
             <a href="{{ url_for('.room_show', room_id=room.id) }}">Raum: {{ room.id }}</a>
