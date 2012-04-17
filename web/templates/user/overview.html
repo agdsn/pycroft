@@ -6,9 +6,19 @@
 {% extends "user/base.html" %}
 
 {% block basecontent %}
-    <ul>
-    {% for dormitory in dormitories %}
-        <li>{{ dormitory }}</li>
-    {% endfor %}
-    </ul>
+    <div class="overview">
+    <div class="row">
+    {%- for dormitory in dormitories %}
+        <div class="span4">
+            <a href="{{url_for('user.overview')}}dormitory/{{ dormitory.id }}" class="btn btn-primary btn-large">
+                {{- dormitory.street }} {{ dormitory.number -}}
+            </a>
+        </div>
+    {%- if loop.index%3 == 0 %}
+    </div>
+    <div class="row">
+    {% endif -%}
+    {%- endfor %}
+    </div>
+    </div>
 {% endblock %}
