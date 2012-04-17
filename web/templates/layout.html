@@ -4,21 +4,14 @@
     <meta charset="utf-8">​
     <title>Userman – {{ page_title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Le styles -->
     <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
     <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
-
-    <!-- Le fav icon -->
     <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}">​
 </head>
 
 <body>
 
-<!-- Navbar
-    ================================================== -->
 {% import "macros/navigation.html" as navigation with context %}
-
 
 <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">

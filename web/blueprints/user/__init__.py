@@ -9,6 +9,8 @@
 """
 
 from flask import Blueprint, render_template, flash
+from pycroft.model import user, session
+from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
 
 bp = Blueprint('user', __name__, )
@@ -18,7 +20,17 @@ nav = BlueprintNavigation(bp, "Nutzer")
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    return render_template('user/base.html', page_title=u"Übersicht")
+    user_list = user.User.q.all()
+    return render_template('user/user_list.html',
+                           page_title=u"Nutzerübersicht", users=user_list)
+
+
+@bp.route('/show/<user_id>')
+def user_show(user_id):
+    user_list = user.User.q.filter(User.id == user_id).all()
+    return render_template('user/user_show.html',
+                           page_title=u"Nutzer anzeigen: "+user_id,
+                           user=user_list)
 
 
 @bp.route('/create')

@@ -5,3 +5,7 @@ body {
 .dropdown:hover .dropdown-menu {
     display: block;
 }
+
+ul.showList {
+    list-style-type: none;
+}
