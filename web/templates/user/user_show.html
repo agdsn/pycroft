@@ -1,7 +1,7 @@
 {% extends "user/base.html" %}
 
-{% block tabcontent %}
-    <ul class="showList">
+{% block basecontent %}
+    <ul class="unstyled">
         <li>Name: {{ user[0].name }} ({{ user[0].id }})</li>
         <li>Login: {{ user[0].login }}</li>
         <li>Registriert seit: {{ user[0].registration_date }}</li>
