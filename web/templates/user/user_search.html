@@ -20,7 +20,7 @@
                         {% for result in results %}
                             <tr>
                             <td>{{ result.id }}</td>
-                            <td>{{ result.name }}</td>
+			    <td><a href="{{ url_for('.user_show', user_id=result.id) }}">{{ result.name }}</a></td>
                             <td>{{ result.login }}</td>
                             </tr>
                         {% endfor %}
