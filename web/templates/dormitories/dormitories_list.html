@@ -6,7 +6,7 @@
 {% extends "dormitories/base.html" %}
 
 {% block basecontent %}
-    <ul>
+    <ul class="unstyled">
     {% for dormitory in dormitories %}
         <li><a href="{{ url_for(".dormitory_show", dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
     {% endfor %}

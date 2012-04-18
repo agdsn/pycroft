@@ -6,6 +6,6 @@
 {% extends "user/base.html" %}
 
 {% import "macros/forms.html" as forms %}
-{% block tabcontent %}
+{% block basecontent %}
     {{ forms.simple_form(form, '', url_for('.create')  ) }}
 {% endblock %}
