@@ -86,8 +86,8 @@ def search():
             .data + '%'))
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
-        return render_template('user/user_search.html',
-                               page_title=u"Nutzer Suchergebnis",
+	if len(userResult.all()) == 0:
+	    flash('Benutzer nicht gefunden', 'error')
+        return render_template('user/user_search.html', page_title=u"Suchergebnis",
                                results=userResult.all(), form=form)
-    return render_template('user/user_search.html',
-                           page_title=u"Nutzer Suchen", form=form)
+    return render_template('user/user_search.html', form=form)
