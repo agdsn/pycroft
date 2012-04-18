@@ -10,11 +10,11 @@
 {% endblock %}
 
 {% block content %}
-    <form method="post" action="{{url_for('new_user')}}">
+    <form method="post" action="">
         <div>Name: <input type="text" name="newuser_name"></div>
         <div>Pass: <input type="text" name="newuser_pass"></div>
-        <div><button type="submit" style="border: 1px solid black; ">Nutzer anlegen</button> 
-            <button type="reset" style="border: 1px solid black;">Reset</button></div>
+        <div><button type="submit" class"btn">Nutzer anlegen</button> 
+            <button type="reset" class"btn">Reset</button></div>
     </form>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
