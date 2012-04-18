@@ -60,17 +60,16 @@ def search():
     if form.validate_on_submit():
         # Check: with_entities
         #userResult = user.User.q.with_entities()
-        userResult_id = user.User.q.filter(User.id.like(form.userid.data))\
-        .all()
-        userResult_name = user.User.q.filter(User.name.like('%' + form.name\
-        .data + '%')).all()
-        userResult_login = user.User.q.filter(User.login.like(form.login
-        .data)).all()
+        userResult = user.User.q
+        if len(form.userid.data):
+            userResult = userResult.filter(User.id == form.userid.data)
+        if len(form.name.data):
+            userResult = userResult.filter(User.name.like('%' + form.name\
+            .data + '%'))
+        if len(form.login.data):
+            userResult = userResult.filter(User.login == form.login.data)
         return render_template('user/user_search.html',
                                page_title=u"Nutzer Suchergebnis",
-                               result_id=userResult_id,
-                               result_name=userResult_name,
-                               result_login=userResult_login,
-                               form=form)
+                               results=userResult.all(), form=form)
     return render_template('user/user_search.html',
                            page_title=u"Nutzer Suchen", form=form)
