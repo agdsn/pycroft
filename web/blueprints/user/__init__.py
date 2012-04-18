@@ -11,8 +11,11 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template, flash
+from flask import Blueprint, render_template, flash, redirect, url_for
+from pycroft.model import user, session
+from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
+from web.blueprints.user.forms import UserSearchForm, UserCreateForm
 from pycroft.model import dormitory
 
 bp = Blueprint('user', __name__, )
@@ -39,6 +42,12 @@ def overview():
     return render_template('user/overview.html',
         dormitories=dormitories_list)
 
+@bp.route('/show/<user_id>')
+def user_show(user_id):
+    user_list = user.User.q.filter(User.id == user_id).all()
+    return render_template('user/user_show.html',
+        page_title=u"Nutzer anzeigen: " + user_id,
+        user=user_list)
 
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_floors(dormitory_id):
@@ -46,18 +55,39 @@ def dormitory_floors(dormitory_id):
     return render_template('user/floors.html',
         floors=floors_list, page_title=u"Etagen Wohnheim XY")
 
-
-@bp.route('/create')
+@bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate("Anlegen")
 def create():
-    flash("Test1", "info")
-    flash("Test2", "warning")
-    flash("Test3", "error")
-    flash("Test4", "success")
-    return render_template('user/base.html')
+    form = UserCreateForm()
+    if form.validate_on_submit():
+        myUser = user.User(login=form.login.data,
+            name=form.name.data, registration_date=form.registration_date.data,
+            room_id=form.room_id.data)
+        session.session.add(myUser)
+        session.session.commit()
+        flash('Benutzer angelegt', 'success')
+        return redirect(url_for('.overview'))
+    return render_template('user/user_create.html',
+        page_title=u"Neuer Nutzer", form=form)
 
 
-@bp.route('/search')
+@bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate("Suchen")
 def search():
-    return render_template('user/base.html')
+    form = UserSearchForm()
+    if form.validate_on_submit():
+        # Check: with_entities
+        #userResult = user.User.q.with_entities()
+        userResult = user.User.q
+        if len(form.userid.data):
+            userResult = userResult.filter(User.id == form.userid.data)
+        if len(form.name.data):
+            userResult = userResult.filter(User.name.like('%' + form.name\
+            .data + '%'))
+        if len(form.login.data):
+            userResult = userResult.filter(User.login == form.login.data)
+        return render_template('user/user_search.html',
+                               page_title=u"Nutzer Suchergebnis",
+                               results=userResult.all(), form=form)
+    return render_template('user/user_search.html',
+                           page_title=u"Nutzer Suchen", form=form)
