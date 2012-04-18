@@ -1,21 +1,6 @@
-{% extends "layout.html" %}
+{% extends "user/base.html" %}
 
-{% block pagetitle %}
-    Neuer Nutzer
-{% endblock %}
-
-{% block content %}
-    <form method="post" action="">
-        <div>Name: <input type="text" name="newuser_name"></div>
-        <div>Pass: <input type="text" name="newuser_pass"></div>
-        <div><button type="submit" class"btn">Nutzer anlegen</button> 
-            <button type="reset" class"btn">Reset</button></div>
-    </form>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+{% import "macros/forms.html" as forms %}
+{% block tabcontent %}
+    {{ forms.simple_form(form, '', url_for('.create')  ) }}
 {% endblock %}

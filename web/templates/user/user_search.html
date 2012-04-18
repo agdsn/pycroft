@@ -2,18 +2,29 @@
 
 {% import "macros/forms.html" as forms %}
 {% block tabcontent %}
-    {{ forms.simple_form(form, '', url_for('.search')  ) }}
 
-    <ul class="showList">
-        {% for id_result in result_id %}
-            <li>{{ id_result.id }} - {{ id_result.name }} ({{ id_result.login }})</li>
-        {% endfor %}
-        {% for user in result_name %}
-            <li>{{ user.id }} - {{ user.name }} ({{ user.login }})</li>
-        {% endfor %}
-        {% for user in result_login %}
-            <li>{{ user.id }} - {{ user.name }} ({{ user.login }})</li>
-        {% endfor %}
-    </ul>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span6">
+                {{ forms.simple_form(form, '', url_for('.search')) }}
+            </div>
+            <div class="span6">
+                {% if results %}
+                    <table class="table table-striped">
+                    <thead><tr><td>ID</td><td>Name</td><td>Login</td></tr></thead>
+                        {% for result in results %}
+                            <tr>
+                            <td>{{ result.id }}</td>
+                            <td>{{ result.name }}</td>
+                            <td>{{ result.login }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
 
 {% endblock %}
