@@ -1,0 +1,35 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "user/base.html" %}
+
+{% import "macros/forms.html" as forms %}
+{% block tabcontent %}
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span6">
+                {{ forms.simple_form(form, '', url_for('.search')) }}
+            </div>
+            <div class="span6">
+                {% if results %}
+                    <table class="table table-striped">
+                    <thead><tr><td>ID</td><td>Name</td><td>Login</td></tr></thead>
+                        {% for result in results %}
+                            <tr>
+                            <td>{{ result.id }}</td>
+                            <td>{{ result.name }}</td>
+                            <td>{{ result.login }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}

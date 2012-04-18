@@ -5,7 +5,11 @@
 #}
 {% extends "user/base.html" %}
 
-{% import "macros/forms.html" as forms %}
 {% block tabcontent %}
-    {{ forms.simple_form(form, '', url_for('.create')  ) }}
+    <ul class="showList">
+        {% for user in users %}
+            <li><a href="{{ url_for(".user_show", user_id = user.id) }}">{{
+                    user.name }}</a> ({{ user.login }})</li>
+        {% endfor %}
+    </ul>
 {% endblock %}

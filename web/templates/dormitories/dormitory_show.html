@@ -8,7 +8,8 @@
 {% block basecontent %}
     <ul>
         {% for room in rooms %}
-            <a href="{{ url_for('.room_show', room_id=room.id) }}">Raum: {{ room.id }}</a>
+            <li><a href="{{ url_for('.room_show', room_id=room.id) }}">Raum:
+                {{ room.id }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}
