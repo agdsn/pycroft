@@ -17,6 +17,7 @@ from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm
 from pycroft.model import dormitory
+import datetime
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -61,8 +62,7 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         myUser = user.User(login=form.login.data,
-            name=form.name.data, registration_date=form.registration_date.data,
-            room_id=form.room_id.data)
+            name=form.name.data, room_id=form.room_id.data, registration_date=datetime.datetime.now())
         session.session.add(myUser)
         session.session.commit()
         flash('Benutzer angelegt', 'success')
