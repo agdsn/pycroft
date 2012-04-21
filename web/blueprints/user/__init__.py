@@ -17,7 +17,7 @@ from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm
 from pycroft.model import dormitory
-import datetime
+import datetime, random
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -43,6 +43,7 @@ def overview():
     return render_template('user/overview.html',
         dormitories=dormitories_list)
 
+
 @bp.route('/show/<user_id>')
 def user_show(user_id):
     user_list = user.User.q.filter(User.id == user_id).all()
@@ -50,11 +51,22 @@ def user_show(user_id):
         page_title=u"Nutzer anzeigen: " + user_id,
         user=user_list)
 
+
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_floors(dormitory_id):
     floors_list = ["dummy 1", "dummy 2", "dummy 3"]
     return render_template('user/floors.html',
         floors=floors_list, page_title=u"Etagen Wohnheim XY")
+
+
+def generate_Password():
+    ZEICHEN = "abcdefghijklmnopqrstuvwxyz!$%&()=.,:;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    PASSWORD_LENGTH = 8
+    password = ""
+    for i in range(PASSWORD_LENGTH):
+        password = password + ZEICHEN[random.choice(range(len(ZEICHEN)))]
+    return password
+
 
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate("Anlegen")
@@ -62,7 +74,8 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         myUser = user.User(login=form.login.data,
-            name=form.name.data, room_id=form.room_id.data, registration_date=datetime.datetime.now())
+            name=form.name.data, room_id=form.room_id.data,
+            registration_date=datetime.datetime.now())
         session.session.add(myUser)
         session.session.commit()
         flash('Benutzer angelegt', 'success')
@@ -86,8 +99,9 @@ def search():
             .data + '%'))
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
-	if len(userResult.all()) == 0:
-	    flash('Benutzer nicht gefunden', 'error')
-        return render_template('user/user_search.html', page_title=u"Suchergebnis",
-                               results=userResult.all(), form=form)
+        if len(userResult.all()) == 0:
+            flash('Benutzer nicht gefunden', 'error')
+        return render_template('user/user_search.html',
+            page_title=u"Suchergebnis",
+            results=userResult.all(), form=form)
     return render_template('user/user_search.html', form=form)
