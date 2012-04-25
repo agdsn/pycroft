@@ -4,3 +4,4 @@
 .idea/misc.xml
 .idea/Pycroft.iml
 *.DS_Store
+*.orig
