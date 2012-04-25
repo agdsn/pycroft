@@ -80,8 +80,6 @@ def create():
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
-        # Check: with_entities
-        #userResult = user.User.q.with_entities()
         userResult = user.User.q
         if len(form.userid.data):
             userResult = userResult.filter(User.id == form.userid.data)
