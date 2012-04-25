@@ -5,12 +5,15 @@ from flaskext.wtf import Form, TextField, QuerySelectField, PasswordField, \
     DateField, BooleanField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
+from pycroft.model.hosts import Host
 from helpers import getRegex
 
 
 def user_query():
     return User.q.order_by(User.id)
 
+def host_query():
+    return Host.q.order_by(Host.id)
 
 class UserSearchForm(Form):
     userid = TextField(u"Nutzerid")
@@ -30,3 +33,8 @@ class UserCreateForm(Form):
     room_id = TextField(u"Raum ID", [Required(message=u"Raum?"),
                                      Regexp(regex=getRegex("room"),
                                             message=u"Raum ist ungültig!")])
+
+
+class hostCreateForm(Form):
+    name = TextField(u"Name")
+    

@@ -9,10 +9,11 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for
-from pycroft.model import user, session
+from pycroft.model import user, session, hosts, ports
+from pycroft.model.hosts import Host
 from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
-from web.blueprints.user.forms import UserSearchForm, UserCreateForm
+from web.blueprints.user.forms import UserSearchForm, UserCreateForm, hostCreateForm
 from pycroft.model import dormitory
 import datetime
 
@@ -91,3 +92,17 @@ def search():
             page_title=u"Suchergebnis",
             results=userResult.all(), form=form)
     return render_template('user/user_search.html', form=form)
+
+
+@bp.route('/host_create', methods=['GET', 'POST'])
+@nav.navigate("Host erstellen")
+def host_create():
+    form = hostCreateForm()
+    hostResult = hosts.Host.q
+    if form.validate_on_submit():
+        myHost = hosts.Host(hostname = form.name.data)
+        session.session.add(myHost)
+        session.session.commit()
+        flash ('Host angelegt', 'success')
+        return render_template('user/host_create.html', form = form, results = hostResult.all())
+    return render_template('user/host_create.html', form = form, results = hostResult.all())
