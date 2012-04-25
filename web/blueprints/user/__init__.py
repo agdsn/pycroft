@@ -14,7 +14,7 @@ from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm
 from pycroft.model import dormitory
-import datetime, random
+import datetime
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -56,15 +56,6 @@ def dormitory_floors(dormitory_id):
         floors=floors_list, page_title=u"Etagen Wohnheim XY")
 
 
-def generate_Password():
-    ZEICHEN = "abcdefghijklmnopqrstuvwxyz!$%&()=.,:;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    PASSWORD_LENGTH = 8
-    password = ""
-    for i in range(PASSWORD_LENGTH):
-        password = password + ZEICHEN[random.choice(range(len(ZEICHEN)))]
-    return password
-
-
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate("Anlegen")
 def create():
@@ -96,7 +87,7 @@ def search():
             .data + '%'))
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
-        if len(userResult.all()) == 0:
+        if not len(userResult.all()):
             flash('Benutzer nicht gefunden', 'error')
         return render_template('user/user_search.html',
             page_title=u"Suchergebnis",
