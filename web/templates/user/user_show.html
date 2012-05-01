@@ -1,11 +1,19 @@
 {% extends "user/base.html" %}
 
 {% block basecontent %}
-    <ul class="unstyled">
-        <li>Name: {{ user[0].name }} ({{ user[0].id }})</li>
-        <li>Login: {{ user[0].login }}</li>
-        <li>Registriert seit: {{ user[0].registration_date }}</li>
-        <li>Zugeordneter Raum: <a href="{{ url_for("dormitories.room_show",
-                room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></li>
-        </ul>
+    <div class="span7">
+        <table class="table table-condensed">
+            <tr><td>ID:</td><td>{{ user[0].id }}</td></tr>
+            <tr><td>Name:</td><td>{{ user[0].name }}</td></tr>
+            <tr><td>Login:</td><td>{{ user[0].login }}</td></tr>
+            <tr><td>Erstellungsdatum:</td><td>{{ user[0].registration_date.
+                strftime("%d.%m.%Y %H:%M Uhr") }}</td></tr>
+            <tr><td>Raum:</td><td><a href="{{ url_for("dormitories.room_show",
+                room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></td></tr>
+            <tr><td>Hosts:</td>
+                <td>{% for host in user[0].hosts %} {{ host.hostname }} {%
+                        endfor %}</td>
+            </tr>
+        </table>
+    </div>
 {% endblock %}

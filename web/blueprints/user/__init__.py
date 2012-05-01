@@ -46,7 +46,7 @@ def overview():
 def user_show(user_id):
     user_list = user.User.q.filter(User.id == user_id).all()
     return render_template('user/user_show.html',
-        page_title=u"Nutzer anzeigen: " + user_id,
+        page_title=u"Nutzer anzeigen",
         user=user_list)
 
 
