@@ -91,7 +91,7 @@ def create():
         level = int(form.room_number.data[:2])
         number = form.room_number.data[-2:]
         room_id = session.session.query(dormitory.Room).filter_by(number=number,
-            level=level).first().id
+            level=level,dormitory_id=dormitory_id).first().id
 
         patchport_id = session.session.query(ports.PatchPort).filter_by(
             room_id=room_id).first().id
@@ -114,7 +114,7 @@ def create():
         session.session.commit()
 
         flash('Benutzer angelegt', 'success')
-        return redirect(url_for('.overview'))
+        return redirect(url_for('.user_show', user_id = myUser.id))
     return render_template('user/user_create.html',
         page_title=u"Neuer Nutzer", form=form)
 
