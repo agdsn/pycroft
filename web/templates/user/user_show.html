@@ -1,19 +1,74 @@
 {% extends "user/base.html" %}
 
 {% block basecontent %}
-    <div class="span7">
-        <table class="table table-condensed">
-            <tr><td>ID:</td><td>{{ user[0].id }}</td></tr>
-            <tr><td>Name:</td><td>{{ user[0].name }}</td></tr>
-            <tr><td>Login:</td><td>{{ user[0].login }}</td></tr>
-            <tr><td>Erstellungsdatum:</td><td>{{ user[0].registration_date.
-                strftime("%d.%m.%Y %H:%M Uhr") }}</td></tr>
-            <tr><td>Raum:</td><td><a href="{{ url_for("dormitories.room_show",
-                room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></td></tr>
-            <tr><td>Hosts:</td>
-                <td>{% for host in user[0].hosts %} {{ host.hostname }} {%
-                        endfor %}</td>
-            </tr>
-        </table>
+
+    <div class="row">
+        <div class="span3">ID:</div>
+        <div class="span7">{{ user[0].id }}</div>
+    </div>
+
+    <div class="row">
+        <div class="span3">Name:</div>
+        <div class="span7">{{ user[0].name }}</div>
+    </div>
+
+    <div class="row">
+        <div class="span3">Login:</div>
+        <div class="span7">{{ user[0].login }}</div>
+    </div>
+
+    <div class="row">
+        <div class="span3">Erstellungsdatum:</div>
+        <div class="span7">{{ user[0].registration_date.
+                                strftime("%d.%m.%Y %H:%M Uhr") }}</div>
+    </div>
+
+    <div class="row">
+        <div class="span3">Raum:</div>
+        <div class="span7"><a href="{{ url_for("dormitories.room_show",
+                room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></div>
+    </div>
+
+    <div class="row">
+        <div class="span10">&nbsp;</div>
+        <div class="span10">Hosts:</div>
+    </div>
+    {% for host in user[0].hosts %}
+    <div class="row">
+        <div class="span3">&rArr; Hostname: {{ host.hostname }}</div>
+        <div class="span7">
+            {% if host.net_devices %}
+                {% for netdevice in host.net_devices %}
+                    <div>
+                        Ethernet-Adresse: {{ netdevice.mac }}</div>
+                    <div>IP4-Adresse: {{ netdevice.ipv4
+                            }}</div>
+                    <div>IP6-Adresse: {{ netdevice.ipv6
+                            }}</div>
+                {% endfor %}
+            {% else %}<div>&ndash;</div>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="row">
+        <div class="span10">&nbsp;</div>
+        <div class="span10">Logeinträge:</div>
+        <div class="span10"><form class="form-horizontal" action="" method="post">
+            <input type="text" class="span6">
+            <button type="submit" class="btn">Submit</button></form>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if user[0].user_log_entries %}
+            {% for entry in user[0].user_log_entries %}
+                <div class="row span10">{{ entry.author }},
+                    {{ entry.timestamp }}</div>
+                <div class="row span10">{{ entry.message }}</div>
+            {% endfor %}
+        {% else %}
+            <div class="row span10">Nutzer hat keine Einträge.</div>
+        {% endif %}
     </div>
 {% endblock %}
