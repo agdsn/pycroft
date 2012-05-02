@@ -13,12 +13,14 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for
 from pycroft.model import user, session, hosts, ports
-from pycroft.model.hosts import Host
 from pycroft.model.user import User
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, hostCreateForm
+from web.blueprints.user import helpers
+
 from pycroft.model import dormitory
 import datetime
+from web.blueprints.user.helpers import generateHostname
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -55,7 +57,10 @@ def user_show(user_id):
 
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_floors(dormitory_id):
-    floors_list = ["dummy 1", "dummy 2", "dummy 3"]
+    floors_list = []
+    for floor in session.session.query(dormitory.Room.level).filter_by(
+        dormitory_id=dormitory_id).distinct().all():
+        floors_list.append(floor.level)
     return render_template('user/floors.html',
         floors=floors_list, page_title=u"Etagen Wohnheim XY")
 
@@ -65,11 +70,49 @@ def dormitory_floors(dormitory_id):
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
+        dormitory_id = form.dormitory_id.data.id
+
+        try:
+            subnets = session.session.query(dormitory.Subnet.address).filter_by(
+                id=dormitory_id).join(
+                (dormitory.VLan, dormitory.Dormitory.vlans)).join(
+                (dormitory.Subnet, dormitory.VLan.subnets)).distinct().all()
+            subnet_list = []
+            for subnet in subnets:
+                subnet_list.append(subnet.address)
+            ip_address = helpers.getFreeIP(subnet_list)
+        except helpers.SubnetFullException, error:
+            flash('Subnetz voll', 'error')
+            return render_template('user/user_create.html',
+                page_title=u"Neuer Nutzer", form=form)
+
+        hostname = generateHostname(ip_address, form.host.data)
+        
+        level = int(form.room_number.data[:2])
+        number = form.room_number.data[-2:]
+        room_id = session.session.query(dormitory.Room).filter_by(number=number,
+            level=level).first().id
+
+        patchport_id = session.session.query(ports.PatchPort).filter_by(
+            room_id=room_id).first().id
+
         myUser = user.User(login=form.login.data,
-            name=form.name.data, room_id=form.room_id.data,
+            name=form.name.data, room_id=room_id,
             registration_date=datetime.datetime.now())
         session.session.add(myUser)
         session.session.commit()
+
+        myHost = hosts.Host(hostname=hostname, user_id=myUser.id,
+            room_id=room_id)
+        session.session.add(myHost)
+        session.session.commit()
+
+        myNetDevice = hosts.NetDevice(ipv4=ip_address, mac=form.mac.data,
+            host_id=myHost.id, patch_port_id=patchport_id)
+        session.session.add(myNetDevice)
+
+        session.session.commit()
+
         flash('Benutzer angelegt', 'success')
         return redirect(url_for('.overview'))
     return render_template('user/user_create.html',
@@ -81,6 +124,8 @@ def create():
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
+        # Check: with_entities
+        #userResult = user.User.q.with_entities()
         userResult = user.User.q
         if len(form.userid.data):
             userResult = userResult.filter(User.id == form.userid.data)
@@ -89,7 +134,7 @@ def search():
             .data + '%'))
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
-        if not len(userResult.all()):
+        if len(userResult.all()) == 0:
             flash('Benutzer nicht gefunden', 'error')
         return render_template('user/user_search.html',
             page_title=u"Suchergebnis",
@@ -103,9 +148,11 @@ def host_create():
     form = hostCreateForm()
     hostResult = hosts.Host.q
     if form.validate_on_submit():
-        myHost = hosts.Host(hostname = form.name.data)
+        myHost = hosts.Host(hostname=form.name.data)
         session.session.add(myHost)
         session.session.commit()
-        flash ('Host angelegt', 'success')
-        return render_template('user/host_create.html', form = form, results = hostResult.all())
-    return render_template('user/host_create.html', form = form, results = hostResult.all())
+        flash('Host angelegt', 'success')
+        return render_template('user/host_create.html', form=form,
+            results=hostResult.all())
+    return render_template('user/host_create.html', form=form,
+        results=hostResult.all())
