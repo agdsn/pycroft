@@ -7,73 +7,143 @@
 
 {% block basecontent %}
 
-    <div class="row">
-        <div class="span3">ID:</div>
-        <div class="span7">{{ user[0].id }}</div>
-    </div>
+    <div id="userboxes" class="accordion">
+        <div class="accordion-group">
 
-    <div class="row">
-        <div class="span3">Name:</div>
-        <div class="span7">{{ user[0].name }}</div>
-    </div>
+            {# Stammdaten #}
+            <div class="accordion-inner">
+                <div class="row">
+                    <div class="span3">ID:</div>
+                    <div class="span7">{{ user[0].id }}</div>
+                </div>
 
-    <div class="row">
-        <div class="span3">Login:</div>
-        <div class="span7">{{ user[0].login }}</div>
-    </div>
+                <div class="row">
+                    <div class="span3">Name:</div>
+                    <div class="span7">{{ user[0].name }}</div>
+                </div>
 
-    <div class="row">
-        <div class="span3">Erstellungsdatum:</div>
-        <div class="span7">{{ user[0].registration_date.
-                                strftime("%d.%m.%Y %H:%M Uhr") }}</div>
-    </div>
+                <div class="row">
+                    <div class="span3">Login:</div>
+                    <div class="span7">{{ user[0].login }}</div>
+                </div>
 
-    <div class="row">
-        <div class="span3">Raum:</div>
-        <div class="span7"><a href="{{ url_for("dormitories.room_show",
-                room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></div>
-    </div>
+                <div class="row">
+                    <div class="span3">Erstellungsdatum:</div>
+                    <div class="span7">{{ user[0].registration_date.
+                            strftime("%d.%m.%Y %H:%M Uhr") }}</div>
+                </div>
 
-    <div class="row">
-        <div class="span10">&nbsp;</div>
-        <div class="span10">Hosts:</div>
-    </div>
-    {% for host in user[0].hosts %}
-    <div class="row">
-        <div class="span3">&rArr; Hostname: {{ host.hostname }}</div>
-        <div class="span7">
-            {% if host.net_devices %}
-                {% for netdevice in host.net_devices %}
-                    <div>
-                        Ethernet-Adresse: {{ netdevice.mac }}</div>
-                    <div>IP4-Adresse: {{ netdevice.ipv4
-                            }}</div>
-                    <div>IP6-Adresse: {{ netdevice.ipv6
-                            }}</div>
-                {% endfor %}
-            {% else %}<div>&ndash;</div>{% endif %}
+                <div class="row">
+                    <div class="span3">Raum:</div>
+                    <div class="span7"><a href="{{ url_for("dormitories.room_show",
+            room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></div>
+                </div>
+            </div>
+
+
+            {# Traffic #}
+            <div class="accordion-heading">
+                <a href="#traffic" data-parent="#userboxes"
+                   data-toggle="collapse" class="accordion-toggle">
+                    Traffic
+                </a>
+            </div>
+            <div class="accordion-body collapse" id="traffic"
+                 style="height:0px;">
+                <div class="accordion-inner">
+                    Not implemented yet.
+                </div>
+            </div>
+
+
+            {# Hosts-Tabelle #}
+            <div class="accordion-heading">
+                <a href="#hosts" data-parent="#userboxes"
+                   data-toggle="collapse" class="accordion-toggle">
+                    Hosts
+                </a>
+            </div>
+            <div class="accordion-body collapse" id="hosts"
+                 style="height: 0px;">
+                <div class="accordion-inner">
+                    {% if user[0].hosts %}
+                        {% for host in user[0].hosts %}
+                            <div class="row">
+                                <div class="span3">Hostname:
+                                    {{ host.hostname }}</div>
+                                <div class="span7">
+                                    {% if host.net_devices %}
+                                        {% for netdevice in host.net_devices %}
+                                            <div>
+                                                Ethernet-Adresse:
+                                                {{ netdevice.mac }}</div>
+                                            <div>IP4-Adresse:
+                                                {{ netdevice.ipv4 }}</div>
+                                            <div>IP6-Adresse:
+                                                {{ netdevice.ipv6 }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        Nutzer hat keine Hosts.
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {# Logeintrage des Nutzers #}
+            <div class="accordion-heading">
+                <a href="#logentries" data-parent="#userboxes"
+                   data-toggle="collapse" class="accordion-toggle">
+                    Logeinträge
+                </a>
+            </div>
+            <div class="accordion-body collapse" id="logentries"
+                 style="height:0px;">
+                <div class="accordion-inner">
+                    <div class="row">
+                        <div class="span10">
+                            <form class="form-horizontal" action=""
+                                  method="post">
+                                <input type="text" class="span8"
+                                       placeholder="Neuen Logeintrag anlegen">
+                                <button type="submit" class="btn">Submit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row">
+                        {% if user[0].user_log_entries %}
+                            {% for entry in user[0].user_log_entries %}
+                                <div class="row span10">{{ entry.author }},
+                                    {{ entry.timestamp }}</div>
+                                <div class="row span10">{{ entry.message }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="row span10">Nutzer hat keine Einträge.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+            {# Kontostand des Nutzers #}
+            <div class="accordion-heading">
+                <a href="#finance" data-parent="#userboxes"
+                   data-toggle="collapse" class="accordion-toggle">
+                    Kontoeinträge
+                </a>
+            </div>
+            <div class="accordion-body collapse" id="finance"
+                 style="height:0px;">
+                <div class="accordion-inner">
+                    Not implemented yet.
+                </div>
+            </div>
+
         </div>
-    </div>
-    {% endfor %}
-
-    <div class="row">
-        <div class="span10">&nbsp;</div>
-        <div class="span10">Logeinträge:</div>
-        <div class="span10"><form class="form-horizontal" action="" method="post">
-            <input type="text" class="span6">
-            <button type="submit" class="btn">Submit</button></form>
-        </div>
-    </div>
-
-    <div class="row">
-        {% if user[0].user_log_entries %}
-            {% for entry in user[0].user_log_entries %}
-                <div class="row span10">{{ entry.author }},
-                    {{ entry.timestamp }}</div>
-                <div class="row span10">{{ entry.message }}</div>
-            {% endfor %}
-        {% else %}
-            <div class="row span10">Nutzer hat keine Einträge.</div>
-        {% endif %}
     </div>
 {% endblock %}
