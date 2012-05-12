@@ -11,7 +11,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for
 from pycroft.model import user, session, hosts, ports, dormitory
 from pycroft.model.user import User
-from pycroft.helpers.user_helper import UserHelper as helpers
+import pycroft.helpers.user_helper as helpers
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, hostCreateForm
 import datetime
