@@ -23,7 +23,7 @@ from pycroft.model import hosts, session
 #    pass
 
 
-def generatePassword(self, length):
+def generatePassword(length):
     allowedLetters = "abcdefghijklmnopqrstuvwxyz!$%&()=.,"\
                      ":;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     passwordLength = length
@@ -34,13 +34,13 @@ def generatePassword(self, length):
     return password
 
 
-def generateHostname(self, ip_address, hostname):
+def generateHostname(ip_address, hostname):
     if hostname == "":
         return "whdd" + ip_address[-3, -1]
     return hostname
 
 
-def getRegex(self, type):
+def getRegex(type):
     regexName = "^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
                 "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$"
     regexLogin = "^[a-z][a-z0-9_]{1,20}[a-z0-9]$"
@@ -57,7 +57,7 @@ def getRegex(self, type):
         return regexRoom
 
 
-def getFreeIP(self, subnets):
+def getFreeIP(subnets):
     possible_hosts = []
 
     for subnet in subnets:
