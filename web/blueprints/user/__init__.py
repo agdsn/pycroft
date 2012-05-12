@@ -12,15 +12,12 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for
-from pycroft.model import user, session, hosts, ports
+from pycroft.model import user, session, hosts, ports, dormitory
 from pycroft.model.user import User
+from pycroft.helpers.user_helper import UserHelper as helpers
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, hostCreateForm
-from web.blueprints.user import helpers
-
-from pycroft.model import dormitory
 import datetime
-from web.blueprints.user.helpers import generateHostname
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -86,7 +83,7 @@ def create():
             return render_template('user/user_create.html',
                 page_title=u"Neuer Nutzer", form=form)
 
-        hostname = generateHostname(ip_address, form.host.data)
+        hostname = helpers.generateHostname(ip_address, form.host.data)
         
         level = int(form.room_number.data[:2])
         number = form.room_number.data[-2:]
@@ -110,7 +107,6 @@ def create():
         myNetDevice = hosts.NetDevice(ipv4=ip_address, mac=form.mac.data,
             host_id=myHost.id, patch_port_id=patchport_id)
         session.session.add(myNetDevice)
-
         session.session.commit()
 
         flash('Benutzer angelegt', 'success')
@@ -124,8 +120,6 @@ def create():
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
-        # Check: with_entities
-        #userResult = user.User.q.with_entities()
         userResult = user.User.q
         if len(form.userid.data):
             userResult = userResult.filter(User.id == form.userid.data)
@@ -134,7 +128,7 @@ def search():
             .data + '%'))
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
-        if len(userResult.all()) == 0:
+        if not len(userResult.all()):
             flash('Benutzer nicht gefunden', 'error')
         return render_template('user/user_search.html',
             page_title=u"Suchergebnis",
