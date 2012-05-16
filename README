@@ -1,5 +1,0 @@
-dependencies:
-*sqlalchemy
-*flask
-*flask-wtf
-*ipaddr
