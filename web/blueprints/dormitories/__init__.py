@@ -11,7 +11,7 @@
 """
 
 from flask import Blueprint, render_template, redirect, url_for, flash
-from pycroft.model import dormitory, session
+from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints import BlueprintNavigation
 from web.blueprints.dormitories.forms import RoomForm, DormitoryForm
@@ -23,14 +23,14 @@ nav = BlueprintNavigation(bp, "Wohnheime")
 @bp.route('/')
 @nav.navigate(u"Wohnheime")
 def dormitories():
-    dormitories_list = dormitory.Dormitory.q.all()
+    dormitories_list = Dormitory.q.all()
     return render_template('dormitories/dormitories_list.html',
         dormitories=dormitories_list)
 
 
 @bp.route('/show/<dormitory_id>')
 def dormitory_show(dormitory_id):
-    rooms_list = dormitory.Room.q.join(Dormitory).filter(
+    rooms_list = Room.q.join(Dormitory).filter(
         Dormitory.id == dormitory_id).all()
     return render_template('dormitories/dormitory_show.html',
         page_title=u"Wohnheim", rooms=rooms_list)
@@ -41,10 +41,10 @@ def dormitory_show(dormitory_id):
 def dormitory_create():
     form = DormitoryForm()
     if form.validate_on_submit():
-        myDormitory = dormitory.Dormitory(short_name=form.short_name.data,
+        myDormitory = Dormitory(short_name=form.short_name.data,
             street=form.street.data, number=form.number.data)
-        session.session.add(myDormitory)
-        session.session.commit()
+        session.add(myDormitory)
+        session.commit()
         flash('Wohnheim angelegt', 'success')
         return redirect(url_for('.dormitories'))
     return render_template('dormitories/dormitory_create.html', form=form)
@@ -52,16 +52,16 @@ def dormitory_create():
 
 @bp.route('/room/delete/<room_id>')
 def room_delete(room_id):
-    dormitory.Room.q.filter(Room.id == room_id).delete(
+    Room.q.filter(Room.id == room_id).delete(
         synchronize_session='fetch')
-    session.session.commit()
+    session.commit()
     flash('Raum gelöscht', 'success')
     return redirect(url_for('.dormitories'))
 
 
 @bp.route('/room/show/<room_id>')
 def room_show(room_id):
-    room_list = dormitory.Room.q.filter(Room.id == room_id).all()
+    room_list = Room.q.filter(Room.id == room_id).all()
     return render_template('dormitories/room_show.html',
         page_title=u"Raum mit ID " + room_id, room=room_list)
 
@@ -71,13 +71,13 @@ def room_show(room_id):
 def room_create():
     form = RoomForm()
     if form.validate_on_submit():
-        myRoom = dormitory.Room(
+        myRoom = Room(
             number=form.number.data,
             level=form.level.data,
             inhabitable=form.inhabitable.data,
             dormitory_id=form.dormitory_id.data.id)
-        session.session.add(myRoom)
-        session.session.commit()
+        session.add(myRoom)
+        session.commit()
         flash('Raum angelegt', 'success')
         return redirect(url_for('.room_show', room_id=myRoom.id))
     return render_template('dormitories/dormitory_create.html', form=form)
