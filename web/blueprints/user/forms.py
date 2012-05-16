@@ -5,7 +5,8 @@ from flaskext.wtf import Form, TextField, QuerySelectField, PasswordField,\
     DateField, BooleanField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
-from pycroft.model.hosts import Host
+from pycroft.model.hosts import Host, NetDevice
+from pycroft.model.dormitory import Room
 import pycroft.helpers.user_helper as helpers
 from web.blueprints.dormitories.forms import dormitory_query
 
@@ -25,19 +26,21 @@ class UserSearchForm(Form):
 
 
 class UserCreateForm(Form):
+
+
     name = TextField(u"Name", [Required(message=u"Name?"),
-                               Regexp(regex=helpers.getRegex("name"),
+                               Regexp(regex=User.name_regex,
                                    message=u"Name ist ungültig!")])
     login = TextField(u"Login", [Required(message=u"Login?"),
-                                 Regexp(regex=helpers.getRegex("login"),
+                                 Regexp(regex=User.login_regex,
                                      message=u"Login ist ungültig!")])
-    mac = TextField(u"MAC", [Regexp(regex=helpers.getRegex("mac"),
+    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
     dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
         query_factory=dormitory_query)
     room_number = TextField(u"Raum ID", [Required(message=u"Raum?"),
-                                         Regexp(regex=helpers.getRegex("room"),
+                                         Regexp(regex=Room.room_regex,
                                              message=u"Raum ist ungültig!")])
 
 
