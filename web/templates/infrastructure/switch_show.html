@@ -1,0 +1,15 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "infrastructure/base.html" %}
+
+{% block basecontent %}
+    <ul class="unstyled">
+	<p>switch ports:</p>
+        {% for switch_port in switch_ports %}
+            <li>{{switch_port.name}}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
