@@ -40,23 +40,6 @@ def generateHostname(ip_address, hostname):
     return hostname
 
 
-def getRegex(type):
-    regexName = "^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
-                "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$"
-    regexLogin = "^[a-z][a-z0-9_]{1,20}[a-z0-9]$"
-    regexMac = "^[a-f0-9]{2}(:[a-f0-9]{2}){5}$"
-    regexRoom = "^[0-9]{1,6}$"
-
-    if type == "name":
-        return regexName
-    if type == "login":
-        return regexLogin
-    if type == "mac":
-        return regexMac
-    if type == "room":
-        return regexRoom
-
-
 def getFreeIP(subnets):
     possible_hosts = []
 
@@ -78,4 +61,4 @@ def getFreeIP(subnets):
     if possible_hosts:
         return possible_hosts[0].compressed
 
-    raise self.SubnetFullException()
+   raise self.SubnetFullException()
