@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -13,9 +13,11 @@
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
+import re
+
 
 
 class User(ModelBase):
@@ -26,3 +28,16 @@ class User(ModelBase):
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+
+    login_regex = "^[a-z][a-z0-9_]{1,20}[a-z0-9]$"
+    name_regex = "^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
+                 "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$"
+
+
+
+    @validates('login')
+    def validate_login(self, key, user):
+        m = re.search(login_regex, user.login)
+        if m.group(0) == None:
+            raise Exception("invalid unix-login!")
+        return user
