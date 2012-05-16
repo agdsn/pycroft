@@ -13,11 +13,12 @@
 """
 
 import random, ipaddr
-from pycroft.model import hosts, session
+from pycroft.model import hosts
+from pycroft.model.session import session
 
 
-# class SubnetFullException(Exception):
-#    pass
+class SubnetFullException(Exception):
+    pass
 
 
 def generatePassword(length):
@@ -46,7 +47,7 @@ def getFreeIP(subnets):
 
     reserved_hosts = []
 
-    reserved_hosts_string = session.session.query(hosts.NetDevice.ipv4).all()
+    reserved_hosts_string = session.query(hosts.NetDevice.ipv4).all()
 
     for ip in reserved_hosts_string:
         reserved_hosts.append(ipaddr.IPv4Address(ip.ipv4))
@@ -58,4 +59,4 @@ def getFreeIP(subnets):
     if possible_hosts:
         return possible_hosts[0].compressed
 
-   raise self.SubnetFullException()
+    raise SubnetFullException()
