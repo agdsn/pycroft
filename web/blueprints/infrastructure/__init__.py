@@ -9,6 +9,7 @@
 """
 
 from flask import Blueprint, render_template
+from pycroft.model.hosts import Switch
 from web.blueprints import BlueprintNavigation
 
 bp = Blueprint('infrastructure', __name__, )
@@ -24,7 +25,17 @@ def subnets():
 @bp.route('/switches')
 @nav.navigate(u"Switche")
 def switches():
-    return render_template('infrastructure/base.html')
+    switches_list = Switch.q.all()
+    return render_template('infrastructure/switches_list.html',
+            switches=switches_list)
+
+
+@bp.route('/show/<switch_id>')
+def switch_show(switch_id):
+    switch = Switch.q.get(switch_id)
+    switch_port_list = switch.ports
+    return render_template('infrastructure/switch_show.html',
+        page_title=u"Switch " + switch.name, switch_ports=switch_port_list)
 
 
 @bp.route('/vlans')

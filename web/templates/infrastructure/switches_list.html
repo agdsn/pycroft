@@ -1,0 +1,9 @@
+{% extends "infrastructure/base.html" %}
+
+{% block basecontent %}
+    <ul class="unstyled">
+    {% for switch in switches %}
+        <li><a href="{{ url_for(".switch_show", switch_id=switch.id) }}">{{ switch.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}
