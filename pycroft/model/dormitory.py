@@ -62,6 +62,7 @@ class Room(ModelBase):
     dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
     dormitory = relationship("Dormitory", backref=backref("rooms"))
 
+    room_regex = "^[0-9]{1,6}$"
 
 class Subnet(ModelBase):
     #address = Column(postgresql.INET, nullable=False)
