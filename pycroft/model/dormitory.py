@@ -57,8 +57,7 @@ class Room(ModelBase):
 
     # many to one from Room to Dormitory
     dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
-    dormitory = relationship("Dormitory", backref=backref("rooms",
-                                                      order_by=number))
+    dormitory = relationship("Dormitory", backref=backref("rooms"))
 
 
 class Subnet(ModelBase):

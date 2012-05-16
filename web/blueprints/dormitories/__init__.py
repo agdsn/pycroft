@@ -27,10 +27,10 @@ def dormitories():
 
 @bp.route('/show/<dormitory_id>')
 def dormitory_show(dormitory_id):
-    rooms_list = Room.q.join(Dormitory).filter(
-        Dormitory.id == dormitory_id).all()
+    dormitory = Dormitory.q.get(dormitory_id)
+    rooms_list = dormitory.rooms
     return render_template('dormitories/dormitory_show.html',
-        page_title=u"Wohnheim", rooms=rooms_list)
+        page_title=u"Wohnheim " + dormitory.short_name, rooms=rooms_list)
 
 
 @bp.route('/create', methods=['GET', 'POST'])
