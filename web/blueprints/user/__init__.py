@@ -11,13 +11,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-<<<<<<< HEAD
-from flask import Blueprint, render_template, flash, redirect, url_for
-from pycroft.model import session, hosts, ports, dormitory, logging
-=======
-from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify
-from pycroft.model import user, session, hosts, ports
->>>>>>> in user_create form there is now a Dropdown for dormitory and floors change in the user_overview
+from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify, abort
+from pycroft.model import user, session, hosts, ports, dormitory, logging
 from pycroft.model.user import User
 import pycroft.helpers.user_helper as helpers
 from web.blueprints import BlueprintNavigation
@@ -141,7 +136,7 @@ def create():
         level = int(form.room_number.data[:2])
         number = form.room_number.data[-2:]
         room_id = session.session.query(dormitory.Room).filter_by(number=number,
-            level=level,dormitory_id=dormitory_idt).first().id
+            level=level,dormitory_id=dormitory_id).first().id
 
         patchport_id = session.session.query(ports.PatchPort).filter_by(
             room_id=room_id).first().id
