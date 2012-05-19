@@ -28,6 +28,9 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
+
+
+
 class UserCreateForm(Form):
 
 
@@ -43,9 +46,7 @@ class UserCreateForm(Form):
     dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
         query_factory=dormitory_query)
     level = SelectField(u"Etage", coerce=int, choices=[])
-    room_number = TextField(u"Raum ID", [Required(message=u"Raum?"),
-                                         Regexp(regex=Room.room_regex,
-                                             message=u"Raum ist ungültig!")])
+    room_number = SelectField(u"Raumnummer", [Required(message=u"Raum?")], coerce=str, choices=[])
 
 
 class hostCreateForm(Form):

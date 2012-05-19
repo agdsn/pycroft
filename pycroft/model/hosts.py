@@ -54,6 +54,7 @@ class NetDevice(ModelBase):
 
     mac_regex= "^[a-f0-9]{2}(:[a-f0-9]{2}){5}$"
 
+
 class Switch(Host):
     __mapper_args__ = {'polymorphic_identity': 'switch'}
     id = Column(Integer, ForeignKey('host.id'), primary_key=True)
