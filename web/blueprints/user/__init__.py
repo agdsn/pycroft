@@ -20,7 +20,7 @@ from pycroft.helpers import user_helper, dormitory_helper
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry
-import datetime
+from datetime import datetime
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
@@ -38,25 +38,21 @@ def overview():
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
 def user_show(user_id):
     user = User.q.get(user_id)
-    countLogEntries = logging.LogEntry.q.count()
-    user_log_list = user.user_log_entries
     form = userLogEntry()
     if form.validate_on_submit():
+        #TODO determine author_id from user session
         newUserLogEntry = logging.UserLogEntry(message=form.message.data,
-            timestamp=datetime.datetime.now(),
-            author_id=3, user_id=user_id)
+            timestamp=datetime.now(),
+            author_id=user_id, user_id=user_id)
         session.add(newUserLogEntry)
         session.commit()
         flash('Kommentar hinzugefügt', 'success')
-        user_log_list = user.user_log_entries
-        return render_template('user/user_show.html',
-            page_title=u"Nutzer anzeigen neu",
-            user=user, user_logs=user_log_list,
-            form=form)
+
+    user_log_list = user.user_log_entries
 
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
-        user=user, user_logs=user_log_list, form=form, count=countLogEntries)
+        user=user, user_logs=user_log_list, form=form)
 
 
 @bp.route('/dormitory/<dormitory_id>')
