@@ -8,8 +8,13 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
+<<<<<<< HEAD
 from flask import Blueprint, render_template, flash, redirect, url_for
 from pycroft.model import session, hosts, ports, dormitory, logging
+=======
+from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify
+from pycroft.model import user, session, hosts, ports
+>>>>>>> in user_create form there is now a Dropdown for dormitory and floors change in the user_overview
 from pycroft.model.user import User
 import pycroft.helpers.user_helper as helpers
 from web.blueprints import BlueprintNavigation
@@ -74,10 +79,37 @@ def user_show(user_id):
 def dormitory_floors(dormitory_id):
     floors_list = []
     for floor in session.session.query(dormitory.Room.level).filter_by(
-        dormitory_id=dormitory_id).distinct().all():
+        dormitory_id=dormitory_id).distinct().order_by(dormitory.Room.level).all():
         floors_list.append(floor.level)
     return render_template('user/floors.html',
-        floors=floors_list, page_title=u"Etagen Wohnheim XY")
+        floors=floors_list, dormitory_id=dormitory_id, page_title=u"Etagen Wohnheim "+session.session.query(dormitory.Dormitory).filter_by(id=dormitory_id).first().short_name)
+
+@bp.route('/dormitory/<dormitory_id>/level/<level>')
+def dormitory_level_rooms(dormitory_id, level):
+    rooms_list = []
+    for room in session.session.query(dormitory.Room.number).filter_by(
+        dormitory_id=dormitory_id,level=level).order_by(dormitory.Room.number).all():
+        rooms_list.append(room.number)
+    return render_template('user/rooms.html',
+        rooms=rooms_list, page_title=u"Zimmer der Etage "+ level +u" des Wohnheim "+session.session.query(dormitory.Dormitory).filter_by(id=dormitory_id).first().short_name)
+
+
+@bp.route('/json/levels', defaults={"dormitory_id": 0})
+@bp.route('/json/levels/<int:dormitory_id>')
+def json_levels(dormitory_id):
+    if not request.is_xhr:
+        abort(404)
+    levels = session.session.query(dormitory.Room.level.label('level')).filter_by(dormitory_id=dormitory_id).order_by(dormitory.Room.level).distinct()
+    return jsonify(dict(levels=[entry.level for entry in levels]))
+
+@bp.route('/json/rooms', defaults={"dormitory_id":0, "level": 0})
+@bp.route('/json/rooms/<int:dormitory_id>+<level>')
+def json_rooms(dormitory_id, level):
+    if not request.is_xhr:
+        abort(404)
+    rooms = session.session.query(dormitory.Room.number.label('room_number')).filter_by(dormitory_id=dormitory_id, level=level).order_by(dormitory.Room.number).distinct()
+    return jsonify(dict(rooms=[entry.number for entry in rooms]))
+
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -106,7 +138,7 @@ def create():
         level = int(form.room_number.data[:2])
         number = form.room_number.data[-2:]
         room_id = session.session.query(dormitory.Room).filter_by(number=number,
-            level=level,dormitory_id=dormitory_id).first().id
+            level=level,dormitory_id=dormitory_idt).first().id
 
         patchport_id = session.session.query(ports.PatchPort).filter_by(
             room_id=room_id).first().id

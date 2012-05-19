@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from flaskext.wtf import Form, TextField, QuerySelectField, PasswordField,\
+from flaskext.wtf import Form, TextField, QuerySelectField, SelectField, PasswordField,\
     DateField, BooleanField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
@@ -39,6 +39,7 @@ class UserCreateForm(Form):
     host = TextField(u"Host")
     dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
         query_factory=dormitory_query)
+    level = SelectField(u"Etage", coerce=int, choices=[])
     room_number = TextField(u"Raum ID", [Required(message=u"Raum?"),
                                          Regexp(regex=Room.room_regex,
                                              message=u"Raum ist ungültig!")])

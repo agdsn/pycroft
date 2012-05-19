@@ -1,0 +1,9 @@
+{% extends "user/base.html" %}
+
+{% block basecontent %}
+    <div>
+        {%- for room in rooms %}
+            <div class="row"><a class="btn btn-primary btn-large">{{ room }}</a></div>
+        {%- endfor %}
+    </div>
+{% endblock %}
