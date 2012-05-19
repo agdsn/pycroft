@@ -5892,24 +5892,23 @@ INSERT INTO switchport VALUES('A13',1420,1);
 INSERT INTO switchport VALUES('A14',1421,1);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL, 
-	author_id INTEGER NOT NULL, 
-	message VARCHAR(255) NOT NULL, 
+	type VARCHAR(50) NOT NULL,
+	message VARCHAR(255) NOT NULL,	
 	timestamp DATETIME NOT NULL, 
+	author_id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(author_id) REFERENCES user (id)
 );
-INSERT INTO logentry VALUES(1,1,'(in der example.sql eingebettet) Testeintrag des User ID 1','2012-05-24 16:11:05.739251');
-INSERT INTO logentry VALUES(2,2,'(in der example.sql eingebettet) Und hier Eintrag 2 von User 2','2012-05-24 16:52:05.739251');
-INSERT INTO logentry VALUES(3,3,'ALIENS','2012-05-19 02:25:06.369191');
+INSERT INTO logentry VALUES(1,'userlogentry','(in der example.sql eingebettet) Testeintrag des User ID 1','2012-05-24 16:11:05.739251',1);
+INSERT INTO logentry VALUES(2,'userlogentry','(in der example.sql eingebettet) Und hier Eintrag 2 von User 2','2012-05-24 16:52:05.739251',2);
+INSERT INTO logentry VALUES(3,'userlogentry','ALIENS','2012-05-19 02:25:06.369191',3);
 CREATE TABLE userlogentry (
 	id INTEGER NOT NULL, 
 	user_id INTEGER NOT NULL, 
-	logentry_id INTEGER NOT NULL,
 	PRIMARY KEY (id), 
-	FOREIGN KEY(user_id) REFERENCES user (id), 
-	FOREIGN KEY(logentry_id) REFERENCES logentry (id)
+	FOREIGN KEY(user_id) REFERENCES user (id)
 );
-INSERT INTO userlogentry VALUES(1, 3, 1);
-INSERT INTO userlogentry VALUES(2, 3, 2);
-INSERT INTO userlogentry VALUES(3, 1, 3);
+INSERT INTO userlogentry VALUES(1, 3);
+INSERT INTO userlogentry VALUES(2, 3);
+INSERT INTO userlogentry VALUES(3, 1);
 COMMIT;

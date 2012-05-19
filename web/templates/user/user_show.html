@@ -103,13 +103,13 @@
                         {% if user_logs %}
                             <div class="row span10"><dl>
                             {% for entry in user_logs %}
-                            <dt>{{ entry.logentry.author.name }} (<a
+                            <dt>{{ entry.author.name }} (<a
                                     href="{{ url_for(".user_show",
-                                user_id = entry.logentry.author.id) }}"
-                                    >{{ entry.logentry.author.login }}</a>) am
-                                {{ entry.logentry.timestamp.strftime(
+                                user_id = entry.author.id) }}"
+                                    >{{ entry.author.login }}</a>) am
+                                {{ entry.timestamp.strftime(
                                     "%d.%m. um %H:%M Uhr") }}</dt>
-                            <dd>{{ entry.logentry.message }}</dd>
+                            <dd>{{ entry.message }}</dd>
                             {% endfor %}
                             </dl></div>
                         {% else %}
