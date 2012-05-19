@@ -43,12 +43,16 @@ class UserCreateForm(Form):
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
-    dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
+    dormitory_id = QuerySelectField(u"Wohnheim",
+        [Required(message=u"Wohnheim?")],
+        get_label='short_name',
         query_factory=dormitory_query)
-    level = AjaxSelectField(u"Etage", coerce=int, choices=[])
+    level = AjaxSelectField(u"Etage",
+        [Required(message=u"Etage?")],
+        coerce=int, choices=[])
     room_number = AjaxSelectField(u"Raumnummer",
-            [Required(message=u"Raum?")],
-            coerce=str, choices=[])
+        [Required(message=u"Raum?")],
+        coerce=str, choices=[])
 
 
 class hostCreateForm(Form):

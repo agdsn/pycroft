@@ -5,3 +5,5 @@
 .idea/Pycroft.iml
 *.DS_Store
 *.orig
+.idea/inspectionProfiles/Project_Default.xml
+.idea/inspectionProfiles/profiles_settings.xml
