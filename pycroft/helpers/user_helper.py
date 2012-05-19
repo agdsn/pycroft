@@ -28,7 +28,7 @@ def generatePassword(length):
 
 def generateHostname(ip_address, hostname):
     if hostname == "":
-        return "whdd" + ip_address[-3, -1]
+        return "whdd" + ip_address.split(u".")[-1]
     return hostname
 
 
