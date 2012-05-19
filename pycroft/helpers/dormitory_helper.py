@@ -7,18 +7,20 @@
 """
 import re
 
-def sort_dormitory_key(dormitory):
-    number = re.search("[0-9]+", dormitory.number)
-    letter = re.search("[a-z]", dormitory.number.lower())
-
-    if letter:
-        return ord(letter.group(0)) + 256*int(number.group(0))
-
-    return 256*int(number.group(0))
-
 
 def sort_dormitories(dormitories):
-    sorted_dormitories = sorted(dormitories,
-        key=lambda dormitory: sort_dormitory_key(dormitory))
+    number_re = re.compile(r"[0-9]+")
+    letter_re = re.compile(r"[a-z]")
+
+    def make_sort_key(dormitory):
+        number = number_re.search(dormitory.number)
+        letter = letter_re.search(dormitory.number.lower())
+
+        if letter:
+            return ord(letter.group(0)) + 256*int(number.group(0))
+
+        return 256*int(number.group(0))
+
+    sorted_dormitories = sorted(dormitories, key=make_sort_key)
 
     return sorted_dormitories
