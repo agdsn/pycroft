@@ -12,6 +12,7 @@
 """
 
 from flask import Blueprint, render_template
+from pycroft.helpers import host_helper
 from pycroft.model.hosts import Switch
 from web.blueprints import BlueprintNavigation
 
@@ -37,8 +38,9 @@ def switches():
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
     switch_port_list = switch.ports
+    switch_port_list = host_helper.sort_ports(switch_port_list)
     return render_template('infrastructure/switch_show.html',
-        page_title=u"Switch " + switch.name, switch_ports=switch_port_list)
+        page_title=u"Switch: " + switch.name, switch_ports=switch_port_list)
 
 
 @bp.route('/vlans')
