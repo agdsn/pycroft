@@ -10,7 +10,11 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
-from pycroft.model import user, hosts, ports, dormitory, logging
+# this is necessary
+from pycroft.model import ports
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
+from pycroft.model.hosts import Host, NetDevice
+from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.helpers import user_helper, dormitory_helper
@@ -26,7 +30,7 @@ nav = BlueprintNavigation(bp, "Nutzer")
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    dormitories_list = dormitory.Dormitory.q.all()
+    dormitories_list = Dormitory.q.all()
     dormitories_list = dormitory_helper.sort_dormitories(dormitories_list)
     return render_template('user/overview.html',
         dormitories=dormitories_list)
@@ -38,7 +42,7 @@ def user_show(user_id):
     form = userLogEntry()
     if form.validate_on_submit():
         #TODO determine author_id from user session
-        newUserLogEntry = logging.UserLogEntry(message=form.message.data,
+        newUserLogEntry = UserLogEntry(message=form.message.data,
             timestamp=datetime.now(),
             author_id=user_id, user_id=user_id)
         session.add(newUserLogEntry)
@@ -54,28 +58,28 @@ def user_show(user_id):
 
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_floors(dormitory_id):
-    floors_list = []
-    for floor in session.query(dormitory.Room.level).filter_by(
-        dormitory_id=dormitory_id).distinct().order_by(
-        dormitory.Room.level).all():
-        floors_list.append(floor.level)
+    dormitory = Dormitory.q.get(dormitory_id)
+    floors_list = session.query(Room.level.label('level')).filter_by(
+        dormitory_id=dormitory_id).order_by(Room.level).distinct()
+    floors_list = [floor.level for floor in floors_list]
+
     return render_template('user/floors.html',
         floors=floors_list, dormitory_id=dormitory_id,
-        page_title=u"Etagen Wohnheim " + session.query(
-            dormitory.Dormitory).filter_by(id=dormitory_id).first().short_name)
+        page_title=u"Etagen Wohnheim " + dormitory.short_name)
 
 
 @bp.route('/dormitory/<dormitory_id>/level/<level>')
 def dormitory_level_rooms(dormitory_id, level):
-    rooms_list = []
-    for room in session.query(dormitory.Room.number).filter_by(
-        dormitory_id=dormitory_id, level=level).order_by(
-        dormitory.Room.number).all():
-        rooms_list.append(room.number)
-    return render_template('user/rooms.html',
-        rooms=rooms_list,
-        page_title=u"Zimmer der Etage " + level + u" des Wohnheim " + session.query(
-            dormitory.Dormitory).filter_by(id=dormitory_id).first().short_name)
+    dormitory = Dormitory.q.get(dormitory_id)
+    rooms_list = session.query(Room.number.label('number')).filter_by(
+        dormitory_id=dormitory_id, level=level).order_by(Room.number)
+    rooms_list = [room.number for room in rooms_list]
+
+    #TODO depending on, whether a user is living in the room, the room is
+    # a link to the user. If there is more then one user, the room is duplicated
+    return render_template('user/rooms.html', rooms=rooms_list,
+        page_title=u"Zimmer der Etage " + level + u" des Wohnheim " +
+                   dormitory.short_name)
 
 
 @bp.route('/json/levels', defaults={"dormitory_id": 0})
@@ -83,9 +87,8 @@ def dormitory_level_rooms(dormitory_id, level):
 def json_levels(dormitory_id):
     if not request.is_xhr:
         abort(404)
-    levels = session.query(
-        dormitory.Room.level.label('level')).filter_by(
-        dormitory_id=dormitory_id).order_by(dormitory.Room.level).distinct()
+    levels = session.query(Room.level.label('level')).filter_by(
+        dormitory_id=dormitory_id).order_by(Room.level).distinct()
     return jsonify(dict(levels=[entry.level for entry in levels]))
 
 
@@ -95,9 +98,9 @@ def json_rooms(dormitory_id, level):
     if not request.is_xhr:
         abort(404)
     rooms = session.query(
-        dormitory.Room.number.label("room_num")).filter_by(
+        Room.number.label("room_num")).filter_by(
         dormitory_id=dormitory_id, level=level).order_by(
-        dormitory.Room.number).distinct()
+        Room.number).distinct()
     return jsonify(dict(rooms=[entry.room_num for entry in rooms]))
 
 
@@ -112,13 +115,13 @@ def create():
             #ToDo: Ugly, but ... Someone can convert this is a proper property of Dormitory
             #ToDo: Also possibly slow and untested
             subnets = session.query(
-                dormitory.Subnet
+                Subnet
             ).join(
-                dormitory.Subnet.vlans
+                Subnet.vlans
             ).join(
-                dormitory.VLan.dormitories
+                VLan.dormitories
             ).filter(
-                dormitory.Dormitory.id == dorm.id
+                Dormitory.id == dorm.id
             ).all()
 
             ip_address = user_helper.getFreeIP(subnets)
@@ -129,25 +132,24 @@ def create():
 
         hostname = user_helper.generateHostname(ip_address, form.host.data)
 
-        room = dormitory.Room.q.filter_by(number=form.room_number.data,
-            level=form.level.data,
-            dormitory_id=dorm.id).one()
+        room = Room.q.filter_by(number=form.room_number.data,
+            level=form.level.data, dormitory_id=dorm.id).one()
 
         #ToDo: Which port to choose if room has more than one?
         patch_port = room.patch_ports[0]
 
-        myUser = user.User(login=form.login.data,
+        myUser = User(login=form.login.data,
             name=form.name.data,
             room=room,
-            registration_date=datetime.datetime.now())
+            registration_date=datetime.now())
         session.add(myUser)
 
-        myHost = hosts.Host(hostname=hostname,
+        myHost = Host(hostname=hostname,
             user=myUser,
             room=room)
         session.add(myHost)
 
-        myNetDevice = hosts.NetDevice(ipv4=ip_address,
+        myNetDevice = NetDevice(ipv4=ip_address,
             mac=form.mac.data,
             host=myHost,
             patch_port=patch_port)
@@ -187,7 +189,7 @@ def host_create():
     form = hostCreateForm()
     hostResult = hosts.Host.q
     if form.validate_on_submit():
-        myHost = hosts.Host(hostname=form.name.data)
+        myHost = Host(hostname=form.name.data)
         session.add(myHost)
         session.commit()
         flash('Host angelegt', 'success')
