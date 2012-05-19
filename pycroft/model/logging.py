@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -26,12 +26,18 @@ class LogEntry(ModelBase):
 
     # many to one from LogEntry to User
     author = relationship("User",
-                backref=backref("log_entries"))
+                          backref=backref("log_entries"))
     author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
 
 class UserLogEntry(ModelBase):
     # many to one from UserLogEntry to User
     user = relationship("User",
-                backref=backref("user_log_entries"))
+                        backref=backref("user_log_entries"),
+                        primaryjoin="UserLogEntry.user_id == User.id")
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+
+    logentry = relationship("LogEntry",
+                            primaryjoin="UserLogEntry.logentry_id == " \
+                                        "LogEntry.id", uselist=False)
+    logentry_id = Column(Integer, ForeignKey("logentry.id"))

@@ -49,3 +49,7 @@ class UserCreateForm(Form):
 
 class hostCreateForm(Form):
     name = TextField(u"Name")
+
+
+class userLogEntry(Form):
+    message = TextField(u"", [Required()])
