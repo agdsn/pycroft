@@ -9,25 +9,28 @@
     This module is a simple command line client.
     Invoke this file with python -m console.console
 
+    IMPORTANT: If you want to create a database,
+               be sure all modules are imported
+
     :copyright: (c) 2012 by AG DSN.
 """
 
 import code
-#from pycroft.helpers.user_controller import UserController
+from pycroft import model
+from pycroft.model import accounting, base, dormitory, finance, hosts, logging
+from pycroft.model import ports, rights, user
 from pycroft.model.dormitory import Dormitory
 from pycroft.model.session import session
 
 
 def createDB():
-    from pycroft import model
     model.create_db_model()
-    model.session.session.flush()
+    session.flush()
 
 
 def dropDB():
-    from pycroft import model
     model.drop_db_model()
-    model.session.session.flush()
+    session.flush()
 
 
 def newDorm():
@@ -92,38 +95,6 @@ def deleteDorm():
         except:
             session.rollback()
 
-
-def newRoom():
-    pass
-
-
-def newUser():
-
-    #name = raw_input("name: ")
-    #dorm_short_name = raw_input("dormitory: ")
-    #floor_no = raw_input("floor no.: ")
-    #room_no = raw_input("room no.: ")
-    #login = raw_input("login: ")
-    #mac = raw_input("mac: ")
-
-    # returns new user
-    #try:
-    #    user = UserController.new_user(name,
-    #       dorm_short_name, floor_no, room_no, login, mac)
-    #except:
-    #    print "Unexpected error:", sys.exc_info()[0]
-    #    raise
-
-    # print new user
-    #print str(user)
-
-    # do you want to safe?
-    # yes
-    # change
-    # no
-    pass
-
-
 def h():
     print "\nCommands:"
     print "createDB()   - create database"
@@ -131,8 +102,6 @@ def h():
     print "h()          - shows this help"
     print "newDorm()    - new dormitory"
     print "deleteDorm() - delete a dormitory"
-    #print "newRoom()    - new room"
-    #print "newUser()    - new user"
     print "quit()       - quits the program"
     print ""
 
