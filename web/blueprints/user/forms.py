@@ -28,6 +28,9 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
+class AjaxSelectField(SelectField):
+    def pre_validate(self, form):
+        pass
 
 
 
@@ -45,8 +48,8 @@ class UserCreateForm(Form):
     host = TextField(u"Host")
     dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
         query_factory=dormitory_query)
-    level = SelectField(u"Etage", coerce=int, choices=[])
-    room_number = SelectField(u"Raumnummer", [Required(message=u"Raum?")], coerce=str, choices=[])
+    level = AjaxSelectField(u"Etage", coerce=int, choices=[])
+    room_number = AjaxSelectField(u"Raumnummer", [Required(message=u"Raum?")], coerce=str, choices=[])
 
 
 class hostCreateForm(Form):

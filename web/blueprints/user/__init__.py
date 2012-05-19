@@ -136,7 +136,7 @@ def create():
         
         room = dormitory.Room.q.filter_by(number=form.room_number.data,
                                           level=form.level.data,
-                                          dormitory_id=dormitory_id).one()
+                                          dormitory_id=dorm.id).one()
 
         #ToDo: Which port to choose if room has more than one?
         patch_port = room.patch_ports[0]
