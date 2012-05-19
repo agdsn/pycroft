@@ -76,7 +76,8 @@ def dormitory_level_rooms(dormitory_id, level):
     rooms_list = [room.number for room in rooms_list]
 
     #TODO depending on, whether a user is living in the room, the room is
-    # a link to the user. If there is more then one user, the room is duplicated
+    # a link to the user. If there is more then one user, the room is
+    # duplicated
     return render_template('user/rooms.html', rooms=rooms_list,
         page_title=u"Zimmer der Etage " + level + u" des Wohnheim " +
                    dormitory.short_name)
@@ -112,7 +113,8 @@ def create():
         dorm = form.dormitory_id.data
 
         try:
-            #ToDo: Ugly, but ... Someone can convert this is a proper property of Dormitory
+            #ToDo: Ugly, but ... Someone can convert this is
+            #      a proper property of Dormitory
             #ToDo: Also possibly slow and untested
             subnets = session.query(
                 Subnet

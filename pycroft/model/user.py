@@ -16,7 +16,6 @@ from sqlalchemy.types import String
 import re
 
 
-
 class User(ModelBase):
     login = Column(String(40), nullable=False)
     name = Column(String(255), nullable=False)
@@ -27,7 +26,8 @@ class User(ModelBase):
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
-    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
+    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"\
+                            "([A-Z][a-z0-9]+)((-|\\s)"\
                             "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$")
 
     @validates('login')
