@@ -3,12 +3,6 @@
     pycroft.helpers.user_helper
     ~~~~~~~~~~~~~~
 
-    This package contains the class UserHelper with the following helpers:
-    - generate password with given length
-    - generate hostname from IP
-    - return regex value specified for input type
-    - get free IP from available subnets
-
     :copyright: (c) 2011 by AG DSN.
 """
 
