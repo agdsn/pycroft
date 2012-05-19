@@ -23,12 +23,18 @@ class LogEntry(ModelBase):
 
     # many to one from LogEntry to User
     author = relationship("User",
-                backref=backref("log_entries"))
+                          backref=backref("log_entries"))
     author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
 
 class UserLogEntry(ModelBase):
     # many to one from UserLogEntry to User
     user = relationship("User",
-                backref=backref("user_log_entries"))
+                        backref=backref("user_log_entries"),
+                        primaryjoin="UserLogEntry.user_id == User.id")
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+
+    logentry = relationship("LogEntry",
+                            primaryjoin="UserLogEntry.logentry_id == " \
+                                        "LogEntry.id", uselist=False)
+    logentry_id = Column(Integer, ForeignKey("logentry.id"))
