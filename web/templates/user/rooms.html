@@ -7,8 +7,8 @@
 
 {% block basecontent %}
     <div>
-    {%- for floor in floors %}
-        <div class="row"><a href="{{url_for('user.overview')}}dormitory/{{ dormitory_id }}/level/{{ floor }}" class="btn btn-primary btn-large">{{ floor }}</a></div>
-    {%- endfor %}
+        {%- for room in rooms %}
+            <div class="row"><a class="btn btn-primary btn-large">{{ room }}</a></div>
+        {%- endfor %}
     </div>
 {% endblock %}
