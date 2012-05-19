@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "user/base.html" %}
+{% import "macros/forms.html" as forms %}
 
 {% block basecontent %}
 
@@ -14,29 +15,29 @@
             <div class="accordion-inner">
                 <div class="row">
                     <div class="span3">ID:</div>
-                    <div class="span7">{{ user[0].id }}</div>
+                    <div class="span7">{{ user.id }}</div>
                 </div>
 
                 <div class="row">
                     <div class="span3">Name:</div>
-                    <div class="span7">{{ user[0].name }}</div>
+                    <div class="span7">{{ user.name }}</div>
                 </div>
 
                 <div class="row">
                     <div class="span3">Login:</div>
-                    <div class="span7">{{ user[0].login }}</div>
+                    <div class="span7">{{ user.login }}</div>
                 </div>
 
                 <div class="row">
                     <div class="span3">Erstellungsdatum:</div>
-                    <div class="span7">{{ user[0].registration_date.
+                    <div class="span7">{{ user.registration_date.
                             strftime("%d.%m.%Y %H:%M Uhr") }}</div>
                 </div>
 
                 <div class="row">
                     <div class="span3">Raum:</div>
                     <div class="span7"><a href="{{ url_for("dormitories.room_show",
-            room_id = user[0].room_id) }}">{{ user[0].room_id }}</a></div>
+            room_id = user.room_id) }}">{{ user.room_id }}</a></div>
                 </div>
             </div>
 
@@ -66,8 +67,8 @@
             <div class="accordion-body collapse" id="hosts"
                  style="height: 0px;">
                 <div class="accordion-inner">
-                    {% if user[0].hosts %}
-                        {% for host in user[0].hosts %}
+                    {% if user.hosts %}
+                        {% for host in user.hosts %}
                             <div class="row">
                                 <div class="span3">Hostname:
                                     {{ host.hostname }}</div>
@@ -104,27 +105,42 @@
                  style="height:0px;">
                 <div class="accordion-inner">
                     <div class="row">
-                    <div class="span10">
-                        <form class="form-horizontal" action=""
-                              method="post">
-                            <input type="text" class="span8"
-                                   placeholder="Neuen Logeintrag anlegen">
-                            <button type="submit" class="btn">Submit
-                            </button>
-                        </form>
-                    </div>
-                    </div>
-                    <div class="row">
-                        {% if user[0].user_log_entries %}
-                            {% for entry in user[0].user_log_entries %}
-                                <div class="row span10">{{ entry.author }},
-                                    {{ entry.timestamp }}</div>
-                                <div class="row span10">{{ entry.message }}</div>
+                        {% if user_logs %}
+                            <div class="row span10"><dl>
+                            {% for entry in user_logs %}
+                            <dt>{{ entry.logentry.author.name }} (<a
+                                    href="{{ url_for(".user_show",
+                                user_id = entry.logentry.author.id) }}"
+                                    >{{ entry.logentry.author.login }}</a>) am
+                                {{ entry.logentry.timestamp.strftime(
+                                    "%d.%m. um %H:%M Uhr") }}</dt>
+                            <dd>{{ entry.logentry.message }}</dd>
                             {% endfor %}
+                            </dl></div>
                         {% else %}
                             <div class="row span10">Nutzer hat keine Einträge.
-                            </div>
+                                </div>
                         {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="row span8">
+                                <form method="POST" action=""
+                                      class="form-horizontal">
+                                    {{ form.hidden_tag() }}
+                                    {% for field in form %}
+                                        {% if field.type not in ["HiddenField",
+                                                "CSRFTokenField"] %}
+                                            {{ field(placeholder='Nachricht',
+                                                        class='span6') }}
+                                        {% endif %}
+                                    {% endfor %}
+                                        <button type="submit" class="btn
+                                        btn-primary">Absenden</button>
+                                </form>
+
+                                    {# {{ forms.simple_form(form, '',
+                                                    url_for('.create')) }} #}
+                        </div>
                     </div>
                 </div>
             </div>
