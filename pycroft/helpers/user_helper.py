@@ -9,7 +9,8 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-import random, ipaddr
+import random
+import ipaddr
 from pycroft.model import hosts
 from pycroft.model.session import session
 

@@ -4,8 +4,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
-from flaskext.wtf import Form, TextField, QuerySelectField, SelectField, PasswordField,\
-    DateField, BooleanField
+from flaskext.wtf import Form, TextField, QuerySelectField, SelectField,\
+    PasswordField, DateField, BooleanField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
 from pycroft.model.hosts import Host, NetDevice
@@ -33,10 +33,7 @@ class AjaxSelectField(SelectField):
         pass
 
 
-
 class UserCreateForm(Form):
-
-
     name = TextField(u"Name", [Required(message=u"Name?"),
                                Regexp(regex=User.name_regex,
                                    message=u"Name ist ungültig!")])
@@ -49,7 +46,9 @@ class UserCreateForm(Form):
     dormitory_id = QuerySelectField(u"Wohnheim", get_label='short_name',
         query_factory=dormitory_query)
     level = AjaxSelectField(u"Etage", coerce=int, choices=[])
-    room_number = AjaxSelectField(u"Raumnummer", [Required(message=u"Raum?")], coerce=str, choices=[])
+    room_number = AjaxSelectField(u"Raumnummer",
+            [Required(message=u"Raum?")],
+            coerce=str, choices=[])
 
 
 class hostCreateForm(Form):

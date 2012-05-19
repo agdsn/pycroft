@@ -20,9 +20,9 @@ def sort_dormitories(dormitories):
         letter = letter_re.search(dormitory.number.lower())
 
         if letter:
-            return ord(letter.group(0)) + 256*int(number.group(0))
+            return ord(letter.group(0)) + 256 * int(number.group(0))
 
-        return 256*int(number.group(0))
+        return 256 * int(number.group(0))
 
     sorted_dormitories = sorted(dormitories, key=make_sort_key)
 
