@@ -96,14 +96,14 @@ def json_levels(dormitory_id):
     levels = session.session.query(dormitory.Room.level.label('level')).filter_by(dormitory_id=dormitory_id).order_by(dormitory.Room.level).distinct()
     return jsonify(dict(levels=[entry.level for entry in levels]))
 
+
 @bp.route('/json/rooms', defaults={"dormitory_id":0, "level": 0})
-@bp.route('/json/rooms/<int:dormitory_id>+<level>')
+@bp.route('/json/rooms/<int:dormitory_id>/<int:level>')
 def json_rooms(dormitory_id, level):
     if not request.is_xhr:
         abort(404)
-    rooms = session.session.query(dormitory.Room.number.label('room_number')).filter_by(dormitory_id=dormitory_id, level=level).order_by(dormitory.Room.number).distinct()
-    return jsonify(dict(rooms=[entry.number for entry in rooms]))
-
+    rooms = session.session.query(dormitory.Room.number.label("room_num")).filter_by(dormitory_id=dormitory_id, level=level).order_by(dormitory.Room.number).distinct()
+    return jsonify(dict(rooms=[entry.room_num for entry in rooms]))
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -111,17 +111,22 @@ def json_rooms(dormitory_id, level):
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
-        dormitory_id = form.dormitory_id.data.id
+        dorm = form.dormitory_id.data
 
         try:
-            subnets = session.session.query(dormitory.Subnet.address).filter_by(
-                id=dormitory_id).join(
-                (dormitory.VLan, dormitory.Dormitory.vlans)).join(
-                (dormitory.Subnet, dormitory.VLan.subnets)).distinct().all()
-            subnet_list = []
-            for subnet in subnets:
-                subnet_list.append(subnet.address)
-            ip_address = helpers.getFreeIP(subnet_list)
+            #ToDo: Ugly, but ... Someone can convert this is a proper property of Dormitory
+            #ToDo: Also possibly slow and untested
+            subnets = session.session.query(
+                                        dormitory.Subnet
+                                    ).join(
+                                        dormitory.Subnet.vlans
+                                    ).join(
+                                        dormitory.VLan.dormitories
+                                    ).filter(
+                                        dormitory.Dormitory.id == dorm.id
+                                    ).all()
+
+            ip_address = helpers.getFreeIP(subnets)
         except helpers.SubnetFullException, error:
             flash('Subnetz voll', 'error')
             return render_template('user/user_create.html',
@@ -129,32 +134,33 @@ def create():
 
         hostname = helpers.generateHostname(ip_address, form.host.data)
         
-        level = int(form.room_number.data[:2])
-        number = form.room_number.data[-2:]
-        room_id = session.session.query(dormitory.Room).filter_by(number=number,
-            level=level,dormitory_id=dormitory_id).first().id
+        room = dormitory.Room.q.filter_by(number=form.room_number.data,
+                                          level=form.level.data,
+                                          dormitory_id=dormitory_id).one()
 
-        patchport_id = session.session.query(ports.PatchPort).filter_by(
-            room_id=room_id).first().id
+        #ToDo: Which port to choose if room has more than one?
+        patch_port = room.patch_ports[0]
 
         myUser = user.User(login=form.login.data,
-            name=form.name.data, room_id=room_id,
-            registration_date=datetime.datetime.now())
+                           name=form.name.data,
+                           room=room,
+                           registration_date=datetime.datetime.now())
         session.session.add(myUser)
-        session.session.commit()
 
-        myHost = hosts.Host(hostname=hostname, user_id=myUser.id,
-            room_id=room_id)
+        myHost = hosts.Host(hostname=hostname,
+                            user=myUser,
+                            room=room)
         session.session.add(myHost)
-        session.session.commit()
 
-        myNetDevice = hosts.NetDevice(ipv4=ip_address, mac=form.mac.data,
-            host_id=myHost.id, patch_port_id=patchport_id)
+        myNetDevice = hosts.NetDevice(ipv4=ip_address,
+                                      mac=form.mac.data,
+                                      host=myHost,
+                                      patch_port=patch_port)
         session.session.add(myNetDevice)
         session.session.commit()
-
         flash('Benutzer angelegt', 'success')
         return redirect(url_for('.user_show', user_id = myUser.id))
+
     return render_template('user/user_create.html',
         page_title=u"Neuer Nutzer", form=form)
 

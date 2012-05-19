@@ -45,7 +45,7 @@ def getFreeIP(subnets):
     possible_hosts = []
 
     for subnet in subnets:
-        for ip in ipaddr.IPv4Network(subnet).iterhosts():
+        for ip in ipaddr.IPv4Network(subnet.address).iterhosts():
             possible_hosts.append(ip)
 
     reserved_hosts = []
