@@ -52,13 +52,9 @@ def user_show(user_id):
     user_log_list = user.user_log_entries
     form = userLogEntry()
     if form.validate_on_submit():
-        newLogEntry = logging.LogEntry(message=form.message.data,
-                                       timestamp=datetime.datetime.now(),
-                                       author_id=3)
-        session.session.add(newLogEntry)
-        session.session.commit()
-        newUserLogEntry = logging.UserLogEntry(user_id=user_id,
-                                               logentry_id=countLogEntries + 1)
+        newUserLogEntry = logging.UserLogEntry(message=form.message.data,
+                                               timestamp=datetime.datetime.now(),
+                                               author_id=3, user_id=user_id)
         session.session.add(newUserLogEntry)
         session.session.commit()
         flash('Kommentar hinzugefügt', 'success')

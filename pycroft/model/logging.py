@@ -19,6 +19,9 @@ from sqlalchemy.types import Text
 
 
 class LogEntry(ModelBase):
+    discriminator = Column('type', Text(50))
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
     # variably sized string
     message = Column(Text, nullable=False)
     # created
@@ -30,14 +33,10 @@ class LogEntry(ModelBase):
     author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
 
-class UserLogEntry(ModelBase):
-    # many to one from UserLogEntry to User
-    user = relationship("User",
-                        backref=backref("user_log_entries"),
-                        primaryjoin="UserLogEntry.user_id == User.id")
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+class UserLogEntry(LogEntry):
+    __mapper_args__ = {'polymorphic_identity': 'userlogentry'}
+    id = Column(Integer, ForeignKey('logentry.id'), primary_key=True)
 
-    logentry = relationship("LogEntry",
-                            primaryjoin="UserLogEntry.logentry_id == " \
-                                        "LogEntry.id", uselist=False)
-    logentry_id = Column(Integer, ForeignKey("logentry.id"))
+    # many to one from UserLogEntry to User
+    user = relationship("User", backref=backref("user_log_entries"))
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
