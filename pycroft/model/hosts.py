@@ -52,7 +52,7 @@ class NetDevice(ModelBase):
     host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
     host = relationship("Host", backref=backref("net_devices"))
 
-    mac_regex= "^[a-f0-9]{2}(:[a-f0-9]{2}){5}$"
+    mac_regex = "^[a-f0-9]{2}(:[a-f0-9]{2}){5}$"
 
 
 class Switch(Host):
@@ -63,4 +63,3 @@ class Switch(Host):
 
     #management_ip = Column(postgresql.INET, nullable=False)
     management_ip = Column(String(51), unique=True, nullable=False)
-
