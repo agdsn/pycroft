@@ -20,7 +20,22 @@
                     });
 
                 })
-            })
+            });
+            $("body").on("change", "select#level", null, function( e ){
+                var $level_select = $(this),
+                        selected_level = $level_select.val(),
+                        $dorm_selector = $("select#dormitory_id"),
+                        selected_dorm = $dorm_selector.val(),
+                        $room_select = $("select#room_number");
+                $.getJSON("{{ url_for(".json_rooms") }}" + "/" + selected_dorm + "/" + selected_level, null, function( data ){
+                    var $rooms = $(data.rooms);
+                    $room_select.find("option").remove();
+                    $rooms.each(function(num, item){
+                        $room_select.append('<option value="'+ item +'">'+item+'</option>');
+                    });
+
+                })
+            });
         })
 
     </script>
