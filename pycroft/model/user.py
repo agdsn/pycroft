@@ -26,15 +26,12 @@ class User(ModelBase):
     room = relationship("Room", backref=backref("users", order_by='User.id'))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
 
-    login_regex = "^[a-z][a-z0-9_]{1,20}[a-z0-9]$"
-    name_regex = "^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
-                 "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$"
-
-
+    login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
+    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*([A-Z][a-z0-9]+)((-|\\s)"\
+                            "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$")
 
     @validates('login')
-    def validate_login(self, key, user):
-        m = re.search(login_regex, user.login)
-        if m.group(0) == None:
+    def validate_login(self, key, value):
+        if not User.login_regex.match(value):
             raise Exception("invalid unix-login!")
-        return user
+        return value
