@@ -15,6 +15,8 @@ from pycroft.model import hosts
 from pycroft.model.session import session
 from crypt import crypt
 from passlib.apps import ldap_context
+
+# ToDo: evaluate if we need "ldap_sha1_crypt" here for cpmpatibility
 ldap_context = ldap_context.replace(default="ldap_salted_sha1")
 
 
