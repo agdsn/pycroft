@@ -42,8 +42,14 @@ class User(ModelBase):
             raise Exception("invalid unix-login!")
         return value
 
-    def check_password(self, to_check):
-        return verify_password(to_check, self.passwd_hash)
+    def check_password(self, plaintext_password):
+        """verify a given plaintext password against the users passwd hash.
+
+        """
+        return verify_password(plaintext_reference, self.passwd_hash)
 
     def set_password(self, plain_password):
+        """Store a hash of a given plaintext passwd for the user.
+
+        """
         self.passwd_hash = hash_password(plain_password)
