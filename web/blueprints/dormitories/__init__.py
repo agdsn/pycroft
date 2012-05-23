@@ -60,9 +60,10 @@ def room_delete(room_id):
 
 @bp.route('/room/show/<room_id>')
 def room_show(room_id):
-    room_list = Room.q.filter(Room.id == room_id).all()
+    room = Room.q.get(room_id)
     return render_template('dormitories/room_show.html',
-        page_title=u"Raum mit ID " + room_id, room=room_list)
+        page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
+                   str(room.level) + u"-" + str(room.number), room=room)
 
 
 @bp.route('/room/create', methods=['GET', 'POST'])

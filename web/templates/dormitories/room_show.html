@@ -2,10 +2,11 @@
 
 {% block basecontent %}
     <ul class="unstyled">
-        <li>Nummer: {{ room[0].number }}</li>
-        <li>Etage: {{ room[0].level }}</li>
-        <li>Bewohnbar: {{ room[0].inhabitable }}</li>
-        <li>Wohnheim: {{ room[0].dormitory_id }}</li> 
+        <li>Wohnheim: {{ room.dormitory.street }} {{ room.dormitory.number
+                }}</li>
+        <li>Nummer: {{ room.number }}</li>
+        <li>Etage: {{ room.level }}</li>
+        <li>Bewohnbar: {{ room.inhabitable }}</li>
     </ul>
-    <div><a href="{{ url_for('.room_delete', room_id=room[0].id) }}" class="btn">Löschen</a></div>
+    <div><a href="{{ url_for('.room_delete', room_id=room.id) }}" class="btn">Löschen</a></div>
 {% endblock %}
