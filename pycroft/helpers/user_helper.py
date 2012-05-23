@@ -10,6 +10,9 @@ import random
 import ipaddr
 from pycroft.model import hosts
 from pycroft.model.session import session
+from crypt import crypt
+from passlib.apps import ldap_context
+ldap_context = ldap_context.replace(default="ldap_salted_sha1")
 
 
 class SubnetFullException(Exception):
@@ -55,3 +58,22 @@ def getFreeIP(subnets):
         return possible_hosts[0].compressed
 
     raise SubnetFullException()
+
+
+def hash_password(plaintext_passwd):
+    return ldap_context.encrypt(plaintext_passwd)
+
+
+def verify_password(plaintext_password, hash):
+    try:
+        result = ldap_context.verify(plaintext_password, hash)
+        if result:
+            return result
+    except ValueError:
+        pass
+    if hash.startswith("{crypt}") and len(hash) > 9:
+        real_hash = hash[6:]
+        salt = hash[6:8]
+        crypted = crypt(plaintext_password, salt)
+        return crypted == real_hash
+    return False
