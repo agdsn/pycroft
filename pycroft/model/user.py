@@ -17,8 +17,8 @@ from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
-from crypt import crypt
-from passlib.apps import ldap_context
+from pycroft.helpers.user_helper import hash_password, verify_password
+
 
 
 class User(ModelBase):
@@ -43,15 +43,7 @@ class User(ModelBase):
         return value
 
     def check_password(self, to_check):
-        try:
-            result = ldap_context.verify(to_check, self.passwd_hash)
-            if result:
-                return result
-        except ValueError:
-            pass
-        if self.passwd_hash.lower().startswith("{crypt}") and len(self.passwd_hash) > 9:
-            real_hash = self.passwd_hash[6:]
-            salt = self.passwd_hash[6:8]
-            crypted = crypt(to_check, salt)
-            return crypted == real_hash
-        return False
+        return verify_password(to_check, self.passwd_hash)
+
+    def set_password(self, plain_password):
+        self.passwd_hash = hash_password(plain_password)
