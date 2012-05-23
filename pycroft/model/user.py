@@ -17,12 +17,15 @@ from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
+from crypt import crypt
+from passlib.apps import ldap_context
 
 
 class User(ModelBase):
     login = Column(String(40), nullable=False)
     name = Column(String(255), nullable=False)
     registration_date = Column(DateTime, nullable=False)
+    passwd_hash = Column(String)
 
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
@@ -38,3 +41,17 @@ class User(ModelBase):
         if not User.login_regex.match(value):
             raise Exception("invalid unix-login!")
         return value
+
+    def check_password(self, to_check):
+        try:
+            result = ldap_context.verify(to_check, self.passwd_hash)
+            if result:
+                return result
+        except ValueError:
+            pass
+        if self.passwd_hash.lower().startswith("{crypt}") and len(self.passwd_hash) > 9:
+            real_hash = self.passwd_hash[6:]
+            salt = self.passwd_hash[6:8]
+            crypted = crypt(to_check, salt)
+            return crypted == real_hash
+        return False
