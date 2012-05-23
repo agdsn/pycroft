@@ -189,13 +189,13 @@ def search():
 @nav.navigate("Host erstellen")
 def host_create():
     form = hostCreateForm()
-    hostResult = hosts.Host.q
+    hostResult = Host.q.all()
     if form.validate_on_submit():
         myHost = Host(hostname=form.name.data)
         session.add(myHost)
         session.commit()
         flash('Host angelegt', 'success')
         return render_template('user/host_create.html', form=form,
-            results=hostResult.all())
+            results=hostResult)
     return render_template('user/host_create.html', form=form,
-        results=hostResult.all())
+        results=hostResult)
