@@ -14,12 +14,15 @@ from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
+from pycroft.helpers.user_helper import hash_password, verify_password
+
 
 
 class User(ModelBase):
     login = Column(String(40), nullable=False)
     name = Column(String(255), nullable=False)
     registration_date = Column(DateTime, nullable=False)
+    passwd_hash = Column(String)
 
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by='User.id'))
@@ -35,3 +38,15 @@ class User(ModelBase):
         if not User.login_regex.match(value):
             raise Exception("invalid unix-login!")
         return value
+
+    def check_password(self, plaintext_password):
+        """verify a given plaintext password against the users passwd hash.
+
+        """
+        return verify_password(plaintext_reference, self.passwd_hash)
+
+    def set_password(self, plain_password):
+        """Store a hash of a given plaintext passwd for the user.
+
+        """
+        self.passwd_hash = hash_password(plain_password)
