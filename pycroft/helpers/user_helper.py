@@ -61,10 +61,23 @@ def getFreeIP(subnets):
 
 
 def hash_password(plaintext_passwd):
+    """Use a ldap_context to generate a RFC 2307 from given plaintext.
+
+    The ldap_context is preconfigured to generate ldap_salted_sha1
+    hashes (prefixed with {SSHA}).
+    """
     return ldap_context.encrypt(plaintext_passwd)
 
 
 def verify_password(plaintext_password, hash):
+    """Verifies a plain password string agailst a given password hash.
+
+    It uses a ldap_context to verify RFC 2307 hashes including the GNU
+    {crypt} extension. If the passord is a basic 2-byte-salted hash
+    given grom old unix crypt() the ldap_context will fail. For this we
+    try to crypt() the given plaintext using the first two bytes of the
+    given hash als salt and compare the two hashes.
+    """
     try:
         result = ldap_context.verify(plaintext_password, hash)
         if result:
