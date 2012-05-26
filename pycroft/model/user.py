@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from flaskext.login import UserMixin
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
@@ -21,7 +22,7 @@ from pycroft.helpers.user_helper import hash_password, verify_password
 
 
 
-class User(ModelBase):
+class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False)
     name = Column(String(255), nullable=False)
     registration_date = Column(DateTime, nullable=False)
@@ -46,10 +47,18 @@ class User(ModelBase):
         """verify a given plaintext password against the users passwd hash.
 
         """
-        return verify_password(plaintext_reference, self.passwd_hash)
+        return verify_password(plaintext_password, self.passwd_hash)
 
     def set_password(self, plain_password):
         """Store a hash of a given plaintext passwd for the user.
 
         """
         self.passwd_hash = hash_password(plain_password)
+
+    @staticmethod
+    def verify_and_get(login, plaintext_password):
+        user = User.q.filter(User.login == login).first()
+        if user is not None:
+            if user.check_password(plaintext_password):
+                return user
+        return None
