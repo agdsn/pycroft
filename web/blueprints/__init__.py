@@ -9,6 +9,8 @@
 """
 
 from flask import request, url_for
+from flaskext.login import UserMixin
+from pycroft.model.user import User
 
 
 class BlueprintNavigation(object):

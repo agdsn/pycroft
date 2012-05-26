@@ -9,10 +9,11 @@
 """
 
 from flask import Flask, redirect, url_for
-from blueprints import finance, infrastructure, rights, user, dormitories
+from blueprints import finance, infrastructure, rights, user, dormitories, login
 import template_filters
 
 from pycroft.model.session import session
+from web.blueprints.login import login_manager
 
 
 def make_app():
@@ -26,11 +27,14 @@ def make_app():
     app.secret_key = \
         r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
+    login_manager.setup_app(app)
+
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(rights.bp, url_prefix="/rights")
     app.register_blueprint(finance.bp, url_prefix="/finance")
+    app.register_blueprint(login.bp)
 
     template_filters.register_filters(app)
 
