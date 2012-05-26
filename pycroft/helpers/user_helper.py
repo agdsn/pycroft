@@ -52,8 +52,8 @@ def verify_password(plaintext_password, hash):
     except ValueError:
         pass
     if hash.startswith("{crypt}") and len(hash) > 9:
-        real_hash = hash[6:]
-        salt = hash[6:8]
+        real_hash = hash[7:]
+        salt = hash[7:9]
         crypted = crypt(plaintext_password, salt)
         return crypted == real_hash
     return False
