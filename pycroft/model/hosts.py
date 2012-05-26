@@ -15,9 +15,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
-from pycroft.model.user import User
-from pycroft.model.dormitory import Room
-
+from pycroft.model import user
+from pycroft.model import dormitory
 
 class Host(ModelBase):
     hostname = Column(String(255), nullable=False)
@@ -25,11 +24,11 @@ class Host(ModelBase):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user = relationship(User, backref=backref("hosts"))
+    user = relationship("User", backref=backref("hosts"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
 
     # many to one from Host to Room
-    room = relationship(Room, backref=backref("hosts"))
+    room = relationship(dormitory.Room, backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=True)
 
 
