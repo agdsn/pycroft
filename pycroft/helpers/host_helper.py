@@ -8,7 +8,10 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import ipaddr
 import re
+from pycroft.model import hosts
+from pycroft.model.session import session
 
 
 def sort_ports(ports):
@@ -24,3 +27,38 @@ def sort_ports(ports):
     sorted_ports = sorted(ports, key=make_sort_key)
 
     return sorted_ports
+
+
+def generateHostname(ip_address, hostname):
+    if hostname == "":
+        return "whdd" + ip_address.split(u".")[-1]
+    return hostname
+
+
+class SubnetFullException(Exception):
+    pass
+
+
+def getFreeIP(subnets):
+    possible_hosts = []
+
+    for subnet in subnets:
+        for ip in ipaddr.IPv4Network(subnet.address).iterhosts():
+            possible_hosts.append(ip)
+
+    reserved_hosts = []
+
+    reserved_hosts_string = session.query(hosts.NetDevice.ipv4).all()
+
+    for ip in reserved_hosts_string:
+        reserved_hosts.append(ipaddr.IPv4Address(ip.ipv4))
+
+    for ip in reserved_hosts:
+        if ip in possible_hosts:
+            possible_hosts.remove(ip)
+
+    if possible_hosts:
+        return possible_hosts[0].compressed
+
+    raise SubnetFullException()
+

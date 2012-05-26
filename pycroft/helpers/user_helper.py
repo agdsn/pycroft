@@ -10,18 +10,11 @@
 """
 
 import random
-import ipaddr
-from pycroft.model import hosts
-from pycroft.model.session import session
 from crypt import crypt
 from passlib.apps import ldap_context
 
 # ToDo: evaluate if we need "ldap_sha1_crypt" here for cpmpatibility
 ldap_context = ldap_context.replace(default="ldap_salted_sha1")
-
-
-class SubnetFullException(Exception):
-    pass
 
 
 def generatePassword(length):
@@ -35,34 +28,6 @@ def generatePassword(length):
     return password
 
 
-def generateHostname(ip_address, hostname):
-    if hostname == "":
-        return "whdd" + ip_address.split(u".")[-1]
-    return hostname
-
-
-def getFreeIP(subnets):
-    possible_hosts = []
-
-    for subnet in subnets:
-        for ip in ipaddr.IPv4Network(subnet.address).iterhosts():
-            possible_hosts.append(ip)
-
-    reserved_hosts = []
-
-    reserved_hosts_string = session.query(hosts.NetDevice.ipv4).all()
-
-    for ip in reserved_hosts_string:
-        reserved_hosts.append(ipaddr.IPv4Address(ip.ipv4))
-
-    for ip in reserved_hosts:
-        if ip in possible_hosts:
-            possible_hosts.remove(ip)
-
-    if possible_hosts:
-        return possible_hosts[0].compressed
-
-    raise SubnetFullException()
 
 
 def hash_password(plaintext_passwd):
