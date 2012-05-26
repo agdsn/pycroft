@@ -11,12 +11,9 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template, flash, redirect, url_for
+from flask import Blueprint, render_template, flash, redirect, url_for, request
 from flaskext.login import login_user, logout_user, login_required, current_user, LoginManager
-from pycroft.helpers import host_helper
-from pycroft.model.hosts import Switch
 from pycroft.model.user import User
-from web.blueprints import BlueprintNavigation
 from web.blueprints.login.forms import LoginForm
 
 bp = Blueprint('login', __name__, )
@@ -42,9 +39,9 @@ def login():
         if user is not None:
             login_user(user)
             flash(u"Erfolgreich angemeldet.", "success")
-            return redirect("")
+            return redirect(request.args.get("next") or url_for("user.overview"))
         flash(u"Benutzername und/oder Passwort falsch", "error")
-    return render_template("login/login.html", form=form)
+    return render_template("login/login.html", form=form, next=request.args.get("next"))
 
 
 @bp.route("/logout")
