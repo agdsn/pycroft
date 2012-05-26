@@ -18,8 +18,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
-from pycroft.model.hosts import Switch
-
 
 class Port(object):
     name = Column(String(4), nullable=False)
@@ -59,4 +57,4 @@ class SwitchPort(DestinationPort):
 
     # many to one from SwitchPort to Switch
     switch_id = Column(Integer, ForeignKey("switch.id"), nullable=False)
-    switch = relationship(Switch, backref=backref("ports"))
+    switch = relationship("Switch", backref=backref("ports"))

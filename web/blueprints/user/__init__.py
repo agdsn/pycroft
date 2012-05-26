@@ -14,13 +14,14 @@
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 # this is necessary
+from pycroft.helpers.host_helper import getFreeIP
 from pycroft.model import ports
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.helpers import user_helper, dormitory_helper
+from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry
@@ -129,13 +130,13 @@ def create():
                 Dormitory.id == dorm.id
             ).all()
 
-            ip_address = user_helper.getFreeIP(subnets)
-        except user_helper.SubnetFullException, error:
+            ip_address = host_helper.getFreeIP(subnets)
+        except host_helper.SubnetFullException, error:
             flash('Subnetz voll', 'error')
             return render_template('user/user_create.html',
                 page_title=u"Neuer Nutzer", form=form)
 
-        hostname = user_helper.generateHostname(ip_address, form.host.data)
+        hostname = host_helper.generateHostname(ip_address, form.host.data)
 
         room = Room.q.filter_by(number=form.room_number.data,
             level=form.level.data, dormitory_id=dorm.id).one()
