@@ -12,7 +12,7 @@
 """
 
 from flask import Blueprint, render_template
-from web.blueprints import BlueprintNavigation
+from web.blueprints.navigation import BlueprintNavigation
 
 bp = Blueprint('rights', __name__, )
 nav = BlueprintNavigation(bp, "Rechte")
