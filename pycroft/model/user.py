@@ -59,3 +59,7 @@ class User(ModelBase, UserMixin):
             if user.check_password(plaintext_password):
                 return user
         return None
+
+    def has_property(self, property_name):
+        # ToDo: Implement the property-fetching over membershios of groups ...
+        return True
