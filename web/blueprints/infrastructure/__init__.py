@@ -14,7 +14,7 @@
 from flask import Blueprint, render_template
 from pycroft.helpers import host_helper
 from pycroft.model.hosts import Switch
-from web.blueprints import BlueprintNavigation
+from web.blueprints.navigation import BlueprintNavigation
 
 bp = Blueprint('infrastructure', __name__, )
 nav = BlueprintNavigation(bp, "Infrastruktur")
