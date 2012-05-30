@@ -19,7 +19,7 @@ from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.helpers import user_helper, dormitory_helper, host_helper
-from web.blueprints import BlueprintNavigation
+from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry
 from datetime import datetime

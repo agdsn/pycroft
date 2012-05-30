@@ -11,7 +11,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from pycroft.helpers import dormitory_helper
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
-from web.blueprints import BlueprintNavigation
+from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.dormitories.forms import RoomForm, DormitoryForm
 
 bp = Blueprint('dormitories', __name__, )
