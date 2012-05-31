@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pycroft.model.rights
+    pycroft.model.properties
     ~~~~~~~~~~~~~~
-
-    This module contains the classes Group, Membership, Right.
 
     :copyright: (c) 2011 by AG DSN.
 """
@@ -37,18 +35,18 @@ class Membership(ModelBase):
                                                 order_by='Membership.id'))
 
 
-class Right(ModelBase):
+class Property(ModelBase):
     name = Column(String(255), nullable=False)
 
-    # many to one from Right to RightGroup
+    # many to one from Property to PropertyGroup
     # nullable=True
-    right_group_id = Column(Integer, ForeignKey("rightgroup.id"),
+    property_group_id = Column(Integer, ForeignKey("propertygroup.id"),
                             nullable=False)
-    right_group = relationship("RightGroup", backref=backref("rights"))
+    property_group = relationship("PropertyGroup", backref=backref("properties"))
 
 
-class RightGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'rightgroup'}
+class PropertyGroup(Group):
+    __mapper_args__ = {'polymorphic_identity': 'propertygroup'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
                 nullable=False)
 

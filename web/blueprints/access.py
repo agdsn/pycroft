@@ -1,7 +1,7 @@
 from functools import wraps
 from flask.globals import current_app
 from flask import abort
-from flaskext.login import current_user, login_required
+from flask.ext.login import current_user, login_required
 from web.blueprints import bake_endpoint
 
 

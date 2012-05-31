@@ -7,7 +7,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from flaskext.login import UserMixin
+from flask.ext.login import UserMixin
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column

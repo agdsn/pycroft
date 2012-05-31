@@ -5902,11 +5902,6 @@ CREATE TABLE "group" (
 	type VARCHAR(17) NOT NULL, 
 	PRIMARY KEY (id)
 );
-CREATE TABLE rightgroup (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES "group" (id)
-);
 CREATE TABLE trafficgroup (
 	id INTEGER NOT NULL, 
 	traffic_limit BIGINT NOT NULL, 
@@ -5925,13 +5920,6 @@ CREATE TABLE journalentry (
 	timestamp DATETIME NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(journal_id) REFERENCES journal (id)
-);
-CREATE TABLE "right" (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	right_group_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(right_group_id) REFERENCES rightgroup (id)
 );
 CREATE TABLE "transaction" (
 	id INTEGER NOT NULL, 
@@ -5998,4 +5986,16 @@ CREATE TABLE userlogentry (
 	FOREIGN KEY(user_id) REFERENCES user (id)
 );
 INSERT INTO "userlogentry" VALUES(1,1);
+CREATE TABLE propertygroup (
+	id INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(id) REFERENCES "group" (id)
+);
+CREATE TABLE property (
+	id INTEGER NOT NULL, 
+	name VARCHAR(255) NOT NULL, 
+	property_group_id INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(property_group_id) REFERENCES propertygroup (id)
+);
 COMMIT;

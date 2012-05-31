@@ -9,7 +9,7 @@
 """
 
 from flask import Flask, redirect, url_for
-from blueprints import finance, infrastructure, rights, user, dormitories, login
+from blueprints import finance, infrastructure, properties, user, dormitories, login
 import template_filters
 
 from pycroft.model.session import session
@@ -32,7 +32,7 @@ def make_app():
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
-    app.register_blueprint(rights.bp, url_prefix="/rights")
+    app.register_blueprint(properties.bp, url_prefix="/properties")
     app.register_blueprint(finance.bp, url_prefix="/finance")
     app.register_blueprint(login.bp)
 
@@ -42,7 +42,7 @@ def make_app():
     finance.nav.register_on(app)
     dormitories.nav.register_on(app)
     infrastructure.nav.register_on(app)
-    rights.nav.register_on(app)
+    properties.nav.register_on(app)
 
     @app.route('/')
     def redirect_to_index():
