@@ -3,10 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.rights
+    web.blueprints.properties
     ~~~~~~~~~~~~~~
 
-    This module defines view functions for /rights
+    This module defines view functions for /properties
 
     :copyright: (c) 2012 by AG DSN.
 """
@@ -14,17 +14,17 @@
 from flask import Blueprint, render_template
 from web.blueprints.navigation import BlueprintNavigation
 
-bp = Blueprint('rights', __name__, )
-nav = BlueprintNavigation(bp, "Rechte")
+bp = Blueprint('properties', __name__, )
+nav = BlueprintNavigation(bp, "Eigenschaften")
 
 
 @bp.route('/groups')
 @nav.navigate(u"Gruppen")
 def groups():
-    return render_template('rights/base.html')
+    return render_template('properties/base.html')
 
 
-@bp.route('/rights')
-@nav.navigate(u"Rechte")
+@bp.route('/properties')
+@nav.navigate(u"Eigenschaften")
 def rights():
-    return render_template('rights/base.html')
+    return render_template('properties/base.html')

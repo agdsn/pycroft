@@ -12,7 +12,7 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for, request
-from flaskext.login import login_user, logout_user, login_required, current_user, LoginManager
+from flask.ext.login import login_user, logout_user, login_required, current_user, LoginManager
 from pycroft.model.user import User
 from web.blueprints.login.forms import LoginForm
 
