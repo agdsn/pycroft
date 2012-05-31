@@ -18,7 +18,7 @@
 import code
 from pycroft import model
 from pycroft.model import accounting, base, dormitory, finance, hosts, logging
-from pycroft.model import ports, rights, user
+from pycroft.model import ports, properties, user
 from pycroft.model.dormitory import Dormitory
 from pycroft.model.session import session
 
