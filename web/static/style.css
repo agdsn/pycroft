@@ -14,3 +14,21 @@ h2 {
 .dropdown:hover .dropdown-menu {
     display: block;
 }
+
+.level a{
+    width: 10%;
+}
+
+.level {
+    margin-bottom: 0.5em;
+}
+
+.room a{
+    width: 70%;
+    margin: 0.5em;
+}
+
+.room {
+    width: 20%;
+    float: left;
+}
