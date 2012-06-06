@@ -11,6 +11,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import re
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
@@ -21,6 +22,8 @@ from sqlalchemy.types import String
 
 class Port(object):
     name = Column(String(4), nullable=False)
+    
+    name_regex = re.compile("[A-Z][1-9][0-9]?")
 
 
 class DestinationPort(Port, ModelBase):
