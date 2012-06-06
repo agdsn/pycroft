@@ -7,7 +7,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import dormitory_helper
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
