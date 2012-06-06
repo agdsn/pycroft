@@ -26,12 +26,17 @@ class Membership(ModelBase):
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey('group.id'), primary_key=True,
                         nullable=False)
+    #TODO prüfen, ob cascade Memberships löscht, wenn zugehörige Gruppe deleted
     group = relationship("Group", backref=backref("memberships",
+                                                  cascade="all, delete",
                                                   order_by='Membership.id'))
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True,
                         nullable=False)
+
+    #TODO prüfen, ob cascade Memberships löscht, wenn zugehöriger User deleted
     user = relationship("User", backref=backref("memberships",
+                                                cascade="all, delete",
                                                 order_by='Membership.id'))
 
 
@@ -42,8 +47,24 @@ class Property(ModelBase):
     # nullable=True
     property_group_id = Column(Integer, ForeignKey("propertygroup.id"),
                             nullable=False)
-    property_group = relationship("PropertyGroup", backref=backref("properties"))
+    #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
+    property_group = relationship("PropertyGroup",
+        backref=backref("properties", cascade="all,delete"))
 
+properties = {
+    u"internet": u"Nutzer darf sich mit dem Internet verbinden",
+    u"no_internet": u"Nutzer darf sich NICHT mit dem Internet verbinden",
+    u"mail": u"Nutzer darf E-Mails versenden (und empfangen)",
+    u"ssh_helios" : u"Nutzer darf sich mit SSH auf Helios einloggen",
+    u"no_ssh_helios" : u"Nutzer darf sich NICHT mit SSH auf Helios einloggen",
+    u"homepage_helios" : u"Nutzer darf eine Hompage auf Helios anlegen",
+    u"no_pay" : u"Nutzer muss keinen Semesterbeitrag zahlen",
+    u"show_user" : u"Nutzer darf andere Nutzer in der Usersuite sehen",
+    u"change_mac" : u"Nutzer darf MAC Adressen ändern",
+    u"change_user" : u"Nutzer darf Nutzer erstellen, ändern, löschen",
+    u"finance" : u"Nutzer darf Finanzen einsehen und verwalten",
+    u"root" : u"Nutzer darf Infrastruktur verwalten"
+}
 
 class PropertyGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'propertygroup'}

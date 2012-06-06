@@ -1,0 +1,24 @@
+{% extends "properties/base.html" %}
+
+{% block basecontent %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            {% if property_groups %}
+            <th>Eigenschaften Gruppe</th>
+            {% for property in properties %}
+            <th>{{ property }}</th>
+            {% endfor %}
+            {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for property_group in property_groups %}
+            <tr>
+                <td>{{ property_group.name }} <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a> </td>
+            </tr>
+        {% endfor %}
+        <tbody>
+    </table>
+    <a href="{{ url_for(".property_group_create") }}" class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
+{% endblock %}
