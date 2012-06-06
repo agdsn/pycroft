@@ -8,9 +8,11 @@ from flaskext.wtf import Form, TextField, validators, BooleanField, \
     QuerySelectField
 from pycroft.model.dormitory import Dormitory
 
+from pycroft.helpers.dormitory_helper import sort_dormitories
+
 
 def dormitory_query():
-    return Dormitory.q.order_by(Dormitory.short_name)
+    return sort_dormitories(Dormitory.q.all())
 
 
 class RoomForm(Form):
