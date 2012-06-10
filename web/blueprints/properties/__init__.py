@@ -14,7 +14,8 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
-from pycroft.model.properties import PropertyGroup, TrafficGroup, properties
+from pycroft.model.properties import PropertyGroup, TrafficGroup, \
+    Property, property_categories, get_properties
 from pycroft.model.session import session
 
 bp = Blueprint('properties', __name__, )
@@ -44,7 +45,7 @@ def traffic_group_create():
     page_title = u"Neue Traffic Gruppe")
 
 
-@bp.route('/traffic_group/delete/<group_id>')
+@bp.route('/traffic_group/<group_id>/delete')
 def traffic_group_delete(group_id):
     group = TrafficGroup.q.get(group_id)
     session.delete(group)
@@ -58,7 +59,9 @@ def traffic_group_delete(group_id):
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
     return render_template('properties/property_groups_list.html',
-        properties = sorted(properties), property_groups=property_groups_list)
+        property_categories = property_categories,
+        property_groups=property_groups_list,
+        num_groups = len(property_groups_list))
 
 
 @bp.route('/property_group/create', methods=['GET', 'POST'])
@@ -68,16 +71,42 @@ def property_group_create():
         new_property_group = PropertyGroup(name=form.name.data)
         session.add(new_property_group)
         session.commit()
-        flash('Eigenschaften Gruppe angelegt', 'success')
+        flash('Eigenschaften Gruppe {} angelegt'.format(new_property_group.name), 'success')
         return redirect(url_for('.property_groups'))
     return render_template('properties/property_group_create.html', form=form,
         page_title = u"Neue Eigenschaften Gruppe")
 
 
-@bp.route('/property_group/delete/<group_id>')
+@bp.route('/property_group/<group_id>/add/<property_name>')
+def property_group_add_property(group_id, property_name):
+    group = PropertyGroup.q.get(group_id)
+    assert group
+    assert(property_name in get_properties())
+    new_property = Property(name=property_name, property_group_id=group_id)
+    session.add(new_property)
+    session.commit()
+    flash('Eigenschaft {} zur Gruppe {} hinzugefügt'.format(property_name,
+        group.name), 'success')
+    return redirect(url_for('.property_groups'))
+
+
+@bp.route('/property_group/<group_id>/delete/<property_name>')
+def property_group_delete_property(group_id, property_name):
+    group = PropertyGroup.q.get(group_id)
+    assert group
+    assert(property_name in get_properties())
+    Property.q.filter_by(name=property_name,
+        property_group_id = group_id).delete()
+    session.commit()
+    flash('Eigenschaft {} von Gruppe {} entfernt'.format(property_name,
+        group.name), 'success')
+    return redirect(url_for('.property_groups'))
+
+
+@bp.route('/property_group/<group_id>/delete')
 def property_group_delete(group_id):
     group = PropertyGroup.q.get(group_id)
     session.delete(group)
     session.commit()
-    flash('Eigenschaften Gruppe gelöscht', 'success')
+    flash('Eigenschaften Gruppe {} gelöscht'.format(group.name), 'success')
     return redirect(url_for('.property_groups'))

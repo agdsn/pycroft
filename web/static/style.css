@@ -27,3 +27,26 @@ h2 {
     width: 20%;
     float: left;
 }
+
+.sprite-button {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+.sprite-button img {
+    margin-left: -1px;
+    margin-top: -4px;
+}
+
+.sprite-button:hover {
+    background-position-x: right;
+}
+
+.check-button {
+    background: url("/static/images/check.png") no-repeat;
+}
+
+.add-button {
+    background: url("/static/images/add.png") no-repeat;
+}
