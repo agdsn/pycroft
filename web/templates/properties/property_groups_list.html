@@ -31,12 +31,12 @@
                 {% for property_group in property_groups %}
                 <td>
                     {% if  property_group.has_property(property[0]) %}
-                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}" class="sprite-button check-button">
-                        <img src="{{ url_for("static", filename="images/empty26x26.png") }}" alt="löschen">
+                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
+                           class="icon-ok remove-button">
                         </a>
                     {% else %}
-                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}" class="sprite-button add-button">
-                        <img src="{{ url_for("static", filename="images/empty26x26.png") }}" alt="hinzufügen">
+                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
+                           class="icon-ban-circle add-button">
                         </a>
                     {% endif %}
                 </td>
