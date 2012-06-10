@@ -35,13 +35,8 @@ h2 {
 
 .sprite-button {
     display: block;
-    width: 16px;
-    height: 16px;
-}
-
-.sprite-button img {
-    margin-left: -1px;
-    margin-top: -4px;
+    height: 18px;
+    width: 18px;
 }
 
 .sprite-button:hover {
