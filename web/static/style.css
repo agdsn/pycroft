@@ -33,24 +33,10 @@ h2 {
     float: left;
 }
 
-.sprite-button {
-    display: block;
-    height: 26px;
-    width: 26px;
-}
-
-.check-button {
-    background: url("/static/images/glyphicons_206_ok_2.png") no-repeat;
-}
-
-.add-button {
-    background: url("/static/images/checkbox26x26.png") no-repeat;
-}
-
-.check-button:hover {
-    background: url("/static/images/glyphicons_207_remove_2_26x26.png") no-repeat;
-}
-
 .add-button:hover {
-    background: url("/static/images/glyphicons_190_circle_plus.png") no-repeat;
+    background-position: 0 -96px;
+}
+
+.remove-button:hover {
+    background-position: -312px 0;
 }
