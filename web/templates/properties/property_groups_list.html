@@ -6,24 +6,46 @@
 {% extends "properties/base.html" %}
 
 {% block basecontent %}
+    <a href="{{ url_for(".property_group_create") }}" class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
+    {% if property_groups %}
     <table class="table table-striped">
         <thead>
         <tr>
-            {% if property_groups %}
-            <th>Eigenschaften Gruppe</th>
-            {% for property in properties %}
-            <th>{{ property }}</th>
+            <th></th>
+            {% for property_group in property_groups %}
+            <th>{{ property_group.name }} <br> <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a></th>
             {% endfor %}
-            {% endif %}
         </tr>
         </thead>
-        <tbody>
-        {% for property_group in property_groups %}
+
+        {% for category in property_categories %}
+            <thead>
             <tr>
-                <td>{{ property_group.name }} <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a> </td>
+                <th colspan="{{ num_groups + 1 }}">{{ category[0] }}</th>
             </tr>
+            </thead>
+            <tbody>
+            {% for property in category[1] %}
+            <tr>
+                <td>{{ property[1] }}</td>
+                {% for property_group in property_groups %}
+                <td>
+                    {% if  property_group.has_property(property[0]) %}
+                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}" class="sprite-button check-button">
+                        <img src="{{ url_for("static", filename="images/checkbox.png") }}" alt="löschen">
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}" class="sprite-button add-button">
+                        <img src="{{ url_for("static", filename="images/checkbox.png") }}" alt="hinzufügen">
+                        </a>
+                    {% endif %}
+                </td>
+                {% endfor %}
+
+            </tr>
+            {% endfor %}
+            <tbody>
         {% endfor %}
-        <tbody>
     </table>
-    <a href="{{ url_for(".property_group_create") }}" class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
+    {% endif %}
 {% endblock %}
