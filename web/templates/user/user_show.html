@@ -32,7 +32,8 @@
                 <div class="row">
                     <div class="span3">Raum:</div>
                     <div class="span7"><a href="{{ url_for("dormitories.room_show",
-            room_id = user.room_id) }}">{{ user.room_id }}</a></div>
+            room_id = user.room_id) }}">{{ room.dormitory.short_name }}
+                        {{ room.level }}-{{ room.number }}</a></div>
                 </div>
             </div>
 
@@ -97,43 +98,47 @@
                 </a>
             </div>
             <div class="accordion-body collapse" id="logentries"
-                 style="height:5em;">
+                 style="height: auto;">
                 <div class="accordion-inner">
                     <div class="row">
                         {% if user_logs %}
-                            <div class="row span10"><dl>
-                            {% for entry in user_logs %}
-                            <dt>{{ entry.author.name }} (<a
-                                    href="{{ url_for(".user_show",
+                            <div class="row span10">
+                                <dl>
+                                    {% for entry in user_logs %}
+                                        <dt>{{ entry.author.name }} (<a
+                                                href="{{ url_for(".user_show",
                                 user_id = entry.author.id) }}"
-                                    >{{ entry.author.login }}</a>) am
-                                {{ entry.timestamp.strftime(
+                                                >{{ entry.author.login }}</a>)
+                                            am
+                                            {{ entry.timestamp.strftime(
                                     "%d.%m. um %H:%M Uhr") }}</dt>
-                            <dd>{{ entry.message }}</dd>
-                            {% endfor %}
-                            </dl></div>
+                                        <dd>{{ entry.message }}</dd>
+                                    {% endfor %}
+                                </dl>
+                            </div>
                         {% else %}
                             <div class="row span10">Nutzer hat keine Einträge.
-                                </div>
+                            </div>
                         {% endif %}
                     </div>
                     <div class="row">
                         <div class="row span8">
-                                <form method="POST" action=""
-                                      class="form-horizontal">
-                                    {{ form.hidden_tag() }}
-                                    {% for field in form %}
-                                        {% if field.type not in ["HiddenField",
+                            <form method="POST" action=""
+                                  class="form-horizontal">
+                                {{ form.hidden_tag() }}
+                                {% for field in form %}
+                                    {% if field.type not in ["HiddenField",
                                                 "CSRFTokenField"] %}
-                                            {{ field(placeholder='Nachricht',
+                                        {{ field(placeholder='Nachricht',
                                                         class='span6') }}
-                                        {% endif %}
-                                    {% endfor %}
-                                        <button type="submit" class="btn
-                                        btn-primary">Absenden</button>
-                                </form>
+                                    {% endif %}
+                                {% endfor %}
+                                <button type="submit" class="btn
+                                        btn-primary">Absenden
+                                </button>
+                            </form>
 
-                                    {# {{ forms.simple_form(form, '',
+                            {# {{ forms.simple_form(form, '',
                                                     url_for('.create')) }} #}
                         </div>
                     </div>
