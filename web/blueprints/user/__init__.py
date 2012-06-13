@@ -13,6 +13,7 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
+from flask.ext.login import current_user
 # this is necessary
 from pycroft.helpers.host_helper import getFreeIP
 from pycroft.model import ports
@@ -25,10 +26,12 @@ from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry
+from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
+access = BlueprintAccess(bp)
 
 
 @bp.route('/')
@@ -41,14 +44,16 @@ def overview():
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
+@access.login_required
 def user_show(user_id):
     user = User.q.get(user_id)
+    room = Room.q.get(user.room_id)
     form = userLogEntry()
     if form.validate_on_submit():
         #TODO determine author_id from user session
         newUserLogEntry = UserLogEntry(message=form.message.data,
             timestamp=datetime.now(),
-            author_id=user_id, user_id=user_id)
+            author_id=current_user.id, user_id=user_id)
         session.add(newUserLogEntry)
         session.commit()
         flash('Kommentar hinzugefügt', 'success')
@@ -57,7 +62,7 @@ def user_show(user_id):
 
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
-        user=user, user_logs=user_log_list, form=form)
+        user=user, user_logs=user_log_list, room=room, form=form)
 
 
 @bp.route('/dormitory/<dormitory_id>')
@@ -116,6 +121,7 @@ def json_rooms(dormitory_id, level):
 
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate("Anlegen")
+@access.login_required
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
@@ -153,6 +159,10 @@ def create():
             name=form.name.data,
             room=room,
             registration_date=datetime.now())
+        plain_password = user_helper.generatePassword(12)
+        #TODO: DEBUG remove in productive
+        print u"new password" + plain_password
+        myUser.set_password(plain_password)
         session.add(myUser)
 
         myHost = Host(hostname=hostname,
