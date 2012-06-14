@@ -34,8 +34,6 @@ class DatePickerField(fields.DateField):
     """
     widget = None
     def __init__(self, *args, **kwargs):
-        super(DatePickerField, self).__init__(*args, **kwargs)
-
         if "with_today_button" in kwargs:
             self.with_today_button = kwargs.pop("with_today_button")
         else:
@@ -45,6 +43,8 @@ class DatePickerField(fields.DateField):
             self.today_title = kwargs.pop("today_title")
         else:
             self.today_title = u"Set today!"
+
+        super(DatePickerField, self).__init__(*args, **kwargs)
 
         if self.widget is None:
             self.widget = DatePickerWidget(date_format=self._format_to_widget(),
