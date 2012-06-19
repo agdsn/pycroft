@@ -2,6 +2,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from wtforms import widgets
+from wtforms.widgets.core import html_params
+
 
 class DatePickerWidget(widgets.TextInput):
     """This is a Datepicker widget usinng bootstrap-datepicker.
@@ -64,3 +66,24 @@ class DatePickerWidget(widgets.TextInput):
             return html
         else:
             return field_html
+
+
+class CheckBoxWidget(widgets.Select):
+    """A simple multi selection widget rendered as Checkbox list.
+    
+    It uses the bootstrap markup.
+    """
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('type', 'checkbox')
+        field_id = kwargs.pop('id', field.id)
+        html = []
+        for value, label, checked in field.iter_choices():
+            choice_id = u'%s-%s' % (field_id, value)
+            options = dict(kwargs, name=field.name, value=value, id=choice_id)
+            html.append(u'<label class="checkbox" %s>' % html_params(id=field_id))
+            if checked:
+                options['checked'] = 'checked'
+            html.append(u'<input %s>' % html_params(**options))
+            html.append(label)
+            html.append(u'</label>')
+        return u''.join(html)
