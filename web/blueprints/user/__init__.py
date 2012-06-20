@@ -13,7 +13,6 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
-from flask.ext.login import current_user
 # this is necessary
 from pycroft.helpers.host_helper import getFreeIP
 from pycroft.model import ports
@@ -22,10 +21,11 @@ from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
+from pycroft.model.properties import Membership
 from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    hostCreateForm, userLogEntry
+    hostCreateForm, userLogEntry, UserAddGroupMembership
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime
 
@@ -64,6 +64,21 @@ def user_show(user_id):
         page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form)
 
+@bp.route('/add_group_membership/<int:user_id>/', methods=['GET', 'Post'])
+def add_group_membership(user_id):
+    user = User.q.get(user_id)
+    if user is None:
+        abort(404)
+    form = UserAddGroupMembership()
+    if form.validate_on_submit():
+        newMembership = Membership(user=user,group=form.group_id.data,start_date=form.begin_date.data, end_date=form.end_date.data)
+        session.add(newMembership)
+        session.commit()
+        flash('Nutzer wurde der Gruppe hinzugefügt.','success')
+
+        return redirect(url_for(".user_show",user_id=user_id))
+
+    return render_template('user/add_group_membership.html',page_title="Neue Gruppe für Nutzer", user_id=user_id,form=form)
 
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_levels(dormitory_id):
