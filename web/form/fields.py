@@ -14,7 +14,12 @@ class DatePickerField(fields.DateField):
                               The default is false.
     :param today_title: The title of the today button. Default is "Set today!"
 
-    I needs the datepicker css and js files!  You must also activate the
+    It needs the datepicker css and js files!
+        <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
+        <script type="text/javascript" src="{{ url_for("static", filename="datepicker/js/bootstrap-datepicker.js") }}"></script>
+        <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
+
+    You must also activate the
     datepicker for the widget with a js snipped:
         <script type="text/javascript">
             $('[data-role=datepicker]').datepicker();
@@ -22,14 +27,7 @@ class DatePickerField(fields.DateField):
 
     To use the Today Button You also need this:
         <script type="text/javascript">
-            $('[data-role=today-btn]').on("click", function (ev) {
-                var $this = $(this),
-                    $target = $("#" + $this.data("target")),
-                    format = $target.data("datepicker").format;
-                ev.preventDefault();
-                $target.val(formatDate(new Date(), format));
-                $target.data("datepicker").update()
-            })
+            $('[data-role=today-btn]').todayButton();
         </script>
     """
     widget = None
