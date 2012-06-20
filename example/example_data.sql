@@ -5954,7 +5954,7 @@ CREATE TABLE membership (
 	end_date DATETIME, 
 	group_id INTEGER NOT NULL, 
 	user_id INTEGER NOT NULL, 
-	PRIMARY KEY (id, group_id, user_id), 
+	PRIMARY KEY (id),
 	FOREIGN KEY(group_id) REFERENCES "group" (id), 
 	FOREIGN KEY(user_id) REFERENCES user (id)
 );
