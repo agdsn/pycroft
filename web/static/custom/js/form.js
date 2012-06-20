@@ -1,14 +1,17 @@
 /**
- * Created with PyCharm.
- * User: nick-xyz-
- * Date: 6/20/12
- * Time: 8:59 PM
- * To change this template use File | Settings | File Templates.
+ * form.js
+ *
+ * This file contains javascript code used with the forms
+ *
+ * copyright (c) 2012 by AG DSN.
  */
 
-
+/**
+ * This is a today-button to use with the datepicker.
+ */
 !function ( $ ) {
 
+    // Today Button object
     var TodayButton = function (element, options) {
         this.element = $(element);
         this.target = $("#" + this.element.data("target"));
