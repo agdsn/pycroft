@@ -74,9 +74,9 @@
                                             <div>
                                                 Ethernet-Adresse:
                                                 {{ netdevice.mac }}</div>
-                                            <div>IP4-Adresse:
+                                            <div>IPv4-Adresse:
                                                 {{ netdevice.ipv4 }}</div>
-                                            <div>IP6-Adresse:
+                                            <div>IPv6-Adresse:
                                                 {{ netdevice.ipv6 }}</div>
                                         {% endfor %}
                                     {% endif %}
@@ -157,6 +157,19 @@
                  style="height:0px;">
                 <div class="accordion-inner">
                     Not implemented yet.
+                </div>
+            </div>
+
+            <div class="accordion-heading">
+                <a href="#property_groups" data-parent="#userboxes"
+                   data-toggle="collapse" class="accordion-toggle">
+                    Gruppen
+                </a>
+            </div>
+            <div class="accordion-body collapse" id="property_groups"
+                 style="height:0px;">
+                <div class="accordion-inner">
+                    <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">Neue Gruppe</a>
                 </div>
             </div>
 
