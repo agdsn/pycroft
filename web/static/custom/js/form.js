@@ -67,7 +67,12 @@
 }(window.jQuery);
 
 
-
+/**
+ * The LazyLoadSelect plugin!
+ *
+ * This Plugin is used with the LazyLoadSelectField from web.form.fields.
+ * It fetches new option values if one of the dependencies changes.
+ */
 !function ( $ ) {
 
     var LazyLoadSelect= function(element, options) {
