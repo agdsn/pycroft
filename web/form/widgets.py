@@ -89,6 +89,10 @@ class CheckBoxWidget(widgets.Select):
 
 
 class LazyLoadSelectWidget(widgets.Select):
+    """This is the widget for the LazyLoadSelectField
+
+    Please look at web.form.fields.LazyLoadSelectField for more information.
+    """
 
     def __call__(self, field, **kwargs):
         conditions = getattr(field, "conditions", None)
