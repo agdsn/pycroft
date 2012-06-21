@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from web.form.widgets import DatePickerWidget
+from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
 from wtforms import fields
 
 
@@ -55,3 +55,16 @@ class DatePickerField(fields.DateField):
         date_format = date_format.replace(u"%m", u"mm")
         date_format = date_format.replace(u"%d", u"dd")
         return date_format
+
+
+class LazyLoadSelectField(fields.SelectField):
+    widget = LazyLoadSelectWidget()
+
+    def __init__(self, *args, **kwargs):
+        self.conditions = kwargs.pop("conditions")
+        self.data_endpoint = kwargs.pop("data_endpoint")
+
+        super(LazyLoadSelectField,self).__init__(*args, **kwargs)
+
+    def pre_validate(self, form):
+        pass
