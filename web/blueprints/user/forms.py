@@ -33,10 +33,7 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
-class AjaxSelectField(SelectField):
-    def pre_validate(self, form):
-        pass
-
+from web.form.fields import LazyLoadSelectField
 
 class UserCreateForm(Form):
     name = TextField(u"Name", [Required(message=u"Name?"),
@@ -48,16 +45,23 @@ class UserCreateForm(Form):
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
-    dormitory_id = QuerySelectField(u"Wohnheim",
+    dormitory = QuerySelectField(u"Wohnheim",
         [Required(message=u"Wohnheim?")],
         get_label='short_name',
         query_factory=dormitory_query)
-    level = AjaxSelectField(u"Etage",
-        [Required(message=u"Etage?")],
-        coerce=int, choices=[])
-    room_number = AjaxSelectField(u"Raumnummer",
-        [Required(message=u"Raum?")],
-        coerce=str, choices=[])
+    level = LazyLoadSelectField(u"Etage",
+        validators=[Required(message=u"Etage?")],
+        coerce=int,
+        choices=[],
+        conditions=["dormitory"],
+        data_endpoint="user.json_levels")
+    room_number = LazyLoadSelectField(u"Raumnummer",
+        validators=[Required(message=u"Raum?")],
+        coerce=str,
+        choices=[],
+        conditions=["dormitory", "level"],
+        data_endpoint="user.json_rooms")
+
 
 
 class hostCreateForm(Form):

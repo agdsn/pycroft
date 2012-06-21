@@ -1,6 +1,10 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import json
+
+from flask import url_for
+
 from wtforms import widgets
 from wtforms.widgets.core import html_params
 
@@ -85,3 +89,15 @@ class CheckBoxWidget(widgets.Select):
             html.append(label)
             html.append(u'</label>')
         return u''.join(html)
+
+
+class LazyLoadSelectWidget(widgets.Select):
+
+    def __call__(self, field, **kwargs):
+        conditions = getattr(field, "conditions", None)
+        if conditions is not None:
+            kwargs["data-fieldids"] = ",".join(conditions)
+        kwargs['data-role'] = u'lazyloadselect'
+        kwargs['data-url'] = url_for(field.data_endpoint)
+
+        return super(LazyLoadSelectWidget, self).__call__(field, **kwargs)

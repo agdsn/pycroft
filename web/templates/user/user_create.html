@@ -11,37 +11,8 @@
 {% endblock %}
 
 {% block page_script %}
+    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
     <script type="text/javascript">
-        $(function(){
-            $("body").on("change", "select#dormitory_id", null, function( e ){
-                var $select = $(this),
-                    selected_id = $select.val(),
-                    $level_selector = $("select#level");
-                $.getJSON("{{ url_for(".json_levels") }}" + "/" + selected_id, null, function( data ){
-                    var $levels = $(data.levels);
-                    $level_selector.find("option").remove();
-                    $levels.each(function(num, item){
-                       $level_selector.append('<option value="'+ item +'">'+item+'</option>');
-                    });
-
-                })
-            });
-            $("body").on("change", "select#level", null, function( e ){
-                var $level_select = $(this),
-                        selected_level = $level_select.val(),
-                        $dorm_selector = $("select#dormitory_id"),
-                        selected_dorm = $dorm_selector.val(),
-                        $room_select = $("select#room_number");
-                $.getJSON("{{ url_for(".json_rooms") }}" + "/" + selected_dorm + "/" + selected_level, null, function( data ){
-                    var $rooms = $(data.rooms);
-                    $room_select.find("option").remove();
-                    $rooms.each(function(num, item){
-                        $room_select.append('<option value="'+ item +'">'+item+'</option>');
-                    });
-
-                })
-            });
-        })
-
+        $('[data-role=lazyloadselect]').lazyLoadSelect()
     </script>
 {% endblock %}

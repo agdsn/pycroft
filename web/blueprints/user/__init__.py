@@ -112,26 +112,27 @@ def dormitory_level_rooms(dormitory_id, level):
                    dormitory.short_name)
 
 
-@bp.route('/json/levels', defaults={"dormitory_id": 0})
-@bp.route('/json/levels/<int:dormitory_id>')
-def json_levels(dormitory_id):
+@bp.route('/json/levels')
+def json_levels():
     if not request.is_xhr:
         abort(404)
+    dormitory_id = request.args.get('dormitory', 0, type=int)
     levels = session.query(Room.level.label('level')).filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
-    return jsonify(dict(levels=[entry.level for entry in levels]))
+    return jsonify(dict(items=[entry.level for entry in levels]))
 
 
-@bp.route('/json/rooms', defaults={"dormitory_id": 0, "level": 0})
-@bp.route('/json/rooms/<int:dormitory_id>/<int:level>')
-def json_rooms(dormitory_id, level):
+@bp.route('/json/rooms')
+def json_rooms():
     if not request.is_xhr:
         abort(404)
+    dormitory_id = request.args.get('dormitory', 0, type=int)
+    level = request.args.get('level', 0, type=int)
     rooms = session.query(
         Room.number.label("room_num")).filter_by(
         dormitory_id=dormitory_id, level=level).order_by(
         Room.number).distinct()
-    return jsonify(dict(rooms=[entry.room_num for entry in rooms]))
+    return jsonify(dict(items=[entry.room_num for entry in rooms]))
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -140,7 +141,7 @@ def json_rooms(dormitory_id, level):
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
-        dorm = form.dormitory_id.data
+        dorm = form.dormitory.data
 
         try:
             #ToDo: Ugly, but ... Someone can convert this is
