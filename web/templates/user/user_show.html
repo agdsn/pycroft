@@ -185,8 +185,16 @@
                         {% for membership in memberships %}
                             <tr>
                                 <td>{{ membership.group.name }}</td>
-                                <td>{{ membership.start_date.strftime("%d.%m.%Y") }}</td>
-                                <td>{{ membership.end_date.strftime("%d.%m.%Y") }}</td>
+                                <td>{% if membership.start_date is none %}
+                                    {% else %}
+                                        {{ membership.start_date.strftime("%d.%m.%Y") }}
+                                    {% endif %}
+                                </td>
+                                <td>{% if membership.end_date is none %}
+                                {% else %}
+                                    {{ membership.end_date.strftime("%d.%m.%Y") }}
+                                {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
