@@ -25,6 +25,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime
+from flask.ext.login import current_user
 
 bp = Blueprint('user', __name__, )
 nav = BlueprintNavigation(bp, "Nutzer")
