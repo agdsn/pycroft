@@ -4,175 +4,223 @@
 {% block basecontent %}
 
     <div id="userboxes" class="accordion">
-        <div class="accordion-group">
+    <div class="accordion-group">
 
-            {# Stammdaten #}
+        {# Stammdaten #}
+        <div class="accordion-inner">
+            <div class="row">
+                <div class="span3">ID:</div>
+                <div class="span7">{{ user.id }}</div>
+            </div>
+
+            <div class="row">
+                <div class="span3">Name:</div>
+                <div class="span7">{{ user.name }}</div>
+            </div>
+
+            <div class="row">
+                <div class="span3">Login:</div>
+                <div class="span7">{{ user.login }}</div>
+            </div>
+
+            <div class="row">
+                <div class="span3">Erstellungsdatum:</div>
+                <div class="span7">{{ user.registration_date.
+                            strftime("%d.%m.%Y %H:%M Uhr") }}</div>
+            </div>
+
+            <div class="row">
+                <div class="span3">Raum:</div>
+                <div class="span7"><a href="{{ url_for("dormitories.room_show",
+            room_id = user.room_id) }}">{{ room.dormitory.short_name }}
+                    {{ room.level }}-{{ room.number }}</a></div>
+            </div>
+
+            <div class="row">
+                <div class="span3">Status:</div>
+                <div class="span7">Freigeschalten</div>
+            </div>
+        </div>
+
+        {# Traffic #}
+        <div class="accordion-heading">
+            <a href="#traffic" data-parent="#userboxes"
+               data-toggle="collapse" class="accordion-toggle">
+                Traffic
+            </a>
+        </div>
+        <div class="accordion-body" id="traffic"
+             style="height: auto">
+            <div class="accordion-inner" id="trafficchart">
+
+            </div>
+        </div>
+
+
+        {# Hosts-Tabelle #}
+        <div class="accordion-heading">
+            <a href="#hosts" data-parent="#userboxes"
+               data-toggle="collapse" class="accordion-toggle">
+                Hosts
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="hosts"
+             style="height: 0;">
+            <div class="accordion-inner">
+                {% if user.hosts %}
+                    {% for host in user.hosts %}
+                        <div class="row">
+                            <div class="span3">Hostname:
+                                {{ host.hostname }}</div>
+                            <div class="span7">
+                                {% if host.net_devices %}
+                                    {% for netdevice in host.net_devices %}
+                                        <div>
+                                            Ethernet-Adresse:
+                                            {{ netdevice.mac }}</div>
+                                        <div>IPv4-Adresse:
+                                            {{ netdevice.ipv4 }}</div>
+                                        <div>IPv6-Adresse:
+                                            {{ netdevice.ipv6 }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    Nutzer hat keine Hosts.
+                {% endif %}
+            </div>
+        </div>
+
+
+        {# Logeintrage des Nutzers #}
+        <div class="accordion-heading">
+            <a href="#logentries" data-parent="#userboxes"
+               data-toggle="collapse" class="accordion-toggle">
+                Logeinträge
+            </a>
+        </div>
+        <div class="accordion-body" id="logentries"
+             style="height: auto;">
             <div class="accordion-inner">
                 <div class="row">
-                    <div class="span3">ID:</div>
-                    <div class="span7">{{ user.id }}</div>
-                </div>
-
-                <div class="row">
-                    <div class="span3">Name:</div>
-                    <div class="span7">{{ user.name }}</div>
-                </div>
-
-                <div class="row">
-                    <div class="span3">Login:</div>
-                    <div class="span7">{{ user.login }}</div>
-                </div>
-
-                <div class="row">
-                    <div class="span3">Erstellungsdatum:</div>
-                    <div class="span7">{{ user.registration_date.
-                            strftime("%d.%m.%Y %H:%M Uhr") }}</div>
-                </div>
-
-                <div class="row">
-                    <div class="span3">Raum:</div>
-                    <div class="span7"><a href="{{ url_for("dormitories.room_show",
-            room_id = user.room_id) }}">{{ room.dormitory.short_name }}
-                        {{ room.level }}-{{ room.number }}</a></div>
-                </div>
-            </div>
-
-
-            {# Traffic #}
-            <div class="accordion-heading">
-                <a href="#traffic" data-parent="#userboxes"
-                   data-toggle="collapse" class="accordion-toggle">
-                    Traffic
-                </a>
-            </div>
-            <div class="accordion-body collapse" id="traffic"
-                 style="height: auto;">
-                <div class="accordion-inner">
-                    Not implemented yet.
-                </div>
-            </div>
-
-
-            {# Hosts-Tabelle #}
-            <div class="accordion-heading">
-                <a href="#hosts" data-parent="#userboxes"
-                   data-toggle="collapse" class="accordion-toggle">
-                    Hosts
-                </a>
-            </div>
-            <div class="accordion-body collapse" id="hosts"
-                 style="height: auto;">
-                <div class="accordion-inner">
-                    {% if user.hosts %}
-                        {% for host in user.hosts %}
-                            <div class="row">
-                                <div class="span3">Hostname:
-                                    {{ host.hostname }}</div>
-                                <div class="span7">
-                                    {% if host.net_devices %}
-                                        {% for netdevice in host.net_devices %}
-                                            <div>
-                                                Ethernet-Adresse:
-                                                {{ netdevice.mac }}</div>
-                                            <div>IPv4-Adresse:
-                                                {{ netdevice.ipv4 }}</div>
-                                            <div>IPv6-Adresse:
-                                                {{ netdevice.ipv6 }}</div>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
+                    {% if user_logs %}
+                        <div class="row span10">
+                            <dl>
+                                {% for entry in user_logs %}
+                                    <dt>{{ entry.author.name }} (<a
+                                            href="{{ url_for(".user_show",
+                                user_id = entry.author.id) }}"
+                                            >{{ entry.author.login }}</a>)
+                                        am
+                                        {{ entry.timestamp.strftime(
+                                    "%d.%m. um %H:%M Uhr") }}</dt>
+                                    <dd>{{ entry.message }}</dd>
+                                {% endfor %}
+                            </dl>
+                        </div>
                     {% else %}
-                        Nutzer hat keine Hosts.
+                        <div class="row span10">Nutzer hat keine Einträge.
+                        </div>
                     {% endif %}
                 </div>
-            </div>
-
-
-            {# Logeintrage des Nutzers #}
-            <div class="accordion-heading">
-                <a href="#logentries" data-parent="#userboxes"
-                   data-toggle="collapse" class="accordion-toggle">
-                    Logeinträge
-                </a>
-            </div>
-            <div class="accordion-body collapse" id="logentries"
-                 style="height: auto;">
-                <div class="accordion-inner">
-                    <div class="row">
-                        {% if user_logs %}
-                            <div class="row span10">
-                                <dl>
-                                    {% for entry in user_logs %}
-                                        <dt>{{ entry.author.name }} (<a
-                                                href="{{ url_for(".user_show",
-                                user_id = entry.author.id) }}"
-                                                >{{ entry.author.login }}</a>)
-                                            am
-                                            {{ entry.timestamp.strftime(
-                                    "%d.%m. um %H:%M Uhr") }}</dt>
-                                        <dd>{{ entry.message }}</dd>
-                                    {% endfor %}
-                                </dl>
-                            </div>
-                        {% else %}
-                            <div class="row span10">Nutzer hat keine Einträge.
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="row">
-                        <div class="row span8">
-                            <form method="POST" action=""
-                                  class="form-horizontal">
-                                {{ form.hidden_tag() }}
-                                {% for field in form %}
-                                    {% if field.type not in ["HiddenField",
+                <div class="row">
+                    <div class="row span8">
+                        <form method="POST" action=""
+                              class="form-horizontal">
+                            {{ form.hidden_tag() }}
+                            {% for field in form %}
+                                {% if field.type not in ["HiddenField",
                                                 "CSRFTokenField"] %}
-                                        {{ field(placeholder='Nachricht',
+                                    {{ field(placeholder='Nachricht',
                                                         class='span6') }}
-                                    {% endif %}
-                                {% endfor %}
-                                <button type="submit" class="btn
+                                {% endif %}
+                            {% endfor %}
+                            <button type="submit" class="btn
                                         btn-primary">Absenden
-                                </button>
-                            </form>
+                            </button>
+                        </form>
 
-                            {# {{ forms.simple_form(form, '',
+                        {# {{ forms.simple_form(form, '',
                                                     url_for('.create')) }} #}
-                        </div>
                     </div>
                 </div>
             </div>
-
-
-            {# Kontostand des Nutzers #}
-            <div class="accordion-heading">
-                <a href="#finance" data-parent="#userboxes"
-                   data-toggle="collapse" class="accordion-toggle">
-                    Kontoeinträge
-                </a>
-            </div>
-            <div class="accordion-body collapse" id="finance"
-                 style="height:0px;">
-                <div class="accordion-inner">
-                    Not implemented yet.
-                </div>
-            </div>
-
-            <div class="accordion-heading">
-                <a href="#property_groups" data-parent="#userboxes"
-                   data-toggle="collapse" class="accordion-toggle">
-                    Gruppen
-                </a>
-            </div>
-            <div class="accordion-body collapse" id="property_groups"
-                 style="height:0px;">
-                <div class="accordion-inner">
-                    <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">Neue Gruppe</a>
-                </div>
-            </div>
-
         </div>
+
+
+        {# Kontostand des Nutzers #}
+        <div class="accordion-heading">
+            <a href="#finance" data-parent="#userboxes"
+               data-toggle="collapse" class="accordion-toggle">
+                Kontoeinträge
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="finance"
+             style="height:0px;">
+            <div class="accordion-inner">
+                Not implemented yet.
+            </div>
+        </div>
+
+        <div class="accordion-heading">
+            <a href="#property_groups" data-parent="#userboxes"
+               data-toggle="collapse" class="accordion-toggle">
+                Gruppen
+            </a>
+        </div>
+        <div class="accordion-body collapse" id="property_groups"
+             style="height:0px;">
+            <div class="accordion-inner">
+                <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">Neue Gruppe</a>
+            </div>
+        </div>
+
     </div>
+    </div>
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript" src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var trafficchart = new Highcharts.Chart({
+                chart:{
+                    renderTo:'trafficchart',
+                    type:'column',
+                    width: 600,
+                    height: 250,
+                    animation: false
+                },
+                title: {
+                    text: null
+                },
+                plotOptions: {
+                    series: { animation: false }
+                },
+                legend: {
+                    enabled: false
+                },
+                tooltip: {
+                    enabled: true,
+                    formatter: function() {
+                    return 'Verbrauch von <b>'+ this.x +
+                    '</b> ist <b>'+ this.y +'%</b>';
+                    }
+                },
+                xAxis:{
+                    categories:['Montag', 'Dienstag', 'Mittwoch',
+                                    'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+                },
+                yAxis: {
+                    title: { text: null }
+                },
+                series:
+                [{ {# STATIC TESTDATA ONLY #} data: [34, 12, 2, 7, 22, 13, 9] }]
+            });
+        });
+
+    </script>
+
 {% endblock %}
