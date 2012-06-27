@@ -83,6 +83,14 @@ def add_group_membership(user_id):
 
     return render_template('user/add_group_membership.html',page_title="Neue Gruppe für Nutzer", user_id=user_id,form=form)
 
+@bp.route('/delete_group_membership/<int:user_id>/<int:group_id>/')
+def delete_group_membership(user_id,group_id):
+    Membership.q.filter_by(user_id = user_id).filter_by(group_id = group_id).delete(
+        synchronize_session='fetch')
+    session.commit()
+    flash('Gruppe gelöscht', 'success')
+    return redirect(url_for(".user_show",user_id=user_id))
+
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
