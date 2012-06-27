@@ -21,7 +21,7 @@ from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.properties import Membership
+from pycroft.model.properties import Membership, Group
 from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -60,9 +60,11 @@ def user_show(user_id):
 
     user_log_list = user.user_log_entries
 
+    memberships = Membership.q.filter_by(user_id = user.id).all()
+
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
-        user=user, user_logs=user_log_list, room=room, form=form)
+        user=user, user_logs=user_log_list, room=room, form=form, memberships=memberships)
 
 @bp.route('/add_group_membership/<int:user_id>/', methods=['GET', 'Post'])
 def add_group_membership(user_id):
