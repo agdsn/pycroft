@@ -202,7 +202,8 @@
                     text: null
                 },
                 plotOptions: {
-                    series: { animation: false }
+                    series: { animation: false },
+                    column: { stacking: 'normal' }
                 },
                 legend: {
                     enabled: false
@@ -210,9 +211,13 @@
                 tooltip: {
                     enabled: true,
                     formatter: function() {
-                    return 'Verbrauch von <b>'+ this.x +
-                    '</b> ist <b>'+ this.y +'%</b>';
-                    }
+                        var tooltip = '<b>'+ this.x +'</b>';
+                        $.each(this.points, function(i, point) {
+                            tooltip += '<br />'+ point.series.name +': '+ point.y +'%';
+                        });
+                        return tooltip;
+                    },
+                    shared: true
                 },
                 xAxis:{
                     categories:['Montag', 'Dienstag', 'Mittwoch',
@@ -222,7 +227,8 @@
                     title: { text: null }
                 },
                 series:
-                [{ {# STATIC TESTDATA ONLY #} data: [34, 12, 2, 7, 22, 13, 9] }]
+                [{ name: 'Input', data: [34,12,2,7,22,13,9], stack: 0 },
+                    { name: 'Output', data: [53,12,6,7,12,3,4], stack: 1 }]
             });
         });
 
