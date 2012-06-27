@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
 from wtforms import fields
+import datetime
 
 
 class DatePickerField(fields.DateField):
@@ -55,6 +56,13 @@ class DatePickerField(fields.DateField):
         date_format = date_format.replace(u"%m", u"mm")
         date_format = date_format.replace(u"%d", u"dd")
         return date_format
+
+    def process_formdata(self, valuelist):
+        try:
+            super(DatePickerField, self).process_formdata(valuelist)
+        except ValueError:
+            if not sum(map(len, valuelist)):
+                return
 
 
 class LazyLoadSelectField(fields.SelectField):
