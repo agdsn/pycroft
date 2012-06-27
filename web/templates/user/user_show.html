@@ -173,7 +173,25 @@
         <div class="accordion-body collapse" id="property_groups"
              style="height:0px;">
             <div class="accordion-inner">
-                <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">Neue Gruppe</a>
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Gruppe</th>
+                            <th>Begin</th>
+                            <th>Ende</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in memberships %}
+                            <tr>
+                                <td>{{ membership.group.name }}</td>
+                                <td>{{ membership.start_date.strftime("%d.%m.%Y") }}</td>
+                                <td>{{ membership.end_date.strftime("%d.%m.%Y") }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">einer Gruppe hinzufügen</a>
             </div>
         </div>
 
