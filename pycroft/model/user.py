@@ -11,13 +11,15 @@ from flask.ext.login import UserMixin
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
+from sqlalchemy.sql.expression import func, or_
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
+from datetime import datetime
+from pycroft.model.properties import Membership, Property, PropertyGroup
+from pycroft.model.session import session
 from pycroft.helpers.user_helper import hash_password, verify_password
-
-
 
 class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False)
@@ -61,5 +63,22 @@ class User(ModelBase, UserMixin):
         return None
 
     def has_property(self, property_name):
-        # ToDo: Implement the property-fetching over membershios of groups ...
-        return True
+        now = datetime.now()
+        query = session.query(
+            func.count(Property.id).label("property_count")
+                ).join(
+                    (PropertyGroup, PropertyGroup.id == Property.property_group_id)
+                ).join(
+                    (Membership, Membership.group_id == PropertyGroup.id)
+                ).filter(
+                    Property.name == property_name
+                ).filter(
+                    Membership.user_id == self.id
+                ).filter(
+                    or_(Membership.start_date == None, Membership.start_date <= now)
+                ).filter(
+                    or_(Membership.end_date == None, Membership.end_date > now)
+                )
+        result = query.one()
+        
+        return result.property_count > 0
