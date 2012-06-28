@@ -69,8 +69,8 @@ def user_show(user_id):
         memberships=memberships)
 
 
-@bp.route('/add_group_membership/<int:user_id>/', methods=['GET', 'Post'])
-def add_group_membership(user_id):
+@bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
+def add_membership(user_id):
     user = User.q.get(user_id)
     if user is None:
         abort(404)
@@ -84,17 +84,18 @@ def add_group_membership(user_id):
 
         return redirect(url_for(".user_show", user_id=user_id))
 
-    return render_template('user/add_group_membership.html',
-        page_title="Neue Gruppe für Nutzer", user_id=user_id, form=form)
+    return render_template('user/add_membership.html',
+        page_title="Neue Gruppenmitgliedschaft für Nutzer {}".format(user_id),
+            user_id=user_id, form=form)
 
 
-@bp.route('/delete_group_membership/<int:user_id>/<int:group_id>/')
-def delete_group_membership(user_id, group_id):
-    Membership.q.filter_by(user_id=user_id).filter_by(group_id=group_id).delete(
-        synchronize_session='fetch')
+@bp.route('/delete_membership/<int:membership_id>')
+def delete_membership(membership_id):
+    membership = Membership.q.get(membership_id)
+    session.delete(membership)
     session.commit()
     flash('Gruppe gelöscht', 'success')
-    return redirect(url_for(".user_show", user_id=user_id))
+    return redirect(url_for(".user_show", user_id=membership.user_id))
 
 
 @bp.route('/dormitory/<dormitory_id>')
