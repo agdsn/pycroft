@@ -17,7 +17,8 @@ def get_passwd(filename):
 
 class ReprMixin(object):
     def __repr__(self):
-        args = ", ".join("%s='%s'" % (key, getattr(self, key)) for key in self.__table__.columns.keys())
+        args = ", ".join("%s='%s'" % (
+        key, getattr(self, key)) for key in self.__table__.columns.keys())
         return u"%s(%s)" % (self.__class__.__name__, args)
 
 
@@ -28,11 +29,13 @@ session = None
 
 
 class Wheim(Base):
-    props = ColumnCollection(Column('wheim_id',Integer,primary_key=True))
+    props = ColumnCollection(Column('wheim_id', Integer, primary_key=True))
     __table__ = Table('wheim', meta, *props, autoload=True)
 
     def port_qry(self):
-        return session.query(Hp4108Ports).filter(Hp4108Ports.haus == self.kuerzel).order_by(Hp4108Ports.etage, Hp4108Ports.zimmernr)
+        return session.query(Hp4108Ports).filter(
+            Hp4108Ports.haus == self.kuerzel).order_by(Hp4108Ports.etage,
+            Hp4108Ports.zimmernr)
 
 
 class Hp4108Ports(Base):
@@ -48,7 +51,7 @@ class Computer(Base):
 
 
 class Subnet(Base):
-    props = ColumnCollection(Column('subnet_id',Integer,primary_key=True))
+    props = ColumnCollection(Column('subnet_id', Integer, primary_key=True))
     __table__ = Table('subnet', meta, *props, autoload=True)
 
 

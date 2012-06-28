@@ -41,7 +41,8 @@ class BlueprintNavigation(object):
     that are accessible for the current user.
     """
 
-    def __init__(self, blueprint, text, description=None, blueprint_access=None):
+    def __init__(self, blueprint, text, description=None,
+                 blueprint_access=None):
         """Init the `BlueprintNavigation` instance.
 
         :param blueprint: A `flask.Blueprint` instance.
@@ -80,6 +81,7 @@ class BlueprintNavigation(object):
         :param text: The menu entry text.
         :param description: a anchor title.
         """
+
         def decorator(f):
             element = self._navigation_item(
                 bake_endpoint(self.blueprint, f),
@@ -88,12 +90,13 @@ class BlueprintNavigation(object):
 
             self._elements.append(element)
             return f
+
         return decorator
 
     def _navigation_item(self, endpoint, text, description=None):
         return {"endpoint": endpoint,
                 "text": text,
-                "description": description,}
+                "description": description, }
 
     def __iter__(self):
         """Get all navigation elements the user has access to.
@@ -180,8 +183,8 @@ class BlueprintNavigation(object):
             raise Exception("Blueprint %s is not registred in Flask app" %
                             self.blueprint.name)
         else:
-            assert app.blueprints[self.blueprint.name] is self.blueprint, \
-            "Blueprint resistred as %s in Flask app is not the one you " \
+            assert app.blueprints[self.blueprint.name] is self.blueprint,\
+            "Blueprint resistred as %s in Flask app is not the one you "\
             "register navigation for!"
 
             if "blueprint_navigation" not in app.config:

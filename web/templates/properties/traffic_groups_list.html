@@ -7,9 +7,13 @@
 
 {% block basecontent %}
     <ul class="unstyled">
-    {% for traffic_group in traffic_groups %}
-        <li>{{ traffic_group.name }} – Limit: {{ traffic_group.traffic_limit/1024/1024 }} MB <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">löschen</a> </li>
-    {% endfor %}
+        {% for traffic_group in traffic_groups %}
+            <li>{{ traffic_group.name }} –
+                Limit: {{ traffic_group.traffic_limit/1024/1024 }} MB <a
+                        href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">löschen</a>
+            </li>
+        {% endfor %}
     </ul>
-    <a href="{{ url_for(".traffic_group_create") }}" class="btn btn-primary btn-large">neue Traffic Gruppe</a>
+    <a href="{{ url_for(".traffic_group_create") }}"
+       class="btn btn-primary btn-large">neue Traffic Gruppe</a>
 {% endblock %}

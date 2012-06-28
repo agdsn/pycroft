@@ -17,7 +17,9 @@
         <div class="controls">
             {{ field }}
             {% if field.errors -%}
-                <span class="help-inline">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
+                <span class="help-inline">{% for error in field.errors %}
+                    {% if not loop.first %}
+                        ; {% endif %}{{ error }}{% endfor %}</span>
             {%- endif %}
         </div>
     </div>
@@ -31,6 +33,6 @@
                 {{ bootstrap_simple_field(field) }}
             {% endif %}
         {% endfor %}
-    {{ form_actions(cancel_to) }}
+        {{ form_actions(cancel_to) }}
     </form>
 {%- endmacro %}

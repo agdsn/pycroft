@@ -61,11 +61,13 @@ def user_show(user_id):
 
     user_log_list = user.user_log_entries
 
-    memberships = Membership.q.filter_by(user_id = user.id).all()
+    memberships = Membership.q.filter_by(user_id=user.id).all()
 
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
-        user=user, user_logs=user_log_list, room=room, form=form, memberships=memberships)
+        user=user, user_logs=user_log_list, room=room, form=form,
+        memberships=memberships)
+
 
 @bp.route('/add_group_membership/<int:user_id>/', methods=['GET', 'Post'])
 def add_group_membership(user_id):
@@ -74,22 +76,26 @@ def add_group_membership(user_id):
         abort(404)
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        newMembership = Membership(user=user,group=form.group_id.data,start_date=form.begin_date.data, end_date=form.end_date.data)
+        newMembership = Membership(user=user, group=form.group_id.data,
+            start_date=form.begin_date.data, end_date=form.end_date.data)
         session.add(newMembership)
         session.commit()
-        flash('Nutzer wurde der Gruppe hinzugefügt.','success')
+        flash('Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
-        return redirect(url_for(".user_show",user_id=user_id))
+        return redirect(url_for(".user_show", user_id=user_id))
 
-    return render_template('user/add_group_membership.html',page_title="Neue Gruppe für Nutzer", user_id=user_id,form=form)
+    return render_template('user/add_group_membership.html',
+        page_title="Neue Gruppe für Nutzer", user_id=user_id, form=form)
+
 
 @bp.route('/delete_group_membership/<int:user_id>/<int:group_id>/')
-def delete_group_membership(user_id,group_id):
-    Membership.q.filter_by(user_id = user_id).filter_by(group_id = group_id).delete(
+def delete_group_membership(user_id, group_id):
+    Membership.q.filter_by(user_id=user_id).filter_by(group_id=group_id).delete(
         synchronize_session='fetch')
     session.commit()
     flash('Gruppe gelöscht', 'success')
-    return redirect(url_for(".user_show",user_id=user_id))
+    return redirect(url_for(".user_show", user_id=user_id))
+
 
 @bp.route('/dormitory/<dormitory_id>')
 def dormitory_levels(dormitory_id):
@@ -111,7 +117,7 @@ def dormitory_level_rooms(dormitory_id, level):
     rooms_list = [room.number for room in rooms_list]
 
     if int(level) < 10:
-        level_l0 = u"0"+level
+        level_l0 = u"0" + level
     else:
         level_l0 = level
 

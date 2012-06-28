@@ -6,46 +6,49 @@
 {% extends "properties/base.html" %}
 
 {% block basecontent %}
-    <a href="{{ url_for(".property_group_create") }}" class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
+    <a href="{{ url_for(".property_group_create") }}"
+       class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
     {% if property_groups %}
-    <table class="table">
-        <thead>
-        <tr>
-            <th></th>
-            {% for property_group in property_groups %}
-            <th>{{ property_group.name }} <br> <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a></th>
-            {% endfor %}
-        </tr>
-        </thead>
-
-        {% for category in property_categories %}
+        <table class="table">
             <thead>
             <tr>
-                <th colspan="{{ num_groups + 1 }}">{{ category[0] }}</th>
+                <th></th>
+                {% for property_group in property_groups %}
+                    <th>{{ property_group.name }} <br> <a
+                            href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a>
+                    </th>
+                {% endfor %}
             </tr>
             </thead>
-            <tbody>
-            {% for property in category[1] %}
-            <tr>
-                <td>{{ property[1] }}</td>
-                {% for property_group in property_groups %}
-                <td>
-                    {% if  property_group.has_property(property[0]) %}
-                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ok remove-button">
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ban-circle add-button">
-                        </a>
-                    {% endif %}
-                </td>
-                {% endfor %}
 
-            </tr>
+            {% for category in property_categories %}
+                <thead>
+                <tr>
+                    <th colspan="{{ num_groups + 1 }}">{{ category[0] }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for property in category[1] %}
+                    <tr>
+                        <td>{{ property[1] }}</td>
+                        {% for property_group in property_groups %}
+                            <td>
+                                {% if  property_group.has_property(property[0]) %}
+                                    <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
+                                       class="icon-ok remove-button">
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
+                                       class="icon-ban-circle add-button">
+                                    </a>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+
+                    </tr>
+                {% endfor %}
+                <tbody>
             {% endfor %}
-            <tbody>
-        {% endfor %}
-    </table>
+        </table>
     {% endif %}
 {% endblock %}

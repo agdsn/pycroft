@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -21,7 +21,7 @@ from sqlalchemy.types import String
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
-                        name="financeaccounttypes"), nullable=False)
+        name="financeaccounttypes"), nullable=False)
 
     # many to one from FinanceAccount to User
     user = relationship("User", backref=backref("finance_accounts"))
@@ -50,19 +50,19 @@ class JournalEntry(ModelBase):
 class Transaction(ModelBase):
     message = Column(Text(), nullable=False)
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
-                                                            nullable=True)
+        nullable=True)
     journal_entry = relationship("JournalEntry",
-                                    backref=backref("transaction"))
+        backref=backref("transaction"))
 
 
 class Split(ModelBase):
     amount = Column(Integer(), nullable=False)
     from_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
-                                nullable=False)
+        nullable=False)
     from_account = relationship("FinanceAccount")
     to_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
-                                nullable=False)
+        nullable=False)
     to_account = relationship("FinanceAccount")
     transaction_id = Column(Integer(), ForeignKey("transaction.id"),
-                                nullable=False)
+        nullable=False)
     transaction = relationship("Transaction", backref=backref("splits"))

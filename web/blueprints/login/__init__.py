@@ -31,7 +31,8 @@ def load_user(userid):
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if current_user is not None and current_user.is_authenticated():
-        flash(u'Sie sind bereits als "%s" angemeldet!' % current_user.name, "warning")
+        flash(u'Sie sind bereits als "%s" angemeldet!' % current_user.name,
+            "warning")
         return redirect(url_for('user.overview'))
     form = LoginForm()
     if form.validate_on_submit():
@@ -39,9 +40,11 @@ def login():
         if user is not None:
             login_user(user)
             flash(u"Erfolgreich angemeldet.", "success")
-            return redirect(request.args.get("next") or url_for("user.overview"))
+            return redirect(
+                request.args.get("next") or url_for("user.overview"))
         flash(u"Benutzername und/oder Passwort falsch", "error")
-    return render_template("login/login.html", form=form, next=request.args.get("next"))
+    return render_template("login/login.html", form=form,
+        next=request.args.get("next"))
 
 
 @bp.route("/logout")
