@@ -36,8 +36,7 @@
 
             <div class="row">
                 <div class="span3">Erstellungsdatum:</div>
-                <div class="span7">{{ user.registration_date.
-                            strftime("%d.%m.%Y %H:%M Uhr") }}</div>
+                <div class="span7">{{ user.registration_date|datetime }}</div>
             </div>
 
             <div class="row">
@@ -172,12 +171,12 @@
                         <td>{{ membership.group.name }}</td>
                         <td>{% if membership.start_date is none %}
                             {% else %}
-                                {{ membership.start_date.strftime("%d.%m.%Y") }}
+                                {{ membership.start_date|date }}
                             {% endif %}
                         </td>
                         <td>{% if membership.end_date is none %}
                             {% else %}
-                                {{ membership.end_date.strftime("%d.%m.%Y") }}
+                                {{ membership.end_date|date }}
                             {% endif %}
                         </td>
                         <td>

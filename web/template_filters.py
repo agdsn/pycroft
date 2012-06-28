@@ -47,7 +47,7 @@ def date_filter(dt, format="%d.%m.%Y"):
 
 
 @template_filter("datetime")
-def datetime_filter(dt, format="%d.%m.%Y %H:%M"):
+def datetime_filter(dt, format="%d.%m.%Y %H:%M Uhr"):
     """Pretty format a Date/Time.
     """
     if dt is None:
