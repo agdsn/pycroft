@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
-from flaskext.wtf import Form, TextField, validators, BooleanField, \
+from flaskext.wtf import Form, TextField, validators, BooleanField,\
     QuerySelectField
 from pycroft.model.dormitory import Dormitory
 
@@ -20,8 +20,8 @@ class RoomForm(Form):
     level = TextField(u"Etage")
     inhabitable = BooleanField(u"Bewohnbar")
     dormitory_id = QuerySelectField(u"Wohnheim",
-                                    get_label='short_name',
-                                    query_factory=dormitory_query)
+        get_label='short_name',
+        query_factory=dormitory_query)
 
 
 class DormitoryForm(Form):

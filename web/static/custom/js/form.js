@@ -9,7 +9,7 @@
 /**
  * This is a today-button to use with the datepicker.
  */
-!function ( $ ) {
+!function ($) {
 
     // Today Button object
     var TodayButton = function (element, options) {
@@ -57,7 +57,7 @@
     };
 
     $.fn.todayButton.defaults = {};
-	$.fn.todayButton.Constructor = TodayButton;
+    $.fn.todayButton.Constructor = TodayButton;
 
 }(window.jQuery);
 
@@ -68,14 +68,14 @@
  * This Plugin is used with the LazyLoadSelectField from web.form.fields.
  * It fetches new option values if one of the dependencies changes.
  */
-!function ( $ ) {
+!function ($) {
 
-    var LazyLoadSelect= function(element, options) {
+    var LazyLoadSelect = function (element, options) {
         this.element = $(element);
         this.options = $.extend({
-            field_ids: [],
-            item_attr: "items"
-            }, options);
+            field_ids:[],
+            item_attr:"items"
+        }, options);
         this.fields = [];
         this.itemAttr = this.options.item_attr;
         this.dataUrl = this.element.data("url");
@@ -86,22 +86,22 @@
         if (undefined != this.options.field_ids)
             field_ids = field_ids.concat(this.options.field_ids);
 
-        for(var i = 0; i < field_ids.length; i++) {
+        for (var i = 0; i < field_ids.length; i++) {
             this.fields.push($("#" + field_ids[i]));
         }
         this.bind()
     };
 
     LazyLoadSelect.prototype = {
-        constructor: LazyLoadSelect,
+        constructor:LazyLoadSelect,
 
-        bind: function() {
+        bind:function () {
             for (var i = 0; i < this.fields.length; i++) {
                 this.fields[i].on("change", $.proxy(this.reload, this));
             }
         },
 
-        queryData: function(){
+        queryData:function () {
             var query_data = {};
             for (var i = 0; i < this.fields.length; i++) {
                 var field = this.fields[i];
@@ -110,11 +110,11 @@
             return query_data
         },
 
-        reload: function( ev ) {
+        reload:function (ev) {
             $.getJSON(this.dataUrl, this.queryData(), $.proxy(this.replaceOptions, this));
         },
 
-        replaceOptions: function(data) {
+        replaceOptions:function (data) {
             var items = data[this.itemAttr];
             this.element.find("option").remove();
             for (var i = 0; i < items.length; i++) {
@@ -136,7 +136,7 @@
     };
 
     $.fn.lazyLoadSelect.defaults = {};
-	$.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
+    $.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
 
 }(window.jQuery);
 

@@ -11,7 +11,6 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-
 from functools import wraps
 
 
@@ -22,6 +21,7 @@ def template_filter(name):
     def decorator(fn):
         _filter_registry[name] = fn
         return fn
+
     return decorator
 
 

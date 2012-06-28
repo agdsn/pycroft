@@ -6,11 +6,12 @@
 {% extends "infrastructure/base.html" %}
 
 {% block basecontent %}
-<a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
+    <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer
+        Switch Port</a>
     <ul class="unstyled">
-	<p>switch ports:</p>
+        <p>switch ports:</p>
         {% for switch_port in switch_ports %}
-            <li>{{switch_port.name}}</li>
+            <li>{{ switch_port.name }}</li>
         {% endfor %}
     </ul>
 {% endblock %}

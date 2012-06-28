@@ -16,12 +16,23 @@
             <div class="span6">
                 {% if results %}
                     <table class="table table-striped">
-                    <thead><tr><td>ID</td><td>Name</td><td>Login</td><td>Hosts</td></tr></thead>
+                        <thead>
+                        <tr>
+                            <td>ID</td>
+                            <td>Name</td>
+                            <td>Login</td>
+                            <td>Hosts</td>
+                        </tr>
+                        </thead>
                         {% for result in results %}
                             <tr>
-                            <td>{{ result.id }}</td>
-			    <td><a href="{{ url_for('.user_show', user_id=result.id) }}">{{ result.name }}</a></td>
-                            <td>{{ result.login }}</td><td> {% for host in result.hosts %}{{ host.hostname }} {% endfor %}</td>
+                                <td>{{ result.id }}</td>
+                                <td>
+                                    <a href="{{ url_for('.user_show', user_id=result.id) }}">{{ result.name }}</a>
+                                </td>
+                                <td>{{ result.login }}</td>
+                                <td>
+                                    {% for host in result.hosts %}{{ host.hostname }} {% endfor %}</td>
                             </tr>
                         {% endfor %}
                     </table>

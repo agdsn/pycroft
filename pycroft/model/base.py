@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -21,6 +21,7 @@ _session = None
 class _ModelMeta(DeclarativeMeta):
     """Metaclass for all mapped Database objects.
     """
+
     @property
     def q(cls):
         """This is a shortcut for easy querying of whole objects.
@@ -31,6 +32,7 @@ class _ModelMeta(DeclarativeMeta):
         global _session
         if _session is None:
             import pycroft.model.session
+
             _session = pycroft.model.session.session
         return _session.query(cls)
 
