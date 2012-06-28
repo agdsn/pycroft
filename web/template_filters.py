@@ -32,11 +32,15 @@ _category_map = {"warning": "Warnung",
 
 @template_filter("pretty_category")
 def pretty_category_filter(category):
+    """Make pretty category names for flash messages, etc
+    """
     return _category_map.get(category, "Hinweis")
 
 
 @template_filter("date")
 def date_filter(dt, format="%d.%m.%Y"):
+    """Pretty format a date.
+    """
     if dt is None:
         return "k/A"
     return  dt.strftime(format)
@@ -44,6 +48,8 @@ def date_filter(dt, format="%d.%m.%Y"):
 
 @template_filter("datetime")
 def datetime_filter(dt, format="%d.%m.%Y %H:%M"):
+    """Pretty format a Date/Time.
+    """
     if dt is None:
         return "k/A"
     return dt.strftime(format)
@@ -80,7 +86,6 @@ def timesince_filter(dt, default="just now"):
             return "vor %d %s" % (period, singular if period == 1 else plural)
 
     return default
-
 
 
 def register_filters(app):
