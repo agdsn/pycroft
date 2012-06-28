@@ -1,0 +1,39 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% if memberships %}
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th>Gruppe</th>
+            <th>Begin</th>
+            <th>Ende</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for membership in memberships %}
+            <tr>
+                <td>{{ membership.group.name }}</td>
+                <td>{% if membership.start_date is none %}
+                {% else %}
+                    {{ membership.start_date|date }}
+                {% endif %}
+                </td>
+                <td>{% if membership.end_date is none %}
+                {% else %}
+                    {{ membership.end_date|date }}
+                {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for(".delete_membership", membership_id=membership.id) }}">
+                        <i class="icon-remove-sign"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+<a href="{{ url_for(".add_membership", user_id=user.id) }}">einer
+    Gruppe hinzufügen</a>
