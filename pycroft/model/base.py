@@ -21,7 +21,6 @@ _session = None
 class _ModelMeta(DeclarativeMeta):
     """Metaclass for all mapped Database objects.
     """
-
     @property
     def q(cls):
         """This is a shortcut for easy querying of whole objects.
@@ -32,7 +31,6 @@ class _ModelMeta(DeclarativeMeta):
         global _session
         if _session is None:
             import pycroft.model.session
-
             _session = pycroft.model.session.session
         return _session.query(cls)
 

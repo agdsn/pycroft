@@ -176,14 +176,14 @@
                     <tr>
                         <td>{{ membership.group.name }}</td>
                         <td>{% if membership.start_date is none %}
-                        {% else %}
-                            {{ membership.start_date.strftime("%d.%m.%Y") }}
-                        {% endif %}
+                            {% else %}
+                                {{ membership.start_date.strftime("%d.%m.%Y") }}
+                            {% endif %}
                         </td>
                         <td>{% if membership.end_date is none %}
-                        {% else %}
-                            {{ membership.end_date.strftime("%d.%m.%Y") }}
-                        {% endif %}
+                            {% else %}
+                                {{ membership.end_date.strftime("%d.%m.%Y") }}
+                            {% endif %}
                         </td>
                         <td>
                             <a href="{{ url_for(".delete_membership", membership_id=membership.id) }}">
@@ -202,8 +202,7 @@
 
 
 {% block page_script %}
-    <script type="text/javascript"
-            src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
+    <script type="text/javascript" src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             var trafficchart = new Highcharts.Chart({
