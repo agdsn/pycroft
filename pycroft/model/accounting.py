@@ -24,5 +24,5 @@ class TrafficVolume(ModelBase):
 
     # many to one from TrafficVolume to User
     user = relationship("User",
-                backref=backref("traffic_volumes"))
+        backref=backref("traffic_volumes"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)

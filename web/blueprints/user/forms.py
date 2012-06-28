@@ -20,6 +20,7 @@ def user_query():
 def host_query():
     return Host.q.order_by(Host.id)
 
+
 def group_query():
     return PropertyGroup.q.order_by(PropertyGroup.name)
 
@@ -60,7 +61,6 @@ class UserCreateForm(Form):
         data_endpoint="user.json_rooms")
 
 
-
 class hostCreateForm(Form):
     name = TextField(u"Name")
 
@@ -68,7 +68,9 @@ class hostCreateForm(Form):
 class userLogEntry(Form):
     message = TextField(u"", [Required()])
 
+
 class UserAddGroupMembership(Form):
-    group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
-    begin_date = DatePickerField(u"Beginn",with_today_button=True)
-    end_date = DatePickerField(u"Ende",with_today_button=True)
+    group_id = QuerySelectField(u"Gruppe", get_label='name',
+        query_factory=group_query)
+    begin_date = DatePickerField(u"Beginn", with_today_button=True)
+    end_date = DatePickerField(u"Ende", with_today_button=True)

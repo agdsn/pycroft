@@ -43,7 +43,7 @@ class NetDevice(ModelBase):
     # one to one from PatchPort to NetDevice
     patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=True)
     patch_port = relationship("PatchPort", backref=backref("net_device",
-                                                          uselist=False))
+        uselist=False))
 
     host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
     host = relationship("Host", backref=backref("net_devices"))

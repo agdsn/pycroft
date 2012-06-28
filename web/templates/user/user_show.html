@@ -170,69 +170,75 @@
                     <tr>
                         <td>{{ membership.group.name }}</td>
                         <td>{% if membership.start_date is none %}
-                            {% else %}
-                                {{ membership.start_date.strftime("%d.%m.%Y") }}
-                            {% endif %}
+                        {% else %}
+                            {{ membership.start_date.strftime("%d.%m.%Y") }}
+                        {% endif %}
                         </td>
                         <td>{% if membership.end_date is none %}
-                            {% else %}
-                                {{ membership.end_date.strftime("%d.%m.%Y") }}
-                            {% endif %}
+                        {% else %}
+                            {{ membership.end_date.strftime("%d.%m.%Y") }}
+                        {% endif %}
                         </td>
-                        <td><a href="{{ url_for(".delete_group_membership", user_id=membership.user.id,group_id=membership.group.id) }}" class="btn"><i class="icon-remove-sign"></i></a></td>
+                        <td>
+                            <a href="{{ url_for(".delete_group_membership", user_id=membership.user.id,group_id=membership.group.id) }}"
+                               class="btn"><i class="icon-remove-sign"></i></a>
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-            <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">einer Gruppe hinzufügen</a>
+            <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">einer
+                Gruppe hinzufügen</a>
         </div>
     </section>
 {% endblock %}
 
 
 {% block page_script %}
-    <script type="text/javascript" src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             var trafficchart = new Highcharts.Chart({
                 chart:{
                     renderTo:'trafficchart',
                     type:'column',
-                    width: 600,
-                    height: 250,
-                    animation: false
+                    width:600,
+                    height:250,
+                    animation:false
                 },
-                title: {
-                    text: null
+                title:{
+                    text:null
                 },
-                plotOptions: {
-                    series: { animation: false },
-                    column: { stacking: 'normal' }
+                plotOptions:{
+                    series:{ animation:false },
+                    column:{ stacking:'normal' }
                 },
-                legend: {
-                    enabled: false
+                legend:{
+                    enabled:false
                 },
-                tooltip: {
-                    enabled: true,
-                    formatter: function() {
-                        var tooltip = '<b>'+ this.x +'</b>';
-                        $.each(this.points, function(i, point) {
-                            tooltip += '<br />'+ point.series.name +': '+ point.y +'%';
+                tooltip:{
+                    enabled:true,
+                    formatter:function () {
+                        var tooltip = '<b>' + this.x + '</b>';
+                        $.each(this.points, function (i, point) {
+                            tooltip += '<br />' + point.series.name + ': ' + point.y + '%';
                         });
                         return tooltip;
                     },
-                    shared: true
+                    shared:true
                 },
                 xAxis:{
                     categories:['Montag', 'Dienstag', 'Mittwoch',
-                                    'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+                        'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
                 },
-                yAxis: {
-                    title: { text: null }
+                yAxis:{
+                    title:{ text:null }
                 },
-                series:
-                [{ name: 'Input', data: [34,12,2,7,22,13,9], stack: 0 },
-                    { name: 'Output', data: [53,12,6,7,12,3,4], stack: 1 }]
+                series:[
+                    { name:'Input', data:[34, 12, 2, 7, 22, 13, 9], stack:0 },
+                    { name:'Output', data:[53, 12, 6, 7, 12, 3, 4], stack:1 }
+                ]
             });
         });
 
@@ -248,7 +254,9 @@
         processScroll()
 
         $nav.on('click', function () {
-            if (!isFixed) setTimeout(function () { $win.scrollTop($win.scrollTop() - 47) }, 10)
+            if (!isFixed) setTimeout(function () {
+                $win.scrollTop($win.scrollTop() - 47)
+            }, 10)
         })
 
         $win.on('scroll', processScroll)

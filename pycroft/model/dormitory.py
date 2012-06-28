@@ -18,19 +18,18 @@ import ipaddr
 
 
 association_table_dormitory_vlan = Table('association_dormitory_vlan',
-                                         ModelBase.metadata,
-                                         Column('dormitory_id', Integer,
-                                                ForeignKey('dormitory.id')),
-                                         Column('vlan_id', Integer,
-                                                ForeignKey('vlan.id')))
-
+    ModelBase.metadata,
+    Column('dormitory_id', Integer,
+        ForeignKey('dormitory.id')),
+    Column('vlan_id', Integer,
+        ForeignKey('vlan.id')))
 
 association_table_subnet_vlan = Table("association_subnet_vlan",
-                                        ModelBase.metadata,
-                                        Column("subnet_id", Integer,
-                                                ForeignKey("subnet.id")),
-                                        Column("vlan_id", Integer,
-                                                ForeignKey("vlan.id")))
+    ModelBase.metadata,
+    Column("subnet_id", Integer,
+        ForeignKey("subnet.id")),
+    Column("vlan_id", Integer,
+        ForeignKey("vlan.id")))
 
 
 class Dormitory(ModelBase):
@@ -40,14 +39,14 @@ class Dormitory(ModelBase):
 
     #many to many from Dormitory to VLan
     vlans = relationship("VLan",
-                            backref=backref("dormitories"),
-                            secondary=association_table_dormitory_vlan)
+        backref=backref("dormitories"),
+        secondary=association_table_dormitory_vlan)
 
     # methods
 
     def __repr__(self):
         return "Dormitory(number={}, short_name={}, street={})".format(
-               self.number, self.short_name, self.street)
+            self.number, self.short_name, self.street)
 
 
 class Room(ModelBase):
@@ -69,8 +68,8 @@ class Subnet(ModelBase):
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
-                            backref=backref("subnets"),
-                            secondary=association_table_subnet_vlan)
+        backref=backref("subnets"),
+        secondary=association_table_subnet_vlan)
 
     @property
     def netmask(self):
