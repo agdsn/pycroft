@@ -91,7 +91,7 @@ def delete_membership(membership_id):
     membership = Membership.q.get(membership_id)
     session.delete(membership)
     session.commit()
-    flash('Gruppe gelöscht', 'success')
+    flash('Mitgliedschaft in Gruppe gelöscht', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
 
 

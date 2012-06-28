@@ -157,6 +157,7 @@
     <section id="groups">
         <div class="head">Gruppen</div>
         <div class="body">
+        {% if memberships %}
             <table class="table table-condensed">
                 <thead>
                 <tr>
@@ -187,6 +188,7 @@
                 {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
             <a href="{{ url_for(".add_membership", user_id=user.id) }}">einer
                 Gruppe hinzufügen</a>
         </div>
