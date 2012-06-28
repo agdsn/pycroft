@@ -92,7 +92,6 @@ def deleteDorm():
         except:
             session.rollback()
 
-
 def h():
     print "\nCommands:"
     print "createDB()   - create database"

@@ -24,8 +24,8 @@ def make_app():
     app = Flask(__name__)
 
     #initialization code
-    app.secret_key =\
-    r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
+    app.secret_key = \
+        r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
     login_manager.setup_app(app)
 

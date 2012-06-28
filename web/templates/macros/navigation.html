@@ -13,27 +13,21 @@
 
 
 {% macro nav_tab_card(endpoint, text, active=False) %}
-    <li {% if request.endpoint.endswith(endpoint) %} class="active"{% endif %}>
-        <a href="{{ url_for(endpoint) }}">{{ text }}</a></li>
+    <li {% if request.endpoint.endswith(endpoint) %} class="active"{% endif %}><a href="{{ url_for(endpoint) }}">{{ text }}</a></li>
 {% endmacro %}
 
 
 {% macro blueprint_element(bp_nav) -%}
     <li class="{{ bp_nav.css_classes|join(" ") }}">
         {%- if bp_nav.dropdown -%}
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
-                    {% if bp_nav.is_active %}
-               style="background-color: #222"{% endif %}>{{ bp_nav.text }} <b
-                    class="caret"></b></a>
+            <a  href="#" class="dropdown-toggle" data-toggle="dropdown"{% if bp_nav.is_active %} style="background-color: #222"{% endif %}>{{ bp_nav.text }} <b class="caret"></b></a>
         {%- else -%}
-            <a href="{{ url_for(bp_nav.first.endpoint) }}">{{ bp_nav.text }}</a>
+            <a  href="{{ url_for(bp_nav.first.endpoint) }}">{{ bp_nav.text }}</a>
         {%- endif -%}
         {%- if bp_nav.dropdown -%}
             <ul class="dropdown-menu">
                 {% for element in bp_nav -%}
-                    <li>
-                        <a href="{{ url_for(element.endpoint) }}">{{ element.text }}</a>
-                    </li>
+                    <li><a href="{{ url_for(element.endpoint) }}">{{ element.text }}</a></li>
                 {%- endfor %}
             </ul>
         {%- endif -%}

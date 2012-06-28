@@ -47,7 +47,6 @@ class BlueprintAccess(object):
 
 
     """
-
     def __init__(self, blueprint, general=None):
         """Initialize the `BlueprintAccess`.
 
@@ -72,12 +71,10 @@ class BlueprintAccess(object):
         arguments to the decorator generator.
 
         """
-
         def decorator(fn):
             if len(needed_permissions):
                 endpoint = bake_endpoint(self.blueprint, fn)
                 self._restrictions[endpoint] = tuple(needed_permissions)
-
             @wraps(fn)
             def nufun(*args, **kwargs):
                 if not current_user.is_authenticated():
@@ -85,9 +82,7 @@ class BlueprintAccess(object):
                 if self._current_has_access(needed_permissions):
                     return fn(*args, **kwargs)
                 abort(401)
-
             return nufun
-
         return decorator
 
     @property

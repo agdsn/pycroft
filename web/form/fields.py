@@ -29,7 +29,6 @@ class DatePickerField(fields.DateField):
         </script>
     """
     widget = None
-
     def __init__(self, *args, **kwargs):
         if "with_today_button" in kwargs:
             self.with_today_button = kwargs.pop("with_today_button")
@@ -45,8 +44,8 @@ class DatePickerField(fields.DateField):
 
         if self.widget is None:
             self.widget = DatePickerWidget(date_format=self._format_to_widget(),
-                with_today_button=self.with_today_button,
-                today_title=self.today_title)
+                                           with_today_button=self.with_today_button,
+                                           today_title=self.today_title)
 
     def _format_to_widget(self):
         date_format = unicode(self.format)
@@ -105,7 +104,7 @@ class LazyLoadSelectField(fields.SelectField):
         self.conditions = kwargs.pop("conditions")
         self.data_endpoint = kwargs.pop("data_endpoint")
 
-        super(LazyLoadSelectField, self).__init__(*args, **kwargs)
+        super(LazyLoadSelectField,self).__init__(*args, **kwargs)
 
     def pre_validate(self, form):
         pass

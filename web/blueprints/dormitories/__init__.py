@@ -62,7 +62,7 @@ def room_delete(room_id):
 def room_show(room_id):
     room = Room.q.get(room_id)
     return render_template('dormitories/room_show.html',
-        page_title=u"Raum " + str(room.dormitory.short_name) + u" " +\
+        page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number), room=room)
 
 

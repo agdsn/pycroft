@@ -25,6 +25,8 @@ def generatePassword(length):
     return password
 
 
+
+
 def hash_password(plaintext_passwd):
     """Use a ldap_context to generate a RFC 2307 from given plaintext.
 

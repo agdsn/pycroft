@@ -3,8 +3,7 @@
 {% block basecontent %}
     <div>
         {%- for room in rooms %}
-            <div class="room"><a class="btn btn-primary btn-large">
-                {{ level }}{{ room }}</a></div>
+            <div class="room"><a class="btn btn-primary btn-large">{{ level }}{{ room }}</a></div>
         {%- endfor %}
     </div>
 {% endblock %}
