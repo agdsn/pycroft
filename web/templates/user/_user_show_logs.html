@@ -3,12 +3,8 @@
         <div class="row span10">
             <dl>
                 {% for entry in user_logs %}
-                    <dt><a href="{{ url_for(".user_show",
-                            user_id = entry.author.id) }}"
-                            >{{ entry.author.name }}</a>
-                        am
-                        {{ entry.timestamp.strftime(
-                                "%d.%m.%Y um %H:%M Uhr") }}</dt>
+                    <dt><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
+                        am {{ entry.timestamp|datetime }}</dt>
                     <dd>{{ entry.message }}</dd>
                 {% endfor %}
             </dl>
@@ -25,15 +21,12 @@
             {{ form.hidden_tag() }}
             {% for field in form %}
                 {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                    {{ field(placeholder='Nachricht',
-                                                    class='span6') }}
+                    {{ field(placeholder='Nachricht', class='span6') }}
                 {% endif %}
             {% endfor %}
             <button type="submit" class="btn btn-primary">Absenden
             </button>
         </form>
-
-        {# {{ forms.simple_form(form, '',
-                                                url_for('.create')) }} #}
+        {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
     </div>
 </div>
