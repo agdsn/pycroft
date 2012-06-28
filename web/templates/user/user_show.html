@@ -24,38 +24,7 @@
     <section id="basedata">
         <div class="head">Basisdaten</div>
         <div class="body">
-            <div class="row">
-                <div class="span3">ID:</div>
-                <div class="span7">{{ user.id }}</div>
-            </div>
-
-            <div class="row">
-                <div class="span3">Name:</div>
-                <div class="span7">{{ user.name }}</div>
-            </div>
-
-            <div class="row">
-                <div class="span3">Login:</div>
-                <div class="span7">{{ user.login }}</div>
-            </div>
-
-            <div class="row">
-                <div class="span3">Erstellungsdatum:</div>
-                <div class="span7">{{ user.registration_date|datetime }}</div>
-            </div>
-
-            <div class="row">
-                <div class="span3">Raum:</div>
-                <div class="span7"><a href="{{ url_for("dormitories.room_show",
-            room_id = user.room_id) }}">{{ room.dormitory.short_name }}
-                    {{ room.level }}-{{ room.number }}</a></div>
-            </div>
-
-            <div class="row">
-                <div class="span3">Status:</div>
-                {# TODO implementieren #}
-                <div class="span7">Freigeschaltet</div>
-            </div>
+            {% include "user/_user_show_basedata.html" with context %}
         </div>
     </section>
 
@@ -63,7 +32,9 @@
     {# Traffic #}
     <section id="traffic">
         <div class="head">Traffic</div>
-        <div class="body" id="trafficchart">
+        </div>
+        <div class="body">
+            {% include "user/_user_show_traffic.html" with context %}
         </div>
     </section>
 
@@ -72,29 +43,7 @@
     <section id="hosts">
         <div class="head">Hosts</div>
         <div class="body">
-            {% if user.hosts %}
-                {% for host in user.hosts %}
-                    <div class="row">
-                        <div class="span3">Hostname:
-                            {{ host.hostname }}</div>
-                        <div class="span7">
-                            {% if host.net_devices %}
-                                {% for netdevice in host.net_devices %}
-                                    <div>
-                                        Ethernet-Adresse:
-                                        {{ netdevice.mac }}</div>
-                                    <div>IPv4-Adresse:
-                                        {{ netdevice.ipv4 }}</div>
-                                    <div>IPv6-Adresse:
-                                        {{ netdevice.ipv6 }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                Nutzer hat keine Hosts.
-            {% endif %}
+            {% include "user/_user_show_hosts.html" with context %}
         </div>
     </section>
 
@@ -103,47 +52,7 @@
     <section id="logs">
         <div class="head">Logeinträge</div>
         <div class="body">
-            <div class="row">
-                {% if user_logs %}
-                    <div class="row span10">
-                        <dl>
-                            {% for entry in user_logs %}
-                                <dt><a href="{{ url_for(".user_show",
-                            user_id = entry.author.id) }}"
-                                        >{{ entry.author.name }}</a>
-                                    am
-                                    {{ entry.timestamp.strftime(
-                                "%d.%m.%Y um %H:%M Uhr") }}</dt>
-                                <dd>{{ entry.message }}</dd>
-                            {% endfor %}
-                        </dl>
-                    </div>
-                {% else %}
-                    <div class="row span10">Nutzer hat keine Einträge.
-                    </div>
-                {% endif %}
-            </div>
-            <div class="row">
-                <div class="row span8">
-                    <form method="POST" action=""
-                          class="form-horizontal">
-                        {{ form.hidden_tag() }}
-                        {% for field in form %}
-                            {% if field.type not in ["HiddenField",
-                                            "CSRFTokenField"] %}
-                                {{ field(placeholder='Nachricht',
-                                                    class='span6') }}
-                            {% endif %}
-                        {% endfor %}
-                        <button type="submit" class="btn
-                                    btn-primary">Absenden
-                        </button>
-                    </form>
-
-                    {# {{ forms.simple_form(form, '',
-                                                url_for('.create')) }} #}
-                </div>
-            </div>
+            {% include "user/_user_show_logs.html" with context %}
         </div>
     </section>
 
@@ -152,7 +61,7 @@
     <section id="finance">
         <div class="head">Kontoeinträge</div>
         <div class="body">
-            Not implemented yet.
+            {% include "user/_user_show_finance.html" with context %}
         </div>
     </section>
 
@@ -161,40 +70,7 @@
     <section id="groups">
         <div class="head">Gruppen</div>
         <div class="body">
-        {% if memberships %}
-            <table class="table table-condensed">
-                <thead>
-                <tr>
-                    <th>Gruppe</th>
-                    <th>Begin</th>
-                    <th>Ende</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for membership in memberships %}
-                    <tr>
-                        <td>{{ membership.group.name }}</td>
-                        <td>{% if membership.start_date is none %}
-                            {% else %}
-                                {{ membership.start_date|date }}
-                            {% endif %}
-                        </td>
-                        <td>{% if membership.end_date is none %}
-                            {% else %}
-                                {{ membership.end_date|date }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for(".delete_membership", membership_id=membership.id) }}">
-                                <i class="icon-remove-sign"></i></a>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}
-            <a href="{{ url_for(".add_membership", user_id=user.id) }}">einer
-                Gruppe hinzufügen</a>
+            {% include "user/_user_show_groups.html" with context %}
         </div>
     </section>
 {% endblock %}
