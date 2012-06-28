@@ -63,8 +63,7 @@ class DatePickerWidget(widgets.TextInput):
         if self.with_today_button:
             html = u'<div class="input-append">'
             html += field_html
-            html += u'<a href="#" title="%s" class="btn" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (
-            self.today_title, field.id)
+            html += u'<a href="#" title="%s" class="btn" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
             html += u'</div>'
             return html
         else:
@@ -76,7 +75,6 @@ class CheckBoxWidget(widgets.Select):
     
     It uses the bootstrap markup.
     """
-
     def __call__(self, field, **kwargs):
         kwargs.setdefault('type', 'checkbox')
         field_id = kwargs.pop('id', field.id)
@@ -84,8 +82,7 @@ class CheckBoxWidget(widgets.Select):
         for value, label, checked in field.iter_choices():
             choice_id = u'%s-%s' % (field_id, value)
             options = dict(kwargs, name=field.name, value=value, id=choice_id)
-            html.append(
-                u'<label class="checkbox" %s>' % html_params(id=field_id))
+            html.append(u'<label class="checkbox" %s>' % html_params(id=field_id))
             if checked:
                 options['checked'] = 'checked'
             html.append(u'<input %s>' % html_params(**options))

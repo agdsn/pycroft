@@ -22,7 +22,7 @@ from sqlalchemy.types import String
 
 class Port(object):
     name = Column(String(4), nullable=False)
-
+    
     name_regex = re.compile("[A-Z][1-9][0-9]?")
 
 
@@ -33,11 +33,12 @@ class DestinationPort(Port, ModelBase):
 
 
 class PatchPort(Port, ModelBase):
+
     # one to one from PatchPort to DestinationPort
     destination_port_id = Column(Integer, ForeignKey('destinationport.id'),
-        nullable=True)
+                                    nullable=True)
     destination_port = relationship("DestinationPort", backref=backref(
-        "patch_port", uselist=False))
+                                    "patch_port", uselist=False))
 
     # many to one from PatchPort to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
@@ -47,14 +48,14 @@ class PatchPort(Port, ModelBase):
 class PhonePort(DestinationPort):
     # Joined table inheritance
     id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
-        nullable=False)
+                    nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'phone_port'}
 
 
 class SwitchPort(DestinationPort):
     # Joined table inheritance
     id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
-        nullable=False)
+                    nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'switch_port'}
 
     # many to one from SwitchPort to Switch
