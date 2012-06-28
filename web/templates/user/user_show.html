@@ -49,7 +49,8 @@
 
             <div class="row">
                 <div class="span3">Status:</div>
-                <div class="span7">Freigeschalten</div>
+                {# TODO implementieren #}
+                <div class="span7">Freigeschaltet</div>
             </div>
         </div>
     </section>
@@ -103,13 +104,12 @@
                     <div class="row span10">
                         <dl>
                             {% for entry in user_logs %}
-                                <dt>{{ entry.author.name }} (<a
-                                        href="{{ url_for(".user_show",
+                                <dt><a href="{{ url_for(".user_show",
                             user_id = entry.author.id) }}"
-                                        >{{ entry.author.login }}</a>)
+                                        >{{ entry.author.name }}</a>
                                     am
                                     {{ entry.timestamp.strftime(
-                                "%d.%m. um %H:%M Uhr") }}</dt>
+                                "%d.%m.%Y um %H:%M Uhr") }}</dt>
                                 <dd>{{ entry.message }}</dd>
                             {% endfor %}
                         </dl>
