@@ -1,0 +1,23 @@
+{% if user.hosts %}
+    {% for host in user.hosts %}
+        <div class="row">
+            <div class="span3">Hostname:
+                {{ host.hostname }}</div>
+            <div class="span7">
+                {% if host.net_devices %}
+                    {% for netdevice in host.net_devices %}
+                        <div>
+                            Ethernet-Adresse:
+                            {{ netdevice.mac }}</div>
+                        <div>IPv4-Adresse:
+                            {{ netdevice.ipv4 }}</div>
+                        <div>IPv6-Adresse:
+                            {{ netdevice.ipv6 }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    Nutzer hat keine Hosts.
+{% endif %}

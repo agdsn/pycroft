@@ -1,0 +1,39 @@
+<div class="row">
+    {% if user_logs %}
+        <div class="row span10">
+            <dl>
+                {% for entry in user_logs %}
+                    <dt><a href="{{ url_for(".user_show",
+                            user_id = entry.author.id) }}"
+                            >{{ entry.author.name }}</a>
+                        am
+                        {{ entry.timestamp.strftime(
+                                "%d.%m.%Y um %H:%M Uhr") }}</dt>
+                    <dd>{{ entry.message }}</dd>
+                {% endfor %}
+            </dl>
+        </div>
+    {% else %}
+        <div class="row span10">Nutzer hat keine Einträge.
+        </div>
+    {% endif %}
+</div>
+<div class="row">
+    <div class="row span8">
+        <form method="POST" action=""
+              class="form-horizontal">
+            {{ form.hidden_tag() }}
+            {% for field in form %}
+                {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
+                    {{ field(placeholder='Nachricht',
+                                                    class='span6') }}
+                {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Absenden
+            </button>
+        </form>
+
+        {# {{ forms.simple_form(form, '',
+                                                url_for('.create')) }} #}
+    </div>
+</div>
