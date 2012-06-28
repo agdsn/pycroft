@@ -185,14 +185,14 @@
                         {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for(".delete_group_membership", user_id=membership.user.id,group_id=membership.group.id) }}"
-                               class="btn"><i class="icon-remove-sign"></i></a>
+                            <a href="{{ url_for(".delete_membership", membership_id=membership.id) }}">
+                                <i class="icon-remove-sign"></i></a>
                         </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-            <a href="{{ url_for(".add_group_membership", user_id=user.id) }}">einer
+            <a href="{{ url_for(".add_membership", user_id=user.id) }}">einer
                 Gruppe hinzufügen</a>
         </div>
     </section>
