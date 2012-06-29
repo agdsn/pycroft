@@ -17,8 +17,8 @@
 
     {# Stammdaten #}
     <section id="basedata">
-        <div class="head">Basisdaten</div>
-        <div class="body">
+        <div class="page-header"><h2>Basisdaten</h2></div>
+        <div>
             {% include "user/_user_show_basedata.html" with context %}
         </div>
     </section>
@@ -26,7 +26,7 @@
 
     {# Traffic #}
     <section id="traffic">
-        <div class="head">Traffic</div>
+        <div class="page-header"><h2>Traffic</h2></div>
         <div class="body">
             {% include "user/_user_show_traffic.html" with context %}
         </div>
@@ -35,7 +35,7 @@
 
     {# Hosts-Tabelle #}
     <section id="hosts">
-        <div class="head">Hosts</div>
+        <div class="page-header"><h2>Hosts</h2></div>
         <div class="body">
             {% include "user/_user_show_hosts.html" with context %}
         </div>
@@ -44,7 +44,7 @@
 
     {# Logeintrage des Nutzers #}
     <section id="logs">
-        <div class="head">Logeinträge</div>
+        <div class="page-header"><h2>Logeinträge</h2></div>
         <div class="body">
             {% include "user/_user_show_logs.html" with context %}
         </div>
@@ -53,7 +53,7 @@
 
     {# Kontostand des Nutzers #}
     <section id="finance">
-        <div class="head">Kontoeinträge</div>
+        <div class="page-header"><h2>Kontoeinträge</h2></div>
         <div class="body">
             {% include "user/_user_show_finance.html" with context %}
         </div>
@@ -62,7 +62,7 @@
 
     {# Gruppen des Nutzers #}
     <section id="groups">
-        <div class="head">Gruppen</div>
+        <div class="page-header"><h2>Gruppen</h2></div>
         <div class="body">
             {% include "user/_user_show_groups.html" with context %}
         </div>

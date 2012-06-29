@@ -5,10 +5,11 @@ body {
 h1 {
     margin-bottom: 18px;
 }
-
+/*
 h2 {
     margin-bottom: 1em;
 }
+*/
 
 .dropdown:hover .dropdown-menu {
     display: block;
@@ -42,11 +43,13 @@ h2 {
 
 
 
+
 section {
     border: 0;
-    padding: 80px 20px 20px 20px;
+    padding-top: 80px;
 }
 
+/*
 section > .head {
     border: 1px solid #e5e5e5;
     font-size: 24px;
@@ -59,7 +62,7 @@ section > .body {
     border-top: 0;
     padding: 10px;
 }
-
+*/
 .subnav {
     background-color: #EEEEEE;
     background-image: -moz-linear-gradient(center top , #F5F5F5 0%, #EEEEEE 50%);
