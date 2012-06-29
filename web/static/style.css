@@ -7,6 +7,10 @@ body {
     padding-top: 40px;
 }
 
+h1 {
+    margin-bottom: 18px;
+}
+
 h2 {
     margin-bottom: 1em;
 }
