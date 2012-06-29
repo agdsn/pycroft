@@ -107,7 +107,7 @@ def dormitory_levels(dormitory_id):
 
     return render_template('user/levels.html',
         levels=levels_list, dormitory_id=dormitory_id,
-        page_title=u"Etagen Wohnheim " + dormitory.short_name)
+        page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
 
 
 @bp.route('/dormitory/<dormitory_id>/level/<level>')
@@ -126,8 +126,8 @@ def dormitory_level_rooms(dormitory_id, level):
     # a link to the user. If there is more then one user, the room is
     # duplicated
     return render_template('user/rooms.html', rooms=rooms_list, level=level_l0,
-        page_title=u"Zimmer der Etage " + level + u" des Wohnheims " +
-                   dormitory.short_name)
+        page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
+                                                              dormitory.short_name))
 
 
 @bp.route('/json/levels')
