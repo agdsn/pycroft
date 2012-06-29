@@ -22,6 +22,14 @@ nav = BlueprintNavigation(bp, "Wohnheime")
 
 
 @bp.route('/')
+def overview():
+    dormitories_list = Dormitory.q.all()
+    dormitories_list = dormitory_helper.sort_dormitories(dormitories_list)
+    return render_template('dormitories/overview.html',
+        dormitories=dormitories_list)
+
+
+@bp.route('/')
 @nav.navigate(u"Wohnheime")
 def dormitories():
     dormitories_list = Dormitory.q.all()
@@ -87,20 +95,20 @@ def room_create():
 
 
 # ToDo: Review this!
-@bp.route('/dormitory/<dormitory_id>')
+@bp.route('/levels/<int:dormitory_id>')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = session.query(Room.level.label('level')).filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
     levels_list = [room.level for room in rooms_list]
 
-    return render_template('dormitory/levels.html',
+    return render_template('dormitories/levels.html',
         levels=levels_list, dormitory_id=dormitory_id,
         page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
 
 
 # ToDo: Review this!
-@bp.route('/dormitory/<dormitory_id>/level/<level>')
+@bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = session.query(Room.number.label('number')).filter_by(
@@ -112,6 +120,6 @@ def dormitory_level_rooms(dormitory_id, level):
     #TODO depending on, whether a user is living in the room, the room is
     # a link to the user. If there is more then one user, the room is
     # duplicated
-    return render_template('dormitory/rooms.html', rooms=rooms_list, level=level_l0,
+    return render_template('dormitories/rooms.html', rooms=rooms_list, level=level_l0,
         page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
                                                               dormitory.short_name))
