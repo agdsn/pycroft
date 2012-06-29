@@ -1,8 +1,7 @@
-{% extends "user/base.html" %}
+{% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
-{% block basecontent %}
-{{ forms.simple_form(form, '', url_for('.create')  ) }}
-
+{% block content %}
+    {{ forms.simple_form(form, '', url_for('.create')  ) }}
 {% endblock %}
 

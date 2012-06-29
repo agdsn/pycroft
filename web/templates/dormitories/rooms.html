@@ -1,6 +1,6 @@
-{% extends "user/base.html" %}
+{% extends "layout.html" %}
 
-{% block basecontent %}
+{% block content %}
     <div>
         {%- for room in rooms %}
             <div class="room"><a class="btn btn-primary btn-large">{{ level }}{{ room }}</a></div>
