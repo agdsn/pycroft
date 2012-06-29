@@ -57,7 +57,7 @@ def user_show(user_id):
             author_id=current_user.id, user_id=user_id)
         session.add(newUserLogEntry)
         session.commit()
-        flash('Kommentar hinzugefügt', 'success')
+        flash(u'Kommentar hinzugefügt', 'success')
 
     user_log_list = user.user_log_entries
 
@@ -80,12 +80,12 @@ def add_membership(user_id):
             start_date=form.begin_date.data, end_date=form.end_date.data)
         session.add(newMembership)
         session.commit()
-        flash('Nutzer wurde der Gruppe hinzugefügt.', 'success')
+        flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
         return redirect(url_for(".user_show", user_id=user_id))
 
     return render_template('user/add_membership.html',
-        page_title="Neue Gruppenmitgliedschaft für Nutzer {}".format(user_id),
+        page_title=u"Neue Gruppenmitgliedschaft für Nutzer %s" % user_id,
             user_id=user_id, form=form)
 
 
@@ -94,7 +94,7 @@ def delete_membership(membership_id):
     membership = Membership.q.get(membership_id)
     session.delete(membership)
     session.commit()
-    flash('Mitgliedschaft in Gruppe gelöscht', 'success')
+    flash(u'Mitgliedschaft in Gruppe gelöscht', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
 
 
@@ -154,7 +154,7 @@ def json_rooms():
 
 
 @bp.route('/create', methods=['GET', 'POST'])
-@nav.navigate("Anlegen")
+@nav.navigate(u"Anlegen")
 @access.login_required
 def create():
     form = UserCreateForm()
@@ -177,7 +177,7 @@ def create():
 
             ip_address = host_helper.getFreeIP(subnets)
         except host_helper.SubnetFullException, error:
-            flash('Subnetz voll', 'error')
+            flash(u'Subnetz voll', 'error')
             return render_template('user/user_create.html',
                 page_title=u"Neuer Nutzer", form=form)
 
@@ -210,7 +210,7 @@ def create():
             patch_port=patch_port)
         session.add(myNetDevice)
         session.commit()
-        flash('Benutzer angelegt', 'success')
+        flash(u'Benutzer angelegt', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
 
     return render_template('user/user_create.html',
@@ -218,7 +218,7 @@ def create():
 
 
 @bp.route('/search', methods=['GET', 'POST'])
-@nav.navigate("Suchen")
+@nav.navigate(u"Suchen")
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
@@ -231,7 +231,7 @@ def search():
         if len(form.login.data):
             userResult = userResult.filter(User.login == form.login.data)
         if not len(userResult.all()):
-            flash('Benutzer nicht gefunden', 'error')
+            flash(u'Benutzer nicht gefunden', 'error')
         return render_template('user/user_search.html',
             page_title=u"Suchergebnis",
             results=userResult.all(), form=form)
@@ -239,7 +239,7 @@ def search():
 
 
 @bp.route('/host_create', methods=['GET', 'POST'])
-@nav.navigate("Host erstellen")
+@nav.navigate(u"Host erstellen")
 def host_create():
     form = hostCreateForm()
     hostResult = Host.q.all()
@@ -247,7 +247,7 @@ def host_create():
         myHost = Host(hostname=form.name.data)
         session.add(myHost)
         session.commit()
-        flash('Host angelegt', 'success')
+        flash(u'Host angelegt', 'success')
         return render_template('user/host_create.html', form=form,
             results=hostResult)
     return render_template('user/host_create.html', form=form,
