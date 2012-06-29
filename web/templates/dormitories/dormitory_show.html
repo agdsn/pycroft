@@ -3,9 +3,9 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% extends "dormitories/base.html" %}
+{% extends "layout.html" %}
 
-{% block basecontent %}
+{% block content %}
     <ul class="unstyled">
         {% for room in rooms %}
             <li><a href="{{ url_for('.room_show', room_id=room.id) }}">Raum:
