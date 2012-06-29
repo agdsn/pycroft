@@ -3,7 +3,7 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% extends "user/base.html" %}
+{% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
 
@@ -11,9 +11,8 @@
     <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
 {% endblock %}
 
-{% block basecontent %}
+{% block content %}
     {{ forms.simple_form(form, '', url_for('.add_membership',user_id=user_id)  ) }}
-
 {% endblock %}
 
 {% block page_script %}
