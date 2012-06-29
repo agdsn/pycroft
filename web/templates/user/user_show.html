@@ -102,7 +102,7 @@
                     formatter:function () {
                         var tooltip = '<b>' + this.x + '</b>';
                         $.each(this.points, function (i, point) {
-                            tooltip += '<br />' + point.series.name + ': ' + point.y + '%';
+                            tooltip += '<br />' + point.series.name + ': ' + point.y + 'Mb';
                         });
                         return tooltip;
                     },
@@ -116,8 +116,8 @@
                     title:{ text:null }
                 },
                 series:[
-                    { name:'Input', data:[34, 12, 2, 7, 22, 13, 9], stack:0 },
-                    { name:'Output', data:[53, 12, 6, 7, 12, 3, 4], stack:1 }
+                    { name: 'Input', data: [{% for entry in trafficvolume_in %}{{ entry.size / 1024 / 1024 }},{% endfor %}], stack: 0 },
+                    { name: 'Output', data: [{% for entry in trafficvolume_out %}{{ entry.size / 1024 / 1024 }},{% endfor %}], stack: 1 }
                 ]
             });
         });
