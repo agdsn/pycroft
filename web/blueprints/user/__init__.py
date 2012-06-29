@@ -17,12 +17,13 @@ from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.properties import Membership
+from pycroft.model.accounting import TrafficVolume
 from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership
 from web.blueprints.access import login_required, BlueprintAccess
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask.ext.login import current_user
 
 bp = Blueprint('user', __name__, )
@@ -42,6 +43,13 @@ def user_show(user_id):
     user = User.q.get(user_id)
     room = Room.q.get(user.room_id)
     form = userLogEntry()
+
+    traffic_timespan = datetime.now() - timedelta(days=7)
+    trafficvolume_in = TrafficVolume.q.filter_by(user_id = user.id, type = 'IN')
+    trafficvolume_in = trafficvolume_in.filter(TrafficVolume.timestamp > traffic_timespan).all()
+    trafficvolume_out = TrafficVolume.q.filter_by(user_id = user.id, type = 'OUT')
+    trafficvolume_out = trafficvolume_out.filter(TrafficVolume.timestamp > traffic_timespan).all()
+
     if form.validate_on_submit():
         #TODO determine author_id from user session
         newUserLogEntry = UserLogEntry(message=form.message.data,
@@ -58,7 +66,7 @@ def user_show(user_id):
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form,
-        memberships=memberships)
+        memberships=memberships, trafficvolume_in=trafficvolume_in, trafficvolume_out=trafficvolume_out)
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
