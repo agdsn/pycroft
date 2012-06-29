@@ -14,14 +14,12 @@
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 # this is necessary
-from pycroft.helpers.host_helper import getFreeIP
-from pycroft.model import ports
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.properties import Membership, Group
+from pycroft.model.properties import Membership
 from pycroft.helpers import user_helper, dormitory_helper, host_helper
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -96,35 +94,6 @@ def delete_membership(membership_id):
     session.commit()
     flash(u'Mitgliedschaft in Gruppe gelöscht', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
-
-
-@bp.route('/dormitory/<dormitory_id>')
-def dormitory_levels(dormitory_id):
-    dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = session.query(Room.level.label('level')).filter_by(
-        dormitory_id=dormitory_id).order_by(Room.level).distinct()
-    levels_list = [room.level for room in rooms_list]
-
-    return render_template('user/levels.html',
-        levels=levels_list, dormitory_id=dormitory_id,
-        page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
-
-
-@bp.route('/dormitory/<dormitory_id>/level/<level>')
-def dormitory_level_rooms(dormitory_id, level):
-    dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = session.query(Room.number.label('number')).filter_by(
-        dormitory_id=dormitory_id, level=level).order_by(Room.number)
-    rooms_list = [room.number for room in rooms_list]
-
-    level_l0 = "%02d" % level
-
-    #TODO depending on, whether a user is living in the room, the room is
-    # a link to the user. If there is more then one user, the room is
-    # duplicated
-    return render_template('user/rooms.html', rooms=rooms_list, level=level_l0,
-        page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
-                                                              dormitory.short_name))
 
 
 @bp.route('/json/levels')

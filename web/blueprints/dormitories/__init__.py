@@ -84,3 +84,34 @@ def room_create():
         flash('Raum angelegt', 'success')
         return redirect(url_for('.room_show', room_id=myRoom.id))
     return render_template('dormitories/dormitory_create.html', form=form)
+
+
+# ToDo: Review this!
+@bp.route('/dormitory/<dormitory_id>')
+def dormitory_levels(dormitory_id):
+    dormitory = Dormitory.q.get(dormitory_id)
+    rooms_list = session.query(Room.level.label('level')).filter_by(
+        dormitory_id=dormitory_id).order_by(Room.level).distinct()
+    levels_list = [room.level for room in rooms_list]
+
+    return render_template('dormitory/levels.html',
+        levels=levels_list, dormitory_id=dormitory_id,
+        page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
+
+
+# ToDo: Review this!
+@bp.route('/dormitory/<dormitory_id>/level/<level>')
+def dormitory_level_rooms(dormitory_id, level):
+    dormitory = Dormitory.q.get(dormitory_id)
+    rooms_list = session.query(Room.number.label('number')).filter_by(
+        dormitory_id=dormitory_id, level=level).order_by(Room.number)
+    rooms_list = [room.number for room in rooms_list]
+
+    level_l0 = "%02d" % level
+
+    #TODO depending on, whether a user is living in the room, the room is
+    # a link to the user. If there is more then one user, the room is
+    # duplicated
+    return render_template('dormitory/rooms.html', rooms=rooms_list, level=level_l0,
+        page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
+                                                              dormitory.short_name))
