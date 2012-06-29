@@ -114,10 +114,7 @@ def dormitory_level_rooms(dormitory_id, level):
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
     rooms_list = [room.number for room in rooms_list]
 
-    if int(level) < 10:
-        level_l0 = u"0" + level
-    else:
-        level_l0 = level
+    level_l0 = "%02d" % level
 
     #TODO depending on, whether a user is living in the room, the room is
     # a link to the user. If there is more then one user, the room is
