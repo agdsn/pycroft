@@ -33,10 +33,7 @@ access = BlueprintAccess(bp)
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    dormitories_list = Dormitory.q.all()
-    dormitories_list = dormitory_helper.sort_dormitories(dormitories_list)
-    return render_template('user/overview.html',
-        dormitories=dormitories_list)
+    return redirect(url_for("dormitories.overview"))
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
