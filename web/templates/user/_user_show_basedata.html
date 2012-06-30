@@ -4,25 +4,25 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {%- macro info_row(name) %}
-    <div class="row">
-        <div class="span3">{{ name }}:</div>
-        <div class="span7">{{ caller() }}</div>
-    </div>
+    <dt>{{ name }}:</dt>
+    <dd>{{ caller() }}</dd>
 {%- endmacro %}
 
-{% call info_row("ID") %}{{ user.id }}{% endcall %}
+<dl class="dl-horizontal">
+    {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
-{% call info_row("Name") %}{{ user.name }}{% endcall %}
+    {% call info_row("Name") %}{{ user.name }}{% endcall %}
 
-{% call info_row("Login") %}{{ user.login }}{% endcall %}
+    {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
-{% call info_row("Anmeldedatum") %}{{ user.registration_date|datetime }}{% endcall %}
+    {% call info_row("Anmeldedatum") %}{{ user.registration_date|datetime }}{% endcall %}
 
-{% call info_row("Wohnort") %}
-    <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ room.dormitory.short_name }} {{ room.level }}-{{ room.number }}</a>
-{% endcall %}
+    {% call info_row("Wohnort") %}
+        <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ room.dormitory.short_name }} {{ room.level }}-{{ room.number }}</a>
+    {% endcall %}
 
-{% call info_row("Netzstatus") %}
-    {# TODO implementieren #}
-    Freigeschaltet
-{% endcall %}
+    {% call info_row("Netzstatus") %}
+        {# TODO implementieren #}
+        Freigeschaltet
+    {% endcall %}
+</dl>
