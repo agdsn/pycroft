@@ -48,13 +48,25 @@ def user_show(user_id):
     form = userLogEntry()
 
     traffic_timespan = datetime.now() - timedelta(days=7)
-    trafficvolume_in = TrafficVolume.q.filter_by(user_id = user.id, type = 'IN')
-    trafficvolume_in = trafficvolume_in.filter(TrafficVolume.timestamp > traffic_timespan).all()
-    trafficvolume_out = TrafficVolume.q.filter_by(user_id = user.id, type = 'OUT')
-    trafficvolume_out = trafficvolume_out.filter(TrafficVolume.timestamp > traffic_timespan).all()
+
+    trafficvolumes = session.query(
+        TrafficVolume
+    ).join(
+        (NetDevice, NetDevice.id == TrafficVolume.net_device_id)
+    ).join(
+        (Host, Host.id == NetDevice.host_id)
+    ).filter(
+        Host.user_id == user_id
+    ).filter(
+        TrafficVolume.timestamp > traffic_timespan)
+
+    trafficvolume_in = trafficvolumes.filter(
+        TrafficVolume.type == 'IN').all()
+
+    trafficvolume_out = trafficvolumes.filter(
+        TrafficVolume.type == 'OUT').all()
 
     if form.validate_on_submit():
-        #TODO determine author_id from user session
         newUserLogEntry = UserLogEntry(message=form.message.data,
             timestamp=datetime.now(),
             author_id=current_user.id, user_id=user_id)
@@ -69,7 +81,8 @@ def user_show(user_id):
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form,
-        memberships=memberships, trafficvolume_in=trafficvolume_in, trafficvolume_out=trafficvolume_out)
+        memberships=memberships, trafficvolume_in=trafficvolume_in,
+        trafficvolume_out=trafficvolume_out)
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
@@ -89,7 +102,7 @@ def add_membership(user_id):
 
     return render_template('user/add_membership.html',
         page_title=u"Neue Gruppenmitgliedschaft für Nutzer %s" % user_id,
-            user_id=user_id, form=form)
+        user_id=user_id, form=form)
 
 
 @bp.route('/delete_membership/<int:membership_id>')
