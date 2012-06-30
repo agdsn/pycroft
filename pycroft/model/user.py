@@ -20,6 +20,7 @@ from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
 from datetime import datetime
+from pycroft.model import dormitory
 from pycroft.model.properties import Membership, Property, PropertyGroup
 from pycroft.model.session import session
 from pycroft.helpers.user_helper import hash_password, verify_password
