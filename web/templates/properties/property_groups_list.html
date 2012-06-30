@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <a href="{{ url_for(".property_group_create") }}" class="btn btn-primary btn-large">neue Eigenschaften Gruppe</a>
+    <a href="{{ url_for(".property_group_create") }}" class="btn">neue Eigenschaften Gruppe</a>
     {% if property_groups %}
     <table class="table">
         <thead>
