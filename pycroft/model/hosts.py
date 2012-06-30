@@ -17,6 +17,7 @@ from sqlalchemy.types import String
 
 from pycroft.model import user
 from pycroft.model import dormitory
+from pycroft.model import ports
 
 class Host(ModelBase):
     hostname = Column(String(255), nullable=False)
