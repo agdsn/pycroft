@@ -22,7 +22,7 @@ class TrafficVolume(ModelBase):
     timestamp = Column(DateTime, nullable=False)
     type = Column(Enum("IN", "OUT", name="traffic_types"), nullable=False)
 
-    # many to one from TrafficVolume to User
-    user = relationship("User",
+    # many to one from TrafficVolume to NetDevice
+    net_device = relationship("NetDevice",
                 backref=backref("traffic_volumes"))
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    net_device_id = Column(Integer, ForeignKey("netdevice.id"), nullable=False)

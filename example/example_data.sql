@@ -4394,6 +4394,7 @@ CREATE TABLE user (
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
 INSERT INTO "user" VALUES(1,'ag_dsn','System User','{SSHA}IPVJh2ri9sXFFpWt3sp9ca64H6gdg9A6','2012-04-10 16:11:05.739251',1212);
+INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0','2012-06-30 10:53:20.930821',398);
 CREATE TABLE host (
 	id INTEGER NOT NULL, 
 	hostname VARCHAR(255) NOT NULL, 
@@ -4421,6 +4422,7 @@ INSERT INTO "host" VALUES(14,'4','switch',1,NULL);
 INSERT INTO "host" VALUES(15,'5','switch',1,NULL);
 INSERT INTO "host" VALUES(16,'3','switch',1,NULL);
 INSERT INTO "host" VALUES(17,'2','switch',1,NULL);
+INSERT INTO "host" VALUES(18,'whdd1',NULL,2,398);
 CREATE TABLE switch (
 	id INTEGER NOT NULL, 
 	name VARCHAR(127) NOT NULL, 
@@ -4459,6 +4461,7 @@ CREATE TABLE netdevice (
 	FOREIGN KEY(patch_port_id) REFERENCES patchport (id), 
 	FOREIGN KEY(host_id) REFERENCES host (id)
 );
+INSERT INTO "netdevice" VALUES(1,'141.30.202.1',NULL,'d4:9a:20:d0:6a:18',471,18);
 CREATE TABLE switchport (
 	name VARCHAR(4) NOT NULL, 
 	id INTEGER NOT NULL, 
@@ -5902,6 +5905,7 @@ CREATE TABLE "group" (
 	type VARCHAR(17) NOT NULL, 
 	PRIMARY KEY (id)
 );
+INSERT INTO "group" VALUES(1,'users','propertygroup');
 CREATE TABLE trafficgroup (
 	id INTEGER NOT NULL, 
 	traffic_limit BIGINT NOT NULL, 
@@ -5937,31 +5941,8 @@ CREATE TABLE logentry (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(author_id) REFERENCES user (id)
 );
-INSERT INTO "logentry" VALUES(1,'userlogentry','Ein komischer Typ.','2012-05-19 17:22:39.475358',3);
-CREATE TABLE trafficvolume (
-	id INTEGER NOT NULL, 
-	size BIGINT NOT NULL, 
-	timestamp DATETIME NOT NULL, 
-	type VARCHAR(3) NOT NULL, 
-	user_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	CONSTRAINT traffic_types CHECK (type IN ('IN', 'OUT')), 
-	FOREIGN KEY(user_id) REFERENCES user (id)
-);
-INSERT INTO "trafficvolume" VALUES(1, 0, '2012-06-23 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(2, 0, '2012-06-23 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(3, 0, '2012-06-24 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(4, 0, '2012-06-24 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(5, 42991616, '2012-06-25 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(6, 49283072, '2012-06-25 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(7, 33554432, '2012-06-26 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(8, 70254592, '2012-06-26 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(9, 106954752, '2012-06-27 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(10, 12582912, '2012-06-27 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(11, 45088768, '2012-06-28 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(12, 55574528, '2012-06-28 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(13, 220200960, '2012-06-29 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(14, 53477376, '2012-06-29 00:00:00.475358','OUT',1);
+INSERT INTO "logentry" VALUES(1,'userlogentry','Ein komischer Typ.','2012-05-19 17:22:39.475358',2);
+INSERT INTO "logentry" VALUES(3,'userlogentry','Dies ist ein Beispiel für einen gewöhnlichen Nutzer. Sein Passwort ist lLAOHgUPxJz','2012-06-30 10:55:47.196164',1);
 CREATE TABLE membership (
 	id INTEGER NOT NULL, 
 	start_date DATETIME, 
@@ -6000,11 +5981,14 @@ CREATE TABLE userlogentry (
 	FOREIGN KEY(user_id) REFERENCES user (id)
 );
 INSERT INTO "userlogentry" VALUES(1,1);
+INSERT INTO "userlogentry" VALUES(2,1);
+INSERT INTO "userlogentry" VALUES(3,2);
 CREATE TABLE propertygroup (
 	id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(id) REFERENCES "group" (id)
 );
+INSERT INTO "propertygroup" VALUES(1);
 CREATE TABLE property (
 	id INTEGER NOT NULL, 
 	name VARCHAR(255) NOT NULL, 
@@ -6012,4 +5996,29 @@ CREATE TABLE property (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(property_group_id) REFERENCES propertygroup (id)
 );
+INSERT INTO "property" VALUES(1,'internet',1);
+CREATE TABLE trafficvolume (
+	id INTEGER NOT NULL, 
+	size BIGINT NOT NULL, 
+	timestamp DATETIME NOT NULL, 
+	type VARCHAR(3) NOT NULL, 
+	net_device_id INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT traffic_types CHECK (type IN ('IN', 'OUT')), 
+	FOREIGN KEY(net_device_id) REFERENCES netdevice (id)
+);
+INSERT INTO "trafficvolume" VALUES(1, 0, '2012-06-23 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(2, 0, '2012-06-23 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(3, 0, '2012-06-24 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(4, 0, '2012-06-24 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(5, 42991616, '2012-06-25 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(6, 49283072, '2012-06-25 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(7, 33554432, '2012-06-26 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(8, 70254592, '2012-06-26 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(9, 106954752, '2012-06-27 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(10, 12582912, '2012-06-27 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(11, 45088768, '2012-06-28 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(12, 55574528, '2012-06-28 00:00:00.475358','OUT',1);
+INSERT INTO "trafficvolume" VALUES(13, 220200960, '2012-06-29 00:00:00.475358','IN',1);
+INSERT INTO "trafficvolume" VALUES(14, 53477376, '2012-06-29 00:00:00.475358','OUT',1);
 COMMIT;
