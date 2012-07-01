@@ -5,22 +5,19 @@
 #}
 <div class="row">
     {% if user_logs %}
-        <div class="row span10">
-            <dl>
+            <dl class="span6">
                 {% for entry in user_logs %}
-                    <dt><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
-                        am {{ entry.timestamp|datetime }}</dt>
-                    <dd>{{ entry.message }}</dd>
+                    <dt>
+                        {{ entry.timestamp|datetime }} von <a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
+                    </dt>
+                    <dd><p>{{ entry.message }}</p></dd>
                 {% endfor %}
             </dl>
-        </div>
     {% else %}
-        <div class="row span10">Nutzer hat keine Einträge.
-        </div>
+            <p>Nutzer hat keine Einträge.</p>
     {% endif %}
 </div>
 <div class="row">
-    <div class="row span8">
         <form method="POST" action=""
               class="form-horizontal">
             {{ form.hidden_tag() }}
@@ -29,9 +26,7 @@
                     {{ field(placeholder='Nachricht', class='span6') }}
                 {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary">Absenden
-            </button>
+            <button type="submit" class="btn btn-primary">Absenden</button>
         </form>
         {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
-    </div>
 </div>
