@@ -56,7 +56,7 @@ class NetDevice(ModelBase):
     def validate_mac(self, _, value):
         if not NetDevice.mac_regex.match(value):
             raise Exception("invalid MAC address!")
-        if int("0x{}".format(value[1]), base=16) & int(1):
+        if int(value[0], base=16) & 1:
             raise Exception("Multicast-Flag (least significant bit im "
                             "ersten Byte gesetzt)!")
         return value
