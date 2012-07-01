@@ -11,7 +11,7 @@
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import BigInteger, Integer, DateTime
 from sqlalchemy.types import String
 
@@ -28,19 +28,26 @@ class Membership(ModelBase):
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey('group.id'),
-                        nullable=False)
+        nullable=False)
     #TODO prüfen, ob cascade Memberships löscht, wenn zugehörige Gruppe deleted
     group = relationship("Group", backref=backref("memberships",
-                                                  cascade="all, delete",
-                                                  order_by='Membership.id'))
+        cascade="all, delete",
+        order_by='Membership.id'))
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey('user.id'),
-                        nullable=False)
+        nullable=False)
 
     #TODO prüfen, ob cascade Memberships löscht, wenn zugehöriger User deleted
     user = relationship("User", backref=backref("memberships",
-                                                cascade="all, delete",
-                                                order_by='Membership.id'))
+        cascade="all, delete",
+        order_by='Membership.id'))
+
+
+    @validates('end_date')
+    def validate_end_date(self, _, value):
+        if not value > self.start_date:
+            raise Exception("end_date is not bigger than start date!")
+        return value
 
 
 class Property(ModelBase):
@@ -49,7 +56,7 @@ class Property(ModelBase):
     # many to one from Property to PropertyGroup
     # nullable=True
     property_group_id = Column(Integer, ForeignKey("propertygroup.id"),
-                            nullable=False)
+        nullable=False)
     #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group = relationship("PropertyGroup",
         backref=backref("properties", cascade="all,delete"))
@@ -58,7 +65,7 @@ class Property(ModelBase):
 class PropertyGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'propertygroup'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
-                nullable=False)
+        nullable=False)
 
     def has_property(self, property_name):
         if Property.q.filter_by(property_group_id=self.id,
@@ -71,7 +78,7 @@ class PropertyGroup(Group):
 class TrafficGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'trafficgroup'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
-                nullable=False)
+        nullable=False)
     # in byte per seven days, zero is no limit
     traffic_limit = Column(BigInteger, nullable=False)
 
@@ -89,7 +96,8 @@ property_categories = [
     (u"Verbote Nutzer",
      [
          (u"no_internet", u"Nutzer darf sich NICHT mit dem Internet verbinden"),
-         (u"no_ssh_helios", u"Nutzer darf sich NICHT mit SSH auf Helios einloggen")
+         (u"no_ssh_helios",
+          u"Nutzer darf sich NICHT mit SSH auf Helios einloggen")
      ]
         ),
     (u"Nutzeradministration",

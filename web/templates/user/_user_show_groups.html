@@ -3,37 +3,76 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if memberships %}
-    <table class="table table-condensed">
-        <thead>
-        <tr>
-            <th>Gruppe</th>
-            <th>Begin</th>
-            <th>Ende</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for membership in memberships %}
-            <tr>
-                <td>{{ membership.group.name }}</td>
-                <td>{% if membership.start_date is none %}
-                {% else %}
-                    {{ membership.start_date|date }}
-                {% endif %}
-                </td>
-                <td>{% if membership.end_date is none %}
-                {% else %}
-                    {{ membership.end_date|date }}
-                {% endif %}
-                </td>
-                <td>
-                    <a href="{{ url_for(".delete_membership", membership_id=membership.id) }}">
-                        <i class="icon-remove-sign"></i></a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-{% endif %}
+<ul id="myTab" class="nav nav-tabs">
+    <li class="active"><a href="#memberships_active" data-toggle="tab">Aktiv</a></li>
+    <li><a href="#memberships_all" data-toggle="tab">Alle</a></li>
+</ul>
+<div id="myTabContent" class="tab-content">
+    <div class="tab-pane fade in active" id="memberships_active">
+        {% if memberships_active %}
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Gruppe</th>
+                    <th>Begin</th>
+                    <th>Ende</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for membership in memberships_active %}
+                    <tr>
+                        <td>{{ membership.group.name }}</td>
+                        <td>{% if membership.start_date is none %}
+                        {% else %}
+                            {{ membership.start_date|date }}
+                        {% endif %}
+                        </td>
+                        <td>{% if membership.end_date is none %}
+                        {% else %}
+                            {{ membership.end_date|date }}
+                        {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for(".end_membership", membership_id=membership.id) }}">
+                                beenden</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+    <div class="tab-pane fade" id="memberships_all">
+        {% if memberships %}
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Gruppe</th>
+                    <th>Begin</th>
+                    <th>Ende</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for membership in memberships %}
+                    <tr>
+                        <td>{{ membership.group.name }}</td>
+                        <td>{% if membership.start_date is none %}
+                        {% else %}
+                            {{ membership.start_date|date }}
+                        {% endif %}
+                        </td>
+                        <td>{% if membership.end_date is none %}
+                        {% else %}
+                            {{ membership.end_date|date }}
+                        {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</div>
+
 <a href="{{ url_for(".add_membership", user_id=user.id) }}">einer
     Gruppe hinzufügen</a>
