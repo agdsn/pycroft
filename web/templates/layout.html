@@ -36,9 +36,6 @@
 </div>
 
 <div class="container">
-    <ul class="breadcrumb">
-        {{ navigation.breadcrumbs() }}
-    </ul>
 
     {% with messages = get_flashed_messages(with_categories=true) -%}
         {% if messages -%}
