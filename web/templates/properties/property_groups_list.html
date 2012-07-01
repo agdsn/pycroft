@@ -32,11 +32,11 @@
                 <td>
                     {% if  property_group.has_property(property[0]) %}
                         <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ok remove-button">
+                           class="icon-ok remove-button" title="Löschen">
                         </a>
                     {% else %}
                         <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ban-circle add-button">
+                           class="icon-ban-circle add-button" title="Hinzufügen">
                         </a>
                     {% endif %}
                 </td>
