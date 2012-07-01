@@ -41,20 +41,20 @@
             }
         },
 
-        processClick:function () {
-            var $window = this.window,
-                    $doc = this.doc;
-            if (!this.isFixed) {
-                setTimeout(function () {
-                    if ($doc.height() >= $window.height() + $window.scrollTop() + 60)
-                        $window.scrollTop($window.scrollTop() - 60);
-                }, 10)
-            } else {
-                setTimeout(function () {
-                    if ($doc.height() >= $window.height() + $window.scrollTop() + 22)
-                        $window.scrollTop($window.scrollTop() - 22);
-                }, 10)
-            }
+        processClick:function (ev) {
+            var target_id = $(ev.target).attr("href"),
+                $target = $(target_id),
+                offset = $target.offset().top;
+            ev.preventDefault();
+
+            var scrollback = 22;
+            if (!this.isFixed)
+                scrollback = 60;
+
+            if (this.doc.height() >= this.window.height() + offset + scrollback)
+                this.window.scrollTop(offset - scrollback);
+            else
+                this.window.scrollTop(offset);
         }
     };
 
