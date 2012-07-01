@@ -132,3 +132,7 @@ section > .body {
     width: 938px;
     z-index: 200;
 }
+
+.hoverable:hover {
+    background-color: whiteSmoke;
+}
