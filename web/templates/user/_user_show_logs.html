@@ -11,10 +11,9 @@
     {% else %}
             <p>Nutzer hat keine Einträge.</p>
     {% endif %}
-</div>
-<div class="row">
-        <form method="POST" action=""
-              class="form-horizontal">
+
+    <div class="span6">
+        <form method="POST" action="" class="form-horizontal">
             {{ form.hidden_tag() }}
             {% for field in form %}
                 {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
@@ -24,4 +23,5 @@
             <button type="submit" class="btn btn-primary">Absenden</button>
         </form>
         {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
+    </div>
 </div>
