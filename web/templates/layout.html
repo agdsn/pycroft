@@ -44,12 +44,14 @@
 
     {% with messages = get_flashed_messages(with_categories=true) -%}
         {% if messages -%}
+            <div class="flash-messages">
             {% for category, message in messages -%}
                 <div class="alert fade in alert-{{ category }}">
                     <a class="close" data-dismiss="alert" href="#">×</a>
                     <strong>{{ category|pretty_category }}:</strong> {{ message }}
                 </div>
             {%- endfor %}
+            </div>
             <p>&nbsp;</p>
         {%- endif %}
     {%- endwith %}
@@ -60,7 +62,29 @@
 <script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery-1.7.2.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="bootstrap/js/bootstrap.js") }}"></script>
 <script type="text/javascript">
-    $('.dropdown-toggle').dropdown()
+    $('.dropdown-toggle').dropdown();
+    $(function() {
+        var isFixed = 0,
+            $window = $(window);
+        $(window).on("scroll", function() {
+            var $messages = $(".flash-messages");
+            if (!$messages.length)
+                return;
+            var offset = $messages.offset().top;
+
+            if (isFixed){
+                if ($window.scrollTop() < 2) {
+                    $messages.removeClass("flash-messages-fixed");
+                    isFixed = 0;
+                }
+            } else {
+                if ($window.scrollTop() >= 2) {
+                    $messages.addClass("flash-messages-fixed");
+                    isFixed = 1;
+                }
+            }
+        });
+    })
 </script>
 {% block page_script %}{% endblock %}
 </body>

@@ -126,3 +126,9 @@ section > .body {
 .subnav .nav > li:first-child > a, .subnav .nav > li:first-child > a:hover {
     border-radius: 0 0 0 0;
 }
+
+.flash-messages-fixed {
+    position: fixed;
+    width: 938px;
+    z-index: 200;
+}
