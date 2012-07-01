@@ -66,19 +66,20 @@ class User(ModelBase, UserMixin):
         now = datetime.now()
         query = session.query(
             func.count(Property.id).label("property_count")
-                ).join(
-                    (PropertyGroup, PropertyGroup.id == Property.property_group_id)
-                ).join(
-                    (Membership, Membership.group_id == PropertyGroup.id)
-                ).filter(
-                    Property.name == property_name
-                ).filter(
-                    Membership.user_id == self.id
-                ).filter(
-                    or_(Membership.start_date is None, Membership.start_date <= now)
-                ).filter(
-                    or_(Membership.end_date is None, Membership.end_date > now)
-                )
+        ).join(
+            (PropertyGroup, PropertyGroup.id == Property.property_group_id)
+        ).join(
+            (Membership, Membership.group_id == PropertyGroup.id)
+        ).filter(
+            Property.name == property_name
+        ).filter(
+            Membership.user_id == self.id
+        ).filter(
+        # it is important to use == here, "is" does not work
+            or_(Membership.start_date == None, Membership.start_date <= now)
+        ).filter(
+            or_(Membership.end_date == None, Membership.end_date > now)
+        )
         result = query.one()
-        
+
         return result.property_count > 0
