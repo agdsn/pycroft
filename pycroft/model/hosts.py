@@ -11,13 +11,13 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import relationship, backref
+from pycroft.model import dormitory
+from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
-from pycroft.model import user
-from pycroft.model import dormitory
-from pycroft.model import ports
+import re
+
 
 class Host(ModelBase):
     hostname = Column(String(255), nullable=False)
@@ -49,7 +49,17 @@ class NetDevice(ModelBase):
     host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
     host = relationship("Host", backref=backref("net_devices"))
 
-    mac_regex = "^[a-f0-9]{2}(:[a-f0-9]{2}){5}$"
+    mac_regex = re.compile("^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
+
+
+    @validates('mac')
+    def validate_mac(self, _, value):
+        if not NetDevice.mac_regex.match(value):
+            raise Exception("invalid MAC address!")
+        if int("0x{}".format(value[1]), base=16) | int(14) == 15:
+            raise Exception("Multicast-Flag (least significant bit im "
+                            "ersten Byte gesetzt)!")
+        return value
 
 
 class Switch(Host):
