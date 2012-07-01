@@ -13,7 +13,6 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
-# this is necessary
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
@@ -21,7 +20,8 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.properties import Membership
 from pycroft.model.accounting import TrafficVolume
-from pycroft.helpers import user_helper, dormitory_helper, host_helper
+from pycroft.helpers import user_helper, host_helper
+from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership
@@ -74,14 +74,24 @@ def user_show(user_id):
         session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
 
-    user_log_list = user.user_log_entries
+    user_log_list = user.user_log_entries[::-1]
 
-    memberships = Membership.q.filter_by(user_id=user.id).all()
+    memberships = Membership.q.filter(Membership.user_id == user.id)
+    memberships_active = memberships.filter(
+        # it is important to use == here, "is" does not work
+        or_(Membership.start_date == None,
+            Membership.start_date <= datetime.now())
+    ).filter(
+        or_(Membership.end_date == None,
+            Membership.end_date > datetime.now())
+    )
 
     return render_template('user/user_show.html',
         page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form,
-        memberships=memberships, trafficvolume_in=trafficvolume_in,
+        memberships=memberships.all(),
+        memberships_active=memberships_active.all(),
+        trafficvolume_in=trafficvolume_in,
         trafficvolume_out=trafficvolume_out)
 
 
@@ -94,7 +104,13 @@ def add_membership(user_id):
     if form.validate_on_submit():
         newMembership = Membership(user=user, group=form.group_id.data,
             start_date=form.begin_date.data, end_date=form.end_date.data)
+        newUserLogEntry = UserLogEntry(author_id=current_user.id,
+            message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
+                    form.group_id.data.name,
+            timestamp=datetime.now(), user_id=user_id)
+
         session.add(newMembership)
+        session.add(newUserLogEntry)
         session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
@@ -106,11 +122,20 @@ def add_membership(user_id):
 
 
 @bp.route('/delete_membership/<int:membership_id>')
-def delete_membership(membership_id):
+def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
-    session.delete(membership)
+    membership.end_date = datetime.now()
+
+    newUserLogEntry = UserLogEntry(author_id=current_user.id,
+        message=u"hat die Mitgliedschaft des Nutzers"
+                u" in der Gruppe '%s' beendet." %
+                membership.group.name,
+        timestamp=datetime.now(), user_id=membership.user_id)
+
+    session.add(membership)
+    session.add(newUserLogEntry)
     session.commit()
-    flash(u'Mitgliedschaft in Gruppe gelöscht', 'success')
+    flash(u'Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
 
 
