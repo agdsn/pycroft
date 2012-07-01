@@ -1,6 +1,6 @@
 {% if user.hosts %}
     {% for host in user.hosts %}
-        <h3 class="row">
+        <h3 class="row hoverable">
             <small style="float: right"><a class="" title="Löschen!" href="#"><i
                     class="icon-remove"></i></a></small>
             <span class="span6">Host: {{ host.hostname }}</span>
@@ -18,6 +18,7 @@
                     <th>IP-Adresse</th>
                     <th>Switch</th>
                     <th>Port(s)</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -27,6 +28,7 @@
                         <td>{{ netdevice.ipv4 }}</td>
                         <td>TODO</td>
                         <td>TODO</td>
+                        <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -34,6 +36,7 @@
         {% else %}
             <p>Keine IP-Adressen vergeben!</p>
         {% endif %}
+        <p>&nbsp;</p>
     {% endfor %}
 {% else %}
     Nutzer hat keine Hosts.
