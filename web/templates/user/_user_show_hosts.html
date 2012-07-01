@@ -5,23 +5,40 @@
 #}
 {% if user.hosts %}
     {% for host in user.hosts %}
-        <div class="row">
-            <div class="span3">Hostname:
-                {{ host.hostname }}</div>
-            <div class="span7">
-                {% if host.net_devices %}
-                    {% for netdevice in host.net_devices %}
-                        <div>
-                            Ethernet-Adresse:
-                            {{ netdevice.mac }}</div>
-                        <div>IPv4-Adresse:
-                            {{ netdevice.ipv4 }}</div>
-                        <div>IPv6-Adresse:
-                            {{ netdevice.ipv6 }}</div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
+        <h3 class="row">
+            <small style="float: right"><a class="" title="Löschen!" href="#"><i
+                    class="icon-remove"></i></a></small>
+            <span class="span6">Host: {{ host.hostname }}</span>
+            <small class="span2">Zw 41a/2/A205</small>
+            <small class="span1">Alias: 2</small>
+            <small class="span1">IPs: 2</small>
+            <small>Traffic: 30%</small>
+        </h3>
+
+        {% if host.net_devices %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Mac-Adresse</th>
+                    <th>IP-Adresse</th>
+                    <th>Switch</th>
+                    <th>Port(s)</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for netdevice in host.net_devices %}
+                    <tr>
+                        <td>{{ netdevice.mac }}</td>
+                        <td>{{ netdevice.ipv4 }}</td>
+                        <td>TODO</td>
+                        <td>TODO</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Keine IP-Adressen vergeben!</p>
+        {% endif %}
     {% endfor %}
 {% else %}
     Nutzer hat keine Hosts.
