@@ -17,7 +17,6 @@ from sqlalchemy.types import DateTime, Integer
 from sqlalchemy.types import String
 import re
 from datetime import datetime
-from pycroft.model import dormitory
 from pycroft.model.properties import Membership, Property, PropertyGroup
 from pycroft.model.session import session
 from pycroft.helpers.user_helper import hash_password, verify_password
@@ -33,12 +32,12 @@ class User(ModelBase, UserMixin):
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
-    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"\
-                            "([A-Z][a-z0-9]+)((-|\\s)"\
+    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"
+                            "([A-Z][a-z0-9]+)((-|\\s)"
                             "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$")
 
     @validates('login')
-    def validate_login(self, key, value):
+    def validate_login(self, _, value):
         if not User.login_regex.match(value):
             raise Exception("invalid unix-login!")
         return value
@@ -76,9 +75,9 @@ class User(ModelBase, UserMixin):
                 ).filter(
                     Membership.user_id == self.id
                 ).filter(
-                    or_(Membership.start_date == None, Membership.start_date <= now)
+                    or_(Membership.start_date is None, Membership.start_date <= now)
                 ).filter(
-                    or_(Membership.end_date == None, Membership.end_date > now)
+                    or_(Membership.end_date is None, Membership.end_date > now)
                 )
         result = query.one()
         

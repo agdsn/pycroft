@@ -175,8 +175,8 @@ def create():
             room=room,
             registration_date=datetime.now())
         plain_password = user_helper.generatePassword(12)
-        #TODO: DEBUG remove in productive
-        print u"new password" + plain_password
+        #TODO: DEBUG remove in productive!!!
+        print u"new password: " + plain_password
         myUser.set_password(plain_password)
         session.add(myUser)
 
