@@ -5,13 +5,11 @@
 
 
 from flaskext.wtf import Form, TextField, QuerySelectField, SelectField,\
-    PasswordField, DateTimeField, BooleanField
+    PasswordField, DateTimeField, BooleanField, TextAreaField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.properties import PropertyGroup
-from pycroft.model.dormitory import Room
-import pycroft.helpers.user_helper as helpers
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields import DatePickerField
 
@@ -69,7 +67,7 @@ class hostCreateForm(Form):
 
 
 class userLogEntry(Form):
-    message = TextField(u"", [Required()])
+    message = TextAreaField(u"", [Required()])
 
 class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
