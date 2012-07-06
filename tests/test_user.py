@@ -1,14 +1,39 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
+import random
 import unittest
 from crypt import crypt
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
 from pycroft.helpers.user_helper import generatePassword, hash_password, verify_password
 
-class TestPasswdHashes(unittest.TestCase):
+
+class Test_010_PasswordGenerator(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(Test_010_PasswordGenerator, self).__init__(*args, **kwargs)
+        self.pws = []
+
+    def test_0010_pw_length(self):
+        for i in range(0, 100):
+            length = random.randint(2, 12)
+            pw = generatePassword(length)
+            self.assertEqual(len(pw), length)
+            self.pws.append(pw)
+
+    def test_0020_unique(self):
+        for i in range(0, 100):
+            self.pws.append(generatePassword(8))
+
+        self.assertEqual(len(self.pws), len(set(self.pws)))
+
+    def test_0030_first_part_unique(self):
+        pws = list(self.pws)
+        pws = filter(lambda x: len(x) >= 6, pws)
+        self.assertEqual(len(set(map(lambda x: x[:6], pws))), len(pws))
+
+
+class Test_020_PasswdHashes(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.hashes = []
@@ -27,7 +52,7 @@ class TestPasswdHashes(unittest.TestCase):
             for method in self.methods:
                 hash_dict[method] = self.methods[method](pw)
             self.hashes.append(hash_dict)
-        super(TestPasswdHashes, self).__init__(*args, **kwargs)
+        super(Test_020_PasswdHashes, self).__init__(*args, **kwargs)
 
     def test_0010_verify(self):
         for pw in self.hashes:
