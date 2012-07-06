@@ -60,25 +60,43 @@
     $('.dropdown-toggle').dropdown();
     $(function() {
         var isFixed = 0,
-            $window = $(window);
-        $(window).on("scroll", function() {
+            $window = $(window),
+            $subnav = $(".subnav");
+
+        function place_alerts() {
             var $messages = $(".flash-messages");
             if (!$messages.length)
                 return;
-            var offset = $messages.offset().top;
+            var offset = $messages.offset().top,
+                    top = $window.scrollTop();
 
-            if (isFixed){
-                if ($window.scrollTop() < 2) {
+            if (isFixed) {
+                if (top < 2) {
                     $messages.removeClass("flash-messages-fixed");
+                    $messages.css("margin-top", 0);
                     isFixed = 0;
                 }
+                if ($subnav.length) {
+                    var padding = 28;
+                    if (top < 60) {
+                        padding = (top / 2) - 2;
+                    }
+                    $messages.css("margin-top", padding);
+                }
             } else {
-                if ($window.scrollTop() >= 2) {
+                if (top >= 2) {
+                    var width = $messages.width();
                     $messages.addClass("flash-messages-fixed");
+                    $messages.css("width", width);
                     isFixed = 1;
+
+                    // reemit event as workaround to get proper subnav offset calc
+                    $window.trigger("scroll");
                 }
             }
-        });
+        }
+
+        $(window).on("scroll", place_alerts);
     })
 </script>
 {% block page_script %}{% endblock %}
