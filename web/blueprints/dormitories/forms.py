@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from flaskext.wtf import Form, TextField, validators, BooleanField, \
+from flask.ext.wtf import Form, TextField, validators, BooleanField, \
     QuerySelectField
 from pycroft.model.dormitory import Dormitory
 

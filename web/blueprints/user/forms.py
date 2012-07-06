@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from flaskext.wtf import Form, TextField, QuerySelectField, SelectField,\
+from flask.ext.wtf import Form, TextField, QuerySelectField, SelectField,\
     PasswordField, DateTimeField, BooleanField, TextAreaField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
