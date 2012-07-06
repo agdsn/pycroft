@@ -12,7 +12,7 @@ from flask import Flask, redirect, url_for
 from blueprints import finance, infrastructure, properties, user, dormitories, login
 import template_filters
 
-from pycroft.model.session import session
+from pycroft.model import session
 from web.blueprints.login import login_manager
 
 
@@ -21,6 +21,8 @@ def make_app():
 
     :return: The fully configured app object
     """
+    session.init_session()
+
     app = Flask(__name__)
 
     #initialization code
@@ -50,6 +52,6 @@ def make_app():
 
     @app.teardown_request
     def shutdown_session(exception=None):
-        session.remove()
+        session.session.remove()
 
     return app
