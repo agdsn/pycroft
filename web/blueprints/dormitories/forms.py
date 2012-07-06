@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
-from flaskext.wtf import Form, TextField, validators, BooleanField, \
+from flask.ext.wtf import Form, TextField, validators, BooleanField, \
     QuerySelectField
 from pycroft.model.dormitory import Dormitory
 
