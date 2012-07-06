@@ -18,13 +18,15 @@
         this.window = $(window);
         this.doc = $(document);
         this.element = $(element);
-        this.navTop = this.element.length && this.element.offset().top - 40;
+        this.navTop = this.element.length && this.element.offset().top - 35;
         this.isFixed = 1;
 
-        this.processScroll();
+        if (this.element.length) {
+            this.processScroll();
 
-        this.element.on('click', $.proxy(this.processClick, this));
-        this.window.on('scroll', $.proxy(this.processScroll, this));
+            this.element.on('click', $.proxy(this.processClick, this));
+            this.window.on('scroll', $.proxy(this.processScroll, this));
+        }
     };
 
     SubNavBar.prototype = {
@@ -32,6 +34,11 @@
 
         processScroll:function () {
             var scrollTop = this.window.scrollTop();
+
+            if (!this.isFixed) {
+                this.navTop = this.element.length && this.element.offset().top - 35;
+            }
+
             if (scrollTop >= this.navTop && !this.isFixed) {
                 this.isFixed = 1;
                 this.element.addClass(this.options.fix_class);
@@ -47,9 +54,9 @@
                 offset = $target.offset().top;
             ev.preventDefault();
 
-            var scrollback = 22;
-            if (!this.isFixed)
-                scrollback = 60;
+            var scrollback = 60;
+            //if (!this.isFixed)
+            //    scrollback = 60;
 
             if (this.doc.height() >= this.window.height() + offset + scrollback)
                 this.window.scrollTop(offset - scrollback);
