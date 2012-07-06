@@ -328,7 +328,8 @@
 		},
 		parseDate: function(date, format) {
 			var parts = date.split(format.separator),
-				date = new Date(1970, 1, 1, 0, 0, 0),
+				//date = new Date(1970, 1, 1, 0, 0, 0),
+                date = new Date(),
 				val;
 			if (parts.length == format.parts.length) {
 				for (var i=0, cnt = format.parts.length; i < cnt; i++) {
