@@ -122,10 +122,17 @@ section > .body {
     border-radius: 0 0 0 0;
 }
 
+.flash-messages {
+    width: 100%;
+}
+
 .flash-messages-fixed {
     position: fixed;
-    width: 938px;
-    z-index: 200;
+    padding: 0px;
+}
+
+.flash-messages-fixed .alert {
+    z-index: 1030;
 }
 
 .hoverable:hover {
