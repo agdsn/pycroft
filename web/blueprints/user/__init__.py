@@ -121,7 +121,7 @@ def add_membership(user_id):
 @bp.route('/delete_membership/<int:membership_id>')
 def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
-    membership.end_date = datetime.now()
+    membership.disable()
 
     newUserLogEntry = UserLogEntry(author_id=current_user.id,
         message=u"hat die Mitgliedschaft des Nutzers"
@@ -129,7 +129,6 @@ def end_membership(membership_id):
                 membership.group.name,
         timestamp=datetime.now(), user_id=membership.user_id)
 
-    session.add(membership)
     session.add(newUserLogEntry)
     session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
