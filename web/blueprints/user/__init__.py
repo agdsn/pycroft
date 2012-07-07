@@ -126,6 +126,7 @@ def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
     membership.disable()
 
+    # ToDo: Make the log messages not Frontend specific (a helper?)
     newUserLogEntry = UserLogEntry(author_id=current_user.id,
         message=u"hat die Mitgliedschaft des Nutzers"
                 u" in der Gruppe '%s' beendet." %
