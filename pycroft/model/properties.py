@@ -8,6 +8,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from datetime import datetime
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
@@ -48,6 +49,9 @@ class Membership(ModelBase):
         if not value > self.start_date:
             raise Exception("end_date is not bigger than start date!")
         return value
+
+    def disable(self):
+        self.end_date = datetime.now()
 
 
 class Property(ModelBase):
