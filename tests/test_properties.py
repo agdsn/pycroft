@@ -76,8 +76,6 @@ class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
 
         self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
         self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test3.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test4.name))
 
         self.assertTrue(properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one().has_property(PropertyData.prop_test1.name))
         self.assertTrue(properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one().has_property(PropertyData.prop_test1.name))
