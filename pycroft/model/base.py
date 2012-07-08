@@ -26,7 +26,7 @@ class _ModelMeta(DeclarativeMeta):
         Model.q.filter(...) without using the verbose session stuff
         """
         global _session
-        if _session is None:
+        if _session is None or not _session.active:
             import pycroft.model.session
             _session = pycroft.model.session.session
         return _session.query(cls)
