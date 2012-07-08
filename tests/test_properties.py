@@ -53,10 +53,11 @@ def make_fixture():
     fixture = SQLAlchemyFixture(
             env=_all,
             style=TrimmedNameStyle(suffix="Data"),
-            session=session.session,
-            scoped_session=session.session._scoped_session,
+#            session=session.session,
+#            scoped_session=session.session._scoped_session,
             engine=session.session.get_engine() )
     return fixture
+
 
 class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
 
@@ -68,11 +69,15 @@ class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
         cls.fixture = make_fixture()
         cls.datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, PropertyData]
 
-
     def setUp(self):
         super(Test_010_PropertyResolving, self).setUp()
         self.user = user.User.q.get(1)
 
+    def tearDown(self):
+        properties.Membership.q.delete()
+        session.session.commit()
+        super(Test_010_PropertyResolving, self).tearDown()
+        session.session.remove()
 
     def test_0010_assert_correct_fixture(self):
         self.assertEqual(properties.Membership.q.count(), 0)
