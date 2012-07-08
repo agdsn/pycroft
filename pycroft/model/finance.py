@@ -13,12 +13,15 @@ from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Enum, Integer, Text, DateTime
 from sqlalchemy.types import String
+from sqlalchemy import event
 
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
                         name="financeaccounttypes"), nullable=False)
+
+    transactions = relationship("Transaction", secondary="split")
 
     # many to one from FinanceAccount to User
     user = relationship("User", backref=backref("finance_accounts"))
@@ -50,6 +53,20 @@ class Transaction(ModelBase):
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
                                     backref=backref("transaction"))
+
+    @property
+    def is_balanced(self):
+        print [split.amount for split in self.splits]
+        return sum([split.amount for split in self.splits]) == 0
+
+
+def check_transaction_balance_on_save(mapper, connection, target):
+    if not target.is_balanced:
+        raise Exception('Transaction "%s" is not balanced!' % target.message)
+
+
+event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
+event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 
 
 class Split(ModelBase):
