@@ -57,12 +57,9 @@ class Transaction(ModelBase):
 
 class Split(ModelBase):
     amount = Column(Integer(), nullable=False)
-    from_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
+    account_id = Column(Integer(), ForeignKey("financeaccount.id"),
                                 nullable=False)
-    from_account = relationship("FinanceAccount")
-    to_account_id = Column(Integer(), ForeignKey("financeaccount.id"),
-                                nullable=False)
-    to_account = relationship("FinanceAccount")
+    account = relationship("FinanceAccount")
     transaction_id = Column(Integer(), ForeignKey("transaction.id"),
                                 nullable=False)
     transaction = relationship("Transaction", backref=backref("splits"))
