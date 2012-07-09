@@ -59,7 +59,7 @@ def make_fixture():
     return fixture
 
 
-class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
+class PropertyDataTestBase(DataTestCase, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -70,15 +70,17 @@ class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
         cls.datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, PropertyData]
 
     def setUp(self):
-        super(Test_010_PropertyResolving, self).setUp()
+        super(PropertyDataTestBase, self).setUp()
         self.user = user.User.q.get(1)
 
     def tearDown(self):
         properties.Membership.q.delete()
         session.session.commit()
-        super(Test_010_PropertyResolving, self).tearDown()
+        super(PropertyDataTestBase, self).tearDown()
         session.session.remove()
 
+
+class Test_010_PropertyResolving(PropertyDataTestBase):
     def test_0010_assert_correct_fixture(self):
         self.assertEqual(properties.Membership.q.count(), 0)
 
@@ -158,3 +160,54 @@ class Test_010_PropertyResolving(DataTestCase, unittest.TestCase):
         membership.disable()
         self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
         self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+
+
+class Test_020_MembershipValidators(PropertyDataTestBase):
+    def test_0010_start_date_default(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+
+        p = properties.Membership.q.first()
+        self.assertIsNotNone(p)
+        self.assertIsNotNone(p.start_date)
+        self.assertIsNone(p.end_date)
+
+        p1 = properties.Membership(user=self.user, group=group)
+        p1.end_date = datetime.now()
+        session.session.add(p1)
+        session.session.commit()
+
+    def test_0020_end_date_before_start(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        p1.start_date = datetime.now()
+
+        def set_old_date():
+            p1.end_date = datetime.now() - timedelta(hours=2)
+
+        self.assertRaisesRegexp(AssertionError, "you set end date before start date!", set_old_date)
+
+    def test_0030_start_date_after_end(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        p1.end_date = datetime.now()
+        self.assertEqual(p1.end_date, p1.start_date)
+
+        def set_new_start():
+            p1.start_date = datetime.now() + timedelta(hours=2)
+
+        self.assertRaisesRegexp(AssertionError, "you set start date behind end date!", set_new_start)
+
+    def test_0040_set_correct_dates(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        p1.start_date = datetime.now()
+        p1.end_date = datetime.now()
+
+        p1.start_date = datetime.now() - timedelta(days=3)
+        p1.end_date = datetime.now() + timedelta(days=3)
+
+        session.session.add(p1)
+        session.session.commit()
