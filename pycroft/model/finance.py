@@ -54,8 +54,6 @@ class Transaction(ModelBase):
     journal_entry = relationship("JournalEntry",
                                     backref=backref("transaction"))
 
-    splits = relationship("Split", backref=backref("transaction"), cascade="all, delete-orphan", single_parent=True)
-
     @property
     def is_balanced(self):
         return sum([split.amount for split in self.splits]) == 0
@@ -76,6 +74,7 @@ class Split(ModelBase):
                                 nullable=False)
     account = relationship("FinanceAccount")
 
-    transaction_id = Column(Integer, ForeignKey("transaction.id"),
+    transaction_id = Column(Integer, ForeignKey("transaction.id",
+                                                ondelete='CASCADE'),
                                 nullable=False)
-    #transaction = relationship("Transaction", backref=backref("splits", cascade="save-update, merge, delete, delete-orphan"))
+    transaction = relationship("Transaction", backref=backref("splits", cascade="all, delete-orphan"))
