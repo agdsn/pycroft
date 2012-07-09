@@ -3,6 +3,7 @@ from fixture.style import TrimmedNameStyle
 import unittest
 from datetime import datetime, timedelta
 
+from tests import OldPythonTestCase
 from pycroft.model import session, user, properties, _all
 from pycroft import model
 
@@ -56,7 +57,7 @@ def make_fixture():
     return fixture
 
 
-class PropertyDataTestBase(DataTestCase, unittest.TestCase):
+class PropertyDataTestBase(DataTestCase, OldPythonTestCase):
 
     @classmethod
     def setUpClass(cls):

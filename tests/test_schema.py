@@ -12,6 +12,8 @@ import unittest
 from sqlalchemy.orm.util import class_mapper
 import sqlalchemy.exc
 
+from tests import OldPythonTestCase
+
 
 def try_mapper(module):
     for attr in dir(module):
@@ -26,7 +28,7 @@ def try_mapper(module):
     return None
 
 
-class Test_010_SchemaMapping(unittest.TestCase):
+class Test_010_SchemaMapping(OldPythonTestCase):
     def test_0010_mapping_base(self):
         from pycroft.model import base
         msg = try_mapper(base)

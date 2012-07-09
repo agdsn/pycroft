@@ -1,11 +1,12 @@
 import unittest
 import re
 
+from tests import OldPythonTestCase
 from pycroft import model
 from pycroft.model import session, hosts
 
 
-class Test_010_NetDeviceValidators(unittest.TestCase):
+class Test_010_NetDeviceValidators(OldPythonTestCase):
     @classmethod
     def setUpClass(cls):
         session.reinit_session("sqlite://")
