@@ -1,8 +1,17 @@
 __author__ = 'jan'
 
 import unittest
-from unittest.util import safe_repr
 import re
+
+_MAX_LENGTH = 80
+def safe_repr(obj, short=False):
+    try:
+        result = repr(obj)
+    except Exception:
+        result = object.__repr__(obj)
+    if not short or len(result) < _MAX_LENGTH:
+        return result
+    return result[:_MAX_LENGTH] + ' [truncated]...'
 
 
 class _AssertRaisesContext(object):
