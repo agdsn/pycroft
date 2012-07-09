@@ -35,19 +35,19 @@ class Journal(ModelBase):
     account = Column(String(255), nullable=False)
     bank = Column(String(255), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    last_update = Column(DateTime(), nullable=False)
+    last_update = Column(DateTime, nullable=False)
 
 
 class JournalEntry(ModelBase):
-    amount = Column(Integer(), nullable=False)
-    message = Column(Text(), nullable=True)
-    journal_id = Column(Integer(), ForeignKey("journal.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+    message = Column(Text, nullable=True)
+    journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
     journal = relationship("Journal", backref=backref("entries"))
     other_account = Column(String(255), nullable=False)
     other_bank = Column(String(255), nullable=False)
     other_person = Column(String(255), nullable=False)
-    original_message = Column(Text(), nullable=False)
-    timestamp = Column(DateTime(), nullable=False)
+    original_message = Column(Text, nullable=False)
+    timestamp = Column(DateTime, nullable=False)
 
 
 class Transaction(ModelBase):
@@ -57,9 +57,10 @@ class Transaction(ModelBase):
     journal_entry = relationship("JournalEntry",
                                     backref=backref("transaction"))
 
+    splits = relationship("Split", backref=backref("transaction"), cascade="all, delete-orphan", single_parent=True)
+
     @property
     def is_balanced(self):
-        print [split.amount for split in self.splits]
         return sum([split.amount for split in self.splits]) == 0
 
 
@@ -73,10 +74,11 @@ event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 
 
 class Split(ModelBase):
-    amount = Column(Integer(), nullable=False)
-    account_id = Column(Integer(), ForeignKey("financeaccount.id"),
+    amount = Column(Integer, nullable=False)
+    account_id = Column(Integer, ForeignKey("financeaccount.id"),
                                 nullable=False)
     account = relationship("FinanceAccount")
-    transaction_id = Column(Integer(), ForeignKey("transaction.id"),
+
+    transaction_id = Column(Integer, ForeignKey("transaction.id"),
                                 nullable=False)
-    transaction = relationship("Transaction", backref=backref("splits"))
+    #transaction = relationship("Transaction", backref=backref("splits", cascade="save-update, merge, delete, delete-orphan"))
