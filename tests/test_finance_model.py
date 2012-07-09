@@ -3,11 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import unittest
 
+from tests import OldPythonTestCase
 from pycroft import model
 from pycroft.model import session, user, finance, _all
 
 
-class Test_010_TransactionSplits(unittest.TestCase):
+class Test_010_TransactionSplits(OldPythonTestCase):
     @classmethod
     def setUpClass(cls):
         session.reinit_session("sqlite://")
