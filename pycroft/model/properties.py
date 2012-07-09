@@ -21,30 +21,38 @@ class Group(ModelBase):
 
 
 class Membership(ModelBase):
-    start_date = Column(DateTime, nullable=True)
+    start_date = Column(DateTime, nullable=False, default=datetime.now)
     end_date = Column(DateTime, nullable=True)
 
     # many to one from Membership to Group
-    group_id = Column(Integer, ForeignKey('group.id'),
+    group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE"),
         nullable=False)
-    #TODO prüfen, ob cascade Memberships löscht, wenn zugehörige Gruppe deleted
     group = relationship("Group", backref=backref("memberships",
-        cascade="all, delete",
+        cascade="all, delete-orphan",
         order_by='Membership.id'))
-    # many to one from Membership to User
-    user_id = Column(Integer, ForeignKey('user.id'),
-        nullable=False)
 
-    #TODO prüfen, ob cascade Memberships löscht, wenn zugehöriger User deleted
+    # many to one from Membership to User
+    user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"),
+        nullable=False)
     user = relationship("User", backref=backref("memberships",
-        cascade="all, delete",
+        cascade="all, delete-orphan",
         order_by='Membership.id'))
 
 
     @validates('end_date')
     def validate_end_date(self, _, value):
-        if not value > self.start_date:
-            raise Exception("end_date is not bigger than start date!")
+        if value is None:
+            return value
+        if self.start_date is None:
+            self.start_date = value
+        assert value >= self.start_date, "you set end date before start date!"
+        return value
+
+    @validates('start_date')
+    def validate_start_date(self, _, value):
+        assert value is not None, "start_date cannot be None!"
+        if self.end_date is not None:
+            assert value <= self.end_date, "you set start date behind end date!"
         return value
 
     def disable(self):
