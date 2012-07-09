@@ -55,7 +55,8 @@ class _AssertRaisesContext(object):
 class OldPythonTestCase(unittest.TestCase):
 
     _old_py_mapping = {"assertRaisesRegexp": "_assertRaisesRegexp",
-                       "assertIsNone": "_assertIsNone"}
+                       "assertIsNone": "_assertIsNone",
+                       "assertIsNotNone": "_assertIsNotNone"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -87,4 +88,10 @@ class OldPythonTestCase(unittest.TestCase):
         """Same as self.assertTrue(obj is None), with a nicer default message."""
         if obj is not None:
             standardMsg = '%s is not None' % (safe_repr(obj),)
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertIsNotNone(self, obj, msg=None):
+        """Included for symmetry with assertIsNone."""
+        if obj is None:
+            standardMsg = 'unexpectedly None'
             self.fail(self._formatMessage(msg, standardMsg))
