@@ -63,7 +63,6 @@ class OldPythonTestCase(unittest.TestCase):
             return getattr(self, self._old_py_mapping[item])
         raise AttributeError, item
 
-
     def _assertRaisesRegexp(self, expected_exception, expected_regexp,
                            callable_obj=None, *args, **kwargs):
         """Asserts that the message in a raised exception matches a regexp.
@@ -76,7 +75,6 @@ class OldPythonTestCase(unittest.TestCase):
             args: Extra args.
             kwargs: Extra kwargs.
         """
-
 
         context = _AssertRaisesContext(expected_exception, self, expected_regexp)
         if callable_obj is None:
