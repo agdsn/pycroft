@@ -47,25 +47,6 @@ def user_show(user_id):
     room = Room.q.get(user.room_id)
     form = userLogEntry()
 
-    traffic_timespan = datetime.now() - timedelta(days=7)
-
-    trafficvolumes = session.query(
-        TrafficVolume
-    ).join(
-        (NetDevice, NetDevice.id == TrafficVolume.net_device_id)
-    ).join(
-        (Host, Host.id == NetDevice.host_id)
-    ).filter(
-        Host.user_id == user_id
-    ).filter(
-        TrafficVolume.timestamp > traffic_timespan)
-
-    trafficvolume_in = trafficvolumes.filter(
-        TrafficVolume.type == 'IN').all()
-
-    trafficvolume_out = trafficvolumes.filter(
-        TrafficVolume.type == 'OUT').all()
-
     if form.validate_on_submit():
         newUserLogEntry = UserLogEntry(message=form.message.data,
             timestamp=datetime.now(),
@@ -90,9 +71,7 @@ def user_show(user_id):
         page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form,
         memberships=memberships.all(),
-        memberships_active=memberships_active.all(),
-        trafficvolume_in=trafficvolume_in,
-        trafficvolume_out=trafficvolume_out)
+        memberships_active=memberships_active.all())
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
@@ -160,6 +139,37 @@ def json_rooms():
         dormitory_id=dormitory_id, level=level).order_by(
         Room.number).distinct()
     return jsonify(dict(items=[entry.room_num for entry in rooms]))
+
+
+@bp.route('/json/traffic/<int:user_id>')
+def json_trafficdata(user_id):
+    traffic_timespan = datetime.now() - timedelta(days=7)
+
+    trafficvolumes = session.query(
+        TrafficVolume
+    ).join(
+        (NetDevice, NetDevice.id == TrafficVolume.net_device_id)
+    ).join(
+        (Host, Host.id == NetDevice.host_id)
+    ).filter(
+        Host.user_id == user_id
+    ).filter(
+        TrafficVolume.timestamp > traffic_timespan)
+
+    trafficvolume_in = trafficvolumes.filter(TrafficVolume.type == 'IN').all()
+    trafficvolume_out = trafficvolumes.filter(TrafficVolume.type == 'OUT').all()
+
+    tv_in = []
+    for entry in trafficvolume_in:
+        tv_in.append(entry.size / 1024 / 1024)
+    tv_out = []
+    for entry in trafficvolume_out:
+        tv_out.append(entry.size / 1024 / 1024)
+
+    trafficdata = [{ "name": 'Input', "data": tv_in, "stack": 0 },
+            { "name": 'Output', "data": tv_out, "stack": 1 }]
+
+    return jsonify({"series" : trafficdata})
 
 
 @bp.route('/create', methods=['GET', 'POST'])
