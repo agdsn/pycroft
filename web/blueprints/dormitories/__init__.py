@@ -55,7 +55,7 @@ def dormitory_create():
             street=form.street.data, number=form.number.data)
         session.add(myDormitory)
         session.commit()
-        flash('Wohnheim angelegt', 'success')
+        flash(u'Wohnheim angelegt', 'success')
         return redirect(url_for('.dormitories'))
     return render_template('dormitories/dormitory_create.html', form=form)
 
@@ -65,7 +65,7 @@ def room_delete(room_id):
     Room.q.filter(Room.id == room_id).delete(
         synchronize_session='fetch')
     session.commit()
-    flash('Raum gelöscht', 'success')
+    flash(u'Raum gelöscht', 'success')
     return redirect(url_for('.dormitories'))
 
 
@@ -89,7 +89,7 @@ def room_create():
             dormitory_id=form.dormitory_id.data.id)
         session.add(myRoom)
         session.commit()
-        flash('Raum angelegt', 'success')
+        flash(u'Raum angelegt', 'success')
         return redirect(url_for('.room_show', room_id=myRoom.id))
     return render_template('dormitories/dormitory_create.html', form=form)
 
