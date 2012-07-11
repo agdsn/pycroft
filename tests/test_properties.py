@@ -193,7 +193,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
     def test_0030_start_date_after_end(self):
         group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
         p1 = properties.Membership(user=self.user, group=group)
-        p1.end_date = datetime.now()
+        p1.end_date = p1.start_date
         self.assertEqual(p1.end_date, p1.start_date)
 
         def set_new_start():
