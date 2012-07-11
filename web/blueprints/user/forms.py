@@ -12,6 +12,7 @@ from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.properties import PropertyGroup
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields import DatePickerField
+from datetime import datetime
 
 
 def user_query():
@@ -71,5 +72,5 @@ class userLogEntry(Form):
 
 class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
-    begin_date = DatePickerField(u"Beginn",with_today_button=True)
+    begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
     end_date = DatePickerField(u"Ende",with_today_button=True)
