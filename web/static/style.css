@@ -124,11 +124,13 @@ section > .body {
 
 .flash-messages {
     width: 100%;
+    z-index: 1030;
 }
 
 .flash-messages-fixed {
     position: fixed;
     padding: 0px;
+    z-index: 1030;
 }
 
 .flash-messages-fixed .alert {
