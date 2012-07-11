@@ -21,7 +21,7 @@ class Group(ModelBase):
 
 
 class Membership(ModelBase):
-    start_date = Column(DateTime, nullable=False, default=datetime.now)
+    start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
 
     # many to one from Membership to Group
@@ -38,13 +38,16 @@ class Membership(ModelBase):
         cascade="all, delete-orphan",
         order_by='Membership.id'))
 
+    def __init__(self, *args, **kwargs):
+        super(Membership, self).__init__(*args, **kwargs)
+
+        self.start_date = datetime.now()
+
 
     @validates('end_date')
     def validate_end_date(self, _, value):
         if value is None:
             return value
-        if self.start_date is None:
-            self.start_date = value
         assert value >= self.start_date, "you set end date before start date!"
         return value
 
