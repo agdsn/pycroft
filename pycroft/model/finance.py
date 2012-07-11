@@ -63,8 +63,7 @@ class Transaction(ModelBase):
 
 
 def check_transaction_balance_on_save(mapper, connection, target):
-    if not target.is_balanced:
-        raise Exception('Transaction "%s" is not balanced!' % target.message)
+    assert target.is_balanced, 'Transaction "%s" is not balanced!' % target.message
 
 
 event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
