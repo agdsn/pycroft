@@ -53,7 +53,7 @@ def switch_port_create(switch_id):
                 switch_id = switch_id)
         session.add(new_switch_port)
         session.commit()
-        flash('Neuer Switch Port angelegt', 'success')
+        flash(u'Neuer Switch Port angelegt', 'success')
         return redirect(url_for('.switch_show', switch_id = switch_id))
     return render_template('infrastructure/switch_port_create.html', 
             form=form, switch_id = switch_id,
