@@ -36,7 +36,7 @@ def traffic_group_create():
             traffic_limit=int(form.traffic_limit.data)*1024*1024*1024)
         session.add(new_traffic_group)
         session.commit()
-        flash('Traffic Gruppe angelegt', 'success')
+        flash(u'Traffic Gruppe angelegt', 'success')
         return redirect(url_for('.traffic_groups'))
     return render_template('properties/traffic_group_create.html', form=form,
     page_title = u"Neue Traffic Gruppe")
@@ -47,7 +47,7 @@ def traffic_group_delete(group_id):
     group = TrafficGroup.q.get(group_id)
     session.delete(group)
     session.commit()
-    flash('Traffic Gruppe gelöscht', 'success')
+    flash(u'Traffic Gruppe gelöscht', 'success')
     return redirect(url_for('.traffic_groups'))
 
 
@@ -68,7 +68,7 @@ def property_group_create():
         new_property_group = PropertyGroup(name=form.name.data)
         session.add(new_property_group)
         session.commit()
-        flash('Eigenschaften Gruppe {} angelegt'.format(new_property_group.name), 'success')
+        flash(u'Eigenschaften Gruppe {} angelegt'.format(new_property_group.name), 'success')
         return redirect(url_for('.property_groups'))
     return render_template('properties/property_group_create.html', form=form,
         page_title = u"Neue Eigenschaften Gruppe")
@@ -82,7 +82,7 @@ def property_group_add_property(group_id, property_name):
     new_property = Property(name=property_name, property_group_id=group_id)
     session.add(new_property)
     session.commit()
-    flash('Eigenschaft {} zur Gruppe {} hinzugefügt'.format(property_name,
+    flash(u'Eigenschaft {} zur Gruppe {} hinzugefügt'.format(property_name,
         group.name), 'success')
     return redirect(url_for('.property_groups'))
 
@@ -95,7 +95,7 @@ def property_group_delete_property(group_id, property_name):
     Property.q.filter_by(name=property_name,
         property_group_id = group_id).delete()
     session.commit()
-    flash('Eigenschaft {} von Gruppe {} entfernt'.format(property_name,
+    flash(u'Eigenschaft {} von Gruppe {} entfernt'.format(property_name,
         group.name), 'success')
     return redirect(url_for('.property_groups'))
 
@@ -105,5 +105,5 @@ def property_group_delete(group_id):
     group = PropertyGroup.q.get(group_id)
     session.delete(group)
     session.commit()
-    flash('Eigenschaften Gruppe {} gelöscht'.format(group.name), 'success')
+    flash(u'Eigenschaften Gruppe {} gelöscht'.format(group.name), 'success')
     return redirect(url_for('.property_groups'))
