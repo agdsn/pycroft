@@ -108,9 +108,11 @@ def dormitory_levels(dormitory_id):
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = session.query(Room.number.label('number')).filter_by(
+    rooms_list = session.query(Room).filter_by(
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
-    rooms_list = [room.number for room in rooms_list]
+    for room in rooms_list:
+        print room.users
+    #rooms_list = [room.number for room in rooms_list]
 
     level_l0 = "%02d" % level
 
