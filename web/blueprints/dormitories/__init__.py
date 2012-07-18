@@ -100,7 +100,7 @@ def dormitory_levels(dormitory_id):
     levels_list = [room.level for room in rooms_list]
 
     return render_template('dormitories/levels.html',
-        levels=levels_list, dormitory_id=dormitory_id,
+        levels=levels_list, dormitory_id=dormitory_id, dormitory=dormitory,
         page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
 
 
@@ -120,5 +120,5 @@ def dormitory_level_rooms(dormitory_id, level):
     # a link to the user. If there is more then one user, the room is
     # duplicated
     return render_template('dormitories/rooms.html', rooms=rooms_list, level=level_l0,
-        page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
+                           dormitory=dormitory, page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
                                                               dormitory.short_name))

@@ -1,9 +1,15 @@
 {% extends "layout.html" %}
 
 {% block content %}
+    <ul class="breadcrumb">
+        <li>
+            <a href="{{ url_for('dormitories.overview') }}">Wohnheime</a> <span class="divider">/</span>
+        </li>
+        <li class="active">{{ dormitory.short_name }}</li>
+    </ul>
     <div>
-    {%- for level in levels %}
-        <div class="level"><a href="{{url_for('.dormitory_level_rooms', dormitory_id=dormitory_id, level=level)}}" class="btn btn-large">{{ level }}</a></div>
-    {%- endfor %}
+        {%- for level in levels %}
+            <div class="level"><a href="{{url_for('.dormitory_level_rooms', dormitory_id=dormitory_id, level=level)}}" class="btn btn-large">{{ level }}</a></div>
+        {%- endfor %}
     </div>
 {% endblock %}
