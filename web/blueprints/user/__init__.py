@@ -21,7 +21,7 @@ from pycroft.helpers import user_helper, host_helper
 from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    hostCreateForm, userLogEntry, UserAddGroupMembership
+    hostCreateForm, userLogEntry, UserAddGroupMembership, UserEditForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta
 from flask.ext.login import current_user
@@ -232,6 +232,42 @@ def create():
     return render_template('user/user_create.html',
         page_title=u"Neuer Nutzer", form=form)
 
+@bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
+@access.login_required
+def edit(user_id):
+    user = User.q.get(user_id)
+    form = UserEditForm()
+    form.name.data = user.name
+    form.dormitory.data = user.room.dormitory
+    levels = session.query(Room.level.label('level')).filter_by(
+        dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
+    level_field = [(entry.level,str(entry.level)) for entry in levels]
+    form.level.choices = level_field
+    form.level.data = user.room.level
+
+    rooms = session.query(
+        Room.number.label("room_num")).filter_by(
+        dormitory_id=user.room.dormitory.id, level=user.room.level).order_by(
+        Room.number).distinct()
+    room_field = [(entry,str(entry.room_num)) for entry in rooms]
+    form.room_number.choices = room_field
+    form.room_number.data = user.room.number
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+            level=form.level.data, dormitory_id=dorm.id).one()
+
+        user.name = form.name.data
+        user.room = room
+
+        session.add(user)
+        session.commit
+
+        flash(u'Benutzer geändert', 'success')
+        return redirect(url_for('.user_show', user_id=user.id))
+
+    return render_template('user/user_edit.html', user_id=user_id,
+        page_title=u"Benutzer editieren", form=form)
 
 @bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate(u"Suchen")
