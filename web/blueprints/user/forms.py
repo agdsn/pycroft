@@ -61,7 +61,26 @@ class UserCreateForm(Form):
         conditions=["dormitory", "level"],
         data_endpoint="user.json_rooms")
 
-
+class UserEditForm(Form):
+    name = TextField(u"Name", [Required(message=u"Name?"),
+                               Regexp(regex=User.name_regex,
+                                   message=u"Name ist ungültig!")])
+    dormitory = QuerySelectField(u"Wohnheim",
+        [Required(message=u"Wohnheim?")],
+        get_label='short_name',
+        query_factory=dormitory_query)
+    level = LazyLoadSelectField(u"Etage",
+        validators=[Required(message=u"Etage?")],
+        coerce=int,
+        choices=[],
+        conditions=["dormitory"],
+        data_endpoint="user.json_levels")
+    room_number = LazyLoadSelectField(u"Raumnummer",
+        validators=[Required(message=u"Raum?")],
+        coerce=str,
+        choices=[],
+        conditions=["dormitory", "level"],
+        data_endpoint="user.json_rooms")
 
 class hostCreateForm(Form):
     name = TextField(u"Name")
