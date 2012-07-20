@@ -110,9 +110,6 @@ def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = session.query(Room).filter_by(
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
-    for room in rooms_list:
-        print room.users
-    #rooms_list = [room.number for room in rooms_list]
 
     level_l0 = "%02d" % level
 
