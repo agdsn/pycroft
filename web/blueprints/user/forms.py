@@ -31,33 +31,6 @@ class UserSearchForm(Form):
 
 from web.form.fields import LazyLoadSelectField
 
-class UserCreateForm(Form):
-    name = TextField(u"Name", [Required(message=u"Name?"),
-                               Regexp(regex=User.name_regex,
-                                   message=u"Name ist ungültig!")])
-    login = TextField(u"Login", [Required(message=u"Login?"),
-                                 Regexp(regex=User.login_regex,
-                                     message=u"Login ist ungültig!")])
-    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
-        message=u"MAC ist ungültig!")])
-    host = TextField(u"Host")
-    dormitory = QuerySelectField(u"Wohnheim",
-        [Required(message=u"Wohnheim?")],
-        get_label='short_name',
-        query_factory=dormitory_query)
-    level = LazyLoadSelectField(u"Etage",
-        validators=[Required(message=u"Etage?")],
-        coerce=int,
-        choices=[],
-        conditions=["dormitory"],
-        data_endpoint="user.json_levels")
-    room_number = LazyLoadSelectField(u"Raumnummer",
-        validators=[Required(message=u"Raum?")],
-        coerce=str,
-        choices=[],
-        conditions=["dormitory", "level"],
-        data_endpoint="user.json_rooms")
-
 class UserEditForm(Form):
     name = TextField(u"Name", [Required(message=u"Name?"),
                                Regexp(regex=User.name_regex,
@@ -78,6 +51,16 @@ class UserEditForm(Form):
         choices=[],
         conditions=["dormitory", "level"],
         data_endpoint="user.json_rooms")
+
+
+class UserCreateForm(UserEditForm):
+    login = TextField(u"Login", [Required(message=u"Login?"),
+                                 Regexp(regex=User.login_regex,
+                                     message=u"Login ist ungültig!")])
+    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
+        message=u"MAC ist ungültig!")])
+    host = TextField(u"Host")
+
 
 class hostCreateForm(Form):
     name = TextField(u"Name")
