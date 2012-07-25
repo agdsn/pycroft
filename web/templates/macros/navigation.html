@@ -34,7 +34,7 @@
     </li>
 {%- endmacro %}
 
-{% macro get_page_title(config) -%}
+{% macro get_page_title(config, page_title) -%}
     {%- if page_title -%}
         {{ page_title }}
     {%- else -%}

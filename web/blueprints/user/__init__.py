@@ -66,7 +66,6 @@ def user_show(user_id):
     )
 
     return render_template('user/user_show.html',
-        page_title=u"Nutzer anzeigen",
         user=user, user_logs=user_log_list, room=room, form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all())
