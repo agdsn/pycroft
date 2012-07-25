@@ -13,14 +13,15 @@
 
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
+from pycroft import lib
+from pycroft.helpers import host_helper
+from pycroft.model.dormitory import Room
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.properties import Membership
 from pycroft.model.accounting import TrafficVolume
-from pycroft.helpers import user_helper, host_helper
 from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -178,62 +179,19 @@ def json_trafficdata(user_id):
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
-        dorm = form.dormitory.data
-
         try:
-            #ToDo: Ugly, but ... Someone can convert this is
-            #      a proper property of Dormitory
-            #ToDo: Also possibly slow and untested
-            subnets = session.query(
-                Subnet
-            ).join(
-                Subnet.vlans
-            ).join(
-                VLan.dormitories
-            ).filter(
-                Dormitory.id == dorm.id
-            ).all()
+            new_user = lib.user.moves_in(form.name.data, form.login.data,
+                form.dormitory.data, form.level.data, form.room_number.data,
+                form.host.data, form.mac.data)
 
-            ip_address = host_helper.getFreeIP(subnets)
+            flash(u'Benutzer angelegt', 'success')
+            return redirect(url_for('.user_show', user_id = new_user.id))
+
         except host_helper.SubnetFullException, error:
             flash(u'Subnetz voll', 'error')
-            return render_template('user/user_create.html',
-                page_title=u"Neuer Nutzer", form=form)
 
-        hostname = host_helper.generateHostname(ip_address, form.host.data)
+    return render_template('user/user_create.html', form = form)
 
-        room = Room.q.filter_by(number=form.room_number.data,
-            level=form.level.data, dormitory_id=dorm.id).one()
-
-        #ToDo: Which port to choose if room has more than one?
-        patch_port = room.patch_ports[0]
-
-        myUser = User(login=form.login.data,
-            name=form.name.data,
-            room=room,
-            registration_date=datetime.now())
-        plain_password = user_helper.generatePassword(12)
-        #TODO: DEBUG remove in productive!!!
-        print u"new password: " + plain_password
-        myUser.set_password(plain_password)
-        session.add(myUser)
-
-        myHost = Host(hostname=hostname,
-            user=myUser,
-            room=room)
-        session.add(myHost)
-
-        myNetDevice = NetDevice(ipv4=ip_address,
-            mac=form.mac.data,
-            host=myHost,
-            patch_port=patch_port)
-        session.add(myNetDevice)
-        session.commit()
-        flash(u'Benutzer angelegt', 'success')
-        return redirect(url_for('.user_show', user_id=myUser.id))
-
-    return render_template('user/user_create.html',
-        page_title=u"Neuer Nutzer", form=form)
 
 @bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
 @access.login_required

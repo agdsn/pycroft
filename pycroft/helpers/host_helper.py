@@ -29,10 +29,8 @@ def sort_ports(ports):
     return sorted_ports
 
 
-def generateHostname(ip_address, hostname):
-    if hostname == "":
-        return "whdd" + ip_address.split(u".")[-1]
-    return hostname
+def generateHostname(ip_address):
+    return "whdd" + ip_address.split(u".")[-1]
 
 
 class SubnetFullException(Exception):
