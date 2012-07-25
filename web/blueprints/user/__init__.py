@@ -235,33 +235,44 @@ def create():
 @bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
 @access.login_required
 def edit(user_id):
-    user = User.q.get(user_id)
-    form = UserEditForm()
-    form.name.data = user.name
-    form.dormitory.data = user.room.dormitory
-    levels = session.query(Room.level.label('level')).filter_by(
-        dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
-    level_field = [(entry.level,str(entry.level)) for entry in levels]
-    form.level.choices = level_field
-    form.level.data = user.room.level
 
-    rooms = session.query(
-        Room.number.label("room_num")).filter_by(
-        dormitory_id=user.room.dormitory.id, level=user.room.level).order_by(
-        Room.number).distinct()
-    room_field = [(entry,str(entry.room_num)) for entry in rooms]
-    form.room_number.choices = room_field
-    form.room_number.data = user.room.number
+    user = User.q.get(user_id)
+
+    form = UserEditForm()
+
+    if not form.is_submitted():
+        form.name.data = user.name
+
+        form.dormitory.data = user.room.dormitory
+
+        levels = session.query(Room.level.label('level')).filter_by(
+            dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
+
+        form.level.choices = [(entry.level,str(entry.level)) for entry in levels]
+        form.level.data = user.room.level
+
+        rooms = session.query(
+            Room).filter_by(
+            dormitory_id=user.room.dormitory.id, level=user.room.level).order_by(
+            Room.number).distinct()
+
+        form.room_number.choices = [(entry.number,str(entry.number)) for entry in rooms]
+        form.room_number.data = user.room
+
+        print type(form.room_number.data)
 
     if form.validate_on_submit():
-        room = Room.q.filter_by(number=form.room_number.data,
-            level=form.level.data, dormitory_id=dorm.id).one()
 
-        user.name = form.name.data
-        user.room = room
+        room = Room.q.filter_by(number=form.room_number.data,
+            level=form.level.data, dormitory_id=form.dormitory.data.id).one()
+
+        if len(form.name.data):
+            user.name = form.name.data
+        if room is not None:
+            user.room = room
 
         session.add(user)
-        session.commit
+        session.commit()
 
         flash(u'Benutzer geändert', 'success')
         return redirect(url_for('.user_show', user_id=user.id))
