@@ -67,3 +67,17 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
     session.commit()
 
     return new_user
+
+def edit_user(user, name, dormitory, level, room_number):
+    room = Room.q.filter_by(number=room_number,
+        level=level, dormitory_id=dormitory.id).one()
+
+    if len(name):
+        user.name = name
+    if room is not None:
+        user.room = room
+
+    session.add(user)
+    session.commit()
+
+    return user

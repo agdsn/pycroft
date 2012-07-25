@@ -221,19 +221,11 @@ def edit(user_id):
 
     if form.validate_on_submit():
 
-        room = Room.q.filter_by(number=form.room_number.data,
-            level=form.level.data, dormitory_id=form.dormitory.data.id).one()
-
-        if len(form.name.data):
-            user.name = form.name.data
-        if room is not None:
-            user.room = room
-
-        session.add(user)
-        session.commit()
+        edited_user = lib.user.edit_user(user, form.name.data,
+            form.dormitory.data, form.level.data, form.room_number.data)
 
         flash(u'Benutzer geändert', 'success')
-        return redirect(url_for('.user_show', user_id=user.id))
+        return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_edit.html', user_id=user_id,
         page_title=u"Benutzer editieren", form=form)
