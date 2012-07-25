@@ -8,7 +8,7 @@
 <html lang="de">
 <head>
     <meta charset="utf-8">​
-    <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config) -}}
+    <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
@@ -55,7 +55,7 @@
             <p>&nbsp;</p>
         {%- endif %}
     {%- endwith %}
-    <h1>{{ navigation.get_page_title(config) }}</h1>
+    <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
     {% block content %}{% endblock %}
 </div> <!-- /container -->
 
