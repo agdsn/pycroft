@@ -8,10 +8,10 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
+from datetime import datetime
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.session import session
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.hosts import Host, NetDevice
 

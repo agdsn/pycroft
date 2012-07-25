@@ -7,3 +7,5 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+
+import user
