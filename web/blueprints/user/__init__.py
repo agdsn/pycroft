@@ -259,8 +259,6 @@ def edit(user_id):
         form.room_number.choices = [(entry.number,str(entry.number)) for entry in rooms]
         form.room_number.data = user.room
 
-        print type(form.room_number.data)
-
     if form.validate_on_submit():
 
         room = Room.q.filter_by(number=form.room_number.data,
