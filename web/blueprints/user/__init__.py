@@ -32,6 +32,11 @@ nav = BlueprintNavigation(bp, "Nutzer")
 access = BlueprintAccess(bp)
 
 
+@bp.errorhandler(404)
+def error_404(e):
+    return render_template('errorpages/404.html', ref=request.referrer)
+
+
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
@@ -41,7 +46,12 @@ def overview():
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
 @access.login_required
 def user_show(user_id):
+
     user = User.q.get(user_id)
+    if user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
+
     room = Room.q.get(user.room_id)
     form = userLogEntry()
 
@@ -73,9 +83,12 @@ def user_show(user_id):
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
 def add_membership(user_id):
+
     user = User.q.get(user_id)
     if user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
+
     form = UserAddGroupMembership()
     if form.validate_on_submit():
         newMembership = Membership(user=user, group=form.group_id.data,
@@ -194,6 +207,9 @@ def create():
 def edit(user_id):
 
     user = User.q.get(user_id)
+    if user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
 
     form = UserEditForm()
 
