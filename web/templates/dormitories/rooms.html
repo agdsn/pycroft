@@ -23,7 +23,7 @@
                     <div class="room"><a href="{{ url_for(".room_show",room_id=room.id) }}" class="btn btn-large">{{ room.level }}{{ room.number }}</a></div>
                 {% else %}
                     {% for user in room.users %}
-                        <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-primary btn-large">{{ room.level }}{{ room.number }} -- {{ user.name }}</a></div>
+                        <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-success btn-large">{{ room.level }}{{ room.number }} - {{ user.name }}</a></div>
                     {% endfor %}
                 {% endif %}
         {%- endfor %}
