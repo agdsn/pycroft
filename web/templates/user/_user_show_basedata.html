@@ -11,7 +11,10 @@
 <dl class="dl-horizontal">
     {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
-    {% call info_row("Name") %}{{ user.name }}{% endcall %}
+    {% call info_row("Name") %}
+        {{ user.name }}
+         <a href="{{ url_for(".edit_name", user_id=user.id) }}">ändern</a>
+    {% endcall %}
 
     {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
@@ -19,6 +22,7 @@
 
     {% call info_row("Wohnort") %}
         <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ room.dormitory.short_name }} {{ room.level }}-{{ room.number }}</a>
+         <a href="{{ url_for(".move", user_id=user.id) }}">ändern</a>
     {% endcall %}
 
     {% call info_row("Netzstatus") %}
@@ -26,5 +30,3 @@
         Freigeschaltet
     {% endcall %}
 </dl>
-
-<a href="{{ url_for(".edit", user_id=user.id) }}">Benutzer editieren</a>
