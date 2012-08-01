@@ -22,7 +22,8 @@ from pycroft.model.accounting import TrafficVolume
 from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    hostCreateForm, userLogEntry, UserAddGroupMembership, UserEditForm
+    hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
+    UserEditNameForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta
 from flask.ext.login import current_user
@@ -203,46 +204,67 @@ def create():
     return render_template('user/user_create.html', form = form)
 
 
-@bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/move/<int:user_id>', methods=['GET', 'POST'])
 @access.login_required
-def edit(user_id):
-
+def move(user_id):
     user = User.q.get(user_id)
     if user is None:
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
 
-    form = UserEditForm()
+    form = UserMoveForm()
 
     if not form.is_submitted():
-        form.name.data = user.name
-
         form.dormitory.data = user.room.dormitory
 
         levels = session.query(Room.level.label('level')).filter_by(
             dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
 
-        form.level.choices = [(entry.level,str(entry.level)) for entry in levels]
+        form.level.choices = [(entry.level, str(entry.level)) for entry in
+                                                              levels]
         form.level.data = user.room.level
 
-        rooms = session.query(
-            Room).filter_by(
-            dormitory_id=user.room.dormitory.id, level=user.room.level).order_by(
-            Room.number).distinct()
+        rooms = session.query(Room).filter_by(
+            dormitory_id=user.room.dormitory.id,
+            level=user.room.level
+        ).order_by(Room.number).distinct()
 
-        form.room_number.choices = [(entry.number,str(entry.number)) for entry in rooms]
+        form.room_number.choices = [(entry.number, str(entry.number)) for entry
+                                                                      in rooms]
         form.room_number.data = user.room
 
     if form.validate_on_submit():
+        edited_user = lib.user.move(user, form.dormitory.data,
+            form.level.data, form.room_number.data)
 
-        edited_user = lib.user.edit_user(user, form.name.data,
-            form.dormitory.data, form.level.data, form.room_number.data)
-
-        flash(u'Benutzer geändert', 'success')
+        flash(u'Benutzer umgezogen', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
-    return render_template('user/user_edit.html', user_id=user_id,
-        page_title=u"Benutzer editieren", form=form)
+    return render_template('user/user_move.html', user_id=user_id, form=form)
+
+
+@bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
+@access.login_required
+def edit_name(user_id):
+    user = User.q.get(user_id)
+    if user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
+
+    form = UserEditNameForm()
+
+    if not form.is_submitted():
+        form.name.data = user.name
+
+    if form.validate_on_submit():
+        edited_user = lib.user.edit_name(user, form.name.data)
+
+        flash(u'Benutzername geändert', 'success')
+        return redirect(url_for('.user_show', user_id=edited_user.id))
+
+    return render_template('user/user_edit_name.html', user_id=user_id,
+        form=form)
+
 
 @bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate(u"Suchen")

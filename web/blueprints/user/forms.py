@@ -31,10 +31,12 @@ class UserSearchForm(Form):
 
 from web.form.fields import LazyLoadSelectField
 
-class UserEditForm(Form):
+class UserEditNameForm(Form):
     name = TextField(u"Name", [Required(message=u"Name?"),
                                Regexp(regex=User.name_regex,
                                    message=u"Name ist ungültig!")])
+
+class UserMoveForm(Form):
     dormitory = QuerySelectField(u"Wohnheim",
         [Required(message=u"Wohnheim?")],
         get_label='short_name',
@@ -53,7 +55,7 @@ class UserEditForm(Form):
         data_endpoint="user.json_rooms")
 
 
-class UserCreateForm(UserEditForm):
+class UserCreateForm(UserEditNameForm, UserMoveForm):
     login = TextField(u"Login", [Required(message=u"Login?"),
                                  Regexp(regex=User.login_regex,
                                      message=u"Login ist ungültig!")])

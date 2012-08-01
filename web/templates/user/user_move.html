@@ -1,0 +1,5 @@
+{% extends "user/work_on_user.html" %}
+{% set page_title = "Umzug" %}
+{% block type_of_change %}
+    {{ forms.simple_form(form, '', url_for('.move',user_id=user_id)  ) }}
+{% endblock %}
