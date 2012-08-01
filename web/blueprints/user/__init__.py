@@ -67,11 +67,12 @@ def user_show(user_id):
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
-        # it is important to use == here, "is" does not work
-        or_(Membership.start_date is None,
+        # it is important to use == here, "is" does NOT work
+        or_(Membership.start_date == None,
             Membership.start_date <= datetime.now())
     ).filter(
-        or_(Membership.end_date is None,
+        # it is important to use == here, "is" does NOT work
+        or_(Membership.end_date == None,
             Membership.end_date > datetime.now())
     )
 
