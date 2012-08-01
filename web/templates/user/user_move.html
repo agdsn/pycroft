@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "user/work_on_user.html" %}
+{% set page_title = "Umzug" %}
 {% block type_of_change %}
-    {{ forms.simple_form(form, '', url_for('.edit',user_id=user_id)  ) }}
+    {{ forms.simple_form(form, '', url_for('.move',user_id=user_id)  ) }}
 {% endblock %}
