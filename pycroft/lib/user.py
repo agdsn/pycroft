@@ -22,20 +22,7 @@ from pycroft.model.user import User
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac):
-    #ToDo: Ugly, but ... Someone can convert this is
-    #      a proper property of Dormitory
-    #ToDo: Also possibly slow and untested
-    subnets = session.query(
-        Subnet
-    ).join(
-        Subnet.vlans
-    ).join(
-        VLan.dormitories
-    ).filter(
-        Dormitory.id == dormitory.id
-    ).all()
-
-    ip_address = host_helper.getFreeIP(subnets)
+    ip_address = host_helper.getFreeIP(dormitory.get_subnets())
 
     if not host_name:
         host_name = host_helper.generateHostname(ip_address)
@@ -81,20 +68,46 @@ def move(user, dormitory, level, room_number):
     session.add(user)
 
     newUserLogEntry = UserLogEntry(author_id=current_user.id,
-        message=u"umgezogen von %s nach %s"%(oldRoom, newRoom),
+        message=u"umgezogen von %s nach %s" % (oldRoom, newRoom),
         timestamp=datetime.now(), user_id=user.id)
     session.add(newUserLogEntry)
 
-    session.commit()
+    if oldRoom.dormitory_id != newRoom.dormitory_id:
+        #TODO let choose which hosts should move in the same room
+        netdevices = session.query(
+            NetDevice
+        ).join(
+            NetDevice.host
+        ).filter(
+            Host.user_id == user.id
+        ).all()
 
+        for netdevice in netdevices:
+            #TODO set new patchport
+            oldIPv4 = netdevice.ipv4
+            netdevice.ipv4 = host_helper.getFreeIP(dormitory.get_subnets())
+            session.add(netdevice)
+            newUserLogEntry = UserLogEntry(author_id=current_user.id,
+                message=u"IPv4 von %s auf %s geändert" % (
+                oldIPv4, netdevice.ipv4),
+                timestamp=datetime.now(), user_id=user.id)
+            session.add(newUserLogEntry)
+
+    session.commit()
     return user
 
 
 def edit_name(user, name):
+    oldName = user.name
     if len(name):
         user.name = name
-
     session.add(user)
+
+    newUserLogEntry = UserLogEntry(author_id=current_user.id,
+        message=u"Nutzer %s umbenannt in %s" % (oldName, name),
+        timestamp=datetime.now(), user_id=user.id)
+    session.add(newUserLogEntry)
+
     session.commit()
 
     return user
