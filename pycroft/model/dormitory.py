@@ -13,6 +13,7 @@
 
 #from sqlalchemy.dialects import postgresql
 from base import ModelBase
+from pycroft.model.session import session
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
@@ -21,19 +22,18 @@ import ipaddr
 
 
 association_table_dormitory_vlan = Table('association_dormitory_vlan',
-                                         ModelBase.metadata,
-                                         Column('dormitory_id', Integer,
-                                                ForeignKey('dormitory.id')),
-                                         Column('vlan_id', Integer,
-                                                ForeignKey('vlan.id')))
-
+    ModelBase.metadata,
+    Column('dormitory_id', Integer,
+        ForeignKey('dormitory.id')),
+    Column('vlan_id', Integer,
+        ForeignKey('vlan.id')))
 
 association_table_subnet_vlan = Table("association_subnet_vlan",
-                                        ModelBase.metadata,
-                                        Column("subnet_id", Integer,
-                                                ForeignKey("subnet.id")),
-                                        Column("vlan_id", Integer,
-                                                ForeignKey("vlan.id")))
+    ModelBase.metadata,
+    Column("subnet_id", Integer,
+        ForeignKey("subnet.id")),
+    Column("vlan_id", Integer,
+        ForeignKey("vlan.id")))
 
 
 class Dormitory(ModelBase):
@@ -43,13 +43,27 @@ class Dormitory(ModelBase):
 
     #many to many from Dormitory to VLan
     vlans = relationship("VLan",
-                            backref=backref("dormitories"),
-                            secondary=association_table_dormitory_vlan)
+        backref=backref("dormitories"),
+        secondary=association_table_dormitory_vlan)
 
     # methods
 
+    def get_subnets(self):
+    #ToDo: Ugly, but ... Someone can convert this is
+    #      a proper property of Dormitory
+    #ToDo: Also possibly slow and untested
+        return session.query(
+            Subnet
+        ).join(
+            Subnet.vlans
+        ).join(
+            VLan.dormitories
+        ).filter(
+            Dormitory.id == self.id
+        ).all()
+
     def __repr__(self):
-        return u"%s %s"%(self.street, self.number)
+        return u"%s %s" % (self.street, self.number)
 
 
 class Room(ModelBase):
@@ -62,7 +76,7 @@ class Room(ModelBase):
     dormitory = relationship("Dormitory", backref=backref("rooms"))
 
     def __repr__(self):
-        return u"%s %d%s"%(self.dormitory, self.level, self.number)
+        return u"%s %d%s" % (self.dormitory, self.level, self.number)
 
 
 class Subnet(ModelBase):
@@ -74,8 +88,8 @@ class Subnet(ModelBase):
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
-                            backref=backref("subnets"),
-                            secondary=association_table_subnet_vlan)
+        backref=backref("subnets"),
+        secondary=association_table_subnet_vlan)
 
     @property
     def netmask(self):
