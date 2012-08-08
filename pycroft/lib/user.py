@@ -9,11 +9,14 @@ This module contains.
 """
 
 from datetime import datetime
+from flask.ext.login import current_user
 from pycroft.helpers import user_helper, host_helper
-from pycroft.model.session import session
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.user import User
 from pycroft.model.hosts import Host, NetDevice
+from pycroft.model.logging import UserLogEntry
+from pycroft.model.session import session
+from pycroft.model.user import User
+
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac):
     #ToDo: Ugly, but ... Someone can convert this is
@@ -67,10 +70,18 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
 
 
 def move(user, dormitory, level, room_number):
-    user.room = Room.q.filter_by(number=room_number,
+    oldRoom = user.room
+    newRoom = Room.q.filter_by(number=room_number,
         level=level,
         dormitory_id=dormitory.id).one()
+    user.room = newRoom
     session.add(user)
+
+    newUserLogEntry = UserLogEntry(author_id=current_user.id,
+        message=u"umgezogen von %s nach %s"%(oldRoom, newRoom),
+        timestamp=datetime.now(), user_id=user.id)
+    session.add(newUserLogEntry)
+
     session.commit()
 
     return user
