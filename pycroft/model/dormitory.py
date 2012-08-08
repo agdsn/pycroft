@@ -49,8 +49,7 @@ class Dormitory(ModelBase):
     # methods
 
     def __repr__(self):
-        return "Dormitory(number={}, short_name={}, street={})".format(
-               self.number, self.short_name, self.street)
+        return u"%s %s"%(self.street, self.number)
 
 
 class Room(ModelBase):
@@ -61,6 +60,9 @@ class Room(ModelBase):
     # many to one from Room to Dormitory
     dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
     dormitory = relationship("Dormitory", backref=backref("rooms"))
+
+    def __repr__(self):
+        return u"%s %d%s"%(self.dormitory, self.level, self.number)
 
 
 class Subnet(ModelBase):
