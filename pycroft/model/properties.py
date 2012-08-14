@@ -40,9 +40,8 @@ class Membership(ModelBase):
 
     def __init__(self, *args, **kwargs):
         super(Membership, self).__init__(*args, **kwargs)
-
-        self.start_date = datetime.now()
-
+        if self.start_date is None:
+            self.start_date = datetime.now()
 
     @validates('end_date')
     def validate_end_date(self, _, value):
