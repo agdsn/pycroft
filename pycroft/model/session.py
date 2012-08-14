@@ -12,7 +12,7 @@
 """
 
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy import create_engine, pool
+from sqlalchemy import create_engine, pool, func
 
 
 class DummySession(object):
@@ -46,6 +46,14 @@ class SessionWrapper(object):
 
     def disable_instance(self):
         self.active = False
+
+    # hack for postgres/sqlite "multiplexing"
+    def now_sql(self):
+        if self._engine.driver == "psycopg2":
+            return func.now()
+        else:
+            # 1 Minute modifier to fix strange unit test race
+            return func.datetime("now", "localtime", "+1 minutes")
 
 
 def init_session(connection_string=None):
