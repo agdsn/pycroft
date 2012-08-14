@@ -7,8 +7,9 @@
 """
 from datetime import datetime
 from base import ModelBase
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, and_, or_
 from sqlalchemy import Column
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import BigInteger, Integer, DateTime
 from sqlalchemy.types import String
@@ -42,6 +43,22 @@ class Membership(ModelBase):
         super(Membership, self).__init__(*args, **kwargs)
         if self.start_date is None:
             self.start_date = datetime.now()
+
+    @hybrid_property
+    def active(self):
+        now = datetime.now()
+        if now < self.start_date:
+            return False
+        if self.end_date is not None:
+            if self.end_date < now:
+                return False
+        return True
+
+    @active.expression
+    def active(cls):
+        import pycroft.model.session as session
+        now = session.session.now_sql()
+        return and_(cls.start_date <= now, or_(cls.end_date == None, cls.end_date >= now))
 
     @validates('end_date')
     def validate_end_date(self, _, value):
