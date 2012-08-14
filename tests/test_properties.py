@@ -5,6 +5,7 @@ from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from fixture.style import TrimmedNameStyle
 import unittest
 from datetime import datetime, timedelta
+from sqlalchemy import func
 
 from tests import OldPythonTestCase
 from pycroft.model import session, user, properties, _all
@@ -221,3 +222,160 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         session.session.add(p1)
         session.session.commit()
+
+
+class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
+    def test_0010_group_users(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        self.assertEqual(len(group.users), 0)
+        self.assertEqual(len(group.active_users), 0)
+
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        self.assertEqual(len(group.users), 1)
+        self.assertEqual(len(group.active_users), 1)
+
+        p1.disable()
+        session.session.commit()
+        self.assertEqual(len(group.users), 1)
+        self.assertEqual(len(group.active_users), 0)
+
+    def test_0020_user_traffic_groups(self):
+        # first have no traffic group
+        group = properties.TrafficGroup.q.filter_by(name=TrafficGroupData.group1.name).one()
+        self.assertEqual(len(self.user.traffic_groups), 0)
+        self.assertEqual(len(self.user.active_traffic_groups), 0)
+
+        # add one active traffic group
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        f = properties.Membership.q.first()
+        self.assertTrue(f.active)
+        self.assertEqual(len(self.user.traffic_groups), 1)
+        self.assertEqual(len(self.user.active_traffic_groups), 1)
+
+        # adding a property group should not affect the traffic_groups
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 1)
+        self.assertEqual(len(self.user.active_traffic_groups), 1)
+
+        # add a second active traffic group - count should be 2
+        group = properties.TrafficGroup.q.filter_by(name=TrafficGroupData.group2.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups), 2)
+
+        # disable the second group. active should be one, all 2
+        p1.disable()
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups), 1)
+
+        # test a join
+        res = session.session.query(user.User, properties.TrafficGroup.id).join(user.User.active_traffic_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 1)
+        res = session.session.query(user.User, properties.TrafficGroup.id).join(user.User.traffic_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+
+        # reenable it - but with a deadline - both counts should be 2
+        p1.end_date = datetime.now() + timedelta(days=1)
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 2)
+
+        # Add a second membership to the first group - should not affect the count
+        group = properties.Group.q.filter_by(name=TrafficGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups), 2)
+
+        # disabling the new one should also not affect.
+        p1.disable()
+        session.session.commit()
+        self.assertEqual(len(self.user.traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups), 2)
+
+        # test a join
+        res = session.session.query(user.User, properties.TrafficGroup.id).join(user.User.active_traffic_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+        res = session.session.query(user.User, properties.TrafficGroup.id).join(user.User.traffic_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+
+    def test_0030_user_property_groups(self):
+        # first have no property group
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        self.assertEqual(len(self.user.property_groups), 0)
+        self.assertEqual(len(self.user.active_property_groups), 0)
+
+        # add one active property group
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        f = properties.Membership.q.first()
+        self.assertTrue(f.active)
+        self.assertEqual(len(self.user.property_groups), 1)
+        self.assertEqual(len(self.user.active_property_groups), 1)
+
+        # adding a traffic group should not affect the property_group
+        group = properties.TrafficGroup.q.filter_by(name=TrafficGroupData.group2.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 1)
+        self.assertEqual(len(self.user.active_property_groups), 1)
+
+        # add a second active property group - count should be 2
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups), 2)
+
+        # disable the second group. active should be one, all 2
+        p1.disable()
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups), 1)
+
+        # test a join
+        res = session.session.query(user.User, properties.PropertyGroup.id).join(user.User.active_property_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 1)
+        res = session.session.query(user.User, properties.PropertyGroup.id).join(user.User.property_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+
+        # reenable it - but with a deadline - both counts should be 2
+        p1.end_date = datetime.now() + timedelta(days=1)
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups), 2)
+
+        # Add a second membership to the first group - should not affect the count
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups), 2)
+
+        # disabling the new one should also not affect.
+        p1.disable()
+        session.session.commit()
+        self.assertEqual(len(self.user.property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups), 2)
+
+        # test a join
+        res = session.session.query(user.User, properties.PropertyGroup).join(user.User.active_property_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+        res = session.session.query(user.User, properties.PropertyGroup).join(user.User.property_groups).filter(user.User.id==self.user.id).distinct().count()
+        self.assertEqual(res, 2)
+
