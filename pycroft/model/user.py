@@ -12,15 +12,12 @@
 """
 from flask.ext.login import UserMixin
 from base import ModelBase
-from sqlalchemy import ForeignKey
-from sqlalchemy import Column
-from sqlalchemy.sql.expression import func, or_
+from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
+    String
 from sqlalchemy.orm import backref, relationship, validates
-from sqlalchemy.types import DateTime, Integer
-from sqlalchemy.types import String
 import re
 from datetime import datetime
-from pycroft.model.properties import Membership, Property, PropertyGroup
+from pycroft.model.properties import Membership, Property, PropertyGroup, TrafficGroup
 from pycroft.model.session import session
 from pycroft.helpers.user_helper import hash_password, verify_password
 
@@ -33,6 +30,35 @@ class User(ModelBase, UserMixin):
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by=id))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+
+    traffic_groups = relationship("TrafficGroup",
+        secondary=Membership.__tablename__,
+        primaryjoin="User.id==Membership.user_id",
+        secondaryjoin="Membership.group_id==TrafficGroup.id",
+        foreign_keys=[Membership.user_id, Membership.group_id],
+        viewonly=True)
+
+    active_traffic_groups = relationship("TrafficGroup",
+        secondary=Membership.__tablename__,
+        primaryjoin="User.id==Membership.user_id",
+        secondaryjoin=and_(Membership.group_id==TrafficGroup.id, Membership.active),
+        foreign_keys=[Membership.user_id, Membership.group_id],
+        viewonly=True)
+
+    property_groups = relationship("PropertyGroup",
+        secondary=Membership.__tablename__,
+        primaryjoin="User.id==Membership.user_id",
+        secondaryjoin="Membership.group_id==PropertyGroup.id",
+        foreign_keys=[Membership.user_id, Membership.group_id],
+        viewonly=True)
+
+    active_property_groups = relationship("PropertyGroup",
+        secondary=Membership.__tablename__,
+        primaryjoin="User.id==Membership.user_id",
+        secondaryjoin=and_(Membership.group_id==PropertyGroup.id, Membership.active),
+        foreign_keys=[Membership.user_id, Membership.group_id],
+        viewonly=True)
+
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
     name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"
