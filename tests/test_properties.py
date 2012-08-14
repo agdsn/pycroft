@@ -39,6 +39,15 @@ class PropertyGroupData(DataSet):
         name = "group2"
 
 
+class TrafficGroupData(DataSet):
+    class group1:
+        name = "trafficgroup1"
+        traffic_limit = 1000
+    class group2:
+        name = "trafficgroup2"
+        traffic_limit = 2000
+
+
 class PropertyData(DataSet):
     class prop_test1:
         name = "test1"
@@ -68,7 +77,7 @@ class PropertyDataTestBase(DataTestCase, OldPythonTestCase):
         model.drop_db_model()
         model.create_db_model()
         cls.fixture = make_fixture()
-        cls.datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, PropertyData]
+        cls.datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, TrafficGroupData, PropertyData]
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
