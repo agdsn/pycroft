@@ -23,6 +23,20 @@ class Group(ModelBase):
     discriminator = Column('type', String(17), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
+    users = relationship("User",
+        secondary="membership",
+        primaryjoin="Membership.group_id==Group.id",
+        secondaryjoin="User.id==Membership.user_id",
+        foreign_keys=lambda: [Membership.user_id, Membership.group_id],
+        viewonly=True)
+
+    active_users = relationship("User",
+        secondary="membership",
+        primaryjoin=lambda: and_(Membership.group_id==Group.id, Membership.active),
+        secondaryjoin="User.id==Membership.user_id",
+        foreign_keys=lambda: [Membership.user_id, Membership.group_id],
+        viewonly=True)
+
 
 class Membership(ModelBase):
     start_date = Column(DateTime, nullable=False)
