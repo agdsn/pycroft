@@ -10,8 +10,11 @@ from sqlalchemy.types import Integer
 
 def get_passwd(filename):
     pw = ""
-    with open(filename, "r") as f:
-        pw = f.read()
+    try:
+        with open(filename, "r") as f:
+            pw = f.read()
+    except :
+        pass
     return pw
 
 
