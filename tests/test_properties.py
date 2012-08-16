@@ -213,12 +213,32 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         p1 = properties.Membership(user=self.user, group=group)
         p1.start_date = datetime.now()
         p1.end_date = datetime.now()
+        session.session.add(p1)
+        session.session.commit()
 
         p1.start_date = datetime.now() - timedelta(days=3)
         p1.end_date = datetime.now() + timedelta(days=3)
 
+        session.session.commit()
+
+    def test_0050_clear_end_date(self):
+        group = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        p1.start_date = datetime.now()
+        p1.end_date = datetime.now()
         session.session.add(p1)
         session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertIsNotNone(p1.end_date)
+        self.assertFalse(p1.active)
+
+        p1.end_date = None
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertIsNone(p1.end_date)
+        self.assertTrue(p1.active)
 
 
 class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
