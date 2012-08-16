@@ -234,14 +234,12 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
         self.assertIsNotNone(p1.end_date)
-        self.assertFalse(p1.active)
 
         p1.end_date = None
         session.session.commit()
 
         p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
         self.assertIsNone(p1.end_date)
-        self.assertTrue(p1.active)
 
 
 class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
@@ -410,3 +408,63 @@ class Test_040_PropertyGroups(PropertyDataTestBase):
 
         self.assertTrue(group2.has_property(PropertyData.prop_test1.name))
         self.assertTrue(group2.has_property(PropertyData.prop_test2.name))
+
+
+class Test_050_Membership(PropertyDataTestBase):
+    def test_0010_active_instance_property(self):
+        group = properties.TrafficGroup.q.filter_by(name=TrafficGroupData.group1.name).one()
+        p1 = properties.Membership(user=self.user, group=group)
+        self.assertTrue(p1.active)
+        session.session.add(p1)
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertTrue(p1.active)
+
+        p1.disable()
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertFalse(p1.active)
+
+        p1.end_date = None
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertTrue(p1.active)
+
+        session.session.delete(p1)
+        session.session.commit()
+
+        p1 = properties.Membership(user=self.user, group=group)
+        session.session.add(p1)
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertTrue(p1.active)
+
+        p1.start_date = datetime.now() + timedelta(days=2)
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertFalse(p1.active)
+
+        p1.disable()
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertFalse(p1.active)
+
+        p1.end_date = p1.start_date + timedelta(days=1)
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertFalse(p1.active)
+
+        p1.start_date = datetime.now() - timedelta(days=1)
+        session.session.commit()
+
+        p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
+        self.assertTrue(p1.active)
+
+
