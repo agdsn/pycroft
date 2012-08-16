@@ -71,7 +71,7 @@ class User(ModelBase, UserMixin):
     @validates('passwd_hash')
     def validate_passwd_hash(self, _, value):
         assert value is not None, "Cannot clear the password hash!"
-        assert len(value) > 5, "A password-hash with les than 5 chars is not correct!"
+        assert len(value) > 9, "A password-hash with les than 9 chars is not correct!"
         return value
 
     def check_password(self, plaintext_password):
