@@ -398,7 +398,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
 
 
 class Test_040_PropertyGroups(PropertyDataTestBase):
-    def test_0010_has_propert(self):
+    def test_0010_has_property(self):
         group1 = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
         group2 = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
 
