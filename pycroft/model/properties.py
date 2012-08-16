@@ -92,7 +92,11 @@ class Membership(ModelBase):
         return value
 
     def disable(self):
-        self.end_date = datetime.now()
+        now = datetime.now()
+        if self.start_date > now:
+            self.end_date = self.start_date
+        else:
+            self.end_date = now
 
 
 class Property(ModelBase):
