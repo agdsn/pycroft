@@ -3,10 +3,37 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import random
 import unittest
+from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from crypt import crypt
+from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
+from pycroft.model import user, session
 from pycroft.helpers.user_helper import generatePassword, hash_password, verify_password
+from tests import FixtureDataTestBase
+
+
+class DormitoryData(DataSet):
+    class dummy_house:
+        number = "01"
+        short_name = "abc"
+        street = "dummy"
+
+
+class RoomData(DataSet):
+    class dummy_room:
+        number = 1
+        level = 1
+        inhabitable = True
+        dormitory = DormitoryData.dummy_house
+
+
+class UserData(DataSet):
+    class dummy_user:
+        login = "test"
+        name = "John Doe"
+        registration_date = datetime.now()
+        room = RoomData.dummy_room
 
 
 class Test_010_PasswordGenerator(unittest.TestCase):
@@ -77,3 +104,29 @@ class Test_020_PasswdHashes(unittest.TestCase):
             hash = hash_password(pw)
             self.assertFalse(hash in hash_list)
             hash_list.append(hash)
+
+class Test_030_User_Passwords(FixtureDataTestBase):
+    datasets = [DormitoryData, RoomData, UserData]
+
+    def test_0010_password_hash_validator(self):
+        u = user.User.q.get(1)
+        password = generatePassword(4)
+        hash = hash_password(password)
+
+        def set_hash(h):
+            u.passwd_hash = h
+
+        set_hash(hash)
+        session.session.commit()
+
+        self.assertRaisesRegexp(AssertionError, "A password-hash with les than 9 chars is not correct!", set_hash, password)
+        session.session.commit()
+
+        self.assertRaisesRegexp(AssertionError, "Cannot clear the password hash!", set_hash, None)
+        session.session.commit()
+
+
+    # ToDo: Implement set and verify
+    #def test_0020_set_and_verify_password(self):
+    #    pass
+
