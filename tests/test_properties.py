@@ -7,7 +7,7 @@ import unittest
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
-from tests import OldPythonTestCase
+from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft.model import session, user, properties, _all
 from pycroft import model
 
@@ -60,25 +60,8 @@ class PropertyData(DataSet):
         property_group = PropertyGroupData.group2
 
 
-def make_fixture():
-    fixture = SQLAlchemyFixture(
-            env=_all,
-            style=TrimmedNameStyle(suffix="Data"),
-#            session=session.session,
-#            scoped_session=session.session._scoped_session,
-            engine=session.session.get_engine() )
-    return fixture
-
-
-class PropertyDataTestBase(DataTestCase, OldPythonTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        session.reinit_session("sqlite://")
-        model.drop_db_model()
-        model.create_db_model()
-        cls.fixture = make_fixture()
-        cls.datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, TrafficGroupData, PropertyData]
+class PropertyDataTestBase(FixtureDataTestBase):
+    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, TrafficGroupData, PropertyData]
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
@@ -88,7 +71,6 @@ class PropertyDataTestBase(DataTestCase, OldPythonTestCase):
         properties.Membership.q.delete()
         session.session.commit()
         super(PropertyDataTestBase, self).tearDown()
-        session.session.remove()
 
 
 class Test_010_PropertyResolving(PropertyDataTestBase):
