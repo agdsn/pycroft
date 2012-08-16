@@ -396,3 +396,14 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         res = session.session.query(user.User, properties.PropertyGroup).join(user.User.property_groups).filter(user.User.id==self.user.id).distinct().count()
         self.assertEqual(res, 2)
 
+
+class Test_040_PropertyGroups(PropertyDataTestBase):
+    def test_0010_has_propert(self):
+        group1 = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
+        group2 = properties.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
+
+        self.assertTrue(group1.has_property(PropertyData.prop_test1.name))
+        self.assertFalse(group1.has_property(PropertyData.prop_test2.name))
+
+        self.assertTrue(group2.has_property(PropertyData.prop_test1.name))
+        self.assertTrue(group2.has_property(PropertyData.prop_test2.name))
