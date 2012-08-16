@@ -68,6 +68,12 @@ class User(ModelBase, UserMixin):
             raise Exception("invalid unix-login!")
         return value
 
+    @validates('passwd_hash')
+    def validate_passwd_hash(self, _, value):
+        assert value is not None, "Cannot clear the password hash!"
+        assert len(value) > 5, "A password-hash with les than 5 chars is not correct!"
+        return value
+
     def check_password(self, plaintext_password):
         """verify a given plaintext password against the users passwd hash.
 
