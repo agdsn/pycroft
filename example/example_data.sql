@@ -1431,18 +1431,19 @@ CREATE TABLE subnet (
 	id INTEGER NOT NULL, 
 	address VARCHAR(51) NOT NULL, 
 	gateway VARCHAR(51) NOT NULL, 
-	dns_domain VARCHAR, 
+	dns_domain VARCHAR,
+	reserved_addresses INTEGER NOT NULL,
 	PRIMARY KEY (id)
 );
-INSERT INTO "subnet" VALUES(1,'141.30.228.0/24','141.30.228.1','wh2.tu-dresden.de');
-INSERT INTO "subnet" VALUES(2,'141.30.227.0/24','141.30.227.1','wh3.tu-dresden.de');
-INSERT INTO "subnet" VALUES(3,'141.30.242.128/26','141.30.242.129','whunep.tu-dresden.de');
-INSERT INTO "subnet" VALUES(4,'141.30.216.0/24','141.30.216.1','wh16.tu-dresden.de');
-INSERT INTO "subnet" VALUES(5,'141.30.202.0/24','141.30.202.1','wh30.tu-dresden.de');
-INSERT INTO "subnet" VALUES(6,'141.30.224.0/24','141.30.224.1','wh6.tu-dresden.de');
-INSERT INTO "subnet" VALUES(7,'141.30.223.0/24','141.30.223.1','wh5.tu-dresden.de');
-INSERT INTO "subnet" VALUES(8,'141.30.226.0/24','141.30.226.1','wh7.tu-dresden.de');
-INSERT INTO "subnet" VALUES(9,'141.30.222.0/24','141.30.222.1','wh4.tu-dresden.de');
+INSERT INTO "subnet" VALUES(1,'141.30.228.0/24','141.30.228.1','wh2.tu-dresden.de', 40);
+INSERT INTO "subnet" VALUES(2,'141.30.227.0/24','141.30.227.1','wh3.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(3,'141.30.242.128/26','141.30.242.129','whunep.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(4,'141.30.216.0/24','141.30.216.1','wh16.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(5,'141.30.202.0/24','141.30.202.1','wh30.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(6,'141.30.224.0/24','141.30.224.1','wh6.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(7,'141.30.223.0/24','141.30.223.1','wh5.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(8,'141.30.226.0/24','141.30.226.1','wh7.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(9,'141.30.222.0/24','141.30.222.1','wh4.tu-dresden.de', 10);
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL, 
 	number VARCHAR(3) NOT NULL, 
