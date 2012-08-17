@@ -134,6 +134,9 @@ class Test_030_User_Passwords(FixtureDataTestBase):
         u = user.User.q.get(1)
         self.assertTrue(u.check_password(password))
         self.assertIsNotNone(user.User.verify_and_get(u.login, password))
+        self.assertEqual(user.User.verify_and_get(u.login, password), u)
+
+        self.assertIsNone(user.User.verify_and_get(password, u.login))
 
         for length in range(0, 10):
             for cnt in range(1, 3):
