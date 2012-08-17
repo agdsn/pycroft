@@ -13,6 +13,7 @@ from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
     String
 from sqlalchemy.orm import backref, relationship, validates
 import re
+from sqlalchemy.orm.util import has_identity
 from datetime import datetime
 from pycroft.model.properties import Membership, Property, PropertyGroup, TrafficGroup
 from pycroft.model.session import session
@@ -68,6 +69,7 @@ class User(ModelBase, UserMixin):
 
     @validates('login')
     def validate_login(self, _, value):
+        assert not has_identity(self), "user already in the database - cannot change login anymore!"
         if not User.login_regex.match(value) or value in self.blocked_logins:
             raise Exception("invalid unix-login!")
         return value
