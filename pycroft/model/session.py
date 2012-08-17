@@ -30,7 +30,7 @@ class SessionWrapper(object):
         if connection_string is None:
             connection_string = "sqlite:////tmp/test.db"
 
-        self._engine = create_engine(connection_string, echo=True)
+        self._engine = create_engine(connection_string, echo=False)
         self._scoped_session = scoped_session(
                                 sessionmaker(bind=self._engine,
                                              autocommit=autocommit,
