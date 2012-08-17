@@ -29,7 +29,7 @@ def sort_ports(ports):
     return sorted_ports
 
 
-def generateHostname(ip_address):
+def generate_hostname(ip_address):
     return "whdd" + ip_address.split(u".")[-1]
 
 
