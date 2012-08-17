@@ -61,10 +61,14 @@ class User(ModelBase, UserMixin):
     name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"
                             "([A-Z][a-z0-9]+)((-|\\s)"
                             "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$")
+    blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
+                      "lp", "mail", "news", "uucp", "proxy", "majordom",
+                      "postgres", "wwwadmin", "backup",	"msql", "operator",
+                      "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
     @validates('login')
     def validate_login(self, _, value):
-        if not User.login_regex.match(value):
+        if not User.login_regex.match(value) or value in self.blocked_logins:
             raise Exception("invalid unix-login!")
         return value
 

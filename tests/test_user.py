@@ -5,7 +5,7 @@ from crypt import crypt
 from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
-from pycroft.model import user, session
+from pycroft.model import user, dormitory, session
 from pycroft.helpers.user_helper import generatePassword, hash_password, verify_password
 from tests import FixtureDataTestBase
 
@@ -141,3 +141,33 @@ class Test_030_User_Passwords(FixtureDataTestBase):
                 if pw != password:
                     self.assertFalse(u.check_password(pw))
                     self.assertIsNone(user.User.verify_and_get(u.login, pw))
+
+
+class Test_040_User_Login(FixtureDataTestBase):
+    datasets = [DormitoryData, RoomData, UserData]
+
+    def test_0010_user_login_validator(self):
+        u = user.User(name="John Doe", registration_date=datetime.now(), room=dormitory.Room.q.get(1))
+
+        def set_login(login):
+            u.login = login
+
+        for length in range(1, 30):
+            if 2 < length < 23:
+                set_login("a" * length)
+            else:
+                self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, "a" * length)
+
+        valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a__4"]
+        invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
+        blocked = ["root", "daemon", "bin", "sys", "sync", "games", "man", "lp", "mail",
+                   "news", "uucp", "proxy", "majordom", "postgres", "wwwadmin", "backup",
+                   "msql", "operator", "ftp", "ftpadmin", "guest", "bb", "nobody"]
+
+        for login in valid:
+            set_login(login)
+        for login in invalid:
+            self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, login)
+        for login in blocked:
+            self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, login)
+
