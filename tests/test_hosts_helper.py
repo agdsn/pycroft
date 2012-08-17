@@ -1,6 +1,6 @@
 from tests import OldPythonTestCase
 from random import randint
-from pycroft.helpers.host_helper import sort_ports
+from pycroft.helpers.host_helper import sort_ports, generate_hostname
 
 class Test_010_SimpleHostsHelper(OldPythonTestCase):
     def test_0010_sort_ports(self):
@@ -21,3 +21,11 @@ class Test_010_SimpleHostsHelper(OldPythonTestCase):
             del pool[idx]
         resorted = [p.name for p in sort_ports(shuffled)]
         self.assertEqual(resorted, ports)
+
+    def test_0020_generate_hostname(self):
+        networks = ["141.30.228", "10.10.10", "141.30.126"]
+        for hostpart in range(1, 255):
+            for net in networks:
+                expected = "whdd%d" % hostpart
+                generated = generate_hostname("%s.%d" % (net, hostpart))
+                self.assertEqual(generated, expected)
