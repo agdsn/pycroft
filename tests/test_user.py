@@ -123,7 +123,21 @@ class Test_030_User_Passwords(FixtureDataTestBase):
         session.session.commit()
 
 
-    # ToDo: Implement set and verify
-    #def test_0020_set_and_verify_password(self):
-    #    pass
+    def test_0020_set_and_verify_password(self):
+        u = user.User.q.get(1)
+        password = generatePassword(4)
+        hash = hash_password(password)
 
+        u.set_password(password)
+        session.session.commit()
+
+        u = user.User.q.get(1)
+        self.assertTrue(u.check_password(password))
+        self.assertIsNotNone(user.User.verify_and_get(u.login, password))
+
+        for length in range(0, 10):
+            for cnt in range(1, 3):
+                pw = generatePassword(length)
+                if pw != password:
+                    self.assertFalse(u.check_password(pw))
+                    self.assertIsNone(user.User.verify_and_get(u.login, pw))
