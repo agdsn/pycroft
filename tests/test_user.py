@@ -177,3 +177,6 @@ class Test_040_User_Login(FixtureDataTestBase):
         for login in blocked:
             self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, login)
 
+        u = user.User.q.get(1)
+        self.assertRaisesRegexp(AssertionError, "user already in the database - cannot change login anymore!", set_login, "abc")
+
