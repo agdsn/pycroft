@@ -22,7 +22,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
     ip_address = host_helper.getFreeIP(dormitory.get_subnets())
 
     if not host_name:
-        host_name = host_helper.generateHostname(ip_address)
+        host_name = host_helper.generate_hostname(ip_address)
 
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory_id=dormitory.id).one()
