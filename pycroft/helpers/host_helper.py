@@ -40,12 +40,12 @@ def get_free_ip(subnets):
         net = ipaddr.IPv4Network(subnet.address)
         used_ips = [dev.ipv4 for dev in subnet.net_devices]
 
-        if (net.numhosts - reserved) <= 0:
+        if (net.numhosts -2 - reserved) <= len(used_ips):
             continue
 
         for ip in net.iterhosts():
             if reserved > 0:
-                reserved += -1
+                reserved -= 1
                 continue
             if ip.compressed not in used_ips:
                 return ip.compressed
