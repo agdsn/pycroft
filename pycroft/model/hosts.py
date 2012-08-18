@@ -8,7 +8,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from base import ModelBase
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
@@ -17,6 +17,8 @@ from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
 import re
+
+from pycroft.helpers import host_helper
 
 
 class Host(ModelBase):
@@ -63,6 +65,28 @@ class NetDevice(ModelBase):
             raise Exception("Multicast-Flag (least significant bit im "
                             "ersten Byte gesetzt)!")
         return value
+
+    def set_v4address(self, ipv4_address, subnet):
+        assert host_helper.select_subnet_for_ip(ipv4_address, (subnet, )) \
+                is not None, "Subnet does not contain the given ip"
+        self.ipv4 = ipv4_address
+        self.subnet = subnet
+
+
+def _check_correct_netdev_subnet(mapper, connection, target):
+    if target.ipv4 is not None:
+        assert target.subnet is not None, \
+                "NetDevice has an ip bot no Subnet assigned!"
+        assert host_helper.select_subnet_for_ip(target.ipv4,
+                    (target.subnet, )) is not None, \
+                "Assigned Subnet does not contain the assigned ip"
+
+    if target.subnet is not None:
+        assert target.ipv4 is not None, "A Subnet is assigned but no ip was set"
+
+
+event.listen(NetDevice, "before_insert", _check_correct_netdev_subnet)
+event.listen(NetDevice, "before_update", _check_correct_netdev_subnet)
 
 
 class Switch(Host):
