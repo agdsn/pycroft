@@ -7,8 +7,6 @@
 """
 import ipaddr
 import re
-from pycroft.model import hosts
-from pycroft.model.session import session
 
 
 def sort_ports(ports):
@@ -34,30 +32,27 @@ class SubnetFullException(Exception):
     pass
 
 
-def getFreeIP(subnets):
-    possible_hosts = []
-
+def get_free_ip(subnets):
     for subnet in subnets:
         reserved = subnet.reserved_addresses
-        for ip in ipaddr.IPv4Network(subnet.address).iterhosts():
+        net = ipaddr.IPv4Network(subnet.address)
+        used_ips = [dev.ipv4 for dev in subnet.net_devices]
+
+        if (net.numhosts -2 - reserved) <= len(used_ips):
+            continue
+
+        for ip in net.iterhosts():
             if reserved > 0:
-                reserved =- 1
+                reserved -= 1
                 continue
-            possible_hosts.append(ip)
-
-    reserved_hosts = []
-
-    reserved_hosts_string = session.query(hosts.NetDevice.ipv4).all()
-
-    for ip in reserved_hosts_string:
-        reserved_hosts.append(ipaddr.IPv4Address(ip.ipv4))
-
-    for ip in reserved_hosts:
-        if ip in possible_hosts:
-            possible_hosts.remove(ip)
-
-    if possible_hosts:
-        return possible_hosts[0].compressed
+            if ip.compressed not in used_ips:
+                return ip.compressed
 
     raise SubnetFullException()
+
+
+def select_subnet_for_ip(ip, subnets):
+    for subnet in subnets:
+        if ipaddr.IPAddress(ip) in ipaddr.IPv4Network(subnet.address):
+            return subnet
 
