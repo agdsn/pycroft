@@ -41,6 +41,9 @@ class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR, nullable=False)
     mac = Column(String(12), nullable=False)
 
+    subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=True)
+    subnet = relationship("Subnet", backref=backref("net_devices"))
+
     # one to one from PatchPort to NetDevice
     patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=True)
     patch_port = relationship("PatchPort", backref=backref("net_device",
