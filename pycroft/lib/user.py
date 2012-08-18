@@ -22,7 +22,7 @@ from pycroft.model.user import User
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac):
-    ip_address = host_helper.getFreeIP(dormitory.get_subnets())
+    ip_address = host_helper.get_free_ip(dormitory.get_subnets())
 
     if not host_name:
         host_name = host_helper.generate_hostname(ip_address)
@@ -85,7 +85,7 @@ def move(user, dormitory, level, room_number):
         for netdevice in netdevices:
             #TODO set new patchport
             oldIPv4 = netdevice.ipv4
-            netdevice.ipv4 = host_helper.getFreeIP(dormitory.get_subnets())
+            netdevice.ipv4 = host_helper.get_free_ip(dormitory.get_subnets())
             session.add(netdevice)
             newUserLogEntry = UserLogEntry(author_id=current_user.id,
                 message=u"IPv4 von %s auf %s geändert" % (
