@@ -7,8 +7,6 @@
 """
 import ipaddr
 import re
-from pycroft.model import hosts
-from pycroft.model.session import session
 
 
 def sort_ports(ports):
