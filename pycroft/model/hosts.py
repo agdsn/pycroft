@@ -38,7 +38,7 @@ class Host(ModelBase):
 
 class NetDevice(ModelBase):
     #ipv4 = Column(postgresql.INET, nullable=True)
-    ipv4 = Column(String(12), unique=True, nullable=True)
+    ipv4 = Column(String(15), unique=True, nullable=True)
     #ipv6 = Column(postgresql.INET, nullable=True)
     ipv6 = Column(String(51), unique=True, nullable=True)
     #mac = Column(postgresql.MACADDR, nullable=False)
