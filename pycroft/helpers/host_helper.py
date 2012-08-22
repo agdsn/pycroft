@@ -39,7 +39,7 @@ def get_free_ip(subnets):
     for subnet in subnets:
         reserved = subnet.reserved_addresses
         net = ipaddr.IPv4Network(subnet.address)
-        used_ips = [dev.ipv4 for dev in subnet.net_devices]
+        used_ips = [ip.address for ip in subnet.ips]
 
         if (net.numhosts -2 - reserved) <= len(used_ips):
             continue
