@@ -66,6 +66,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
         host = hosts.Host.q.filter(hosts.Host.hostname == HostData.dummy_host2.hostname).one()
 
+        nd = hosts.NetDevice(host=host, mac="00:00:00:00:00:00")
         for num in range(0, 490):
             if num >= 488:
                 self.assertRaises(SubnetFullException, get_free_ip, subnets)
@@ -76,10 +77,12 @@ class Test_020_IpHelper(FixtureDataTestBase):
                 self.assertEqual(ip, self.ip_s1(num))
             else:
                 self.assertEqual(ip, self.ip_s2(num % 244))
-            nd = hosts.NetDevice(host=host, mac="00:00:00:00:00:00", ipv4=ip, subnet=net)
-            session.session.add(nd)
+
+            ip_addr = hosts.Ip(address=ip, subnet=net, net_device=nd)
+            session.session.add(ip_addr)
             session.session.commit()
 
+        hosts.Ip.q.filter(hosts.Ip.net_device == nd).delete()
         hosts.NetDevice.q.filter(hosts.NetDevice.host==host).delete()
         session.session.commit()
 
