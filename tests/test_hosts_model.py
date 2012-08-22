@@ -65,32 +65,32 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
 class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
 
-    def test_0010_set_v4address(self):
-        subnets = dormitory.Subnet.q.all()
-        netdev = hosts.NetDevice.q.first()
-
-        ip = get_free_ip((subnets[0], ))
-        def call_method(subnet):
-            netdev.set_v4address(ip, subnet)
-
-        call_method(subnets[0])
-        self.assertRaises(AssertionError, call_method, subnets[1])
+    # alscaholder because the set_v4 method is gone
+    pass
 
 
-class Test_030_NetworkDeviceEvents(FixtureDataTestBase):
+class Test_030_IpEvents(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
 
     def test_0010_correct_subnet_and_ip(self):
         subnet = dormitory.Subnet.q.first()
         netdev = hosts.NetDevice.q.first()
 
-        netdev.ipv4 = get_free_ip((subnet, ))
-        netdev.subnet = subnet
+        ip = get_free_ip((subnet, ))
+
+        ip_addr = hosts.Ip(net_device=netdev)
+        ip_addr.address = ip
+        ip_addr.subnet = subnet
+        session.session.add(ip_addr)
         session.session.commit()
 
         netdev = hosts.NetDevice.q.first()
         ip = get_free_ip((subnet, ))
-        netdev.set_v4address(ip, subnet)
+        ip_addr = hosts.Ip(address=ip, subnet=subnet, net_device=netdev)
+        session.session.add(ip_addr)
+        session.session.commit()
+
+        hosts.Ip.q.filter(hosts.Ip.net_device == netdev).delete()
         session.session.commit()
 
 
@@ -98,29 +98,47 @@ class Test_030_NetworkDeviceEvents(FixtureDataTestBase):
         subnet = dormitory.Subnet.q.first()
         netdev = hosts.NetDevice.q.first()
 
-        netdev.ipv4 = get_free_ip((subnet, ))
+        ip = get_free_ip((subnet, ))
+        ip_addr = hosts.Ip(net_device=netdev)
+        ip_addr.address = ip
 
         def commit():
+            session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(AssertionError, "NetDevice has an ip bot no Subnet assigned!", commit)
+        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.subnet_id may not be NULL .*", commit)
 
     def test_0030_missing_ip(self):
         subnet = dormitory.Subnet.q.first()
         netdev = hosts.NetDevice.q.first()
 
-        netdev.subnet = subnet
+        ip_addr = hosts.Ip(net_device=netdev)
+        ip_addr.subnet = subnet
 
         def commit():
+            session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(AssertionError, "A Subnet is assigned but no ip was set", commit)
+        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.address may not be NULL .*", commit)
 
     def test_0040_wrong_subnet(self):
         subnets = dormitory.Subnet.q.all()
         netdev = hosts.NetDevice.q.first()
+        ip = get_free_ip((subnets[0], ))
 
-        netdev.ipv4 = get_free_ip((subnets[0], ))
-        netdev.subnet = subnets[1]
+        ip_addr = hosts.Ip(net_device=netdev, address=ip)
 
-        def commit():
-            session.session.commit()
-        self.assertRaisesRegexp(AssertionError, "Assigned Subnet does not contain the assigned ip", commit)
+        def assign_subnet():
+            ip_addr.subnet = subnets[1]
+
+        self.assertRaisesRegexp(AssertionError, "Given subnet does not contain the ip", assign_subnet)
+
+        ip_addr = hosts.Ip(net_device=netdev, subnet=subnets[1])
+
+        def assign_ip():
+            ip_addr.address = ip
+
+        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", assign_ip)
+
+        def new_instance():
+            hosts.Ip(net_device=netdev, subnet=subnets[1], address=ip)
+
+        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", new_instance)
