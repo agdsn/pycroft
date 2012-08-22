@@ -473,3 +473,18 @@ class Test_050_Membership(PropertyDataTestBase):
 
         p1 = properties.Membership.q.filter(properties.Membership.user==self.user).filter(properties.Membership.group==group).one()
         self.assertTrue(p1.active)
+
+
+class Test_060_Property_Module_Code(unittest.TestCase):
+    def test_0010_get_properties(self):
+        property_list = properties.get_properties()
+
+        self.assertIsInstance(property_list, list)
+
+        for item in property_list:
+            self.assertIsInstance(item, basestring)
+
+        property_set = list(set(property_list))
+
+        # property strings have to be unique
+        self.assertListEqual(sorted(property_list), sorted(property_set))
