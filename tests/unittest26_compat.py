@@ -1,6 +1,8 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import difflib
+import pprint
 import unittest
 import re
 
@@ -67,7 +69,8 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertIsNotNone": "_assertIsNotNone",
                        "assertIsInstance": "_assertIsInstance",
                        "assertIsNotInstance": "_assertIsNotInstance",
-                       "assertListEqual": "_assertListEqual",}
+                       "assertListEqual": "_assertListEqual",
+                       "assertSequenceEqual": "_assertSequenceEqual"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
