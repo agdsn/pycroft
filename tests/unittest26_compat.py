@@ -64,7 +64,9 @@ class OldPythonTestCase(unittest.TestCase):
 
     _old_py_mapping = {"assertRaisesRegexp": "_assertRaisesRegexp",
                        "assertIsNone": "_assertIsNone",
-                       "assertIsNotNone": "_assertIsNotNone"}
+                       "assertIsNotNone": "_assertIsNotNone",
+                       "assertIsInstance": "_assertIsInstance",
+                       "assertIsNotInstance": "_assertIsNotInstance",}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -100,4 +102,17 @@ class OldPythonTestCase(unittest.TestCase):
         """Included for symmetry with assertIsNone."""
         if obj is None:
             standardMsg = 'unexpectedly None'
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertIsInstance(self, obj, cls, msg=None):
+        """Same as self.assertTrue(isinstance(obj, cls)), with a nicer
+        default message."""
+        if not isinstance(obj, cls):
+            standardMsg = '%s is not an instance of %r' % (safe_repr(obj), cls)
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertNotIsInstance(self, obj, cls, msg=None):
+        """Included for symmetry with assertIsInstance."""
+        if isinstance(obj, cls):
+            standardMsg = '%s is an instance of %r' % (safe_repr(obj), cls)
             self.fail(self._formatMessage(msg, standardMsg))
