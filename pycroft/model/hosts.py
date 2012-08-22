@@ -15,6 +15,7 @@ from pycroft.model import dormitory
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
+import ipaddr
 
 import re
 
@@ -76,21 +77,28 @@ class Ip(ModelBase):
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
 
+    def _ip_subnet_valid(self, ip, subnet):
+        return ipaddr.IPAddress(ip) in ipaddr.IPNetwork(subnet.address)
+
     @property
     def is_ip_valid(self):
-        return host_helper.select_subnet_for_ip(self.address, (self.subnet, )) \
-                is not None
-
+        if self.address is None or self.subnet is None:
+            return False
+        return self._ip_subnet_valid(self.address, self.subnet)
 
     @validates('subnet')
     def validate_subnet(self, _, value):
-        if self.ip is not None:
-            assert self.is_ip_valid, "Given subnet does not contain the ip"
+        if self.address is not None:
+            assert self._ip_subnet_valid(self.address, value), \
+                    "Given subnet does not contain the ip"
+        return value
 
     @validates("address")
     def validate_address(self, _, value):
         if self.subnet is not None:
-            assert self.is_ip_valid, "Subnet does not contain the given ip"
+            assert self._ip_subnet_valid(value, self.subnet), \
+                    "Subnet does not contain the given ip"
+        return value
 
 
 def _check_correct_ip_subnet(mapper, connection, target):
