@@ -4388,15 +4388,15 @@ CREATE TABLE user (
 	id INTEGER NOT NULL, 
 	login VARCHAR(40) NOT NULL, 
 	name VARCHAR(255) NOT NULL,
-	passwd_hash VARCHAR(255) NOT NULL,
 	registration_date DATETIME NOT NULL, 
+	passwd_hash VARCHAR(255) NOT NULL,
     email VARCHAR(255), 
 	room_id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
-INSERT INTO "user" VALUES(1,'ag_dsn','System User','{SSHA}IPVJh2ri9sXFFpWt3sp9ca64H6gdg9A6','2012-04-10 16:11:05.739251',1212);
-INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0','2012-06-30 10:53:20.930821',398);
+INSERT INTO "user" VALUES(1,'ag_dsn','System User','2012-04-10 16:11:05.739251','{SSHA}IPVJh2ri9sXFFpWt3sp9ca64H6gdg9A6',NULL,1212);
+INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','2012-06-30 10:53:20.930821','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0',NULL,398);
 CREATE TABLE host (
 	id INTEGER NOT NULL, 
 	hostname VARCHAR(255) NOT NULL, 
