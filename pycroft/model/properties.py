@@ -172,6 +172,9 @@ property_categories = [
 
 
 def get_properties():
+    """ Join all categories to one list of property strings.
+    :return: list of property identifiers
+    """
     properties = []
     for category in property_categories:
         for property in category[1]:
