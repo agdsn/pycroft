@@ -475,7 +475,7 @@ class Test_050_Membership(PropertyDataTestBase):
         self.assertTrue(p1.active)
 
 
-class Test_060_Property_Module_Code(unittest.TestCase):
+class Test_060_Property_Module_Code(OldPythonTestCase):
     def test_0010_get_properties(self):
         property_list = properties.get_properties()
 
