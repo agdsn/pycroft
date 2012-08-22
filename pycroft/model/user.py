@@ -24,6 +24,7 @@ class User(ModelBase, UserMixin):
     name = Column(String(255), nullable=False)
     registration_date = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
+    email = Column(String(255), nullable=True)
 
     # many to one from User to Room
     room = relationship("Room", backref=backref("users", order_by='User.id'))

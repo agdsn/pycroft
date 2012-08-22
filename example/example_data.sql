@@ -4390,6 +4390,7 @@ CREATE TABLE user (
 	name VARCHAR(255) NOT NULL,
 	passwd_hash VARCHAR(255) NOT NULL,
 	registration_date DATETIME NOT NULL, 
+    email VARCHAR(255), 
 	room_id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(room_id) REFERENCES room (id)
