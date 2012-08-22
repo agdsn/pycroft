@@ -69,7 +69,15 @@ class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
     pass
 
 
-class Test_030_IpEvents(FixtureDataTestBase):
+class Test_030_IpModel(FixtureDataTestBase):
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+
+    def test_0010_is_ip_valid(self):
+        ip_addr = hosts.Ip()
+        self.assertFalse(ip_addr.is_ip_valid)
+
+
+class Test_040_IpEvents(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
 
     def test_0010_correct_subnet_and_ip(self):
