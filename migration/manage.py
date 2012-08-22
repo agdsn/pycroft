@@ -2,4 +2,4 @@
 from migrate.versioning.shell import main
 
 if __name__ == '__main__':
-    main(url='sqlite:///test_db.sqlite', debug='False')
+    main(url='sqlite:////tmp/test.db', debug='False')
