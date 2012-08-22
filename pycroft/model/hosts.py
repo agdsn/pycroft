@@ -74,7 +74,7 @@ class Ip(ModelBase):
     net_device = relationship(NetDevice, backref=backref("net_devices"))
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
-    subnet = relationship("Subnet", backref=backref("net_devices"))
+    subnet = relationship("Subnet", backref=backref("ips"))
 
     @property
     def is_ip_valid(self):
