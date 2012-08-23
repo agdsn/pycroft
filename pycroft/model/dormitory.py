@@ -86,6 +86,7 @@ class Subnet(ModelBase):
     gateway = Column(String(51), nullable=False)
     dns_domain = Column(String)
     reserved_addresses = Column(Integer)
+    ip_type = Column(Enum("4", "6", name="iptypes"), nullable=False)
 
     #many to many from Subnet to VLan
     vlans = relationship("VLan",
