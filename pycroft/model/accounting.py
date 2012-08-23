@@ -26,6 +26,10 @@ class TrafficVolume(ModelBase):
     type = Column(Enum("IN", "OUT", name="traffic_types"), nullable=False)
 
     # many to one from TrafficVolume to NetDevice
-    net_device = relationship("NetDevice",
+    ip = relationship("Ip",
                 backref=backref("traffic_volumes"))
-    net_device_id = Column(Integer, ForeignKey("netdevice.id"), nullable=False)
+    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+
+    net_device = relationship("NetDevice",
+        secondary="ip",
+        viewonly=True)
