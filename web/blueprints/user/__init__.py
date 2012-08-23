@@ -13,7 +13,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
 from pycroft import lib
 from pycroft.helpers import host_helper
 from pycroft.model.dormitory import Room
-from pycroft.model.hosts import Host, NetDevice
+from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
@@ -160,9 +160,9 @@ def json_trafficdata(user_id):
     trafficvolumes = session.query(
         TrafficVolume
     ).join(
-        (NetDevice, NetDevice.id == TrafficVolume.net_device_id)
+        TrafficVolume.ips
     ).join(
-        (Host, Host.id == NetDevice.host_id)
+        Ip.host
     ).filter(
         Host.user_id == user_id
     ).filter(
