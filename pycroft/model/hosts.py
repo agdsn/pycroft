@@ -72,7 +72,7 @@ class Ip(ModelBase):
     #address = Column(postgresql.INET, nullable=True)
 
     net_device_id = Column(Integer, ForeignKey('netdevice.id'), nullable=False)
-    net_device = relationship(NetDevice, backref=backref("net_devices"))
+    net_device = relationship(NetDevice, backref=backref("ips"))
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
