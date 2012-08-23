@@ -68,7 +68,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
 class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
 
-    # alscaholder because the set_v4 method is gone
+    # placeholder because the set_v4 method is gone
     pass
 
 
