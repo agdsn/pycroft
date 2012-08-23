@@ -74,6 +74,8 @@ class Ip(ModelBase):
     net_device_id = Column(Integer, ForeignKey('netdevice.id'), nullable=False)
     net_device = relationship(NetDevice, backref=backref("ips"))
 
+    host = relationship(Host, secondary="netdevice", viewonly=True)
+
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
 
