@@ -1428,22 +1428,24 @@ INSERT INTO "destinationport" VALUES(1419,'A12','switch_port');
 INSERT INTO "destinationport" VALUES(1420,'A13','switch_port');
 INSERT INTO "destinationport" VALUES(1421,'A14','switch_port');
 CREATE TABLE subnet (
-	id INTEGER NOT NULL, 
-	address VARCHAR(51) NOT NULL, 
-	gateway VARCHAR(51) NOT NULL, 
-	dns_domain VARCHAR,
-	reserved_addresses INTEGER NOT NULL,
-	PRIMARY KEY (id)
+    id INTEGER NOT NULL,
+    address VARCHAR(51) NOT NULL,
+    gateway VARCHAR(51) NOT NULL,
+    dns_domain VARCHAR,
+    reserved_addresses INTEGER,
+    ip_type VARCHAR(1) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT iptypes CHECK (ip_type IN ('4', '6'))
 );
-INSERT INTO "subnet" VALUES(1,'141.30.228.0/24','141.30.228.1','wh2.tu-dresden.de', 40);
-INSERT INTO "subnet" VALUES(2,'141.30.227.0/24','141.30.227.1','wh3.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(3,'141.30.242.128/26','141.30.242.129','whunep.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(4,'141.30.216.0/24','141.30.216.1','wh16.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(5,'141.30.202.0/24','141.30.202.1','wh30.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(6,'141.30.224.0/24','141.30.224.1','wh6.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(7,'141.30.223.0/24','141.30.223.1','wh5.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(8,'141.30.226.0/24','141.30.226.1','wh7.tu-dresden.de', 10);
-INSERT INTO "subnet" VALUES(9,'141.30.222.0/24','141.30.222.1','wh4.tu-dresden.de', 10);
+INSERT INTO "subnet" VALUES(1,'141.30.228.0/24','141.30.228.1','wh2.tu-dresden.de', 40, '4');
+INSERT INTO "subnet" VALUES(2,'141.30.227.0/24','141.30.227.1','wh3.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(3,'141.30.242.128/26','141.30.242.129','whunep.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(4,'141.30.216.0/24','141.30.216.1','wh16.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(5,'141.30.202.0/24','141.30.202.1','wh30.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(6,'141.30.224.0/24','141.30.224.1','wh6.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(7,'141.30.223.0/24','141.30.223.1','wh5.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(8,'141.30.226.0/24','141.30.226.1','wh7.tu-dresden.de', 10, '4');
+INSERT INTO "subnet" VALUES(9,'141.30.222.0/24','141.30.222.1','wh4.tu-dresden.de', 10, '4');
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL, 
 	number VARCHAR(3) NOT NULL, 
@@ -1526,6 +1528,16 @@ CREATE TABLE room (
 	PRIMARY KEY (id), 
 	CHECK (inhabitable IN (0, 1)), 
 	FOREIGN KEY(dormitory_id) REFERENCES dormitory (id)
+);
+CREATE TABLE ip (
+    id INTEGER NOT NULL,
+    address VARCHAR(51) NOT NULL,
+    net_device_id INTEGER NOT NULL,
+    subnet_id INTEGER NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (address),
+    FOREIGN KEY(net_device_id) REFERENCES netdevice (id),
+    FOREIGN KEY(subnet_id) REFERENCES subnet (id)
 );
 INSERT INTO "room" VALUES(1,'1',0,1,1);
 INSERT INTO "room" VALUES(2,'A001',0,1,2);
@@ -6000,27 +6012,13 @@ CREATE TABLE property (
 );
 INSERT INTO "property" VALUES(1,'internet',1);
 CREATE TABLE trafficvolume (
-	id INTEGER NOT NULL, 
-	size BIGINT NOT NULL, 
-	timestamp DATETIME NOT NULL, 
-	type VARCHAR(3) NOT NULL, 
-	net_device_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	CONSTRAINT traffic_types CHECK (type IN ('IN', 'OUT')), 
-	FOREIGN KEY(net_device_id) REFERENCES netdevice (id)
+    id INTEGER NOT NULL,
+    size BIGINT NOT NULL,
+    timestamp DATETIME NOT NULL,
+    type VARCHAR(3) NOT NULL,
+    ip_id INTEGER NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT traffic_types CHECK (type IN ('IN', 'OUT')),
+    FOREIGN KEY(ip_id) REFERENCES ip (id)
 );
-INSERT INTO "trafficvolume" VALUES(1, 0, '2012-06-23 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(2, 0, '2012-06-23 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(3, 0, '2012-06-24 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(4, 0, '2012-06-24 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(5, 42991616, '2012-06-25 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(6, 49283072, '2012-06-25 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(7, 33554432, '2012-06-26 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(8, 70254592, '2012-06-26 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(9, 106954752, '2012-06-27 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(10, 12582912, '2012-06-27 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(11, 45088768, '2012-06-28 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(12, 55574528, '2012-06-28 00:00:00.475358','OUT',1);
-INSERT INTO "trafficvolume" VALUES(13, 220200960, '2012-06-29 00:00:00.475358','IN',1);
-INSERT INTO "trafficvolume" VALUES(14, 53477376, '2012-06-29 00:00:00.475358','OUT',1);
 COMMIT;
