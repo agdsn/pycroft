@@ -80,6 +80,11 @@ class Ip(ModelBase):
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
 
+    def change_ip(self, ip, subnet):
+        self.subnet = None
+        self.address = ip
+        self.subnet = subnet
+
     def _ip_subnet_valid(self, ip, subnet):
         return ipaddr.IPAddress(ip) in ipaddr.IPNetwork(subnet.address)
 
@@ -91,6 +96,8 @@ class Ip(ModelBase):
 
     @validates('subnet')
     def validate_subnet(self, _, value):
+        if value is None:
+            return value
         if self.address is not None:
             assert self._ip_subnet_valid(self.address, value), \
                     "Given subnet does not contain the ip"
@@ -98,6 +105,8 @@ class Ip(ModelBase):
 
     @validates("address")
     def validate_address(self, _, value):
+        if value is None:
+            return value
         if self.subnet is not None:
             assert self._ip_subnet_valid(value, self.subnet), \
                     "Subnet does not contain the given ip"
