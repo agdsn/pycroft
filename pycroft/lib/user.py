@@ -12,14 +12,16 @@ from datetime import datetime
 from flask.ext.login import current_user
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.hosts import Host, NetDevice
+from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac):
-    ip_address = host_helper.get_free_ip(dormitory.get_subnets())
+    subnets = dormitory.get_subnets()
+    ip_address = host_helper.get_free_ip(subnets)
+    subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
 
     if not host_name:
         host_name = host_helper.generate_hostname(ip_address)
@@ -28,6 +30,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
         level=level, dormitory_id=dormitory.id).one()
 
     #ToDo: Which port to choose if room has more than one?
+    # --> The one that is connected to a switch!
     patch_port = room.patch_ports[0]
 
     new_user = User(login=login,
@@ -46,11 +49,12 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
         room=room)
     session.add(new_host)
 
-    new_net_device = NetDevice(ipv4=ip_address,
-        mac=mac,
-        host=new_host,
-        patch_port=patch_port)
+    new_net_device = NetDevice(mac=mac, host=new_host, patch_port=patch_port)
+    new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
+
     session.add(new_net_device)
+    session.add(new_ip)
+
     session.commit()
 
     return new_user
@@ -81,14 +85,19 @@ def move(user, dormitory, level, room_number):
 
         for netdevice in netdevices:
             #TODO set new patchport
-            oldIPv4 = netdevice.ipv4
-            netdevice.ipv4 = host_helper.get_free_ip(dormitory.get_subnets())
-            session.add(netdevice)
-            newUserLogEntry = UserLogEntry(author_id=current_user.id,
-                message=u"IPv4 von %s auf %s geändert" % (
-                oldIPv4, netdevice.ipv4),
-                timestamp=datetime.now(), user_id=user.id)
-            session.add(newUserLogEntry)
+            for ip_addr in netdevice.ips:
+                old_ip = ip_addr.address
+                new_address = host_helper.get_free_ip(dormitory.get_subnets())
+                new_subnet = host_helper.select_subnet_for_ip(new_address,
+                                                    dormitory.get_subnets())
+            
+                ip_addr.change_ip(new_address, new_subnet)
+            
+                newUserLogEntry = UserLogEntry(author_id=current_user.id,
+                    message=u"IPv4 von %s auf %s geändert" % (
+                    old_ip, new_address),
+                    timestamp=datetime.now(), user_id=user.id)
+                session.add(newUserLogEntry)
 
     session.commit()
     return user
