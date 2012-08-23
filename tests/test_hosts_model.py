@@ -76,6 +76,28 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr = hosts.Ip()
         self.assertFalse(ip_addr.is_ip_valid)
 
+    def test_0020_change_ip(self):
+        subnet = dormitory.Subnet.q.first()
+        netdev = hosts.NetDevice.q.first()
+        ip = get_free_ip((subnet, ))
+        ip_addr = hosts.Ip(net_device=netdev, address=ip, subnet=subnet)
+
+        session.session.add(ip_addr)
+        session.session.commit()
+
+        ip_addr = hosts.Ip.q.first()
+        self.assertEqual(ip_addr.address, ip)
+
+        ip = get_free_ip((subnet,))
+        ip_addr.change_ip(ip, subnet)
+        session.session.commit()
+
+        ip_addr = hosts.Ip.q.first()
+        self.assertEqual(ip_addr.address, ip)
+
+        hosts.Ip.q.delete()
+        session.session.commit()
+
 
 class Test_040_IpEvents(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
