@@ -130,5 +130,13 @@ class Switch(Host):
 
     name = Column(String(127), nullable=False)
 
-    #management_ip = Column(postgresql.INET, nullable=False)
-    management_ip = Column(String(51), unique=True, nullable=False)
+    management_ip_id = Column(Integer, ForeignKey("ip.id"), unique=True, nullable=False)
+    management_ip = relationship("Ip")
+
+
+def _check_correct_management_ip(mapper, connection, target):
+    assert target.management_ip in target.ips
+
+
+event.listen(Switch, "before_insert", _check_correct_management_ip)
+event.listen(Switch, "before_update", _check_correct_management_ip)
