@@ -3,7 +3,7 @@ import re
 
 from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
-from pycroft.model import session, hosts, dormitory
+from pycroft.model import session, hosts, dormitory, user
 
 from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData
 from pycroft.helpers.host_helper import get_free_ip
@@ -172,3 +172,138 @@ class Test_040_IpEvents(FixtureDataTestBase):
             hosts.Ip(net_device=netdev, subnet=subnets[1], address=ip)
 
         self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", new_instance)
+
+
+class Test_050_SwitchEvents(FixtureDataTestBase):
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+
+    def tearDown(self):
+        session.session.remove()
+        hosts.Ip.q.delete()
+        hosts.NetDevice.q.delete()
+        for switch in hosts.Switch.q.all():
+            session.session.delete(switch)
+        session.session.commit()
+        super(Test_050_SwitchEvents, self).tearDown()
+
+    def setUp(self):
+        super(Test_050_SwitchEvents, self).setUp()
+        self.subnet = dormitory.Subnet.q.first()
+        self.user = user.User.q.first()
+        self.room = dormitory.Room.q.first()
+
+    def make_switch(self, **kwargs):
+        if "hostname" not in kwargs:
+            kwargs["hostname"] = "testswitch"
+        if "name" not in kwargs:
+            kwargs["name"] = "testswitch1"
+
+        new_switch = hosts.Switch(room=self.room, user=self.user, **kwargs)
+        return new_switch
+
+    def make_ip(self, num, net_dev):
+        net_parts = self.subnet.gateway.split(".")
+        net_parts[3] = str(1 + self.subnet.reserved_addresses + num)
+        ip_addr = '.'.join(net_parts)
+
+        return hosts.Ip(net_device=net_dev, address=ip_addr, subnet=self.subnet)
+
+    def test_0010_check_missing_management_ip_no_ips(self):
+        new_switch = self.make_switch()
+        session.session.add(new_switch)
+        self.assertRaisesRegexp(AssertionError, "A management ip has to be set", session.session.commit)
+
+    def test_0020_check_missing_management_ip_have_one_ip(self):
+        new_switch = self.make_switch()
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ip = self.make_ip(1, netdev)
+
+        session.session.add(new_switch)
+        session.session.add(ip)
+        self.assertRaisesRegexp(AssertionError, "A management ip has to be set", session.session.commit)
+
+    def test_0030_check_missing_management_ip_have_ips(self):
+        new_switch = self.make_switch()
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ips = []
+        for num in range(1, 3):
+            ip = self.make_ip(num, netdev)
+            ips.append(ip)
+
+        session.session.add(new_switch)
+        session.session.add_all(ips)
+        self.assertRaisesRegexp(AssertionError, "A management ip has to be set", session.session.commit)
+
+
+    def test_0040_check_wrong_management_ip_no_ips(self):
+        dflt_netdev = hosts.NetDevice.q.first()
+        ip = self.make_ip(1, dflt_netdev)
+        session.session.add(ip)
+
+        new_switch = self.make_switch()
+        new_switch.management_ip = ip
+
+        session.session.add(new_switch)
+        self.assertRaisesRegexp(AssertionError, "the management ip is not valid on this switch", session.session.commit)
+
+    def test_0050_check_wrong_management_ip_one_ip(self):
+        dflt_netdev = hosts.NetDevice.q.first()
+        ip = self.make_ip(1, dflt_netdev)
+        session.session.add(ip)
+
+        new_switch = self.make_switch()
+        new_switch.management_ip = ip
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ip = self.make_ip(2, netdev)
+
+        session.session.add(new_switch)
+        session.session.add(ip)
+        self.assertRaisesRegexp(AssertionError, "the management ip is not valid on this switch", session.session.commit)
+
+    def test_0060_check_wrong_management_ip_have_ips(self):
+        dflt_netdev = hosts.NetDevice.q.first()
+        ip = self.make_ip(1, dflt_netdev)
+        session.session.add(ip)
+
+        new_switch = self.make_switch()
+        new_switch.management_ip = ip
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ips = []
+        for num in range(3, 5):
+            ip = self.make_ip(num, netdev)
+            ips.append(ip)
+
+        session.session.add(new_switch)
+        session.session.add_all(ips)
+        self.assertRaisesRegexp(AssertionError, "the management ip is not valid on this switch", session.session.commit)
+
+    def test_0070_check_correct_management_ip_have_one_ip(self):
+        new_switch = self.make_switch()
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ip = self.make_ip(1, netdev)
+        new_switch.management_ip = ip
+
+        session.session.add(new_switch)
+        session.session.add(netdev)
+        session.session.add(ip)
+        session.session.commit()
+
+    def test_0080_check_correct_management_ip_have_ips(self):
+        new_switch = self.make_switch()
+
+        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        ips = []
+        for num in range(3, 5):
+            ip = self.make_ip(num, netdev)
+            ips.append(ip)
+        new_switch.management_ip = ips[0]
+
+        session.session.add(new_switch)
+        session.session.add(netdev)
+        session.session.add_all(ips)
+        session.session.commit()
