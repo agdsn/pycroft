@@ -77,7 +77,10 @@ class Ip(ModelBase):
     net_device_id = Column(Integer, ForeignKey('netdevice.id'), nullable=False)
     net_device = relationship(NetDevice, backref=backref("ips"))
 
-    host = relationship(Host, secondary="netdevice", viewonly=True)
+    host = relationship(Host,
+        secondary="netdevice",
+        backref=backref("ips"),
+        viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
@@ -130,12 +133,23 @@ class Switch(Host):
 
     name = Column(String(127), nullable=False)
 
-    management_ip_id = Column(Integer, ForeignKey("ip.id"), unique=True, nullable=False)
-    management_ip = relationship("Ip")
+    management_ip_id = Column(Integer,
+        ForeignKey("ip.id",
+            use_alter=True,
+            name="fk_management_ip"),
+        unique=True,)
+    management_ip = relationship("Ip", post_update=True)
 
 
 def _check_correct_management_ip(mapper, connection, target):
-    assert target.management_ip in target.ips
+    assert target.management_ip is not None, "A management ip has to be set"
+
+    ips = []
+    for dev in target.net_devices:
+        ips.extend(dev.ips)
+
+    assert target.management_ip in ips, \
+            "the management ip is not valid on this switch"
 
 
 event.listen(Switch, "before_insert", _check_correct_management_ip)
