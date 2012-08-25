@@ -72,6 +72,12 @@ class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
 class Test_030_IpModel(FixtureDataTestBase):
     datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
 
+    def tearDown(self):
+        session.session.remove()
+        hosts.Ip.q.delete()
+        session.session.commit()
+        super(Test_030_IpModel, self).tearDown()
+
     def test_0010_is_ip_valid(self):
         ip_addr = hosts.Ip()
         self.assertFalse(ip_addr.is_ip_valid)
@@ -97,6 +103,34 @@ class Test_030_IpModel(FixtureDataTestBase):
 
         hosts.Ip.q.delete()
         session.session.commit()
+
+    def test_0030_delete_address(self):
+        subnet = dormitory.Subnet.q.first()
+        netdev = hosts.NetDevice.q.first()
+        ip = get_free_ip((subnet, ))
+        ip_addr = hosts.Ip(net_device=netdev, address=ip, subnet=subnet)
+
+        session.session.add(ip_addr)
+        session.session.commit()
+
+        ip_addr.address = None
+        self.assertIsNone(ip_addr.address)
+
+        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.address may not be NULL.*", session.session.commit)
+
+    def test_0040_delete_subnet(self):
+        subnet = dormitory.Subnet.q.first()
+        netdev = hosts.NetDevice.q.first()
+        ip = get_free_ip((subnet, ))
+        ip_addr = hosts.Ip(net_device=netdev, address=ip, subnet=subnet)
+
+        session.session.add(ip_addr)
+        session.session.commit()
+
+        ip_addr.subnet = None
+        self.assertIsNone(ip_addr.subnet)
+
+        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.subnet_id may not be NULL.*", session.session.commit)
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
