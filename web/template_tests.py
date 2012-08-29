@@ -33,6 +33,6 @@ def exceeded_traffic_check(user):
     return has_exceeded_traffic(user)
 
 
-def register_tests(app):
+def register_checks(app):
     for name in _check_registry:
         app.jinja_env.tests[name] = _check_registry[name]
