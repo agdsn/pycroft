@@ -14,6 +14,7 @@
 from flask import Flask, redirect, url_for
 from blueprints import finance, infrastructure, properties, user, dormitories, login
 import template_filters
+import template_tests
 
 from pycroft.model import session
 from web.blueprints.login import login_manager
@@ -42,6 +43,7 @@ def make_app():
     app.register_blueprint(login.bp)
 
     template_filters.register_filters(app)
+    template_tests.register_tests(app)
 
     user.nav.register_on(app)
     finance.nav.register_on(app)
