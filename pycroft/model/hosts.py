@@ -39,6 +39,110 @@ class Host(ModelBase):
     room_id = Column(Integer, ForeignKey("room.id"), nullable=True)
 
 
+class HostAlias(ModelBase):
+    content = Column(String(255), nullable=False)
+    discriminator = Column('type', String(50))
+    __mapper_args__ =  {'polymorphic_on': discriminator}
+
+    def __init__(self, content):
+        self.content = content
+
+    # many to one from HostAlias to Host
+    host = relationship("Host", backref=backref("aliases"))
+    host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
+
+
+class ARecord(HostAlias):
+    time_to_live = Column(Integer)  # optional time to live attribute
+    ip = Column(String(51), nullable=False)
+    __mapper_args__ = {'polymorphic_identity':'arecord'}
+
+    def __init__(self, name, ip, time_to_live = None):
+        super(ARecord, self).__init__(name)
+        self.ip = ip
+        self.time_to_live = time_to_live
+
+    @validates('ip')
+    def validate_ip (self, _, value):
+        assert value.subnet.ip_type == "4"
+        return value
+
+    @property
+    def gen_entry(self):
+        if not self.time_to_live:
+            return u"%s IN A %s" % (self.content, self.ip)
+        else:
+            return u"%s %s IN A %s" % (self.content, self.time_to_live, self.ip)
+
+
+class AAAARecord(HostAlias):
+    time_to_live = Column(Integer)  # optional time to live attribute
+    ip = Column(String(51), nullable=False)
+    __mapper_args__ = {'polymorphic_identity':'aaaarecord'}
+
+    def __init__(self, name, ip, time_to_live = None):
+        super(AAAARecord, self).__init__(name)
+        self.ip = ip
+        self.time_to_live = time_to_live
+
+    @validates('ip')
+    def validate_ip(self, _, value):
+        assert value.subnet.ip_type == "6"
+        return value
+
+    @property
+    def gen_entry(self):
+        if not self.time_to_live:
+            return u"%s IN AAAA %s" % (self.content, self.ip)
+        else:
+            return u"%s %s IN AAAA %s" % (self.content, self.time_to_live, self.ip)
+
+class MXRecord(HostAlias):
+    domain = Column(String(255), nullable=False)
+    priority = Column(Integer, nullable=False)
+    __mapper_args__ = {'polymorphic_identity':'mxrecord'}
+
+    def __init__(self, server_name, domain, priority):
+        super(MXRecord, self).__init__(server_name)
+        self.domain = domain
+        self.priority = priority
+
+    @property
+    def gen_entry(self):
+        return u"%s IN MX %s %s" % (self.domain, self.priority, self.content)
+
+
+class CNameRecord(HostAlias):
+    alias_for = Column(Integer, nullable=False)
+    __mapper_args__ = {'polymorphic_identity':'cnamerecord'}
+
+    def __init__(self, name, alias_for):
+        super(CNameRecord, self).__init__(name)
+        self.alias_for = alias_for
+
+    @property
+    def gen_entry(self):
+        return u"%s IN CNAME %s" % (self.content, self.alias_for)
+
+
+class NSRecord(HostAlias):
+    domain = Column(String(255), nullable=False)
+    time_to_live = Column(Integer)
+    __mapper_args__ = {'polymorphic_identity':'nsrecord'}
+
+    def __init__(self, server, domain, time_to_live = None):
+        super(NSRecord, self).__init__(server)
+        self.domain = domain
+        self.time_to_live = time_to_live
+
+    @property
+    def gen_entry(self):
+        if not self.time_to_live:
+            return u"%s IN NS %s" % (self.domain, self.content)
+        else:
+            return u"%s %s IN NS %s" % (self.domain, self.time_to_live, self.content)
+
+
 class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR, nullable=False)
     mac = Column(String(12), nullable=False)
