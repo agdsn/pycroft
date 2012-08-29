@@ -7,7 +7,7 @@ _check_registry = {}
 
 def template_check(name):
     def decorator(fn):
-        _test_registry[name] = fn
+        _check_registry[name] = fn
         return fn
     return decorator
 
