@@ -79,11 +79,13 @@ class Membership(ModelBase):
         if value is None:
             return value
         assert value >= self.start_date, "you set end date before start date!"
+        assert isinstance(value, datetime), "end_date should be a datetime"
         return value
 
     @validates('start_date')
     def validate_start_date(self, _, value):
         assert value is not None, "start_date cannot be None!"
+        assert isinstance(value, datetime), "start_date should be a datetime"
         if self.end_date is not None:
             assert value <= self.end_date, "you set start date behind end date!"
         return value
@@ -137,7 +139,6 @@ property_categories = [
          (u"ssh_helios", u"Nutzer darf sich mit SSH auf Helios einloggen"),
          (u"homepage_helios", u"Nutzer darf eine Hompage auf Helios anlegen"),
          (u"no_pay", u"Nutzer muss keinen Semesterbeitrag zahlen"),
-         (u"negative_bilance",u"Nutzer darf eine negative Kontobilanz haben")
      ]
         ),
     (u"Verbote Nutzer",

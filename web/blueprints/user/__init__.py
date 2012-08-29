@@ -25,7 +25,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm
 from web.blueprints.access import login_required, BlueprintAccess
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 
 bp = Blueprint('user', __name__, )
@@ -94,7 +94,7 @@ def add_membership(user_id):
     form = UserAddGroupMembership()
     if form.validate_on_submit():
         newMembership = Membership(user=user, group=form.group_id.data,
-            start_date=form.begin_date.data, end_date=form.end_date.data)
+            start_date=datetime.combine(form.begin_date.data,time(0)), end_date=datetime.combine(form.end_date.data,time(0)))
         newUserLogEntry = UserLogEntry(author_id=current_user.id,
             message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
                     form.group_id.data.name,

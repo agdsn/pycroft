@@ -117,3 +117,28 @@ def edit_name(user, name):
     session.commit()
 
     return user
+
+
+#ToDo: Funktion zum Überprüfen des Trafficlimits
+def has_exceeded_traffic(user):
+    return False
+
+
+#ToDo: Funktion zur Abfrage dr Kontobilanz
+def has_positive_balance(user):
+    return True
+
+def has_internet(user):
+    if user.has_property("internet"):
+        if user.has_property("no_internet"):
+            return False
+        else:
+            if has_exceeded_traffic(user):
+                return False
+            else:
+                if has_positive_bilance(user):
+                    return True
+                else:
+                    return False
+    else:
+        return False
