@@ -10,10 +10,13 @@ This module contains.
 
 from datetime import datetime
 from flask.ext.login import current_user
+from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
+from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
+from pycroft.model.properties import TrafficGroup
 from pycroft.model.session import session
 from pycroft.model.user import User
 
@@ -119,10 +122,12 @@ def edit_name(user, name):
     return user
 
 
-#ToDo: Funktion zum Überprüfen des Trafficlimits
+#ToDo: Usecases überprüfen: standardmäßig nicht False?
 def has_exceeded_traffic(user):
-    return False
-
+    result = session.query(User.id, (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")).join(User.active_traffic_groups).join(User.hosts).join(Host.ips).join(Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
+    if result is not None:
+        return result.has_exceeded_traffic
+    else: return False
 
 #ToDo: Funktion zur Abfrage dr Kontobilanz
 def has_positive_balance(user):
