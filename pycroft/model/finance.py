@@ -14,8 +14,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Enum, Integer, Text, DateTime
-from sqlalchemy.types import String
+from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Float, Date
 from sqlalchemy import event
 
 
@@ -80,3 +79,11 @@ class Split(ModelBase):
                                                 ondelete='CASCADE'),
                                 nullable=False)
     transaction = relationship("Transaction", backref=backref("splits", cascade="all, delete-orphan"))
+
+
+class Semester(ModelBase):
+    name = Column(String, nullable=False)
+    semester_due = Column(Float, nullable=False)
+    registration_fee = Column(Float, nullable=False)
+    begin_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
