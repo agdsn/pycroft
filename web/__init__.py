@@ -43,7 +43,7 @@ def make_app():
     app.register_blueprint(login.bp)
 
     template_filters.register_filters(app)
-    template_tests.register_tests(app)
+    template_tests.register_checks(app)
 
     user.nav.register_on(app)
     finance.nav.register_on(app)
