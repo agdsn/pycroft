@@ -136,7 +136,8 @@ property_categories = [
          (u"mail", u"Nutzer darf E-Mails versenden (und empfangen)"),
          (u"ssh_helios", u"Nutzer darf sich mit SSH auf Helios einloggen"),
          (u"homepage_helios", u"Nutzer darf eine Hompage auf Helios anlegen"),
-         (u"no_pay", u"Nutzer muss keinen Semesterbeitrag zahlen")
+         (u"no_pay", u"Nutzer muss keinen Semesterbeitrag zahlen"),
+         (u"negative_bilance",u"Nutzer darf eine negative Kontobilanz haben")
      ]
         ),
     (u"Verbote Nutzer",
