@@ -3,9 +3,9 @@ import re
 
 from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
-from pycroft.model import session, hosts, dormitory, user
+from pycroft.model import session, hosts, dormitory, user, accounting
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData
+from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData, IpData, TrafficVolumeData
 from pycroft.helpers.host_helper import get_free_ip
 
 
@@ -341,3 +341,33 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         session.session.add(netdev)
         session.session.add_all(ips)
         session.session.commit()
+
+
+class Test_060_Cascades(FixtureDataTestBase):
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData, IpData, TrafficVolumeData]
+
+    def test_0010_cascade_on_delete_ip(self):
+        session.session.delete(hosts.Ip.q.get(1))
+        session.session.commit()
+        self._assertIsNone(accounting.TrafficVolume.q.first())
+
+    def test_0010_cascade_on_delete_netdevice(self):
+        session.session.delete(hosts.NetDevice.q.get(1))
+        session.session.commit()
+        self._assertIsNone(hosts.Ip.q.first())
+        self._assertIsNone(accounting.TrafficVolume.q.first())
+
+    def test_0010_cascade_on_delete_host(self):
+        session.session.delete(hosts.Host.q.get(1))
+        session.session.commit()
+        self._assertIsNone(hosts.NetDevice.q.first())
+        self._assertIsNone(hosts.Ip.q.first())
+        self._assertIsNone(accounting.TrafficVolume.q.first())
+
+    def test_0010_cascade_on_delete_user(self):
+        session.session.delete(user.User.q.get(1))
+        session.session.commit()
+        self._assertIsNone(hosts.Host.q.first())
+        self._assertIsNone(hosts.NetDevice.q.first())
+        self._assertIsNone(hosts.Ip.q.first())
+        self._assertIsNone(accounting.TrafficVolume.q.first())
