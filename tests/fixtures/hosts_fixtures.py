@@ -7,6 +7,10 @@ class DormitoryData(DataSet):
         number = "01"
         short_name = "abc"
         street = "dummy"
+    class dummy_house2:
+        number = "02"
+        short_name = "abcd"
+        street = "dummy"
 
 
 class VLanData(DataSet):
@@ -39,6 +43,25 @@ class RoomData(DataSet):
         level = 1
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
+    class dummy_room2:
+        number = 1
+        level = 2
+        inhabitable = True
+        dormitory = DormitoryData.dummy_house1
+    class dummy_room3:
+        number = 1
+        level = 1
+        inhabitable = True
+        dormitory = DormitoryData.dummy_house2
+
+
+class PatchPortData(DataSet):
+    class dummy_port1:
+        room = RoomData.dummy_room
+    class dummy_port2:
+        room = RoomData.dummy_room2
+    class dummy_port3:
+        room = RoomData.dummy_room3
 
 
 class UserData(DataSet):
