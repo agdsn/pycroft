@@ -22,41 +22,53 @@ from pycroft.model.user import User
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac):
-    subnets = dormitory.get_subnets()
-    ip_address = host_helper.get_free_ip(subnets)
-    subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
-
-    if not host_name:
-        host_name = host_helper.generate_hostname(ip_address)
 
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory_id=dormitory.id).one()
 
-    #ToDo: Which port to choose if room has more than one?
-    # --> The one that is connected to a switch!
-    patch_port = room.patch_ports[0]
-
+    # create a new user
     new_user = User(login=login,
         name=name,
         room=room,
         registration_date=datetime.now())
     plain_password = user_helper.generatePassword(12)
 
-    #TODO: DEBUG remove in productive!!!
+
+    #TODO: print plain password on paper instead
     print u"new password: " + plain_password
+
+    # set random initial password
     new_user.set_password(plain_password)
     session.add(new_user)
+
+    # create one new host (including net_device) for the new user
+    subnets = dormitory.get_subnets()
+    ip_address = host_helper.get_free_ip(subnets)
+    subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
+    #ToDo: Which port to choose if room has more than one?
+    # --> The one that is connected to a switch!
+    # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
+    patch_port = room.patch_ports[0]
+
+    if not host_name:
+        host_name = host_helper.generate_hostname(ip_address)
 
     new_host = Host(hostname=host_name,
         user=new_user,
         room=room)
-    session.add(new_host)
 
     new_net_device = NetDevice(mac=mac, host=new_host, patch_port=patch_port)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
+    session.add(new_host)
     session.add(new_net_device)
     session.add(new_ip)
+
+    #TODO: add user to initial groups (create those memberships)
+
+    #TODO: create financial account for user with negative balance
+
+    #TODO: add membership that allows negative account balance for one month
 
     session.commit()
 
@@ -64,10 +76,12 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
 
 
 def move(user, dormitory, level, room_number):
+    # change the room of the user
     oldRoom = user.room
     newRoom = Room.q.filter_by(number=room_number,
         level=level,
         dormitory_id=dormitory.id).one()
+
     user.room = newRoom
     session.add(user)
 
@@ -76,19 +90,20 @@ def move(user, dormitory, level, room_number):
         timestamp=datetime.now(), user_id=user.id)
     session.add(newUserLogEntry)
 
-    if oldRoom.dormitory_id != newRoom.dormitory_id:
-        #TODO let choose which hosts should move in the same room
-        netdevices = session.query(
-            NetDevice
-        ).join(
-            NetDevice.host
-        ).filter(
-            Host.user_id == user.id
-        ).all()
 
-        for netdevice in netdevices:
-            #TODO set new patchport
-            for ip_addr in netdevice.ips:
+    # TODO let choose which hosts should move in the same room, change only their net_devices
+    net_devices = session.query(
+        NetDevice
+    ).join(
+        NetDevice.host
+    ).filter(
+        Host.user_id == user.id
+    ).all()
+
+    # assign a new IP to each net_device
+    if oldRoom.dormitory_id != newRoom.dormitory_id:
+       for net_device in net_devices:
+            for ip_addr in net_device.ips:
                 old_ip = ip_addr.address
                 new_address = host_helper.get_free_ip(dormitory.get_subnets())
                 new_subnet = host_helper.select_subnet_for_ip(new_address,
@@ -101,6 +116,10 @@ def move(user, dormitory, level, room_number):
                     old_ip, new_address),
                     timestamp=datetime.now(), user_id=user.id)
                 session.add(newUserLogEntry)
+
+    #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
+    #for netdevice in netdevices:
+    #    pass
 
     session.commit()
     return user
