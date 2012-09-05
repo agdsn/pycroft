@@ -18,7 +18,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
         session.reinit_session("sqlite://")
         model.drop_db_model()
         model.create_db_model()
-        cls.host = hosts.Host(hostname="dummy")
+        cls.host = hosts.Host(hostname="dummy", user_id = 1)
         session.session.commit()
 
     def test_0010_mac_validate(self):
