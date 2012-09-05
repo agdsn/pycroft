@@ -6,7 +6,7 @@ from fixture import DataSet
 
 
 class DormitoryData(DataSet):
-    class dummy_house:
+    class dummy_house1:
         number = "01"
         short_name = "abc"
         street = "dummy"
@@ -41,7 +41,7 @@ class RoomData(DataSet):
         number = 1
         level = 1
         inhabitable = True
-        dormitory = DormitoryData.dummy_house
+        dormitory = DormitoryData.dummy_house1
 
 
 class UserData(DataSet):
