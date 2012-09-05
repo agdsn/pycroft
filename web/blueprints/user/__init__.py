@@ -160,7 +160,7 @@ def json_trafficdata(user_id):
     trafficvolumes = session.query(
         TrafficVolume
     ).join(
-        TrafficVolume.ips
+        TrafficVolume.ip
     ).join(
         Ip.host
     ).filter(
