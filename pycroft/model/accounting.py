@@ -24,8 +24,8 @@ class TrafficVolume(ModelBase):
 
     # many to one from TrafficVolume to NetDevice
     ip = relationship("Ip",
-                backref=backref("traffic_volumes"))
-    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+                backref=backref("traffic_volumes", cascade="all, delete-orphan"))
+    ip_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"), nullable=False)
 
     net_device = relationship("NetDevice",
         secondary="ip",
