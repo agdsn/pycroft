@@ -31,8 +31,8 @@ class Host(ModelBase):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user = relationship("User", backref=backref("hosts"))
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+    user = relationship("User", backref=backref("hosts", cascade="all, delete-orphan"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
     # many to one from Host to Room
     room = relationship(dormitory.Room, backref=backref("hosts"))
@@ -48,8 +48,8 @@ class NetDevice(ModelBase):
     patch_port = relationship("PatchPort", backref=backref("net_device",
                                                           uselist=False))
 
-    host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
-    host = relationship("Host", backref=backref("net_devices"))
+    host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"), nullable=False)
+    host = relationship("Host", backref=backref("net_devices", cascade="all, delete-orphan"))
 
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
@@ -74,8 +74,8 @@ class Ip(ModelBase):
     address = Column(String(51), unique=True, nullable=False)
     #address = Column(postgresql.INET, nullable=True)
 
-    net_device_id = Column(Integer, ForeignKey('netdevice.id'), nullable=False)
-    net_device = relationship(NetDevice, backref=backref("ips"))
+    net_device_id = Column(Integer, ForeignKey('netdevice.id', ondelete="CASCADE"), nullable=False)
+    net_device = relationship(NetDevice, backref=backref("ips", cascade="all, delete-orphan"))
 
     host = relationship(Host,
         secondary="netdevice",
