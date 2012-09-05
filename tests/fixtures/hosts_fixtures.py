@@ -67,3 +67,18 @@ class NetDeviceData(DataSet):
     class dummy_device:
         mac = "00:00:00:00:00:00"
         host = HostData.dummy_host1
+
+
+class IpData(DataSet):
+    class dummy_ip:
+        address = "141.30.216.2"
+        net_device = NetDeviceData.dummy_device
+        subnet = SubnetData.subnet1
+
+
+class TrafficVolumeData(DataSet):
+    class dummy_volume:
+        size = 1000
+        timestamp = datetime.now()
+        type = "IN"
+        ip = IpData.dummy_ip
