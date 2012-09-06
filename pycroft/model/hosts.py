@@ -67,7 +67,7 @@ class ARecord(HostAlias):
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN A %s" % (self.content, self.ip)
+            return u"%s IN A %s" % (self.content, self.ip.address)
         else:
             return u"%s %s IN A %s" % (self.content, self.time_to_live, self.ip.address)
 
@@ -90,7 +90,7 @@ class AAAARecord(HostAlias):
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN AAAA %s" % (self.content, self.ip.adresse)
+            return u"%s IN AAAA %s" % (self.content, self.ip.address)
         else:
             return u"%s %s IN AAAA %s" % (self.content, self.time_to_live, self.ip.address)
 

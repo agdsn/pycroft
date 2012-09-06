@@ -44,9 +44,8 @@ class IpData(DataSet):
 class ARecordData(DataSet):
     class dummy_record1:
         ip = IpData.ip_v4
-        ip_id = 0
         content = "www.dummy.de."
-        host_id = 0
+        host = HostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
@@ -54,9 +53,8 @@ class ARecordData(DataSet):
 class AAAARecordData(DataSet):
     class dummy_record1:
         ip = IpData.ip_v6
-        ip_id = 1
         content = "www.dummy.de."
-        host_id = 0
+        host = HostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
@@ -65,17 +63,20 @@ class MXRecordData(DataSet):
     class dummy_record:
         domain = "dummy.de."
         content = "mail.dummy.de."
-        priority = "10"
+        priority = 10
+        host = HostData.dummy_host1
 
 class CNameRecordData(DataSet):
     class dummy_record:
         content = "dummy.net."
         alias_for = "dummy.de."
+        host = HostData.dummy_host1
 
 class NSRecordData(DataSet):
     class dummy_record1:
         content = "server.dummy.de."
         domain = "dummy.de."
+        host = HostData.dummy_host1
 
     class dummy_record2(dummy_record1):
-        time_to_live = "1000"
+        time_to_live = 1000
