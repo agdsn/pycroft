@@ -14,7 +14,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
-from pycroft.model import dormitory
+from pycroft.model import dormitory   
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
@@ -44,23 +44,20 @@ class HostAlias(ModelBase):
     discriminator = Column('type', String(50))
     __mapper_args__ =  {'polymorphic_on': discriminator}
 
-    def __init__(self, content):
-        self.content = content
-
     # many to one from HostAlias to Host
     host = relationship("Host", backref=backref("aliases"))
     host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
 
 
 class ARecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     time_to_live = Column(Integer)  # optional time to live attribute
-    ip = Column(String(51), nullable=False)
-    __mapper_args__ = {'polymorphic_identity':'arecord'}
 
-    def __init__(self, name, ip, time_to_live = None):
-        super(ARecord, self).__init__(name)
-        self.ip = ip
-        self.time_to_live = time_to_live
+    # many to one from ARecord to Ip
+    ip = relationship("Ip")
+    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+
+    __mapper_args__ = {'polymorphic_identity':'arecord'}
 
     @validates('ip')
     def validate_ip (self, _, value):
@@ -72,18 +69,18 @@ class ARecord(HostAlias):
         if not self.time_to_live:
             return u"%s IN A %s" % (self.content, self.ip)
         else:
-            return u"%s %s IN A %s" % (self.content, self.time_to_live, self.ip)
+            return u"%s %s IN A %s" % (self.content, self.time_to_live, self.ip.address)
 
 
 class AAAARecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     time_to_live = Column(Integer)  # optional time to live attribute
-    ip = Column(String(51), nullable=False)
-    __mapper_args__ = {'polymorphic_identity':'aaaarecord'}
 
-    def __init__(self, name, ip, time_to_live = None):
-        super(AAAARecord, self).__init__(name)
-        self.ip = ip
-        self.time_to_live = time_to_live
+    # many to one from ARecord to Ip
+    ip = relationship("Ip")
+    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+
+    __mapper_args__ = {'polymorphic_identity':'aaaarecord'}
 
     @validates('ip')
     def validate_ip(self, _, value):
@@ -93,19 +90,15 @@ class AAAARecord(HostAlias):
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN AAAA %s" % (self.content, self.ip)
+            return u"%s IN AAAA %s" % (self.content, self.ip.adresse)
         else:
-            return u"%s %s IN AAAA %s" % (self.content, self.time_to_live, self.ip)
+            return u"%s %s IN AAAA %s" % (self.content, self.time_to_live, self.ip.address)
 
 class MXRecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     domain = Column(String(255), nullable=False)
     priority = Column(Integer, nullable=False)
     __mapper_args__ = {'polymorphic_identity':'mxrecord'}
-
-    def __init__(self, server_name, domain, priority):
-        super(MXRecord, self).__init__(server_name)
-        self.domain = domain
-        self.priority = priority
 
     @property
     def gen_entry(self):
@@ -113,12 +106,9 @@ class MXRecord(HostAlias):
 
 
 class CNameRecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     alias_for = Column(Integer, nullable=False)
     __mapper_args__ = {'polymorphic_identity':'cnamerecord'}
-
-    def __init__(self, name, alias_for):
-        super(CNameRecord, self).__init__(name)
-        self.alias_for = alias_for
 
     @property
     def gen_entry(self):
@@ -126,14 +116,10 @@ class CNameRecord(HostAlias):
 
 
 class NSRecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     domain = Column(String(255), nullable=False)
     time_to_live = Column(Integer)
     __mapper_args__ = {'polymorphic_identity':'nsrecord'}
-
-    def __init__(self, server, domain, time_to_live = None):
-        super(NSRecord, self).__init__(server)
-        self.domain = domain
-        self.time_to_live = time_to_live
 
     @property
     def gen_entry(self):
