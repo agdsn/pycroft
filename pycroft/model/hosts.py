@@ -132,6 +132,24 @@ class NSRecord(HostAlias):
         else:
             return u"%s %s IN NS %s" % (self.domain, self.time_to_live, self.server)
 
+class SRVRecord(HostAlias):
+    id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
+    service = Column(String(255), nullable=False)
+    time_to_live = Column(Integer)
+    priority = Column(Integer, nullable=False)
+    weight = Column(Integer, nullable=False)
+    port = Column(Integer, nullable=False)
+    target = Column(String(255), nullable=False)
+
+    @property
+    def gen_entry(self):
+        if not self.time_to_live:
+            return u"%s IN SRV %s %s %s %s" % (self.service, self.priority, self.weight,
+                                               self.port, self.target)
+        else:
+            return u"%s %s IN SRV %s %s %s %s" % (self.service, self.time_to_live, self.priority,
+                                                  self.weight, self.port, self.target)
+
 
 class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR, nullable=False)
