@@ -43,8 +43,8 @@ class IpData(DataSet):
 
 class ARecordData(DataSet):
     class dummy_record1:
-        ip = IpData.ip_v4
-        content = "www.dummy.de."
+        address = IpData.ip_v4
+        name = "www.dummy.de."
         host = HostData.dummy_host1
 
     class dummy_record2(dummy_record1):
@@ -52,8 +52,8 @@ class ARecordData(DataSet):
 
 class AAAARecordData(DataSet):
     class dummy_record1:
-        ip = IpData.ip_v6
-        content = "www.dummy.de."
+        address = IpData.ip_v6
+        name = "www.dummy.de."
         host = HostData.dummy_host1
 
     class dummy_record2(dummy_record1):
@@ -62,19 +62,19 @@ class AAAARecordData(DataSet):
 class MXRecordData(DataSet):
     class dummy_record:
         domain = "dummy.de."
-        content = "mail.dummy.de."
+        server = "mail.dummy.de."
         priority = 10
         host = HostData.dummy_host1
 
 class CNameRecordData(DataSet):
     class dummy_record:
-        content = "dummy.net."
+        name = "dummy.net."
         alias_for = "dummy.de."
         host = HostData.dummy_host1
 
 class NSRecordData(DataSet):
     class dummy_record1:
-        content = "server.dummy.de."
+        server = "server.dummy.de."
         domain = "dummy.de."
         host = HostData.dummy_host1
 

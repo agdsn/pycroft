@@ -40,7 +40,6 @@ class Host(ModelBase):
 
 
 class HostAlias(ModelBase):
-    content = Column(String(255), nullable=False)
     discriminator = Column('type', String(50))
     __mapper_args__ =  {'polymorphic_on': discriminator}
 
@@ -51,82 +50,87 @@ class HostAlias(ModelBase):
 
 class ARecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
+    name = Column(String(255), nullable=False)
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    ip = relationship("Ip")
-    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+    address = relationship("Ip")
+    address_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
 
     __mapper_args__ = {'polymorphic_identity':'arecord'}
 
-    @validates('ip')
-    def validate_ip (self, _, value):
+    @validates('address')
+    def validate_address (self, _, value):
         assert value.subnet.ip_type == "4"
         return value
 
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN A %s" % (self.content, self.ip.address)
+            return u"%s IN A %s" % (self.name, self.address.address)
         else:
-            return u"%s %s IN A %s" % (self.content, self.time_to_live, self.ip.address)
+            return u"%s %s IN A %s" % (self.name, self.time_to_live, self.address.address)
 
 
 class AAAARecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
+    name = Column(String(255), nullable=False)
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    ip = relationship("Ip")
-    ip_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+    address = relationship("Ip")
+    address_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
 
     __mapper_args__ = {'polymorphic_identity':'aaaarecord'}
 
-    @validates('ip')
-    def validate_ip(self, _, value):
+    @validates('address')
+    def validate_address(self, _, value):
         assert value.subnet.ip_type == "6"
         return value
 
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN AAAA %s" % (self.content, self.ip.address)
+            return u"%s IN AAAA %s" % (self.name, self.address.address)
         else:
-            return u"%s %s IN AAAA %s" % (self.content, self.time_to_live, self.ip.address)
+            return u"%s %s IN AAAA %s" % (self.name, self.time_to_live, self.address.address)
 
 class MXRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
+    server = Column(String(255), nullable=False)
     domain = Column(String(255), nullable=False)
     priority = Column(Integer, nullable=False)
     __mapper_args__ = {'polymorphic_identity':'mxrecord'}
 
     @property
     def gen_entry(self):
-        return u"%s IN MX %s %s" % (self.domain, self.priority, self.content)
+        return u"%s IN MX %s %s" % (self.domain, self.priority, self.server)
 
 
 class CNameRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
+    name = Column(String(255), nullable=False)
     alias_for = Column(Integer, nullable=False)
     __mapper_args__ = {'polymorphic_identity':'cnamerecord'}
 
     @property
     def gen_entry(self):
-        return u"%s IN CNAME %s" % (self.content, self.alias_for)
+        return u"%s IN CNAME %s" % (self.name, self.alias_for)
 
 
 class NSRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     domain = Column(String(255), nullable=False)
+    server = Column(String(255), nullable=False)
     time_to_live = Column(Integer)
     __mapper_args__ = {'polymorphic_identity':'nsrecord'}
 
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN NS %s" % (self.domain, self.content)
+            return u"%s IN NS %s" % (self.domain, self.server)
         else:
-            return u"%s %s IN NS %s" % (self.domain, self.time_to_live, self.content)
+            return u"%s %s IN NS %s" % (self.domain, self.time_to_live, self.server)
 
 
 class NetDevice(ModelBase):
