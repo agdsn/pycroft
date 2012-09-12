@@ -4,7 +4,7 @@ from fixtures.host_aliases_fixture import ARecordData, AAAARecordData,\
     MXRecordData, CNameRecordData, NSRecordData, IpData
 from tests import FixtureDataTestBase
 from pycroft.model.hosts import ARecord, AAAARecord, MXRecord, CNameRecord,\
-    NSRecord, Ip
+    NSRecord, SRVRecord, Ip
 
 class Test_010_ARecordValidator(FixtureDataTestBase):
 
@@ -42,8 +42,7 @@ class Test_020_AAAARecordValidator(FixtureDataTestBase):
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
 
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData,\
-    NSRecordData]
+    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData, NSRecordData, SRVRecord]
 
     def test_0010_arecord_without_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live == None).first()
@@ -55,8 +54,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0015_arecord_with_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"%s %s IN A %s" % (record.name, record.time_to_live,\
-                                             record.address.address)
+        entry_expected = u"%s %s IN A %s" % (record.name, record.time_to_live, record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
@@ -99,5 +97,22 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0055_nsrecord_with_ttl(self):
         record = NSRecord.q.filter(NSRecord.time_to_live != None).first()
         entry =  record.gen_entry
-        entry_expected = u"%s %s IN NS %s" % (record.domain, record.time_to_live, \
-                                              record.server)
+        entry_expected = u"%s %s IN NS %s" % (record.domain, record.time_to_live, record.server)
+
+        self.assertEqual(entry, entry_expected)
+
+    def test_0060_srvrecord_without_ttl(self):
+        record = SRVRecord.q.filter(SRVRecord.time_to_live == None).first()
+        entry = record.gen_entry
+        entry_expected = u"%s IN SRV %s %s %s %s" % (record.service, record.priority,
+                                                     record.weight, record.port, record.target)
+
+        self.assertEqual(entry, entry_expected)
+
+    def test_0065_srvrecord_with_ttl(self):
+        record = SRVRecord.q.filter(SRVRecord.time_to_live != None).first()
+        entry = record.gen_entry
+        entry_expected = u"%s %s IN SRV %s %s %s %s" % (record.service, record.time_to_live,
+            record.priority, record.weight, record.port, record.target)
+
+        self.assertEqual(entry, entry_expected)

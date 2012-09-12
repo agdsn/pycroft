@@ -77,3 +77,16 @@ class NSRecordData(DataSet):
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
+
+
+class SRVRecordData(DataSet):
+    class dummy_record1:
+        service = "_xmpp._tcp.dummy.de."
+        priority = 10
+        weight = 50
+        port = 5050
+        target = "xmpp.dummy.de."
+        host = HostData.dummy_host1
+
+    class dummy_record2(dummy_record1):
+        time_to_live = 1000
