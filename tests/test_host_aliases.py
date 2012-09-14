@@ -1,10 +1,11 @@
 __author__ = 'l3nkz'
 
 from fixtures.host_aliases_fixture import ARecordData, AAAARecordData,\
-    MXRecordData, CNameRecordData, NSRecordData, IpData
+    MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData
 from tests import FixtureDataTestBase
 from pycroft.model.hosts import ARecord, AAAARecord, MXRecord, CNameRecord,\
     NSRecord, SRVRecord, Ip
+import ipaddr
 
 class Test_010_ARecordValidator(FixtureDataTestBase):
 
@@ -42,7 +43,7 @@ class Test_020_AAAARecordValidator(FixtureDataTestBase):
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
 
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData, NSRecordData, SRVRecord]
+    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData, NSRecordData, SRVRecordData]
 
     def test_0010_arecord_without_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live == None).first()
@@ -51,12 +52,23 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
+        rev_entry = record.gen_reverse_entry
+        rev_entry_expected = u"%s.in-addr.arpa. IN PTR %s" % (".".join(reversed(record.address.address.split("."))), record.name)
+
+        self.assertEqual(rev_entry, rev_entry_expected)
+
     def test_0015_arecord_with_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live != None).first()
         entry = record.gen_entry
         entry_expected = u"%s %s IN A %s" % (record.name, record.time_to_live, record.address.address)
 
         self.assertEqual(entry, entry_expected)
+
+        rev_entry = record.gen_reverse_entry
+        rev_entry_expected = u"%s.in-addr.arpa. %s IN PTR %s" % (".".join(reversed(record.address.address.split("."))),
+                                                                 record.time_to_live, record.name)
+
+        self.assertEqual(rev_entry, rev_entry_expected)
 
     def test_0020_aaaarecord_without_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live == None).first()
@@ -65,6 +77,12 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
+        rev_entry = record.gen_reverse_entry
+        rev_entry_expected = u"%s.ip6.arpa. IN PTR %s" % (".".join(["%x" % ord(b) for b in reversed(
+            (ipaddr.IPv6Address(record.address.address)).packed)]), record.name)
+
+        self.assertEqual(rev_entry, rev_entry_expected)
+
     def test_0025_aaaarecord_with_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live != None).first()
         entry = record.gen_entry
@@ -72,6 +90,12 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
                                                 record.time_to_live, record.address.address)
 
         self.assertEqual(entry, entry_expected)
+
+        rev_entry = record.gen_reverse_entry
+        rev_entry_expected = u"%s.ip6.arpa. %s IN PTR %s" % (".".join(["%x" % ord(b) for b in reversed(
+            (ipaddr.IPv6Address(record.address.address)).packed)]), record.time_to_live, record.name)
+
+        self.assertEqual(rev_entry, rev_entry_expected)
 
     def test_0030_mxrecord(self):
         record = MXRecord.q.first()

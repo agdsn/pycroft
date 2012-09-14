@@ -68,6 +68,15 @@ class ARecord(HostAlias):
         else:
             return u"%s %s IN A %s" % (self.name, self.time_to_live, self.address.address)
 
+    @property
+    def gen_reverse_entry(self):
+        reversed_address = ".".join(reversed(self.address.address.split(".")))
+        if not self.time_to_live:
+            return u"%s.in-addr.arpa. IN PTR %s" % (reversed_address, self.name)
+        else:
+            return u"%s.in-addr.arpa. %s IN PTR %s" % (reversed_address, self.time_to_live,
+                self.name)
+
 
 class AAAARecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
@@ -91,6 +100,15 @@ class AAAARecord(HostAlias):
             return u"%s IN AAAA %s" % (self.name, self.address.address)
         else:
             return u"%s %s IN AAAA %s" % (self.name, self.time_to_live, self.address.address)
+
+    @property
+    def gen_reverse_entry(self):
+        reversed_address = ".".join(["%x" % ord(b) for b in reversed(
+            (ipaddr.IPv6Address(self.address.address)).packed)])
+        if not self.time_to_live:
+            return u"%s.ip6.arpa. IN PTR %s" % (reversed_address, self.name)
+        else:
+            return u"%s.ip6.arpa. %s IN PTR %s" % (reversed_address, self.time_to_live, self.name)
 
 class MXRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
@@ -137,6 +155,7 @@ class SRVRecord(HostAlias):
     weight = Column(Integer, nullable=False)
     port = Column(Integer, nullable=False)
     target = Column(String(255), nullable=False)
+    __mapper_args__ = {'polymorphic_identity':'srvrecord'}
 
     @property
     def gen_entry(self):
