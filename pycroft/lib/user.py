@@ -17,7 +17,7 @@ from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.properties import TrafficGroup
-from pycroft.model.session import session
+from pycroft.model import session
 from pycroft.model.user import User
 
 
@@ -39,7 +39,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
 
     # set random initial password
     new_user.set_password(plain_password)
-    session.add(new_user)
+    session.session.add(new_user)
 
     # create one new host (including net_device) for the new user
     subnets = dormitory.get_subnets()
@@ -60,9 +60,9 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
     new_net_device = NetDevice(mac=mac, host=new_host, patch_port=patch_port)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
-    session.add(new_host)
-    session.add(new_net_device)
-    session.add(new_ip)
+    session.session.add(new_host)
+    session.session.add(new_net_device)
+    session.session.add(new_ip)
 
     #TODO: add user to initial groups (create those memberships)
 
@@ -70,58 +70,72 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
 
     #TODO: add membership that allows negative account balance for one month
 
-    session.commit()
+    session.session.commit()
 
     return new_user
 
-
-def move(user, dormitory, level, room_number):
+#TODO ensure serializability
+def move(user, dormitory, level, room_number, processing_user):
     # change the room of the user
+
+    def get_free_patchport(patch_ports):
+        free_patch_ports = []
+        for patch_port in patch_ports:
+            if patch_port.net_device == None:
+                free_patch_ports.append(patch_port)
+        assert len(free_patch_ports) > 0
+        return free_patch_ports[0]
+
     oldRoom = user.room
     newRoom = Room.q.filter_by(number=room_number,
         level=level,
         dormitory_id=dormitory.id).one()
 
-    user.room = newRoom
-    session.add(user)
+    assert oldRoom is not newRoom, "A User is only allowed to move in a different room!"
 
-    newUserLogEntry = UserLogEntry(author_id=current_user.id,
-        message=u"umgezogen von %s nach %s" % (oldRoom, newRoom),
+    user.room = newRoom
+    #session.add(user)
+
+    newUserLogEntry = UserLogEntry(author_id=processing_user.id,
+        message=u"umgezogen von %s nach %s" % (oldRoom.dormitory.short_name, newRoom),
         timestamp=datetime.now(), user_id=user.id)
-    session.add(newUserLogEntry)
+    session.session.add(newUserLogEntry)
 
 
     # TODO let choose which hosts should move in the same room, change only their net_devices
-    net_devices = session.query(
+    net_device_qry = session.session.query(
         NetDevice
     ).join(
         NetDevice.host
     ).filter(
         Host.user_id == user.id
-    ).all()
+    )
+
+    assert net_device_qry.count() == 1, u"You can not move users with %d network device!" % net_device_qry.count()
 
     # assign a new IP to each net_device
+    net_dev = net_device_qry.one()
     if oldRoom.dormitory_id != newRoom.dormitory_id:
-       for net_device in net_devices:
-            for ip_addr in net_device.ips:
-                old_ip = ip_addr.address
-                new_address = host_helper.get_free_ip(dormitory.get_subnets())
-                new_subnet = host_helper.select_subnet_for_ip(new_address,
-                                                    dormitory.get_subnets())
-            
-                ip_addr.change_ip(new_address, new_subnet)
-            
-                newUserLogEntry = UserLogEntry(author_id=current_user.id,
-                    message=u"IPv4 von %s auf %s geändert" % (
-                    old_ip, new_address),
-                    timestamp=datetime.now(), user_id=user.id)
-                session.add(newUserLogEntry)
+    #   for net_device in net_devices:
+    #        for ip_addr in net_device.ips:
+        ip_addr = net_dev.ip
+        old_ip = ip_addr.address
+        new_address = host_helper.get_free_ip(dormitory.get_subnets())
+        new_subnet = host_helper.select_subnet_for_ip(new_address,
+                                            dormitory.get_subnets())
+
+        ip_addr.change_ip(new_address, new_subnet)
+
+        newUserLogEntry = UserLogEntry(author_id=current_user.id,
+            message=u"IPv4 von %s auf %s geändert" % (
+            old_ip, new_address),
+            timestamp=datetime.now(), user_id=user.id)
+        session.session.add(newUserLogEntry)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
-    #for netdevice in netdevices:
-    #    pass
+    net_dev.patch_port = get_free_patchport(newRoom.patch_ports)
 
-    session.commit()
+    session.session.commit()
     return user
 
 
@@ -129,21 +143,21 @@ def edit_name(user, name):
     oldName = user.name
     if len(name):
         user.name = name
-    session.add(user)
+    session.session.add(user)
 
     newUserLogEntry = UserLogEntry(author_id=current_user.id,
         message=u"Nutzer %s umbenannt in %s" % (oldName, name),
         timestamp=datetime.now(), user_id=user.id)
-    session.add(newUserLogEntry)
+    session.session.add(newUserLogEntry)
 
-    session.commit()
+    session.session.commit()
 
     return user
 
 
 #ToDo: Usecases überprüfen: standardmäßig nicht False?
 def has_exceeded_traffic(user):
-    result = session.query(User.id, (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")).join(User.active_traffic_groups).join(User.hosts).join(Host.ips).join(Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
+    result = session.session.query(User.id, (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")).join(User.active_traffic_groups).join(User.hosts).join(Host.ips).join(Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
     if result is not None:
         return result.has_exceeded_traffic
     else: return False
@@ -160,7 +174,7 @@ def has_internet(user):
             if has_exceeded_traffic(user):
                 return False
             else:
-                if has_positive_bilance(user):
+                if has_positive_balance(user):
                     return True
                 else:
                     return False
