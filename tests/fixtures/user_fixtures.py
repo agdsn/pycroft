@@ -26,6 +26,11 @@ class RoomData(DataSet):
         level = 2
         inhabitable = True
         dormitory = DormitoryData.dummy_house2
+    class dummy_room3:
+        number = 2
+        level = 2
+        inhabitable = True
+        dormitory = DormitoryData.dummy_house1
 
 
 class UserData(DataSet):
