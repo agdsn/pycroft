@@ -14,9 +14,11 @@ class Test_010_User_Move(FixtureDataTestBase):
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
         self.user = user.User.q.get(1)
-        self.newRoom = dormitory.Room.q.get(1)
+        self.old_room = dormitory.Room.q.get(1)
+        self.new_room_other_dormitory = dormitory.Room.q.get(2)
+        self.new_room_same_dormitory = dormitory.Room.q.get(3)
 
     def test_010_moves_into_same_room(self):
         self.assertRaises(AssertionError, UserHelper.move,
-            self.user, self.newRoom.dormitory, self.newRoom.level,
-             self.newRoom.number, self.user)
+            self.user, self.old_room.dormitory, self.old_room.level,
+             self.old_room.number, self.user)
