@@ -40,4 +40,5 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.new_room_other_dormitory.number, self.processing_user)
         self.assertEqual(self.user.room, self.new_room_other_dormitory)
         self.assertEqual(self.user.hosts[0].room, self.new_room_other_dormitory)
+        #TODO test for changing ip
 
