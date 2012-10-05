@@ -3,6 +3,7 @@ import unittest
 from tests import OldPythonTestCase
 from pycroft import model
 from pycroft.model import session, user, finance, _all
+from datetime import datetime
 
 
 class Test_010_TransactionSplits(OldPythonTestCase):
@@ -22,13 +23,13 @@ class Test_010_TransactionSplits(OldPythonTestCase):
         self.s.remove()
 
     def test_0010_empty_transaction(self):
-        tr = finance.Transaction(message="Transaction1")
+        tr = finance.Transaction(message="Transaction1", transaction_date=datetime.now())
         self.s.add(tr)
         self.s.commit()
         self.assertEqual(finance.Transaction.q.filter_by(message="Transaction1").count(), 1)
 
     def test_0020_fail_on_unbalanced(self):
-        tr = finance.Transaction(message="Transaction2")
+        tr = finance.Transaction(message="Transaction2", transaction_date=datetime.now())
         self.s.add(tr)
         self.s.commit()
         sp1 = finance.Split(amount=100, account=self.account, transaction=tr)
@@ -37,7 +38,7 @@ class Test_010_TransactionSplits(OldPythonTestCase):
         #self.s.rollback()
 
     def test_0030_insert_balanced(self):
-        tr = finance.Transaction(message="Transaction3")
+        tr = finance.Transaction(message="Transaction3", transaction_date=datetime.now())
         self.s.add(tr)
         self.s.commit()
         sp1 = finance.Split(amount=100, account=self.account, transaction=tr)
@@ -47,7 +48,7 @@ class Test_010_TransactionSplits(OldPythonTestCase):
         self.s.commit()
 
     def test_0040_delete_cascade(self):
-        tr = finance.Transaction(message="Transaction4")
+        tr = finance.Transaction(message="Transaction4", transaction_date=datetime.now())
         sp1 = finance.Split(amount=234, account=self.account, transaction=tr)
         sp2 = finance.Split(amount=-234, account=self.account, transaction=tr)
         self.s.add(tr)

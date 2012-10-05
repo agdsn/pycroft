@@ -48,6 +48,7 @@ class JournalEntry(ModelBase):
 
 class Transaction(ModelBase):
     message = Column(Text(), nullable=False)
+    transaction_date = Column(DateTime, nullable=False)
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
