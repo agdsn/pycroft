@@ -86,20 +86,20 @@ def move(user, dormitory, level, room_number, processing_user):
         assert len(free_patch_ports) > 0
         return free_patch_ports[0]
 
-    oldRoom = user.room
-    newRoom = Room.q.filter_by(number=room_number,
+    old_room = user.room
+    new_room = Room.q.filter_by(number=room_number,
         level=level,
         dormitory_id=dormitory.id).one()
 
-    assert oldRoom is not newRoom, "A User is only allowed to move in a different room!"
+    assert old_room is not new_room, "A User is only allowed to move in a different room!"
 
-    user.room = newRoom
-    #session.add(user)
+    user.room = new_room
+    session.session.add(user)
 
-    newUserLogEntry = UserLogEntry(author_id=processing_user.id,
-        message=u"umgezogen von %s nach %s" % (oldRoom.dormitory.short_name, newRoom),
+    moving_user_log_entry = UserLogEntry(author_id=processing_user.id,
+        message=u"umgezogen von %s nach %s" % (old_room.dormitory.short_name, new_room),
         timestamp=datetime.now(), user_id=user.id)
-    session.session.add(newUserLogEntry)
+    session.session.add(moving_user_log_entry)
 
 
     # TODO let choose which hosts should move in the same room, change only their net_devices
@@ -111,14 +111,15 @@ def move(user, dormitory, level, room_number, processing_user):
         Host.user_id == user.id
     )
 
-    assert net_device_qry.count() == 1, u"You can not move users with %d network device!" % net_device_qry.count()
+    assert net_device_qry.count() == 1, u"You can not move users with %d network devices!" % net_device_qry.count()
 
     # assign a new IP to each net_device
     net_dev = net_device_qry.one()
-    if oldRoom.dormitory_id != newRoom.dormitory_id:
+    if old_room.dormitory_id != new_room.dormitory_id:
     #   for net_device in net_devices:
     #        for ip_addr in net_device.ips:
-        ip_addr = net_dev.ip
+        assert len(net_dev.ips) == 1, u"A user should only have one ip!"
+        ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
         new_address = host_helper.get_free_ip(dormitory.get_subnets())
         new_subnet = host_helper.select_subnet_for_ip(new_address,
@@ -126,14 +127,16 @@ def move(user, dormitory, level, room_number, processing_user):
 
         ip_addr.change_ip(new_address, new_subnet)
 
-        newUserLogEntry = UserLogEntry(author_id=current_user.id,
+        ip_change_log_entry = UserLogEntry(author_id=processing_user.id,
             message=u"IPv4 von %s auf %s geändert" % (
             old_ip, new_address),
             timestamp=datetime.now(), user_id=user.id)
-        session.session.add(newUserLogEntry)
+        session.session.add(ip_change_log_entry)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
-    net_dev.patch_port = get_free_patchport(newRoom.patch_ports)
+    #moves the host in the new room and assign the belonging net_device to the new patch_port
+    user.hosts[0].room = new_room
+    net_dev.patch_port = get_free_patchport(new_room.patch_ports)
 
     session.session.commit()
     return user
