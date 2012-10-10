@@ -6018,6 +6018,15 @@ CREATE TABLE trafficvolume (
     CONSTRAINT traffic_types CHECK (type IN ('IN', 'OUT')),
     FOREIGN KEY(ip_id) REFERENCES ip (id)
 );
+CREATE TABLE semester (
+    id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    registration_fee INTEGER NOT NULL,
+    semester_fee INTEGER NOT NULL,
+    begin_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    PRIMARY KEY (id),
+);
 COMMIT;
 
 CREATE TABLE hostalias (
