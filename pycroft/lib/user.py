@@ -20,11 +20,12 @@ from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.properties import TrafficGroup
+from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
 
 
-def moves_in(name, login, dormitory, level, room_number, host_name, mac):
+def moves_in(name, login, dormitory, level, room_number, host_name, mac, current_semester):
 
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory_id=dormitory.id).one()
@@ -70,6 +71,34 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac):
     #TODO: add user to initial groups (create those memberships)
 
     #TODO: create financial account for user with negative balance
+    #adds the initial finance transactions to the user
+    finance_things = []
+
+    new_finance_account = FinanceAccount(name=u"Nutzerid: %i" % new_user.id,
+        type="LIABILITY", user=new_user)
+    new_transaction_registration_fee = Transaction(
+        message=u"Anmeldegebühren bei der AG DSN von Nutzer %s" % (
+        new_user.id, ), transaction_date=datetime.now())
+    new_transaction_semester_fee = Transaction(
+        message=u"Semestergebühren für das Semester %s von Nutzer %s" % (
+        current_semester.name, new_user.id), transaction_date=datetime.now())
+    new_split_registration_user = Split(
+        amount=current_semester.registration_fee, account=new_finance_account,
+        transaction=new_transaction_registration_fee)
+    new_split_registration_ag = Split(amount=-current_semester.registration_fee,
+        account=new_finance_account,
+        transaction=new_transaction_registration_fee)
+    new_split_semester_user = Split(amount=current_semester.semester_due,
+        account=new_finance_account, transaction=new_transaction_semester_fee)
+    new_split_semester_ag = Split(amount=-current_semester.semester_fee,
+        account=new_finance_account, transaction=new_transaction_semester_fee)
+
+    finance_things.append(new_finance_account, new_transaction_registration_fee,
+        new_transaction_semester_fee, new_split_registration_user,
+        new_split_registration_ag, new_split_semester_user,
+        new_split_semester_ag)
+
+    session.session.add_all(finance_things)
 
     #TODO: add membership that allows negative account balance for one month
 
@@ -186,3 +215,6 @@ def has_internet(user):
                     return False
     else:
         return False
+
+def get_current_semester():
+    pass
