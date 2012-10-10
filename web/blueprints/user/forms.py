@@ -10,6 +10,7 @@ from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
 from pycroft.model.hosts import Host, NetDevice
 from pycroft.model.properties import PropertyGroup
+from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields import DatePickerField
 from datetime import datetime
@@ -24,6 +25,9 @@ def host_query():
 
 def group_query():
     return PropertyGroup.q.order_by(PropertyGroup.name)
+
+def semester_query():
+    return Semester.q.order_by(Semester.name)
 
 
 class UserSearchForm(Form):
@@ -65,6 +69,8 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
+    semester = QuerySelectField(u"aktuelles Semester", get_label="name",
+        query_factory=semester_query)
 
 
 class hostCreateForm(Form):
