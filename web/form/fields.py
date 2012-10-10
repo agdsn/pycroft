@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
+from flask.ext.wtf import TextField
 from wtforms import fields
 import datetime
 
@@ -111,3 +112,9 @@ class LazyLoadSelectField(fields.SelectField):
 
     def pre_validate(self, form):
         pass
+
+
+
+class ReadonlyTextField(TextField):
+    def __call__(self, **kwargs):
+        return self.widget(self, disabled=True )
