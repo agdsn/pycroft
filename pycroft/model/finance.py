@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import datetime
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
@@ -20,6 +21,7 @@ from sqlalchemy import event
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
+    #LIABILITY=Forderung, EXPENSE=Verbindlichkeit, ASSET=Bestand, INCOME=Einnahme, EQUITY=Vermögen
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
                         name="financeaccounttypes"), nullable=False)
 
@@ -51,7 +53,7 @@ class JournalEntry(ModelBase):
 
 class Transaction(ModelBase):
     message = Column(Text(), nullable=False)
-    transaction_date = Column(DateTime, nullable=False)
+    transaction_date = Column(DateTime, nullable=False, default=datetime.datetime.now)
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
