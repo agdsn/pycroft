@@ -24,14 +24,14 @@ def do_convert():
         houses[wheim.wheim_id] = new_house
 
         for port in wheim.port_qry():
-            new_port = ports.PatchPort(name="%s/%s" % (port.etage, port.zimmernr))
+            new_room = dormitory.Room.q.filter_by(number=port.zimmernr,
+                level=port.etage,
+                dormitory=new_house).first()
+            if new_room is None:
+                new_room = dormitory.Room(number=port.zimmernr, level=port.etage, inhabitable=True, dormitory=new_house)
+                rooms.append(new_room)
+            new_port = ports.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
             patch_ports.append(new_port)
-            new_room = dormitory.Room(number=port.zimmernr,
-                                      level=port.etage,
-                                      inhabitable=True,
-                                      dormitory=new_house)
-            rooms.append(new_room)
-            new_port.room = new_room
 
             if port.ip not in switches:
                 pub_ip = port.ip.replace("10.10", "141.30")
