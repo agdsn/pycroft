@@ -6025,7 +6025,7 @@ CREATE TABLE semester (
     semester_fee INTEGER NOT NULL,
     begin_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    PRIMARY KEY (id),
+    PRIMARY KEY (id)
 );
 COMMIT;
 
