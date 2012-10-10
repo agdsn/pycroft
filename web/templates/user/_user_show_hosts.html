@@ -3,7 +3,7 @@
         <h3 class="row hoverable">
             <small style="float: right"><a class="" title="Löschen!" href="#"><i
                     class="icon-remove"></i></a></small>
-            <span class="span6">Host: {{ host.hostname }}</span>
+            <span class="span6"><a href="{{ url_for("infrastructure.host_show", host_id = host.id) }}">Host: {{ host.hostname }}</a></span>
             <small class="span2">Zw 41a/2/A205</small>
             <small class="span1">Alias: 2</small>
             <small class="span1">IPs: 2</small>

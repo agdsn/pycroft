@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <table class="table table-striped">
+        <tr>
+            <th>Hostname</th>
+            <th>Nutzer</th>
+            <th>Raum</th>
+        </tr>
+    {% for host in hosts %}
+        <tr>
+            <td><a href="{{ url_for(".host_show", host_id=host.id) }}">{{ host.hostname }}</a></td>
+            <td><a href="{{ url_for("user.user_show", user_id=host.user_id) }}">{{host.user.name}}</a></td>
+            {% if host.room is not none %}
+                <td><a href="{{ url_for("dormitories.room_show", room_id=host.room_id) }}">{{host.room.dormitory.short_name}} {{host.room.level}}-{{host.room.number}}</a></td>
+            {% else %}
+                <td>no room</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </table>
+{% endblock %}

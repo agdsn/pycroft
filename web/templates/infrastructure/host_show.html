@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block content %}
+        <ul class="unstyled">
+        {% for alias in host.aliases %}
+            <li>{{alias.discriminator}} - {{alias.id}} -- {{alias.gen_entry}}
+                {% if alias.discriminator != "arecord" %}
+                    <a href="{{ url_for(".edit_alias", host_id=host.id, alias_id=alias.id) }}">ändern</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+{% endblock %}

@@ -1,4 +1,5 @@
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
+from flask.ext.wtf import TextField
 from wtforms import fields
 import datetime
 
@@ -108,3 +109,9 @@ class LazyLoadSelectField(fields.SelectField):
 
     def pre_validate(self, form):
         pass
+
+
+
+class ReadonlyTextField(TextField):
+    def __call__(self, **kwargs):
+        return self.widget(self, disabled=True )
