@@ -15,7 +15,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Float, Date
+from sqlalchemy.types import Enum, Integer, Text, DateTime, String
 from sqlalchemy import event
 
 
@@ -86,7 +86,7 @@ class Split(ModelBase):
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    semester_fee = Column(Float, nullable=False)
-    registration_fee = Column(Float, nullable=False)
-    begin_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
+    semester_fee = Column(Integer, nullable=False)
+    registration_fee = Column(Integer, nullable=False)
+    begin_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
