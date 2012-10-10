@@ -6019,3 +6019,81 @@ CREATE TABLE trafficvolume (
     FOREIGN KEY(ip_id) REFERENCES ip (id)
 );
 COMMIT;
+
+CREATE TABLE hostalias (
+    id INTEGER NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    host_id INTEGER NOT NULL,
+
+    PRIMARY KEY (id),
+    FOREIGN KEY(host_id) REFERENCES host (id)
+);
+
+CREATE TABLE arecord (
+    id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    time_to_live INTEGER,
+    address_id INTEGER NOT NULL,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id),
+    FOREIGN KEY(address_id) REFERENCES ip (id)
+);
+
+CREATE TABLE aaaarecord (
+    id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    time_to_live INTEGER,
+    address_id INTEGER NOT NULL,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id),
+    FOREIGN KEY(address_id) REFERENCES ip (id)
+);
+
+CREATE TABLE mxrecord (
+    id INTEGER NOT NULL,
+    server VARCHAR(255) NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    priority INTEGER NOT NULL,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id)
+);
+
+CREATE TABLE cnamerecord (
+    id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    alias_for VARCHAR(255) NOT NULL,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id)
+);
+
+CREATE TABLE nsrecord (
+    id INTEGER NOT NULL,
+    domain VARCHAR(255) NOT NULL,
+    server VARCHAR(255) NOT NULL,
+    time_to_live INTEGER,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id)
+);
+
+CREATE TABLE srvrecord (
+    id INTEGER NOT NULL,
+    service VARCHAR(255) NOT NULL,
+    time_to_live INTEGER,
+    priority INTEGER NOT NULL,
+    weight INTEGER NOT NULL,
+    port INTEGER NOT NULL,
+    target VARCHAR(255) NOT NULL,
+
+    FOREIGN KEY(id) REFERENCES hostalias (id)
+);
+
+INSERT INTO "hostalias" VALUES(1, "arecord", 18);
+INSERT INTO "hostalias" VALUES(2, "mxrecord", 18);
+INSERT INTO "hostalias" VALUES(3, "cnamerecord", 18);
+INSERT INTO "hostalias" VALUES(4, "nsrecord", 18);
+INSERT INTO "hostalias" VALUES(5, "srvrecord", 18);
+INSERT INTO "arecord" VALUES(1, "arecorddummy", NULL, 1);
+INSERT INTO "mxrecord" VALUES(2, "serverdummy", "domaindummy", 10);
+INSERT INTO "cnamerecord" VALUES(3, "anotherdummy", "arecorddummy");
+INSERT INTO "nsrecord" VALUES(4, "domaindummy", "serverdummy", NULL);
+INSERT INTO "srvrecord" VALUES(5, "servicedummy", NULL, 10, 100, 22, "targetdummy");
