@@ -86,7 +86,7 @@ class Split(ModelBase):
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    semester_due = Column(Float, nullable=False)
+    semester_fee = Column(Float, nullable=False)
     registration_fee = Column(Float, nullable=False)
     begin_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
