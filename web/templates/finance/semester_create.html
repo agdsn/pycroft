@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block page_css %}
+    <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
+{% endblock %}
+
+{% import "macros/forms.html" as forms %}
+{% block content %}
+    {{ forms.simple_form(form, '', url_for('.semester_create')  ) }}
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript" src="{{ url_for("static", filename="datepicker/js/bootstrap-datepicker.js") }}"></script>
+    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
+    <script type="text/javascript">
+        $('[data-role=datepicker]').datepicker();
+        $('[data-role=today-btn]').todayButton();
+    </script>
+{% endblock %}

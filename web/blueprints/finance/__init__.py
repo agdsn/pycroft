@@ -8,8 +8,10 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for
 from web.blueprints.navigation import BlueprintNavigation
+from forms import SemesterCreateForm
+from pycroft.lib.finance import semester_create
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
@@ -32,3 +34,21 @@ def accounts():
 @nav.navigate(u"Transaktionen")
 def transactions():
     return render_template('finance/base.html')
+
+@bp.route("/semester")
+@nav.navigate(u"Semesterliste")
+def semester_list():
+    return "foo"
+
+@bp.route('/semester/create', methods=("GET", "POST"))
+@nav.navigate(u"Erstelle Semester")
+def semester_create():
+    form = SemesterCreateForm()
+    if form.validate_on_submit():
+        semester_create(name=form.name.data,
+        registration_fee=form.registration_fee.data,
+        semester_fee=form.semester_fee.data,
+        begin_date=form.begin_date.data,
+        end_date=form.end_date.data)
+        return redirect(url_for(".semester_list"))
+    return render_template('finance/semester_create.html', form=form)
