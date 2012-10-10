@@ -90,3 +90,13 @@ class Semester(ModelBase):
     registration_fee = Column(Integer, nullable=False)
     begin_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
+
+    registration_fee_account_id = Column(Integer,
+        ForeignKey("financeaccount.id"),
+        nullable=False)
+    registration_fee_account = relationship("FinanceAccount")
+
+    semester_fee_account_id = Column(Integer,
+        ForeignKey("financeaccount.id"),
+        nullable=False)
+    semester_fee_account = relationship("FinanceAccount")
