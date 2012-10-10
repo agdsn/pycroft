@@ -23,9 +23,11 @@ def semester_create(name, registration_fee, semester_fee, begin_date, end_date):
         begin_date=begin_date,
         end_date=end_date)
 
-    new_registration_fee_account = FinanceAccount("Anmeldegebühr %s" % name)
+    new_registration_fee_account = FinanceAccount("Anmeldegebühr %s" % name,
+                                            type="EXPENSE")
 
-    new_semester_fee_account = FinanceAccount("Semestergebühr %s" % name)
+    new_semester_fee_account = FinanceAccount("Semestergebühr %s" % name,
+                                            type="EXPENSE")
 
     session.session.add(new_registration_fee_account)
     session.session.add(new_semester_fee_account)
