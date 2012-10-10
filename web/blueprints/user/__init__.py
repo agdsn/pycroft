@@ -193,7 +193,7 @@ def create():
         try:
             new_user = lib.user.moves_in(form.name.data, form.login.data,
                 form.dormitory.data, form.level.data, form.room_number.data,
-                form.host.data, form.mac.data)
+                form.host.data, form.mac.data, form.semester.data)
 
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
