@@ -70,9 +70,9 @@ class ARecord(HostAlias):
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
-            return u"%s for %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
+            return u"%s points to %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
         else:
-            return u"%s for %s" % (self.name, self.address.address)
+            return u"%s points to %s" % (self.name, self.address.address)
 
     @property
     def gen_entry(self):
@@ -116,9 +116,9 @@ class AAAARecord(HostAlias):
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
-            return u"%s for %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
+            return u"%s points to %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
         else:
-            return u"%s for %s" % (self.name, self.address.address)
+            return u"%s points to %s" % (self.name, self.address.address)
 
     @property
     def gen_entry(self):
@@ -151,7 +151,7 @@ class MXRecord(HostAlias):
     @property
     def information_human(self):
         "returns all information readable for a human"
-        return u"%s is server for %s with priority %s" % (self.server, self.domain, self.priority)
+        return u"%s is mail-server for %s with priority %s" % (self.server, self.domain, self.priority)
 
     @property
     def gen_entry(self):
