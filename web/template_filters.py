@@ -10,8 +10,11 @@
 
 
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from pycroft.model.session import session
+from pycroft.model.accounting import TrafficVolume
+from pycroft.model.hosts import Host, Ip
 
 _filter_registry = {}
 
@@ -86,6 +89,29 @@ def timesince_filter(dt, default="just now"):
             return "vor %d %s" % (period, singular if period == 1 else plural)
 
     return default
+
+
+@template_filter("host_traffic")
+def host_traffic_filter(host):
+    traffic_timespan = datetime.now() - timedelta(days=7)
+
+    trafficvolumes = session.query(
+        TrafficVolume
+    ).join(
+        TrafficVolume.ip
+    ).join(
+        Ip.host
+    ).filter(
+        Host.id == host.id
+    ).filter(
+        TrafficVolume.timestamp > traffic_timespan
+    ).all()
+
+    traffic_sum = 0
+    for traffic in trafficvolumes:
+        traffic_sum += ( traffic.size / 1024 / 1024 )
+
+    return u"%s MB" % (traffic_sum, )
 
 
 def register_filters(app):
