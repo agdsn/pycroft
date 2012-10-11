@@ -8,7 +8,7 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
@@ -16,10 +16,11 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice, Ip
 from pycroft.model.logging import UserLogEntry
-from pycroft.model.properties import TrafficGroup
+from pycroft.model.properties import TrafficGroup, Membership, Group
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
+from pycroft.lib import user_config
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac, current_semester):
@@ -66,6 +67,23 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
     session.session.add(new_ip)
 
     #TODO: add user to initial groups (create those memberships)
+    for initial_group in user_config.initial_groups:
+        assert isinstance(initial_group["dates"]["start_date"], timedelta)
+        assert not initial_group["dates"]["start_date"] < timedelta(0)
+        group = Group.q.filter(Group.name == initial_group["group_name"]).one()
+        new_membership = Membership(
+            start_date=datetime.now() + initial_group["dates"]["start_date"],
+            group=group,
+            user=new_user)
+        if initial_group["dates"]["end_date"] is 0:
+            assert not initial_group["dates"]["end_date"] < 0
+        else:
+            assert isinstance(initial_group["dates"]["end_date"], timedelta)
+            assert not initial_group["dates"]["end_date"] < timedelta(0)
+            new_membership.end_date = datetime.now() + initial_group["dates"][
+                                                     "end_date"]
+
+
 
     #TODO: create financial account for user with negative balance
     #adds the initial finance transactions to the user

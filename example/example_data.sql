@@ -6109,3 +6109,8 @@ INSERT INTO "mxrecord" VALUES(2, "serverdummy", "domaindummy", 10);
 INSERT INTO "cnamerecord" VALUES(3, "anotherdummy", "arecorddummy");
 INSERT INTO "nsrecord" VALUES(4, "domaindummy", "serverdummy", NULL);
 INSERT INTO "srvrecord" VALUES(5, "servicedummy", NULL, 10, 100, 22, "targetdummy");
+
+INSERT INTO "group" VALUES(2,'standart_traffic','trafficgroup');
+INSERT INTO "group" VALUES(3,'one_month_negative_balance','propertygroup');
+INSERT INTO "trafficgroup" VALUES(2,7000000000);
+INSERT INTO "propertygroup" VALUES(3);
