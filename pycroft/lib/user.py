@@ -26,7 +26,22 @@ from pycroft.model.user import User
 from pycroft.lib import user_config
 
 
-def moves_in(name, login, dormitory, level, room_number, host_name, mac, current_semester, processor):
+def moves_in(name, login, dormitory, level, room_number, host_name, mac,
+             current_semester, initial_groups):
+    """
+    This function creates a new user, assign him to a room and creates some
+    inital groups and transactions.
+    :param name: The full name of the user. (Max Mustermann)
+    :param login: The unix login for the user.
+    :param dormitory: The dormitory the user moves in.
+    :param level: The level the user moves in.
+    :param room_number: The room number the user moves in.
+    :param host_name: An optional Hostname for the users pc.
+    :param mac: The mac address of the users pc.
+    :param current_semester: The semester the user moves in.
+    :param initial_groups: The groups a user is member from beginning.
+    :return: The new user object.
+    """
 
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory_id=dormitory.id).one()
