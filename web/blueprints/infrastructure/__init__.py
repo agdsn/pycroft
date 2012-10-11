@@ -40,37 +40,24 @@ def switches():
         switches=switches_list)
 
 
-@bp.route('/hosts')
-@nav.navigate(u"Hosts")
-def hosts():
-    hosts_list = Host.q.all()
-    return render_template('infrastructure/hosts_list.html', page_title=u"Liste der Hosts", hosts=hosts_list)
-
-
-@bp.route('/host/show/<int:host_id>')
-def host_show(host_id):
-    host = Host.q.get(host_id)
-    return render_template('infrastructure/host_show.html', page_title=u"Host: " + host.hostname, host=host )
-
-
-@bp.route('/host/<int:host_id>/alias/<int:alias_id>/edit', methods=['GET', 'POST'])
-def edit_alias(host_id, alias_id):
+@bp.route('/user/<int:user_id>/edit_record/<int:alias_id>', methods=['GET', 'POST'])
+def edit_record(user_id, alias_id):
     alias = HostAlias.q.get(alias_id)
     if alias.discriminator == "cnamerecord":
         form = CNameRecordEditForm()
-        form.alias_for.data = alias.alias_for
+        form.alias_for.data = alias.alias_for.name
 
         if form.validate_on_submit():
             alias.name = form.name.data
             session.commit()
             flash(u"Alias geändert", "success")
-            return redirect(url_for(".host_show", host_id=host_id))
+            return redirect(url_for("user.user_show", user_id=user_id))
 
         return render_template('infrastructure/cnamerecord_edit.html',
-                form=form, host_id=host_id,
-                page_title=u"Alias ändern für " + alias.alias_for)
+                form=form, user_id=user_id,
+                page_title=u"Alias ändern für " + alias.alias_for.name)
 
-    return redirect(url_for(".host_show", host_id=host_id))
+    return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/switch/show/<switch_id>')
