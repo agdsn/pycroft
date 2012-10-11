@@ -2,8 +2,8 @@ PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE destinationport (
 	id INTEGER NOT NULL, 
-	name VARCHAR(4) NOT NULL, 
-	type VARCHAR(15) NOT NULL, 
+	name VARCHAR(4) NOT NULL,
+	type VARCHAR(15) NOT NULL,
 	PRIMARY KEY (id)
 );
 INSERT INTO "destinationport" VALUES(1,'D20','switch_port');
@@ -5938,7 +5938,8 @@ CREATE TABLE journalentry (
 );
 CREATE TABLE "transaction" (
 	id INTEGER NOT NULL, 
-	message TEXT NOT NULL, 
+	message TEXT NOT NULL,
+	transaction_date DATETIME NOT NULL,
 	journal_entry_id INTEGER, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id)
@@ -5976,12 +5977,10 @@ CREATE TABLE financeaccount (
 CREATE TABLE split (
 	id INTEGER NOT NULL, 
 	amount INTEGER NOT NULL, 
-	from_account_id INTEGER NOT NULL, 
-	to_account_id INTEGER NOT NULL, 
+	account_id INTEGER NOT NULL,
 	transaction_id INTEGER NOT NULL, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(from_account_id) REFERENCES financeaccount (id), 
-	FOREIGN KEY(to_account_id) REFERENCES financeaccount (id), 
+	FOREIGN KEY(account_id) REFERENCES financeaccount (id),
 	FOREIGN KEY(transaction_id) REFERENCES "transaction" (id)
 );
 CREATE TABLE userlogentry (
@@ -6025,7 +6024,11 @@ CREATE TABLE semester (
     semester_fee INTEGER NOT NULL,
     begin_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    PRIMARY KEY (id)
+    registration_fee_account_id INTEGER NOT NULL,
+    semester_fee_account_id INTEGER NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY(registration_fee_account_id) REFERENCES financeaccount (id),
+    FOREIGN KEY(semester_fee_account_id) REFERENCES financeaccount (id)
 );
 COMMIT;
 
