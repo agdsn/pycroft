@@ -20,7 +20,6 @@ import re
 
 
 class Host(ModelBase):
-    hostname = Column(String(255))
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -158,8 +157,22 @@ class MXRecord(HostAlias):
 class CNameRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     name = Column(String(255), nullable=False)
-    alias_for = Column(Integer, nullable=False)
-    __mapper_args__ = {'polymorphic_identity':'cnamerecord'}
+
+    alias_for_id = Column(Integer, ForeignKey("hostalias.id"), nullable=False)
+    alias_for = relationship("HostAlias", primaryjoin=alias_for_id==HostAlias.id)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'cnamerecord',
+        'inherit_condition': (id == HostAlias.id)
+    }
+
+    @validates('alias_for')
+    def validate_alias_for(self, _, value):
+        # check if the alias is of the correct type! just arecord and
+        # aaaarecord are allowed
+        assert value.discriminator == "arecord" or \
+               value.discriminator == "aaaarecord"
+        return value
 
     @property
     def name_human(self):
@@ -169,11 +182,11 @@ class CNameRecord(HostAlias):
     @property
     def information_human(self):
         "returns all information readable for a human"
-        return u"%s is alias for %s" % (self.name, self.alias_for)
+        return u"%s is alias for %s" % (self.name, self.alias_for.name)
 
     @property
     def gen_entry(self):
-        return u"%s IN CNAME %s" % (self.name, self.alias_for)
+        return u"%s IN CNAME %s" % (self.name, self.alias_for.name)
 
 
 class NSRecord(HostAlias):
