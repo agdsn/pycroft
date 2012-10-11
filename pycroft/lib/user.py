@@ -123,8 +123,24 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
     return new_user
 
 #TODO ensure serializability
-def move(user, dormitory, level, room_number, processor):
-    # change the room of the user
+def move(user, dormitory, level, room_number, processing_user):
+    """
+    Moves the user into another room.
+    :param user: The user to be moved.
+    :param dormitory: The new dormitory.
+    :param level: The level of the new room.
+    :param room_number: The number of the new room.
+    :param processing_user: The user who is currently logged in.
+    :return: The user object of the moved user.
+    """
+
+    def get_free_patchport(patch_ports):
+        free_patch_ports = []
+        for patch_port in patch_ports:
+            if patch_port.net_device == None:
+                free_patch_ports.append(patch_port)
+        assert len(free_patch_ports) > 0
+        return free_patch_ports[0]
 
     old_room = user.room
     new_room = Room.q.filter_by(number=room_number,
