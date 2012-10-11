@@ -207,6 +207,7 @@ def move(user, dormitory, level, room_number, processing_user):
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
     user.hosts[0].room = new_room
+    net_dev.patch_port = get_free_patchport(new_room.patch_ports)
 
     session.session.commit()
     return user
