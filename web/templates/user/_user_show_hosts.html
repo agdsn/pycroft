@@ -5,10 +5,10 @@
 #}
 {% if user.hosts %}
     {% for host in user.hosts %}
-        <h3 class="row hoverable">
+        <h4 class="row hoverable">
             <small style="float: right"><a class="" title="Löschen!" href="#"><i
                     class="icon-remove"></i></a></small>
-            <span class="span6">Host: <a href="{{ url_for("infrastructure.host_show", host_id = host.id) }}">{{ host.hostname }}</a></span>
+            <span class="span6">Host: {{ host|host_cname }} ({{ host|host_name }})</span>
             <small class="span2">
                 {% if host.room %}
                     {{ host.room.dormitory.short_name }} {{ host.room.level }}-{{ host.room.number }}
@@ -31,15 +31,15 @@
                 {% endif %}
             </small>
             <small class="span1">Traffic: {{ host|host_traffic }}</small>
-        </h3>
+        </h4>
 
         {% if host.aliases %}
-            <h4>
-                <span class="span5">Records</span>
-                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseAliases">
-                    <i class="icon-plus-sign"></i></a></small>
-            </h4><br/>
-            <div class="accordion-toggle collapse" id="collapseAliases">
+            <h5>
+                <span class="span5">Records <small><a class="" title="Hinzufügen" href="#"><i class="icon-plus-sign"></i></a></small></span>
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseAliases{{ host.id }}">
+                    <i id="icon_collapseAliases{{ host.id }} "class="icon-arrow-down"></i></a></small>
+            </h5><br/>
+            <div class="accordion-toggle collapse" id="collapseAliases{{ host.id }}">
                 <table class="table">
                      <thead>
                      <tr>
@@ -54,7 +54,7 @@
                         <td>{{ alias.name_human }}</td>
                         <td>{{ alias.information_human }}</td>
                         {% if alias.name_human != "ARecord" %}
-                            <td style="text-align: right"><a href="{{ url_for("infrastructure.edit_alias", host_id=host.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
+                            <td style="text-align: right"><a href="{{ url_for("infrastructure.edit_record", user_id=user.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
                         {% else %}
                             <td></td>
                         {% endif %}
@@ -65,14 +65,13 @@
             </div>
         {% endif %}
 
-
         {% if host.ips %}
-            <h4>
+            <h5>
                 <span class="span5">IPs</span>
-                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseIPs">
-                    <i class="icon-plus-sign"></i></a></small>
-            </h4><br/>
-            <div class="accordion-toggle collapse" id="collapseIPs">
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseIPs{{ host.id }}">
+                    <i id="icon_collapseIPs{{ host.id }}" class="icon-arrow-down"></i></a></small>
+            </h5><br/>
+            <div class="accordion-toggle collapse" id="collapseIPs{{ host.id }}">
                 <table class="table">
                     <thead>
                     <tr>
