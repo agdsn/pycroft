@@ -69,8 +69,6 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
 
     #TODO: create financial account for user with negative balance
     #adds the initial finance transactions to the user
-    finance_things = []
-
     new_finance_account = FinanceAccount(name=u"Nutzerid: %i" % new_user.id,
         type="LIABILITY", user=new_user)
     new_transaction_registration_fee = Transaction(
@@ -79,21 +77,23 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
     new_transaction_semester_fee = Transaction(
         message=u"Semestergebühren für das Semester %s von Nutzer %s" % (
         current_semester.name, new_user.id), transaction_date=datetime.now())
-    new_split_registration_user = Split(
-        amount=current_semester.registration_fee, account=new_finance_account,
-        transaction=new_transaction_registration_fee)
-    new_split_registration_ag = Split(amount=-current_semester.registration_fee,
+    new_split_registration_user = Split(amount=current_semester.registration_fee,
         account=new_finance_account,
         transaction=new_transaction_registration_fee)
-    new_split_semester_user = Split(amount=current_semester.semester_due,
-        account=new_finance_account, transaction=new_transaction_semester_fee)
+    new_split_registration_ag = Split(amount=-current_semester.registration_fee,
+        account=current_semester.registration_fee_account,
+        transaction=new_transaction_registration_fee)
+    new_split_semester_user = Split(amount=current_semester.semester_fee,
+        account=new_finance_account,
+        transaction=new_transaction_semester_fee)
     new_split_semester_ag = Split(amount=-current_semester.semester_fee,
-        account=new_finance_account, transaction=new_transaction_semester_fee)
+        account=current_semester.semester_fee_account,
+        transaction=new_transaction_semester_fee)
 
-    finance_things.append(new_finance_account, new_transaction_registration_fee,
+    finance_things = [new_finance_account, new_transaction_registration_fee,
         new_transaction_semester_fee, new_split_registration_user,
         new_split_registration_ag, new_split_semester_user,
-        new_split_semester_ag)
+        new_split_semester_ag]
 
     session.session.add_all(finance_things)
 

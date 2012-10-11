@@ -11,7 +11,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm
-from pycroft.lib.finance import semester_create
+from pycroft.lib import finance
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
@@ -45,7 +45,7 @@ def semester_list():
 def semester_create():
     form = SemesterCreateForm()
     if form.validate_on_submit():
-        semester_create(name=form.name.data,
+        finance.semester_create(name=form.name.data,
         registration_fee=form.registration_fee.data,
         semester_fee=form.semester_fee.data,
         begin_date=form.begin_date.data,
