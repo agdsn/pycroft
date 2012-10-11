@@ -1,1 +1,24 @@
-Noch nicht implementiert!
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th>Konto</th>
+        <th>Betrag</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for account in user.finance_accounts %}
+        {% for transaction in account.transactions %}
+            {% for split in transaction.splits %}
+                <tr>
+                    <td>
+                        {{ split.account.name }}
+                    </td>
+                    <td>
+                        {{ split.amount }}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
