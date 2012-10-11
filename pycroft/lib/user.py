@@ -12,6 +12,7 @@ This module contains.
 """
 
 from datetime import datetime, timedelta
+from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.accounting import TrafficVolume
