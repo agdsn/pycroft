@@ -3,12 +3,56 @@
         <h3 class="row hoverable">
             <small style="float: right"><a class="" title="Löschen!" href="#"><i
                     class="icon-remove"></i></a></small>
-            <span class="span6"><a href="{{ url_for("infrastructure.host_show", host_id = host.id) }}">Host: {{ host.hostname }}</a></span>
-            <small class="span2">Zw 41a/2/A205</small>
-            <small class="span1">Alias: 2</small>
-            <small class="span1">IPs: 2</small>
-            <small>Traffic: 30%</small>
+            <span class="span6">Host: <a href="{{ url_for("infrastructure.host_show", host_id = host.id) }}">{{ host.hostname }}</a></span>
+            <small class="span2">
+                {% if host.room %}
+                    {{ host.room.dormitory.short_name }} {{ host.room.level }}-{{ host.room.number }}
+                {% else %}
+                    no room
+                {% endif %}
+            </small>
+            <small class="span1">Alias:
+                {%  if host.aliases %}
+                    {{ host.aliases|length }}
+                {% else %}
+                    0
+                {% endif %}
+            </small>
+            <small class="span1">IPs:
+                {% if host.ips %}
+                    {{ host.ips|length }}</small>
+                {% else %}
+                    0
+                {% endif %}
+            </small>
+            <small class="span1">Traffic: {{ host|host_traffic }}</small>
         </h3>
+
+        {% if host.aliases %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Information</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for alias in host.aliases %}
+                    <tr>
+                        <td>{{ alias.name_human }}</td>
+                        <td>{{ alias.information_human }}</td>
+                        {% if alias.name_human != "ARecord" %}
+                            <td style="text-align: right"><a href="{{ url_for("infrastructure.edit_alias", host_id=host.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% endif %}
 
         {% if host.ips %}
             <table class="table">

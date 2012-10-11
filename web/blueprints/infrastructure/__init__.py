@@ -56,6 +56,7 @@ def edit_alias(host_id, alias_id):
     if alias.discriminator == "cnamerecord":
         form = CNameRecordEditForm()
         form.alias_for.data = alias.alias_for
+
         if form.validate_on_submit():
             alias.name = form.name.data
             session.commit()
