@@ -34,17 +34,23 @@
         </h3>
 
         {% if host.aliases %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Information</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for alias in host.aliases %}
-                    <tr>
+            <h4>
+                <span class="span5">Records</span>
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseAliases">
+                    <i class="icon-plus-sign"></i></a></small>
+            </h4><br/>
+            <div class="accordion-toggle collapse" id="collapseAliases">
+                <table class="table">
+                     <thead>
+                     <tr>
+                        <th>Type</th>
+                        <th>Information</th>
+                        <th></th>
+                     </tr>
+                     </thead>
+                     <tbody>
+                     {% for alias in host.aliases %}
+                     <tr>
                         <td>{{ alias.name_human }}</td>
                         <td>{{ alias.information_human }}</td>
                         {% if alias.name_human != "ARecord" %}
@@ -52,38 +58,44 @@
                         {% else %}
                             <td></td>
                         {% endif %}
-                    </tr>
-                {% endfor %}
+                     </tr>
+                     {% endfor %}
                 </tbody>
-            </table>
-
+                </table>
+            </div>
         {% endif %}
 
+
         {% if host.ips %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Mac-Adresse</th>
-                    <th>IP-Adresse</th>
-                    <th>Switch</th>
-                    <th>Port(s)</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for ip in host.ips %}
+            <h4>
+                <span class="span5">IPs</span>
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseIPs">
+                    <i class="icon-plus-sign"></i></a></small>
+            </h4><br/>
+            <div class="accordion-toggle collapse" id="collapseIPs">
+                <table class="table">
+                    <thead>
                     <tr>
-                        <td>{{ ip.net_device.mac }}</td>
-                        <td>{{ ip.address }}</td>
-                        <td>TODO</td>
-                        <td>TODO</td>
-                        <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
+                        <th>Mac-Adresse</th>
+                        <th>IP-Adresse</th>
+                        <th>Switch</th>
+                        <th>Port(s)</th>
+                        <th></th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>Keine IP-Adressen vergeben!</p>
+                    </thead>
+                    <tbody>
+                    {% for ip in host.ips %}
+                        <tr>
+                            <td>{{ ip.net_device.mac }}</td>
+                            <td>{{ ip.address }}</td>
+                            <td>TODO</td>
+                            <td>TODO</td>
+                            <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% endif %}
         <p>&nbsp;</p>
     {% endfor %}
