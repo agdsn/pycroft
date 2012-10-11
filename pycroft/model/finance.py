@@ -91,9 +91,11 @@ class Semester(ModelBase):
     registration_fee_account_id = Column(Integer,
         ForeignKey("financeaccount.id"),
         nullable=False)
-    registration_fee_account = relationship("FinanceAccount")
+    registration_fee_account = relationship("FinanceAccount",
+        primaryjoin="FinanceAccount.id==Semester.registration_fee_account_id")
 
     semester_fee_account_id = Column(Integer,
         ForeignKey("financeaccount.id"),
         nullable=False)
-    semester_fee_account = relationship("FinanceAccount")
+    semester_fee_account = relationship("FinanceAccount",
+        primaryjoin="FinanceAccount.id==Semester.semester_fee_account_id")
