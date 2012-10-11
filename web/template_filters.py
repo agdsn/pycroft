@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 from pycroft.model.session import session
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.hosts import Host, Ip
+from pycroft.model.hosts import Host, Ip, ARecord, CNameRecord
 
 _filter_registry = {}
 
@@ -112,6 +112,33 @@ def host_traffic_filter(host):
         traffic_sum += ( traffic.size / 1024 / 1024 )
 
     return u"%s MB" % (traffic_sum, )
+
+
+@template_filter("host_name")
+def host_name_filter(host):
+    arecords = session.query(
+        ARecord
+    ).filter(
+        ARecord.host_id == host.id
+    ).all()
+
+    if arecords:
+        return arecords[0].name
+    else:
+        return "NoName"
+
+@template_filter("host_cname")
+def host_cname_filter(host):
+    cnamerecords = session.query(
+        CNameRecord
+    ).filter(
+        CNameRecord.host_id == host.id
+    ).all()
+
+    if cnamerecords:
+        return cnamerecords[0].name
+    else:
+        return "NoCName"
 
 
 def register_filters(app):
