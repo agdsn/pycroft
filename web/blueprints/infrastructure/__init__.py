@@ -174,7 +174,7 @@ def cnamerecord_create(user_id, host_id):
 
         return redirect(url_for("user.user_show", user_id=user_id))
 
-    return render_template('infrastructure/record_create.html', form=form,
+    return render_template('infrastructure/recordtype_create.html', form=form,
         user_id=user_id, host_id=host_id,
         page_title=u"Neuen CNameRecord erzeugen")
 
