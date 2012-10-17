@@ -6112,7 +6112,7 @@ INSERT INTO "hostalias" VALUES(5, "arecord", 2);
 INSERT INTO "hostalias" VALUES(6, "cnamerecord", 2);
 INSERT INTO "arecord" VALUES(5, "whdd254", NULL, 1);
 
-INSERT INTO "group" VALUES(2,'standard_traffic','trafficgroup');
+INSERT INTO "group" VALUES(2,'standart_traffic','trafficgroup');
 INSERT INTO "group" VALUES(3,'one_month_negative_balance','propertygroup');
 INSERT INTO "trafficgroup" VALUES(2,7000000000);
 INSERT INTO "propertygroup" VALUES(3);
