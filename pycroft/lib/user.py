@@ -27,7 +27,7 @@ from pycroft.lib import user_config
 
 
 def moves_in(name, login, dormitory, level, room_number, host_name, mac,
-             current_semester, initial_groups):
+             current_semester, processor):
     """
     This function creates a new user, assign him to a room and creates some
     inital groups and transactions.
@@ -145,7 +145,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac,
     return new_user
 
 #TODO ensure serializability
-def move(user, dormitory, level, room_number, processing_user):
+def move(user, dormitory, level, room_number, processor):
     """
     Moves the user into another room.
     :param user: The user to be moved.
@@ -155,14 +155,6 @@ def move(user, dormitory, level, room_number, processing_user):
     :param processing_user: The user who is currently logged in.
     :return: The user object of the moved user.
     """
-
-    def get_free_patchport(patch_ports):
-        free_patch_ports = []
-        for patch_port in patch_ports:
-            if patch_port.net_device == None:
-                free_patch_ports.append(patch_port)
-        assert len(free_patch_ports) > 0
-        return free_patch_ports[0]
 
     old_room = user.room
     new_room = Room.q.filter_by(number=room_number,
@@ -214,7 +206,6 @@ def move(user, dormitory, level, room_number, processing_user):
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
     user.hosts[0].room = new_room
-    net_dev.patch_port = get_free_patchport(new_room.patch_ports)
 
     session.session.commit()
     return user
