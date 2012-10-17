@@ -237,8 +237,7 @@ def move(user_id):
 
     if form.validate_on_submit():
         edited_user = lib.user.move(user, form.dormitory.data,
-            form.level.data, form.room_number.data, current_user,
-            lib.user_config.initial_groups)
+            form.level.data, form.room_number.data, current_user)
 
         flash(u'Benutzer umgezogen', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
