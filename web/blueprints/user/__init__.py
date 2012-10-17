@@ -10,7 +10,6 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 from pycroft import lib
@@ -196,7 +195,7 @@ def create():
         try:
             new_user = lib.user.moves_in(form.name.data, form.login.data,
                 form.dormitory.data, form.level.data, form.room_number.data,
-                form.host.data, form.mac.data, form.semester.data)
+                form.host.data, form.mac.data, form.semester.data, current_user)
 
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
@@ -260,7 +259,7 @@ def edit_name(user_id):
         form.name.data = user.name
 
     if form.validate_on_submit():
-        edited_user = lib.user.edit_name(user, form.name.data)
+        edited_user = lib.user.edit_name(user, form.name.data, current_user)
 
         flash(u'Benutzername geändert', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
