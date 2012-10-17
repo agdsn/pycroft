@@ -11,13 +11,15 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host_helper
 from pycroft.model.hosts import Switch
-from pycroft.model.hosts import Host
-from pycroft.model.hosts import HostAlias
+from pycroft.model.hosts import HostAlias, CNameRecord
 from pycroft.model.ports import SwitchPort
 from pycroft.model.session import session
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm
+from web.blueprints.infrastructure.forms import CNameRecordCreateForm
+from web.blueprints.infrastructure.forms import RecordCreateForm
+from web.blueprints.infrastructure.forms import arecords_query
 
 bp = Blueprint('infrastructure', __name__, )
 nav = BlueprintNavigation(bp, "Infrastruktur")
@@ -37,36 +39,156 @@ def switches():
         switches=switches_list)
 
 
-@bp.route('/hosts')
-@nav.navigate(u"Hosts")
-def hosts():
-    hosts_list = Host.q.all()
-    return render_template('infrastructure/hosts_list.html', page_title=u"Liste der Hosts", hosts=hosts_list)
-
-
-@bp.route('/host/show/<int:host_id>')
-def host_show(host_id):
-    host = Host.q.get(host_id)
-    return render_template('infrastructure/host_show.html', page_title=u"Host: " + host.hostname, host=host )
-
-
-@bp.route('/host/<int:host_id>/alias/<int:alias_id>/edit', methods=['GET', 'POST'])
-def edit_alias(host_id, alias_id):
+@bp.route('/user/<int:user_id>/record_delete/<int:alias_id>')
+def record_delete(user_id, alias_id):
     alias = HostAlias.q.get(alias_id)
-    if alias.discriminator == "cnamerecord":
-        form = CNameRecordEditForm()
-        form.alias_for.data = alias.alias_for
-        if form.validate_on_submit():
-            alias.name = form.name.data
-            session.commit()
-            flash(u"Alias geändert", "success")
-            return redirect(url_for(".host_show", host_id=host_id))
 
-        return render_template('infrastructure/cnamerecord_edit.html',
-                form=form, host_id=host_id,
-                page_title=u"Alias ändern für " + alias.alias_for)
+    session.delete(alias)
+    session.commit()
 
-    return redirect(url_for(".host_show", host_id=host_id))
+    flash(u"Record gelöscht", 'success')
+
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>',
+    methods=['GET', 'POST'])
+def record_edit(user_id, alias_id):
+    alias = HostAlias.q.get(alias_id)
+
+    edit_function = ".%s_edit" % (alias.discriminator,)
+
+    return redirect(
+        url_for(edit_function, user_id=user_id, alias_id=alias_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/a')
+def arecord_edit(user_id, alias_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/aaaa')
+def aaaarecord_edit(user_id, alias_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/cname',
+    methods=['GET', 'POST'])
+def cnamerecord_edit(user_id, alias_id):
+    alias = CNameRecord.q.get(alias_id)
+
+    form = CNameRecordEditForm()
+    form.alias_for.data = alias.alias_for.name
+
+    if form.validate_on_submit():
+        alias.name = form.name.data
+        session.commit()
+        flash(u"Alias geändert", "success")
+        return redirect(url_for("user.user_show", user_id=user_id))
+
+    return render_template('infrastructure/record_edit.html',
+        form=form, user_id=user_id,
+        page_title=u"Alias ändern für " + alias.alias_for.name)
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/cname',
+    methods=['GET', 'POST'])
+def cnamerecord_edit(user_id, alias_id):
+    alias = CNameRecord.q.get(alias_id)
+
+    form = CNameRecordEditForm()
+    form.alias_for.data = alias.alias_for.name
+
+    if form.validate_on_submit():
+        alias.name = form.name.data
+        session.commit()
+        flash(u"Alias geändert", "success")
+        return redirect(url_for("user.user_show", user_id=user_id))
+
+    return render_template('infrastructure/record_edit.html',
+        form=form, user_id=user_id,
+        page_title=u"Alias ändern für " + alias.alias_for.name)
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/mx')
+def mxrecord_edit(user_id, alias_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/ns')
+def nsrecord_edit(user_id, alias_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/srv')
+def srvrecord_edit(user_id, alias_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>',
+    methods=['GET', 'POST'])
+def record_create(user_id, host_id):
+    form = RecordCreateForm()
+
+    if not form.is_submitted():
+        form.type.data = 'CNameRecord'
+
+    if form.validate_on_submit():
+        create_function = ".%s_create" % (form.type.data,)
+
+        return redirect(url_for(create_function, user_id=user_id,
+            host_id=host_id))
+
+    return render_template('infrastructure/record_create.html',
+        form=form, user_id=user_id, host_id=host_id,
+        page_title=u"Alias erzeugen")
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/a')
+def arecord_create(user_id, host_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/aaaa')
+def aaaarecord_create(user_id, host_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/cname',
+    methods=['GET', 'POST'])
+def cnamerecord_create(user_id, host_id):
+    form = CNameRecordCreateForm()
+    form.alias_for.query = arecords_query(host_id)
+
+    if form.validate_on_submit():
+        cname = CNameRecord(host_id=host_id, name=form.name.data
+            , alias_for=form.alias_for.data)
+
+        session.add(cname)
+        session.commit()
+
+        flash(u"Neuer CNameRecord angelegt", 'success')
+
+        return redirect(url_for("user.user_show", user_id=user_id))
+
+    return render_template('infrastructure/recordtype_create.html', form=form,
+        user_id=user_id, host_id=host_id,
+        page_title=u"Neuen CNameRecord erzeugen")
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/mx')
+def mxrecord_create(user_id, host_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/ns')
+def nsrecord_create(user_id, host_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
+
+
+@bp.route('/user/<int:user_id>/record_create/<int:host_id>/srv')
+def srvrecord_create(user_id, host_id):
+    return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/switch/show/<switch_id>')

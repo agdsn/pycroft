@@ -16,14 +16,10 @@ from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 import ipaddr
-
 import re
-
-from pycroft.helpers import host_helper
 
 
 class Host(ModelBase):
-    hostname = Column(String(255), nullable=False)
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -62,6 +58,19 @@ class ARecord(HostAlias):
         return value
 
     @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"ARecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        if self.time_to_live is not None:
+            return u"%s points to %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
+        else:
+            return u"%s points to %s" % (self.name, self.address.address)
+
+    @property
     def gen_entry(self):
         if not self.time_to_live:
             return u"%s IN A %s" % (self.name, self.address.address)
@@ -95,6 +104,19 @@ class AAAARecord(HostAlias):
         return value
 
     @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"AAAARecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        if self.time_to_live is not None:
+            return u"%s points to %s with TTL %s" % (self.name, self.address.address, self.time_to_live)
+        else:
+            return u"%s points to %s" % (self.name, self.address.address)
+
+    @property
     def gen_entry(self):
         if not self.time_to_live:
             return u"%s IN AAAA %s" % (self.name, self.address.address)
@@ -118,6 +140,16 @@ class MXRecord(HostAlias):
     __mapper_args__ = {'polymorphic_identity':'mxrecord'}
 
     @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"MXRecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        return u"%s is mail-server for %s with priority %s" % (self.server, self.domain, self.priority)
+
+    @property
     def gen_entry(self):
         return u"%s IN MX %s %s" % (self.domain, self.priority, self.server)
 
@@ -125,12 +157,36 @@ class MXRecord(HostAlias):
 class CNameRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     name = Column(String(255), nullable=False)
-    alias_for = Column(Integer, nullable=False)
-    __mapper_args__ = {'polymorphic_identity':'cnamerecord'}
+
+    alias_for_id = Column(Integer, ForeignKey("hostalias.id"), nullable=False)
+    alias_for = relationship("HostAlias", primaryjoin=alias_for_id==HostAlias.id)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'cnamerecord',
+        'inherit_condition': (id == HostAlias.id)
+    }
+
+    @validates('alias_for')
+    def validate_alias_for(self, _, value):
+        # check if the alias is of the correct type! just arecord and
+        # aaaarecord are allowed
+        assert value.discriminator == "arecord" or \
+               value.discriminator == "aaaarecord"
+        return value
+
+    @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"CNameRecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        return u"%s is alias for %s" % (self.name, self.alias_for.name)
 
     @property
     def gen_entry(self):
-        return u"%s IN CNAME %s" % (self.name, self.alias_for)
+        return u"%s IN CNAME %s" % (self.name, self.alias_for.name)
 
 
 class NSRecord(HostAlias):
@@ -139,6 +195,16 @@ class NSRecord(HostAlias):
     server = Column(String(255), nullable=False)
     time_to_live = Column(Integer)
     __mapper_args__ = {'polymorphic_identity':'nsrecord'}
+
+    @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"NSRecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        return u"TODO"
 
     @property
     def gen_entry(self):
@@ -156,6 +222,16 @@ class SRVRecord(HostAlias):
     port = Column(Integer, nullable=False)
     target = Column(String(255), nullable=False)
     __mapper_args__ = {'polymorphic_identity':'srvrecord'}
+
+    @property
+    def name_human(self):
+        "returns a human readable name"
+        return u"SRVRecord"
+
+    @property
+    def information_human(self):
+        "returns all information readable for a human"
+        return u"TODO"
 
     @property
     def gen_entry(self):

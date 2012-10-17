@@ -4411,32 +4411,32 @@ INSERT INTO "user" VALUES(1,'ag_dsn','System User','2012-04-10 16:11:05.739251',
 INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','2012-06-30 10:53:20.930821','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0',NULL,398);
 CREATE TABLE host (
 	id INTEGER NOT NULL, 
-	hostname VARCHAR(255) NOT NULL, 
-	type VARCHAR(50), 
+	type VARCHAR(50),
 	user_id INTEGER, 
 	room_id INTEGER, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(user_id) REFERENCES user (id), 
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
-INSERT INTO "host" VALUES(1,'252','switch',1,NULL);
-INSERT INTO "host" VALUES(2,'254','switch',1,NULL);
-INSERT INTO "host" VALUES(3,'3','switch',1,NULL);
-INSERT INTO "host" VALUES(4,'3','switch',1,NULL);
-INSERT INTO "host" VALUES(5,'2','switch',1,NULL);
-INSERT INTO "host" VALUES(6,'253','switch',1,NULL);
-INSERT INTO "host" VALUES(7,'4','switch',1,NULL);
-INSERT INTO "host" VALUES(8,'3','switch',1,NULL);
-INSERT INTO "host" VALUES(9,'2','switch',1,NULL);
-INSERT INTO "host" VALUES(10,'2','switch',1,NULL);
-INSERT INTO "host" VALUES(11,'6','switch',1,NULL);
-INSERT INTO "host" VALUES(12,'2','switch',1,NULL);
-INSERT INTO "host" VALUES(13,'3','switch',1,NULL);
-INSERT INTO "host" VALUES(14,'4','switch',1,NULL);
-INSERT INTO "host" VALUES(15,'5','switch',1,NULL);
-INSERT INTO "host" VALUES(16,'3','switch',1,NULL);
-INSERT INTO "host" VALUES(17,'2','switch',1,NULL);
-INSERT INTO "host" VALUES(18,'whdd1',NULL,2,398);
+INSERT INTO "host" VALUES(1,'switch',1,NULL);
+INSERT INTO "host" VALUES(2,'switch',1,NULL);
+INSERT INTO "host" VALUES(3,'switch',1,NULL);
+INSERT INTO "host" VALUES(4,'switch',1,NULL);
+INSERT INTO "host" VALUES(5,'switch',1,NULL);
+INSERT INTO "host" VALUES(6,'switch',1,NULL);
+INSERT INTO "host" VALUES(7,'switch',1,NULL);
+INSERT INTO "host" VALUES(8,'switch',1,NULL);
+INSERT INTO "host" VALUES(9,'switch',1,NULL);
+INSERT INTO "host" VALUES(10,'switch',1,NULL);
+INSERT INTO "host" VALUES(11,'switch',1,NULL);
+INSERT INTO "host" VALUES(12,'switch',1,NULL);
+INSERT INTO "host" VALUES(13,'switch',1,NULL);
+INSERT INTO "host" VALUES(14,'switch',1,NULL);
+INSERT INTO "host" VALUES(15,'switch',1,NULL);
+INSERT INTO "host" VALUES(16,'switch',1,NULL);
+INSERT INTO "host" VALUES(17,'switch',1,NULL);
+INSERT INTO "host" VALUES(18,NULL,2,398);
+
 CREATE TABLE switch (
 	id INTEGER NOT NULL, 
 	name VARCHAR(127) NOT NULL, 
@@ -6073,9 +6073,10 @@ CREATE TABLE mxrecord (
 CREATE TABLE cnamerecord (
     id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
-    alias_for VARCHAR(255) NOT NULL,
+    alias_for_id INTEGER NOT NULL,
 
-    FOREIGN KEY(id) REFERENCES hostalias (id)
+    FOREIGN KEY(id) REFERENCES hostalias (id),
+    FOREIGN KEY(alias_for_id) REFERENCES hostalias (id)
 );
 
 CREATE TABLE nsrecord (
@@ -6100,17 +6101,91 @@ CREATE TABLE srvrecord (
 );
 
 INSERT INTO "hostalias" VALUES(1, "arecord", 18);
-INSERT INTO "hostalias" VALUES(2, "mxrecord", 18);
-INSERT INTO "hostalias" VALUES(3, "cnamerecord", 18);
-INSERT INTO "hostalias" VALUES(4, "nsrecord", 18);
-INSERT INTO "hostalias" VALUES(5, "srvrecord", 18);
-INSERT INTO "arecord" VALUES(1, "arecorddummy", NULL, 1);
-INSERT INTO "mxrecord" VALUES(2, "serverdummy", "domaindummy", 10);
-INSERT INTO "cnamerecord" VALUES(3, "anotherdummy", "arecorddummy");
-INSERT INTO "nsrecord" VALUES(4, "domaindummy", "serverdummy", NULL);
-INSERT INTO "srvrecord" VALUES(5, "servicedummy", NULL, 10, 100, 22, "targetdummy");
+INSERT INTO "hostalias" VALUES(2, "cnamerecord", 18);
+INSERT INTO "arecord" VALUES(1, "whdd1", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(2, "jacobs", 1);
 
-INSERT INTO "group" VALUES(2,'standart_traffic','trafficgroup');
-INSERT INTO "group" VALUES(3,'one_month_negative_balance','propertygroup');
-INSERT INTO "trafficgroup" VALUES(2,7000000000);
-INSERT INTO "propertygroup" VALUES(3);
+INSERT INTO "hostalias" VALUES(3, "arecord", 1);
+INSERT INTO "hostalias" VALUES(4, "cnamerecord", 1);
+INSERT INTO "arecord" VALUES(3, "whdd252", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(4, "switch-wu5-ke", 3);
+
+INSERT INTO "hostalias" VALUES(5, "arecord", 2);
+INSERT INTO "hostalias" VALUES(6, "cnamerecord", 2);
+INSERT INTO "arecord" VALUES(5, "whdd254", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(6, "switch-wu5-13og", 5);
+
+INSERT INTO "hostalias" VALUES(7, "arecord", 3);
+INSERT INTO "hostalias" VALUES(8, "cnamerecord", 3);
+INSERT INTO "arecord" VALUES(7, "whdd3", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(8, "switch2", 7);
+
+INSERT INTO "hostalias" VALUES(9, "arecord", 4);
+INSERT INTO "hostalias" VALUES(10, "cnamerecord", 4);
+INSERT INTO "arecord" VALUES(9, "whdd3", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(10, "switch-wu9-11", 9);
+
+INSERT INTO "hostalias" VALUES(11, "arecord", 5);
+INSERT INTO "hostalias" VALUES(12, "cnamerecord", 5);
+INSERT INTO "arecord" VALUES(11, "whdd2", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(12, "switch-wu9-4", 11);
+
+INSERT INTO "hostalias" VALUES(13, "arecord", 6);
+INSERT INTO "hostalias" VALUES(14, "cnamerecord", 6);
+INSERT INTO "arecord" VALUES(13, "whdd253", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(14, "switch-wu5-7og", 13);
+
+INSERT INTO "hostalias" VALUES(15, "arecord", 7);
+INSERT INTO "hostalias" VALUES(16, "cnamerecord", 7);
+INSERT INTO "arecord" VALUES(15, "whdd4", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(16, "switch-wu7-12", 15);
+
+INSERT INTO "hostalias" VALUES(17, "arecord", 8);
+INSERT INTO "hostalias" VALUES(18, "cnamerecord", 8);
+INSERT INTO "arecord" VALUES(17, "whdd3", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(18, "switch-wu7-6", 17);
+
+INSERT INTO "hostalias" VALUES(19, "arecord", 9);
+INSERT INTO "hostalias" VALUES(20, "cnamerecord", 9);
+INSERT INTO "arecord" VALUES(19, "whdd2", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(20, "switch-wu7-2", 19);
+
+INSERT INTO "hostalias" VALUES(21, "arecord", 10);
+INSERT INTO "hostalias" VALUES(22, "cnamerecord", 10);
+INSERT INTO "arecord" VALUES(21, "whdd2", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(22, "switch-wu3-4", 21);
+
+INSERT INTO "hostalias" VALUES(23, "arecord", 11);
+INSERT INTO "hostalias" VALUES(24, "cnamerecord", 11);
+INSERT INTO "arecord" VALUES(23, "whdd6", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(24, "switch5", 23);
+
+INSERT INTO "hostalias" VALUES(25, "arecord", 12);
+INSERT INTO "hostalias" VALUES(26, "cnamerecord", 12);
+INSERT INTO "arecord" VALUES(25, "whdd2", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(26, "switch1", 25);
+
+INSERT INTO "hostalias" VALUES(27, "arecord", 13);
+INSERT INTO "hostalias" VALUES(28, "cnamerecord", 13);
+INSERT INTO "arecord" VALUES(27, "whdd3", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(28, "switch-wu3-11", 27);
+
+INSERT INTO "hostalias" VALUES(29, "arecord", 14);
+INSERT INTO "hostalias" VALUES(30, "cnamerecord", 14);
+INSERT INTO "arecord" VALUES(29, "whdd4", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(30, "switch3", 29);
+
+INSERT INTO "hostalias" VALUES(31, "arecord", 15);
+INSERT INTO "hostalias" VALUES(32, "cnamerecord", 15);
+INSERT INTO "arecord" VALUES(31, "whdd5", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(32, "switch4", 31);
+
+INSERT INTO "hostalias" VALUES(33, "arecord", 16);
+INSERT INTO "hostalias" VALUES(34, "cnamerecord", 16);
+INSERT INTO "arecord" VALUES(33, "whdd3", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(34, "switch-wu11-11", 33);
+
+INSERT INTO "hostalias" VALUES(35, "arecord", 17);
+INSERT INTO "hostalias" VALUES(36, "cnamerecord", 17);
+INSERT INTO "arecord" VALUES(35, "whdd2", NULL, 1);
+INSERT INTO "cnamerecord" VALUES(36, "switch-wu11-4", 35);

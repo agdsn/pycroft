@@ -1,0 +1,6 @@
+{% extends "layout.html" %}
+
+{% import "macros/forms.html" as forms %}
+{% block content %}
+    {{ forms.simple_form(form, '', url_for('user.user_show', user_id = user_id)  ) }}
+{% endblock %}
