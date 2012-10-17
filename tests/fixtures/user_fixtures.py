@@ -6,19 +6,24 @@ from fixture import DataSet
 
 class VLanData(DataSet):
     class vlan_dummy1:
-        name = "vlan_dom_2"
+        name = "vlan_dom_1"
         tag = "1"
+
+    class vlan_dummy2:
+        name = "vlan_dom_2"
+        tag = "2"
 
 class DormitoryData(DataSet):
     class dummy_house1:
         number = "01"
         short_name = "abc"
         street = "dummy"
+        vlans = [VLanData.vlan_dummy1]
     class dummy_house2:
         number = "02"
         short_name = "def"
         street = "dummy"
-        vlans = [VLanData.vlan_dummy1]
+        vlans = [VLanData.vlan_dummy2]
 
 
 class RoomData(DataSet):
@@ -53,6 +58,17 @@ class UserData(DataSet):
         room = RoomData.dummy_room3
 
 
+class TrafficGroupData(DataSet):
+    class standard_traffic:
+        name = "standard_traffic"
+        traffic_limit = 7000
+
+
+class PropertyGroupData(DataSet):
+    class one_month_negative_balance:
+        name = "one_month_negative_balance"
+
+
 class HostData(DataSet):
     class dummy_host1:
         hostname = "host1"
@@ -78,14 +94,36 @@ class SubnetData(DataSet):
         address = "141.30.216.0/24"
         gateway = "141.30.216.1"
         ip_type = "4"
+        vlans = [VLanData.vlan_dummy1]
     class dummy_subnet2:
         address = "141.30.203.0/24"
         gateway = "141.30.203.1"
         ip_type = "4"
-        vlans = [VLanData.vlan_dummy1]
+        vlans = [VLanData.vlan_dummy2]
 
 class IpData(DataSet):
     class dummy_ip1:
         address = "141.30.216.203"
         net_device = NetDeviceData.dummy_device
         subnet = SubnetData.dummy_subnet1
+
+
+class FinanceAccountData(DataSet):
+    class dummy_finance_account1:
+        name = "finance account 1"
+        type = "EXPENSE"
+
+    class dummy_finance_account2:
+        name = "finance account 2"
+        type = "EXPENSE"
+
+
+class SemesterData(DataSet):
+    class dummy_semester1:
+        name = "first semester"
+        semester_fee = 2500
+        registration_fee = 1500
+        begin_date = datetime.now()
+        end_date = datetime.now()
+        registration_fee_account = FinanceAccountData.dummy_finance_account1
+        semester_fee_account = FinanceAccountData.dummy_finance_account2

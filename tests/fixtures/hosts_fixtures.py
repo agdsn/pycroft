@@ -39,17 +39,17 @@ class SubnetData(DataSet):
 
 class RoomData(DataSet):
     class dummy_room:
-        number = 1
+        number = "1"
         level = 1
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
     class dummy_room2:
-        number = 1
+        number = "1"
         level = 2
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
     class dummy_room3:
-        number = 1
+        number = "1"
         level = 1
         inhabitable = True
         dormitory = DormitoryData.dummy_house2
