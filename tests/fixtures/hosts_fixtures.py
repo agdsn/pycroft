@@ -77,11 +77,11 @@ class UserData(DataSet):
 
 class HostData(DataSet):
     class dummy_host1:
-        hostname = "host1"
+        id = 1
         user = UserData.dummy_user
         room = RoomData.dummy_room
     class dummy_host2:
-        hostname = "host2"
+        id = 2
         user = UserData.dummy_user
         room = RoomData.dummy_room
 
