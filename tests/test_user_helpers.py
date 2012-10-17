@@ -6,8 +6,10 @@ __author__ = 'florian'
 
 from tests import FixtureDataTestBase, make_fixture
 from pycroft.lib import user as UserHelper
-from tests.fixtures.user_fixtures import DormitoryData, RoomData, UserData, NetDeviceData, HostData, IpData, VLanData, SubnetData, PatchPortData
-from pycroft.model import user, dormitory, ports, session, logging
+from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
+    RoomData, UserData, NetDeviceData, HostData, IpData, VLanData, SubnetData, \
+    PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData
+from pycroft.model import user, dormitory, ports, session, logging, finance
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData, NetDeviceData, HostData,
@@ -23,11 +25,10 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.new_patch_port = ports.PatchPort.q.get(2)
 
     def tearDown(self):
-        #TODO dont delete all log entries but the userlogentries
+        #TODO don't delete all log entries but the user log entries
         logging.LogEntry.q.delete()
         session.session.commit()
         super(Test_010_User_Move, self).tearDown()
-
 
     def test_010_moves_into_same_room(self):
         self.assertRaises(AssertionError, UserHelper.move,
@@ -42,3 +43,36 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.assertEqual(self.user.hosts[0].room, self.new_room_other_dormitory)
         #TODO test for changing ip
 
+
+class Test_020_User_Move_In(FixtureDataTestBase):
+    datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
+                NetDeviceData, HostData, IpData, VLanData, SubnetData,
+                PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData]
+
+    def setUp(self):
+        super(Test_020_User_Move_In, self).setUp()
+        self.processing_user = user.User.q.get(1)
+
+
+    def tearDown(self):
+        #TODO don't delete all log entries but the user log entries
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_020_User_Move_In, self).tearDown()
+
+    def test_010_move_in(self):
+        test_name = u"Hans"
+        test_login = u"hans66"
+        test_dormitory = dormitory.Dormitory.q.first()
+        test_mac = "12:11:11:11:11:11"
+
+        new_user = UserHelper.moves_in(test_name, test_login, test_dormitory, 1, "1", None, test_mac, finance.Semester.q.first(), self.processing_user)
+
+        self.assertEqual(new_user.name, test_name)
+        self.assertEqual(new_user.login, test_login)
+        self.assertEqual(new_user.room.dormitory, test_dormitory)
+        self.assertEqual(new_user.room.number, "1")
+        self.assertEqual(new_user.room.level, 1)
+        self.assertEqual(new_user.hosts[0].net_devices[0].mac, test_mac)
+        #TODO has initial properties
+        #TODO check account balance
