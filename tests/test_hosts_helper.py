@@ -64,7 +64,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
 
     def test_0030_get_free_ip_next_to_full(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
-        host = hosts.Host.q.filter(hosts.Host.hostname == HostData.dummy_host2.hostname).one()
+        host = hosts.Host.q.filter(hosts.Host.id == HostData.dummy_host2.id).one()
 
         nd = hosts.NetDevice(host=host, mac="00:00:00:00:00:00")
         for num in range(0, 490):

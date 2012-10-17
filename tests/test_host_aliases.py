@@ -107,7 +107,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0040_cnamerecord(self):
         record = CNameRecord.q.first()
         entry = record.gen_entry
-        entry_expected = u"%s IN CNAME %s" % (record.name, record.alias_for)
+        entry_expected = u"%s IN CNAME %s" % (record.name, record.alias_for.name)
 
         self.assertEqual(entry, entry_expected)
 

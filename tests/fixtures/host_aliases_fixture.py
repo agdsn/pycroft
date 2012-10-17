@@ -66,7 +66,7 @@ class MXRecordData(DataSet):
 class CNameRecordData(DataSet):
     class dummy_record:
         name = "dummy.net."
-        alias_for = "dummy.de."
+        alias_for = ARecordData.dummy_record1
         host = HostData.dummy_host1
 
 class NSRecordData(DataSet):
