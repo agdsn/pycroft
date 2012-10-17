@@ -17,7 +17,7 @@ from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.hosts import Host, NetDevice, Ip
+from pycroft.model.hosts import Host, NetDevice, Ip, ARecord, CNameRecord
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.properties import TrafficGroup, Membership, Group
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
@@ -55,19 +55,20 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    if not host_name:
-        host_name = host_helper.generate_hostname(ip_address)
-
-    new_host = Host(hostname=host_name,
-        user=new_user,
-        room=room)
+    new_host = Host(user=new_user,room=room)
 
     new_net_device = NetDevice(mac=mac, host=new_host, patch_port=patch_port)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
+    new_arecord = ARecord(host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
+    if host_name:
+        new_cnamerecord = CNameRecord(host=new_host, name=host_name, alias_for=new_arecord)
+        session.session.add(new_cnamerecord)
+
     session.session.add(new_host)
     session.session.add(new_net_device)
     session.session.add(new_ip)
+    session.session.add(new_arecord)
 
     #TODO: add user to initial groups (create those memberships)
     for initial_group in user_config.initial_groups:
