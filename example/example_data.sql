@@ -4465,13 +4465,11 @@ INSERT INTO "switch" VALUES(17,'switch-wu11-4','10.10.226.2');
 CREATE TABLE netdevice (
 	id INTEGER NOT NULL, 
 	mac VARCHAR(12) NOT NULL,
-	patch_port_id INTEGER, 
 	host_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(patch_port_id) REFERENCES patchport (id),
+	PRIMARY KEY (id),
 	FOREIGN KEY(host_id) REFERENCES host (id)
 );
-INSERT INTO "netdevice" VALUES(1,'d4:9a:20:d0:6a:18',471,18);
+INSERT INTO "netdevice" VALUES(1,'d4:9a:20:d0:6a:18',18);
 INSERT INTO "ip" VALUES(1,'141.30.202.1',1,5);
 CREATE TABLE switchport (
 	name VARCHAR(4) NOT NULL, 
