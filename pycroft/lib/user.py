@@ -65,6 +65,10 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac,
     subnets = dormitory.get_subnets()
     ip_address = host_helper.get_free_ip(subnets)
     subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
+    #ToDo: Which port to choose if room has more than one?
+    # --> The one that is connected to a switch!
+    # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
+    patch_port = room.patch_ports[0]
 
     new_host = Host(user=new_user,room=room)
 
@@ -171,7 +175,7 @@ def move(user, dormitory, level, room_number, processing_user):
     session.session.add(user)
 
     moving_user_log_entry = UserLogEntry(author_id=processor.id,
-        message=u"umgezogen von %s nach %s" % (old_room.dormitory.short_name, new_room),
+        message=u"umgezogen von %s nach %s" % (old_room, new_room),
         timestamp=datetime.now(), user_id=user.id)
     session.session.add(moving_user_log_entry)
 
@@ -217,6 +221,12 @@ def move(user, dormitory, level, room_number, processing_user):
 
 
 def edit_name(user, name, processor):
+    """
+    Changes the name of the user and creates a log entry.
+    :param user: The user object.
+    :param name: The new full name.
+    :return: The changed user object.
+    """
     oldName = user.name
     if len(name):
         user.name = name
@@ -234,6 +244,12 @@ def edit_name(user, name, processor):
 
 #ToDo: Usecases überprüfen: standardmäßig nicht False?
 def has_exceeded_traffic(user):
+    """
+    The function calculates the balance of the users traffic.
+    :param user: The user object which has to be checked.
+    :return: True if the user has more traffic than allowed and false if he
+    did not exceed the limit.
+    """
     result = session.session.query(User.id, (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")).join(User.active_traffic_groups).join(User.hosts).join(Host.ips).join(Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
     if result is not None:
         return result.has_exceeded_traffic
@@ -244,6 +260,11 @@ def has_positive_balance(user):
     return True
 
 def has_internet(user):
+    """
+    The function evaluates if the user is allowed to connect to the internet.
+    :param user: The user object.
+    :return: True if he is allowed to use the internet, false if he is not.
+    """
     if user.has_property("internet"):
         if user.has_property("no_internet"):
             return False
