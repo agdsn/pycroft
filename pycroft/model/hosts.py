@@ -250,11 +250,6 @@ class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR, nullable=False)
     mac = Column(String(12), nullable=False)
 
-    # one to one from PatchPort to NetDevice
-    patch_port_id = Column(Integer, ForeignKey('patchport.id'), nullable=True)
-    patch_port = relationship("PatchPort", backref=backref("net_device",
-                                                          uselist=False))
-
     host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"), nullable=False)
     host = relationship("Host", backref=backref("net_devices", cascade="all, delete-orphan"))
 

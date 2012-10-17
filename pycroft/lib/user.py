@@ -12,7 +12,6 @@ This module contains.
 """
 
 from datetime import datetime, timedelta
-from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.accounting import TrafficVolume
@@ -26,7 +25,7 @@ from pycroft.model.user import User
 from pycroft.lib import user_config
 
 
-def moves_in(name, login, dormitory, level, room_number, host_name, mac, current_semester):
+def moves_in(name, login, dormitory, level, room_number, host_name, mac, current_semester, processor):
 
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory_id=dormitory.id).one()
@@ -50,14 +49,10 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
     subnets = dormitory.get_subnets()
     ip_address = host_helper.get_free_ip(subnets)
     subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
-    #ToDo: Which port to choose if room has more than one?
-    # --> The one that is connected to a switch!
-    # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
-    patch_port = room.patch_ports[0]
 
     new_host = Host(user=new_user,room=room)
 
-    new_net_device = NetDevice(mac=mac, host=new_host, patch_port=patch_port)
+    new_net_device = NetDevice(mac=mac, host=new_host)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
     new_arecord = ARecord(host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
@@ -121,21 +116,17 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac, current
 
     #TODO: add membership that allows negative account balance for one month
 
+    move_in_user_log_entry = UserLogEntry(author_id=processor.id,
+        message=u"angemeldet" , timestamp=datetime.now(), user_id=new_user.id)
+    session.session.add(move_in_user_log_entry)
+
     session.session.commit()
 
     return new_user
 
 #TODO ensure serializability
-def move(user, dormitory, level, room_number, processing_user):
+def move(user, dormitory, level, room_number, processor):
     # change the room of the user
-
-    def get_free_patchport(patch_ports):
-        free_patch_ports = []
-        for patch_port in patch_ports:
-            if patch_port.net_device == None:
-                free_patch_ports.append(patch_port)
-        assert len(free_patch_ports) > 0
-        return free_patch_ports[0]
 
     old_room = user.room
     new_room = Room.q.filter_by(number=room_number,
@@ -147,7 +138,7 @@ def move(user, dormitory, level, room_number, processing_user):
     user.room = new_room
     session.session.add(user)
 
-    moving_user_log_entry = UserLogEntry(author_id=processing_user.id,
+    moving_user_log_entry = UserLogEntry(author_id=processor.id,
         message=u"umgezogen von %s nach %s" % (old_room.dormitory.short_name, new_room),
         timestamp=datetime.now(), user_id=user.id)
     session.session.add(moving_user_log_entry)
@@ -178,7 +169,7 @@ def move(user, dormitory, level, room_number, processing_user):
 
         ip_addr.change_ip(new_address, new_subnet)
 
-        ip_change_log_entry = UserLogEntry(author_id=processing_user.id,
+        ip_change_log_entry = UserLogEntry(author_id=processor.id,
             message=u"IPv4 von %s auf %s geändert" % (
             old_ip, new_address),
             timestamp=datetime.now(), user_id=user.id)
@@ -187,19 +178,18 @@ def move(user, dormitory, level, room_number, processing_user):
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
     user.hosts[0].room = new_room
-    net_dev.patch_port = get_free_patchport(new_room.patch_ports)
 
     session.session.commit()
     return user
 
 
-def edit_name(user, name):
+def edit_name(user, name, processor):
     oldName = user.name
     if len(name):
         user.name = name
     session.session.add(user)
 
-    newUserLogEntry = UserLogEntry(author_id=current_user.id,
+    newUserLogEntry = UserLogEntry(author_id=processor.id,
         message=u"Nutzer %s umbenannt in %s" % (oldName, name),
         timestamp=datetime.now(), user_id=user.id)
     session.session.add(newUserLogEntry)
