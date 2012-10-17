@@ -15,7 +15,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
         session.reinit_session("sqlite://")
         model.drop_db_model()
         model.create_db_model()
-        cls.host = hosts.Host(hostname="dummy", user_id = 1)
+        cls.host = hosts.Host(user_id = 1)
         session.session.commit()
 
     def test_0010_mac_validate(self):
@@ -227,8 +227,6 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         self.room = dormitory.Room.q.first()
 
     def make_switch(self, **kwargs):
-        if "hostname" not in kwargs:
-            kwargs["hostname"] = "testswitch"
         if "name" not in kwargs:
             kwargs["name"] = "testswitch1"
 
