@@ -45,10 +45,8 @@ class Dormitory(ModelBase):
 
     # methods
 
-    def get_subnets(self):
-    #ToDo: Ugly, but ... Someone can convert this is
-    #      a proper property of Dormitory
-    #ToDo: Also possibly slow and untested
+    @property
+    def subnets(self):
         return session.query(
             Subnet
         ).join(
