@@ -62,7 +62,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac,
     session.session.add(new_user)
 
     # create one new host (including net_device) for the new user
-    subnets = dormitory.get_subnets()
+    subnets = dormitory.subnets
     ip_address = host_helper.get_free_ip(subnets)
     subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
     #ToDo: Which port to choose if room has more than one?
@@ -191,9 +191,9 @@ def move(user, dormitory, level, room_number, processor):
         assert len(net_dev.ips) == 1, u"A user should only have one ip!"
         ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
-        new_address = host_helper.get_free_ip(dormitory.get_subnets())
+        new_address = host_helper.get_free_ip(dormitory.subnets)
         new_subnet = host_helper.select_subnet_for_ip(new_address,
-                                            dormitory.get_subnets())
+                                            dormitory.subnets)
 
         ip_addr.change_ip(new_address, new_subnet)
 
