@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'florian'
 
-from tests import FixtureDataTestBase, make_fixture
+from tests import FixtureDataTestBas
 from pycroft.lib import user as UserHelper
 from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, NetDeviceData, HostData, IpData, VLanData, SubnetData, \
