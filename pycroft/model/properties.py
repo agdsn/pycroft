@@ -57,9 +57,9 @@ class Membership(ModelBase):
         order_by='Membership.id'))
 
     def __init__(self, *args, **kwargs):
-        super(Membership, self).__init__(*args, **kwargs)
         if self.start_date is None:
             self.start_date = datetime.now()
+        super(Membership, self).__init__(*args, **kwargs)
 
     @hybrid_property
     def active(self):
