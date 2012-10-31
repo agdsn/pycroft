@@ -84,3 +84,7 @@ class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
     begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
     end_date = DatePickerField(u"Ende",with_today_button=True)
+
+class UserBanForm(Form):
+    date = DatePickerField(u"Gespert bis", [Required()], with_today_button=True, default=datetime.now)
+    reason = TextAreaField(u"Grund")
