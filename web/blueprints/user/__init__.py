@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm
+    UserEditNameForm, UserBanForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
@@ -300,3 +300,16 @@ def host_create():
             results=hostResult)
     return render_template('user/host_create.html', form=form,
         results=hostResult)
+
+@bp.route('/ban/<int:user_id>', methods=['GET', 'POST'])
+def ban_user(user_id):
+    form = UserBanForm()
+    myUser = User.q.get(user_id)
+    if form.validate_on_submit():
+        banned_user = lib.user.ban_user(user=myUser,
+            date=form.date.data,
+            reason=form.reason.data,
+            processor=current_user)
+        flash(u'Nutzer gesperrt', 'success')
+        return redirect(url_for('.user_show', user_id=banned_user.id))
+    return render_template('user/user_ban.html', form=form, user_id=user_id)
