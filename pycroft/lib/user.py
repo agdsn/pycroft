@@ -8,7 +8,7 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
@@ -16,7 +16,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.hosts import Host, NetDevice, Ip, ARecord, CNameRecord
 from pycroft.model.logging import UserLogEntry
-from pycroft.model.properties import TrafficGroup, Membership, Group
+from pycroft.model.properties import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
@@ -238,7 +238,11 @@ def has_exceeded_traffic(user):
     :return: True if the user has more traffic than allowed and false if he
     did not exceed the limit.
     """
-    result = session.session.query(User.id, (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")).join(User.active_traffic_groups).join(User.hosts).join(Host.ips).join(Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
+    result = session.session.query(User.id,
+        (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(
+            TrafficVolume.size).label("has_exceeded_traffic")).join(
+        User.active_traffic_groups).join(User.hosts).join(Host.ips).join(
+        Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
     if result is not None:
         return result.has_exceeded_traffic
     else: return False
@@ -267,5 +271,31 @@ def has_internet(user):
     else:
         return False
 
-def get_current_semester():
-    pass
+def ban_user(user, date, reason, processor):
+    """
+    This function bans a user for a certain time.
+    A logmessage with a reason is created.
+    :param user: The user to be banned.
+    :param date: The date the user is not banned anymore.
+    :param reason: The reason of banning.
+    :param processor: The admin who banned the user.
+    :return: The banned user.
+    """
+
+    ban_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
+
+    new_membership = Membership(end_date=datetime.combine(date, time(0)),
+        group=ban_group,
+        user=user)
+
+    ban_message = u"Der Nutzer ist bis zum %s gesperrt aufgrund von: %s" % (
+        date.strftime("%d.%m.%Y"), reason)
+
+    new_log_entry = UserLogEntry(message=ban_message,
+        timestamp=datetime.now(),
+        author=processor,
+        user=user)
+
+    session.session.add(new_membership)
+    session.session.commit()
+    return user
