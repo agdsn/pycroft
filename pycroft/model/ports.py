@@ -17,24 +17,32 @@ from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 
 
-class Port(object):
+class Port(ModelBase):
+    # Joined table inheritance
+    discriminator = Column('type', String(15), nullable=False)
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
     name = Column(String(4), nullable=False)
     
     name_regex = re.compile("[A-Z][1-9][0-9]?")
 
 
-class DestinationPort(Port, ModelBase):
-    # Joined table inheritance
-    discriminator = Column('type', String(15), nullable=False)
-    __mapper_args__ = {'polymorphic_on': discriminator}
+class DestinationPort(Port):
+    id = Column(Integer, ForeignKey('port.id'), primary_key=True,
+        nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'destination_port'}
 
 
-class PatchPort(Port, ModelBase):
+class PatchPort(Port):
+    id = Column(Integer, ForeignKey('port.id'), primary_key=True,
+        nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'patch_port'}
 
     # one to one from PatchPort to DestinationPort
     destination_port_id = Column(Integer, ForeignKey('destinationport.id'),
                                     nullable=True)
-    destination_port = relationship("DestinationPort", backref=backref(
+    destination_port = relationship("DestinationPort", primaryjoin=("patchport.c.destination_port_id==destinationport.c.id"),
+                                    backref=backref(
                                     "patch_port", uselist=False))
 
     # many to one from PatchPort to Room
