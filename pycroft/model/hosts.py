@@ -253,6 +253,10 @@ class NetDevice(ModelBase):
     host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"), nullable=False)
     host = relationship("Host", backref=backref("net_devices", cascade="all, delete-orphan"))
 
+    #TODO assert that Port is no PhonePort
+    port_id = Column(Integer, ForeignKey("port.id"))
+    port = relationship("Port", backref=backref("net_device", uselist=False))
+
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
 
