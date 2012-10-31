@@ -140,6 +140,12 @@ def host_cname_filter(host):
     else:
         return "NoCName"
 
+@template_filter("level_number")
+def level_number_filter(level):
+        if level<10:
+            return u"0%s" % (level, )
+        else:
+            return level
 
 def register_filters(app):
     for name in _filter_registry:
