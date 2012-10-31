@@ -4,9 +4,13 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {%- macro info_row(name) %}
-    <dt>{{ name }}:</dt>
+    <dt xmlns="http://www.w3.org/1999/html">{{ name }}:</dt>
     <dd>{{ caller() }}</dd>
 {%- endmacro %}
+
+<div class="row">
+    <div class="span2 offset10"><a href="{{ url_for(".ban_user", user_id=user.id) }}"><i class="icon-minus-sign"></i></a></div>
+</div>
 
 <dl class="dl-horizontal">
     {% call info_row("ID") %}{{ user.id }}{% endcall %}
@@ -21,7 +25,7 @@
     {% call info_row("Anmeldedatum") %}{{ user.registration_date|datetime }}{% endcall %}
 
     {% call info_row("Wohnort") %}
-        <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ room.dormitory.short_name }} {{ room.level }}-{{ room.number }}</a>
+        <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a>
          <a href="{{ url_for(".move", user_id=user.id) }}">ändern</a>
     {% endcall %}
 
