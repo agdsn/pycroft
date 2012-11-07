@@ -14,7 +14,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
-from pycroft.model import dormitory   
+from pycroft.model import dormitory, ports
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
@@ -33,6 +33,22 @@ class Host(ModelBase):
     # many to one from Host to Room
     room = relationship(dormitory.Room, backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=True)
+
+
+class UserHost(Host):
+    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'user_host'}
+
+    # one to one from Host to User
+    user = relationship("User",
+        backref=backref("hosts", cascade="all, delete-orphan", uselist=False))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False)
+
+
+class ServerHost(Host):
+    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'server_host'}
 
 
 class HostAlias(ModelBase):
@@ -247,18 +263,13 @@ class SRVRecord(HostAlias):
 
 
 class NetDevice(ModelBase):
+    discriminator = Column('type', String(50))
+    __mapper_args__ =  {'polymorphic_on': discriminator}
+
     #mac = Column(postgresql.MACADDR, nullable=False)
     mac = Column(String(12), nullable=False)
 
-    host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"), nullable=False)
-    host = relationship("Host", backref=backref("net_devices", cascade="all, delete-orphan"))
-
-    #TODO assert that Port is no PhonePort
-    port_id = Column(Integer, ForeignKey("port.id"))
-    port = relationship("Port", backref=backref("net_device", uselist=False))
-
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
-
 
     @validates('mac')
     def validate_mac(self, _, value):
@@ -268,6 +279,26 @@ class NetDevice(ModelBase):
             raise Exception("Multicast-Flag (least significant bit im "
                             "ersten Byte gesetzt)!")
         return value
+
+
+class UserNetDevice(NetDevice):
+    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+
+    user_host_id = Column(Integer, ForeignKey('serverhost.id'), nullable=False)
+    user_host = relationship(UserHost,
+        backref=backref("server_net_devices", uselist=False))
+
+
+class ServerNetDevice(NetDevice):
+    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+
+    user_host_id = Column(Integer, ForeignKey('serverhost.id'), nullable=False)
+    user_host = relationship(UserHost,
+        backref=backref("server_net_devices", uselist=False))
+
+    switch_port_id = Column(Integer, ForeignKey('switchport.id'),
+        nullable=False)
+    switch_port = relationship(ports.SwitchPort)
 
 
 class Ip(ModelBase):
