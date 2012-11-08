@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from sqlalchemy.ext.hybrid import hybrid_property
 from base import ModelBase
 from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
@@ -27,7 +28,6 @@ class Host(ModelBase):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user = relationship("User", backref=backref("hosts", cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
     # many to one from Host to Room
@@ -41,14 +41,14 @@ class UserHost(Host):
 
     # one to one from Host to User
     user = relationship("User",
-        backref=backref("hosts", cascade="all, delete-orphan", uselist=False))
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
-        nullable=False)
+        backref=backref("user_host", cascade="all, delete-orphan", uselist=False))
 
 
 class ServerHost(Host):
     id = Column(Integer, ForeignKey('host.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'server_host'}
+
+    user = relationship("User", backref=backref("server_hosts", cascade="all, delete-orphan"))
 
 
 class HostAlias(ModelBase):
@@ -262,6 +262,23 @@ class SRVRecord(HostAlias):
                                                   self.weight, self.port, self.target)
 
 
+class Switch(Host):
+    __mapper_args__ = {'polymorphic_identity': 'switch'}
+    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+
+    name = Column(String(127), nullable=False)
+
+    management_ip_id = Column(Integer,
+        ForeignKey("ip.id",
+            use_alter=True,
+            name="fk_management_ip"),
+        unique=True,)
+    management_ip = relationship("Ip", post_update=True)
+
+    user = relationship("User",
+        backref=backref("switches", cascade="all, delete-orphan"))
+
+
 class NetDevice(ModelBase):
     discriminator = Column('type', String(50))
     __mapper_args__ =  {'polymorphic_on': discriminator}
@@ -270,6 +287,8 @@ class NetDevice(ModelBase):
     mac = Column(String(12), nullable=False)
 
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
+
+    #host_id = Column(Integer, ForeignKey('host.id'), nullable=False)
 
     @validates('mac')
     def validate_mac(self, _, value):
@@ -284,21 +303,39 @@ class NetDevice(ModelBase):
 class UserNetDevice(NetDevice):
     id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
 
-    user_host_id = Column(Integer, ForeignKey('serverhost.id'), nullable=False)
+    __mapper_args__ =  {'polymorphic_identity': "user_net_device"}
+
+    user_host_id = Column(Integer, ForeignKey('userhost.id'), nullable=False)
     user_host = relationship(UserHost,
-        backref=backref("server_net_devices", uselist=False))
+        backref=backref("user_net_device", uselist=False),
+        primaryjoin="UserHost.id==UserNetDevice.user_host_id")
 
 
 class ServerNetDevice(NetDevice):
     id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
 
-    user_host_id = Column(Integer, ForeignKey('serverhost.id'), nullable=False)
-    user_host = relationship(UserHost,
-        backref=backref("server_net_devices", uselist=False))
+    __mapper_args__ =  {'polymorphic_identity': "server_net_device"}
+
+    server_host_id = Column(Integer, ForeignKey('serverhost.id'),
+        nullable=False)
+    server_host = relationship(ServerHost,
+        backref=backref("server_net_devices"),
+        primaryjoin="ServerHost.id==ServerNetDevice.server_host_id")
 
     switch_port_id = Column(Integer, ForeignKey('switchport.id'),
         nullable=False)
     switch_port = relationship(ports.SwitchPort)
+
+
+class SwitchNetDevice(NetDevice):
+    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+
+    __mapper_args__ =  {'polymorphic_identity': "switch_net_device"}
+
+    switch_id = Column(Integer, ForeignKey('switch.id'), nullable=False)
+    switch = relationship(Switch,
+        backref=backref("switch_net_devices"),
+        primaryjoin="Switch.id==SwitchNetDevice.switch_id")
 
 
 class Ip(ModelBase):
@@ -314,10 +351,12 @@ class Ip(ModelBase):
     net_device_id = Column(Integer, ForeignKey('netdevice.id', ondelete="CASCADE"), nullable=False)
     net_device = relationship(NetDevice, backref=backref("ips", cascade="all, delete-orphan"))
 
-    host = relationship(Host,
-        secondary="netdevice",
-        backref=backref("ips"),
-        viewonly=True)
+    @hybrid_property
+    def host(self):
+        if self.net_device.discriminator == "user_net_device":
+            return Host.q.join(UserNetDevice).filter(UserNetDevice.id==self.net_device_id).one()
+        elif self.net_device.discriminator == "server_net_device":
+            return Host.q.join(ServerNetDevice).filter(ServerNetDevice.id==self.net_device_id).one()
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
@@ -364,25 +403,11 @@ event.listen(Ip, "before_insert", _check_correct_ip_subnet)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
 
 
-class Switch(Host):
-    __mapper_args__ = {'polymorphic_identity': 'switch'}
-    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
-
-    name = Column(String(127), nullable=False)
-
-    management_ip_id = Column(Integer,
-        ForeignKey("ip.id",
-            use_alter=True,
-            name="fk_management_ip"),
-        unique=True,)
-    management_ip = relationship("Ip", post_update=True)
-
-
 def _check_correct_management_ip(mapper, connection, target):
     assert target.management_ip is not None, "A management ip has to be set"
 
     ips = []
-    for dev in target.net_devices:
+    for dev in target.switch_net_devices:
         ips.extend(dev.ips)
 
     assert target.management_ip in ips, \
