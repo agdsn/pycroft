@@ -72,7 +72,7 @@ class UserData(DataSet):
         room = RoomData.dummy_room
 
 
-class HostData(DataSet):
+class UserHostData(DataSet):
     class dummy_host1:
         id = 1
         user = UserData.dummy_user
@@ -83,16 +83,16 @@ class HostData(DataSet):
         room = RoomData.dummy_room
 
 
-class NetDeviceData(DataSet):
+class UserNetDeviceData(DataSet):
     class dummy_device:
         mac = "00:00:00:00:00:00"
-        host = HostData.dummy_host1
+        user_host = UserHostData.dummy_host1
 
 
 class IpData(DataSet):
     class dummy_ip:
         address = "141.30.216.2"
-        net_device = NetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device
         subnet = SubnetData.subnet1
 
 

@@ -4,13 +4,13 @@ __author__ = 'florian'
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper
 from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
-    RoomData, UserData, NetDeviceData, HostData, IpData, VLanData, SubnetData, \
+    RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData
 from pycroft.model import user, dormitory, ports, session, logging, finance
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, NetDeviceData, HostData,
+    datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
                 IpData, VLanData, SubnetData, PatchPortData]
 
     def setUp(self):
@@ -38,13 +38,13 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.new_room_other_dormitory.level,
             self.new_room_other_dormitory.number, self.processing_user)
         self.assertEqual(self.user.room, self.new_room_other_dormitory)
-        self.assertEqual(self.user.hosts[0].room, self.new_room_other_dormitory)
+        self.assertEqual(self.user.user_host.room, self.new_room_other_dormitory)
         #TODO test for changing ip
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
-                NetDeviceData, HostData, IpData, VLanData, SubnetData,
+                UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData,
                 PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, PropertyData]
 
