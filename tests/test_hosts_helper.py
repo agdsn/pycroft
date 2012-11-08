@@ -8,7 +8,7 @@ import ipaddr
 from pycroft.helpers.host_helper import sort_ports, generate_hostname, get_free_ip, select_subnet_for_ip, SubnetFullException
 from pycroft.model import dormitory, hosts, session
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData
+from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
 
 class Test_010_SimpleHostsHelper(OldPythonTestCase):
@@ -41,7 +41,7 @@ class Test_010_SimpleHostsHelper(OldPythonTestCase):
 
 
 class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def ip_s1(self, num):
         net_parts = SubnetData.subnet1.gateway.split(".")
@@ -67,9 +67,9 @@ class Test_020_IpHelper(FixtureDataTestBase):
 
     def test_0030_get_free_ip_next_to_full(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
-        host = hosts.Host.q.filter(hosts.Host.id == HostData.dummy_host2.id).one()
+        host = hosts.Host.q.filter(hosts.Host.id == UserHostData.dummy_host2.id).one()
 
-        nd = hosts.NetDevice(host=host, mac="00:00:00:00:00:00")
+        nd = hosts.NetDevice(mac="00:00:00:00:00:00")
         for num in range(0, 490):
             if num >= 488:
                 self.assertRaises(SubnetFullException, get_free_ip, subnets)
@@ -86,6 +86,6 @@ class Test_020_IpHelper(FixtureDataTestBase):
             session.session.commit()
 
         hosts.Ip.q.filter(hosts.Ip.net_device == nd).delete()
-        hosts.NetDevice.q.filter(hosts.NetDevice.host==host).delete()
+        hosts.NetDevice.q.filter(hosts.NetDevice.id==nd.id).delete()
         session.session.commit()
 

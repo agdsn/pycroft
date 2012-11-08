@@ -8,7 +8,7 @@ from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, hosts, dormitory, user, accounting
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData, IpData, TrafficVolumeData
+from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData
 from pycroft.helpers.host_helper import get_free_ip
 
 
@@ -18,13 +18,13 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
         session.reinit_session("sqlite://")
         model.drop_db_model()
         model.create_db_model()
-        cls.host = hosts.Host(user_id = 1)
+        cls.host = hosts.UserHost(user_id = 1)
         session.session.commit()
 
     def test_0010_mac_validate(self):
         mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
-        nd = hosts.NetDevice(host=self.host)
+        nd = hosts.UserNetDevice(user_host=self.host)
         def set_mac(mac):
             nd.mac = mac
 
@@ -66,14 +66,14 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
 
 
 class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     # placeholder because the set_v4 method is gone
     pass
 
 
 class Test_030_IpModel(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def tearDown(self):
         session.session.remove()
@@ -137,7 +137,7 @@ class Test_030_IpModel(FixtureDataTestBase):
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def test_0010_correct_subnet_and_ip(self):
         subnet = dormitory.Subnet.q.first()
@@ -212,7 +212,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 
 class Test_050_SwitchEvents(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def tearDown(self):
         session.session.remove()
@@ -251,7 +251,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0020_check_missing_management_ip_have_one_ip(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ip = self.make_ip(1, netdev)
 
         session.session.add(new_switch)
@@ -261,7 +261,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0030_check_missing_management_ip_have_ips(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ips = []
         for num in range(1, 3):
             ip = self.make_ip(num, netdev)
@@ -291,7 +291,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         new_switch = self.make_switch()
         new_switch.management_ip = ip
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ip = self.make_ip(2, netdev)
 
         session.session.add(new_switch)
@@ -306,7 +306,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         new_switch = self.make_switch()
         new_switch.management_ip = ip
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ips = []
         for num in range(3, 5):
             ip = self.make_ip(num, netdev)
@@ -319,7 +319,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0070_check_correct_management_ip_have_one_ip(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ip = self.make_ip(1, netdev)
         new_switch.management_ip = ip
 
@@ -331,7 +331,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0080_check_correct_management_ip_have_ips(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.NetDevice(mac="00:00:00:00:00:00", host=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
         ips = []
         for num in range(3, 5):
             ip = self.make_ip(num, netdev)
@@ -345,7 +345,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
 
 
 class Test_060_Cascades(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, HostData, NetDeviceData, IpData, TrafficVolumeData]
+    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData]
 
     def test_0010_cascade_on_delete_ip(self):
         session.session.delete(hosts.Ip.q.get(1))
