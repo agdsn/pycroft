@@ -86,7 +86,7 @@ class UserHostData(DataSet):
 class UserNetDeviceData(DataSet):
     class dummy_device:
         mac = "00:00:00:00:00:00"
-        user_host = UserHostData.dummy_host1
+        host = UserHostData.dummy_host1
 
 class PatchPortData(DataSet):
     class dummy_patch_port1:
