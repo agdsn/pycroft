@@ -53,8 +53,8 @@ class HostAlias(ModelBase):
     __mapper_args__ =  {'polymorphic_on': discriminator}
 
     # many to one from HostAlias to Host
-    host = relationship("Host", backref=backref("aliases"))
-    host_id = Column(Integer, ForeignKey("host.id"), nullable=False)
+    host = relationship("Host", backref=backref("aliases", cascade="all, delete-orphan"))
+    host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"), nullable=False)
 
 
 class ARecord(HostAlias):
@@ -269,7 +269,7 @@ class Switch(Host):
         ForeignKey("ip.id",
             use_alter=True,
             name="fk_management_ip"),
-        unique=True,)
+        unique=True)
     management_ip = relationship("Ip", post_update=True)
 
     user = relationship("User",
@@ -285,7 +285,7 @@ class NetDevice(ModelBase):
 
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
-    #host_id = Column(Integer, ForeignKey('host.id'), nullable=False)
+    host_id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"), nullable=False)
 
     @validates('mac')
     def validate_mac(self, _, value):
@@ -302,10 +302,8 @@ class UserNetDevice(NetDevice):
 
     __mapper_args__ =  {'polymorphic_identity': "user_net_device"}
 
-    user_host_id = Column(Integer, ForeignKey('userhost.id'), nullable=False)
-    user_host = relationship(UserHost,
-        backref=backref("user_net_device", uselist=False),
-        primaryjoin="UserHost.id==UserNetDevice.user_host_id")
+    host = relationship("UserHost",
+        backref=backref("user_net_device", uselist=False, cascade="all, delete-orphan"))
 
 
 class ServerNetDevice(NetDevice):
@@ -313,15 +311,12 @@ class ServerNetDevice(NetDevice):
 
     __mapper_args__ =  {'polymorphic_identity': "server_net_device"}
 
-    server_host_id = Column(Integer, ForeignKey('serverhost.id'),
-        nullable=False)
-    server_host = relationship(ServerHost,
-        backref=backref("server_net_devices"),
-        primaryjoin="ServerHost.id==ServerNetDevice.server_host_id")
+    host = relationship("ServerHost",
+        backref=backref("server_net_devices", cascade="all, delete-orphan"))
 
     switch_port_id = Column(Integer, ForeignKey('switchport.id'),
         nullable=False)
-    switch_port = relationship(ports.SwitchPort)
+    switch_port = relationship("SwitchPort")
 
 
 class SwitchNetDevice(NetDevice):
@@ -329,10 +324,8 @@ class SwitchNetDevice(NetDevice):
 
     __mapper_args__ =  {'polymorphic_identity': "switch_net_device"}
 
-    switch_id = Column(Integer, ForeignKey('switch.id'), nullable=False)
-    switch = relationship(Switch,
-        backref=backref("switch_net_devices"),
-        primaryjoin="Switch.id==SwitchNetDevice.switch_id")
+    host = relationship("Switch",
+        backref=backref("switch_net_devices", cascade="all, delete-orphan"))
 
 
 class Ip(ModelBase):
@@ -348,12 +341,18 @@ class Ip(ModelBase):
     net_device_id = Column(Integer, ForeignKey('netdevice.id', ondelete="CASCADE"), nullable=False)
     net_device = relationship(NetDevice, backref=backref("ips", cascade="all, delete-orphan"))
 
-    @hybrid_property
-    def host(self):
-        if self.net_device.discriminator == "user_net_device":
-            return Host.q.join(UserNetDevice).filter(UserNetDevice.id==self.net_device_id).one()
-        elif self.net_device.discriminator == "server_net_device":
-            return Host.q.join(ServerNetDevice).filter(ServerNetDevice.id==self.net_device_id).one()
+    host = relationship("Host",
+        secondary="netdevice",
+        backref=backref("ips"),
+        viewonly=True)
+
+
+    #@hybrid_property
+    #def host(self):
+    #    if self.net_device.discriminator == "user_net_device":
+    #        return Host.q.join(UserNetDevice).filter(UserNetDevice.id==self.net_device_id).one()
+    #    elif self.net_device.discriminator == "server_net_device":
+    #        return Host.q.join(ServerNetDevice).filter(ServerNetDevice.id==self.net_device_id).one()
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
     subnet = relationship("Subnet", backref=backref("ips"))
