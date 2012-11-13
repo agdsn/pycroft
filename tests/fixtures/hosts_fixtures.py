@@ -73,6 +73,11 @@ class UserData(DataSet):
         name = "John Doe"
         registration_date = datetime.now()
         room = RoomData.dummy_room
+    class dummy_user2:
+        login = "test2"
+        name = "John Doe2"
+        registration_date = datetime.now()
+        room = RoomData.dummy_room2
 
 
 class UserHostData(DataSet):
@@ -80,16 +85,12 @@ class UserHostData(DataSet):
         id = 1
         user = UserData.dummy_user
         room = RoomData.dummy_room
-    class dummy_host2:
-        id = 2
-        user = UserData.dummy_user
-        room = RoomData.dummy_room
 
 
 class UserNetDeviceData(DataSet):
     class dummy_device:
         mac = "00:00:00:00:00:00"
-        user_host = UserHostData.dummy_host1
+        host = UserHostData.dummy_host1
 
 
 class IpData(DataSet):
