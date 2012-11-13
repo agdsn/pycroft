@@ -39,9 +39,8 @@ class UserSearchForm(Form):
 from web.form.fields import LazyLoadSelectField
 
 class UserEditNameForm(Form):
-    name = TextField(u"Name", [Required(message=u"Name?"),
-                               Regexp(regex=User.name_regex,
-                                   message=u"Name ist ungültig!")])
+    name = TextField(u"Name", [Required(message=u"Name wird benötigt!")])
+
 
 class UserMoveForm(Form):
     dormitory = QuerySelectField(u"Wohnheim",
