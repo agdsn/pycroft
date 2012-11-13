@@ -60,9 +60,6 @@ class User(ModelBase, UserMixin):
 
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
-    name_regex = re.compile("^(([a-z]{1,5}|[A-Z][a-z0-9]+)\\s)*"
-                            "([A-Z][a-z0-9]+)((-|\\s)"
-                            "[A-Z][a-z0-9]+|\\s[a-z]{1,5})*$")
     blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
                       "lp", "mail", "news", "uucp", "proxy", "majordom",
                       "postgres", "wwwadmin", "backup",	"msql", "operator",
