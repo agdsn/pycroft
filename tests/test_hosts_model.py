@@ -21,7 +21,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
     def test_0010_mac_validate(self):
         mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
-        nd = hosts.UserNetDevice(user_host=self.host)
+        nd = hosts.UserNetDevice(host=self.host)
         def set_mac(mac):
             nd.mac = mac
 
@@ -214,9 +214,19 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def tearDown(self):
         session.session.remove()
         hosts.Ip.q.delete()
-        hosts.NetDevice.q.delete()
+#       Old method to delete NetDevices is commented out, because it doesn't delete the derived table entries
+#        hosts.NetDevice.q.delete()
+
+        for switch_dev in hosts.SwitchNetDevice.q.all():
+            session.session.delete(switch_dev)
+        for user_dev in hosts.UserNetDevice.q.all():
+            session.session.delete(user_dev)
+        for server_dev in hosts.ServerNetDevice.q.all():
+            session.session.delete(server_dev)
+
         for switch in hosts.Switch.q.all():
             session.session.delete(switch)
+
         session.session.commit()
         super(Test_050_SwitchEvents, self).tearDown()
 
@@ -248,7 +258,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0020_check_missing_management_ip_have_one_ip(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
         ip = self.make_ip(1, netdev)
 
         session.session.add(new_switch)
@@ -258,7 +268,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0030_check_missing_management_ip_have_ips(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
         ips = []
         for num in range(1, 3):
             ip = self.make_ip(num, netdev)
@@ -288,7 +298,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         new_switch = self.make_switch()
         new_switch.management_ip = ip
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
         ip = self.make_ip(2, netdev)
 
         session.session.add(new_switch)
@@ -303,7 +313,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         new_switch = self.make_switch()
         new_switch.management_ip = ip
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
         ips = []
         for num in range(3, 5):
             ip = self.make_ip(num, netdev)
@@ -316,7 +326,7 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0070_check_correct_management_ip_have_one_ip(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
         ip = self.make_ip(1, netdev)
         new_switch.management_ip = ip
 
@@ -328,16 +338,20 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def test_0080_check_correct_management_ip_have_ips(self):
         new_switch = self.make_switch()
 
-        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", switch=new_switch)
+        netdev = hosts.SwitchNetDevice(mac="00:00:00:00:00:00", host=new_switch)
+
         ips = []
+
         for num in range(3, 5):
             ip = self.make_ip(num, netdev)
             ips.append(ip)
+
         new_switch.management_ip = ips[0]
 
         session.session.add(new_switch)
         session.session.add(netdev)
         session.session.add_all(ips)
+
         session.session.commit()
 
 

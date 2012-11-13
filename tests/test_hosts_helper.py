@@ -64,9 +64,9 @@ class Test_020_IpHelper(FixtureDataTestBase):
 
     def test_0030_get_free_ip_next_to_full(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
-        host = hosts.Host.q.filter(hosts.Host.id == UserHostData.dummy_host2.id).one()
+        host = hosts.Host.q.filter(hosts.Host.id == UserHostData.dummy_host1.id).one()
 
-        nd = hosts.NetDevice(mac="00:00:00:00:00:00")
+        nd = hosts.NetDevice(mac="00:00:00:00:00:00", host_id=host.id)
         for num in range(0, 490):
             if num >= 488:
                 self.assertRaises(SubnetFullException, get_free_ip, subnets)

@@ -79,7 +79,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.dormitory, test_dormitory)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
-        self.assertEqual(new_user.hosts[0].net_devices[0].mac, test_mac)
+        self.assertEqual(new_user.user_host.user_net_device.mac, test_mac)
         #TODO has initial properties
         self.assertEqual(UserHelper.has_internet(new_user), True)
         user_account = finance.FinanceAccount.q.filter(
