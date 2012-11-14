@@ -8,32 +8,28 @@
     <dd>{{ caller() }}</dd>
 {%- endmacro %}
 
-<div class="row">
-    <div class="span2 offset10"><a href="{{ url_for(".ban_user", user_id=user.id) }}"><i class="icon-minus-sign"></i></a></div>
-</div>
-
 <dl class="dl-horizontal">
     {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
     {% call info_row("Name") %}
-        {{ user.name }}
+        {{ user.name }} /
          <a href="{{ url_for(".edit_name", user_id=user.id) }}">ändern</a>
     {% endcall %}
 
     {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
     {% call info_row("Anmeldedatum") %}
-        {{ user.registration_date|datetime }}
+        {{ user.registration_date|datetime }} /
         <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer endgültig ausziehen</a>
     {% endcall %}
 
     {% call info_row("Wohnort") %}
         <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a>
-         <a href="{{ url_for(".move", user_id=user.id) }}">ändern</a>
+        / <a href="{{ url_for(".move", user_id=user.id) }}">ändern</a>
     {% endcall %}
 
     {% call info_row("Netzstatus") %}
         {# TODO implementieren #}
-        Freigeschaltet
+        #todo# / <a href="{{ url_for(".ban_user", user_id=user.id) }}">Nutzer sperren</a>
     {% endcall %}
 </dl>
