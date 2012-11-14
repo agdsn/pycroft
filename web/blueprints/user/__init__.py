@@ -12,7 +12,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
 from pycroft import lib
 from pycroft.helpers import host_helper
 from pycroft.model.dormitory import Room
-from pycroft.model.hosts import Host, NetDevice, Ip
+from pycroft.model.hosts import Host, UserNetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm, UserBanForm, UserMoveoutForm
+    UserEditNameForm, UserBanForm, UserMoveoutForm, NetDeviceChangeMacForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
@@ -333,3 +333,17 @@ def user_moveout(user_id):
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
+
+@bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
+def change_mac(user_net_device_id):
+    form = NetDeviceChangeMacForm()
+    my_net_device = UserNetDevice.q.get(user_net_device_id)
+    if not form.is_submitted():
+        form.mac.data = my_net_device.mac
+    if form.validate_on_submit():
+        changed_    net_device = lib.hosts.change_mac(net_device=my_net_device,
+            mac=form.mac.data,
+            processor=current_user)
+        flash(u'Mac geändert', 'success')
+        return redirect(url_for('.user_show', user_id=changed_net_device.host.user.id))
+    return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)

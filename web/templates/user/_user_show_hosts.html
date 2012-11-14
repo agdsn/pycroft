@@ -84,7 +84,7 @@
                 <tbody>
                 {% for ip in user.user_host.ips %}
                     <tr>
-                        <td>{{ ip.net_device.mac }}</td>
+                        <td><a href="{{ url_for(".change_mac", user_net_device_id=ip.net_device.id) }}" title="Bearbeiten">{{ ip.net_device.mac }}</a></td>
                         <td>{{ ip.address }}</td>
                         <td>TODO</td>
                         <td>TODO</td>
