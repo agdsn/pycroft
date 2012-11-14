@@ -90,3 +90,7 @@ class UserBanForm(Form):
 
 class UserMoveoutForm(Form):
     date = DatePickerField(u"Endgültiger Auszug am", [Required()], with_today_button=True, default=datetime.now)
+
+class NetDeviceChangeMacForm(Form):
+    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
+        message=u"MAC ist ungültig!")])
