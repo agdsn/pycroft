@@ -5,12 +5,13 @@
 __author__ = 'florian'
 
 from tests import FixtureDataTestBase
-from pycroft.lib import user as UserHelper
+from pycroft.lib import user as UserHelper, user_config
 from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData
-from pycroft.model import user, dormitory, ports, session, logging, finance
+from pycroft.model import user, dormitory, ports, session, logging, finance, \
+    properties
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
@@ -63,6 +64,14 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         super(Test_020_User_Move_In, self).tearDown()
 
     def test_010_move_in(self):
+        def get_initial_groups():
+            initial_groups = []
+            for group in user_config.initial_groups:
+                initial_groups.append(properties.Group.q.filter(
+                    properties.Group.name == group["group_name"]
+                ).one())
+            return initial_groups
+
         test_name = u"Hans"
         test_login = u"hans66"
         test_dormitory = dormitory.Dormitory.q.first()
@@ -83,7 +92,12 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.user_host.user_net_device.mac, test_mac)
-        #TODO has initial properties
+
+        #checks the initial group memberhsips
+        user_groups = new_user.active_property_groups + new_user.active_traffic_groups
+        for group in get_initial_groups():
+            self.assertIn(group, user_groups)
+
         self.assertEqual(UserHelper.has_internet(new_user), True)
         user_account = finance.FinanceAccount.q.filter(
                 finance.FinanceAccount.user==new_user
