@@ -5,8 +5,10 @@ from tests import OldPythonTestCase, FixtureDataTestBase
 from random import randint
 import ipaddr
 
+from pycroft.lib.hosts import change_mac
+
 from pycroft.helpers.host_helper import sort_ports, generate_hostname, get_free_ip, select_subnet_for_ip, SubnetFullException
-from pycroft.model import dormitory, hosts, session
+from pycroft.model import dormitory, hosts, session, user, logging
 
 from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
@@ -88,4 +90,25 @@ class Test_020_IpHelper(FixtureDataTestBase):
         hosts.Ip.q.filter(hosts.Ip.net_device == nd).delete()
         session.session.delete(nd)
         session.session.commit()
+
+
+class Test_030_change_mac_net_device(FixtureDataTestBase):
+    datasets = [UserNetDeviceData, UserData]
+
+    def setUp(self):
+        super(Test_030_change_mac_net_device, self).setUp()
+        self.processing_user = user.User.q.get(1)
+        self.dummy_device = hosts.UserNetDevice.q.get(1)
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_030_change_mac_net_device, self).tearDown()
+
+    def test_0010_change_mac(self):
+        new_mac = "20:00:00:00:00:00"
+        change_mac(self.dummy_device, new_mac, self.processing_user)
+        self.assertEqual(self.dummy_device.mac, new_mac)
+
+
 
