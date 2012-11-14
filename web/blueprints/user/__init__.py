@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm, UserBanForm
+    UserEditNameForm, UserBanForm, UserMoveoutForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
@@ -313,3 +313,23 @@ def ban_user(user_id):
         flash(u'Nutzer gesperrt', 'success')
         return redirect(url_for('.user_show', user_id=banned_user.id))
     return render_template('user/user_ban.html', form=form, user_id=user_id)
+
+@bp.route('/user_moveout/<int:user_id>', methods=['GET', 'POST'])
+def user_moveout(user_id):
+    form = UserMoveoutForm()
+    myUser = User.q.get(user_id)
+    if myUser is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
+    if form.validate_on_submit():
+        for membership in myUser.memberships:
+            if membership.end_date > form.date.data:
+                membership.end_date = form.date.data
+        newUserLogEntry = UserLogEntry(author_id=current_user.id,
+            message=u"wird zum %s komplett ausziehen." % form.date.data.strftime("%d.%m.%Y"),
+            timestamp=datetime.now(), user_id=myUser.id)
+        session.add(newUserLogEntry)
+        session.commit()
+        flash(u'Nutzer wurde ausgezogen', 'success')
+        return redirect(url_for('.user_show', user_id=myUser.id))
+    return render_template('user/user_moveout.html', form=form, user_id=user_id)

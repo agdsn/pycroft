@@ -17,7 +17,10 @@
 
     {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
-    {% call info_row("Anmeldedatum") %}{{ user.registration_date|datetime }}{% endcall %}
+    {% call info_row("Anmeldedatum") %}
+        {{ user.registration_date|datetime }}
+        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer endgültig ausziehen</a>
+    {% endcall %}
 
     {% call info_row("Wohnort") %}
         <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a>
