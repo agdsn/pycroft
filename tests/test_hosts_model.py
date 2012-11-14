@@ -217,9 +217,8 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
     def tearDown(self):
         session.session.remove()
         hosts.Ip.q.delete()
-#       Old method to delete NetDevices is commented out, because it doesn't delete the derived table entries
-#        hosts.NetDevice.q.delete()
 
+        # Delete all derived NetDevices
         for switch_dev in hosts.SwitchNetDevice.q.all():
             session.session.delete(switch_dev)
         for user_dev in hosts.UserNetDevice.q.all():
@@ -354,7 +353,6 @@ class Test_050_SwitchEvents(FixtureDataTestBase):
         session.session.add(new_switch)
         session.session.add(netdev)
         session.session.add_all(ips)
-
         session.session.commit()
 
 
