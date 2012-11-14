@@ -17,7 +17,7 @@ from sqlalchemy.sql.expression import func
 from pycroft.helpers import user_helper, host_helper
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.hosts import Host, NetDevice, Ip, ARecord, CNameRecord
+from pycroft.model.hosts import Host, UserHost, UserNetDevice, Ip, ARecord, CNameRecord
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.properties import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
@@ -70,9 +70,9 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac,
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    new_host = Host(user=new_user,room=room)
+    new_host = UserHost(user_id = new_user.id, user=new_user,room=room)
 
-    new_net_device = NetDevice(mac=mac, host=new_host)
+    new_net_device = UserNetDevice(mac=mac, host=new_host)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
     new_arecord = ARecord(host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
@@ -171,23 +171,10 @@ def move(user, dormitory, level, room_number, processor):
         timestamp=datetime.now(), user_id=user.id)
     session.session.add(moving_user_log_entry)
 
-
-    # TODO let choose which hosts should move in the same room, change only their net_devices
-    net_device_qry = session.session.query(
-        NetDevice
-    ).join(
-        NetDevice.host
-    ).filter(
-        Host.user_id == user.id
-    )
-
-    assert net_device_qry.count() == 1, u"You can not move users with %d network devices!" % net_device_qry.count()
-
     # assign a new IP to each net_device
-    net_dev = net_device_qry.one()
+    net_dev = user.user_host.user_net_device
+
     if old_room.dormitory_id != new_room.dormitory_id:
-    #   for net_device in net_devices:
-    #        for ip_addr in net_device.ips:
         assert len(net_dev.ips) == 1, u"A user should only have one ip!"
         ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
@@ -205,7 +192,7 @@ def move(user, dormitory, level, room_number, processor):
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
-    user.hosts[0].room = new_room
+    user.user_host.room = new_room
 
     session.session.commit()
     return user
@@ -244,7 +231,7 @@ def has_exceeded_traffic(user):
     result = session.session.query(User.id,
         (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(
             TrafficVolume.size).label("has_exceeded_traffic")).join(
-        User.active_traffic_groups).join(User.hosts).join(Host.ips).join(
+        User.active_traffic_groups).join(User.user_host).join(Host.ips).join(
         Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
     if result is not None:
         return result.has_exceeded_traffic
