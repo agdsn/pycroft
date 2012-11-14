@@ -58,8 +58,10 @@ class User(ModelBase, UserMixin):
         foreign_keys=[Membership.user_id, Membership.group_id],
         viewonly=True)
 
-
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
+    email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:-|_|\.)[a-zA-Z0-9]+)*"
+                             r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
+
     blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
                       "lp", "mail", "news", "uucp", "proxy", "majordom",
                       "postgres", "wwwadmin", "backup",	"msql", "operator",
@@ -70,6 +72,11 @@ class User(ModelBase, UserMixin):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
         if not User.login_regex.match(value) or value in self.blocked_logins:
             raise Exception("invalid unix-login!")
+        return value
+
+    @validates('email')
+    def validate_email(self, _, value):
+        assert User.email_regex.match(value)
         return value
 
     @validates('passwd_hash')

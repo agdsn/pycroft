@@ -7258,8 +7258,8 @@ CREATE TABLE user (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
-INSERT INTO "user" VALUES(1,'ag_dsn','System User','2012-04-10 16:11:05.739251','{SSHA}IPVJh2ri9sXFFpWt3sp9ca64H6gdg9A6',NULL,1212);
-INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','2012-06-30 10:53:20.930821','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0',NULL,398);
+INSERT INTO "user" VALUES(1,'ag_dsn','System User','2012-04-10 16:11:05.739251','{SSHA}IPVJh2ri9sXFFpWt3sp9ca64H6gdg9A6','orgliste@wh2.tu-dresden.de',1212);
+INSERT INTO "user" VALUES(2,'jacobs','Christian Jacobs','2012-06-30 10:53:20.930821','{SSHA}uKh22SM3O+R+rOvhA30dgTfvz0mzNqa0','christian.jacobs@mailbox.tu-dresden.de',398);
 
 CREATE TABLE host (
 	id INTEGER NOT NULL,  
@@ -7332,7 +7332,7 @@ CREATE TABLE netdevice (
 	id INTEGER NOT NULL,
 	type VARCHAR(50),
 	mac VARCHAR(12) NOT NULL, 
-	host_id INTEGER NOT NULL, 
+	host_id INTEGER NOT NULL,
 	PRIMARY KEY (id), 
 	FOREIGN KEY(host_id) REFERENCES host (id)
 );

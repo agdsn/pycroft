@@ -71,11 +71,12 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         test_name = u"Hans"
         test_login = u"hans66"
+        test_email = u"hans@hans.de"
         test_dormitory = dormitory.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.moves_in(test_name,
-            test_login, test_dormitory,
+            test_login, test_email, test_dormitory,
             1,
             "1",
             None,
@@ -85,6 +86,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         self.assertEqual(new_user.name, test_name)
         self.assertEqual(new_user.login, test_login)
+        self.assertEqual(new_user.email, test_email)
         self.assertEqual(new_user.room.dormitory, test_dormitory)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
