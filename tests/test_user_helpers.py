@@ -7,13 +7,13 @@ __author__ = 'florian'
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper
 from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
-    RoomData, UserData, NetDeviceData, HostData, IpData, VLanData, SubnetData, \
+    RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData
 from pycroft.model import user, dormitory, ports, session, logging, finance
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, NetDeviceData, HostData,
+    datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
                 IpData, VLanData, SubnetData, PatchPortData]
 
     def setUp(self):
@@ -41,13 +41,13 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.new_room_other_dormitory.level,
             self.new_room_other_dormitory.number, self.processing_user)
         self.assertEqual(self.user.room, self.new_room_other_dormitory)
-        self.assertEqual(self.user.hosts[0].room, self.new_room_other_dormitory)
+        self.assertEqual(self.user.user_host.room, self.new_room_other_dormitory)
         #TODO test for changing ip
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
-                NetDeviceData, HostData, IpData, VLanData, SubnetData,
+                UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData,
                 PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, PropertyData]
 
@@ -82,7 +82,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.dormitory, test_dormitory)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
-        self.assertEqual(new_user.hosts[0].net_devices[0].mac, test_mac)
+        self.assertEqual(new_user.user_host.user_net_device.mac, test_mac)
         #TODO has initial properties
         self.assertEqual(UserHelper.has_internet(new_user), True)
         user_account = finance.FinanceAccount.q.filter(

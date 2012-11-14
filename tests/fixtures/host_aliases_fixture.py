@@ -6,7 +6,7 @@ __author__ = 'l3nkz'
 
 from fixture import DataSet
 
-from hosts_fixtures import NetDeviceData, HostData
+from hosts_fixtures import UserNetDeviceData, UserHostData
 
 # The following two fixtures are needed for generating A and
 # AAAA DNSRecords
@@ -32,12 +32,12 @@ class SubnetData(DataSet):
 class IpData(DataSet):
     class ip_v4:
         subnet = SubnetData.subnet_v4
-        net_device = NetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device
         address = "141.30.216.10"
 
     class ip_v6:
         subnet = SubnetData.subnet_v6
-        net_device = NetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device
         address = "2001:0db8:1234:0000:0000:0000:0000:0010"
 
 
@@ -45,7 +45,7 @@ class ARecordData(DataSet):
     class dummy_record1:
         address = IpData.ip_v4
         name = "www.dummy.de."
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
@@ -54,7 +54,7 @@ class AAAARecordData(DataSet):
     class dummy_record1:
         address = IpData.ip_v6
         name = "www.dummy.de."
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
@@ -64,19 +64,19 @@ class MXRecordData(DataSet):
         domain = "dummy.de."
         server = "mail.dummy.de."
         priority = 10
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
 class CNameRecordData(DataSet):
     class dummy_record:
         name = "dummy.net."
         alias_for = ARecordData.dummy_record1
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
 class NSRecordData(DataSet):
     class dummy_record1:
         server = "server.dummy.de."
         domain = "dummy.de."
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
@@ -89,7 +89,7 @@ class SRVRecordData(DataSet):
         weight = 50
         port = 5050
         target = "xmpp.dummy.de."
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
