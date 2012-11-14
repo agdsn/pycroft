@@ -70,7 +70,8 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertIsInstance": "_assertIsInstance",
                        "assertIsNotInstance": "_assertIsNotInstance",
                        "assertListEqual": "_assertListEqual",
-                       "assertSequenceEqual": "_assertSequenceEqual"}
+                       "assertSequenceEqual": "_assertSequenceEqual",
+                       "assertIn": "_assertIn"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -235,3 +236,10 @@ class OldPythonTestCase(unittest.TestCase):
         standardMsg = self._truncateMessage(standardMsg, diffMsg)
         msg = self._formatMessage(msg, standardMsg)
         self.fail(msg)
+
+    def _assertIn(self, member, container, msg=None):
+        """Just like self.assertTrue(a in b), but with a nicer default message."""
+        if member not in container:
+            standardMsg = '%s not found in %s' % (safe_repr(member),
+                                                  safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
