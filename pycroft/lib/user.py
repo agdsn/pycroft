@@ -172,8 +172,6 @@ def move(user, dormitory, level, room_number, processor):
     net_dev = user.user_host.user_net_device
 
     if old_room.dormitory_id != new_room.dormitory_id:
-    #   for net_device in net_devices:
-    #        for ip_addr in net_device.ips:
         assert len(net_dev.ips) == 1, u"A user should only have one ip!"
         ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
