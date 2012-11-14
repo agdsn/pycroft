@@ -275,7 +275,7 @@ def ban_user(user, date, reason, processor):
         group=ban_group,
         user=user)
 
-    ban_message = u"Der Nutzer ist bis zum %s gesperrt aufgrund von: %s" % (
+    ban_message = u"Sperrung bis zum %s: %s" % (
         date.strftime("%d.%m.%Y"), reason)
 
     new_log_entry = UserLogEntry(message=ban_message,
