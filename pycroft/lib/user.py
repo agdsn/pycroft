@@ -26,13 +26,14 @@ from pycroft.model.user import User
 from pycroft.lib import user_config
 
 
-def moves_in(name, login, dormitory, level, room_number, host_name, mac,
+def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
              current_semester, processor):
     """
     This function creates a new user, assign him to a room and creates some
     inital groups and transactions.
     :param name: The full name of the user. (Max Mustermann)
     :param login: The unix login for the user.
+    :param email: E-Mail address of the user.
     :param dormitory: The dormitory the user moves in.
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
@@ -49,6 +50,7 @@ def moves_in(name, login, dormitory, level, room_number, host_name, mac,
     # create a new user
     new_user = User(login=login,
         name=name,
+        email=email,
         room=room,
         registration_date=datetime.now())
     plain_password = user_helper.generatePassword(12)
@@ -215,6 +217,25 @@ def edit_name(user, name, processor):
         timestamp=datetime.now(), user_id=user.id)
     session.session.add(newUserLogEntry)
 
+    session.session.commit()
+
+    return user
+
+def edit_email(user, email, processor):
+    """
+    Changes the email address of a user and creates a log entry.
+    :param user: User object to change
+    :param email: New email address
+    :param processor:User object of the processor, which issues the change
+    :return:Changed user object
+    """
+    oldEmail = user.email
+    user.email = email
+    session.session.add(user)
+    logEntry = UserLogEntry(author_id=processor.id,
+        message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
+        timestamp=datetime.now(), user_id=user.id)
+    session.session.add(logEntry)
     session.session.commit()
 
     return user

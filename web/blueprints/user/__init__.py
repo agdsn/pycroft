@@ -25,7 +25,8 @@ from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm, UserBanForm, UserMoveoutForm, NetDeviceChangeMacForm
+    UserEditNameForm, UserEditEMailForm, UserBanForm, UserMoveoutForm, \
+    NetDeviceChangeMacForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
