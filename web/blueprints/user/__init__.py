@@ -341,7 +341,7 @@ def change_mac(user_net_device_id):
     if not form.is_submitted():
         form.mac.data = my_net_device.mac
     if form.validate_on_submit():
-        changed_    net_device = lib.hosts.change_mac(net_device=my_net_device,
+        changed_net_device = lib.hosts.change_mac(net_device=my_net_device,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
