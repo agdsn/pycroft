@@ -73,17 +73,17 @@ class PropertyData(DataSet):
         name  ="internet"
         property_group = PropertyGroupData.one_month_negative_balance
 
-class HostData(DataSet):
+class UserHostData(DataSet):
     class dummy_host1:
         hostname = "host1"
         user = UserData.dummy_user1
         room = RoomData.dummy_room1
 
 
-class NetDeviceData(DataSet):
+class UserNetDeviceData(DataSet):
     class dummy_device:
         mac = "00:00:00:00:00:00"
-        host = HostData.dummy_host1
+        host = UserHostData.dummy_host1
 
 class PatchPortData(DataSet):
     class dummy_patch_port1:
@@ -108,7 +108,7 @@ class SubnetData(DataSet):
 class IpData(DataSet):
     class dummy_ip1:
         address = "141.30.216.203"
-        net_device = NetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device
         subnet = SubnetData.dummy_subnet1
 
 
