@@ -13,6 +13,7 @@
 from base import ModelBase
 from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
+from sqlalchemy.orm import Session
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory, ports
 from sqlalchemy.orm import backref, relationship, validates
@@ -71,7 +72,8 @@ class ARecord(HostAlias):
 
     # many to one from ARecord to Ip
     address = relationship("Ip")
-    address_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+    address_id = Column(Integer, ForeignKey("ip.id"),
+        nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'arecord'}
 
@@ -90,7 +92,7 @@ class ARecord(HostAlias):
         "returns all information readable for a human"
         if self.time_to_live is not None:
             return u"%s points to %s with TTL %s" % (
-            self.name, self.address.address, self.time_to_live)
+                self.name, self.address.address, self.time_to_live)
         else:
             return u"%s points to %s" % (self.name, self.address.address)
 
@@ -100,7 +102,7 @@ class ARecord(HostAlias):
             return u"%s IN A %s" % (self.name, self.address.address)
         else:
             return u"%s %s IN A %s" % (
-            self.name, self.time_to_live, self.address.address)
+                self.name, self.time_to_live, self.address.address)
 
     @property
     def gen_reverse_entry(self):
@@ -109,8 +111,8 @@ class ARecord(HostAlias):
             return u"%s.in-addr.arpa. IN PTR %s" % (reversed_address, self.name)
         else:
             return u"%s.in-addr.arpa. %s IN PTR %s" % (
-            reversed_address, self.time_to_live,
-            self.name)
+                reversed_address, self.time_to_live,
+                self.name)
 
 
 class AAAARecord(HostAlias):
@@ -120,7 +122,8 @@ class AAAARecord(HostAlias):
 
     # many to one from ARecord to Ip
     address = relationship("Ip")
-    address_id = Column(Integer, ForeignKey("ip.id"), nullable=False)
+    address_id = Column(Integer, ForeignKey("ip.id"),
+        nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'aaaarecord'}
 
@@ -139,7 +142,7 @@ class AAAARecord(HostAlias):
         "returns all information readable for a human"
         if self.time_to_live is not None:
             return u"%s points to %s with TTL %s" % (
-            self.name, self.address.address, self.time_to_live)
+                self.name, self.address.address, self.time_to_live)
         else:
             return u"%s points to %s" % (self.name, self.address.address)
 
@@ -149,7 +152,7 @@ class AAAARecord(HostAlias):
             return u"%s IN AAAA %s" % (self.name, self.address.address)
         else:
             return u"%s %s IN AAAA %s" % (
-            self.name, self.time_to_live, self.address.address)
+                self.name, self.time_to_live, self.address.address)
 
     @property
     def gen_reverse_entry(self):
@@ -159,7 +162,7 @@ class AAAARecord(HostAlias):
             return u"%s.ip6.arpa. IN PTR %s" % (reversed_address, self.name)
         else:
             return u"%s.ip6.arpa. %s IN PTR %s" % (
-            reversed_address, self.time_to_live, self.name)
+                reversed_address, self.time_to_live, self.name)
 
 
 class MXRecord(HostAlias):
@@ -178,7 +181,7 @@ class MXRecord(HostAlias):
     def information_human(self):
         "returns all information readable for a human"
         return u"%s is mail-server for %s with priority %s" % (
-        self.server, self.domain, self.priority)
+            self.server, self.domain, self.priority)
 
     @property
     def gen_entry(self):
@@ -189,9 +192,12 @@ class CNameRecord(HostAlias):
     id = Column(Integer, ForeignKey('hostalias.id'), primary_key=True)
     name = Column(String(255), nullable=False)
 
-    alias_for_id = Column(Integer, ForeignKey("hostalias.id"), nullable=False)
+    alias_for_id = Column(Integer,
+        ForeignKey("hostalias.id", ondelete="CASCADE"), nullable=False)
     alias_for = relationship("HostAlias",
-        primaryjoin=alias_for_id == HostAlias.id)
+        primaryjoin=alias_for_id == HostAlias.id,
+        backref = backref('cnames', cascade='all, delete-orphan')
+    )
 
     __mapper_args__ = {
         'polymorphic_identity': 'cnamerecord',
@@ -244,7 +250,7 @@ class NSRecord(HostAlias):
             return u"%s IN NS %s" % (self.domain, self.server)
         else:
             return u"%s %s IN NS %s" % (
-            self.domain, self.time_to_live, self.server)
+                self.domain, self.time_to_live, self.server)
 
 
 class SRVRecord(HostAlias):
@@ -271,12 +277,12 @@ class SRVRecord(HostAlias):
     def gen_entry(self):
         if not self.time_to_live:
             return u"%s IN SRV %s %s %s %s" % (
-            self.service, self.priority, self.weight,
-            self.port, self.target)
+                self.service, self.priority, self.weight,
+                self.port, self.target)
         else:
             return u"%s %s IN SRV %s %s %s %s" % (
-            self.service, self.time_to_live, self.priority,
-            self.weight, self.port, self.target)
+                self.service, self.time_to_live, self.priority,
+                self.weight, self.port, self.target)
 
 
 class Switch(Host):
@@ -428,3 +434,20 @@ def _check_correct_management_ip(mapper, connection, target):
 
 event.listen(Switch, "before_insert", _check_correct_management_ip)
 event.listen(Switch, "before_update", _check_correct_management_ip)
+
+
+def _delete_corresponding_record(mapper, connection, target):
+    ip_id = target.id
+
+    # First check for ARecords
+    record = ARecord.q.filter(ARecord.address_id == ip_id).first()
+    if record is not None:
+        raise ValueError("There is still an ARecord which points to this address")
+
+    # Afterwards check for AAAARecords
+    record =  AAAARecord.q.filter(AAAARecord.address_id == ip_id).first()
+    if record is not None:
+        raise ValueError("There is still an AAAARecord which points to this address")
+
+
+event.listen(Ip, 'before_delete', _delete_corresponding_record)
