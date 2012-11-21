@@ -8,10 +8,6 @@ from fixture import DataSet
 
 from hosts_fixtures import UserNetDeviceData, UserHostData
 
-# The following two fixtures are needed for generating A and
-# AAAA DNSRecords
-
-
 # Subnet fixtures
 class SubnetData(DataSet):
     class subnet_v4:
@@ -31,11 +27,13 @@ class SubnetData(DataSet):
 # Ip fixtures
 class IpData(DataSet):
     class ip_v4:
+        id = 1
         subnet = SubnetData.subnet_v4
         net_device = UserNetDeviceData.dummy_device
         address = "141.30.216.10"
 
     class ip_v6:
+        id = 2
         subnet = SubnetData.subnet_v6
         net_device = UserNetDeviceData.dummy_device
         address = "2001:0db8:1234:0000:0000:0000:0000:0010"
@@ -68,8 +66,15 @@ class MXRecordData(DataSet):
 
 class CNameRecordData(DataSet):
     class dummy_record:
+        id = 100
         name = "dummy.net."
         alias_for = ARecordData.dummy_record1
+        host = UserHostData.dummy_host1
+
+    class dummy_record2:
+        id = 101
+        name = "dummy2.net."
+        alias_for =  AAAARecordData.dummy_record1
         host = UserHostData.dummy_host1
 
 class NSRecordData(DataSet):
