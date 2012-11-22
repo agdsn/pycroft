@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model.hosts import HostAlias, ARecord, AAAARecord, CNameRecord, \
     MXRecord, SRVRecord, NSRecord
-from pycroft.model.session import session
+from pycroft.model import session
 
 def delete_alias(alias_id):
     """
@@ -13,6 +13,9 @@ def delete_alias(alias_id):
     :return: nothing
     """
     alias = HostAlias.q.get(alias_id)
+
+    if (alias is None):
+        raise ValueError("The given id is not correct!")
 
     if (alias.discriminator == "arecord"):
         record = ARecord.q.filter(ARecord.id == alias_id).one()
@@ -29,8 +32,8 @@ def delete_alias(alias_id):
     else:
         raise ValueError("Unknown record type: %s" % (alias.discriminator))
 
-    session.delete(record)
-    session.commit()
+    session.session.delete(record)
+    session.session.commit()
 
 
 def change_alias(alias, **kwargs):
@@ -40,7 +43,7 @@ def change_alias(alias, **kwargs):
     :param alias: the alias which should be changed
     :param kwargs: the attributes which should be changed in the format
             attribute_name = new_value
-    :return: nothing
+    :return: the changed record
     """
     for arg in kwargs:
         try:
@@ -50,7 +53,9 @@ def change_alias(alias, **kwargs):
         else:
             setattr(alias, arg, kwargs[arg])
 
-    session.commit()
+    session.session.commit()
+
+    return  alias
 
 
 def create_alias(type, **kwargs):
@@ -59,7 +64,7 @@ def create_alias(type, **kwargs):
 
     :param type: the type of the alias (equals the discriminator of the alias)
     :param kwargs: the arguments which will be passed to the constructor of the alias
-    :return: nothing
+    :return: the created record
     """
 
     discriminator = str(type).lower()
@@ -79,5 +84,7 @@ def create_alias(type, **kwargs):
     else:
         raise ValueError("unknown record type: %s" % (type))
 
-    session.add(record)
-    session.commit()
+    session.session.add(record)
+    session.session.commit()
+
+    return record
