@@ -24,6 +24,7 @@ from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.lib import user_config
+from pycroft.lib.host_alias import create_alias, change_alias
 
 
 def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
@@ -77,15 +78,14 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
     new_net_device = UserNetDevice(mac=mac, host=new_host)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
 
-    new_arecord = ARecord(host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
-    if host_name:
-        new_cnamerecord = CNameRecord(host=new_host, name=host_name, alias_for=new_arecord)
-        session.session.add(new_cnamerecord)
-
     session.session.add(new_host)
     session.session.add(new_net_device)
     session.session.add(new_ip)
-    session.session.add(new_arecord)
+
+    new_arecord = create_alias("arecord", host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
+    if host_name:
+        create_alias("cnamerecord", host=new_host, name=host_name, alias_for=new_arecord)
+
 
     #TODO: add user to initial groups (create those memberships)
     for initial_group in user_config.initial_groups:
