@@ -24,6 +24,8 @@ from web.blueprints.infrastructure.forms import CNameRecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import arecords_query
 
+from pycroft.lib.host_alias import delete_alias, change_alias, create_alias
+
 bp = Blueprint('infrastructure', __name__, )
 nav = BlueprintNavigation(bp, "Infrastruktur")
 
@@ -44,11 +46,7 @@ def switches():
 
 @bp.route('/user/<int:user_id>/record_delete/<int:alias_id>')
 def record_delete(user_id, alias_id):
-    alias = HostAlias.q.get(alias_id)
-
-    session.delete(alias)
-    session.commit()
-
+    delete_alias(alias_id)
     flash(u"Record gelöscht", 'success')
 
     return redirect(url_for("user.user_show", user_id=user_id))
@@ -84,27 +82,8 @@ def cnamerecord_edit(user_id, alias_id):
     form.alias_for.data = alias.alias_for.name
 
     if form.validate_on_submit():
-        alias.name = form.name.data
-        session.commit()
-        flash(u"Alias geändert", "success")
-        return redirect(url_for("user.user_show", user_id=user_id))
+        change_alias(alias, name=form.name.data)
 
-    return render_template('infrastructure/record_edit.html',
-        form=form, user_id=user_id,
-        page_title=u"Alias ändern für " + alias.alias_for.name)
-
-
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/cname',
-    methods=['GET', 'POST'])
-def cnamerecord_edit(user_id, alias_id):
-    alias = CNameRecord.q.get(alias_id)
-
-    form = CNameRecordEditForm()
-    form.alias_for.data = alias.alias_for.name
-
-    if form.validate_on_submit():
-        alias.name = form.name.data
-        session.commit()
         flash(u"Alias geändert", "success")
         return redirect(url_for("user.user_show", user_id=user_id))
 
@@ -164,11 +143,8 @@ def cnamerecord_create(user_id, host_id):
     form.alias_for.query = arecords_query(host_id)
 
     if form.validate_on_submit():
-        cname = CNameRecord(host_id=host_id, name=form.name.data
-            , alias_for=form.alias_for.data)
-
-        session.add(cname)
-        session.commit()
+        create_alias("cnamerecord", host_id=host_id, name=form.name.data,
+            alias_for=form.alias_for.data)
 
         flash(u"Neuer CNameRecord angelegt", 'success')
 
