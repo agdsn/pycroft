@@ -194,7 +194,8 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         try:
-            new_user = lib.user.moves_in(form.name.data, form.login.data,
+            new_user = lib.user.moves_in(
+                form.name.data, form.login.data, form.email.data,
                 form.dormitory.data, form.level.data, form.room_number.data,
                 form.host.data, form.mac.data, form.semester.data, current_user)
 
@@ -266,6 +267,29 @@ def edit_name(user_id):
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_edit_name.html', user_id=user_id,
+        form=form)
+
+
+@bp.route('/edit_email/<int:user_id>', methods=['GET', 'POST'])
+@access.login_required
+def edit_email(user_id):
+    user = User.q.get(user_id)
+    if user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
+
+    form = UserEditEMailForm()
+
+    if not form.is_submitted():
+        form.email.data = user.email
+
+    if form.validate_on_submit():
+        edited_user = lib.user.edit_email(user, form.email.data, current_user)
+
+        flash(u'E-Mail-Adresse geändert', 'success')
+        return redirect(url_for('.user_show', user_id=edited_user.id))
+
+    return render_template('user/user_edit_email.html', user_id=user_id,
         form=form)
 
 
