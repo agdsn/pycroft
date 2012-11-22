@@ -194,10 +194,13 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         try:
-            new_user = lib.user.moves_in(
-                form.name.data, form.login.data, form.email.data,
-                form.dormitory.data, form.level.data, form.room_number.data,
-                form.host.data, form.mac.data, form.semester.data, current_user)
+            new_user = lib.user.moves_in(name=form.name.data,
+                login=form.login.data,
+                dormitory=form.dormitory.data, level=form.level.data,
+                room_number=form.room_number.data,
+                host_name=form.host.data, mac=form.mac.data,
+                current_semester=form.semester.data, processor=current_user,
+                email=form.email.data)
 
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
