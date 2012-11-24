@@ -52,16 +52,16 @@
                  <tbody>
                  {% for alias in user.user_host.aliases %}
                  <tr>
-                    <td>{{ alias.name_human }}</td>
+                    <td>{{ alias|record_readable_name }}</td>
                     <td>{{ alias.information_human }}</td>
-                    {% if alias.name_human != "ARecord" %}
-                        <td style="text-align: right">
+                    <td style="text-align: right">
+                        {% if alias|record_editable %}
                             <a href="{{ url_for("infrastructure.record_edit", user_id=user.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a>
+                        {% endif %}
+                        {% if alias|record_removable %}
                             <a href="{{ url_for("infrastructure.record_delete", user_id=user.id, alias_id=alias.id) }}" title="Löschen"><i class="icon-remove"></i></a>
-                        </td>
-                    {% else %}
-                        <td></td>
-                    {% endif %}
+                        {% endif %}
+                    </td>
                  </tr>
                  {% endfor %}
             </tbody>

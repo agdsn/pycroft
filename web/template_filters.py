@@ -119,29 +119,49 @@ def host_traffic_filter(host):
 
 @template_filter("host_name")
 def host_name_filter(host):
-    arecords = session.query(
+    arecord = session.query(
         ARecord
     ).filter(
         ARecord.host_id == host.id
-    ).all()
+    ).first()
 
-    if arecords:
-        return arecords[0].name
+    if arecord is not None:
+        return arecord.name
     else:
         return "NoName"
 
 @template_filter("host_cname")
 def host_cname_filter(host):
-    cnamerecords = session.query(
+    cname_record = session.query(
         CNameRecord
     ).filter(
         CNameRecord.host_id == host.id
-    ).all()
+    ).first()
 
-    if cnamerecords:
-        return cnamerecords[0].name
+    if cname_record is not None:
+        return cname_record.name
     else:
         return "NoCName"
+
+
+@template_filter("record_editable")
+def record_editable_filter(record):
+    if record.discriminator == "arecord" or record.discriminator == "aaaarecord":
+        return False
+    else:
+        return True
+
+@template_filter("record_removable")
+def record_removable_filter(record):
+    if record.discriminator == "arecord" or record.discriminator == "aaaarecord":
+        return False
+    else:
+        return True
+
+@template_filter("record_readable_name")
+def record_readable_name_filter(record):
+    return record.__class__.__name__
+
 
 @template_filter("level_number")
 def level_number_filter(level):
