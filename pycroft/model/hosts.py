@@ -83,11 +83,6 @@ class ARecord(HostAlias):
         return value
 
     @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"ARecord"
-
-    @property
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
@@ -133,11 +128,6 @@ class AAAARecord(HostAlias):
         return value
 
     @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"AAAARecord"
-
-    @property
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
@@ -171,11 +161,6 @@ class MXRecord(HostAlias):
     domain = Column(String(255), nullable=False)
     priority = Column(Integer, nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'mxrecord'}
-
-    @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"MXRecord"
 
     @property
     def information_human(self):
@@ -213,11 +198,6 @@ class CNameRecord(HostAlias):
         return value
 
     @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"CNameRecord"
-
-    @property
     def information_human(self):
         "returns all information readable for a human"
         return u"%s is alias for %s" % (self.name, self.alias_for.name)
@@ -233,11 +213,6 @@ class NSRecord(HostAlias):
     server = Column(String(255), nullable=False)
     time_to_live = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'nsrecord'}
-
-    @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"NSRecord"
 
     @property
     def information_human(self):
@@ -262,11 +237,6 @@ class SRVRecord(HostAlias):
     port = Column(Integer, nullable=False)
     target = Column(String(255), nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'srvrecord'}
-
-    @property
-    def name_human(self):
-        "returns a human readable name"
-        return u"SRVRecord"
 
     @property
     def information_human(self):
