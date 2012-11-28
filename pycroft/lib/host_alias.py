@@ -55,7 +55,7 @@ def change_alias(alias, **kwargs):
     return  alias
 
 
-def create_alias(type, **kwargs):
+def create_alias(type, *args, **kwargs):
     """
     This method will create a new dns record.
 
@@ -67,21 +67,21 @@ def create_alias(type, **kwargs):
     discriminator = str(type).lower()
 
     if (discriminator == "arecord"):
-        record = ARecord(**kwargs)
+        alias = ARecord(*args, **kwargs)
     elif (discriminator == "aaaarecord"):
-        record = AAAARecord(**kwargs)
+        alias = AAAARecord(*args, **kwargs)
     elif (discriminator == "cnamerecord"):
-        record = CNameRecord(**kwargs)
+        alias = CNameRecord(*args, **kwargs)
     elif (discriminator == "mxrecord"):
-        record = MXRecord(**kwargs)
+        alias = MXRecord(*args, **kwargs)
     elif (discriminator == "nsrecord"):
-        record = NSRecord(**kwargs)
+        alias = NSRecord(*args, **kwargs)
     elif (discriminator == "srvrecord"):
-        record = SRVRecord(**kwargs)
+        alias = SRVRecord(*args, **kwargs)
     else:
         raise ValueError("unknown record type: %s" % (type))
 
-    session.session.add(record)
+    session.session.add(alias)
     session.session.commit()
 
-    return record
+    return alias
