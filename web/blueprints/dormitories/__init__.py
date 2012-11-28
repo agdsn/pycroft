@@ -9,6 +9,7 @@
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import dormitory_helper
+from pycroft.lib.dormitory import create_dormitory, create_room, delete_room
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
@@ -48,10 +49,8 @@ def dormitory_show(dormitory_id):
 def dormitory_create():
     form = DormitoryForm()
     if form.validate_on_submit():
-        myDormitory = Dormitory(short_name=form.short_name.data,
+        create_dormitory(short_name=form.short_name.data,
             street=form.street.data, number=form.number.data)
-        session.add(myDormitory)
-        session.commit()
         flash(u'Wohnheim angelegt', 'success')
         return redirect(url_for('.dormitories'))
     return render_template('dormitories/dormitory_create.html', form=form)
@@ -59,9 +58,7 @@ def dormitory_create():
 
 @bp.route('/room/delete/<room_id>')
 def room_delete(room_id):
-    Room.q.filter(Room.id == room_id).delete(
-        synchronize_session='fetch')
-    session.commit()
+    delete_room(room_id)
     flash(u'Raum gelöscht', 'success')
     return redirect(url_for('.dormitories'))
 
@@ -79,15 +76,13 @@ def room_show(room_id):
 def room_create():
     form = RoomForm()
     if form.validate_on_submit():
-        myRoom = Room(
+        room = create_room(
             number=form.number.data,
             level=form.level.data,
             inhabitable=form.inhabitable.data,
             dormitory_id=form.dormitory_id.data.id)
-        session.add(myRoom)
-        session.commit()
         flash(u'Raum angelegt', 'success')
-        return redirect(url_for('.room_show', room_id=myRoom.id))
+        return redirect(url_for('.room_show', room_id=room.id))
     return render_template('dormitories/dormitory_create.html', form=form)
 
 
@@ -108,7 +103,7 @@ def dormitory_levels(dormitory_id):
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = session.query(Room).filter_by(
+    rooms_list = Room.q.filter_by(
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
 
     level_l0 = "%02d" % level
