@@ -353,18 +353,10 @@ def user_moveout(user_id):
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        for membership in myUser.memberships:
-            if membership.end_date > form.date.data:
-                membership.end_date = form.date.data
-        newUserLogEntry = UserLogEntry(author_id=current_user.id,
-            message=u"wird zum %s komplett ausziehen." % form.date.data.strftime("%d.%m.%Y"),
-            timestamp=datetime.now(), user_id=myUser.id)
-        session.add(newUserLogEntry)
-        session.commit()
+        lib.user.move_out(myUser, form.date.data, current_user)
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
-
 @bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
 def change_mac(user_net_device_id):
     form = NetDeviceChangeMacForm()
