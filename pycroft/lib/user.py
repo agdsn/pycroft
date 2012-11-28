@@ -307,3 +307,22 @@ def ban_user(user, date, reason, processor):
     session.session.add(new_membership)
     session.session.commit()
     return user
+
+def move_out(user, date, processor):
+    """
+    This function moves out a user and finishes all his memberships. A logmessage is created.
+    :param user: The user to move out.
+    :param date: The date the user is going to move out.
+    :param processor: The admin who is going to move out the user.
+    :return: The user to move out.
+    """
+    for membership in user.memberships:
+        if membership.end_date > date:
+            membership.end_date = date
+    new_log_entry = UserLogEntry(message=user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen.",
+        timestamp=datetime.now(),
+        author=processor,
+        user=user)
+    session.session.add(new_log_entry)
+    session.session.commit()
+    return user
