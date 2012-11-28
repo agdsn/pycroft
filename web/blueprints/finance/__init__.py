@@ -12,6 +12,8 @@ from flask import Blueprint, render_template, redirect, url_for
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm
 from pycroft.lib import finance
+from datetime import datetime, timedelta
+from pycroft.model.finance import Semester
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
@@ -43,12 +45,34 @@ def semester_list():
 @bp.route('/semester/create', methods=("GET", "POST"))
 @nav.navigate(u"Erstelle Semester")
 def semester_create():
-    form = SemesterCreateForm()
+    try:
+        previous_semester = Semester.q.order_by(
+            Semester.begin_date.desc()
+            ).first()
+        begin_date_default = previous_semester.end_date
+        end_date_default = previous_semester.begin_date.replace(
+            year = previous_semester.begin_date.year + 1
+            )
+        if begin_date_default.year == end_date_default.year:
+            name_default = u'Sommersemester ' + str(begin_date_default.year)
+        else:
+            name_default = (u'Wintersemester ' + str(begin_date_default.year) +
+                            u'/' + str(end_date_default.year))
+        registration_fee_default = previous_semester.registration_fee
+        semester_fee_default = previous_semester.semester_fee
+        form = SemesterCreateForm(name=name_default,
+                                  registration_fee=registration_fee_default,
+                                  semester_fee=semester_fee_default,
+                                  begin_date=begin_date_default,
+                                  end_date=end_date_default)
+    except IndexError:
+        form = SemesterCreateForm()
     if form.validate_on_submit():
         finance.semester_create(name=form.name.data,
         registration_fee=form.registration_fee.data,
         semester_fee=form.semester_fee.data,
         begin_date=form.begin_date.data,
         end_date=form.end_date.data)
+        print 
         return redirect(url_for(".semester_list"))
     return render_template('finance/semester_create.html', form=form)
