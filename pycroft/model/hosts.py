@@ -276,7 +276,7 @@ class NetDevice(ModelBase):
     #mac = Column(postgresql.MACADDR, nullable=False)
     mac = Column(String(12), nullable=False)
 
-    mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
+    mac_regex = re.compile(r"^[a-fA-F0-9]{2}([:|-]?[a-fA-F0-9]{2}){5}$")
 
     host_id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
         nullable=False)
