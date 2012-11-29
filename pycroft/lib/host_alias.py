@@ -7,7 +7,7 @@ def delete_alias(alias_id):
     This method deletes an alias.
 
     :param alias_id: the id of the alias which should be deleted
-    :return: nothing
+    :return: the deleted alias
     """
     alias = HostAlias.q.get(alias_id)
 
@@ -31,6 +31,8 @@ def delete_alias(alias_id):
 
     session.session.delete(record)
     session.session.commit()
+
+    return alias
 
 
 def change_alias(alias, **kwargs):
