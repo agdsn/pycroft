@@ -1,11 +1,12 @@
-
-from datetime import datetime
+# -*- coding: utf-8 -*-
+from datetime import datetime, time
 import ipaddr
 
 from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
 
 from pycroft import model
-from pycroft.model import dormitory, session, ports, user, hosts
+from pycroft.model import dormitory, session, ports, user, hosts, properties, logging
+from pycroft.helpers.user_helper import hash_password
 
 def do_convert():
     houses = {}
@@ -13,6 +14,9 @@ def do_convert():
     switch_ports = []
     rooms = []
     switches = {}
+    users = []
+    ips = []
+    net_devices = []
 
     root_room = None
 
@@ -32,8 +36,15 @@ def do_convert():
 
             if port.ip not in switches:
                 pub_ip = port.ip.replace("10.10", "141.30")
-                hostname = my_session.query(Computer.c_hname.label("hname")).filter(Computer.c_ip == pub_ip).first().hname
-                new_switch = hosts.Switch(hostname=port.ip.split(".")[3], name=hostname, management_ip=port.ip)
+                computer = my_session.query(Computer).filter(Computer.c_ip == pub_ip).first()
+                hostname = computer.c_hname
+                mac = computer.c_etheraddr
+                new_switch_netdevice = hosts.SwitchNetDevice(mac=mac)
+                mgmt_ip = hosts.Ip(address=pub_ip, net_device=new_switch_netdevice)
+                new_switch = hosts.Switch(name=hostname, management_ip=mgmt_ip)
+                new_switch_netdevice.host = new_switch
+                net_devices.append(new_switch_netdevice)
+                ips.append(mgmt_ip)
                 switches[port.ip] = new_switch
             new_swport = ports.SwitchPort(name=port.port, switch=switches[port.ip])
             switch_ports.append(new_swport)
@@ -44,10 +55,10 @@ def do_convert():
                 root_room = new_room
 
 
-    root = user.User(login="ag_dsn", name="System User", registration_date=datetime.today())
+    root = user.User(login="ag_dsn", name="System User", registration_date=datetime.today(), passwd_hash=hash_password("test"))
     root.room = root_room
     for switch in switches.values():
-        switch.user = root
+        switch.user_id = root.id
 
 
     vlan_houses = {'Wu1': (5,),
@@ -70,12 +81,14 @@ def do_convert():
 
     vlans = {}
 
-    subnets = []
+    subnets = {}
     for subnet in my_session.query(Subnet):
-        new_subnet = dormitory.Subnet(address=str(ipaddr.IPv4Network("%s/%s" % (subnet.net_ip, subnet.netmask))),
+        replaced_subnet_ip = subnet.net_ip.replace("10.10", "141.30")
+        new_subnet = dormitory.Subnet(address=str(ipaddr.IPv4Network("%s/%s" % (replaced_subnet_ip, subnet.netmask))),
                                       dns_domain=subnet.domain,
-                                      gateway=subnet.default_gateway)
-        subnets.append(new_subnet)
+                                      gateway=subnet.default_gateway,
+                                      ip_type="4")
+        subnets[subnet.subnet_id] = new_subnet
 
         vlans[subnet.vlan_name] = dormitory.VLan(name=subnet.vlan_name,
                                                  tag=vlan_tags[subnet.vlan_name])
@@ -84,14 +97,108 @@ def do_convert():
         for house in vlan_houses[subnet.vlan_name]:
             houses[house].vlans.append(vlans[subnet.vlan_name])
 
+    for ip in ips:
+        pub_ip = ip.address.replace("10.10", "141.30")
+        computer_query = my_session.query(Computer).filter(Computer.c_ip == pub_ip)
+        computer = computer_query.first()
+        ip.subnet = subnets[computer.c_subnet_id]
+
+
+    property_groups = {"verstoß": properties.PropertyGroup(name=u"Verstoß"),
+                       "bewohner": properties.PropertyGroup(name=u"Bewohner"),
+                       "admin": properties.PropertyGroup(name=u"Admin"),
+                       "nutzerverwalter": properties.PropertyGroup(
+                           name=u"Nutzerverwalter"),
+                       "finanzen": properties.PropertyGroup(name=u"Finanzen"),
+                       "root": properties.PropertyGroup(name=u"Root"),
+                       "hausmeister": properties.PropertyGroup(
+                           name=u"Hausmeister"),
+                       "exaktiv": properties.PropertyGroup(name=u"Exaktiv")}
+
+    properties_all = [properties.Property(name="no_internet",
+        property_group=property_groups["verstoß"]),
+                      properties.Property(name="internet",
+                          property_group=property_groups["bewohner"]),
+                      properties.Property(name="mail",
+                          property_group=property_groups["bewohner"]),
+                      properties.Property(name="ssh_helios",
+                          property_group=property_groups["bewohner"]),
+                      properties.Property(name="homepage_helios",
+                          property_group=property_groups["bewohner"]),]
+
 
     session.session.add_all(houses.values())
     session.session.add_all(patch_ports)
     session.session.add_all(rooms)
     session.session.add_all(switches.values())
+    session.session.add_all(ips)
+    session.session.add_all(net_devices)
     session.session.add_all(switch_ports)
+    session.session.add_all(property_groups.values())
+    session.session.add_all(properties_all)
     session.session.add(root)
-    session.session.add_all(subnets)
+    session.session.add_all(subnets.values())
     session.session.add_all(vlans.values())
+
+    logs = []
+    user_hosts = []
+    user_netdevices = []
+    ips = []
+    a_records = []
+    cname_records = []
+
+    for old_user in my_session.query(Nutzer):
+        user_room = dormitory.Room.q.filter_by(
+            dormitory_id=houses[old_user.wheim_id].id, level=old_user.etage,
+            number=old_user.zimmernr).first()
+        if old_user.status in [1,2,4,5,6,7,12]:
+            if user_room is not None:
+                #if user_room is None:
+                #    print str(old_user.nutzer_id)+" "+str(old_user.status)+" "+str(houses[old_user.wheim_id].id)+" "+str(old_user.etage)+old_user.zimmernr
+                new_user = user.User(id=old_user.nutzer_id, login=old_user.unix_account,
+                    name=old_user.vname + " " + old_user.name, room_id=user_room.id
+                    ,
+                    registration_date=datetime.combine(old_user.anmeldedatum,time()))
+
+                computer = my_session.query(Computer).filter(
+                            Computer.nutzer_id == old_user.nutzer_id
+                        ).first()
+
+                new_host = hosts.UserHost(user=new_user, room=user_room)
+                user_hosts.append(new_host)
+
+                new_netdevice = hosts.UserNetDevice(mac=computer.c_etheraddr,
+                    host=new_host)
+                user_netdevices.append(new_netdevice)
+
+                new_ip = hosts.Ip(address=computer.c_ip, net_device=new_netdevice,
+                                subnet=subnets[computer.c_subnet_id])
+                ips.append(new_ip)
+
+                new_arecord = hosts.ARecord(name=computer.c_hname,
+                                        address=new_ip, host=new_host)
+                a_records.append(new_arecord)
+
+                if (computer.c_alias is not None) and (len(computer.c_alias) is not 0):
+                    new_cnamerecord = hosts.CNameRecord(name=computer.c_alias,
+                                                alias_for=new_arecord, host=new_host)
+                    cname_records.append(new_cnamerecord)
+
+                if (old_user.comment is not None) and (len(old_user.comment) is not 0):
+                    new_log = logging.UserLogEntry(message=u"Alte Kommentare: "+
+                                                           unicode(old_user.comment,
+                                                               errors="ignore"),
+                        timestamp=datetime.now(), author=root, user=new_user)
+                    logs.append(new_log)
+                users.append(new_user)
+
+
+    session.session.add_all(users)
+    session.session.add_all(logs)
+    session.session.add_all(user_hosts)
+    session.session.add_all(user_netdevices)
+    session.session.add_all(ips)
+    session.session.add_all(a_records)
+    session.session.add_all(cname_records)
 
     session.session.commit()
