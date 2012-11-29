@@ -24,9 +24,10 @@ class Host(ModelBase):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
+    #TODO make user_id nullable after last import of mysql data
     # many to one from Host to User
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
-        nullable=False)
+        nullable=True)
 
     # many to one from Host to Room
     room = relationship(dormitory.Room, backref=backref("hosts"))
