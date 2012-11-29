@@ -24,7 +24,7 @@ def delete_dormitory(dormitory_id):
     This method will remove the dormitory fot the given id.
 
     :param dormitory_id: the id of the dormitory which should be removed
-    :return: nothing
+    :return: the deleted dormitory
     """
     dormitory = Dormitory.q.get(dormitory_id)
     if dormitory is None:
@@ -32,6 +32,8 @@ def delete_dormitory(dormitory_id):
 
     session.session.delete(dormitory)
     session.session.commit()
+
+    return dormitory
 
 
 def create_room(*args, **kwargs):
@@ -54,7 +56,7 @@ def delete_room(room_id):
     This method will remove the room for the given id.
 
     :param room_id: the id of the room which should be deleted
-    :return: nothing
+    :return: the deleted room
     """
     room = Room.q.get(room_id)
     if room is None:
@@ -62,4 +64,6 @@ def delete_room(room_id):
 
     session.session.delete(room)
     session.session.commit()
+
+    return room
 
