@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 __author__ = 'florian'
 
 from tests import FixtureDataTestBase
@@ -9,6 +10,7 @@ from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     PropertyData
 from pycroft.model import user, dormitory, ports, session, logging, finance, \
     properties
+from datetime import datetime
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
@@ -109,3 +111,51 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account_sum = sum([split.amount for split in splits])
         self.assertEqual(account_sum,4000)
 
+class Test_030_User_Move_Out(FixtureDataTestBase):
+    datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
+                UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData,
+                PatchPortData, SemesterData, TrafficGroupData,
+                PropertyGroupData, PropertyData]
+
+    def setUp(self):
+        super(Test_030_User_Move_Out, self).setUp()
+        self.processing_user = user.User.q.get(1)
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_030_User_Move_Out, self).tearDown()
+
+
+    def test_030_move_out(self):
+        def get_initial_groups():
+            initial_groups = []
+            for group in user_config.initial_groups:
+                initial_groups.append(properties.Group.q.filter(
+                    properties.Group.name == group["group_name"]
+                ).one())
+            return initial_groups
+
+        test_name = u"Hans"
+        test_login = u"hans66"
+        test_email = u"hans@hans.de"
+        test_dormitory = dormitory.Dormitory.q.first()
+        test_mac = "12:11:11:11:11:11"
+
+        new_user = UserHelper.moves_in(test_name,
+            test_login, test_email, test_dormitory,
+            1,
+            "1",
+            None,
+            test_mac,
+            finance.Semester.q.first(),
+            self.processing_user)
+
+        out_time = datetime.now()
+
+        UserHelper.move_out(new_user, out_time, self.processing_user)
+
+        # check end_date of moved out user
+        for membership in new_user.memberships:
+            if membership.end_date >= out_time:
+                self.assertEquals(membership.end_date, out_time)
