@@ -12,8 +12,6 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host_helper
 from pycroft.model.hosts import Switch
 from pycroft.model.hosts import HostAlias, CNameRecord
-from pycroft.model.ports import SwitchPort
-from pycroft.model.session import session
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm
@@ -22,6 +20,7 @@ from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import arecords_query
 
 from pycroft.lib.host_alias import delete_alias, change_alias, create_alias
+from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
 nav = BlueprintNavigation(bp, "Infrastruktur")
@@ -182,10 +181,7 @@ def switch_port_create(switch_id):
     form = SwitchPortForm()
     switch = Switch.q.get(switch_id)
     if form.validate_on_submit():
-        new_switch_port = SwitchPort(name=form.name.data,
-            switch_id=switch_id)
-        session.add(new_switch_port)
-        session.commit()
+        create_switch_port(name=form.name.data, switch_id=switch_id)
         flash(u'Neuer Switch Port angelegt', 'success')
         return redirect(url_for('.switch_show', switch_id=switch_id))
     return render_template('infrastructure/switch_port_create.html',
