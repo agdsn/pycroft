@@ -320,8 +320,11 @@ def move_out(user, date, processor):
     :return: The user to move out.
     """
     for membership in user.memberships:
+        if membership.end_date is None:
+            membership.end_date = date
         if membership.end_date > date:
             membership.end_date = date
+
     new_log_entry = UserLogEntry(message=user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen.",
         timestamp=datetime.now(),
         author=processor,
