@@ -44,6 +44,29 @@ class Test_020_AAAARecordValidator(FixtureDataTestBase):
                 break
 
 
+class Test_025_CNameRecordValidator(FixtureDataTestBase):
+    datasets = [ARecordData, MXRecordData, UserHostData]
+
+    def test_0010_alias_for_name_validator(self):
+        arecord = ARecord.q.first()
+        host = UserHost.q.first()
+
+        self.assertRaises(AssertionError, CNameRecord, name=arecord.name,
+            alias_for = arecord, host_id = host.id)
+
+
+        new_record = CNameRecord(name = arecord.name+"_test",
+            alias_for = arecord, host_id = host.id)
+
+    def test_0020_alias_for_type_validator(self):
+        mxrecord = MXRecord.q.first()
+        host = UserHost.q.first()
+
+        self.assertRaises(AssertionError, CNameRecord, name="test",
+            alias_for = mxrecord, host_id = host.id)
+
+
+
 class Test_030_GenEntryMethods(FixtureDataTestBase):
     datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData,
                 NSRecordData, SRVRecordData]
