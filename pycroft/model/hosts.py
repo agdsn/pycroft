@@ -196,6 +196,8 @@ class CNameRecord(HostAlias):
         # aaaarecord are allowed
         assert value.discriminator == "arecord" or\
                value.discriminator == "aaaarecord"
+        assert value.name != self.name
+
         return value
 
     @property
