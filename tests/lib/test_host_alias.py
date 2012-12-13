@@ -1,6 +1,10 @@
-from pycroft.lib.host_alias import delete_alias, change_alias, create_alias
+from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord, \
+    create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord, \
+    create_srvrecord
+
 from pycroft.model.hosts import ARecord, AAAARecord, NSRecord, CNameRecord,\
     MXRecord, SRVRecord, HostAlias, Ip, UserHost
+
 from tests.lib.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
     NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData
 from tests import FixtureDataTestBase
@@ -82,7 +86,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         name = "test"
         id = 1000
 
-        create_alias("arecord", id=id, address_id=address.id, name=name,
+        create_arecord(id=id, address_id=address.id, name=name,
             host=host)
 
         self.assertEqual(ARecord.q.filter(ARecord.id == id).one().name, name)
@@ -101,7 +105,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         ttl = 100
         id = 1000
 
-        create_alias("arecord", id=id, address_id=address.id, name=name,
+        create_arecord(id=id, address_id=address.id, name=name,
             time_to_live=ttl, host=host)
 
         self.assertEqual(ARecord.q.filter(ARecord.id == id).one().name, name)
@@ -120,7 +124,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         name = "test"
         id = 1000
 
-        create_alias("aaaarecord", id=id, address_id=address.id, name=name,
+        create_aaaarecord(id=id, address_id=address.id, name=name,
             host=host)
 
         self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().name,
@@ -141,7 +145,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         ttl = 100
         id = 1000
 
-        create_alias("aaaarecord", id=id, address_id=address.id, name=name,
+        create_aaaarecord(id=id, address_id=address.id, name=name,
             time_to_live=ttl, host=host)
 
         self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().name,
@@ -161,7 +165,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         name = "test"
         id = 1000
 
-        create_alias("cnamerecord", id=id, alias_for=alias_for, name=name,
+        create_cnamerecord(id=id, alias_for=alias_for, name=name,
             host=host)
 
         self.assertEqual(
@@ -181,7 +185,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         id = 1000
         priority = 10
 
-        create_alias("mxrecord", id=id, priority=priority, server=server,
+        create_mxrecord(id=id, priority=priority, server=server,
             domain=domain, host=host)
 
         self.assertEqual(MXRecord.q.filter(MXRecord.id == id).one().server,
@@ -201,7 +205,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         server = "server"
         id = 1000
 
-        create_alias("nsrecord", id=id, domain=domain, server=server,
+        create_nsrecord(id=id, domain=domain, server=server,
             host=host)
 
         self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().domain,
@@ -222,7 +226,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         ttl = 10
         id = 1000
 
-        create_alias("nsrecord", id=id, domain=domain, server=server,
+        create_nsrecord(id=id, domain=domain, server=server,
             time_to_live=ttl, host=host)
 
         self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().domain,
@@ -245,7 +249,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         target = "target"
         id = 1000
 
-        create_alias("srvrecord", id=id, priority=priority, service=service,
+        create_srvrecord(id=id, priority=priority, service=service,
             weight=weight, port=port, target=target, host=host)
 
         self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().service,
@@ -275,7 +279,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         target = "target"
         id = 1000
 
-        create_alias("srvrecord", id=id, priority=priority, service=service,
+        create_srvrecord(id=id, priority=priority, service=service,
             weight=weight, port=port, target=target, time_to_live=ttl,
             host=host)
 

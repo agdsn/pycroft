@@ -57,11 +57,12 @@ def change_alias(alias, **kwargs):
     return  alias
 
 
-def create_alias(type, *args, **kwargs):
+def _create_alias(type, *args, **kwargs):
     """
     This method will create a new dns record.
 
     :param type: the type of the alias (equals the discriminator of the alias)
+    :param args: the positionals which will be passed to the constructor of the alias
     :param kwargs: the arguments which will be passed to the constructor of the alias
     :return: the created record
     """
@@ -87,3 +88,77 @@ def create_alias(type, *args, **kwargs):
     session.session.commit()
 
     return alias
+
+
+# Wrapper functions around the _create_alias function for each record type
+
+def create_arecord(*args, **kwargs):
+    """
+    This method will create a new a-record
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created a-record
+    """
+
+    return _create_alias("arecord", *args, **kwargs)
+
+
+def create_aaaarecord(*args, **kwargs):
+    """
+    This method will create a new aaaa-record
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created aaaa-record
+    """
+
+    return _create_alias("aaaarecord", *args, **kwargs)
+
+
+def create_mxrecord(*args, **kwargs):
+    """
+    This method will create a new mx-record
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created mx-record
+    """
+
+    return _create_alias("mxrecord", *args, **kwargs)
+
+
+def create_cnamerecord(*args, **kwargs):
+    """
+    This method will create a new cname-record
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created cname-record
+    """
+
+    return _create_alias("cnamerecord", *args, **kwargs)
+
+
+def create_nsrecord(*args, **kwargs):
+    """
+    This method will create a new ns-record.
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created ns-record
+    """
+
+    return _create_alias("nsrecord", *args, **kwargs)
+
+
+def create_srvrecord(*args, **kwargs):
+    """
+    This method will create a new srv-record.
+
+    :param args: the positionals which will be passed to the constructor
+    :param kwargs: the keyword arguments which will be passed to the constructor
+    :return: the created srv-record
+    """
+
+    return _create_alias("srvrecord", *args, **kwargs)
