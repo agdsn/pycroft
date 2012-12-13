@@ -7,7 +7,7 @@ __author__ = 'Florian Österreich'
 from pycroft.model.finance import Semester, FinanceAccount
 from pycroft.model import session
 
-def semester_create(name, registration_fee, semester_fee, begin_date, end_date):
+def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     """
     This function creates a new Semester.
     There are created a registration fee account and a semester fee account
