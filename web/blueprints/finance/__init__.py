@@ -45,10 +45,8 @@ def semester_list():
 @bp.route('/semester/create', methods=("GET", "POST"))
 @nav.navigate(u"Erstelle Semester")
 def semester_create():
-    try:
-        previous_semester = Semester.q.order_by(
-            Semester.begin_date.desc()
-            ).first()
+    previous_semester = Semester.q.order_by(Semester.begin_date.desc()).first()
+    if previous_semester:
         begin_date_default = previous_semester.end_date
         end_date_default = previous_semester.begin_date.replace(
             year = previous_semester.begin_date.year + 1
@@ -65,7 +63,7 @@ def semester_create():
                                   semester_fee=semester_fee_default,
                                   begin_date=begin_date_default,
                                   end_date=end_date_default)
-    except IndexError:
+    else:
         form = SemesterCreateForm()
     if form.validate_on_submit():
         finance.semester_create(name=form.name.data,
