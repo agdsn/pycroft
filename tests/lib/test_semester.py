@@ -2,7 +2,7 @@
 __author__ = 'Florian Österreich'
 
 from tests import OldPythonTestCase
-from pycroft.lib import finance as financeHelper
+from pycroft.lib.finance import create_semester
 from pycroft import model
 from pycroft.model import session
 from datetime import datetime
@@ -19,7 +19,7 @@ class Test_010_Create_Semester(OldPythonTestCase):
         session.session.remove()
 
     def test_010_new_semester(self):
-        new_semester = financeHelper.semester_create("Testsemester", "2500", "1500", datetime.now(), datetime.now())
+        new_semester = create_semester("Testsemester", "2500", "1500", datetime.now(), datetime.now())
         self.assertIsNotNone(new_semester.registration_fee_account)
         self.assertEqual(new_semester.registration_fee_account.name,u"Anmeldegebühr Testsemester")
         self.assertEqual(new_semester.registration_fee_account.type,"EXPENSE")

@@ -66,7 +66,7 @@ def semester_create():
     else:
         form = SemesterCreateForm()
     if form.validate_on_submit():
-        finance.semester_create(name=form.name.data,
+        finance.create_semester(name=form.name.data,
         registration_fee=form.registration_fee.data,
         semester_fee=form.semester_fee.data,
         begin_date=form.begin_date.data,
