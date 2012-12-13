@@ -112,10 +112,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(account_sum,4000)
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
-                UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData,
-                PatchPortData, SemesterData, TrafficGroupData,
-                PropertyGroupData, PropertyData]
+    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData]
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
