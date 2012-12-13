@@ -4,7 +4,7 @@
 from pycroft.lib.host_alias import delete_alias, change_alias, create_alias
 from pycroft.model.hosts import ARecord, AAAARecord, NSRecord, CNameRecord,\
     MXRecord, SRVRecord, HostAlias, Ip, UserHost
-from tests.fixtures.host_aliases_fixture import ARecordData, AAAARecordData,\
+from tests.lib.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
     NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData
 from tests import FixtureDataTestBase
 

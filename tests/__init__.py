@@ -6,7 +6,7 @@ __author__ = 'jan'
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
-from pycroft import model
+from pycroft.model import drop_db_model, create_db_model
 
 from tests.unittest26_compat import OldPythonTestCase
 
@@ -28,7 +28,7 @@ class FixtureDataTestBase(DataTestCase, OldPythonTestCase):
     the fixture DataSets. The type of the fixture element will be taken
     from the name of the DataSet class. It needs "Data" as suffic. So if
     you want to provide fixtures for the User model the name of the DataSet
-    has to be "UserData". See also test_properties.py for an example.
+    has to be "UserData". See also test_property.py for an example.
 
     If you overwrite the `tearDown` or `setUpClass` methods don't forget
     to call the ones in the superclass.
@@ -37,8 +37,8 @@ class FixtureDataTestBase(DataTestCase, OldPythonTestCase):
     @classmethod
     def setUpClass(cls):
         session.reinit_session("sqlite://")
-        model.drop_db_model()
-        model.create_db_model()
+        drop_db_model()
+        create_db_model()
         cls.fixture = make_fixture()
 
     def tearDown(self):
