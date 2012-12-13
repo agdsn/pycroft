@@ -1,8 +1,6 @@
-import unittest
-
 from tests import OldPythonTestCase
 from pycroft import model
-from pycroft.model import session, user, finance, _all
+from pycroft.model import session, finance
 from datetime import datetime
 
 

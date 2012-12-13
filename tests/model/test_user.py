@@ -1,6 +1,5 @@
 import random
 import unittest
-from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from crypt import crypt
 from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
@@ -10,27 +9,7 @@ from pycroft.helpers.user_helper import generatePassword, hash_password, verify_
 from tests import FixtureDataTestBase
 
 
-class DormitoryData(DataSet):
-    class dummy_house:
-        number = "01"
-        short_name = "abc"
-        street = "dummy"
-
-
-class RoomData(DataSet):
-    class dummy_room:
-        number = 1
-        level = 1
-        inhabitable = True
-        dormitory = DormitoryData.dummy_house
-
-
-class UserData(DataSet):
-    class dummy_user:
-        login = "test"
-        name = "John Doe"
-        registration_date = datetime.now()
-        room = RoomData.dummy_room
+from tests.model.fixtures.user_fixtures import DormitoryData, UserData, RoomData
 
 
 class Test_010_PasswordGenerator(unittest.TestCase):

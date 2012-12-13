@@ -1,11 +1,12 @@
-import unittest
 import re
 
 from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, hosts, dormitory, user, accounting
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData
+from tests.model.fixtures.hosts_fixtures import DormitoryData, VLanData, \
+    SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
+    TrafficVolumeData
 from pycroft.helpers.host_helper import get_free_ip
 
 

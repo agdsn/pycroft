@@ -1,9 +1,42 @@
 __author__ = 'l3nkz'
 
-
 from fixture import DataSet
+from datetime import datetime
 
-from hosts_fixtures import UserNetDeviceData, UserHostData
+class DormitoryData(DataSet):
+    class dummy_house1:
+        number = "01"
+        short_name = "abc"
+        street = "dummy"
+
+
+class RoomData(DataSet):
+    class dummy_room1:
+        number = "1"
+        level = 1
+        inhabitable = True
+        dormitory = DormitoryData.dummy_house1
+
+
+class UserData(DataSet):
+    class dummy_user1:
+        login = "test"
+        name = "John Doe"
+        registration_date = datetime.now()
+        room = RoomData.dummy_room1
+
+
+class UserHostData(DataSet):
+    class dummy_host1:
+        id = 1
+        user = UserData.dummy_user1
+        room = RoomData.dummy_room1
+
+
+class UserNetDeviceData(DataSet):
+    class dummy_device1:
+        mac = "00:00:00:00:00:00"
+        host = UserHostData.dummy_host1
 
 # Subnet fixtures
 class SubnetData(DataSet):
@@ -26,13 +59,13 @@ class IpData(DataSet):
     class ip_v4:
         id = 1
         subnet = SubnetData.subnet_v4
-        net_device = UserNetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device1
         address = "141.30.216.10"
 
     class ip_v6:
         id = 2
         subnet = SubnetData.subnet_v6
-        net_device = UserNetDeviceData.dummy_device
+        net_device = UserNetDeviceData.dummy_device1
         address = "2001:0db8:1234:0000:0000:0000:0000:0010"
 
 
@@ -45,6 +78,7 @@ class ARecordData(DataSet):
     class dummy_record2(dummy_record1):
         time_to_live = 1000
 
+
 class AAAARecordData(DataSet):
     class dummy_record1:
         address = IpData.ip_v6
@@ -54,12 +88,14 @@ class AAAARecordData(DataSet):
     class dummy_record2(dummy_record1):
         time_to_live = 1000
 
+
 class MXRecordData(DataSet):
     class dummy_record:
         domain = "dummy.de."
         server = "mail.dummy.de."
         priority = 10
         host = UserHostData.dummy_host1
+
 
 class CNameRecordData(DataSet):
     class dummy_record:
@@ -71,8 +107,9 @@ class CNameRecordData(DataSet):
     class dummy_record2:
         id = 101
         name = "dummy2.net."
-        alias_for =  AAAARecordData.dummy_record1
+        alias_for = AAAARecordData.dummy_record1
         host = UserHostData.dummy_host1
+
 
 class NSRecordData(DataSet):
     class dummy_record1:

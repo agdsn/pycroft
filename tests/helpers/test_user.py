@@ -4,7 +4,7 @@ __author__ = 'florian'
 
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper, user_config
-from tests.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
+from tests.helpers.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData

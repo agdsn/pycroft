@@ -1,13 +1,11 @@
 __author__ = 'l3nkz'
 
-from fixtures.host_aliases_fixture import ARecordData, AAAARecordData,\
+from tests.model.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
     MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData, UserHostData
 from tests import FixtureDataTestBase
 from pycroft.model.hosts import ARecord, AAAARecord, MXRecord, CNameRecord,\
     NSRecord, SRVRecord, Ip, UserHost, HostAlias
-from pycroft.model.dormitory import Subnet
 from pycroft.model import session
-from sqlalchemy.exc import *
 import ipaddr
 
 class Test_010_ARecordValidator(FixtureDataTestBase):
@@ -52,19 +50,17 @@ class Test_025_CNameRecordValidator(FixtureDataTestBase):
         host = UserHost.q.first()
 
         self.assertRaises(AssertionError, CNameRecord, name=arecord.name,
-            alias_for = arecord, host_id = host.id)
+            alias_for=arecord, host_id=host.id)
 
-
-        new_record = CNameRecord(name = arecord.name+"_test",
-            alias_for = arecord, host_id = host.id)
+        new_record = CNameRecord(name=arecord.name + "_test",
+            alias_for=arecord, host_id=host.id)
 
     def test_0020_alias_for_type_validator(self):
         mxrecord = MXRecord.q.first()
         host = UserHost.q.first()
 
         self.assertRaises(AssertionError, CNameRecord, name="test",
-            alias_for = mxrecord, host_id = host.id)
-
+            alias_for=mxrecord, host_id=host.id)
 
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
@@ -223,24 +219,15 @@ class Test_040_Cascades(FixtureDataTestBase):
 
     def test_0040_arecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
-        try:
-            session.session.delete(ip)
-            session.session.commit()
-        except ValueError:
-            self.assertTrue(True)
-            session.session.rollback()
-        else:
-            self.assertTrue(False)
+        session.session.delete(ip)
+
+        self.assertRaises(ValueError, session.session.commit)
+        session.session.rollback()
 
 
     def test_0045_aaaarecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()
-        aaaarecords = AAAARecord.q.all()
-        try:
-            session.session.delete(ip)
-            session.session.commit()
-        except ValueError:
-            self.assertTrue(True)
-            session.session.rollback()
-        else:
-            self.assertTrue(False)
+        session.session.delete(ip)
+
+        self.assertRaises(ValueError, session.session.commit)
+        session.session.rollback()

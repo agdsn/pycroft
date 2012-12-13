@@ -4,10 +4,12 @@ import ipaddr
 
 from pycroft.lib.hosts import change_mac
 
-from pycroft.helpers.host_helper import sort_ports, generate_hostname, get_free_ip, select_subnet_for_ip, SubnetFullException
+from pycroft.helpers.host_helper import sort_ports, generate_hostname, \
+    get_free_ip, select_subnet_for_ip, SubnetFullException
 from pycroft.model import dormitory, hosts, session, user, logging
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
+from tests.helpers.fixtures.hosts_fixtures import DormitoryData, VLanData, \
+    SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
 
 class Test_010_SimpleHostsHelper(OldPythonTestCase):

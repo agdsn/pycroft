@@ -8,7 +8,6 @@ This module contains Tests for the basic model schema
 :copyright: (c) 2011 by AG DSN.
 """
 
-import unittest
 from sqlalchemy.orm.util import class_mapper
 import sqlalchemy.exc
 
