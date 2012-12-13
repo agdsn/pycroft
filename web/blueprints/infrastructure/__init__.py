@@ -22,7 +22,7 @@ from web.blueprints.infrastructure.forms import CNameRecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import arecords_query
 
-from pycroft.lib.host_alias import delete_alias, change_alias, create_alias
+from pycroft.lib.host_alias import delete_alias, change_alias, create_cnamerecord
 from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
@@ -142,7 +142,7 @@ def cnamerecord_create(user_id, host_id):
     form.alias_for.query = arecords_query(host_id)
 
     if form.validate_on_submit():
-        create_alias("cnamerecord", host_id=host_id, name=form.name.data,
+        create_cnamerecord(host_id=host_id, name=form.name.data,
             alias_for=form.alias_for.data)
 
         flash(u"Neuer CNameRecord angelegt", 'success')
