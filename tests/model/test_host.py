@@ -1,14 +1,15 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import unittest
 import re
 
 from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, hosts, dormitory, user, accounting
 
-from tests.fixtures.hosts_fixtures import DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData
+from tests.model.fixtures.hosts_fixtures import DormitoryData, VLanData, \
+    SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
+    TrafficVolumeData
 from pycroft.helpers.host_helper import get_free_ip
 
 

@@ -10,6 +10,7 @@ class DormitoryData(DataSet):
         number = "01"
         short_name = "abc"
         street = "dummy"
+
     class dummy_house2:
         number = "02"
         short_name = "abcd"
@@ -20,6 +21,7 @@ class VLanData(DataSet):
     class vlan1:
         name = "vlan1"
         tag = "1"
+
     class vlan2:
         name = "vlan2"
         tag = 2
@@ -32,6 +34,7 @@ class SubnetData(DataSet):
         dns_domain = "wh12.tu-dresden.de"
         reserved_addresses = 10
         ip_type = 4
+
     class subnet2:
         address = "141.30.227.0/24"
         gateway = "141.30.227.1"
@@ -46,11 +49,13 @@ class RoomData(DataSet):
         level = 1
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
+
     class dummy_room2:
         number = "1"
         level = 2
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
+
     class dummy_room3:
         number = "1"
         level = 1
@@ -61,8 +66,10 @@ class RoomData(DataSet):
 class PatchPortData(DataSet):
     class dummy_port1:
         room = RoomData.dummy_room
+
     class dummy_port2:
         room = RoomData.dummy_room2
+
     class dummy_port3:
         room = RoomData.dummy_room3
 
@@ -73,6 +80,7 @@ class UserData(DataSet):
         name = "John Doe"
         registration_date = datetime.now()
         room = RoomData.dummy_room
+
     class dummy_user2:
         login = "test2"
         name = "John Doe2"
