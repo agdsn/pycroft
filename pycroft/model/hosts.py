@@ -296,56 +296,49 @@ def create_mac_regex():
     """
     # Byte represented by 2 hexadecimal digits
     BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
+    # Pattern for the most significant byte
+    # Does not allow the first bit to be set (multicast flag)
+    MOST_SIGNIFICANT_BYTE_PATTERN = r'(?:[a-fA-F0-9][02468ACE])'
     # Allowed 1 byte separators
     SEP1_PATTERN = r'[-:]'
-    # Allowed 2 byte seperators
+    # Allowed 2 byte separators
     SEP2_PATTERN = r'\.'
-    # Allowed 3 byte seperators
+    # Allowed 3 byte separators
     SEP3_PATTERN = r'-'
     expr = []
     # Begin of string
     expr.append(r'^')
-    # First byte
-    expr.append(r'(?P<byte1>%s)' % BYTE_PATTERN)
-    # Try to match sep1 after the first byte
+    # Most significant byte (Sixth byte)
+    # The leftmost byte has highest order due to Big Endian
+    expr.append(r'(?P<byte6>%s)' % BYTE_PATTERN)
+    # Try to match sep1 after the 6th byte
     expr.append(r'(?P<sep1>%s)?' % SEP1_PATTERN)
-    # Second byte
-    expr.append(r'(?P<byte2>%s)' % BYTE_PATTERN)
+    # Fifth byte
+    expr.append(r'(?P<byte5>%s)' % BYTE_PATTERN)
     # If sep1 hasn't matched, try to match the sep2 pattern after the second
     # byte else the same sep1 match must match here too.
     expr.append(r'(?(sep1)(?P=sep1)|(?P<sep2>%s)?)' % SEP2_PATTERN)
-    # Third byte
-    expr.append(r'(?P<byte3>%s)' % BYTE_PATTERN)
+    # Fourth byte
+    expr.append(r'(?P<byte4>%s)' % BYTE_PATTERN)
     # If neither sep1 nor sep2 have matched, try sep3 pattern after third byte.
     # If sep1 has matched before, the same sep1 match must match here too.
     expr.append(r'(?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>%s)?))' % SEP3_PATTERN)
-    # Fourth byte
-    expr.append(r'(?P<byte4>%s)' % BYTE_PATTERN)
+    # Third byte
+    expr.append(r'(?P<byte3>%s)' % BYTE_PATTERN)
     # If sep1 has matched before, the same sep1 match must match after the
     # fourth byte.
     # The same applies to sep2.
     expr.append(r'(?(sep1)(?P=sep1))(?(sep2)(?P=sep2))')
-    # Fifth byte
-    expr.append(r'(?P<byte5>%s)' % BYTE_PATTERN)
+    # Second byte
+    expr.append(r'(?P<byte2>%s)' % BYTE_PATTERN)
     # If sep1 has matched before, the same sep1 match must match after the
     # fifth byte.
     expr.append(r'(?(sep1)(?P=sep1))')
-    # Sixth byte
-    expr.append(r'(?P<byte6>%s)' % BYTE_PATTERN)
+    # Least significant byte (First byte)
+    expr.append(r'(?P<byte1>%s)' % BYTE_PATTERN)
     # End of string
     expr.append(r'$')
     return re.compile(''.join(expr))
-
-
-def convert_mac_address(mac_address):
-    expr = create_mac_regex()
-    match = expr.match(mac_address)
-    if match is None:
-        raise Exception("No a valid mac address.")
-    groupdict = match.groupdict()
-    bytes =  [groupdict['byte1'], groupdict['byte2'], groupdict['byte3'],
-              groupdict['byte4'], groupdict['byte5'], groupdict['byte6']]
-    return ':'.join(bytes)
 
 
 class NetDevice(ModelBase):
@@ -362,12 +355,16 @@ class NetDevice(ModelBase):
 
     @validates('mac')
     def validate_mac(self, _, value):
-        if not NetDevice.mac_regex.match(value):
-            raise Exception("invalid MAC address!")
-        if int(value[1], base=16) & 1:
+        match = NetDevice.mac_regex.match(value)
+        if not match:
+            raise Exception("Invalid MAC address!")
+        groupdict = match.groupdict()
+        bytes =  [groupdict['byte6'], groupdict['byte5'], groupdict['byte4'],
+                  groupdict['byte3'], groupdict['byte2'], groupdict['byte1']]
+        if int(bytes[0], base=16) & 1:
             raise Exception("Multicast-Flag (least significant bit im "
                             "ersten Byte gesetzt)!")
-        return value
+        return ':'.join(bytes).lower()
 
 
 class UserNetDevice(NetDevice):

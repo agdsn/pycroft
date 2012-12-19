@@ -32,10 +32,10 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
         def test_mac(mac):
             parts = mac.split(":")
             if len(mac) != 17 or len(parts) != 6:
-                self.assertRaisesRegexp(Exception, "invalid MAC address!", set_mac, mac)
+                self.assertRaisesRegexp(Exception, "Invalid MAC address!", set_mac, mac)
                 return
             if mac_regex.match(mac) is None:
-                self.assertRaisesRegexp(Exception, "invalid MAC address!", set_mac, mac)
+                self.assertRaisesRegexp(Exception, "Invalid MAC address!", set_mac, mac)
                 return
             if int(parts[0], base=16) & 1:
                 self.assertRaisesRegexp(Exception, "Multicast-Flag ", set_mac, mac)
