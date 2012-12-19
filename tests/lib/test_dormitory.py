@@ -4,7 +4,7 @@ from tests import FixtureDataTestBase
 from tests.lib.fixtures.dormitory_fixtures import DormitoryData, RoomData
 
 from pycroft.model.dormitory import Dormitory, Room
-from pycroft.lib.dormitory import create_dormitory, create_room, \
+from pycroft.lib.dormitory import create_dormitory, create_room,\
     delete_dormitory, delete_room
 from pycroft.model import session
 
@@ -31,6 +31,11 @@ class Test_010_Dormitory(FixtureDataTestBase):
 
         self.assertIsNone(Dormitory.q.get(del_dormitory.id))
 
+    def test_0025_delete_wrong_dormitory(self):
+        # Try to delete a non existing dormitory
+        self.assertRaises(ValueError, delete_dormitory,
+            DormitoryData.dummy_dormitory1.id + 100)
+
 
 class Test_020_Room(FixtureDataTestBase):
     datasets = [RoomData]
@@ -46,7 +51,8 @@ class Test_020_Room(FixtureDataTestBase):
         self.assertEqual(db_room.number, "102")
         self.assertEqual(db_room.level, 0)
         self.assertEqual(db_room.inhabitable, True)
-        self.assertEqual(db_room.dormitory_id, DormitoryData.dummy_dormitory1.id)
+        self.assertEqual(db_room.dormitory_id,
+            DormitoryData.dummy_dormitory1.id)
 
         session.session.delete(db_room)
         session.session.commit()
@@ -55,3 +61,8 @@ class Test_020_Room(FixtureDataTestBase):
         del_room = delete_room(RoomData.dummy_room1.id)
 
         self.assertIsNone(Room.q.get(del_room.id))
+
+    def test_0025_delete_wrong_room(self):
+        # Try to delete a non existing room
+        self.assertRaises(ValueError, delete_room,
+            RoomData.dummy_room1.id + 100)
