@@ -48,6 +48,8 @@ class ServerHost(Host):
     id = Column(Integer, ForeignKey('host.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'server_host'}
 
+    name = Column(String(255))
+
     user = relationship("User",
         backref=backref("server_hosts", cascade="all, delete-orphan"))
 
