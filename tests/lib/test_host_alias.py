@@ -1,16 +1,21 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord, \
-    create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord, \
-    create_srvrecord
+from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord,\
+    create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord,\
+    create_srvrecord, _create_alias
 
 from pycroft.model.hosts import ARecord, AAAARecord, NSRecord, CNameRecord,\
     MXRecord, SRVRecord, HostAlias, Ip, UserHost
 
+from pycroft.model import session
+
 from tests.lib.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
-    NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData
+    NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData
 from tests import FixtureDataTestBase
+
+from sqlalchemy.types import Integer
+from sqlalchemy import ForeignKey, Column
 
 class Test_010_RemovingOFAlias(FixtureDataTestBase):
     datasets = [ARecordData, AAAARecordData, NSRecordData, CNameRecordData,
@@ -302,3 +307,25 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
             host)
 
         delete_alias(id)
+
+
+class Test_040_MalformedTypes(FixtureDataTestBase):
+    datasets = [UserHostData]
+
+    class MalformedRecord(HostAlias):
+        id = Column(Integer, ForeignKey("hostalias.id"), primary_key=True)
+        __mapper_args__ = {'polymorphic_identity': 'malformedrecord'}
+
+    def test_0010_create_malformed_record(self):
+        self.assertRaises(ValueError, _create_alias, 'malformedrecord', id=100)
+
+    def test_0020_delete_malformed_record(self):
+        alias = Test_040_MalformedTypes.MalformedRecord(id=10000,
+            host=UserHost.q.first())
+        session.session.add(alias)
+        session.session.commit()
+
+        self.assertRaises(ValueError, delete_alias, alias.id)
+
+        session.session.delete(alias)
+        session.session.commit()
