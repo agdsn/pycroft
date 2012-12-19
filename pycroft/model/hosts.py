@@ -275,14 +275,87 @@ class Switch(Host):
         backref=backref("switches", cascade="all, delete-orphan"))
 
 
+def create_mac_regex():
+    """Helper function to create a regular expression object for matching
+    MAC addresses in different formats. A valid MAC address is a sequence of
+    6 bytes coded as hexadecimal digits separated by a symbol after either one,
+    two or three bytes. It is also possible that there is no separating symbol.
+
+    The following examples all encode the same MAC address:
+    001122334455
+    00-11-22-33-44-55
+    00:11:22:33:44:55
+    0011.2233.4455
+    001122-334455
+
+    After a successful match, the individual bytes bytes, as well as the
+    separator symbols can be accessed using symbolic group names.
+    byte1, byte2, byte3, byte4, byte5, byte6: The n-th byte
+    sep1, sep2, sep3: The one, two or three byte separator char or None
+    :return: a regular expression object
+    """
+    # Byte represented by 2 hexadecimal digits
+    BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
+    # Allowed 1 byte separators
+    SEP1_PATTERN = r'[-:]'
+    # Allowed 2 byte seperators
+    SEP2_PATTERN = r'\.'
+    # Allowed 3 byte seperators
+    SEP3_PATTERN = r'-'
+    expr = []
+    # Begin of string
+    expr.append(r'^')
+    # First byte
+    expr.append(r'(?P<byte1>%s)' % BYTE_PATTERN)
+    # Try to match sep1 after the first byte
+    expr.append(r'(?P<sep1>%s)?' % SEP1_PATTERN)
+    # Second byte
+    expr.append(r'(?P<byte2>%s)' % BYTE_PATTERN)
+    # If sep1 hasn't matched, try to match the sep2 pattern after the second
+    # byte else the same sep1 match must match here too.
+    expr.append(r'(?(sep1)(?P=sep1)|(?P<sep2>%s)?)' % SEP2_PATTERN)
+    # Third byte
+    expr.append(r'(?P<byte3>%s)' % BYTE_PATTERN)
+    # If neither sep1 nor sep2 have matched, try sep3 pattern after third byte.
+    # If sep1 has matched before, the same sep1 match must match here too.
+    expr.append(r'(?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>%s)?))' % SEP3_PATTERN)
+    # Fourth byte
+    expr.append(r'(?P<byte4>%s)' % BYTE_PATTERN)
+    # If sep1 has matched before, the same sep1 match must match after the
+    # fourth byte.
+    # The same applies to sep2.
+    expr.append(r'(?(sep1)(?P=sep1))(?(sep2)(?P=sep2))')
+    # Fifth byte
+    expr.append(r'(?P<byte5>%s)' % BYTE_PATTERN)
+    # If sep1 has matched before, the same sep1 match must match after the
+    # fifth byte.
+    expr.append(r'(?(sep1)(?P=sep1))')
+    # Sixth byte
+    expr.append(r'(?P<byte6>%s)' % BYTE_PATTERN)
+    # End of string
+    expr.append(r'$')
+    return re.compile(''.join(expr))
+
+
+def convert_mac_address(mac_address):
+    expr = create_mac_regex()
+    match = expr.match(mac_address)
+    if match is None:
+        raise Exception("No a valid mac address.")
+    groupdict = match.groupdict()
+    bytes =  [groupdict['byte1'], groupdict['byte2'], groupdict['byte3'],
+              groupdict['byte4'], groupdict['byte5'], groupdict['byte6']]
+    return ':'.join(bytes)
+
+
 class NetDevice(ModelBase):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     #mac = Column(postgresql.MACADDR, nullable=False)
-    mac = Column(String(12), nullable=False)
+    mac = Column(String(17), nullable=False)
 
-    mac_regex = re.compile(r"^[a-fA-F0-9]{2}([:|-]?[a-fA-F0-9]{2}){5}$")
+    mac_regex = create_mac_regex()
 
     host_id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
         nullable=False)
