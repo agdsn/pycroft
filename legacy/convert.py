@@ -58,6 +58,10 @@ def do_convert():
             if int(wheim.wheim_id) == 1 and new_room.number == "41" and int(new_room.level) == 1:
                 root_room = new_room
 
+    server_room_wu5_keller = dormitory.Room(number="Keller", level="0", inhabitable=False, dormitory_id=1)
+    server_room_wu9_dach = dormitory.Room(number="Dach", level="16", inhabitable=False, dormitory_id=3)
+    server_room_wu11_dach = dormitory.Room(number="Dach", level="17", inhabitable=False, dormitory_id=4)
+    rooms += [server_room_wu11_dach, server_room_wu5_keller, server_room_wu9_dach]
 
     root = user.User(login="ag_dsn", name="System User", registration_date=datetime.today(), passwd_hash=hash_password("test"))
     root.room = root_room
@@ -204,5 +208,223 @@ def do_convert():
     session.session.add_all(ips)
     session.session.add_all(a_records)
     session.session.add_all(cname_records)
+
+    ips = []
+    server_net_devices = []
+    a_records = []
+    server_hosts = []
+
+    #Server
+    #TODO subnet for 141.76 nets
+    #Atlantis
+    atlantis_net_device = host.ServerNetDevice(mac="00:e0:81:b1:3f:0e")
+    server_net_devices.append(atlantis_net_device)
+    atlantis_ip_1 = host.Ip(address="141.30.228.39",net_device=atlantis_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(atlantis_ip_1)
+    #atlantis_ip_2 = host.Ip(address="141.76.119.130",net_device=atlantis_net_device)
+    #ips.append(atlantis_ip_2)
+    atlantis_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    atlantis_net_device.host = atlantis_host
+    server_hosts.append(atlantis_host)
+    atlantis_a_record = host.ARecord(host=atlantis_host, name="atlantis.wh2.tu-dresden.de",
+        address=atlantis_ip_1)
+    a_records.append(atlantis_a_record)
+
+    #Seth
+    seth_net_device = host.ServerNetDevice(mac="00:04:23:8e:b9:91")
+    server_net_devices.append(seth_net_device)
+    seth_ip_1 = host.Ip(address="141.30.228.2",net_device=seth_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(seth_ip_1)
+    #seth_ip_2 = host.Ip(address="141.76.119.134",net_device=seth_net_device)
+    #ips.append(seth_ip_2)
+    seth_host = host.ServerHost(room=server_room_wu5_keller, user=root)
+    seth_net_device.host = seth_host
+    server_hosts.append(seth_host)
+    seth_a_record = host.ARecord(host=seth_host, name="seth.wh2.tu-dresden.de",
+        address=seth_ip_1)
+    a_records.append(seth_a_record)
+
+    #Ramses
+    ramses_net_device = host.ServerNetDevice(mac="00:04:23:9a:fe:86")
+    server_net_devices.append(ramses_net_device)
+    ramses_ip = host.Ip(address="141.30.228.4",net_device=ramses_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(ramses_ip)
+    ramses_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    ramses_net_device.host = ramses_host
+    server_hosts.append(ramses_host)
+    ramses_a_record = host.ARecord(host=ramses_host, name="ramses.wh2.tu-dresden.de",
+        address=ramses_ip)
+    a_records.append(ramses_a_record)
+
+    #Helios
+    helios_net_device = host.ServerNetDevice(mac="00:e0:81:b2:d4:b0")
+    server_net_devices.append(helios_net_device)
+    helios_ip = host.Ip(address="141.30.228.7",net_device=helios_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(helios_ip)
+    helios_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    helios_net_device.host = helios_host
+    server_hosts.append(helios_host)
+    helios_a_record = host.ARecord(host=helios_host, name="helios.wh2.tu-dresden.de",
+        address=helios_ip)
+    a_records.append(helios_a_record)
+
+    #Gizeh
+    gizeh_net_device = host.ServerNetDevice(mac="00:07:e9:10:d3:9a")
+    server_net_devices.append(gizeh_net_device)
+    gizeh_ip = host.Ip(address="141.30.226.4",net_device=gizeh_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh7.tu-dresden.de").one())
+    ips.append(gizeh_ip)
+    gizeh_host = host.ServerHost(room=server_room_wu11_dach, user=root)
+    gizeh_net_device.host = gizeh_host
+    server_host.append(gizeh_host)
+    gizeh_a_record = host.ARecord(host=gizeh_host, name="gizeh.wh7.tu-dresden.de",
+        address=gizeh_ip)
+    a_records.append(gizeh_a_record)
+
+    #Kerberos
+    kerberos_net_device = host.ServerNetDevice(mac="00:04:23:dd:ee:e5")
+    server_net_devices.append(kerberos_net_device)
+    kerberos_ip = host.Ip(address="141.30.228.3",net_device=kerberos_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(kerberos_ip)
+    kerberos_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    kerberos_net_device.host = kerberos_host
+    server_hosts.append(kerberos_host)
+    kerberos_a_record = host.ARecord(host=kerberos_host, name="kerberos.wh2.tu-dresden.de",
+        address=kerberos_ip)
+    a_records.append(kerberos_a_record)
+
+    #radio
+    radio_net_device = host.ServerNetDevice(mac="00:16:3e:27:c0:b3")
+    server_net_devices.append(radio_net_device)
+    radio_ip = host.Ip(address="141.30.228.6",net_device=radio_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(radio_ip)
+    radio_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    radio_net_device.host = radio_host
+    server_hosts.append(radio_host)
+    radio_a_record = host.ARecord(host=radio_host, name="radio.wh2.tu-dresden.de",
+        address=radio_ip)
+    a_records.append(radio_a_record)
+
+    #exma
+    exma_net_device = host.ServerNetDevice(mac="00:16:3e:54:75:af")
+    server_net_devices.append(exma_net_device)
+    exma_ip = host.Ip(address="141.30.228.5",net_device=exma_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(exma_ip)
+    exma_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    exma_net_device.host = exma_host
+    server_hosts.append(exma_host)
+    exma_a_record = host.ARecord(host=exma_host, name="exma.wh2.tu-dresden.de",
+        address=exma_ip)
+    a_records.append(exma_a_record)
+
+    #projecthost
+    projecthost_net_device = host.ServerNetDevice(mac="00:16:3e:57:b2:25")
+    server_net_devices.append(projecthost_net_device)
+    projecthost_ip = host.Ip(address="141.30.228.10",net_device=projecthost_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(projecthost_ip)
+    projecthost_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    projecthost_net_device.host = projecthost_host
+    server_hosts.append(projecthost_host)
+    projecthost_a_record = host.ARecord(host=projecthost_host, name="projecthost.wh2.tu-dresden.de",
+        address=projecthost_ip)
+    a_records.append(projecthost_a_record)
+
+    #linkpartner
+    linkpartner_net_device = host.ServerNetDevice(mac="00:16:3e:cc:8a:f9")
+    server_net_devices.append(linkpartner_net_device)
+    linkpartner_ip = host.Ip(address="141.30.228.11",net_device=linkpartner_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(linkpartner_ip)
+    linkpartner_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    linkpartner_net_device.host = linkpartner_host
+    server_hosts.append(linkpartner_host)
+    linkpartner_a_record = host.ARecord(host=linkpartner_host, name="linkpartner.wh2.tu-dresden.de",
+        address=linkpartner_ip)
+    a_records.append(linkpartner_a_record)
+
+    #kik
+    kik_net_device = host.ServerNetDevice(mac="00:16:3e:1f:7e:25")
+    server_net_devices.append(kik_net_device)
+    kik_ip = host.Ip(address="141.30.228.12",net_device=kik_net_device, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(kik_ip)
+    kik_host = host.ServerHost(room=server_room_wu9_dach, user=root)
+    kik_net_device.host = kik_host
+    server_hosts.append(kik_host)
+    kik_a_record = host.ARecord(host=kik_host, name="kik.wh2.tu-dresden.de",
+        address=kik_ip)
+    a_records.append(kik_a_record)
+
+    #pan
+    pan_net_device_1 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_1)
+    pan_net_device_2 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_2)
+    pan_net_device_3 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_3)
+    pan_net_device_4 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_4)
+    pan_net_device_5 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_5)
+    pan_net_device_6 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_6)
+    pan_net_device_7 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_7)
+    pan_net_device_8 = host.ServerNetDevice(mac="00:0c:db:42:c4:00")
+    server_net_devices.append(pan_net_device_8)
+    pan_host = host.ServerHost(room=server_room_wu9_dach, user=root, name="pan")
+    pan_net_device_1.host = pan_host
+    pan_net_device_2.host = pan_host
+    pan_net_device_3.host = pan_host
+    pan_net_device_4.host = pan_host
+    pan_net_device_5.host = pan_host
+    pan_net_device_6.host = pan_host
+    pan_net_device_7.host = pan_host
+    pan_net_device_8.host = pan_host
+    server_hosts.append(pan_host)
+    pan_ip_1 = host.Ip(address="141.30.228.1",net_device=pan_net_device_1, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh2.tu-dresden.de").one())
+    ips.append(pan_ip_1)
+    pan_ip_2 = host.Ip(address="141.30.224.1",net_device=pan_net_device_2, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh6.tu-dresden.de").one())
+    ips.append(pan_ip_2)
+    pan_ip_3 = host.Ip(address="141.30.223.1",net_device=pan_net_device_3, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh5.tu-dresden.de").one())
+    ips.append(pan_ip_3)
+    pan_ip_4 = host.Ip(address="141.30.222.1",net_device=pan_net_device_4, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh4.tu-dresden.de").one())
+    ips.append(pan_ip_4)
+    pan_ip_5 = host.Ip(address="141.30.227.1",net_device=pan_net_device_5, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh3.tu-dresden.de").one())
+    ips.append(pan_ip_5)
+    pan_ip_6 = host.Ip(address="141.30.226.1",net_device=pan_net_device_6, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh7.tu-dresden.de").one())
+    ips.append(pan_ip_6)
+    pan_ip_7 = host.Ip(address="141.30.216.1",net_device=pan_net_device_7, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh16.tu-dresden.de").one())
+    ips.append(pan_ip_7)
+    pan_ip_8 = host.Ip(address="141.30.202.1",net_device=pan_net_device_8, subnet=dormitory.Subnet.q.filter(dormitory.Subnet.dns_domain == "wh30.tu-dresden.de").one())
+    ips.append(pan_ip_8)
+    pan_a_record_1 = host.ARecord(host=pan_host, name="pan.wh2.tu-dresden.de",
+        address=pan_ip_1)
+    a_records.append(pan_a_record_1)
+    pan_a_record_2 = host.ARecord(host=pan_host, name="pan.wh6.tu-dresden.de",
+        address=pan_ip_2)
+    a_records.append(pan_a_record_2)
+    pan_a_record_3 = host.ARecord(host=pan_host, name="pan.wh5.tu-dresden.de",
+        address=pan_ip_3)
+    a_records.append(pan_a_record_3)
+    pan_a_record_4 = host.ARecord(host=pan_host, name="pan.wh4.tu-dresden.de",
+        address=pan_ip_4)
+    a_records.append(pan_a_record_4)
+    pan_a_record_5 = host.ARecord(host=pan_host, name="pan.wh3.tu-dresden.de",
+        address=pan_ip_5)
+    a_records.append(pan_a_record_5)
+    pan_a_record_6 = host.ARecord(host=pan_host, name="pan.wh7.tu-dresden.de",
+        address=pan_ip_6)
+    a_records.append(pan_a_record_6)
+    pan_a_record_7 = host.ARecord(host=pan_host, name="pan.wh16.tu-dresden.de",
+        address=pan_ip_7)
+    a_records.append(pan_a_record_7)
+    pan_a_record_8 = host.ARecord(host=pan_host, name="pan.wh30.tu-dresden.de",
+        address=pan_ip_8)
+    a_records.append(pan_a_record_8)
+
+    session.session.add_all(ips)
+    session.session.add_all(server_net_devices)
+    session.session.add_all(a_records)
+    session.session.add_all(server_hosts)
+
+
 
     session.session.commit()
