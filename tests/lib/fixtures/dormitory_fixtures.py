@@ -9,6 +9,7 @@ class DormitoryData(DataSet):
         short_name = "wu100"
         street = "wundstrasse"
 
+
 class RoomData(DataSet):
     class dummy_room1:
         id = 1
@@ -17,3 +18,19 @@ class RoomData(DataSet):
         inhabitable = True
         dormitory = DormitoryData.dummy_dormitory1
 
+
+class SubnetData(DataSet):
+    class dummy_subnet1:
+        id = 1
+        address = "192.168.1.1"
+        gateway = "192.168.1.1"
+        dns_domain = "dummy_domain"
+        reserved_addresses = 0
+        ip_type = "4"
+
+
+class VLanData(DataSet):
+    class dummy_vlan1:
+        id = 1
+        name = "dummy_vlan1"
+        tag = 42

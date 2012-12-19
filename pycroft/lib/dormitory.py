@@ -1,4 +1,4 @@
-from pycroft.model.dormitory import Dormitory, Room
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model import session
 
 def create_dormitory(*args, **kwargs):
@@ -64,3 +64,66 @@ def delete_room(room_id):
 
     return room
 
+
+def create_subnet(*args, **kwargs):
+    """
+    This method will create a new subnet.
+
+    :param args: the positionals which will be passed to the constructor.
+    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :return: the newly created subnet.
+    """
+    subnet = Subnet(*args, **kwargs)
+    session.session.add(subnet)
+    session.session.commit()
+
+    return subnet
+
+
+def delete_subnet(subnet_id):
+    """
+    This method will remove the subnet for the given id.
+
+    :param subnet_id: the id of the subnet which should be removed.
+    :return: the removed subnet.
+    """
+    subnet = Subnet.q.get(subnet_id)
+    if subnet is None:
+        raise ValueError("The given id is wrong!")
+
+    session.session.delete(subnet)
+    session.session.commit()
+
+    return subnet
+
+
+def create_vlan(*args, **kwargs):
+    """
+    This method will create a new vlan.
+
+    :param args: the positionals which will be passed to the constructor,
+    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :return: the newly created vlan.
+    """
+    vlan = VLan(*args, **kwargs)
+    session.session.add(vlan)
+    session.session.commit()
+
+    return vlan
+
+
+def delete_vlan(vlan_id):
+    """
+    This method will remove the vlan for the given id.
+
+    :param vlan_id: the id of the vlan which should be removed.
+    :return: the removed vlan.
+    """
+    vlan = VLan.q.get(vlan_id)
+    if vlan is None:
+        raise ValueError("The given id is wrong!")
+
+    session.session.delete(vlan)
+    session.session.commit()
+
+    return vlan

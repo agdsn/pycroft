@@ -1,11 +1,13 @@
 __author__ = 'l3nkz'
 
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.dormitory_fixtures import DormitoryData, RoomData
+from tests.lib.fixtures.dormitory_fixtures import DormitoryData, RoomData,\
+    SubnetData, VLanData
 
-from pycroft.model.dormitory import Dormitory, Room
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.lib.dormitory import create_dormitory, create_room,\
-    delete_dormitory, delete_room
+    delete_dormitory, delete_room, create_subnet, delete_subnet, create_vlan,\
+    delete_vlan
 from pycroft.model import session
 
 class Test_010_Dormitory(FixtureDataTestBase):
@@ -66,3 +68,59 @@ class Test_020_Room(FixtureDataTestBase):
         # Try to delete a non existing room
         self.assertRaises(ValueError, delete_room,
             RoomData.dummy_room1.id + 100)
+
+
+class Test_030_Subnet(FixtureDataTestBase):
+    datasets = [SubnetData]
+
+    def test_0010_create_subnet(self):
+        new_subnet = create_subnet(address="192.168.2.1", gateway="192.168.2.1",
+            dns_domain="dummy_domain", reserved_addresses=1, ip_type="4")
+
+        self.assertIsNotNone(Subnet.q.get(new_subnet.id))
+
+        db_subnet = Subnet.q.get(new_subnet.id)
+
+        self.assertEqual(db_subnet.address, "192.168.2.1")
+        self.assertEqual(db_subnet.gateway, "192.168.2.1")
+        self.assertEqual(db_subnet.dns_domain, "dummy_domain")
+        self.assertEqual(db_subnet.reserved_addresses, 1)
+        self.assertEqual(db_subnet.ip_type, "4")
+
+        session.session.delete(db_subnet)
+        session.session.commit()
+
+    def test_0020_delete_subnet(self):
+        del_subnet = delete_subnet(SubnetData.dummy_subnet1.id)
+
+        self.assertIsNone(Subnet.q.get(del_subnet.id))
+
+    def test_0025_delete_wrong_subnet(self):
+        self.assertRaises(ValueError, delete_subnet,
+            SubnetData.dummy_subnet1.id + 100)
+
+
+class Test_040_Vlan(FixtureDataTestBase):
+    datasets = [VLanData]
+
+    def test_0010_create_vlan(self):
+        new_vlan = create_vlan(name="dummy_vlan2", tag=21)
+
+        self.assertIsNotNone(VLan.q.get(new_vlan.id))
+
+        db_vlan = VLan.q.get(new_vlan.id)
+
+        self.assertEqual(db_vlan.name, "dummy_vlan2")
+        self.assertEqual(db_vlan.tag, 21)
+
+        session.session.delete(db_vlan)
+        session.session.commit()
+
+    def test_0020_delete_vlan(self):
+        del_vlan = delete_vlan(VLanData.dummy_vlan1.id)
+
+        self.assertIsNone(VLan.q.get(del_vlan.id))
+
+    def test_0025_delete_wrong_vlan(self):
+        self.assertRaises(ValueError, delete_vlan,
+            VLanData.dummy_vlan1.id + 100)
