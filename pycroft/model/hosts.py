@@ -261,12 +261,7 @@ class Switch(Host):
 
     name = Column(String(127), nullable=False)
 
-    management_ip_id = Column(Integer,
-        ForeignKey("ip.id",
-            use_alter=True,
-            name="fk_management_ip"),
-        unique=True)
-    management_ip = relationship("Ip", post_update=True)
+    management_ip = Column(String(127), nullable=False)
 
     user = relationship("User",
         backref=backref("switches", cascade="all, delete-orphan"))
@@ -459,22 +454,6 @@ def _check_correct_ip_subnet(mapper, connection, target):
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
-
-
-def _check_correct_management_ip(mapper, connection, target):
-    assert target.management_ip is not None, "A management ip has to be set"
-
-    ips = []
-    for dev in target.switch_net_devices:
-        ips.extend(dev.ips)
-
-    assert target.management_ip in ips,\
-    "the management ip is not valid on this switch"
-
-
-event.listen(Switch, "before_insert", _check_correct_management_ip)
-event.listen(Switch, "before_update", _check_correct_management_ip)
-
 
 def _delete_corresponding_record(mapper, connection, target):
     ip_id = target.id
