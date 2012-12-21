@@ -7,7 +7,7 @@ from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, host, dormitory, user, accounting
 
-from tests.model.fixtures.hosts_fixtures import DormitoryData, VLanData, \
+from tests.model.fixtures.host_fixtures import DormitoryData, VLanData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
     TrafficVolumeData
 from pycroft.helpers.host import get_free_ip
