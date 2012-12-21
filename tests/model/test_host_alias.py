@@ -6,7 +6,7 @@ __author__ = 'l3nkz'
 from tests.model.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
     MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData, UserHostData
 from tests import FixtureDataTestBase
-from pycroft.model.hosts import ARecord, AAAARecord, MXRecord, CNameRecord,\
+from pycroft.model.host import ARecord, AAAARecord, MXRecord, CNameRecord,\
     NSRecord, SRVRecord, Ip, UserHost, HostAlias
 from pycroft.model import session
 import ipaddr

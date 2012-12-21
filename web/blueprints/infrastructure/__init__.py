@@ -12,9 +12,9 @@
 """
 
 from flask import Blueprint, flash, redirect, render_template, url_for
-from pycroft.helpers import host_helper
-from pycroft.model.hosts import Switch
-from pycroft.model.hosts import HostAlias, CNameRecord
+from pycroft.helpers import host
+from pycroft.model.host import Switch
+from pycroft.model.host import HostAlias, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm
@@ -173,7 +173,7 @@ def srvrecord_create(user_id, host_id):
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
     switch_port_list = switch.ports
-    switch_port_list = host_helper.sort_ports(switch_port_list)
+    switch_port_list = host.sort_ports(switch_port_list)
     return render_template('infrastructure/switch_show.html',
         page_title=u"Switch: " + switch.name,
         switch=switch, switch_ports=switch_port_list)

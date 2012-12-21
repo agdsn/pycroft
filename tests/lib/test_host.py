@@ -8,17 +8,17 @@ from tests.lib.fixtures.host_fixtures import UserNetDeviceData, UserData,\
     UserHostData, RoomData, ServerHostData, ServerNetDeviceData,\
     SwitchPortData, SwitchData, SwitchNetDeviceData, IpData, SubnetData
 
-from pycroft.lib.hosts import change_mac, create_user_host, delete_user_host,\
+from pycroft.lib.host import change_mac, create_user_host, delete_user_host,\
     create_server_host, delete_server_host, create_user_net_device,\
     delete_user_net_device, create_server_net_device, delete_server_net_device, \
     create_switch, delete_switch, create_switch_net_device, \
     delete_switch_net_device, create_ip, delete_ip
 
 from pycroft.model import session
-from pycroft.model.hosts import UserNetDevice, UserHost, ServerHost,\
+from pycroft.model.host import UserNetDevice, UserHost, ServerHost,\
     ServerNetDevice, Switch, SwitchNetDevice, Ip
 from pycroft.model.dormitory import Room, Subnet
-from pycroft.model.ports import SwitchPort
+from pycroft.model.port import SwitchPort
 from pycroft.model.user import User
 from pycroft.model.logging import LogEntry
 
