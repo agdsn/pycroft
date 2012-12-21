@@ -11,12 +11,12 @@ This module contains.
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
-from pycroft.helpers import user_helper, host_helper
+from pycroft.helpers import user, host
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.hosts import Host, UserHost, UserNetDevice, Ip, ARecord, CNameRecord
+from pycroft.model.host import Host, UserHost, UserNetDevice, Ip, ARecord, CNameRecord
 from pycroft.model.logging import UserLogEntry
-from pycroft.model.properties import TrafficGroup, Membership, Group, PropertyGroup
+from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
@@ -51,7 +51,7 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
         email=email,
         room=room,
         registration_date=datetime.now())
-    plain_password = user_helper.generatePassword(12)
+    plain_password = user.generatePassword(12)
 
 
     #TODO: print plain password on paper instead
@@ -63,8 +63,8 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
 
     # create one new host (including net_device) for the new user
     subnets = dormitory.subnets
-    ip_address = host_helper.get_free_ip(subnets)
-    subnet = host_helper.select_subnet_for_ip(ip_address, subnets)
+    ip_address = host.get_free_ip(subnets)
+    subnet = host.select_subnet_for_ip(ip_address, subnets)
     #ToDo: Which port to choose if room has more than one?
     # --> The one that is connected to a switch!
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
@@ -79,7 +79,7 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
     session.session.add(new_net_device)
     session.session.add(new_ip)
 
-    new_arecord = create_arecord( host=new_host, time_to_live=None, name=host_helper.generate_hostname(ip_address), address=new_ip)
+    new_arecord = create_arecord( host=new_host, time_to_live=None, name=host.generate_hostname(ip_address), address=new_ip)
     if host_name:
         create_cnamerecord(host=new_host, name=host_name, alias_for=new_arecord)
 
@@ -177,8 +177,8 @@ def move(user, dormitory, level, room_number, processor):
         assert len(net_dev.ips) == 1, u"A user should only have one ip!"
         ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
-        new_address = host_helper.get_free_ip(dormitory.subnets)
-        new_subnet = host_helper.select_subnet_for_ip(new_address,
+        new_address = host.get_free_ip(dormitory.subnets)
+        new_subnet = host.select_subnet_for_ip(new_address,
                                             dormitory.subnets)
 
         ip_addr.change_ip(new_address, new_subnet)

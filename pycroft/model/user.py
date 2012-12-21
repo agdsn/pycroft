@@ -15,9 +15,9 @@ from sqlalchemy.orm import backref, relationship, validates
 import re
 from sqlalchemy.orm.util import has_identity
 from datetime import datetime
-from pycroft.model.properties import Membership, Property, PropertyGroup, TrafficGroup
+from pycroft.model.property import Membership, Property, PropertyGroup, TrafficGroup
 from pycroft.model.session import session
-from pycroft.helpers.user_helper import hash_password, verify_password
+from pycroft.helpers.user import hash_password, verify_password
 
 class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False)

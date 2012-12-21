@@ -8,8 +8,8 @@ from tests.helpers.fixtures.user_fixtures import DormitoryData, FinanceAccountDa
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData
-from pycroft.model import user, dormitory, ports, session, logging, finance, \
-    properties
+from pycroft.model import user, dormitory, port, session, logging, finance, \
+    property
 from datetime import datetime
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -23,7 +23,7 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.old_room = dormitory.Room.q.get(1)
         self.new_room_other_dormitory = dormitory.Room.q.get(2)
         self.new_room_same_dormitory = dormitory.Room.q.get(3)
-        self.new_patch_port = ports.PatchPort.q.get(2)
+        self.new_patch_port = port.PatchPort.q.get(2)
 
     def tearDown(self):
         #TODO don't delete all log entries but the user log entries
@@ -66,8 +66,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         def get_initial_groups():
             initial_groups = []
             for group in user_config.initial_groups:
-                initial_groups.append(properties.Group.q.filter(
-                    properties.Group.name == group["group_name"]
+                initial_groups.append(property.Group.q.filter(
+                    property.Group.name == group["group_name"]
                 ).one())
             return initial_groups
 
@@ -128,8 +128,8 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         def get_initial_groups():
             initial_groups = []
             for group in user_config.initial_groups:
-                initial_groups.append(properties.Group.q.filter(
-                    properties.Group.name == group["group_name"]
+                initial_groups.append(property.Group.q.filter(
+                    property.Group.name == group["group_name"]
                 ).one())
             return initial_groups
 

@@ -39,8 +39,8 @@ class Test_010_SchemaMapping(OldPythonTestCase):
         self.assertIsNone(msg, msg)
 
     def test_0030_mapping_hosts(self):
-        from pycroft.model import hosts
-        msg = try_mapper(hosts)
+        from pycroft.model import host
+        msg = try_mapper(host)
         self.assertIsNone(msg, msg)
 
     def test_0040_mapping_logging(self):
@@ -59,8 +59,8 @@ class Test_010_SchemaMapping(OldPythonTestCase):
         self.assertIsNone(msg, msg)
 
     def test_0070_mapping_properties(self):
-        from pycroft.model import properties
-        msg = try_mapper(properties)
+        from pycroft.model import property
+        msg = try_mapper(property)
         self.assertIsNone(msg, msg)
 
     def test_0080_mapping_accounting(self):
@@ -69,8 +69,8 @@ class Test_010_SchemaMapping(OldPythonTestCase):
         self.assertIsNone(msg, msg)
 
     def test_0090_mapping_ports(self):
-        from pycroft.model import ports
-        msg = try_mapper(ports)
+        from pycroft.model import port
+        msg = try_mapper(port)
         self.assertIsNone(msg, msg)
 
     def test_0100_mapping_finance(self):

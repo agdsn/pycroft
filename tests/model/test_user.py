@@ -5,7 +5,7 @@ from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
 from pycroft.model import user, dormitory, session
-from pycroft.helpers.user_helper import generatePassword, hash_password, verify_password
+from pycroft.helpers.user import generatePassword, hash_password, verify_password
 from tests import FixtureDataTestBase
 
 

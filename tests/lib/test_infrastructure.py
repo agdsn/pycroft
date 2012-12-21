@@ -5,10 +5,10 @@ from tests.lib.fixtures.infrastructure_fixtures import DestinationPortData,\
 from pycroft.lib.infrastructure import create_patch_port, create_phone_port,\
     create_switch_port, _create_port, delete_port
 
-from pycroft.model.ports import DestinationPort, PatchPort, PhonePort,\
+from pycroft.model.port import DestinationPort, PatchPort, PhonePort,\
     SwitchPort, Port
 from pycroft.model.dormitory import Room
-from pycroft.model.hosts import Switch
+from pycroft.model.host import Switch
 from pycroft.model import session
 
 from sqlalchemy.types import Integer

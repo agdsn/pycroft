@@ -8,7 +8,7 @@
 """
 
 from flask import Blueprint, flash, redirect, render_template, url_for
-from pycroft.helpers import dormitory_helper
+from pycroft.helpers import dormitory
 from pycroft.lib.dormitory import create_dormitory, create_room, delete_room
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
@@ -22,7 +22,7 @@ nav = BlueprintNavigation(bp, "Wohnheime")
 @bp.route('/')
 def overview():
     dormitories_list = Dormitory.q.all()
-    dormitories_list = dormitory_helper.sort_dormitories(dormitories_list)
+    dormitories_list = dormitory.sort_dormitories(dormitories_list)
     return render_template('dormitories/overview.html',
         dormitories=dormitories_list)
 
@@ -31,7 +31,7 @@ def overview():
 @nav.navigate(u"Wohnheime")
 def dormitories():
     dormitories_list = Dormitory.q.all()
-    dormitories_list = dormitory_helper.sort_dormitories(dormitories_list)
+    dormitories_list = dormitory.sort_dormitories(dormitories_list)
     return render_template('dormitories/dormitories_list.html',
         dormitories=dormitories_list)
 

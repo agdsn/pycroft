@@ -1,4 +1,4 @@
-from pycroft.helpers.dormitory_helper import sort_dormitories
+from pycroft.helpers.dormitory import sort_dormitories
 from tests import OldPythonTestCase
 
 class Test_010_SimpleDormitoryHelpers(OldPythonTestCase):

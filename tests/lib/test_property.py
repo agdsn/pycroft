@@ -2,12 +2,12 @@ from tests import FixtureDataTestBase
 from tests.lib.fixtures.property_fixtures import UserData, PropertyGroupData,\
     PropertyData, MembershipData, TrafficGroupData
 
-from pycroft.lib.properties import create_membership, create_property,\
+from pycroft.lib.property import create_membership, create_property,\
     create_property_group, create_traffic_group, delete_membership,\
     delete_property, delete_property_group, delete_traffic_group, _create_group,\
     _delete_group
 
-from pycroft.model.properties import TrafficGroup, PropertyGroup, Property,\
+from pycroft.model.property import TrafficGroup, PropertyGroup, Property,\
     Membership, Group
 from pycroft.model.user import User
 from pycroft.model import session

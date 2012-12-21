@@ -1,5 +1,5 @@
 from pycroft.model import session
-from pycroft.model.ports import SwitchPort, DestinationPort, PatchPort, \
+from pycroft.model.port import SwitchPort, DestinationPort, PatchPort, \
     PhonePort, Port
 
 def _create_port(type, *args, **kwargs):

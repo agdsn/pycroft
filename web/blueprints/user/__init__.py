@@ -10,13 +10,13 @@
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 from pycroft import lib
-from pycroft.helpers import host_helper
+from pycroft.helpers import host
 from pycroft.model.dormitory import Room
-from pycroft.model.hosts import Host, UserNetDevice, Ip
+from pycroft.model.host import Host, UserNetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.properties import Membership
+from pycroft.model.property import Membership
 from pycroft.model.accounting import TrafficVolume
 from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
@@ -202,7 +202,7 @@ def create():
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
-        except host_helper.SubnetFullException, error:
+        except host.SubnetFullException, error:
             flash(u'Subnetz voll', 'error')
 
     return render_template('user/user_create.html', form = form)
@@ -363,7 +363,7 @@ def change_mac(user_net_device_id):
     if not form.is_submitted():
         form.mac.data = my_net_device.mac
     if form.validate_on_submit():
-        changed_net_device = lib.hosts.change_mac(net_device=my_net_device,
+        changed_net_device = lib.host.change_mac(net_device=my_net_device,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')

@@ -12,7 +12,7 @@ from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 from sqlalchemy.orm import Session
 #from sqlalchemy.dialects import postgresql
-from pycroft.model import dormitory, ports
+from pycroft.model import dormitory, port
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String

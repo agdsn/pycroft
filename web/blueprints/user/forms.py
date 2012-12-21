@@ -5,8 +5,8 @@ from flask.ext.wtf import Form, TextField, QuerySelectField, SelectField,\
     PasswordField, DateTimeField, BooleanField, TextAreaField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
-from pycroft.model.hosts import Host, NetDevice
-from pycroft.model.properties import PropertyGroup
+from pycroft.model.host import Host, NetDevice
+from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields import DatePickerField

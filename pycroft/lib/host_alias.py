@@ -1,4 +1,4 @@
-from pycroft.model.hosts import HostAlias, ARecord, AAAARecord, CNameRecord, \
+from pycroft.model.host import HostAlias, ARecord, AAAARecord, CNameRecord, \
     MXRecord, SRVRecord, NSRecord
 from pycroft.model import session
 

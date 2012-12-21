@@ -5,7 +5,7 @@ import datetime
 from pycroft.model.logging import UserLogEntry
 from pycroft.model import session
 
-from pycroft.model.hosts import UserHost, ServerHost, Switch, UserNetDevice, \
+from pycroft.model.host import UserHost, ServerHost, Switch, UserNetDevice, \
     ServerNetDevice, SwitchNetDevice, Ip
 
 def change_mac(net_device, mac, processor):

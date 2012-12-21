@@ -1,5 +1,5 @@
 from pycroft.model import session
-from pycroft.model.properties import TrafficGroup, PropertyGroup, Property,\
+from pycroft.model.property import TrafficGroup, PropertyGroup, Property,\
     Membership, Group
 
 

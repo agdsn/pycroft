@@ -11,12 +11,12 @@ This is necessary for things like sqlalchemy-schemadisplay.
 
 from pycroft.model.base import *
 from pycroft.model.dormitory import *
-from pycroft.model.hosts import *
+from pycroft.model.host import *
 from pycroft.model.logging import *
 from pycroft.model.session import *
 from pycroft.model.finance import *
 from pycroft.model.user import *
-from pycroft.model.properties import *
+from pycroft.model.property import *
 from pycroft.model.accounting import *
-from pycroft.model.ports import *
+from pycroft.model.port import *
 

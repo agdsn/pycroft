@@ -5,7 +5,7 @@ from flask.ext.wtf import Form, TextField, validators, BooleanField, \
     QuerySelectField
 from pycroft.model.dormitory import Dormitory
 
-from pycroft.helpers.dormitory_helper import sort_dormitories
+from pycroft.helpers.dormitory import sort_dormitories
 
 
 def dormitory_query():

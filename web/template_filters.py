@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 from pycroft.model.session import session
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.hosts import Host, Ip, ARecord, CNameRecord
+from pycroft.model.host import Host, Ip, ARecord, CNameRecord
 
 _filter_registry = {}
 
