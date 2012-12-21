@@ -19,4 +19,5 @@ from pycroft.model.user import *
 from pycroft.model.property import *
 from pycroft.model.accounting import *
 from pycroft.model.port import *
+from pycroft.model.host_alias import *
 

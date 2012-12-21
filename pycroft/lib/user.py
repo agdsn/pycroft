@@ -14,7 +14,7 @@ from sqlalchemy.sql.expression import func
 from pycroft.helpers import user, host
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
-from pycroft.model.host import Host, UserHost, UserNetDevice, Ip, ARecord, CNameRecord
+from pycroft.model.host import Host, UserHost, UserNetDevice, Ip
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester

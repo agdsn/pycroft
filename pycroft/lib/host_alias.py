@@ -1,6 +1,6 @@
-from pycroft.model.host import HostAlias, ARecord, AAAARecord, CNameRecord, \
-    MXRecord, SRVRecord, NSRecord
 from pycroft.model import session
+from pycroft.model.host_alias import HostAlias, ARecord, AAAARecord, MXRecord, \
+    CNameRecord, NSRecord, SRVRecord
 
 def delete_alias(alias_id):
     """

@@ -3,9 +3,9 @@
 
 from flask.ext.wtf import Form, TextField, SelectField, QuerySelectField
 from wtforms.validators import Required, Regexp
+from pycroft.model.host_alias import ARecord
 from pycroft.model.port import Port
 from web.form.fields import ReadonlyTextField
-from pycroft.model.host import ARecord
 
 
 def arecords_query(host_id):

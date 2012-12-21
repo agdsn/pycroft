@@ -11,7 +11,7 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
 from pycroft.model.host import Switch
-from pycroft.model.host import HostAlias, CNameRecord
+from pycroft.model.host_alias import HostAlias, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm

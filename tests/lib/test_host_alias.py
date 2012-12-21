@@ -2,12 +2,13 @@ from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord,\
     create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord,\
     create_srvrecord, _create_alias
 
-from pycroft.model.host import ARecord, AAAARecord, NSRecord, CNameRecord,\
-    MXRecord, SRVRecord, HostAlias, Ip, UserHost
+from pycroft.model.host import Ip, UserHost
 
 from pycroft.model import session
+from pycroft.model.host_alias import ARecord, AAAARecord, MXRecord, CNameRecord, \
+    NSRecord, SRVRecord, HostAlias
 
-from tests.lib.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
+from tests.lib.fixtures.host_alias_fixtures import ARecordData, AAAARecordData,\
     NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData
 from tests import FixtureDataTestBase
 
