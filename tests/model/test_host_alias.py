@@ -3,11 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
 
-from tests.model.fixtures.host_aliases_fixtures import ARecordData, AAAARecordData,\
+from tests.model.fixtures.host_alias_fixtures import ARecordData, AAAARecordData,\
     MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData, UserHostData
+from pycroft.model.host_alias import HostAlias, ARecord, AAAARecord, MXRecord, \
+    CNameRecord, NSRecord, SRVRecord
 from tests import FixtureDataTestBase
-from pycroft.model.host import ARecord, AAAARecord, MXRecord, CNameRecord,\
-    NSRecord, SRVRecord, Ip, UserHost, HostAlias
+from pycroft.model.host import      Ip, UserHost
 from pycroft.model import session
 import ipaddr
 
