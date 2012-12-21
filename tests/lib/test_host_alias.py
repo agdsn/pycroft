@@ -5,7 +5,7 @@ from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord,\
     create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord,\
     create_srvrecord, _create_alias
 
-from pycroft.model.hosts import ARecord, AAAARecord, NSRecord, CNameRecord,\
+from pycroft.model.host import ARecord, AAAARecord, NSRecord, CNameRecord,\
     MXRecord, SRVRecord, HostAlias, Ip, UserHost
 
 from pycroft.model import session

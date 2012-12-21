@@ -14,9 +14,9 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
-from pycroft.model.properties import PropertyGroup, TrafficGroup, \
+from pycroft.model.property import PropertyGroup, TrafficGroup, \
     property_categories
-from pycroft.lib.properties import delete_property, delete_property_group, \
+from pycroft.lib.property import delete_property, delete_property_group, \
     delete_traffic_group, create_property, create_property_group, \
     create_traffic_group
 

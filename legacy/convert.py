@@ -8,8 +8,8 @@ import ipaddr
 from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
 
 from pycroft import model
-from pycroft.model import dormitory, session, ports, user, hosts, properties, logging
-from pycroft.helpers.user_helper import hash_password
+from pycroft.model import dormitory, session, port, user, host, property, logging
+from pycroft.helpers.user import hash_password
 
 def do_convert():
     houses = {}
@@ -34,7 +34,7 @@ def do_convert():
             if new_room is None:
                 new_room = dormitory.Room(number=port.zimmernr, level=port.etage, inhabitable=True, dormitory=new_house)
                 rooms.append(new_room)
-            new_port = ports.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
+            new_port = port.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
             patch_ports.append(new_port)
 
             if port.ip not in switches:
@@ -42,14 +42,14 @@ def do_convert():
                 computer = my_session.query(Computer).filter(Computer.c_ip == pub_ip).first()
                 hostname = computer.c_hname
                 mac = computer.c_etheraddr
-                new_switch_netdevice = hosts.SwitchNetDevice(mac=mac)
-                mgmt_ip = hosts.Ip(address=pub_ip, net_device=new_switch_netdevice)
-                new_switch = hosts.Switch(name=hostname, management_ip=mgmt_ip)
+                new_switch_netdevice = host.SwitchNetDevice(mac=mac)
+                mgmt_ip = host.Ip(address=pub_ip, net_device=new_switch_netdevice)
+                new_switch = host.Switch(name=hostname, management_ip=mgmt_ip)
                 new_switch_netdevice.host = new_switch
                 net_devices.append(new_switch_netdevice)
                 ips.append(mgmt_ip)
                 switches[port.ip] = new_switch
-            new_swport = ports.SwitchPort(name=port.port, switch=switches[port.ip])
+            new_swport = port.SwitchPort(name=port.port, switch=switches[port.ip])
             switch_ports.append(new_swport)
             new_port.destination_port = new_swport
 
@@ -107,26 +107,26 @@ def do_convert():
         ip.subnet = subnets[computer.c_subnet_id]
 
 
-    property_groups = {"verstoß": properties.PropertyGroup(name=u"Verstoß"),
-                       "bewohner": properties.PropertyGroup(name=u"Bewohner"),
-                       "admin": properties.PropertyGroup(name=u"Admin"),
-                       "nutzerverwalter": properties.PropertyGroup(
+    property_groups = {"verstoß": property.PropertyGroup(name=u"Verstoß"),
+                       "bewohner": property.PropertyGroup(name=u"Bewohner"),
+                       "admin": property.PropertyGroup(name=u"Admin"),
+                       "nutzerverwalter": property.PropertyGroup(
                            name=u"Nutzerverwalter"),
-                       "finanzen": properties.PropertyGroup(name=u"Finanzen"),
-                       "root": properties.PropertyGroup(name=u"Root"),
-                       "hausmeister": properties.PropertyGroup(
+                       "finanzen": property.PropertyGroup(name=u"Finanzen"),
+                       "root": property.PropertyGroup(name=u"Root"),
+                       "hausmeister": property.PropertyGroup(
                            name=u"Hausmeister"),
-                       "exaktiv": properties.PropertyGroup(name=u"Exaktiv")}
+                       "exaktiv": property.PropertyGroup(name=u"Exaktiv")}
 
-    properties_all = [properties.Property(name="no_internet",
+    properties_all = [property.Property(name="no_internet",
         property_group=property_groups["verstoß"]),
-                      properties.Property(name="internet",
+                      property.Property(name="internet",
                           property_group=property_groups["bewohner"]),
-                      properties.Property(name="mail",
+                      property.Property(name="mail",
                           property_group=property_groups["bewohner"]),
-                      properties.Property(name="ssh_helios",
+                      property.Property(name="ssh_helios",
                           property_group=property_groups["bewohner"]),
-                      properties.Property(name="homepage_helios",
+                      property.Property(name="homepage_helios",
                           property_group=property_groups["bewohner"]),]
 
 
@@ -167,23 +167,23 @@ def do_convert():
                             Computer.nutzer_id == old_user.nutzer_id
                         ).first()
 
-                new_host = hosts.UserHost(user=new_user, room=user_room)
+                new_host = host.UserHost(user=new_user, room=user_room)
                 user_hosts.append(new_host)
 
-                new_netdevice = hosts.UserNetDevice(mac=computer.c_etheraddr,
+                new_netdevice = host.UserNetDevice(mac=computer.c_etheraddr,
                     host=new_host)
                 user_netdevices.append(new_netdevice)
 
-                new_ip = hosts.Ip(address=computer.c_ip, net_device=new_netdevice,
+                new_ip = host.Ip(address=computer.c_ip, net_device=new_netdevice,
                                 subnet=subnets[computer.c_subnet_id])
                 ips.append(new_ip)
 
-                new_arecord = hosts.ARecord(name=computer.c_hname,
+                new_arecord = host.ARecord(name=computer.c_hname,
                                         address=new_ip, host=new_host)
                 a_records.append(new_arecord)
 
                 if (computer.c_alias is not None) and (len(computer.c_alias) is not 0):
-                    new_cnamerecord = hosts.CNameRecord(name=computer.c_alias,
+                    new_cnamerecord = host.CNameRecord(name=computer.c_alias,
                                                 alias_for=new_arecord, host=new_host)
                     cname_records.append(new_cnamerecord)
 

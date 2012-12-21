@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.model.hosts import HostAlias, ARecord, AAAARecord, CNameRecord, \
+from pycroft.model.host import HostAlias, ARecord, AAAARecord, CNameRecord, \
     MXRecord, SRVRecord, NSRecord
 from pycroft.model import session
 

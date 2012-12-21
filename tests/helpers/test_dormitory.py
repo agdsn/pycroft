@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.helpers.dormitory_helper import sort_dormitories
+from pycroft.helpers.dormitory import sort_dormitories
 from tests import OldPythonTestCase
 
 class Test_010_SimpleDormitoryHelpers(OldPythonTestCase):
