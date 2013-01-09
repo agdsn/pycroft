@@ -18,6 +18,7 @@ from sqlalchemy import event
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
+    message = Column(Text(), nullable=False)
     #LIABILITY=Forderung, EXPENSE=Verbindlichkeit, ASSET=Bestand, INCOME=Einnahme, EQUITY=Vermögen
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
                         name="financeaccounttypes"), nullable=False)
@@ -27,6 +28,11 @@ class FinanceAccount(ModelBase):
     # many to one from FinanceAccount to User
     user = relationship("User", backref=backref("finance_accounts"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+
+    parent_account_id = Column(Integer, ForeignKey("financeaccount.id"),
+        nullable=True)
+    parent_account = relationship("FinanceAccount",
+        backref=backref("child_accounts"))
 
 
 class Journal(ModelBase):
@@ -69,6 +75,7 @@ event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
 event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 
 
+#soll ist positiv, haben ist negativ
 class Split(ModelBase):
     amount = Column(Integer, nullable=False)
     account_id = Column(Integer, ForeignKey("financeaccount.id"),

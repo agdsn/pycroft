@@ -272,7 +272,7 @@ def do_convert():
     ips.append(gizeh_ip)
     gizeh_host = host.ServerHost(room=server_room_wu11_dach, user=root)
     gizeh_net_device.host = gizeh_host
-    server_host.append(gizeh_host)
+    server_hosts.append(gizeh_host)
     gizeh_a_record = host.ARecord(host=gizeh_host, name="gizeh.wh7.tu-dresden.de",
         address=gizeh_ip)
     a_records.append(gizeh_a_record)
