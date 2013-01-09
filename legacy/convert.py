@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, time
@@ -275,7 +275,7 @@ def do_convert():
     ips.append(gizeh_ip)
     gizeh_host = host.ServerHost(room=server_room_wu11_dach, user=root)
     gizeh_net_device.host = gizeh_host
-    server_host.append(gizeh_host)
+    server_hosts.append(gizeh_host)
     gizeh_a_record = host.ARecord(host=gizeh_host, name="gizeh.wh7.tu-dresden.de",
         address=gizeh_ip)
     a_records.append(gizeh_a_record)
