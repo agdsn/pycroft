@@ -12,7 +12,7 @@ from tests.helpers.fixtures.user_fixtures import DormitoryData, FinanceAccountDa
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData
 from pycroft.model import user, dormitory, port, session, logging, finance, \
-    property
+    property, host_alias, host
 from datetime import datetime
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -78,13 +78,14 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_login = u"hans66"
         test_email = u"hans@hans.de"
         test_dormitory = dormitory.Dormitory.q.first()
+        test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.moves_in(test_name,
             test_login, test_email, test_dormitory,
             1,
             "1",
-            None,
+            test_hostname,
             test_mac,
             finance.Semester.q.first(),
             self.processing_user)
@@ -96,6 +97,14 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.user_host.user_net_device.mac, test_mac)
+
+        user_host = host.UserHost.q.filter_by(user=new_user).one()
+        user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
+        self.assertEqual(user_net_device.mac, test_mac)
+        user_cnamerecord = host_alias.CNameRecord.q.filter_by(host=user_host).one()
+        self.assertEqual(user_cnamerecord.name, test_hostname)
+        user_arecord = host_alias.ARecord.q.filter_by(host=user_host).one()
+        self.assertEqual(user_cnamerecord.alias_for, user_arecord)
 
         #checks the initial group memberhsips
         user_groups = new_user.active_property_groups + new_user.active_traffic_groups
