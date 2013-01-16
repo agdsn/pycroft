@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -25,7 +25,7 @@
 
     {% call info_row("Anmeldedatum") %}
         {{ user.registration_date|datetime }} /
-        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer endgültig ausziehen</a>
+        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer ausziehen</a>
     {% endcall %}
 
     {% call info_row("Wohnort") %}
