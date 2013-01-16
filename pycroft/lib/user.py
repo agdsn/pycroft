@@ -241,13 +241,14 @@ def edit_email(user, email, processor):
     :return:Changed user object
     """
     oldEmail = user.email
-    user.email = email
-    session.session.add(user)
-    logEntry = UserLogEntry(author_id=processor.id,
-        message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
-        timestamp=datetime.now(), user_id=user.id)
-    session.session.add(logEntry)
-    session.session.commit()
+    if len(email):
+        user.email = email
+
+        logEntry = UserLogEntry(author_id=processor.id,
+            message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
+            timestamp=datetime.now(), user_id=user.id)
+        session.session.add(logEntry)
+        session.session.commit()
 
     return user
 
