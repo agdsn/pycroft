@@ -176,3 +176,29 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
         ).one()
 
+class Test_040_User_Edit_Name(FixtureDataTestBase):
+    datasets = [RoomData, DormitoryData, UserData]
+
+    def setUp(self):
+        super(Test_040_User_Edit_Name, self).setUp()
+        self.user = user.User.q.get(2)
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_040_User_Edit_Name, self).tearDown()
+
+    def test_010_correct_new_name(self):
+        print self.user.name
+        print self.user.id
+
+        UserHelper.edit_name(self.user, "toller neuer Name", self.user)
+
+        self.assertEqual(self.user.name, "toller neuer Name")
+
+    def test_020_name_zero_length(self):
+        old_name = self.user.name
+
+        UserHelper.edit_name(self.user, "", self.user)
+
+        self.assertEqual(self.user.name, old_name)
