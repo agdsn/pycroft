@@ -120,6 +120,12 @@ class FinanceAccountData(DataSet):
     class dummy_finance_account2:
         name = "finance account 2"
         type = "EXPENSE"
+    class semester_fee:
+        name = u"Beiträge"
+        type = "INCOME"
+    class registration_fee:
+        name = u"Anmeldegebühren"
+        type = "INCOME"
 
 
 class SemesterData(DataSet):

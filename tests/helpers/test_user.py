@@ -112,7 +112,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(account_sum,4000)
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData]
+    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
+                PropertyGroupData, FinanceAccountData]
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
@@ -156,3 +157,11 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         for membership in new_user.memberships:
             if membership.end_date >= out_time:
                 self.assertEquals(membership.end_date, out_time)
+
+        # check if users finance account still exists
+        user_account = finance.FinanceAccount.q.filter(
+            finance.FinanceAccount.user==new_user
+        ).filter(
+            finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
+        ).one()
+
