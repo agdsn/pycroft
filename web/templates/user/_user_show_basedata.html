@@ -20,7 +20,7 @@
 
     {% call info_row("Anmeldedatum") %}
         {{ user.registration_date|datetime }} /
-        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer endgültig ausziehen</a>
+        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer ausziehen</a>
     {% endcall %}
 
     {% call info_row("Wohnort") %}

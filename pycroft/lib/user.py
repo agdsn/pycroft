@@ -151,7 +151,7 @@ def move(user, dormitory, level, room_number, processor):
     :param dormitory: The new dormitory.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
-    :param processing_user: The user who is currently logged in.
+    :param processor: The user who is currently logged in.
     :return: The user object of the moved user.
     """
 
@@ -308,7 +308,7 @@ def ban_user(user, date, reason, processor):
     session.session.commit()
     return user
 
-def move_out(user, date, processor):
+def move_out(user, date, comment, processor):
     """
     This function moves out a user and finishes all his memberships. A logmessage is created.
     :param user: The user to move out.
@@ -322,7 +322,36 @@ def move_out(user, date, processor):
         if membership.end_date > date:
             membership.end_date = date
 
-    new_log_entry = UserLogEntry(message=user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen.",
+    if(comment):
+        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen. Kommentar: " + comment
+    else:
+        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen."
+    new_log_entry = UserLogEntry(message=log_message,
+        timestamp=datetime.now(),
+        author=processor,
+        user=user)
+    session.session.add(new_log_entry)
+    session.session.commit()
+    return user
+
+def move_out_tmp(user, date, comment, processor):
+    """
+    This function moves a user temporally. A logmessage is created.
+    :param user: The user to move out.
+    :param date: The date the user is going to move out.
+    :param comment: Comment for temp moveout
+    :param processor: The admin who is going to move out the user.
+    :return: The user to move out.
+    """
+    if(user.has_property("internet")):
+        for membership in user.memberships:
+            if(membership.group.name == "internet"):
+                membership.end_date = date
+    if(comment):
+        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen. Kommentar: " + comment
+    else:
+        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen."
+    new_log_entry = UserLogEntry(message=log_message,
         timestamp=datetime.now(),
         author=processor,
         user=user)
