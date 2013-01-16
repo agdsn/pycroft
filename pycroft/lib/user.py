@@ -104,29 +104,41 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
             new_membership.end_date = datetime.now() + initial_group["dates"][
                                                      "end_date"]
 
+    registration_fee_account = FinanceAccount.q.filter(
+        FinanceAccount.name == u"Anmeldegebühren").one()
+    semester_fee_account = FinanceAccount.q.filter(
+        FinanceAccount.name == u"Beiträge").one()
 
 
     #TODO: create financial account for user with negative balance
     #adds the initial finance transactions to the user
     new_finance_account = FinanceAccount(name=u"Nutzerid: %i" % new_user.id,
-        type="LIABILITY", user=new_user)
+        type="EQUITY", user=new_user)
+    #Transaction for the registration fee
     new_transaction_registration_fee = Transaction(
         message=u"Anmeldegebühren bei der AG DSN von Nutzer %s" % (
-        new_user.id, ), transaction_date=datetime.now())
+            new_user.id, ), transaction_date=datetime.now(),
+        semester=current_semester)
+    #Transaction for the semester fee
     new_transaction_semester_fee = Transaction(
         message=u"Semestergebühren für das Semester %s von Nutzer %s" % (
-        current_semester.name, new_user.id), transaction_date=datetime.now())
+            current_semester.name, new_user.id),
+        transaction_date=datetime.now(), semester=current_semester)
+    #soll per Nutzerkonto
     new_split_registration_user = Split(amount=current_semester.registration_fee,
         account=new_finance_account,
         transaction=new_transaction_registration_fee)
+    #haben an Anmeldegebühren
     new_split_registration_ag = Split(amount=-current_semester.registration_fee,
-        account=current_semester.registration_fee_account,
+        account=registration_fee_account,
         transaction=new_transaction_registration_fee)
+    #soll per Nutzerkonto
     new_split_semester_user = Split(amount=current_semester.semester_fee,
         account=new_finance_account,
         transaction=new_transaction_semester_fee)
+    #haben an Beiträge
     new_split_semester_ag = Split(amount=-current_semester.semester_fee,
-        account=current_semester.semester_fee_account,
+        account=semester_fee_account,
         transaction=new_transaction_semester_fee)
 
     finance_things = [new_finance_account, new_transaction_registration_fee,
