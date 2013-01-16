@@ -202,3 +202,28 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
         UserHelper.edit_name(self.user, "", self.user)
 
         self.assertEqual(self.user.name, old_name)
+
+
+class Test_050_User_Edit_Email(FixtureDataTestBase):
+    datasets = [RoomData, DormitoryData, UserData]
+
+    def setUp(self):
+        super(Test_050_User_Edit_Email, self).setUp()
+        self.user = user.User.q.get(2)
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_050_User_Edit_Email, self).tearDown()
+
+    def test_010_correct_new_email(self):
+        UserHelper.edit_email(self.user, "sebastian@schrader.de", self.user)
+
+        self.assertEqual(self.user.email, "sebastian@schrader.de")
+
+    def test_020_email_zero_length(self):
+        old_email = self.user.email
+
+        UserHelper.edit_email(self.user, "", self.user)
+
+        self.assertEqual(self.user.email, old_email)
