@@ -222,14 +222,13 @@ def edit_name(user, name, processor):
     oldName = user.name
     if len(name):
         user.name = name
-    session.session.add(user)
 
-    newUserLogEntry = UserLogEntry(author_id=processor.id,
-        message=u"Nutzer %s umbenannt in %s" % (oldName, name),
-        timestamp=datetime.now(), user_id=user.id)
-    session.session.add(newUserLogEntry)
+        newUserLogEntry = UserLogEntry(author_id=processor.id,
+            message=u"Nutzer %s umbenannt in %s" % (oldName, name),
+            timestamp=datetime.now(), user_id=user.id)
+        session.session.add(newUserLogEntry)
 
-    session.session.commit()
+        session.session.commit()
 
     return user
 
