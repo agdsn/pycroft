@@ -21,8 +21,7 @@ from sqlalchemy import event
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
-    message = Column(Text(), nullable=False)
-    #LIABILITY=Forderung, EXPENSE=Verbindlichkeit, ASSET=Bestand, INCOME=Einnahme, EQUITY=Vermögen
+    #LIABILITY=Passivkonto, EXPENSE=Aufwandskonto, ASSET=Aktivkonto, INCOME=Ertragskonto
     type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
                         name="financeaccounttypes"), nullable=False)
 
@@ -34,8 +33,7 @@ class FinanceAccount(ModelBase):
 
     parent_account_id = Column(Integer, ForeignKey("financeaccount.id"),
         nullable=True)
-    parent_account = relationship("FinanceAccount",
-        backref=backref("child_accounts"))
+    parent_account = relationship("FinanceAccount")
 
 
 class Journal(ModelBase):
@@ -60,10 +58,14 @@ class JournalEntry(ModelBase):
 class Transaction(ModelBase):
     message = Column(Text(), nullable=False)
     transaction_date = Column(DateTime, nullable=False, default=datetime.datetime.now)
+
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
                                     backref=backref("transaction"))
+
+    semester_id = Column(Integer, ForeignKey("semester.id"))
+    semester = relationship("Semester", backref=backref("transactions"))
 
     @property
     def is_balanced(self):
@@ -97,15 +99,3 @@ class Semester(ModelBase):
     registration_fee = Column(Integer, nullable=False)
     begin_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
-
-    registration_fee_account_id = Column(Integer,
-        ForeignKey("financeaccount.id"),
-        nullable=False)
-    registration_fee_account = relationship("FinanceAccount",
-        primaryjoin="FinanceAccount.id==Semester.registration_fee_account_id")
-
-    semester_fee_account_id = Column(Integer,
-        ForeignKey("financeaccount.id"),
-        nullable=False)
-    semester_fee_account = relationship("FinanceAccount",
-        primaryjoin="FinanceAccount.id==Semester.semester_fee_account_id")

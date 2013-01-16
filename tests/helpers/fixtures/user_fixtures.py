@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'florian'
@@ -123,6 +123,12 @@ class FinanceAccountData(DataSet):
     class dummy_finance_account2:
         name = "finance account 2"
         type = "EXPENSE"
+    class semester_fee:
+        name = u"Beiträge"
+        type = "INCOME"
+    class registration_fee:
+        name = u"Anmeldegebühren"
+        type = "INCOME"
 
 
 class SemesterData(DataSet):

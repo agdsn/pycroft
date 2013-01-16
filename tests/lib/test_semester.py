@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'Florian Österreich'
@@ -23,11 +23,5 @@ class Test_010_Create_Semester(OldPythonTestCase):
 
     def test_010_new_semester(self):
         new_semester = create_semester("Testsemester", "2500", "1500", datetime.now(), datetime.now())
-        self.assertIsNotNone(new_semester.registration_fee_account)
-        self.assertEqual(new_semester.registration_fee_account.name,u"Anmeldegebühr Testsemester")
-        self.assertEqual(new_semester.registration_fee_account.type,"EXPENSE")
-        self.assertIsNotNone(new_semester.semester_fee_account)
-        self.assertEqual(new_semester.semester_fee_account.name,u"Semestergebühr Testsemester")
-        self.assertEqual(new_semester.semester_fee_account.type,"EXPENSE")
         self.assertEqual(new_semester.registration_fee,2500)
         self.assertEqual(new_semester.semester_fee,1500)

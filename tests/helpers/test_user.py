@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -115,7 +115,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(account_sum,4000)
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData]
+    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
+                PropertyGroupData, FinanceAccountData]
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
@@ -159,3 +160,11 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         for membership in new_user.memberships:
             if membership.end_date >= out_time:
                 self.assertEquals(membership.end_date, out_time)
+
+        # check if users finance account still exists
+        user_account = finance.FinanceAccount.q.filter(
+            finance.FinanceAccount.user==new_user
+        ).filter(
+            finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
+        ).one()
+

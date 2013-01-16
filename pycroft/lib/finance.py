@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'Florian Österreich'
@@ -20,20 +20,13 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     :param end_date: Date when semester ends.
     :return: The created Semester.
     """
-    new_registration_fee_account = FinanceAccount(name=u"Anmeldegebühr %s" % name, type="EXPENSE")
-
-    new_semester_fee_account = FinanceAccount(name=u"Semestergebühr %s" % name, type="EXPENSE")
 
     new_semester = Semester(name=name,
         registration_fee=registration_fee,
         semester_fee=semester_fee,
         begin_date=begin_date,
-        end_date=end_date,
-        registration_fee_account=new_registration_fee_account,
-        semester_fee_account=new_semester_fee_account)
+        end_date=end_date)
 
-    session.session.add(new_registration_fee_account)
-    session.session.add(new_semester_fee_account)
     session.session.add(new_semester)
     session.session.commit()
     return new_semester
