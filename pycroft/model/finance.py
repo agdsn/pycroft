@@ -28,10 +28,6 @@ class FinanceAccount(ModelBase):
     user = relationship("User", backref=backref("finance_accounts"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
 
-    parent_account_id = Column(Integer, ForeignKey("financeaccount.id"),
-        nullable=True)
-    parent_account = relationship("FinanceAccount")
-
 
 class Journal(ModelBase):
     account = Column(String(255), nullable=False)
