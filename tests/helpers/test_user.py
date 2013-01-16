@@ -59,6 +59,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
     def tearDown(self):
         #TODO don't delete all log entries but the user log entries
         logging.LogEntry.q.delete()
+        finance.Transaction.q.delete()
         session.session.commit()
         super(Test_020_User_Move_In, self).tearDown()
 
@@ -130,6 +131,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
     def tearDown(self):
         logging.LogEntry.q.delete()
+        finance.Transaction.q.delete()
         session.session.commit()
         super(Test_030_User_Move_Out, self).tearDown()
 
@@ -160,7 +162,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
         out_time = datetime.now()
 
-        UserHelper.move_out(new_user, out_time, self.processing_user)
+        UserHelper.move_out(new_user, out_time, "", self.processing_user)
 
         # check end_date of moved out user
         for membership in new_user.memberships:
