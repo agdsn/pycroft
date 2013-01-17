@@ -8824,9 +8824,11 @@ CREATE TABLE "transaction" (
 	id INTEGER NOT NULL, 
 	message TEXT NOT NULL,
 	transaction_date DATETIME NOT NULL,
-	journal_entry_id INTEGER, 
+	journal_entry_id INTEGER,
+	semester_id INTEGER,
 	PRIMARY KEY (id), 
-	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id)
+	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
+	FOREIGN KEY(semester_id) REFERENCES semester(id)
 );
 CREATE TABLE logentry (
 	id INTEGER NOT NULL, 
@@ -8908,11 +8910,7 @@ CREATE TABLE semester (
     semester_fee INTEGER NOT NULL,
     begin_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    registration_fee_account_id INTEGER NOT NULL,
-    semester_fee_account_id INTEGER NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY(registration_fee_account_id) REFERENCES financeaccount (id),
-    FOREIGN KEY(semester_fee_account_id) REFERENCES financeaccount (id)
+    PRIMARY KEY (id)
 );
 COMMIT;
 
@@ -9079,6 +9077,6 @@ INSERT INTO "group" VALUES(3,'one_month_negative_balance','propertygroup');
 INSERT INTO "trafficgroup" VALUES(2,7000000000);
 INSERT INTO "propertygroup" VALUES(3);
 
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühr Wintersemester 2012/13','EXPENSE',1);
-INSERT INTO "financeaccount" VALUES(2,'Semestergebühr Wintersemester 2012/13','EXPENSE',1);
-INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000',1,2);
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühr','INCOME',1);
+INSERT INTO "financeaccount" VALUES(2,'Beitrag','INCOME',1);
+INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000');
