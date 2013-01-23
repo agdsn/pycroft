@@ -217,20 +217,20 @@ class Test_060_Cascades(FixtureDataTestBase):
         session.session.commit()
         self._assertIsNone(accounting.TrafficVolume.q.first())
 
-    def test_0010_cascade_on_delete_netdevice(self):
+    def test_0020_cascade_on_delete_netdevice(self):
         session.session.delete(host.NetDevice.q.get(1))
         session.session.commit()
         self._assertIsNone(host.Ip.q.first())
         self._assertIsNone(accounting.TrafficVolume.q.first())
 
-    def test_0010_cascade_on_delete_host(self):
+    def test_0030_cascade_on_delete_host(self):
         session.session.delete(host.Host.q.get(1))
         session.session.commit()
         self._assertIsNone(host.NetDevice.q.first())
         self._assertIsNone(host.Ip.q.first())
         self._assertIsNone(accounting.TrafficVolume.q.first())
 
-    def test_0010_cascade_on_delete_user(self):
+    def test_0040_cascade_on_delete_user(self):
         session.session.delete(user.User.q.get(1))
         session.session.commit()
         self._assertIsNone(host.Host.q.first())
