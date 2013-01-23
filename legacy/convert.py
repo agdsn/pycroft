@@ -45,7 +45,7 @@ def do_convert():
                 mac = computer.c_etheraddr
                 new_switch_netdevice = host.SwitchNetDevice(mac=mac)
                 mgmt_ip = host.Ip(address=pub_ip, net_device=new_switch_netdevice)
-                new_switch = host.Switch(name=hostname, management_ip=mgmt_ip)
+                new_switch = host.Switch(name=hostname, management_ip=mgmt_ip.address)
                 new_switch_netdevice.host = new_switch
                 net_devices.append(new_switch_netdevice)
                 ips.append(mgmt_ip)
