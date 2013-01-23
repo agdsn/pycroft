@@ -11,7 +11,7 @@
             {% endif %}
         </small>
         <small class="span1">Alias:
-            {%  if user.user_host.aliases %}
+            {% if user.user_host.aliases %}
                 {{ user.user_host.aliases|length }}
             {% else %}
                 0
@@ -86,8 +86,8 @@
                     <tr>
                         <td><a href="{{ url_for(".change_mac", user_net_device_id=ip.net_device.id) }}" title="Bearbeiten">{{ ip.net_device.mac }}</a></td>
                         <td>{{ ip.address }}</td>
-                        <td>TODO</td>
-                        <td>TODO</td>
+                        <td>{{ user.user_host | get_switch(ip)}}</td>
+                        <td>{{ user.user_host | get_switch_port(ip)}}</td>
                         <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
                     </tr>
                 {% endfor %}

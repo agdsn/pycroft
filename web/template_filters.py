@@ -128,6 +128,7 @@ def host_name_filter(host):
     else:
         return "NoName"
 
+
 @template_filter("host_cname")
 def host_cname_filter(host):
     cname_record = session.query(
@@ -149,6 +150,7 @@ def record_editable_filter(record):
     else:
         return True
 
+
 @template_filter("record_removable")
 def record_removable_filter(record):
     if record.discriminator == "arecord" or record.discriminator == "aaaarecord":
@@ -156,9 +158,44 @@ def record_removable_filter(record):
     else:
         return True
 
+
 @template_filter("record_readable_name")
 def record_readable_name_filter(record):
     return record.__class__.__name__
+
+
+@template_filter("get_switch")
+def ip_get_switch(host,ip):
+    patch_ports = host.room.patch_ports
+    switchs = None
+
+    for port in patch_ports:
+        if switchs is None:
+            switchs = port.destination_port.switch.name
+        else:
+            switchs += ", " + port.destination_port.switch.name
+
+    if switchs is not None:
+        return switchs
+    else:
+        return "No Switch"
+
+
+@template_filter("get_switch_port")
+def ip_get_switch_port(host,ip):
+    patch_ports = host.room.patch_ports
+    switch_ports = None
+
+    for port in patch_ports:
+        if switch_ports is None :
+            switch_ports = port.destination_port.name
+        else:
+            switch_ports += ", " + port.destination_port.name
+
+    if switch_ports is not None:
+        return switch_ports
+    else:
+        return "No Port"
 
 
 @template_filter("level_number")
