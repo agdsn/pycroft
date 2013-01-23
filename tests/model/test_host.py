@@ -35,7 +35,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
                 self.assertRaisesRegexp(Exception, "Invalid MAC address!", set_mac, mac)
                 return
             if int(parts[0], base=16) & 1:
-                self.assertRaisesRegexp(Exception, "Multicast-Flag ", set_mac, mac)
+                self.assertRaisesRegexp(Exception, "Multicast flag ", set_mac, mac)
                 return
             nd.mac = mac
 

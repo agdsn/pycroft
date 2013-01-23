@@ -153,8 +153,8 @@ class NetDevice(ModelBase):
         bytes =  [groupdict['byte6'], groupdict['byte5'], groupdict['byte4'],
                   groupdict['byte3'], groupdict['byte2'], groupdict['byte1']]
         if int(bytes[0], base=16) & 1:
-            raise Exception("Multicast-Flag (least significant bit im "
-                            "ersten Byte gesetzt)!")
+            raise Exception("Multicast flag (least significant bit of "
+                            "the first byte) is set!")
         return ':'.join(bytes).lower()
 
 
