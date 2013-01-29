@@ -237,3 +237,73 @@ class Test_060_Cascades(FixtureDataTestBase):
         self._assertIsNone(host.NetDevice.q.first())
         self._assertIsNone(host.Ip.q.first())
         self._assertIsNone(accounting.TrafficVolume.q.first())
+
+
+class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
+    datasets = [VLanData, SubnetData, RoomData, UserData, UserHostData,
+                UserNetDeviceData, IpData]
+
+    def setUp(self):
+        super(Test_070_DuplicateMACAdresses, self).setUp()
+        self.uh = host.UserHost(user_id=1)
+        self.nd = host.UserNetDevice(host=self.uh,
+                                     mac="00:00:00:00:00:01")
+        self.ip = host.Ip(address="141.30.216.3",
+                     subnet=dormitory.Subnet.q.first(),
+                     net_device=self.nd)
+        session.session.add(self.nd)
+        session.session.add(self.ip)
+        session.session.commit()
+
+    def tearDown(self):
+        session.session.rollback()
+        session.session.delete(self.nd)
+        session.session.commit()
+        super(Test_070_DuplicateMACAdresses, self).tearDown()
+
+    def test_0010_duplicate_mac_on_mac_change(self):
+        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+            self.nd.mac = "00:00:00:00:00:00"
+            session.session.add(self.nd)
+            session.session.commit()
+
+    def _add_second_host(self):
+        uh = host.UserHost(user_id=2)
+        nd = host.UserNetDevice(host=uh,
+                                mac="00:00:00:00:00:01")
+        ip = host.Ip(address="141.30.227.2",
+                     subnet=dormitory.Subnet.q.get(2),
+                     net_device=nd)
+        session.session.add(nd)
+        session.session.add(ip)
+        session.session.commit()
+
+        return (uh, nd, ip)
+
+    def test_0020_duplicate_mac_on_ip_change(self):
+        (_, _, ip) = self._add_second_host()
+        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+            ip.change_ip(ip="141.30.216.4",
+                         subnet=dormitory.Subnet.q.first())
+            session.session.commit()
+
+    def test_0030_duplicate_mac_on_ip_insert(self):
+        (uh, nd, _) = self._add_second_host()
+
+        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+            ip = host.Ip(address="141.30.227.4",
+                         subnet=dormitory.Subnet.q.get(2),
+                         net_device=nd)
+            session.session.add(ip)
+            session.session.commit()
+
+    def test_0040_multiple_ips_on_same_net_device(self):
+        ip = host.Ip(address="141.30.216.4",
+                     subnet=dormitory.Subnet.q.first(),
+                     net_device=self.nd)
+        session.session.add(ip)
+        session.session.commit()
+
+        session.session.delete(ip)
+        session.session.commit()
+

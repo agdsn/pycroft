@@ -12,6 +12,7 @@ from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
+from pycroft.model.session import session
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
@@ -158,6 +159,53 @@ class NetDevice(ModelBase):
         return ':'.join(bytes).lower()
 
 
+def _other_subnets_for_mac(net_device):
+    """Helper function for duplicate MAC address checking.
+
+    This retrieves a list of all Subnet addresses connected to any
+    other NetDevice (i.e. not the given net_device) with the same MAC
+    address as net_device.
+
+    """
+    return session.query(
+        dormitory.Subnet.address
+    ).filter(
+        NetDevice.mac == net_device.mac,
+        NetDevice.id != net_device.id,
+    ).join(
+        Ip
+    ).distinct().all()
+
+
+def _check_mac_unique_in_subnets(mapper, connection, target):
+    """Check for common (i.e. duplicate) MAC addresses between
+    different NetDevices on the same Subnet.
+
+    MAC addresses are not uniquely associated to a NetDevice, i.e.
+    there might be more than one NetDevice with a given MAC address,
+    and as long as all those NetDevices have no Subnets in common,
+    this is fine.  However, a given MAC address must not appear on
+    more than one Netdevice on any given Subnet.
+
+    This is called when adding new or udpdating existing NetDevices.
+
+    """
+    own_subnets = [(ip.subnet.address,)
+                   for ip in target.ips
+                   if ip.subnet is not None]
+    other_subnets = _other_subnets_for_mac(target)
+
+    if len(set(own_subnets).intersection(other_subnets)) > 0:
+        raise Exception("Duplicate MAC address (already present on one "
+                        "of the connected subnets)")
+
+
+event.listen(NetDevice, "before_insert", _check_mac_unique_in_subnets,
+             propagate=True)
+event.listen(NetDevice, "before_update", _check_mac_unique_in_subnets,
+             propagate=True)
+
+
 class UserNetDevice(NetDevice):
     id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
 
@@ -251,8 +299,42 @@ def _check_correct_ip_subnet(mapper, connection, target):
         assert target.is_ip_valid, "Subnet does not contain the ip"
 
 
+def _check_subnet_macs_unique(mapper, connection, target):
+    """Check for common (i.e. duplicate) MAC addresses between
+    different NetDevices on the same Subnet.
+
+    There might be more than one NetDevice with a given MAC
+    address. As long as those NetDevices are not connected to a common
+    subnet, this is fine. Also, a given NetDevice may have more than
+    one Ip belonging to a given Subnet.
+
+    This is called when adding or updating Ips.
+
+    """
+    if target.subnet is not None:
+        own_subnet = target.subnet.address
+        other_subnets = session.query(
+            NetDevice.id,
+            Ip.address,
+            dormitory.Subnet.address
+        ).filter(
+            Ip.id != target.id,
+            NetDevice.mac == target.net_device.mac,
+            NetDevice.id != target.net_device.id
+        ).join(
+            Ip.net_device,
+            Ip.subnet
+        ).all()
+
+        if own_subnet in [net for (_, _, net) in other_subnets]:
+            raise Exception("Duplicate MAC address (already present on one "
+                            "of the connected subnets)")
+
+
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
+event.listen(Ip, "before_insert", _check_subnet_macs_unique)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
+event.listen(Ip, "before_update", _check_subnet_macs_unique)
 
 def _delete_corresponding_record(mapper, connection, target):
     ip_id = target.id
