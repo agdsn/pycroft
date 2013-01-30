@@ -358,11 +358,17 @@ def move_out_tmp(user, date, comment, processor):
     :param processor: The admin who is going to move out the user.
     :return: The user to move out.
     """
-    if(user.has_property("internet")):
-        for membership in user.memberships:
-            if(membership.group.name == "internet"):
-                membership.end_date = date
-    if(comment):
+
+    away_group = PropertyGroup.q.filter(
+        PropertyGroup.name == u"tmpAusgezogen").one()
+
+    new_membership = Membership(group=away_group, user=user)
+
+    user.is_away = True
+
+    session.session.delete(user.user_host.user_net_device.ips[0])
+
+    if comment:
         log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen. Kommentar: " + comment
     else:
         log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen."

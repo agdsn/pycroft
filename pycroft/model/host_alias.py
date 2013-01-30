@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import ForeignKey, Column, String, Integer
@@ -23,8 +23,9 @@ class ARecord(HostAlias):
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    address = relationship("Ip")
-    address_id = Column(Integer, ForeignKey("ip.id"),
+    address = relationship("Ip",
+        backref=backref("arecords", cascade="all, delete-orphan"))
+    address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
         nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'arecord'}
@@ -68,6 +69,7 @@ class AAAARecord(HostAlias):
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
+    #TODO Delete cascades
     address = relationship("Ip")
     address_id = Column(Integer, ForeignKey("ip.id"),
         nullable=False)
