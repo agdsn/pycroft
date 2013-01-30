@@ -166,6 +166,10 @@ def _other_subnets_for_mac(net_device):
     other NetDevice (i.e. not the given net_device) with the same MAC
     address as net_device.
 
+    :param net_device: The NetDevice we are interested in.
+    :return: List of all Subnet addresses connected to a different NetDevice
+    with the same MAC address as net_device.
+
     """
     return session.query(
         dormitory.Subnet.address
