@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
@@ -223,11 +223,12 @@ class Test_040_Cascades(FixtureDataTestBase):
 
     def test_0040_arecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
+        arecord_id = ARecord.q.first().id
         session.session.delete(ip)
 
-        self.assertRaises(ValueError, session.session.commit)
-        session.session.rollback()
+        session.session.commit()
 
+        self.assertIsNone(ARecord.q.get(arecord_id))
 
     def test_0045_aaaarecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()
