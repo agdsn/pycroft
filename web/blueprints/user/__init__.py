@@ -388,3 +388,11 @@ def move_out_tmp(user_id):
             'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
+
+
+@bp.route('/come_back/<int:user_id>')
+def come_back(user_id):
+    my_user = User.q.get(user_id)
+    changed_user = lib.user.user_is_back(my_user, current_user)
+    flash(u'Nutzer ist zurück', 'success')
+    return redirect(url_for('.user_show', user_id=changed_user.id))
