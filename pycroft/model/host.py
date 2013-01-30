@@ -228,8 +228,9 @@ class ServerNetDevice(NetDevice):
     host = relationship("ServerHost",
         backref=backref("server_net_devices", cascade="all, delete-orphan"))
 
+    #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
     switch_port_id = Column(Integer, ForeignKey('switchport.id'),
-        nullable=False)
+        nullable=True)
     switch_port = relationship("SwitchPort")
 
 
