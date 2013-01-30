@@ -10,7 +10,7 @@
 from flask.ext.login import UserMixin
 from base import ModelBase
 from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
-    String
+    String, Boolean
 from sqlalchemy.orm import backref, relationship, validates
 import re
 from sqlalchemy.orm.util import has_identity
@@ -25,10 +25,13 @@ class User(ModelBase, UserMixin):
     registration_date = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
+    is_away = Column(Boolean, default=False, nullable=False)
+
 
     # many to one from User to Room
-    room = relationship("Room", backref=backref("users", order_by='User.id'))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room = relationship("Room", backref=backref("users", order_by='User.id'),
+        primaryjoin="and_(User.is_away== False, Room.id==User.room_id)")
 
     traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,

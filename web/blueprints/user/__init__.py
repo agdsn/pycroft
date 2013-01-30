@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm, UserEditEMailForm, UserBanForm, UserMoveoutForm, \
+    UserEditNameForm, UserEditEMailForm, UserBanForm, UserMoveOutForm, \
     NetDeviceChangeMacForm
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
@@ -344,7 +344,7 @@ def ban_user(user_id):
 
 @bp.route('/user_moveout/<int:user_id>', methods=['GET', 'POST'])
 def user_moveout(user_id):
-    form = UserMoveoutForm()
+    form = UserMoveOutForm()
     myUser = User.q.get(user_id)
     if myUser is None:
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
@@ -354,6 +354,8 @@ def user_moveout(user_id):
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
+
+
 @bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
 def change_mac(user_net_device_id):
     form = NetDeviceChangeMacForm()
@@ -367,3 +369,19 @@ def change_mac(user_net_device_id):
         flash(u'Mac geändert', 'success')
         return redirect(url_for('.user_show', user_id=changed_net_device.host.user.id))
     return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)
+
+
+@bp.route('/move_out_tmp/<int:user_id>', methods=['GET', 'POST'])
+def move_out_tmp(user_id):
+    form = UserMoveOutForm()
+    my_user = User.q.get(user_id)
+    if my_user is None:
+        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        abort(404)
+    if form.validate_on_submit():
+        changed_user = lib.user.move_out_tmp(my_user, form.date.data,
+            form.comment.data, current_user)
+        flash(u'Nutzer zieht am %s vorübegehend aus' % form.date.data,
+            'success')
+        return redirect(url_for('.user_show', user_id=changed_user.id))
+    return render_template('user/user_moveout.html', form=form, user_id=user_id)

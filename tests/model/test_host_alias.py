@@ -220,11 +220,12 @@ class Test_040_Cascades(FixtureDataTestBase):
 
     def test_0040_arecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
+        arecord_id = ARecord.q.first().id
         session.session.delete(ip)
 
-        self.assertRaises(ValueError, session.session.commit)
-        session.session.rollback()
+        session.session.commit()
 
+        self.assertIsNone(ARecord.q.get(arecord_id))
 
     def test_0045_aaaarecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()

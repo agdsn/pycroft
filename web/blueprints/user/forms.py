@@ -90,9 +90,9 @@ class UserBanForm(Form):
     date = DatePickerField(u"Gesperrt bis", [Required()], with_today_button=True, default=datetime.now)
     reason = TextAreaField(u"Grund")
 
-class UserMoveoutForm(Form):
-    tmp = BooleanField(u"Temporärer Auszug")
-    date = DatePickerField(u"Auszug am", [Required()], with_today_button=True, default=datetime.now)
+class UserMoveOutForm(Form):
+    date = DatePickerField(u"Auszug am", [Required()], with_today_button=True,
+        default=datetime.now)
     comment = TextAreaField(u"Kommentar")
 
 class NetDeviceChangeMacForm(Form):
