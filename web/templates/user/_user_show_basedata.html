@@ -1,35 +1,51 @@
 {%- macro info_row(name) %}
-    <dt xmlns="http://www.w3.org/1999/html">{{ name }}:</dt>
+    <dt xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{{ name }}:</dt>
     <dd>{{ caller() }}</dd>
 {%- endmacro %}
 
-<dl class="dl-horizontal">
-    {% call info_row("ID") %}{{ user.id }}{% endcall %}
+<div class="row">
+    <div class="span6">
+        <dl class="dl-horizontal">
+            {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
-    {% call info_row("Name") %}
-        {{ user.name }} /
-         <a href="{{ url_for(".edit_name", user_id=user.id) }}">ändern</a>
-    {% endcall %}
+            {% call info_row("Name") %}
+                {{ user.name }} /
+                 <a href="{{ url_for(".edit_name", user_id=user.id) }}">ändern</a>
+            {% endcall %}
 
-    {% call info_row("Login") %}{{ user.login }}{% endcall %}
+            {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
-    {% call info_row("E-Mail") %}
-        {{ user.email }}
-        <a href="{{ url_for(".edit_email", user_id=user.id) }}">ändern</a>
-    {% endcall %}
+            {% call info_row("E-Mail") %}
+                {{ user.email }}
+                <a href="{{ url_for(".edit_email", user_id=user.id) }}">ändern</a>
+            {% endcall %}
 
-    {% call info_row("Anmeldedatum") %}
-        {{ user.registration_date|datetime }} /
-        <a href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer ausziehen</a>
-    {% endcall %}
+            {% call info_row("Anmeldedatum") %}
+                {{ user.registration_date|datetime }}
+            {% endcall %}
 
-    {% call info_row("Wohnort") %}
-        <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a>
-        / <a href="{{ url_for(".move", user_id=user.id) }}">ändern</a>
-    {% endcall %}
+            {% call info_row("Wohnort") %}
+                {% if user.is_away %}
+                    <span style="text-decoration: line-through;"><a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a></span>
+                {% else %}
+                    <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }} {{ user.room.level }}-{{ user.room.number }}</a>
+                {% endif %}
+            {% endcall %}
 
-    {% call info_row("Netzstatus") %}
-        {# TODO implementieren #}
-        #todo# / <a href="{{ url_for(".ban_user", user_id=user.id) }}">Nutzer sperren</a>
-    {% endcall %}
-</dl>
+            {% call info_row("Netzstatus") %}
+                {# TODO implementieren #}
+                #todo#
+            {% endcall %}
+        </dl>
+    </div>
+    <div class="span6">
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Nutzer Umziehen</a></div>
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".ban_user", user_id=user.id) }}">Nutzer Sperren</a></div>
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer Ausziehen</a></div>
+        {% if not user.is_away %}
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_tmp", user_id=user.id) }}">Temporär Ausziehen</a></div>
+        {% else %}
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".come_back", user_id=user.id) }}">Nutzer ist zurück</a></div>
+        {% endif %}
+    </div>
+</div>
