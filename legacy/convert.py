@@ -8,7 +8,7 @@ import ipaddr
 from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
 
 from pycroft import model
-from pycroft.model import dormitory, session, port, user, host, property, logging
+from pycroft.model import dormitory, session, port as port_model, user, host, property, logging
 from pycroft.helpers.user import hash_password
 from pycroft.model.host_alias import ARecord, CNameRecord
 
@@ -35,7 +35,7 @@ def do_convert():
             if new_room is None:
                 new_room = dormitory.Room(number=port.zimmernr, level=port.etage, inhabitable=True, dormitory=new_house)
                 rooms.append(new_room)
-            new_port = port.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
+            new_port = port_model.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
             patch_ports.append(new_port)
 
             if port.ip not in switches:
@@ -50,7 +50,7 @@ def do_convert():
                 net_devices.append(new_switch_netdevice)
                 ips.append(mgmt_ip)
                 switches[port.ip] = new_switch
-            new_swport = port.SwitchPort(name=port.port, switch=switches[port.ip])
+            new_swport = port_model.SwitchPort(name=port.port, switch=switches[port.ip])
             switch_ports.append(new_swport)
             new_port.destination_port = new_swport
 
@@ -121,10 +121,12 @@ def do_convert():
                        "root": property.PropertyGroup(name=u"Root"),
                        "hausmeister": property.PropertyGroup(
                            name=u"Hausmeister"),
-                       "exaktiv": property.PropertyGroup(name=u"Exaktiv")}
+                       "exaktiv": property.PropertyGroup(name=u"Exaktiv"),
+                       "tmpausgezogen": property.PropertyGroup(
+                           name=u"tmpAusgezogen")}
 
     properties_all = [property.Property(name="no_internet",
-        property_group=property_groups["verstoß"]),
+                          property_group=property_groups["verstoß"]),
                       property.Property(name="internet",
                           property_group=property_groups["bewohner"]),
                       property.Property(name="mail",
@@ -132,7 +134,9 @@ def do_convert():
                       property.Property(name="ssh_helios",
                           property_group=property_groups["bewohner"]),
                       property.Property(name="homepage_helios",
-                          property_group=property_groups["bewohner"]),]
+                          property_group=property_groups["bewohner"]),
+                      property.Property(name="no_internet",
+                          property_group=property_groups["tmpausgezogen"])]
 
 
     session.session.add_all(houses.values())

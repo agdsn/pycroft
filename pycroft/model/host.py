@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -179,8 +179,9 @@ class ServerNetDevice(NetDevice):
     host = relationship("ServerHost",
         backref=backref("server_net_devices", cascade="all, delete-orphan"))
 
+    #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
     switch_port_id = Column(Integer, ForeignKey('switchport.id'),
-        nullable=False)
+        nullable=True)
     switch_port = relationship("SwitchPort")
 
 
