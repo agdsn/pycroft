@@ -24,8 +24,9 @@ class FinanceAccount(ModelBase):
 
     transactions = relationship("Transaction", secondary="split")
 
-    # many to one from FinanceAccount to User
-    user = relationship("User", backref=backref("finance_accounts"))
+    # one to one from FinanceAccount to User
+    user = relationship("User", backref=backref("finance_account",
+                                                uselist=False))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
 
 
