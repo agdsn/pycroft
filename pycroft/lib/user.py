@@ -379,3 +379,33 @@ def move_out_tmp(user, date, comment, processor):
     session.session.add(new_log_entry)
     session.session.commit()
     return user
+
+def user_is_back(user, processor):
+    """
+    After a user moved temporarily out, this function sets group memberships and
+     creates a log message
+    :param user: The User who is back.
+    :param date: Todays
+    :param processor:
+    :return:
+    """
+    user.is_away = False
+
+    subnets = user.room.dormitory.subnets
+    ip_address = host.get_free_ip(subnets)
+    subnet = host.select_subnet_for_ip(ip_address, subnets)
+
+    new_ip = Ip(address=ip_address, subnet=subnet,
+        net_device=user.user_host.user_net_device)
+
+    session.session.add(new_ip)
+
+    new_log_entry = UserLogEntry(message=u"Nutzer ist zurück.",
+        timestamp=datetime.now(),
+        author=processor,
+        user=user)
+
+    session.session.add(new_log_entry)
+    session.session.commit()
+
+    return user
