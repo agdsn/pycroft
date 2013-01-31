@@ -394,6 +394,13 @@ def user_is_back(user, processor):
     """
     user.is_away = False
 
+    away_group = PropertyGroup.q.filter(
+        PropertyGroup.name == u"tmpAusgezogen").one()
+
+    for membership in user.memberships:
+        if membership.group == away_group:
+            membership.end_date = datetime.now()
+
     subnets = user.room.dormitory.subnets
     ip_address = host.get_free_ip(subnets)
     subnet = host.select_subnet_for_ip(ip_address, subnets)
