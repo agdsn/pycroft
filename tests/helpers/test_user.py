@@ -363,3 +363,32 @@ class Test_080_User_Ban(FixtureDataTestBase):
 
         self.assertEqual(banned_u.user_log_entries[0].author, u)
 
+
+class Test_090_User_Is_Back(FixtureDataTestBase):
+    datasets = [IpData, PropertyGroupData, UserData]
+
+    def setUp(self):
+        super(Test_090_User_Is_Back, self).setUp()
+        self.processing_user = user.User.q.filter_by(login='admin').one()
+        self.user = user.User.q.filter_by(login='test').one()
+        UserHelper.move_out_tmp(user=self.user,
+                                date=datetime.now(),
+                                comment='',
+                                processor=self.processing_user)
+        
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        session.session.commit()
+        super(Test_090_User_Is_Back, self).tearDown()
+
+    def test_0010_user_is_back(self):
+        UserHelper.user_is_back(self.user, self.processing_user)
+
+        # check whether user has at least one ip
+        self.assertNotEqual(self.user.user_host.user_net_device.ips, [])
+
+        # check log message
+        log_entry = self.user.user_log_entries[-1]
+        self.assertTrue(log_entry.timestamp <= datetime.now())
+        self.assertEqual(log_entry.author, self.processing_user)
+
