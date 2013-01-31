@@ -338,7 +338,7 @@ def ban_user(user, reason, processor, date=None):
 
     ban_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
 
-    if date:
+    if date is not None:
         new_membership = Membership(end_date=datetime.combine(date, time(0)),
             group=ban_group,
             user=user)
