@@ -34,12 +34,12 @@ class Test_010_User_Move(FixtureDataTestBase):
         session.session.commit()
         super(Test_010_User_Move, self).tearDown()
 
-    def test_010_moves_into_same_room(self):
+    def test_0010_moves_into_same_room(self):
         self.assertRaises(AssertionError, UserHelper.move,
             self.user, self.old_room.dormitory, self.old_room.level,
             self.old_room.number, self.processing_user)
 
-    def test_020_moves_into_other_dormitory(self):
+    def test_0020_moves_into_other_dormitory(self):
         UserHelper.move(self.user, self.new_room_other_dormitory.dormitory,
             self.new_room_other_dormitory.level,
             self.new_room_other_dormitory.number, self.processing_user)
@@ -66,7 +66,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         session.session.commit()
         super(Test_020_User_Move_In, self).tearDown()
 
-    def test_010_move_in(self):
+    def test_0010_move_in(self):
         def get_initial_groups():
             initial_groups = []
             for group in user_config.initial_groups:
@@ -124,22 +124,22 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account_sum = sum([split.amount for split in splits])
         self.assertEqual(account_sum,4000)
 
-class Test_030_User_Move_Out(FixtureDataTestBase):
+class Test_0030_User_Move_Out(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, FinanceAccountData]
 
     def setUp(self):
-        super(Test_030_User_Move_Out, self).setUp()
+        super(Test_0030_User_Move_Out, self).setUp()
         self.processing_user = user.User.q.get(1)
 
     def tearDown(self):
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
         session.session.commit()
-        super(Test_030_User_Move_Out, self).tearDown()
+        super(Test_0030_User_Move_Out, self).tearDown()
 
 
-    def test_030_move_out(self):
+    def test_0030_move_out(self):
         def get_initial_groups():
             initial_groups = []
             for group in user_config.initial_groups:
@@ -191,7 +191,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
         session.session.commit()
         super(Test_040_User_Edit_Name, self).tearDown()
 
-    def test_010_correct_new_name(self):
+    def test_0010_correct_new_name(self):
         print self.user.name
         print self.user.id
 
@@ -199,7 +199,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
 
         self.assertEqual(self.user.name, "toller neuer Name")
 
-    def test_020_name_zero_length(self):
+    def test_0020_name_zero_length(self):
         old_name = self.user.name
 
         UserHelper.edit_name(self.user, "", self.user)
@@ -219,12 +219,12 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         session.session.commit()
         super(Test_050_User_Edit_Email, self).tearDown()
 
-    def test_010_correct_new_email(self):
+    def test_0010_correct_new_email(self):
         UserHelper.edit_email(self.user, "sebastian@schrader.de", self.user)
 
         self.assertEqual(self.user.email, "sebastian@schrader.de")
 
-    def test_020_email_zero_length(self):
+    def test_0020_email_zero_length(self):
         old_email = self.user.email
 
         UserHelper.edit_email(self.user, "", self.user)
