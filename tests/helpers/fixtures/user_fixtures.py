@@ -71,6 +71,9 @@ class PropertyGroupData(DataSet):
     class one_month_negative_balance:
         name = "one_month_negative_balance"
 
+    class tmp_ausgezogen:
+        name = "tmpAusgezogen"
+
 class PropertyData(DataSet):
     class internet:
         name  ="internet"
