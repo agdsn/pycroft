@@ -69,7 +69,9 @@ class TrafficGroupData(DataSet):
 
 class PropertyGroupData(DataSet):
     class one_month_negative_balance:
-        name = "one_month_negative_balance"
+        name = u"one_month_negative_balance"
+    class verstoss:
+        name = u"Verstoß"
 
     class tmp_ausgezogen:
         name = "tmpAusgezogen"
@@ -78,6 +80,9 @@ class PropertyData(DataSet):
     class internet:
         name  ="internet"
         property_group = PropertyGroupData.one_month_negative_balance
+    class no_internet:
+        name = "no_internet"
+        property_group = PropertyGroupData.verstoss
 
 class UserHostData(DataSet):
     class dummy_host1:
