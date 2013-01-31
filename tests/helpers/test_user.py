@@ -287,6 +287,7 @@ class Test_080_User_Ban(FixtureDataTestBase):
     def tearDown(self):
         logging.LogEntry.q.delete()
         property.Membership.q.delete()
+        super(Test_080_User_Ban, self).tearDown()
 
     def test_0010_user_has_no_internet(self):
         u = user.User.q.get(1)
@@ -304,7 +305,7 @@ class Test_080_User_Ban(FixtureDataTestBase):
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = [IpData, PropertyGroupData, UserData]
+    datasets = [IpData, PropertyData, PropertyGroupData, UserData]
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()
@@ -317,6 +318,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         
     def tearDown(self):
         logging.LogEntry.q.delete()
+        finance.Transaction.q.delete()
         session.session.commit()
         super(Test_090_User_Is_Back, self).tearDown()
 
