@@ -283,12 +283,12 @@ class Test_060_User_Balance(FixtureDataTestBase):
 
     def test_0030_has_balance_of_over_nine_thousand(self):
         self.assertFalse(self._has_balance_of_at_least(9001))
-        self.assertTrue(self._has_positive_balance)
+        self.assertTrue(self._has_positive_balance())
         self._add_amount(9001)
         self.assertTrue(self._has_balance_of_at_least(9001))
-        self.assertTrue(self._has_positive_balance)
+        self.assertTrue(self._has_positive_balance())
         self._add_amount(-1)
         self.assertFalse(self._has_balance_of_at_least(9001))
         self.assertTrue(self._has_balance_of_at_least(9000))
         self.assertTrue(self._has_balance_of_at_least(-1337))
-        self.assertTrue(self._has_positive_balance)
+        self.assertTrue(self._has_positive_balance())
