@@ -325,7 +325,7 @@ def has_internet(user):
     else:
         return False
 
-def ban_user(user, date, reason, processor):
+def ban_user(user, reason, processor, date=None):
     """
     This function bans a user for a certain time.
     A logmessage with a reason is created.
@@ -338,12 +338,15 @@ def ban_user(user, date, reason, processor):
 
     ban_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
 
-    new_membership = Membership(end_date=datetime.combine(date, time(0)),
-        group=ban_group,
-        user=user)
-
-    ban_message = u"Sperrung bis zum %s: %s" % (
-        date.strftime("%d.%m.%Y"), reason)
+    if date:
+        new_membership = Membership(end_date=datetime.combine(date, time(0)),
+            group=ban_group,
+            user=user)
+        ban_message = u"Sperrung bis zum %s: %s" % (
+            date.strftime("%d.%m.%Y"), reason)
+    else:
+        new_membership = Membership(group=ban_group, user=user)
+        ban_message = u"Sperrung bis: IMMER"
 
     new_log_entry = UserLogEntry(message=ban_message,
         timestamp=datetime.now(),

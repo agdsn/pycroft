@@ -228,7 +228,6 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
         self.assertEqual(self.user.email, old_email)
 
-
 class Test_060_User_Balance(FixtureDataTestBase):
     datasets = [RoomData, DormitoryData, UserData, FinanceAccountData,
                 SemesterData]
@@ -308,7 +307,6 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         session.session.commit()
         super(Test_070_User_Move_Out_Tmp, self).tearDown()
 
-
     def test_0010_move_out_tmp(self):
         test_name = u"Hans"
         test_login = u"hans66"
@@ -341,3 +339,27 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         log_entry = new_user.user_log_entries[-1]
         self.assertTrue(log_entry.timestamp >= out_time)
         self.assertEqual(log_entry.author, self.processing_user)
+
+
+class Test_080_User_Ban(FixtureDataTestBase):
+    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData,
+                PropertyData]
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        property.Membership.q.delete()
+
+    def test_0010_user_has_no_internet(self):
+        u = user.User.q.get(1)
+        verstoss = property.PropertyGroup.q.filter(
+            property.PropertyGroup.name == u"Verstoß")
+        self.assertFalse(u.has_property("no_internet"))
+        self.assertFalse(verstoss in u.active_property_groups)
+
+        banned_u = UserHelper.ban_user(u, u"test", u)
+
+        self.assertTrue(banned_u.has_property("no_internet"))
+        self.assertFalse(verstoss in banned_u.active_property_groups)
+
+        self.assertEqual(banned_u.user_log_entries[0].author, u)
+
