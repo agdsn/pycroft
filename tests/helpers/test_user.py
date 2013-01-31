@@ -227,3 +227,68 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         UserHelper.edit_email(self.user, "", self.user)
 
         self.assertEqual(self.user.email, old_email)
+
+
+class Test_060_User_Balance(FixtureDataTestBase):
+    datasets = [RoomData, DormitoryData, UserData, FinanceAccountData,
+                SemesterData]
+
+    def _has_positive_balance(self):
+        return UserHelper.has_positive_balance(self.user)
+
+    def _has_balance_of_at_least(self, amount):
+        return UserHelper.has_balance_of_at_least(self.user, amount)
+
+    def _add_amount(self, amount):
+        transaction = finance.Transaction(message=self.msg,
+                                          semester=self.semester)
+        user_split = finance.Split(amount=amount,
+                                   account=self.user.finance_account,
+                                   transaction=transaction)
+        other_split = finance.Split(amount=-amount,
+                                    account=self.account,
+                                    transaction=transaction)
+        session.session.add(transaction)
+        session.session.add(user_split)
+        session.session.add(other_split)
+
+    def setUp(self):
+        super(Test_060_User_Balance, self).setUp()
+        self.user = user.User.q.filter(user.User.login == 'admin').first()
+        self.account = finance.FinanceAccount.q.first()
+        self.semester = finance.Semester.q.first()
+        self.msg = repr(self) + repr(self.semester)
+
+    def tearDown(self):
+        finance.Transaction.q.filter(
+            finance.Transaction.message == self.msg
+        ).delete()
+        session.session.commit()
+        super(Test_060_User_Balance, self).tearDown()
+
+    def test_0010_has_positive_balance(self):
+        self.assertIsNotNone(self.user.finance_account)
+        self.assertTrue(self._has_positive_balance())
+        self.assertTrue(self._has_balance_of_at_least(0))
+        self.assertTrue(self._has_balance_of_at_least(-23))
+        self.assertFalse(self._has_balance_of_at_least(1))
+
+    def test_0020_user_without_finance_account(self):
+        u = user.User.q.filter(user.User.login == 'test').first()
+        self.assertIsNone(u.finance_account)
+        self.assertTrue(UserHelper.has_positive_balance(u))
+        self.assertTrue(UserHelper.has_balance_of_at_least(u, 0))
+        self.assertTrue(UserHelper.has_balance_of_at_least(u, -23))
+        self.assertFalse(UserHelper.has_balance_of_at_least(u, 1))
+
+    def test_0030_has_balance_of_over_nine_thousand(self):
+        self.assertFalse(self._has_balance_of_at_least(9001))
+        self.assertTrue(self._has_positive_balance)
+        self._add_amount(9001)
+        self.assertTrue(self._has_balance_of_at_least(9001))
+        self.assertTrue(self._has_positive_balance)
+        self._add_amount(-1)
+        self.assertFalse(self._has_balance_of_at_least(9001))
+        self.assertTrue(self._has_balance_of_at_least(9000))
+        self.assertTrue(self._has_balance_of_at_least(-1337))
+        self.assertTrue(self._has_positive_balance)

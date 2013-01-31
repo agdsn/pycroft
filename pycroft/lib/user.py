@@ -267,9 +267,43 @@ def has_exceeded_traffic(user):
         return result.has_exceeded_traffic
     else: return False
 
-#ToDo: Funktion zur Abfrage dr Kontobilanz
+
+def has_balance_of_at_least(user, amount):
+    """Check whether the given user's balance is at least the given
+    amount.
+
+    If a user does not have an account, we treat his balance as if it
+    were exactly zero.
+
+    :param user: The user we are interested in.
+    :param amount: The amount we want to check for.
+    :return: True if and only if the user's balance is at least the given
+    amount (and False otherwise).
+
+    """
+    if user.finance_account is None:
+        return amount <= 0
+
+    balance = session.session.query(
+        func.sum(Split.amount)
+    ).filter(
+        Split.account_id == user.finance_account.id
+    ).scalar()
+
+    if balance is None:
+        balance = 0
+
+    return balance >= amount
+
+
 def has_positive_balance(user):
-    return True
+    """Check whether the given user's balance is (weakly) positive.
+
+    :param user: The user we are interested in.
+    :return: True if and only if the user's balance is at least zero.
+
+    """
+    return has_balance_of_at_least(user, amount=0)
 
 def has_internet(user):
     """

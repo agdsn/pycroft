@@ -127,6 +127,12 @@ class FinanceAccountData(DataSet):
         name = u"Anmeldegebühren"
         type = "INCOME"
 
+    class dummy_user_account2:
+        name = 'dummy user 2 finance account'
+        type = 'EQUITY'
+
+UserData.dummy_user2.finance_account = FinanceAccountData.dummy_user_account2
+
 
 class SemesterData(DataSet):
     class dummy_semester1:
