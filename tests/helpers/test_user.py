@@ -292,3 +292,52 @@ class Test_060_User_Balance(FixtureDataTestBase):
         self.assertTrue(self._has_balance_of_at_least(9000))
         self.assertTrue(self._has_balance_of_at_least(-1337))
         self.assertTrue(self._has_positive_balance())
+
+
+class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
+    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
+                PropertyGroupData, FinanceAccountData]
+
+    def setUp(self):
+        super(Test_070_User_Move_Out_Tmp, self).setUp()
+        self.processing_user = user.User.q.get(1)
+
+    def tearDown(self):
+        logging.LogEntry.q.delete()
+        finance.Transaction.q.delete()
+        session.session.commit()
+        super(Test_070_User_Move_Out_Tmp, self).tearDown()
+
+
+    def test_0010_move_out_tmp(self):
+        test_name = u"Hans"
+        test_login = u"hans66"
+        test_email = u"hans@hans.de"
+        test_dormitory = dormitory.Dormitory.q.first()
+        test_mac = "12:11:11:11:11:11"
+
+        new_user = UserHelper.moves_in(test_name,
+            test_login, test_email, test_dormitory,
+            1,
+            "1",
+            None,
+            test_mac,
+            finance.Semester.q.first(),
+            self.processing_user)
+
+        out_time = datetime.now()
+
+        UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
+
+        # check for tmpAusgezogen group membership
+        away_group = property.PropertyGroup.q.filter(
+            property.PropertyGroup.name == u"tmpAusgezogen").one()
+        self.assertTrue(new_user in away_group.active_users)
+
+        # check if user has no ips left
+        self.assertEqual(new_user.user_host.user_net_device.ips, [])
+
+        # check log message
+        log_entry = new_user.user_log_entries[-1]
+        self.assertTrue(log_entry.timestamp >= out_time)
+        self.assertEqual(log_entry.author, self.processing_user)
