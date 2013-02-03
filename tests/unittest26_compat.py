@@ -242,6 +242,13 @@ class OldPythonTestCase(unittest.TestCase):
                                                   safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
+    def _assertNotIn(self, member, container, msg=None):
+        """Just like self.assertTrue(a in b), but with a nicer default message."""
+        if member in container:
+            standardMsg = '%s found in %s' % (safe_repr(member),
+                                                  safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
     def _assertGreaterEqual(self, a, b, msg=None):
         """Just like self.assertTrue(a in b), but with a nicer default message.
         """
