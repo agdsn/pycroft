@@ -419,9 +419,8 @@ def user_is_back(user, processor):
     After a user moved temporarily out, this function sets group memberships and
      creates a log message
     :param user: The User who is back.
-    :param date: Todays
-    :param processor:
-    :return:
+    :param processor: The admin recognizing the users return.
+    :return: The user who returned.
     """
     user.is_away = False
 
