@@ -292,14 +292,14 @@ class Test_080_User_Ban(FixtureDataTestBase):
     def test_0010_user_has_no_internet(self):
         u = user.User.q.get(1)
         verstoss = property.PropertyGroup.q.filter(
-            property.PropertyGroup.name == u"Verstoß")
+            property.PropertyGroup.name == u"Verstoß").first()
         self.assertFalse(u.has_property("no_internet"))
-        self.assertFalse(verstoss in u.active_property_groups)
+        self.assertNotIn(verstoss, u.active_property_groups)
 
         banned_u = UserHelper.ban_user(u, u"test", u)
 
         self.assertTrue(banned_u.has_property("no_internet"))
-        self.assertFalse(verstoss in banned_u.active_property_groups)
+        self.assertIn (verstoss, banned_u.active_property_groups)
 
         self.assertEqual(banned_u.user_log_entries[0].author, u)
 
