@@ -68,7 +68,8 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertIsNotInstance": "_assertIsNotInstance",
                        "assertListEqual": "_assertListEqual",
                        "assertSequenceEqual": "_assertSequenceEqual",
-                       "assertIn": "_assertIn"}
+                       "assertIn": "_assertIn",
+                       "assertGreaterEqual": "_assertGreaterEqual"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -239,4 +240,11 @@ class OldPythonTestCase(unittest.TestCase):
         if member not in container:
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertGreaterEqual(self, a, b, msg=None):
+        """Just like self.assertTrue(a in b), but with a nicer default message.
+        """
+        if a < b:
+            standardMsg = '%s is lesser than %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
