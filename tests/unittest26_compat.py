@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import difflib
@@ -71,7 +71,8 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertIsNotInstance": "_assertIsNotInstance",
                        "assertListEqual": "_assertListEqual",
                        "assertSequenceEqual": "_assertSequenceEqual",
-                       "assertIn": "_assertIn"}
+                       "assertIn": "_assertIn",
+                       "assertGreaterEqual": "_assertGreaterEqual"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -242,4 +243,11 @@ class OldPythonTestCase(unittest.TestCase):
         if member not in container:
             standardMsg = '%s not found in %s' % (safe_repr(member),
                                                   safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertGreaterEqual(self, a, b, msg=None):
+        """Just like self.assertTrue(a in b), but with a nicer default message.
+        """
+        if a < b:
+            standardMsg = '%s is lesser than %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
