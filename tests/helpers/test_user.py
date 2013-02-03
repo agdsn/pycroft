@@ -337,7 +337,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
-        self.assertTrue(log_entry.timestamp >= out_time)
+        self.assertGreaterEqual(log_entry.timestamp, out_time)
         self.assertEqual(log_entry.author, self.processing_user)
 
 
