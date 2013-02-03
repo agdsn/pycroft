@@ -379,8 +379,8 @@ def move_out_tmp(user_id):
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        changed_user = lib.user.move_out_tmp(my_user, form.date.data,
-            form.comment.data, current_user)
+        changed_user = lib.user.move_out_tmp(user=my_user, date=form.date.data,
+            comment=form.comment.data, processor=current_user)
         flash(u'Nutzer zieht am %s vorübegehend aus' % form.date.data,
             'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))
@@ -390,6 +390,6 @@ def move_out_tmp(user_id):
 @bp.route('/come_back/<int:user_id>')
 def come_back(user_id):
     my_user = User.q.get(user_id)
-    changed_user = lib.user.user_is_back(my_user, current_user)
+    changed_user = lib.user.user_is_back(user=my_user, processor=current_user)
     flash(u'Nutzer ist zurück', 'success')
     return redirect(url_for('.user_show', user_id=changed_user.id))
