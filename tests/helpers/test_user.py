@@ -299,7 +299,7 @@ class Test_080_User_Ban(FixtureDataTestBase):
         banned_u = UserHelper.ban_user(u, u"test", u)
 
         self.assertTrue(banned_u.has_property("no_internet"))
-        self.assertIn (verstoss, banned_u.active_property_groups)
+        self.assertIn(verstoss, banned_u.active_property_groups)
 
         self.assertEqual(banned_u.user_log_entries[0].author, u)
 
