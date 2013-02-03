@@ -72,7 +72,7 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertListEqual": "_assertListEqual",
                        "assertSequenceEqual": "_assertSequenceEqual",
                        "assertIn": "_assertIn",
-                       "assertNotIn": "_assertNot   In",
+                       "assertNotIn": "_assertNotIn",
                        "assertGreaterEqual": "_assertGreaterEqual"}
 
     def __getattr__(self, item):
