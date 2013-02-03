@@ -269,7 +269,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         # check for tmpAusgezogen group membership
         away_group = property.PropertyGroup.q.filter(
             property.PropertyGroup.name == u"tmpAusgezogen").one()
-        self.assertTrue(new_user in away_group.active_users)
+        self.assertIn(new_user, away_group.active_users)
 
         # check if user has no ips left
         self.assertEqual(new_user.user_host.user_net_device.ips, [])
