@@ -26,14 +26,14 @@ class VLanData(DataSet):
 
 class SubnetData(DataSet):
     class subnet1:
-        address = "141.30.216.0/24"
+        address = "141.30.216.0/27"
         gateway = "141.30.216.1"
         dns_domain = "wh12.tu-dresden.de"
         reserved_addresses = 10
         ip_type = 4
 
     class subnet2:
-        address = "141.30.227.0/24"
+        address = "141.30.227.0/27"
         gateway = "141.30.227.1"
         dns_domain = "wh13.tu-dresden.de"
         reserved_addresses = 10
