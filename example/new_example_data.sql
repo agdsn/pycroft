@@ -66,13 +66,9 @@ CREATE TABLE semester (
     semester_fee INTEGER NOT NULL,
     begin_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    registration_fee_account_id INTEGER NOT NULL,
-    semester_fee_account_id INTEGER NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY(registration_fee_account_id) REFERENCES financeaccount (id),
-    FOREIGN KEY(semester_fee_account_id) REFERENCES financeaccount (id)
+    PRIMARY KEY (id)
 );
-INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000',1,2);
+INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000');
 CREATE TABLE "group" (
 	id INTEGER NOT NULL, 
 	name VARCHAR(255) NOT NULL, 
