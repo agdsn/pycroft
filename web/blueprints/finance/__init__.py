@@ -37,10 +37,12 @@ def accounts():
 def transactions():
     return render_template('finance/base.html')
 
+
 @bp.route("/semester")
 @nav.navigate(u"Semesterliste")
 def semester_list():
-    return "foo"
+    return render_template('finance/base.html')
+
 
 @bp.route('/semester/create', methods=("GET", "POST"))
 @nav.navigate(u"Erstelle Semester")
@@ -71,6 +73,5 @@ def semester_create():
         semester_fee=form.semester_fee.data,
         begin_date=form.begin_date.data,
         end_date=form.end_date.data)
-        print 
         return redirect(url_for(".semester_list"))
     return render_template('finance/semester_create.html', form=form)
