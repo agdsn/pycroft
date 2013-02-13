@@ -83,13 +83,15 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.moves_in(test_name,
-            test_login, test_email, test_dormitory,
-            1,
-            "1",
-            test_hostname,
-            test_mac,
-            finance.Semester.q.first(),
-            self.processing_user)
+            test_login,
+            test_email,
+            test_dormitory,
+            level=1,
+            room_number="1",
+            host_name=test_hostname,
+            mac=test_mac,
+            current_semester=finance.Semester.q.first(),
+            processor=self.processing_user)
 
         self.assertEqual(new_user.name, test_name)
         self.assertEqual(new_user.login, test_login)
@@ -155,13 +157,14 @@ class Test_0030_User_Move_Out(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.moves_in(test_name,
-            test_login, test_email, test_dormitory,
-            1,
-            "1",
-            None,
-            test_mac,
-            finance.Semester.q.first(),
-            self.processing_user)
+            test_login,
+            test_email,
+            test_dormitory,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+            current_semester=finance.Semester.q.first(),
+            processor=self.processing_user)
 
         out_time = datetime.now()
 
@@ -254,13 +257,14 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.moves_in(test_name,
-            test_login, test_email, test_dormitory,
-            1,
-            "1",
-            None,
-            test_mac,
-            finance.Semester.q.first(),
-            self.processing_user)
+            test_login,
+            test_email,
+            test_dormitory,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+            current_semester=finance.Semester.q.first(),
+            processor=self.processing_user)
 
         out_time = datetime.now()
 

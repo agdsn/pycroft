@@ -27,8 +27,8 @@ from pycroft.lib import user_config
 from pycroft.lib.host_alias import create_arecord, create_cnamerecord
 
 
-def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
-             current_semester, processor):
+def moves_in(name, login, email, dormitory, level, room_number, mac,
+             current_semester, processor, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
     inital groups and transactions.
@@ -38,10 +38,10 @@ def moves_in(name, login, email, dormitory, level, room_number, host_name, mac,
     :param dormitory: The dormitory the user moves in.
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
-    :param host_name: An optional Hostname for the users pc.
     :param mac: The mac address of the users pc.
     :param current_semester: The semester the user moves in.
     :param initial_groups: The groups a user is member from beginning.
+    :param host_name: An optional Hostname for the users pc.
     :return: The new user object.
     """
 
