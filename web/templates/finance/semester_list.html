@@ -1,0 +1,27 @@
+{#
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% block content %}
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Gebühr</th>
+            <th>Anmeldekosten</th>
+            <th>Beginn</th>
+            <th>Ende</th>
+        </tr>
+        {% for semester in semesters %}
+            <tr>
+                <td>{{ semester.name }}</td>
+                <td>{{ semester.semester_fee|money }}</td>
+                <td>{{ semester.registration_fee|money }}</td>
+                <td>{{ semester.begin_date|date }}</td>
+                <td>{{ semester.end_date|date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
