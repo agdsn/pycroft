@@ -55,6 +55,13 @@ class Test_020_IpHelper(FixtureDataTestBase):
         net_parts[3] = str(1 + SubnetData.subnet2.reserved_addresses + num)
         return '.'.join(net_parts)
 
+    def _number_of_ips_in(self, net):
+        total_hosts = ipaddr.IPNetwork(net.address).numhosts
+        return (total_hosts
+                - net.reserved_addresses
+                - 2                      # network & broadcast addresses
+                )
+
     def test_0010_get_free_ip_simple(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
         ip = get_free_ip(subnets)
@@ -71,17 +78,21 @@ class Test_020_IpHelper(FixtureDataTestBase):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
         host = Host.q.filter(Host.id == UserHostData.dummy_host1.id).one()
 
+        self.assertEqual(len(subnets), 2)
+        total_ips = sum([self._number_of_ips_in(net) for net in subnets])
+        first_net_ips = self._number_of_ips_in(subnets[0])
+
         nd = UserNetDevice(mac="00:00:00:00:00:00", host = host)
-        for num in range(0, 490):
-            if num >= 488:
+        for num in range(0, total_ips + 2):
+            if num >= total_ips:
                 self.assertRaises(SubnetFullException, get_free_ip, subnets)
                 continue
             ip = get_free_ip(subnets)
             net = select_subnet_for_ip(ip, subnets)
-            if num < 244:
+            if num < first_net_ips:
                 self.assertEqual(ip, self.ip_s1(num))
             else:
-                self.assertEqual(ip, self.ip_s2(num % 244))
+                self.assertEqual(ip, self.ip_s2(num % first_net_ips))
 
             ip_addr = Ip(address=ip, subnet=net, net_device=nd)
             session.session.add(ip_addr)
