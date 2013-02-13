@@ -95,6 +95,14 @@ def timesince_filter(dt, default="just now"):
     return default
 
 
+@template_filter("money")
+def money_filter(amount):
+    """Format a money string from Cents to Euro
+    """
+    euro = amount/100.0
+    return (u"%.2f €" % euro).replace('.', ',')
+
+
 @template_filter("host_traffic")
 def host_traffic_filter(host):
     traffic_timespan = datetime.now() - timedelta(days=7)
