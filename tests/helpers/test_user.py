@@ -139,14 +139,6 @@ class Test_0030_User_Move_Out(FixtureDataTestBase):
 
 
     def test_0030_move_out(self):
-        def get_initial_groups():
-            initial_groups = []
-            for group in user_config.initial_groups:
-                initial_groups.append(property.Group.q.filter(
-                    property.Group.name == group["group_name"]
-                ).one())
-            return initial_groups
-
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
@@ -165,19 +157,21 @@ class Test_0030_User_Move_Out(FixtureDataTestBase):
 
         out_time = datetime.now()
 
-        UserHelper.move_out(new_user, out_time, "", self.processing_user)
+        UserHelper.move_out(user=new_user, date=out_time, comment="",
+            processor=self.processing_user)
 
         # check end_date of moved out user
         for membership in new_user.memberships:
-            if membership.end_date >= out_time:
-                self.assertEquals(membership.end_date, out_time)
+            self.assertIsNotNone(membership.end_date)
+            self.assertLessEqual(membership.end_date, out_time)
 
         # check if users finance account still exists
         user_account = finance.FinanceAccount.q.filter(
             finance.FinanceAccount.user==new_user
         ).filter(
             finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
-        ).one()
+        ).first()
+        self.assertIsNotNone(user_account)
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
     datasets = [RoomData, DormitoryData, UserData]

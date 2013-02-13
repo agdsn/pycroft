@@ -70,7 +70,8 @@ class OldPythonTestCase(unittest.TestCase):
                        "assertSequenceEqual": "_assertSequenceEqual",
                        "assertIn": "_assertIn",
                        "assertNotIn": "_assertNotIn",
-                       "assertGreaterEqual": "_assertGreaterEqual"}
+                       "assertGreaterEqual": "_assertGreaterEqual",
+                       "assertLessEqual": "_assertLessEqual"}
 
     def __getattr__(self, item):
         if item in self._old_py_mapping:
@@ -244,15 +245,22 @@ class OldPythonTestCase(unittest.TestCase):
             self.fail(self._formatMessage(msg, standardMsg))
 
     def _assertNotIn(self, member, container, msg=None):
-        """Just like self.assertTrue(a in b), but with a nicer default message."""
+        """Just like self.assertTrue(a not in b), but with a nicer default message."""
         if member in container:
             standardMsg = '%s found in %s' % (safe_repr(member),
                                                   safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def _assertGreaterEqual(self, a, b, msg=None):
-        """Just like self.assertTrue(a in b), but with a nicer default message.
+        """Just like self.assertTrue(a >= b), but with a nicer default message.
         """
         if a < b:
             standardMsg = '%s is lesser than %s' % (safe_repr(a), safe_repr(b))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertLessEqual(self, a, b, msg=None):
+        """Just like self.assertTrue(a <= b), but with a nicer default message.
+        """
+        if a > b:
+            standardMsg = '%s is greater than %s' % (safe_repr(a), safe_repr(b))
             self.fail(self._formatMessage(msg, standardMsg))
