@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Gebühr</th>
+            <th>Anmeldekosten</th>
+            <th>Beginn</th>
+            <th>Ende</th>
+        </tr>
+        {% for semester in semesters %}
+            <tr>
+                <td>{{ semester.name }}</td>
+                <td>{{ semester.semester_fee|money }}</td>
+                <td>{{ semester.registration_fee|money }}</td>
+                <td>{{ semester.begin_date|date }}</td>
+                <td>{{ semester.end_date|date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

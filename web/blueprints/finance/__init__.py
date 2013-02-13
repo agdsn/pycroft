@@ -41,7 +41,7 @@ def transactions():
 @bp.route("/semester")
 @nav.navigate(u"Semesterliste")
 def semester_list():
-    semesters = Semester.q.all()
+    semesters = Semester.q.order_by(Semester.begin_date.desc()).all()
     return render_template('finance/semester_list.html', semesters=semesters)
 
 
