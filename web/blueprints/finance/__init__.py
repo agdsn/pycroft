@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -40,10 +40,12 @@ def accounts():
 def transactions():
     return render_template('finance/base.html')
 
+
 @bp.route("/semester")
 @nav.navigate(u"Semesterliste")
 def semester_list():
-    return "foo"
+    return render_template('finance/base.html')
+
 
 @bp.route('/semester/create', methods=("GET", "POST"))
 @nav.navigate(u"Erstelle Semester")
@@ -74,6 +76,5 @@ def semester_create():
         semester_fee=form.semester_fee.data,
         begin_date=form.begin_date.data,
         end_date=form.end_date.data)
-        print 
         return redirect(url_for(".semester_list"))
     return render_template('finance/semester_create.html', form=form)
