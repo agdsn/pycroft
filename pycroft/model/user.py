@@ -399,6 +399,8 @@ class TrafficGroup(Group):
     """This model tells the traffic behaviour of a user.
 
     """
+    # ToDo JanLo: Add some throttling parameters here?
+
     __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
     id = Column(Integer, ForeignKey(Group.id), primary_key=True,
                 nullable=False)

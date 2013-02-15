@@ -385,9 +385,11 @@ def has_positive_balance(user):
 def has_network_access(user):
     """
     The function evaluates if the user is allowed to connect to the network.
+
     :param user: The user object.
     :return: True if he is allowed to use the network, false if he is not.
     """
+    # ToDo JanLo: Kill the has_exceeded_traffic from here to support throttling
     return (user.has_property("network_access") and
             not has_exceeded_traffic(user) and
             has_positive_balance(user))
