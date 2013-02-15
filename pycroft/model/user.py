@@ -396,8 +396,15 @@ class Property(ModelBase):
 
 
 class TrafficGroup(Group):
+    """This model tells the traffic behaviour of a user.
+
+    """
     __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
     id = Column(Integer, ForeignKey(Group.id), primary_key=True,
                 nullable=False)
-    # in byte per seven days, zero is no limit
-    traffic_limit = Column(BigInteger, nullable=False)
+
+    # The amount a user gets each day in bytes
+    grant_amount = Column(BigInteger, nullable=False)
+
+    # The amount of traffic a user can save.
+    saving_amount = Column(BigInteger, nullable=False)
