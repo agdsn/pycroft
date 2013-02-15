@@ -325,30 +325,30 @@ def has_internet(user):
     else:
         return False
 
-def ban_user(user, reason, processor, date=None):
+def block_user(user, reason, processor, date=None):
     """
-    This function bans a user for a certain time.
+    This function blocks a user for a certain time.
     A logmessage with a reason is created.
-    :param user: The user to be banned.
-    :param date: The date the user is not banned anymore.
-    :param reason: The reason of banning.
-    :param processor: The admin who banned the user.
-    :return: The banned user.
+    :param user: The user to be blocked.
+    :param date: The date the user is not blocked anymore.
+    :param reason: The reason of blocking.
+    :param processor: The admin who blocked the user.
+    :return: The blocked user.
     """
 
-    ban_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
+    block_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
 
     if date is not None:
         new_membership = Membership(end_date=datetime.combine(date, time(0)),
-            group=ban_group,
+            group=block_group,
             user=user)
-        ban_message = u"Sperrung bis zum %s: %s" % (
+        block_message = u"Sperrung bis zum %s: %s" % (
             date.strftime("%d.%m.%Y"), reason)
     else:
-        new_membership = Membership(group=ban_group, user=user)
-        ban_message = u"Sperrung bis: IMMER"
+        new_membership = Membership(group=block_group, user=user)
+        block_message = u"Sperrung bis: IMMER"
 
-    new_log_entry = UserLogEntry(message=ban_message,
+    new_log_entry = UserLogEntry(message=block_message,
         timestamp=datetime.now(),
         author=processor,
         user=user)

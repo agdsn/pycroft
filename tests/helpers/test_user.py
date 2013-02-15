@@ -339,14 +339,14 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         self.assertEqual(log_entry.author, self.processing_user)
 
 
-class Test_080_User_Ban(FixtureDataTestBase):
+class Test_080_User_Block(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData, PropertyGroupData,
                 PropertyData]
 
     def tearDown(self):
         logging.LogEntry.q.delete()
         property.Membership.q.delete()
-        super(Test_080_User_Ban, self).tearDown()
+        super(Test_080_User_Block, self).tearDown()
 
     def test_0010_user_has_no_internet(self):
         u = user.User.q.get(1)
@@ -355,12 +355,12 @@ class Test_080_User_Ban(FixtureDataTestBase):
         self.assertFalse(u.has_property("no_internet"))
         self.assertNotIn(verstoss, u.active_property_groups)
 
-        banned_u = UserHelper.ban_user(u, u"test", u)
+        blocked_user = UserHelper.block_user(u, u"test", u)
 
-        self.assertTrue(banned_u.has_property("no_internet"))
-        self.assertIn(verstoss, banned_u.active_property_groups)
+        self.assertTrue(blocked_user.has_property("no_internet"))
+        self.assertIn(verstoss, blocked_user.active_property_groups)
 
-        self.assertEqual(banned_u.user_log_entries[0].author, u)
+        self.assertEqual(blocked_user.user_log_entries[0].author, u)
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):

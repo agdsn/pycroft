@@ -86,7 +86,7 @@ class UserAddGroupMembership(Form):
     begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
     end_date = DatePickerField(u"Ende",with_today_button=True)
 
-class UserBanForm(Form):
+class UserBlockForm(Form):
     date = DatePickerField(u"Gesperrt bis", [Required()], with_today_button=True, default=datetime.now)
     reason = TextAreaField(u"Grund")
 
