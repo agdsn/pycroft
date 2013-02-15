@@ -339,8 +339,8 @@ def json_trafficdata(user_id, days=7):
         TrafficVolume.timestamp > traffic_timespan)
 
     # filter for INPUT and OUTPUT
-    traffic_volume_in = traffic_volumes.filter(TrafficVolume.type == 'IN').all()
-    traffic_volume_out = traffic_volumes.filter(TrafficVolume.type == 'OUT').all()
+    traffic_volume_in = traffic_volumes.filter(TrafficVolume.traffic_type == 'IN').all()
+    traffic_volume_out = traffic_volumes.filter(TrafficVolume.traffic_type == 'OUT').all()
 
     # generate the data arrays which will be used in the JSON
     tv_in = []

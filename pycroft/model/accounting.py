@@ -23,7 +23,7 @@ class TrafficVolume(ModelBase):
     size = Column(BigInteger, nullable=False)
     # when this was logged
     timestamp = Column(DateTime, nullable=False)
-    type = Column(Enum("IN", "OUT", name="traffic_types"), nullable=False)
+    traffic_type = Column(Enum("IN", "OUT", name="traffic_types"), nullable=False)
 
     # many to one from TrafficVolume to Interface
     ip = relationship("IP", backref=backref("traffic_volumes",

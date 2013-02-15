@@ -12,5 +12,5 @@ class TrafficVolumeData(DataSet):
     class dummy_volume:
         size = 1000
         timestamp = datetime.utcnow()
-        type = "IN"
+        traffic_type = "IN"
         ip = IPData.dummy_user_ipv4
