@@ -10,6 +10,8 @@ This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
 
 :copyright: (c) 2011 by AG DSN.
 """
+import datetime
+
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
@@ -30,3 +32,19 @@ class TrafficVolume(ModelBase):
                    nullable=False)
 
     interface = relationship("Interface", secondary="ip", viewonly=True)
+
+
+class TrafficCredit(ModelBase):
+    """Represents the traffic credit the user has.
+
+    Only the newes value should be used for accounting. The older ones are only
+    kept for reporting purposes.
+
+    """
+    user = relationship("User", cascade="all, delete-orphan")
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+
+    grant_date = Column(DateTime, default=datetime.datetime.now, nullable=False)
+
+    amount = Column(BigInteger, nullable=False)
+    added_amount = Column(BigInteger, nullable=False)
