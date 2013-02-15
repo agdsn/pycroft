@@ -6,7 +6,8 @@
 pycroft.model.accounting
 ~~~~~~~~~~~~~~
 
-This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
+This module contains the classes TrafficVolume and TrafficCredit. Both are used
+to account the consumed traffic of a user.
 
 :copyright: (c) 2011 by AG DSN.
 """
@@ -19,6 +20,13 @@ from pycroft.model.base import ModelBase
 
 
 class TrafficVolume(ModelBase):
+    """This is represents a volume of traffic consumption within a fixed
+    interval
+
+    The sum of all the volumes within a given time will be the overall
+    traffic consumption. The counting goes per ip and per direction.
+    """
+
     # how many bytes
     size = Column(BigInteger, nullable=False)
     # when this was logged
@@ -37,9 +45,10 @@ class TrafficVolume(ModelBase):
 class TrafficCredit(ModelBase):
     """Represents the traffic credit the user has.
 
-    Only the newes value should be used for accounting. The older ones are only
-    kept for reporting purposes.
-
+    Only the newest value should be used for accounting. The older ones are only
+    kept for reporting purposes. The granted amount means the sum of inbound
+    and outbound traffic. To distinguish between the direction do it by
+    manipulating the consumption parts.
     """
     user = relationship("User", cascade="all, delete-orphan")
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
