@@ -22,6 +22,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen)
+from pycroft.lib.accounting import has_exceeded_traffic
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.accounting import TrafficVolume
@@ -320,35 +321,6 @@ def edit_email(user, email, processor):
     log_user_event(author=processor, user=user,
                    message=message.format(old_email, email).to_json())
     return user
-
-
-#ToDo: Usecases überprüfen: standardmäßig nicht False?
-def has_exceeded_traffic(user, when=None):
-    """
-    The function calculates the balance of the users traffic.
-    :param user: The user object which has to be checked.
-    :return: True if the user has more traffic than allowed and false if he
-    did not exceed the limit.
-    """
-    return session.session.query(
-        (
-            func.max(TrafficGroup.traffic_limit) * literal(1.10) <
-            func.sum(TrafficVolume.size)
-        ).label("has_exceeded_traffic")
-    ).select_from(
-        TrafficGroup
-    ).join(
-        Membership
-    ).join(
-        User.user_hosts
-    ).join(
-        Host.ips
-    ).join(
-        IP.traffic_volumes
-    ).filter(
-        Membership.active(when),
-        Membership.user_id == user.id
-    ).scalar()
 
 
 def is_member(user):
