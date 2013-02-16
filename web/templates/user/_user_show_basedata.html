@@ -44,13 +44,13 @@
         </dl>
     </div>
     <div class="span6">
-        <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Nutzer Umziehen</a></div>
-        <div class="user"><a class="btn btn-info" href="{{ url_for(".block_user", user_id=user.id) }}">Nutzer Sperren</a></div>
-        <div class="user"><a class="btn btn-info" href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer Ausziehen</a></div>
+        <div class="user"><a class="btn btn-info confirm" href="{{ url_for(".move", user_id=user.id) }}">Nutzer Umziehen</a></div>
+        <div class="user"><a class="btn btn-info confirm" href="{{ url_for(".block_user", user_id=user.id) }}">Nutzer Sperren</a></div>
+        <div class="user"><a class="btn btn-info confirm" href="{{ url_for(".user_moveout", user_id=user.id) }}">Nutzer Ausziehen</a></div>
         {% if not user.is_away %}
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_tmp", user_id=user.id) }}">Temporär Ausziehen</a></div>
+            <div class="user"><a class="btn btn-info confirm" href="{{ url_for(".move_out_tmp", user_id=user.id) }}">Temporär Ausziehen</a></div>
         {% else %}
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".come_back", user_id=user.id) }}">Nutzer ist zurück</a></div>
+            <div class="user"><a class="btn btn-info confirm" href="{{ url_for(".come_back", user_id=user.id) }}">Nutzer ist zurück</a></div>
         {% endif %}
     </div>
 </div>

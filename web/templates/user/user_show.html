@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -87,5 +87,16 @@
     <script type="text/javascript" src="{{ url_for("static", filename="custom/js/navigation.js") }}"></script>
     <script type="text/javascript">
         $(".subnav").subNavBar();
+    </script>
+    <script type="text/javascript">
+        $("a.confirm").click(function(event){
+            if (!$(this).attr('confirm')) {
+                event.preventDefault();
+                $(this).attr({
+                    class: 'btn btn-danger',
+                    confirm: true
+                 });
+            }
+        });
     </script>
 {% endblock %}
