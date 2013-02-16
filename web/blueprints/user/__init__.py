@@ -16,7 +16,6 @@ from pycroft import lib
 from pycroft.helpers import host
 from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, UserNetDevice, Ip
-from pycroft.model.logging import UserLogEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.property import Membership
@@ -60,11 +59,10 @@ def user_show(user_id):
     form = userLogEntry()
 
     if form.validate_on_submit():
-        newUserLogEntry = UserLogEntry(message=form.message.data,
+        lib.logging.create_user_log_entry(message=form.message.data,
             timestamp=datetime.now(),
-            author_id=current_user.id, user_id=user_id)
-        session.add(newUserLogEntry)
-        session.commit()
+            author_id=current_user.id,
+            user_id=user_id)
         flash(u'Kommentar hinzugefügt', 'success')
 
     user_log_list = user.user_log_entries[::-1]
@@ -96,15 +94,17 @@ def add_membership(user_id):
 
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        newMembership = Membership(user=user, group=form.group_id.data,
-            start_date=datetime.combine(form.begin_date.data,time(0)), end_date=datetime.combine(form.end_date.data,time(0)))
-        newUserLogEntry = UserLogEntry(author_id=current_user.id,
-            message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
-                    form.group_id.data.name,
-            timestamp=datetime.now(), user_id=user_id)
+        newMembership = Membership(user=user,
+            group=form.group_id.data,
+            start_date=datetime.combine(form.begin_date.data,time(0)),
+            end_date=datetime.combine(form.end_date.data,time(0)))
+        lib.logging.create_user_log_entry(author_id=current_user.id,
+                message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
+                form.group_id.data.name,
+                timestamp=datetime.now(),
+                user_id=user_id)
 
         session.add(newMembership)
-        session.add(newUserLogEntry)
         session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
@@ -121,14 +121,13 @@ def end_membership(membership_id):
     membership.disable()
 
     # ToDo: Make the log messages not Frontend specific (a helper?)
-    newUserLogEntry = UserLogEntry(author_id=current_user.id,
-        message=u"hat die Mitgliedschaft des Nutzers"
+    lib.logging.create_user_log_entry(author_id=current_user.id,
+            message=u"hat die Mitgliedschaft des Nutzers"
                 u" in der Gruppe '%s' beendet." %
                 membership.group.name,
-        timestamp=datetime.now(), user_id=membership.user_id)
+            timestamp=datetime.now(),
+            user_id=membership.user_id)
 
-    session.add(newUserLogEntry)
-    session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
 
