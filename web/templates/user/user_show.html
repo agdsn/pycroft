@@ -83,4 +83,15 @@
     <script type="text/javascript">
         $(".subnav").subNavBar();
     </script>
+    <script type="text/javascript">
+        $("a.confirm").click(function(event){
+            if (!$(this).attr('confirm')) {
+                event.preventDefault();
+                $(this).attr({
+                    class: 'btn btn-danger',
+                    confirm: true
+                 });
+            }
+        });
+    </script>
 {% endblock %}
