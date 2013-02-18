@@ -50,10 +50,15 @@ class TrafficCredit(ModelBase):
     and outbound traffic. To distinguish between the direction do it by
     manipulating the consumption parts.
     """
-    user = relationship("User", cascade="all, delete-orphan")
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-
     grant_date = Column(DateTime, default=datetime.datetime.now, nullable=False)
+
+    # ToDo JanLo: Test Cascade
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user = relationship("User",
+                        backref=backref("traffic_credits",
+                                        cascade="all, delete-orphan",
+                                        order_by="TrafficCredit.grant_date"))
+
 
     amount = Column(BigInteger, nullable=False)
     added_amount = Column(BigInteger, nullable=False)
