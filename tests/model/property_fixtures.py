@@ -16,11 +16,13 @@ class PropertyGroupData(DataSet):
 class TrafficGroupData(DataSet):
     class group1:
         name = "traffic group1"
-        traffic_limit = 1000
+        grant_amount = 1000
+        saving_amount = 2000
 
     class group2:
         name = "traffic group2"
-        traffic_limit = 2000
+        grant_amount = 2000
+        saving_amount = 3000
 
 
 class PropertyData(DataSet):

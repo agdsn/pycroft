@@ -36,4 +36,5 @@ class PropertyData(DataSet):
 class TrafficGroupData(DataSet):
     class dummy:
         name = "dummy"
-        traffic_limit = 7000
+        grant_amount = 7000
+        saving_amount = 21000
