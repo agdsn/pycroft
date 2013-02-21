@@ -13,7 +13,7 @@ property_categories = OrderedDict((
         (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
         (u"reduced_semester_fee", u"muss nur reduzierten Semesterbeitrag bezahlen"),
         (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
-        (u"traffic_accounting_exception", u"Nutzer muss keinen Semesterbeitrag zahlen"),
+        (u"traffic_accounting_exception", u"Nutzer hat kein Trafficlimit"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),
