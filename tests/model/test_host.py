@@ -293,7 +293,7 @@ class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
         with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
             ip = host.Ip(address="141.30.227.4",
                          subnet=dormitory.Subnet.q.get(2),
-                         net_device=nd)
+                         net_device=self.nd)
             session.session.add(ip)
             session.session.commit()
 
@@ -307,3 +307,11 @@ class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
         session.session.delete(ip)
         session.session.commit()
 
+    def test_0050_bug434_other_subnets_for_mac(self):
+        "regression test for #434"
+        (uh, nd, _) = self._add_second_host()
+
+        subnets = [sn.address
+                   for sn in host._other_subnets_for_mac(self.nd)]
+        for ip in self.nd.ips:
+            self.assertNotIn(ip.subnet.address, subnets)

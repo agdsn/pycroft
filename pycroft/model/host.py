@@ -177,7 +177,8 @@ def _other_subnets_for_mac(net_device):
         NetDevice.mac == net_device.mac,
         NetDevice.id != net_device.id,
     ).join(
-        Ip
+        Ip,
+        NetDevice
     ).distinct().all()
 
 
