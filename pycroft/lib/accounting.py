@@ -16,7 +16,7 @@ from sqlalchemy import func
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume, TrafficCredit
 from pycroft.model.host import Host, IP, UserHost
-from pycroft.model.user import Property, TrafficGroup, User
+from pycroft.model.user import Membership, Property, TrafficGroup, User
 
 
 def user_volumes(user):
