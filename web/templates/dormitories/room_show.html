@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -30,5 +30,33 @@
         <li>Etage: {{ room.level }}</li>
         <li>Bewohnbar: {{ room.inhabitable }}</li>
     </ul>
-    <div><a href="{{ url_for('.room_delete', room_id=room.id) }}" class="btn">Löschen</a></div>
+
+    <div class="row">
+        <div class="span6">
+        {% if room_logs %}
+            <dl>
+                {% for entry in room_logs %}
+                    <dt>
+                        {{ entry.timestamp|datetime }} von <a href="{{ url_for("user.user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
+                    </dt>
+                    <dd><p>{{ entry.message }}</p></dd>
+                {% endfor %}
+            </dl>
+        {% else %}
+            <p>Raum hat keine Einträge.</p>
+        {% endif %}
+        </div>
+
+        <div class="span6">
+            <form method="POST" action="" class="form-horizontal">
+                {{ form.hidden_tag() }}
+                {% for field in form %}
+                    {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
+                        {{ field(placeholder='Nachricht', class='span6') }}
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Absenden</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}

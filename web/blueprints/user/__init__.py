@@ -65,7 +65,10 @@ def user_show(user_id):
             user_id=user_id)
         flash(u'Kommentar hinzugefügt', 'success')
 
+    log_list = user.user_log_entries + user.room.room_log_entries
+    log_list.sort(key=lambda LogEntry: LogEntry.timestamp, reverse=True)
     user_log_list = user.user_log_entries[::-1]
+    room_log_list = room.room_log_entries[::-1]
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
@@ -79,7 +82,12 @@ def user_show(user_id):
     )
 
     return render_template('user/user_show.html',
-        user=user, user_logs=user_log_list, room=room, form=form,
+        user=user,
+        all_log=log_list,
+        user_log=user_log_list,
+        room_log=room_log_list,
+        room=room,
+        form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all())
 

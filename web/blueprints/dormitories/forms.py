@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
 from flask.ext.wtf import Form, TextField, validators, BooleanField, \
-    QuerySelectField
+    QuerySelectField, TextAreaField
+from wtforms.validators import Required
 from pycroft.model.dormitory import Dormitory
 
 from pycroft.helpers.dormitory import sort_dormitories
@@ -28,3 +29,7 @@ class DormitoryForm(Form):
     short_name = TextField(u"Kürzel")
     number = TextField(u"Nummer")
     street = TextField(u"Straße", validators=[validators.Length(min=5)])
+
+
+class RoomLogEntry(Form):
+    message = TextAreaField(u"", [Required()])
