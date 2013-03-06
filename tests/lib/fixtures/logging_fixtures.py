@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from tests import DataSet
@@ -37,3 +37,12 @@ class UserLogEntryData(DataSet):
         timestamp = datetime.now()
         author = UserData.dummy_user1
         user = UserData.dummy_user1
+
+
+class RoomLogEntryData(DataSet):
+    class dummy_log_entry1:
+        id = 1
+        message = "dummy_room_log_entry"
+        timestamp = datetime.now()
+        author = UserData.dummy_user1
+        room = RoomData.dummy_room1
