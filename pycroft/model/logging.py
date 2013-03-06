@@ -37,3 +37,12 @@ class UserLogEntry(LogEntry):
     # many to one from UserLogEntry to User
     user = relationship("User", backref=backref("user_log_entries"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+
+
+class RoomLogEntry(LogEntry):
+    __mapper_args__ = {'polymorphic_identity': 'roomlogentry'}
+    id = Column(Integer, ForeignKey('logentry.id'), primary_key=True)
+
+    # many to one from RoomLogEntry to Room
+    room = relationship("Room", backref=backref("room_log_entries"))
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
