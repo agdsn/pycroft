@@ -1,7 +1,7 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.model.logging import UserLogEntry, LogEntry
+from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 from pycroft.model import session
 
 def _create_log_entry(type, *args, **kwargs):
@@ -18,6 +18,8 @@ def _create_log_entry(type, *args, **kwargs):
 
     if type == "userlogentry":
         entry = UserLogEntry(*args, **kwargs)
+    elif type == "roomlogentry":
+        entry = RoomLogEntry(*args, **kwargs)
     else:
         raise ValueError("Unknown LogEntry type!")
 
@@ -39,6 +41,8 @@ def delete_log_entry(log_entry_id):
 
     if entry.discriminator == "userlogentry":
         del_entry = UserLogEntry.q.get(log_entry_id)
+    elif entry.discriminator == "roomlogentry":
+        del_entry = RoomLogEntry.q.get(log_entry_id)
     else:
         raise ValueError("Unknown LogEntry type!")
 
@@ -57,3 +61,14 @@ def create_user_log_entry(*args, **kwargs):
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry("userlogentry", *args, **kwargs)
+
+
+def create_room_log_entry(*args, **kwargs):
+    """
+    This method will create a new RoomLogEntry.
+
+    :param args: the positionals which will be passed to the constructor.
+    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :return: the newly created RoomLogEntry.
+    """
+    return _create_log_entry("roomlogentry", *args, **kwargs)
