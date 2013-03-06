@@ -2,7 +2,8 @@
 
 
 from flask.ext.wtf import Form, TextField, validators, BooleanField, \
-    QuerySelectField
+    QuerySelectField, TextAreaField
+from wtforms.validators import Required
 from pycroft.model.dormitory import Dormitory
 
 from pycroft.helpers.dormitory import sort_dormitories
@@ -25,3 +26,7 @@ class DormitoryForm(Form):
     short_name = TextField(u"Kürzel")
     number = TextField(u"Nummer")
     street = TextField(u"Straße", validators=[validators.Length(min=5)])
+
+
+class RoomLogEntry(Form):
+    message = TextAreaField(u"", [Required()])

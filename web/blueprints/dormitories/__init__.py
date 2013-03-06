@@ -7,13 +7,17 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
+from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, url_for
+from flask.ext.login import current_user
+from pycroft import lib
 from pycroft.helpers import dormitory
 from pycroft.lib.dormitory import create_dormitory, create_room, delete_room
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.dormitories.forms import RoomForm, DormitoryForm
+from web.blueprints.dormitories.forms import RoomForm, DormitoryForm, \
+    RoomLogEntry
 
 bp = Blueprint('dormitories', __name__, )
 nav = BlueprintNavigation(bp, "Wohnheime")
@@ -63,12 +67,26 @@ def room_delete(room_id):
     return redirect(url_for('.dormitories'))
 
 
-@bp.route('/room/show/<room_id>')
+@bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
 def room_show(room_id):
     room = Room.q.get(room_id)
+    form = RoomLogEntry()
+
+    if form.validate_on_submit():
+        lib.logging.create_room_log_entry(message=form.message.data,
+                                          timestamp=datetime.now(),
+                                          author_id=current_user.id,
+                                          room_id=room_id)
+        flash(u'Kommentar hinzugefügt', 'success')
+
+    room_log_list = room.room_log_entries[::-1]
+
     return render_template('dormitories/room_show.html',
         page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
-                   str(room.level) + u"-" + str(room.number), room=room)
+                   str(room.level) + u"-" + str(room.number),
+        room=room,
+        room_logs=room_log_list,
+        form=form)
 
 
 @bp.route('/room/create', methods=['GET', 'POST'])

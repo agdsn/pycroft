@@ -1,16 +1,36 @@
+{% macro log_list(logs) -%}
+        {% if logs %}
+                <dl>
+                    {% for entry in logs %}
+                <dt>
+                    {{ entry.timestamp|datetime }} von <a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
+                </dt>
+                <dd><p>{{ entry.message }}</p></dd>
+            {% endfor %}
+        </dl>
+        {% else %}
+        <p>Nutzer hat keine Einträge.</p>
+        {% endif %}
+{%- endmacro %}
+
+<ul id="myTab" class="nav nav-tabs">
+    <li class="active"><a href="#log_entries_all" data-toggle="tab">Alle</a></li>
+    <li><a href="#log_entries_user" data-toggle="tab">Nutzer</a></li>
+    <li><a href="#log_entries_room" data-toggle="tab">Raum</a></li>
+</ul>
+
 <div class="row">
-    {% if user_logs %}
-            <dl class="span6">
-                {% for entry in user_logs %}
-                    <dt>
-                        {{ entry.timestamp|datetime }} von <a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
-                    </dt>
-                    <dd><p>{{ entry.message }}</p></dd>
-                {% endfor %}
-            </dl>
-    {% else %}
-            <p>Nutzer hat keine Einträge.</p>
-    {% endif %}
+    <div id="myTabContent" class="tab-content span6">
+        <div class="tab-pane fade in active" id="log_entries_all">
+            {{ log_list(all_log) }}
+        </div>
+        <div class="tab-pane fade" id="log_entries_user">
+            {{ log_list(user_log) }}
+        </div>
+        <div class="tab-pane fade" id="log_entries_room">
+            {{ log_list(room_log) }}
+        </div>
+    </div>
 
     <div class="span6">
         <form method="POST" action="" class="form-horizontal">
@@ -20,7 +40,7 @@
                     {{ field(placeholder='Nachricht', class='span6') }}
                 {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary">Absenden</button>
+            <button type="submit" class="btn btn-primary">Nutzerlog anlegen</button>
         </form>
         {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
     </div>
