@@ -12,7 +12,7 @@ This module contains.
 """
 from datetime import datetime, timedelta, date, time
 
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume, TrafficCredit
 from pycroft.model.host import Host, IP, UserHost
@@ -48,6 +48,9 @@ def traffic_consumption(user, start=None, end=None):
         start = datetime.now()
     if end is None:
         end = start - timedelta(days=1)
+
+    assert start > end
+
     value = session.session.query(
         func.sum(TrafficVolume.size).label("amount")
     ).join(
@@ -59,7 +62,7 @@ def traffic_consumption(user, start=None, end=None):
     ).filter(
         UserHost.owner == user
     ).filter(
-        TrafficVolume.timestamp < start
+        TrafficVolume.timestamp <= start
     ).filter(
         TrafficVolume.timestamp > end
     ).one()
@@ -71,6 +74,7 @@ def active_user_credit(user):
 
     :param user: The user to get the credit for.
     :return: The TrafficCredit value.
+    :rtype: TrafficCredit
     """
     return TrafficCredit.q.filter(
         TrafficCredit.user == user
@@ -87,15 +91,7 @@ def _today():
     return datetime.combine(date.today(), time())
 
 
-def users_with_exceeded_traffic():
-    """Get a list of all users with exceeded traffic.
-
-    :return: The list of all with exceeded Traffic
-    """
-    today = _today()
-    yesterday = today - timedelta(days=1)
-
-    # used user traffic by user_id
+def _trafic_by_userid(today, yesterday):
     volume = session.session.query(
         User.id.label("user_id"),
         func.sum(TrafficVolume.size).label("amount")
@@ -110,8 +106,10 @@ def users_with_exceeded_traffic():
     ).filter(
         TrafficVolume.timestamp > yesterday
     ).group_by(User.id).subquery()
+    return volume
 
-    # users without accounting
+
+def _unaccountet_by_userid():
     unlimited = session.session.query(
         User.id.label("user_id"),
     ).join(
@@ -119,14 +117,35 @@ def users_with_exceeded_traffic():
     ).filter(
         Property.name == "no_traffic_accounting"
     ).subquery()
+    return unlimited
 
-    # ids of the newest user credit entries
+
+def _latest_credits_by_userid():
     newest_credits = session.session.query(
         TrafficCredit.user_id.label("user_id"),
         func.max(TrafficCredit.id).label("credit_id")
     ).group_by(
         TrafficCredit.user_id
     ).subquery()
+    return newest_credits
+
+
+def users_with_exceeded_traffic():
+    """Get a list of all users with exceeded traffic.
+
+    :return: The list of all with exceeded Traffic
+    """
+    today = _today()
+    yesterday = today - timedelta(days=1)
+
+    # used user traffic by user_id
+    volume = _trafic_by_userid(today, yesterday)
+
+    # users without accounting
+    unlimited = _unaccountet_by_userid()
+
+    # ids of the newest user credit entries
+    newest_credits = _latest_credits_by_userid()
 
     # the final query
     query = User.q.join(
@@ -150,12 +169,143 @@ def users_with_exceeded_traffic():
     return query.all()
 
 
+def find_actual_trafficgroup(user):
+    """Get the current relevant traffic group for a given user.
+
+    relevant means, its active and it is the one with the most
+    recent start_date.
+
+    :param user: The user to query for.
+    :return: The assigned TrafficGroup.
+    :rtype: TrafficGroup
+    """
+    return session.session.query(
+        TrafficGroup
+    ).join(
+        TrafficGroup.memberships
+    ).join(
+        Membership.user
+    ).filter(
+        User.id == user.id
+    ).filter(
+        Membership.active()
+    ).order_by(
+        Membership.begins_at.desc()
+    ).first()
+
+
+def _traffic_groups_by_userid():
+    start_dates = session.session.query(
+        User.id.label("user_id"),
+        func.max(Membership.start_date).label("start_date")
+    ).join(
+        (Membership, and_(Membership.user_id == User.id,
+                          Membership.active))
+    ).join(
+        (TrafficGroup, TrafficGroup.id == Membership.group_id)
+    ).group_by(
+        User.id
+    ).subquery()
+
+    return session.session.query(
+        User.id.label("user_id"),
+        func.max(TrafficGroup.id).label("group_id")
+    ).join(
+        (start_dates, start_dates.c.user_id == User.id)
+    ).join(
+        (Membership, and_(Membership.user_id == User.id,
+                          Membership.active,
+                          Membership.start_date))
+    ).join(
+        (TrafficGroup, TrafficGroup.id == Membership.group_id)
+    ).group_by(
+        User.id
+    ).subquery()
+
+
+def grant_traffic(user, initial_credit=False):
+    traffic_group = find_actual_trafficgroup(user)
+    assert traffic_group is not None
+
+    now = datetime.now()
+    new_credit = TrafficCredit(user=user,
+                               grant_date=now,
+                               amount=traffic_group.grant_amount * 7,
+                               added_amount=traffic_group.grant_amount * 7)
+
+    if not initial_credit:
+        active_credit = active_user_credit(user)
+        assert active_credit is not None
+
+        consumption = traffic_consumption(user, now, now - timedelta(days=1))
+
+        real_credit = active_credit.amount - consumption
+        new_credit.amount = min(real_credit + traffic_group.grant_amount,
+                                traffic_group.saving_amount)
+
+        new_credit.added_amount = new_credit.amount - real_credit
+
+    session.session.add(new_credit)
+    session.session.commit()
+
+
+def grant_all_traffic():
+    today = _today()
+    yesterday = today - timedelta(days=1)
+
+    # used user traffic by user_id
+    volume = _trafic_by_userid(today, yesterday)
+
+    # users without accounting
+    unlimited = _unaccountet_by_userid()
+
+    # ids of the newest user credit entries
+    newest_credits = _latest_credits_by_userid()
+
+    traffic_group_ids = _traffic_groups_by_userid()
+
+    query = session.session.query(User.id.label("user_id"),
+                                  func.min(TrafficGroup.saving_amount,
+                                           (TrafficCredit.amount -
+                                            func.coalesce(volume.c.amount, 0)
+                                           ) + TrafficGroup.grant_amount
+                                  ).label("new_amount"),
+                                  (TrafficCredit.amount -
+                                   func.coalesce(volume.c.amount, 0)
+                                  ).label("old_amount")
+    ).outerjoin(
+        (volume, volume.c.user_id == User.id)
+    ).outerjoin(
+        (unlimited, unlimited.c.user_id == User.id)
+    ).join(
+        (newest_credits, newest_credits.c.user_id == User.id)
+    ).join(
+        TrafficCredit, TrafficCredit.id == newest_credits.c.credit_id
+    ).join(
+        (traffic_group_ids, traffic_group_ids.c.user_id == User.id)
+    ).join(
+        (TrafficGroup, TrafficGroup.id == traffic_group_ids.c.group_id)
+    )
+
+    now = datetime.now()
+
+    new_credits = []
+    for entry in query:
+        new_credit = TrafficCredit(user_id=entry.user_id,
+                                   grant_date=now,
+                                   amount=entry.new_amount,
+                                   added_amount=entry.new_amount - entry.old_amount)
+        newest_credits.append(new_credit)
+
+    session.session.add_al(newest_credits)
+    session.session.commit()
+
+
 def has_exceeded_traffic(user):
     """
     The function calculates the balance of the users traffic.
     :param user: The user object which has to be checked.
-    :return: True if the user has more traffic than allowed and false if he
-    did not exceed the limit.
+    :return: True if the user has more traffic than allowed and false if he did not exceed the limit.
     """
     if user.has_property("no_traffic_accounting"):
         return False
