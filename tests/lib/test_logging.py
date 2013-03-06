@@ -3,14 +3,16 @@ from sqlalchemy import Column, ForeignKey
 from sqlalchemy.types import Integer
 
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData
+from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData,\
+    RoomData, RoomLogEntryData
 
-from pycroft.model.logging import UserLogEntry, LogEntry
+from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 from pycroft.model.user import User
+from pycroft.model.dormitory import Room
 from pycroft.model import session
 
 from pycroft.lib.logging import create_user_log_entry, delete_log_entry,\
-    _create_log_entry
+    _create_log_entry, create_room_log_entry
 
 class Test_010_UserLogEntry(FixtureDataTestBase):
     datasets = [UserData, UserLogEntryData]
@@ -73,3 +75,40 @@ class Test_020_MalformedTypes(FixtureDataTestBase):
 
         session.session.delete(malformed_log_entry)
         session.session.commit()
+
+
+class Test_030_RoomLogEntry(FixtureDataTestBase):
+    datasets = [RoomData, RoomLogEntryData]
+
+    def test_0010_create_room_log_entry(self):
+        message = "test_message"
+        timestamp = datetime.now()
+        author = User.q.first()
+        room = Room.q.first()
+
+        room_log_entry = create_room_log_entry(message=message,
+                                               timestamp=timestamp,
+                                               author=author,
+                                               room=room)
+
+        self.assertIsNotNone(RoomLogEntry.q.get(room_log_entry.id))
+
+        db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
+
+        self.assertEqual(db_room_log_entry.message, message)
+        self.assertEqual(db_room_log_entry.timestamp, timestamp)
+        self.assertEqual(db_room_log_entry.author, author)
+        self.assertEqual(db_room_log_entry.room, room)
+
+        session.session.delete(db_room_log_entry)
+        session.session.commit()
+
+    def test_0020_delete_room_log_entry(self):
+        del_room_log_entry = delete_log_entry(
+            RoomLogEntryData.dummy_log_entry1.id)
+
+        self.assertIsNone(RoomLogEntry.q.get(del_room_log_entry.id))
+
+    def test_0025_delete_wrong_room_log_entry(self):
+        self.assertRaises(ValueError, delete_log_entry,
+                          RoomLogEntryData.dummy_log_entry1.id + 100)

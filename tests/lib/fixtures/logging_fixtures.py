@@ -34,3 +34,12 @@ class UserLogEntryData(DataSet):
         timestamp = datetime.now()
         author = UserData.dummy_user1
         user = UserData.dummy_user1
+
+
+class RoomLogEntryData(DataSet):
+    class dummy_log_entry1:
+        id = 1
+        message = "dummy_room_log_entry"
+        timestamp = datetime.now()
+        author = UserData.dummy_user1
+        room = RoomData.dummy_room1
