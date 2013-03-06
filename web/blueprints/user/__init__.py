@@ -23,7 +23,7 @@ from pycroft.model.accounting import TrafficVolume
 from sqlalchemy.sql.expression import or_
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    hostCreateForm, userLogEntry, UserAddGroupMembership, UserMoveForm,\
+    hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
     NetDeviceChangeMacForm
 from web.blueprints.access import login_required, BlueprintAccess
@@ -56,7 +56,7 @@ def user_show(user_id):
         abort(404)
 
     room = Room.q.get(user.room_id)
-    form = userLogEntry()
+    form = UserLogEntry()
 
     if form.validate_on_submit():
         lib.logging.create_user_log_entry(message=form.message.data,
