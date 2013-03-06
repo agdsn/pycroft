@@ -22978,4 +22978,12 @@ INSERT INTO "arecord" VALUES(1578,'pan.wh3.tu-dresden.de',NULL,1472);
 INSERT INTO "arecord" VALUES(1579,'pan.wh7.tu-dresden.de',NULL,1473);
 INSERT INTO "arecord" VALUES(1580,'pan.wh16.tu-dresden.de',NULL,1474);
 INSERT INTO "arecord" VALUES(1581,'pan.wh30.tu-dresden.de',NULL,1475);
+
+CREATE TABLE roomlogentry (
+	id INTEGER NOT NULL, 
+	room_id INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(id) REFERENCES logentry (id), 
+	FOREIGN KEY(room_id) REFERENCES room (id)
+);
 COMMIT;
