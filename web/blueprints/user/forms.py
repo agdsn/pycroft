@@ -78,7 +78,7 @@ class hostCreateForm(Form):
     name = TextField(u"Name")
 
 
-class userLogEntry(Form):
+class UserLogEntry(Form):
     message = TextAreaField(u"", [Required()])
 
 class UserAddGroupMembership(Form):
