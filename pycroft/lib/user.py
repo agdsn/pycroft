@@ -102,9 +102,9 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
                                                      "end_date"]
 
     registration_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.name == u"Anmeldegebühren").one()
+        FinanceAccount.name == u"Anmeldegebühren "+current_semester.name).one()
     semester_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.name == u"Beiträge").one()
+        FinanceAccount.name == u"Semestergebühren "+current_semester.name).one()
 
 
     #TODO: create financial account for user with negative balance
@@ -113,12 +113,12 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
         type="EQUITY", user=new_user)
     #Transaction for the registration fee
     new_transaction_registration_fee = Transaction(
-        message=u"Anmeldegebühren bei der AG DSN von Nutzer %s" % (
+        message=u"Anmeldegebühr von Nutzer %s" % (
             new_user.id, ), transaction_date=datetime.now(),
         semester=current_semester)
     #Transaction for the semester fee
     new_transaction_semester_fee = Transaction(
-        message=u"Semestergebühren für das Semester %s von Nutzer %s" % (
+        message=u"Semestergebühr für das %s von Nutzer %s" % (
             current_semester.name, new_user.id),
         transaction_date=datetime.now(), semester=current_semester)
     #soll per Nutzerkonto

@@ -26,8 +26,10 @@ CREATE TABLE "transaction" (
 	message TEXT NOT NULL,
 	transaction_date DATETIME NOT NULL,
 	journal_entry_id INTEGER, 
+    semester_id INTEGER,
 	PRIMARY KEY (id), 
-	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id)
+	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
+    FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
 CREATE TABLE financeaccount (
 	id INTEGER NOT NULL, 
@@ -38,8 +40,8 @@ CREATE TABLE financeaccount (
 	CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')), 
 	FOREIGN KEY(user_id) REFERENCES user (id)
 );
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühr Wintersemester 2012/13','EXPENSE',1);
-INSERT INTO "financeaccount" VALUES(2,'Semestergebühr Wintersemester 2012/13','EXPENSE',1);
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren Wintersemester 2012/13','EXPENSE',1);
+INSERT INTO "financeaccount" VALUES(2,'Semestergebühren Wintersemester 2012/13','EXPENSE',1);
 CREATE TABLE split (
 	id INTEGER NOT NULL, 
 	amount INTEGER NOT NULL, 
@@ -84,6 +86,7 @@ INSERT INTO "group" VALUES(6,'Verstoß','propertygroup');
 INSERT INTO "group" VALUES(7,'Root','propertygroup');
 INSERT INTO "group" VALUES(8,'Finanzen','propertygroup');
 INSERT INTO "group" VALUES(9,'Exaktiv','propertygroup');
+INSERT INTO "group" VALUES(10,'NegativKonto','propertygroup');
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL, 
 	number VARCHAR(3) NOT NULL, 
