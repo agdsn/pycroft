@@ -12,27 +12,45 @@
         </li>
         <li class="active">Etage {{ level }}</li>
     </ul>
-    <div>
-        {%- for room in rooms %}
-                {% if not room.users %}
-                    <div class="room"><a href="{{ url_for(".room_show",room_id=room.id) }}" class="btn btn-large">{{ room.level }}{{ room.number }}</a></div>
-                {% else %}
-                    {% for user in room.users %}
-                        {% if user is not user_with_positive_balance %}
-                            <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-warning btn-large">{{ room.level }}{{ room.number }} - {{ user.name }}</a></div>
+    <div class="span6">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>Raum</th><th>Bewohner</th></tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                        {% if not room.users %}
+                            <tr>
+                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                <td>&nbsp;</td>
                         {% else %}
-                            {% if user is user_with_no_internet %}
-                                <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-danger btn-large">{{ room.level }}{{ room.number }} - {{ user.name }}</a></div>
-                            {% else %}
-                                {% if user is user_with_traffic_exceeded %}
-                                    <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-info btn-large">{{ room.level }}{{ room.number }} - {{ user.name }}</a></div>
+                            {% for user in room.users %}
+                                {% if user is not user_with_positive_balance %}
+                                    <tr class="warning">
+                                        <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                        <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
                                 {% else %}
-                                    <div class="room"><a href="{{ url_for("user.user_show",user_id=user.id) }}" class="btn btn-success btn-large">{{ room.level }}{{ room.number }} - {{ user.name }}</a></div>
+                                    {% if user is user_with_no_internet %}
+                                        <tr class="error">
+                                            <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                            <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                    {% else %}
+                                        {% if user is user_with_traffic_exceeded %}
+                                            <tr class="info">
+                                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                                <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                        {% else %}
+                                            <tr class="success">
+                                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                                <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                        {% endif %}
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
+                                </tr>
+                            {% endfor %}
                         {% endif %}
                     {% endfor %}
-                {% endif %}
-        {%- endfor %}
+            </tbody>
+        </table>
     </div>
 {% endblock %}
