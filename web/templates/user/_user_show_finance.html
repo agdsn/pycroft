@@ -1,29 +1,40 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 <table class="table table-condensed">
     <thead>
     <tr>
-        <th>Konto</th>
+        <th>Beschreibung</th>
         <th>Betrag</th>
     </tr>
     </thead>
     <tbody>
-    {% for account in user.finance_accounts %}
-        {% for transaction in account.transactions %}
+        {% for transaction in user.finance_account.transactions %}
             {% for split in transaction.splits %}
-                <tr>
-                    <td>
-                        {{ split.account.name }}
-                    </td>
-                    <td>
-                        {{ split.amount }}
-                    </td>
-                </tr>
+                {% if split.account.user_id == user.id %}
+                    {% if split.amount < 0 %}
+                        <tr class="success">
+                            <td>
+                                {{ transaction.message }}
+                            </td>
+                            <td>
+                                {{ split.amount|money }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr class="error">
+                            <td>
+                                {{ transaction.message }}
+                            </td>
+                            <td>
+                                -{{ split.amount|money }}
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endif %}
             {% endfor %}
         {% endfor %}
-    {% endfor %}
     </tbody>
 </table>
