@@ -31,9 +31,7 @@ class User(ModelBase, UserMixin):
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
-    # room = relationship("Room")
     room = relationship("Room", backref=backref("users", order_by='User.id'),
-        # primaryjoin="and_(User.is_away== False, Room.id==User.room_id)")
                         primaryjoin=lambda: and_(User.is_away == False,
                                                  Room.id == User.room_id))
 
