@@ -8,7 +8,7 @@ nose>=1.1.2
 passlib>=1.6
 pydot>=1.0.28
 PyMySQL>=0.5
-pyparsing>=1.5.6
+pyparsing==1.5.7
 pysqlite>=2.6.3
 SQLAlchemy>=0.7.6
 sqlalchemy-schemadisplay>=1.1
