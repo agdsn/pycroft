@@ -73,10 +73,14 @@ class PropertyGroupData(DataSet):
     class tmp_ausgezogen:
         name = "tmpAusgezogen"
 
+    class negativ_konto:
+        name = u"NegativKonto"
+
+
 class PropertyData(DataSet):
     class internet:
         name  ="internet"
-        property_group = PropertyGroupData.one_month_negative_balance
+        property_group = PropertyGroupData.negativ_konto
     class no_internet:
         name = "no_internet"
         property_group = PropertyGroupData.verstoss
@@ -129,10 +133,10 @@ class FinanceAccountData(DataSet):
         name = "finance account 2"
         type = "EXPENSE"
     class semester_fee:
-        name = u"Beiträge"
+        name = u"Semestergebühren first semester"
         type = "INCOME"
     class registration_fee:
-        name = u"Anmeldegebühren"
+        name = u"Anmeldegebühren first semester"
         type = "INCOME"
 
     class dummy_user_account2:

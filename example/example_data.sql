@@ -6751,6 +6751,7 @@ INSERT INTO "propertygroup" VALUES(6);
 INSERT INTO "propertygroup" VALUES(7);
 INSERT INTO "propertygroup" VALUES(8);
 INSERT INTO "propertygroup" VALUES(9);
+INSERT INTO "propertygroup" VALUES(10);
 CREATE TABLE user (
 	id INTEGER NOT NULL, 
 	login VARCHAR(40) NOT NULL, 
