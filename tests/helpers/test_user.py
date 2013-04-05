@@ -109,7 +109,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         user_arecord = host_alias.ARecord.q.filter_by(host=user_host).one()
         self.assertEqual(user_cnamerecord.alias_for, user_arecord)
 
-        #checks the initial group memberhsips
+        #checks the initial group memberships
         user_groups = new_user.active_property_groups + new_user.active_traffic_groups
         for group in get_initial_groups():
             self.assertIn(group, user_groups)
