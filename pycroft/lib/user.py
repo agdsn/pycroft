@@ -397,9 +397,6 @@ def move_out_tmp(user, date, comment, processor):
         PropertyGroup.name == u"tmpAusgezogen").one()
 
     new_membership = Membership(group=away_group, user=user)
-
-    user.is_away = True
-
     session.session.delete(user.user_host.user_net_device.ips[0])
 
     if comment:
@@ -422,8 +419,6 @@ def user_is_back(user, processor):
     :param processor: The admin recognizing the users return.
     :return: The user who returned.
     """
-    user.is_away = False
-
     away_group = PropertyGroup.q.filter(
         PropertyGroup.name == u"tmpAusgezogen").one()
 

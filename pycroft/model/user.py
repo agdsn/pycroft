@@ -14,7 +14,9 @@ from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
 from sqlalchemy.orm import backref, relationship, validates
 import re
 from sqlalchemy.orm.util import has_identity
+from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
+from pycroft.model.dormitory import Room
 from pycroft.model.property import Membership, Property, PropertyGroup, TrafficGroup
 from pycroft.model.session import session
 from pycroft.helpers.user import hash_password, verify_password
@@ -25,13 +27,15 @@ class User(ModelBase, UserMixin):
     registration_date = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
-    is_away = Column(Boolean, default=False, nullable=False)
 
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    # room = relationship("Room")
     room = relationship("Room", backref=backref("users", order_by='User.id'),
-        primaryjoin="and_(User.is_away== False, Room.id==User.room_id)")
+        # primaryjoin="and_(User.is_away== False, Room.id==User.room_id)")
+                        primaryjoin=lambda: and_(User.is_away == False,
+                                                 Room.id == User.room_id))
 
     traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,
@@ -129,3 +133,27 @@ class User(ModelBase, UserMixin):
         result = query.one()
 
         return result.property_count > 0
+
+    @hybrid_property
+    def is_away(self):
+        for group in self.active_property_groups:
+            if group.name == "tmpAusgezogen":
+                return True
+        else: return False
+
+    @is_away.expression
+    def is_away(cls):
+        now = datetime.now()
+
+        return session.query(
+            func.count(Membership.id) > 0
+        ).join(
+            PropertyGroup
+        ).filter(
+            PropertyGroup.name == "tmpAusgezogen",
+            Membership.user_id == cls.id,
+            or_(Membership.start_date == None,
+                Membership.start_date <= now),
+            or_(Membership.end_date == None,
+                Membership.end_date > now)
+        ).scalar()
