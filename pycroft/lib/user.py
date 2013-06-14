@@ -186,27 +186,29 @@ def move(user, dormitory, level, room_number, processor):
     session.session.add(moving_user_log_entry)
 
     # assign a new IP to each net_device
-    net_dev = user.user_host.user_net_device
+    for user_host in user.user_hosts:
+        net_dev = user_host.user_net_device
 
-    if old_room.dormitory_id != new_room.dormitory_id:
-        assert len(net_dev.ips) == 1, u"A user should only have one ip!"
-        ip_addr = net_dev.ips[0]
-        old_ip = ip_addr.address
-        new_address = host.get_free_ip(dormitory.subnets)
-        new_subnet = host.select_subnet_for_ip(new_address,
-                                            dormitory.subnets)
+        if old_room.dormitory_id != new_room.dormitory_id:
+            assert len(net_dev.ips) == 1, u"A user should only have one ip!"
+            ip_addr = net_dev.ips[0]
+            old_ip = ip_addr.address
+            new_address = host.get_free_ip(dormitory.subnets)
+            new_subnet = host.select_subnet_for_ip(new_address,
+                                                dormitory.subnets)
 
-        ip_addr.change_ip(new_address, new_subnet)
+            ip_addr.change_ip(new_address, new_subnet)
 
-        ip_change_log_entry = UserLogEntry(author_id=processor.id,
-            message=u"IPv4 von %s auf %s geändert" % (
-            old_ip, new_address),
-            timestamp=datetime.now(), user_id=user.id)
-        session.session.add(ip_change_log_entry)
+            ip_change_log_entry = UserLogEntry(author_id=processor.id,
+                message=u"IPv4 von %s auf %s geändert" % (
+                old_ip, new_address),
+                timestamp=datetime.now(), user_id=user.id)
+            session.session.add(ip_change_log_entry)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
-    user.user_host.room = new_room
+    for user_host in user.user_hosts:
+        user_host.room = new_room
 
     session.session.commit()
     return user
@@ -264,7 +266,7 @@ def has_exceeded_traffic(user):
     result = session.session.query(User.id,
         (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(
             TrafficVolume.size).label("has_exceeded_traffic")).join(
-        User.active_traffic_groups).join(User.user_host).join(Host.ips).join(
+        User.active_traffic_groups).join(User.user_hosts).join(Host.ips).join(
         Ip.traffic_volumes).filter(User.id == user.id).group_by(User.id).first()
     if result is not None:
         return result.has_exceeded_traffic
@@ -366,10 +368,8 @@ def move_out_tmp(user, date, comment, processor):
         PropertyGroup.name == u"tmpAusgezogen").one()
 
     new_membership = Membership(group=away_group, user=user)
-
-    user.is_away = True
-
-    session.session.delete(user.user_host.user_net_device.ips[0])
+    for user_host in user.user_hosts:
+        session.session.delete(user_host.user_net_device.ips[0])
 
     if comment:
         log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen. Kommentar: " + comment
@@ -391,8 +391,6 @@ def user_is_back(user, processor):
     :param processor: The admin recognizing the users return.
     :return: The user who returned.
     """
-    user.is_away = False
-
     away_group = PropertyGroup.q.filter(
         PropertyGroup.name == u"tmpAusgezogen").one()
 
@@ -404,10 +402,11 @@ def user_is_back(user, processor):
     ip_address = host.get_free_ip(subnets)
     subnet = host.select_subnet_for_ip(ip_address, subnets)
 
-    new_ip = Ip(address=ip_address, subnet=subnet,
-        net_device=user.user_host.user_net_device)
+    for user_host in user.user_hosts:
+        new_ip = Ip(address=ip_address, subnet=subnet,
+            net_device=user_host.user_net_device)
 
-    session.session.add(new_ip)
+        session.session.add(new_ip)
 
     new_log_entry = UserLogEntry(message=u"Nutzer ist zurück.",
         timestamp=datetime.now(),
