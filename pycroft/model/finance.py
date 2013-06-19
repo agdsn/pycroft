@@ -16,7 +16,16 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Enum, Integer, Text, DateTime, String
+from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy import event
+
+
+class Semester(ModelBase):
+    name = Column(String, nullable=False)
+    semester_fee = Column(Integer, nullable=False)
+    registration_fee = Column(Integer, nullable=False)
+    begin_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
 
 
 class FinanceAccount(ModelBase):
@@ -30,6 +39,10 @@ class FinanceAccount(ModelBase):
     # many to one from FinanceAccount to User
     user = relationship("User", backref=backref("finance_accounts"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+    semester_id = Column(Integer, ForeignKey('semester.id'), nullable=True)
+    semester = relationship("Semester", backref=backref("accounts"))
+    tag = Column(Enum("registration_fee","additional_fee","regular_fee","arrears_fee"), nullable=True)
+    __table_args__ = (UniqueConstraint("semester_id", "tag"),)
 
 
 class Journal(ModelBase):
@@ -84,14 +97,6 @@ class Split(ModelBase):
     account = relationship("FinanceAccount")
 
     transaction_id = Column(Integer, ForeignKey("transaction.id",
-                                                ondelete='CASCADE'),
+                                ondelete='CASCADE'),
                                 nullable=False)
     transaction = relationship("Transaction", backref=backref("splits", cascade="all, delete-orphan"))
-
-
-class Semester(ModelBase):
-    name = Column(String, nullable=False)
-    semester_fee = Column(Integer, nullable=False)
-    registration_fee = Column(Integer, nullable=False)
-    begin_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)

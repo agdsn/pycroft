@@ -1,0 +1,25 @@
+{"finance": {
+    "semester_accounts": [
+        {
+            "name": "Anmeldegebühren",
+            "tag": "registration_fee",
+            "type": "EQUITY"
+        },
+        {
+            "name": "Semesterbeiträge",
+            "tag": "regular_fee",
+            "type": "EQUITY"
+        },
+        {
+            "name": "Zusatzbeitrag",
+            "tag": "additional_fee",
+            "type": "EQUITY"
+        },
+        {
+            "name": "Versäumnisgebühren",
+            "tag": "arrears_fee",
+            "type": "EQUITY"
+        }
+    ]
+}
+}
