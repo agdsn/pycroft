@@ -3,6 +3,7 @@ __author__ = 'Florian Österreich'
 
 from pycroft.model.finance import Semester, FinanceAccount
 from pycroft.model import session
+from pycroft.lib import config
 
 def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     """
@@ -17,13 +18,16 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     :param end_date: Date when semester ends.
     :return: The created Semester.
     """
-
-    new_semester = Semester(name=name,
+    semester = Semester(name=name,
         registration_fee=registration_fee,
         semester_fee=semester_fee,
         begin_date=begin_date,
         end_date=end_date)
 
-    session.session.add(new_semester)
+    objects = [semester]
+    for account in config.get("finance")["semester_accounts"]:
+        objects.append(FinanceAccount(type=account["type"],name=account["name"],semester=semester,tag=account["tag"]))
+
+    session.session.add_all(objects)
     session.session.commit()
-    return new_semester
+    return semester

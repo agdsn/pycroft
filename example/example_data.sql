@@ -10,7 +10,7 @@ CREATE TABLE journal (
 );
 CREATE TABLE journalentry (
 	id INTEGER NOT NULL, 
-	amount INTEGER NOT NULL, 
+	amount INTEGER NOT NULL,
 	message TEXT, 
 	journal_id INTEGER NOT NULL, 
 	other_account VARCHAR(255) NOT NULL, 
@@ -32,16 +32,23 @@ CREATE TABLE "transaction" (
     FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
 CREATE TABLE financeaccount (
-	id INTEGER NOT NULL, 
-	name VARCHAR(127) NOT NULL, 
-	type VARCHAR(9) NOT NULL, 
-	user_id INTEGER, 
-	PRIMARY KEY (id), 
-	CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')), 
-	FOREIGN KEY(user_id) REFERENCES user (id)
+        id INTEGER NOT NULL,
+        name VARCHAR(127) NOT NULL,
+        type VARCHAR(9) NOT NULL,
+        user_id INTEGER,
+        semester_id INTEGER,
+        tag VARCHAR(16),
+        PRIMARY KEY (id),
+        UNIQUE (semester_id, tag),
+        CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')),
+        FOREIGN KEY(user_id) REFERENCES user (id),
+        FOREIGN KEY(semester_id) REFERENCES semester (id),
+        CHECK (tag IN ('registration_fee', 'additional_fee', 'regular_fee', 'arrears_fee'))
 );
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren Wintersemester 2012/13','EXPENSE',1);
-INSERT INTO "financeaccount" VALUES(2,'Semestergebühren Wintersemester 2012/13','EXPENSE',1);
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','EXPENSE',NULL,1,'registration_fee');
+INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','EXPENSE',NULL,1,'regular_fee');
+INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','EXPENSE',NULL,1,'additional_fee');
+INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',NULL,1,'arreas_fee');
 CREATE TABLE split (
 	id INTEGER NOT NULL, 
 	amount INTEGER NOT NULL, 
