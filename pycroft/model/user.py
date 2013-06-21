@@ -8,9 +8,10 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from flask.ext.login import UserMixin
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from base import ModelBase
 from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
-    String, Boolean
+    String, Boolean, select, exists
 from sqlalchemy.orm import backref, relationship, validates
 import re
 from sqlalchemy.orm.util import has_identity
@@ -110,48 +111,29 @@ class User(ModelBase, UserMixin):
                 return user
         return None
 
+    @hybrid_method
     def has_property(self, property_name):
-        now = datetime.now()
-        query = session.query(
-            func.count(Property.id).label("property_count")
-        ).join(
-            (PropertyGroup, PropertyGroup.id == Property.property_group_id)
-        ).join(
-            (Membership, Membership.group_id == PropertyGroup.id)
-        ).filter(
-            Property.name == property_name
-        ).filter(
-            Membership.user_id == self.id
-        ).filter(
-        # it is important to use == here, "is" does not work
-            or_(Membership.start_date == None, Membership.start_date <= now)
-        ).filter(
-            or_(Membership.end_date == None, Membership.end_date > now)
-        )
-        result = query.one()
-
-        return result.property_count > 0
-
-    @hybrid_property
-    def is_away(self):
         for group in self.active_property_groups:
-            if group.name == "tmpAusgezogen":
-                return True
-        else: return False
+            for prop in group.properties:
+                if prop.name == property_name:
+                    return True
+        return False
 
-    @is_away.expression
-    def is_away(cls):
+    @has_property.expression
+    def has_property(self, prop):
         now = datetime.now()
-
-        return session.query(
-            func.count(Membership.id) > 0
-        ).join(
-            PropertyGroup
-        ).filter(
-            PropertyGroup.name == "tmpAusgezogen",
-            Membership.user_id == cls.id,
-            or_(Membership.start_date == None,
-                Membership.start_date <= now),
-            or_(Membership.end_date == None,
-                Membership.end_date > now)
-        ).scalar()
+        return exists(
+            select(["1"], from_obj=[
+                Property.__table__,
+                PropertyGroup.__table__,
+                Membership.__table__])
+            .where(and_(
+                Property.name == prop,
+                Property.property_group_id == PropertyGroup.id,
+                PropertyGroup.id == Membership.group_id,
+                Membership.user_id == self.id,
+                or_(Membership.start_date == None, Membership.start_date <= now),
+                or_(Membership.end_date == None, Membership.end_date > now)
+            )
+            )
+        )
