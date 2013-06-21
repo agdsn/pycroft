@@ -125,6 +125,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             ).all()
         account_sum = sum([split.amount for split in splits])
         self.assertEqual(account_sum,4000)
+        self.assertFalse(new_user.hasProperty("away"))
 
 class Test_0030_User_Move_Out(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
@@ -261,6 +262,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             processor=self.processing_user)
 
         out_time = datetime.now()
+        self.assertFalse(new_user.hasProperty("away"))
 
         UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
 
@@ -268,6 +270,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         away_group = property.PropertyGroup.q.filter(
             property.PropertyGroup.name == u"tmpAusgezogen").one()
         self.assertIn(new_user, away_group.active_users)
+        self.assertTrue(new_user.hasProperty("away"))
 
         # check if user has no ips left
         self.assertEqual(new_user.user_host.user_net_device.ips, [])
@@ -313,7 +316,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
                                 date=datetime.now(),
                                 comment='',
                                 processor=self.processing_user)
-        
+
     def tearDown(self):
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
@@ -321,6 +324,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         super(Test_090_User_Is_Back, self).tearDown()
 
     def test_0010_user_is_back(self):
+        self.assertTrue(self.user.hasProperty("away"))
         UserHelper.user_is_back(self.user, self.processing_user)
 
         # check whether user has at least one ip
@@ -331,3 +335,4 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.assertTrue(log_entry.timestamp <= datetime.now())
         self.assertEqual(log_entry.author, self.processing_user)
 
+        self.assertFalse(self.user.hasProperty("away"))

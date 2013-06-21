@@ -11,13 +11,16 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from flask.ext.login import UserMixin
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from base import ModelBase
 from sqlalchemy import ForeignKey, Column, and_, or_, func, DateTime, Integer, \
-    String, Boolean
+    String, Boolean, select, exists
 from sqlalchemy.orm import backref, relationship, validates
 import re
 from sqlalchemy.orm.util import has_identity
+from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
+from pycroft.model.dormitory import Room
 from pycroft.model.property import Membership, Property, PropertyGroup, TrafficGroup
 from pycroft.model.session import session
 from pycroft.helpers.user import hash_password, verify_password
@@ -28,13 +31,13 @@ class User(ModelBase, UserMixin):
     registration_date = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
-    is_away = Column(Boolean, default=False, nullable=False)
 
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
     room = relationship("Room", backref=backref("users", order_by='User.id'),
-        primaryjoin="and_(User.is_away== False, Room.id==User.room_id)")
+                        primaryjoin=lambda: and_(User.is_away == False,
+                                                 Room.id == User.room_id))
 
     traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,
@@ -111,24 +114,29 @@ class User(ModelBase, UserMixin):
                 return user
         return None
 
+    @hybrid_method
     def has_property(self, property_name):
-        now = datetime.now()
-        query = session.query(
-            func.count(Property.id).label("property_count")
-        ).join(
-            (PropertyGroup, PropertyGroup.id == Property.property_group_id)
-        ).join(
-            (Membership, Membership.group_id == PropertyGroup.id)
-        ).filter(
-            Property.name == property_name
-        ).filter(
-            Membership.user_id == self.id
-        ).filter(
-        # it is important to use == here, "is" does not work
-            or_(Membership.start_date == None, Membership.start_date <= now)
-        ).filter(
-            or_(Membership.end_date == None, Membership.end_date > now)
-        )
-        result = query.one()
+        for group in self.active_property_groups:
+            for prop in group.properties:
+                if prop.name == property_name:
+                    return True
+        return False
 
-        return result.property_count > 0
+    @has_property.expression
+    def has_property(self, prop):
+        now = datetime.now()
+        return exists(
+            select(["1"], from_obj=[
+                Property.__table__,
+                PropertyGroup.__table__,
+                Membership.__table__])
+            .where(and_(
+                Property.name == prop,
+                Property.property_group_id == PropertyGroup.id,
+                PropertyGroup.id == Membership.group_id,
+                Membership.user_id == self.id,
+                or_(Membership.start_date == None, Membership.start_date <= now),
+                or_(Membership.end_date == None, Membership.end_date > now)
+            )
+            )
+        )
