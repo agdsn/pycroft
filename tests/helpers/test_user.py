@@ -7,7 +7,7 @@ from pycroft.lib import user as UserHelper, user_config
 from tests.helpers.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
-    PropertyData
+    PropertyData, MembershipData
 from pycroft.model import user, dormitory, port, session, logging, finance, \
     property, host_alias, host
 from datetime import datetime
@@ -122,7 +122,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             ).all()
         account_sum = sum([split.amount for split in splits])
         self.assertEqual(account_sum,4000)
-        self.assertFalse(new_user.hasProperty("away"))
+        self.assertFalse(new_user.has_property("away"))
 
 class Test_0030_User_Move_Out(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
@@ -397,3 +397,29 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.assertEqual(log_entry.author, self.processing_user)
 
         self.assertFalse(self.user.hasProperty("away"))
+
+
+class Test_100_User_has_property(FixtureDataTestBase):
+
+    datasets = [PropertyData, PropertyGroupData, UserData, MembershipData]
+
+    def test_0010_positive_test(self):
+        test_user = user.User.q.filter_by(login='admin').one()
+
+        self.assertTrue(test_user.has_property("no_internet"))
+        self.assertIsNotNone(
+            user.User.q.filter(
+                user.User.login == test_user.login,
+                user.User.has_property("no_internet")
+            ).first())
+
+    def test_0020_negative_test(self):
+        test_user = user.User.q.filter_by(login='test').one()
+
+        self.assertFalse(test_user.has_property("no_internet"))
+        self.assertIsNone(
+            user.User.q.filter(
+                user.User.login == test_user.login,
+                user.User.has_property("no_internet")
+            ).first())
+
