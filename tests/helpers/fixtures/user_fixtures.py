@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'florian'
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from fixture import DataSet
 
 class VLanData(DataSet):
@@ -82,11 +82,18 @@ class PropertyGroupData(DataSet):
 
 class PropertyData(DataSet):
     class internet:
-        name  ="internet"
+        name ="internet"
         property_group = PropertyGroupData.negativ_konto
     class no_internet:
         name = "no_internet"
         property_group = PropertyGroupData.verstoss
+
+class MembershipData(DataSet):
+    class dummy_membership1:
+        start_date = datetime.now() - timedelta(hours=1)
+        end_date = datetime.now() + timedelta(hours=1)
+        group = PropertyGroupData.verstoss
+        user = UserData.dummy_user2
 
 class UserHostData(DataSet):
     class dummy_host1:
