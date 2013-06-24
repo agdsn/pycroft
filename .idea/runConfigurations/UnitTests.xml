@@ -4,7 +4,7 @@
     <option name="PARENT_ENVS" value="true" />
     <envs />
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="true" />
     <module name="Pycroft" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
