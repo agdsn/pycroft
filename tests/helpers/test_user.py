@@ -8,6 +8,7 @@ __author__ = 'florian'
 
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper, user_config
+from pycroft.lib.config import config
 from tests.helpers.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
@@ -70,9 +71,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
     def test_0010_move_in(self):
         def get_initial_groups():
             initial_groups = []
-            for group in user_config.initial_groups:
+            for memberships in config["move_in"]["group_memberships"]:
                 initial_groups.append(property.Group.q.filter(
-                    property.Group.name == group["group_name"]
+                    property.Group.name == memberships["name"]
                 ).one())
             return initial_groups
 
@@ -116,10 +117,11 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             self.assertIn(group, user_groups)
 
         self.assertEqual(UserHelper.has_internet(new_user), True)
+
         user_account = finance.FinanceAccount.q.filter(
-                finance.FinanceAccount.user==new_user
+                finance.FinanceAccount.user == new_user
             ).filter(
-                finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
+                finance.FinanceAccount.name == config["move_in"]["financeaccount_name"].format(user_id=new_user.id)
             ).one()
         splits = finance.Split.q.filter(
                 finance.Split.account_id == user_account.id
@@ -172,9 +174,9 @@ class Test_0030_User_Move_Out(FixtureDataTestBase):
 
         # check if users finance account still exists
         user_account = finance.FinanceAccount.q.filter(
-            finance.FinanceAccount.user==new_user
+            finance.FinanceAccount.user == new_user
         ).filter(
-            finance.FinanceAccount.name==u"Nutzerid: %d" % new_user.id
+            finance.FinanceAccount.name == u"Konto von %d" % new_user.id
         ).first()
         self.assertIsNotNone(user_account)
 
@@ -233,7 +235,7 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
 class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
-                PropertyGroupData, FinanceAccountData]
+                PropertyGroupData, PropertyData, FinanceAccountData]
 
     def setUp(self):
         super(Test_070_User_Move_Out_Tmp, self).setUp()
@@ -263,15 +265,16 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             processor=self.processing_user)
 
         out_time = datetime.now()
-        self.assertFalse(new_user.hasProperty("away"))
+        self.assertFalse(new_user.has_property("away"))
 
         UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
 
         # check for tmpAusgezogen group membership
         away_group = property.PropertyGroup.q.filter(
-            property.PropertyGroup.name == u"tmpAusgezogen").one()
+            property.PropertyGroup.name == config["groups"]["away"]).one()
         self.assertIn(new_user, away_group.active_users)
-        self.assertTrue(new_user.hasProperty("away"))
+        self.assertIn(away_group, new_user.active_property_groups)
+        self.assertTrue(new_user.has_property("away"))
 
         # check if user has no ips left
         self.assertEqual(new_user.user_host.user_net_device.ips, [])
@@ -295,12 +298,13 @@ class Test_080_User_Block(FixtureDataTestBase):
         u = user.User.q.get(1)
         verstoss = property.PropertyGroup.q.filter(
             property.PropertyGroup.name == u"Verstoß").first()
-        self.assertFalse(u.has_property("no_internet"))
+#       Ich weiß nicht, ob dieser Test noch gebraucht wird!
+#       self.assertTrue(u.has_property("internet"))
         self.assertNotIn(verstoss, u.active_property_groups)
 
         blocked_user = UserHelper.block_user(u, u"test", u)
 
-        self.assertTrue(blocked_user.has_property("no_internet"))
+        self.assertFalse(blocked_user.has_property("internet"))
         self.assertIn(verstoss, blocked_user.active_property_groups)
 
         self.assertEqual(blocked_user.user_log_entries[0].author, u)
@@ -344,22 +348,22 @@ class Test_100_User_has_property(FixtureDataTestBase):
     datasets = [PropertyData, PropertyGroupData, UserData, MembershipData]
 
     def test_0010_positive_test(self):
-        test_user = user.User.q.filter_by(login='admin').one()
+        test_user = user.User.q.get(UserData.dummy_user2.id)
 
-        self.assertFalse(test_user.has_property("internet"))
+        self.assertTrue(test_user.has_property("dummy"))
         self.assertIsNotNone(
             user.User.q.filter(
                 user.User.login == test_user.login,
-                not_(user.User.has_property("internet"))
+                user.User.has_property("dummy")
             ).first())
 
     def test_0020_negative_test(self):
-        test_user = user.User.q.filter_by(login='test').one()
+        test_user = user.User.q.get(UserData.dummy_user1.id)
 
-        self.assertTrue(test_user.has_property("internet"))
+        self.assertFalse(test_user.has_property("dummy"))
         self.assertIsNone(
             user.User.q.filter(
                 user.User.login == test_user.login,
-                not_(user.User.has_property("internet"))
+                user.User.has_property("dummy")
             ).first())
 
