@@ -385,7 +385,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         super(Test_090_User_Is_Back, self).tearDown()
 
     def test_0010_user_is_back(self):
-        self.assertTrue(self.user.hasProperty("away"))
+        self.assertTrue(self.user.has_property("away"))
         UserHelper.user_is_back(self.user, self.processing_user)
 
         # check whether user has at least one ip
@@ -396,7 +396,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.assertTrue(log_entry.timestamp <= datetime.now())
         self.assertEqual(log_entry.author, self.processing_user)
 
-        self.assertFalse(self.user.hasProperty("away"))
+        self.assertFalse(self.user.has_property("away"))
 
 
 class Test_100_User_has_property(FixtureDataTestBase):
