@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from tests import DataSet
@@ -57,5 +57,6 @@ class MembershipData(DataSet):
 class PropertyData(DataSet):
     class dummy_property1:
         id = 1
+        granted = True
         name = "dummy_property"
         property_group = PropertyGroupData.dummy_property_group1

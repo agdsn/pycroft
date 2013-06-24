@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
@@ -9,7 +9,8 @@ from tests.model.fixtures.property_fixtures import DormitoryData, RoomData, \
 
 
 class PropertyDataTestBase(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData, TrafficGroupData, PropertyData]
+    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData,
+                TrafficGroupData, PropertyData]
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
@@ -91,6 +92,8 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
         membership.disable()
+        session.session.commit()
+        self.assertNotIn(group,self.user.active_property_groups)
         self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
 
         # add membership to group1
@@ -112,6 +115,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # disables membership in group2
         membership.disable()
+        session.session.commit()
         self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
         self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
 
