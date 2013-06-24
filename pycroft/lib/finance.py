@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'Florian Österreich'
 
-from pycroft.model.finance import Semester, FinanceAccount
+from datetime import datetime
+from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split
 from pycroft.model import session
 from pycroft.lib import config
+
 
 def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     """
@@ -19,15 +21,47 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     :return: The created Semester.
     """
     semester = Semester(name=name,
-        registration_fee=registration_fee,
-        semester_fee=semester_fee,
-        begin_date=begin_date,
-        end_date=end_date)
+                        registration_fee=registration_fee,
+                        semester_fee=semester_fee,
+                        begin_date=begin_date,
+                        end_date=end_date)
 
     objects = [semester]
     for account in config.get("finance")["semester_accounts"]:
-        objects.append(FinanceAccount(type=account["type"],name=account["name"],semester=semester,tag=account["tag"]))
+        objects.append(
+            FinanceAccount(type=account["type"], name=account["name"],
+                           semester=semester, tag=account["tag"]))
 
     session.session.add_all(objects)
     session.session.commit()
     return semester
+
+
+def simple_transaction(message, debit_account, credit_account, semester, amount,
+                       date=None):
+    """
+    Creates a simple transaction.
+    A simple transaction is a transaction that consists of exactly two splits.
+    This function does not commit the changes to the database.
+    :param message: Transaction message
+    :param debit_account: Debit (germ. Soll) account.
+    :param credit_account: Credit (germ. Haben) account
+    :param semester: Semester of the transaction.
+    :param amount: Amount in Eurocents
+    """
+    if date is None:
+        date = datetime.now()
+    new_transaction = Transaction(
+        message=message,
+        transaction_date=date, semester=semester)
+    new_debit_split = Split(
+        amount=amount,
+        account=debit_account,
+        transaction=new_transaction)
+    new_credit_split = Split(
+        amount=-amount,
+        account=credit_account,
+        transaction=new_transaction)
+    session.session.add_all(
+        [new_transaction, new_debit_split, new_credit_split]
+    )
