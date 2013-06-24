@@ -87,14 +87,14 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
     for membership in conf["group_memberships"]:
         group = Group.q.filter(Group.name == membership["name"]).one()
         start_date = datetime.now()
-        if not membership["offset"] is None:
+        if membership.get("offset"):
             start_date += timedelta(membership["offset"])
         new_membership = Membership(
             start_date=start_date,
             group=group,
             user=new_user)
-        if not membership["duration"] is None:
-            assert not membership["duration"] <= 0
+        if membership.get("duration"):
+            assert membership["duration"] > 0
             new_membership.end_date = datetime.now() + timedelta(membership["duration"])
         session.session.add(new_membership)
 
@@ -103,7 +103,7 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
         FinanceAccount.tag == "registration_fee").one()
     semester_fee_account = FinanceAccount.q.filter(
         FinanceAccount.semester == current_semester,
-        FinanceAccount.tag == "semester_fee").one()
+        FinanceAccount.tag == "regular_fee").one()
 
 
     format_args = {
@@ -112,20 +112,20 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
         "semester": current_semester.name
     }
     new_finance_account = FinanceAccount(
-        name=conf["financeaccount_name"].format(format_args),
+        name=conf["financeaccount_name"].format(**format_args),
         type="EQUITY", user=new_user)
     session.session.add(new_finance_account)
 
     # Initial fees
     simple_transaction(
-        conf["registration_fee_message"].format(format_args),
+        conf["registration_fee_message"].format(**format_args),
         new_finance_account,
         registration_fee_account,
         current_semester,
         current_semester.registration_fee
     )
     simple_transaction(
-        conf["semester_fee_message"].format(format_args),
+        conf["semester_fee_message"].format(**format_args),
         new_finance_account,
         semester_fee_account,
         current_semester,
@@ -173,7 +173,7 @@ def move(user, dormitory, level, room_number, processor):
     moving_user_log_entry = UserLogEntry(
         author_id=processor.id,
         message=config["move"]["log_message"].format(
-            {"from": old_room, "to": new_room}),
+            from_room=old_room, to_room=new_room),
         timestamp=datetime.now(), user_id=user.id
     )
     session.session.add(moving_user_log_entry)
@@ -193,7 +193,7 @@ def move(user, dormitory, level, room_number, processor):
 
         ip_change_log_entry = UserLogEntry(author_id=processor.id,
             message=config["move"]["ip_change_log_message"].format(
-                {"old": old_ip, "new": new_ip}),
+                old_ip=old_ip, new_ip=new_ip),
             timestamp=datetime.now(), user_id=user.id)
         session.session.add(ip_change_log_entry)
 
@@ -309,7 +309,8 @@ def has_internet(user):
     :param user: The user object.
     :return: True if he is allowed to use the internet, false if he is not.
     """
-    return user.has_property("internet") and not has_exceeded_traffic(user) and has_positive_balance(user)
+    return user.has_property("internet") and not has_exceeded_traffic(user) \
+        and has_positive_balance(user)
 
 
 def block_user(user, reason, processor, date=None):
