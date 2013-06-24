@@ -6,7 +6,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
-from sqlalchemy.sql.functions import now
+from pycroft.model.session import session
 from base import ModelBase
 from sqlalchemy import ForeignKey, and_, or_
 from sqlalchemy import Column, null
@@ -62,16 +62,19 @@ class Membership(ModelBase):
     @hybrid_property
     def active(self):
         now = datetime.now()
-        if now < self.start_date:
+
+        if self.start_date > now:
             return False
         if self.end_date is not None:
-            if self.end_date < now:
-                return False
+            return self.end_date > now
         return True
 
     @active.expression
     def active(self):
-        return and_(self.start_date <= now(), or_(self.end_date == null(), self.end_date >= now()))
+        now = session.now_sql()
+
+        return and_(self.start_date <= now,
+                    or_(self.end_date == null(), self.end_date > now))
 
     @validates('end_date')
     def validate_end_date(self, _, value):

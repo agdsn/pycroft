@@ -45,6 +45,7 @@ class TrafficGroupData(DataSet):
 class PropertyData(DataSet):
     class prop_test1:
         name = "test1"
+        granted = True
         property_group = PropertyGroupData.group1
 
     class prop_test1_1(prop_test1):
@@ -52,4 +53,5 @@ class PropertyData(DataSet):
 
     class prop_test2:
         name = "test2"
+        granted = True
         property_group = PropertyGroupData.group2

@@ -54,5 +54,6 @@ class MembershipData(DataSet):
 class PropertyData(DataSet):
     class dummy_property1:
         id = 1
+        granted = True
         name = "dummy_property"
         property_group = PropertyGroupData.dummy_property_group1

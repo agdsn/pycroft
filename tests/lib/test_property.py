@@ -116,7 +116,7 @@ class Test_040_Property(FixtureDataTestBase):
         name = "dummy_property2"
         property_group = PropertyGroup.q.first()
 
-        (_, property) = create_property(property_group.id, name=name)
+        (_, property) = create_property(property_group.id, name=name, granted=True)
 
         self.assertIsNotNone(Property.q.get(property.id))
 
