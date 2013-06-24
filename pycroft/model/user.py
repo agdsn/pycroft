@@ -32,7 +32,7 @@ class User(ModelBase, UserMixin):
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
     room = relationship("Room", backref=backref("users", order_by='User.id'),
-                        primaryjoin=lambda: and_(User.has_property("away"),
+                        primaryjoin=lambda: and_(not_(User.has_property("away")),
                                                  Room.id == User.room_id))
 
     traffic_groups = relationship("TrafficGroup",
@@ -45,7 +45,8 @@ class User(ModelBase, UserMixin):
     active_traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,
         primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=and_(Membership.group_id==TrafficGroup.id, Membership.active),
+        secondaryjoin=lambda: and_(Membership.group_id == TrafficGroup.id,
+                                   Membership.active),
         foreign_keys=[Membership.user_id, Membership.group_id],
         viewonly=True)
 
@@ -59,7 +60,8 @@ class User(ModelBase, UserMixin):
     active_property_groups = relationship("PropertyGroup",
         secondary=Membership.__tablename__,
         primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=and_(Membership.group_id==PropertyGroup.id, Membership.active),
+        secondaryjoin=lambda: and_(Membership.group_id == PropertyGroup.id,
+                                   Membership.active),
         foreign_keys=[Membership.user_id, Membership.group_id],
         viewonly=True)
 
