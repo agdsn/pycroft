@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -26,7 +26,7 @@ def positive_balance_check(user):
 def no_internet_check(user):
     """Tests if user has no internet
     """
-    return user.has_property("no_internet")
+    return not user.has_property("internet")
 
 
 @template_check("user_with_traffic_exceeded")

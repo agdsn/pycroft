@@ -16,7 +16,7 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     There are created a registration fee account and a semester fee account
     which ones are attached to the semester
     The name could be something like: "Wintersemester 2012/13"
-    :param name: A usefull name for the semester.
+    :param name: A useful name for the semester.
     :param registration_fee: The fee a student have to pay when he moves in first.
     :param semester_fee: The fee a student have to pay every semester.
     :param begin_date: Date when the semester starts.

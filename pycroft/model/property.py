@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -9,13 +9,14 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
+from sqlalchemy.sql.functions import now
 from base import ModelBase
 from sqlalchemy import ForeignKey, and_, or_
-from sqlalchemy import Column
+from sqlalchemy import Column, null
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import BigInteger, Integer, DateTime
-from sqlalchemy.types import String
+from sqlalchemy.types import String, Boolean
 
 
 class Group(ModelBase):
@@ -72,10 +73,8 @@ class Membership(ModelBase):
         return True
 
     @active.expression
-    def active(cls):
-        import pycroft.model.session as session
-        now = session.session.now_sql()
-        return and_(cls.start_date <= now, or_(cls.end_date == None, cls.end_date >= now))
+    def active(self):
+        return and_(self.start_date <= now(), or_(self.end_date == null(), self.end_date >= now()))
 
     @validates('end_date')
     def validate_end_date(self, _, value):
@@ -103,6 +102,7 @@ class Membership(ModelBase):
 
 class Property(ModelBase):
     name = Column(String(255), nullable=False)
+    granted = Column(Boolean, nullable=False)
 
     # many to one from Property to PropertyGroup
     # nullable=True

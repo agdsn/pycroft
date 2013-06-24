@@ -15,6 +15,8 @@ from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user, host
+from pycroft.lib.config import config
+from pycroft.lib.finance import simple_transaction
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
 from pycroft.model.host import Host, UserHost, UserNetDevice, Ip
@@ -23,7 +25,6 @@ from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGrou
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.lib import user_config
 from pycroft.lib.host_alias import create_arecord, create_cnamerecord
 
 
@@ -56,7 +57,6 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
         registration_date=datetime.now())
     plain_password = user.generatePassword(12)
 
-
     #TODO: print plain password on paper instead
     print u"new password: " + plain_password
 
@@ -86,77 +86,67 @@ def moves_in(name, login, email, dormitory, level, room_number, mac,
     if host_name:
         create_cnamerecord(host=new_host, name=host_name, alias_for=new_arecord)
 
-
-    #TODO: add user to initial groups (create those memberships)
-    for initial_group in user_config.initial_groups:
-        assert isinstance(initial_group["dates"]["start_date"], timedelta)
-        assert not initial_group["dates"]["start_date"] < timedelta(0)
-        group = Group.q.filter(Group.name == initial_group["group_name"]).one()
+    conf = config["move_in"]
+    for membership in conf["group_memberships"]:
+        group = Group.q.filter(Group.name == membership["name"]).one()
+        start_date = datetime.now()
+        if not membership["offset"] is None:
+            start_date += timedelta(membership["offset"])
         new_membership = Membership(
-            start_date=datetime.now() + initial_group["dates"]["start_date"],
+            start_date=start_date,
             group=group,
             user=new_user)
-        if initial_group["dates"]["end_date"] is 0:
-            assert not initial_group["dates"]["end_date"] < 0
-        else:
-            assert isinstance(initial_group["dates"]["end_date"], timedelta)
-            assert not initial_group["dates"]["end_date"] < timedelta(0)
-            new_membership.end_date = datetime.now() + initial_group["dates"][
-                                                     "end_date"]
+        if not membership["duration"] is None:
+            assert not membership["duration"] <= 0
+            new_membership.end_date = datetime.now() + timedelta(membership["duration"])
+        session.session.add(new_membership)
 
     registration_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.name == u"Anmeldegebühren "+current_semester.name).one()
+        FinanceAccount.semester == current_semester,
+        FinanceAccount.tag == "registration_fee").one()
     semester_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.name == u"Semestergebühren "+current_semester.name).one()
+        FinanceAccount.semester == current_semester,
+        FinanceAccount.tag == "semester_fee").one()
 
 
-    #TODO: create financial account for user with negative balance
-    #adds the initial finance transactions to the user
-    new_finance_account = FinanceAccount(name=u"Nutzerid: %i" % new_user.id,
+    format_args = {
+        "user_id": new_user.id,
+        "user_name": new_user.name,
+        "semester": current_semester.name
+    }
+    new_finance_account = FinanceAccount(
+        name=conf["financeaccount_name"].format(format_args),
         type="EQUITY", user=new_user)
-    #Transaction for the registration fee
-    new_transaction_registration_fee = Transaction(
-        message=u"Anmeldegebühr von Nutzer %s" % (
-            new_user.id, ), transaction_date=datetime.now(),
-        semester=current_semester)
-    #Transaction for the semester fee
-    new_transaction_semester_fee = Transaction(
-        message=u"Semestergebühr für das %s von Nutzer %s" % (
-            current_semester.name, new_user.id),
-        transaction_date=datetime.now(), semester=current_semester)
-    #soll per Nutzerkonto
-    new_split_registration_user = Split(amount=current_semester.registration_fee,
-        account=new_finance_account,
-        transaction=new_transaction_registration_fee)
-    #haben an Anmeldegebühren
-    new_split_registration_ag = Split(amount=-current_semester.registration_fee,
-        account=registration_fee_account,
-        transaction=new_transaction_registration_fee)
-    #soll per Nutzerkonto
-    new_split_semester_user = Split(amount=current_semester.semester_fee,
-        account=new_finance_account,
-        transaction=new_transaction_semester_fee)
-    #haben an Beiträge
-    new_split_semester_ag = Split(amount=-current_semester.semester_fee,
-        account=semester_fee_account,
-        transaction=new_transaction_semester_fee)
+    session.session.add(new_finance_account)
 
-    finance_things = [new_finance_account, new_transaction_registration_fee,
-        new_transaction_semester_fee, new_split_registration_user,
-        new_split_registration_ag, new_split_semester_user,
-        new_split_semester_ag]
+    # Initial fees
+    simple_transaction(
+        conf["registration_fee_message"].format(format_args),
+        new_finance_account,
+        registration_fee_account,
+        current_semester,
+        current_semester.registration_fee
+    )
+    simple_transaction(
+        conf["semester_fee_message"].format(format_args),
+        new_finance_account,
+        semester_fee_account,
+        current_semester,
+        current_semester.semester_fee
+    )
 
-    session.session.add_all(finance_things)
-
-    #TODO: add membership that allows negative account balance for one month
-
-    move_in_user_log_entry = UserLogEntry(author_id=processor.id,
-        message=u"angemeldet" , timestamp=datetime.now(), user_id=new_user.id)
+    move_in_user_log_entry = UserLogEntry(
+        author_id=processor.id,
+        message=conf["log_message"],
+        timestamp=datetime.now(),
+        user_id=new_user.id
+    )
     session.session.add(move_in_user_log_entry)
 
     session.session.commit()
 
     return new_user
+
 
 #TODO ensure serializability
 def move(user, dormitory, level, room_number, processor):
@@ -171,36 +161,42 @@ def move(user, dormitory, level, room_number, processor):
     """
 
     old_room = user.room
-    new_room = Room.q.filter_by(number=room_number,
+    new_room = Room.q.filter_by(
+        number=room_number,
         level=level,
-        dormitory_id=dormitory.id).one()
+        dormitory_id=dormitory.id
+    ).one()
 
-    assert old_room is not new_room, "A User is only allowed to move in a different room!"
+    assert old_room is not new_room,\
+        "A User is only allowed to move in a different room!"
 
     user.room = new_room
     session.session.add(user)
 
-    moving_user_log_entry = UserLogEntry(author_id=processor.id,
-        message=u"umgezogen von %s nach %s" % (old_room, new_room),
-        timestamp=datetime.now(), user_id=user.id)
+    moving_user_log_entry = UserLogEntry(
+        author_id=processor.id,
+        message=config["move"]["log_message"].format(
+            {"from": old_room, "to": new_room}),
+        timestamp=datetime.now(), user_id=user.id
+    )
     session.session.add(moving_user_log_entry)
 
     # assign a new IP to each net_device
     net_dev = user.user_host.user_net_device
 
     if old_room.dormitory_id != new_room.dormitory_id:
-        assert len(net_dev.ips) == 1, u"A user should only have one ip!"
+        assert len(net_dev.ips) == 1, "A user should only have one ip!"
         ip_addr = net_dev.ips[0]
         old_ip = ip_addr.address
-        new_address = host.get_free_ip(dormitory.subnets)
-        new_subnet = host.select_subnet_for_ip(new_address,
+        new_ip = host.get_free_ip(dormitory.subnets)
+        new_subnet = host.select_subnet_for_ip(new_ip,
                                             dormitory.subnets)
 
-        ip_addr.change_ip(new_address, new_subnet)
+        ip_addr.change_ip(new_ip, new_subnet)
 
         ip_change_log_entry = UserLogEntry(author_id=processor.id,
-            message=u"IPv4 von %s auf %s geändert" % (
-            old_ip, new_address),
+            message=config["move"]["ip_change_log_message"].format(
+                {"old": old_ip, "new": new_ip}),
             timestamp=datetime.now(), user_id=user.id)
         session.session.add(ip_change_log_entry)
 
@@ -231,6 +227,7 @@ def edit_name(user, name, processor):
         session.session.commit()
 
     return user
+
 
 def edit_email(user, email, processor):
     """
@@ -280,19 +277,8 @@ def has_internet(user):
     :param user: The user object.
     :return: True if he is allowed to use the internet, false if he is not.
     """
-    if user.has_property("internet"):
-        if user.has_property("no_internet"):
-            return False
-        else:
-            if has_exceeded_traffic(user):
-                return False
-            else:
-                if has_positive_balance(user):
-                    return True
-                else:
-                    return False
-    else:
-        return False
+    return user.has_property("internet") and not has_exceeded_traffic(user) and has_positive_balance(user)
+
 
 def block_user(user, reason, processor, date=None):
     """
@@ -326,6 +312,7 @@ def block_user(user, reason, processor, date=None):
     session.session.commit()
     return user
 
+
 def move_out(user, date, comment, processor):
     """
     This function moves out a user and finishes all his memberships. A logmessage is created.
@@ -352,6 +339,7 @@ def move_out(user, date, comment, processor):
     session.session.commit()
     return user
 
+
 def move_out_tmp(user, date, comment, processor):
     """
     This function moves a user temporally. A logmessage is created.
@@ -366,9 +354,6 @@ def move_out_tmp(user, date, comment, processor):
         PropertyGroup.name == u"tmpAusgezogen").one()
 
     new_membership = Membership(group=away_group, user=user)
-
-    user.is_away = True
-
     session.session.delete(user.user_host.user_net_device.ips[0])
 
     if comment:
@@ -383,6 +368,7 @@ def move_out_tmp(user, date, comment, processor):
     session.session.commit()
     return user
 
+
 def user_is_back(user, processor):
     """
     After a user moved temporarily out, this function sets group memberships and
@@ -391,14 +377,14 @@ def user_is_back(user, processor):
     :param processor: The admin recognizing the users return.
     :return: The user who returned.
     """
-    user.is_away = False
-
+    away_group_name = config["groups"]["away"]
     away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == u"tmpAusgezogen").one()
+        PropertyGroup.name == away_group_name
+    ).one()
 
     for membership in user.memberships:
         if membership.group == away_group:
-            membership.end_date = datetime.now()
+            membership.disable()
 
     subnets = user.room.dormitory.subnets
     ip_address = host.get_free_ip(subnets)

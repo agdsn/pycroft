@@ -82,10 +82,12 @@ class PropertyGroupData(DataSet):
 
 class PropertyData(DataSet):
     class internet:
-        name ="internet"
+        name = "internet"
+        granted = True
         property_group = PropertyGroupData.negativ_konto
     class no_internet:
-        name = "no_internet"
+        name = "internet"
+        granted = False
         property_group = PropertyGroupData.verstoss
 
 class MembershipData(DataSet):

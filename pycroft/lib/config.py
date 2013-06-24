@@ -6,8 +6,8 @@
 import json, collections
 from os.path import isfile
 
-class Config(object):
 
+class Config(object):
     def __init__(self):
         self._configdata = None
         self._configpath = "pycroft/config.json"
@@ -28,7 +28,9 @@ class Config(object):
     def __setitem__(self, key, value):
         raise Exception("It is not possible to set configuration entries!")
 
+
 config = Config()
+
 
 def get(key):
     return config[key]
