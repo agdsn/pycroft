@@ -40,7 +40,7 @@
         "log_message": "Anmeldung."
     },
     "move":{
-        "log_message": "Umzug von {from} nach {to}."
+        "log_message": "Umzug von {from_room} nach {to_room}.",
         "ip_change_log_message": "IPv4 von {old_ip} zu {new_ip} geändert."
     },
     "move_out": {
