@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sqlalchemy import not_
 
 __author__ = 'florian'
 
@@ -406,20 +407,20 @@ class Test_100_User_has_property(FixtureDataTestBase):
     def test_0010_positive_test(self):
         test_user = user.User.q.filter_by(login='admin').one()
 
-        self.assertTrue(test_user.has_property("no_internet"))
+        self.assertFalse(test_user.has_property("internet"))
         self.assertIsNotNone(
             user.User.q.filter(
                 user.User.login == test_user.login,
-                user.User.has_property("no_internet")
+                not_(user.User.has_property("internet"))
             ).first())
 
     def test_0020_negative_test(self):
         test_user = user.User.q.filter_by(login='test').one()
 
-        self.assertFalse(test_user.has_property("no_internet"))
+        self.assertTrue(test_user.has_property("internet"))
         self.assertIsNone(
             user.User.q.filter(
                 user.User.login == test_user.login,
-                user.User.has_property("no_internet")
+                not_(user.User.has_property("internet"))
             ).first())
 

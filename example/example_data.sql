@@ -88,7 +88,7 @@ INSERT INTO "group" VALUES(1,'Hausmeister','propertygroup');
 INSERT INTO "group" VALUES(2,'Nutzerverwalter','propertygroup');
 INSERT INTO "group" VALUES(3,'Bewohner','propertygroup');
 INSERT INTO "group" VALUES(4,'Admin','propertygroup');
-INSERT INTO "group" VALUES(5,'tmpAusgezogen','propertygroup');
+INSERT INTO "group" VALUES(5,'Kürzlich eingezogen','propertygroup');
 INSERT INTO "group" VALUES(6,'Verstoß','propertygroup');
 INSERT INTO "group" VALUES(7,'Root','propertygroup');
 INSERT INTO "group" VALUES(8,'Finanzen','propertygroup');
@@ -9855,17 +9855,19 @@ CREATE TABLE phoneport (
 );
 CREATE TABLE property (
 	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
+	name VARCHAR(255) NOT NULL,
+	granted BOOLEAN NOT NULL,
 	property_group_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	PRIMARY KEY (id),
+	CHECK (granted IN (0, 1)),
 	FOREIGN KEY(property_group_id) REFERENCES propertygroup (id)
 );
-INSERT INTO "property" VALUES(1,'internet',3);
-INSERT INTO "property" VALUES(2,'mail',3);
-INSERT INTO "property" VALUES(3,'ssh_helios',3);
-INSERT INTO "property" VALUES(4,'homepage_helios',3);
-INSERT INTO "property" VALUES(5,'no_internet',5);
-INSERT INTO "property" VALUES(6,'no_internet',6);
+INSERT INTO "property" VALUES(1,'internet',1,3);
+INSERT INTO "property" VALUES(2,'mail',1,3);
+INSERT INTO "property" VALUES(3,'ssh_helios',1,3);
+INSERT INTO "property" VALUES(4,'homepage_helios',1,3);
+INSERT INTO "property" VALUES(5,'internet',0,5);
+INSERT INTO "property" VALUES(6,'internet',0,6);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL, 
 	type TEXT, 
@@ -11769,6 +11771,10 @@ CREATE TABLE membership (
 	FOREIGN KEY(user_id) REFERENCES user (id) ON DELETE CASCADE
 );
 INSERT INTO "membership" VALUES(1,'2013-01-30 20:59:19.370923',NULL,5,9531);
+INSERT INTO "membership" VALUES(2,'2013-01-30 20:59:19.370923',NULL,3,7934);
+INSERT INTO "membership" VALUES(3,'2013-01-30 20:59:19.370923',NULL,4,7934);
+INSERT INTO "membership" VALUES(4,'2013-01-30 20:59:19.370923',NULL,7,7934);
+INSERT INTO "membership" VALUES(5,'2013-01-30 20:59:19.370923',NULL,8,7934);
 CREATE TABLE serverhost (
 	id INTEGER NOT NULL, 
 	name VARCHAR(255), 

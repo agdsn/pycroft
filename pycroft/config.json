@@ -1,25 +1,49 @@
-{"finance": {
-    "semester_accounts": [
-        {
-            "name": "Anmeldegebühren",
-            "tag": "registration_fee",
-            "type": "EQUITY"
-        },
-        {
-            "name": "Semesterbeiträge",
-            "tag": "regular_fee",
-            "type": "EQUITY"
-        },
-        {
-            "name": "Zusatzbeitrag",
-            "tag": "additional_fee",
-            "type": "EQUITY"
-        },
-        {
-            "name": "Versäumnisgebühren",
-            "tag": "arrears_fee",
-            "type": "EQUITY"
-        }
-    ]
-}
+{
+    "finance": {
+        "semester_accounts": [
+            {
+                "name": "Anmeldegebühren",
+                "tag": "registration_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Semesterbeiträge",
+                "tag": "regular_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Zusatzbeitrag",
+                "tag": "additional_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Versäumnisgebühren",
+                "tag": "arrears_fee",
+                "type": "EQUITY"
+            }
+        ]
+    },
+    "move_in": {
+        "group_memberships": [
+            {
+                "name": "Benutzer",
+                "duration": null
+            },
+            {
+                "name": "Kürzlich eingezogen",
+                "duration": 31
+            }
+        ],
+        "financeaccount_name": "Konto von {user_id}",
+        "registration_fee_message": "Anmeldegebühr",
+        "semester_fee_message": "Semestergebühr {semester}",
+        "log_message": "Anmeldung."
+    },
+    "move":{
+        "log_message": "Umzug von {from} nach {to}."
+        "ip_change_log_message": "IPv4 von {old_ip} zu {new_ip} geändert."
+    },
+    "move_out": {
+        "away_group": "Vorübergehend ausgezogen"
+    }
 }
