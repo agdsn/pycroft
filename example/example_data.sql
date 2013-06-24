@@ -48,7 +48,7 @@ CREATE TABLE financeaccount (
 INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','EXPENSE',NULL,1,'registration_fee');
 INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','EXPENSE',NULL,1,'regular_fee');
 INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','EXPENSE',NULL,1,'additional_fee');
-INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',NULL,1,'arreas_fee');
+INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',NULL,1,'arrears_fee');
 CREATE TABLE split (
 	id INTEGER NOT NULL, 
 	amount INTEGER NOT NULL, 
