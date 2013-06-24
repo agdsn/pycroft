@@ -383,22 +383,29 @@ def move_out_tmp(user, date, comment, processor):
     :return: The user to move out.
     """
 
+    away_group_name = config["groups"]["away"]
     away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == u"tmpAusgezogen").one()
+        PropertyGroup.name == away_group_name
+    ).one()
 
-    new_membership = Membership(group=away_group, user=user)
+    new_membership = Membership(group=away_group, user=user, start_date=date)
+    session.session.add(new_membership)
     session.session.delete(user.user_host.user_net_device.ips[0])
 
+    log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen."
     if comment:
-        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen. Kommentar: " + comment
-    else:
-        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen."
-    new_log_entry = UserLogEntry(message=log_message,
+        log_message += "Kommentar: " + comment
+
+    new_log_entry = UserLogEntry(
+        message=log_message,
         timestamp=datetime.now(),
         author=processor,
-        user=user)
+        user=user
+    )
+
     session.session.add(new_log_entry)
     session.session.commit()
+
     return user
 
 
