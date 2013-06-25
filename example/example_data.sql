@@ -94,6 +94,7 @@ INSERT INTO "group" VALUES(7,'Root','propertygroup');
 INSERT INTO "group" VALUES(8,'Finanzen','propertygroup');
 INSERT INTO "group" VALUES(9,'Exaktiv','propertygroup');
 INSERT INTO "group" VALUES(10,'NegativKonto','propertygroup');
+INSERT INTO "group" VALUES(11,'tmpAusgezogen', 'propertygroup');
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL, 
 	number VARCHAR(3) NOT NULL, 
@@ -6759,6 +6760,7 @@ INSERT INTO "propertygroup" VALUES(7);
 INSERT INTO "propertygroup" VALUES(8);
 INSERT INTO "propertygroup" VALUES(9);
 INSERT INTO "propertygroup" VALUES(10);
+INSERT INTO "propertygroup" VALUES(11);
 CREATE TABLE "user" (
 	id INTEGER NOT NULL, 
 	login VARCHAR(40) NOT NULL, 
@@ -9868,6 +9870,7 @@ INSERT INTO "property" VALUES(3,'ssh_helios',1,3);
 INSERT INTO "property" VALUES(4,'homepage_helios',1,3);
 INSERT INTO "property" VALUES(5,'internet',0,5);
 INSERT INTO "property" VALUES(6,'internet',0,6);
+INSERT INTO "property" VALUES(7,'away',1,11);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL, 
 	type TEXT, 
