@@ -389,7 +389,8 @@ def move_out_tmp(user_id):
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        changed_user = lib.user.move_out_tmp(user=my_user, date=form.date.data,
+        date = datetime.combine(form.date.data,time(0))
+        changed_user = lib.user.move_out_tmp(user=my_user, date=date,
             comment=form.comment.data, processor=current_user)
         flash(u'Nutzer zieht am %s vorübegehend aus' % form.date.data,
             'success')
