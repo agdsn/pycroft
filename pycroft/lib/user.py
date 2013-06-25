@@ -291,24 +291,40 @@ def block_user(user, reason, processor, date=None):
     :param processor: The admin who blocked the user.
     :return: The blocked user.
     """
+    if date is not None and not isinstance(date, datetime):
+        raise ValueError("Date should be a datetime object")
 
-    block_group = PropertyGroup.q.filter(PropertyGroup.name==u"Verstoß").one()
+    if date is not None and date < datetime.now():
+        raise ValueError("Date should be in the future")
+
+    block_group = PropertyGroup.q.filter(
+        PropertyGroup.name == config["block"]["group"]
+    ).one()
 
     if date is not None:
-        new_membership = Membership(end_date=datetime.combine(date, time(0)),
+        new_membership = Membership(
+            end_date=date,
             group=block_group,
-            user=user)
-        block_message = u"Sperrung bis zum %s: %s" % (
-            date.strftime("%d.%m.%Y"), reason)
+            user=user
+        )
+        log_message = config["block"]["log_message_with_enddate"].format(
+            date=date.strftime("%d.%m.%Y"),
+            reason=reason
+        )
     else:
         new_membership = Membership(group=block_group, user=user)
-        block_message = u"Sperrung bis: IMMER"
+        log_message = config["block"]["log_message_without_enddate"].format(
+            reason=reason
+        )
 
-    new_log_entry = UserLogEntry(message=block_message,
+    new_log_entry = UserLogEntry(
+        message=log_message,
         timestamp=datetime.now(),
         author=processor,
-        user=user)
+        user=user
+    )
 
+    session.session.add(new_log_entry)
     session.session.add(new_membership)
     session.session.commit()
     return user
@@ -322,20 +338,31 @@ def move_out(user, date, comment, processor):
     :param processor: The admin who is going to move out the user.
     :return: The user to move out.
     """
-    for membership in user.memberships:
-        if membership.end_date is None:
-            membership.end_date = date
-        if membership.end_date > date:
-            membership.end_date = date
+    if not isinstance(date,datetime):
+        raise ValueError("Date should be a datetime object!")
 
-    if(comment):
-        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen. Kommentar: " + comment
-    else:
-        log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " komplett ausziehen."
-    new_log_entry = UserLogEntry(message=log_message,
+    for membership in user.memberships:
+        if membership.end_date is None or membership.end_date > date:
+            if membership.start_date > date:
+                membership.end_date = membership.start_date
+            else:
+                membership.end_date = date
+
+    log_message = config["move_out"]["log_message"].format(
+        date=date.strftime("%d.%m.%Y")
+    )
+    if comment:
+        log_message += config["move_out"]["log_message_comment"].format(
+            comment=comment
+        )
+
+    new_log_entry = UserLogEntry(
+        message=log_message,
         timestamp=datetime.now(),
         author=processor,
-        user=user)
+        user=user
+    )
+
     session.session.add(new_log_entry)
     session.session.commit()
     return user
@@ -351,7 +378,7 @@ def move_out_tmp(user, date, comment, processor):
     :return: The user to move out.
     """
     away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == config["groups"]["away"]
+        PropertyGroup.name == config["move_out_tmp"]["group"]
     ).one()
 
     if not isinstance(date, datetime):
@@ -364,9 +391,13 @@ def move_out_tmp(user, date, comment, processor):
     if user.user_host is not None:
         session.session.delete(user.user_host.user_net_device.ips[0])
 
-    log_message = u"%s wird zum %s temporär ausziehen" % (user.name, date.strftime("%d.%m.%Y"))
+    log_message = config["move_out_tmp"]["log_message"].format(
+        date=date.strftime("%d.%m.%Y")
+    )
     if comment:
-        log_message += u"\nKommentar: %s" % (comment,)
+        log_message += config["move_out_tmp"]["log_message_comment"].format(
+            comment=comment
+        )
 
     new_log_entry = UserLogEntry(
         message=log_message,
@@ -392,7 +423,7 @@ def user_is_back(user, processor):
     membership = Membership.q.join(
         (PropertyGroup, Membership.group_id == PropertyGroup.id)
     ).filter(
-        PropertyGroup.name == config["groups"]["away"],
+        PropertyGroup.name == config["move_out_tmp"]["group"],
         Membership.user_id == user.id,
         Membership.active
     ).one()
@@ -412,7 +443,7 @@ def user_is_back(user, processor):
     session.session.add(new_ip)
 
     new_log_entry = UserLogEntry(
-        message=u"Nutzer ist zurück.",
+        message=config["move_out_tmp"]["log_message_back"],
         timestamp=datetime.now(),
         author=processor,
         user=user

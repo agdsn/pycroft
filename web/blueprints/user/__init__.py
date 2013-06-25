@@ -65,7 +65,7 @@ def user_show(user_id):
             user_id=user_id)
         flash(u'Kommentar hinzugefügt', 'success')
 
-    log_list = user.user_log_entries + user.room.room_log_entries
+    log_list = user.user_log_entries + room.room_log_entries
     log_list.sort(key=lambda LogEntry: LogEntry.timestamp, reverse=True)
     user_log_list = user.user_log_entries[::-1]
     room_log_list = room.room_log_entries[::-1]
@@ -344,8 +344,9 @@ def block_user(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        blocked_user = lib.user.block_user(user=myUser,
-            date=form.date.data,
+        blocked_user = lib.user.block_user(
+            user=myUser,
+            date=datetime.combine(form.date.data, time(0)),
             reason=form.reason.data,
             processor=current_user)
         flash(u'Nutzer gesperrt', 'success')
@@ -360,7 +361,12 @@ def user_moveout(user_id):
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        lib.user.move_out(myUser, form.date.data, current_user)
+        lib.user.move_out(
+            user=myUser,
+            date=datetime.combine(form.date.data, time(0)),
+            processor=current_user,
+            comment=form.comment.data
+        )
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
@@ -373,7 +379,7 @@ def change_mac(user_net_device_id):
     if not form.is_submitted():
         form.mac.data = my_net_device.mac
     if form.validate_on_submit():
-        changed_net_device = lib.hosts.change_mac(net_device=my_net_device,
+        changed_net_device = lib.host.change_mac(net_device=my_net_device,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
@@ -389,9 +395,12 @@ def move_out_tmp(user_id):
         flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        date = datetime.combine(form.date.data,time(0))
-        changed_user = lib.user.move_out_tmp(user=my_user, date=date,
-            comment=form.comment.data, processor=current_user)
+        changed_user = lib.user.move_out_tmp(
+            user=my_user,
+            date=datetime.combine(form.date.data,time(0)),
+            comment=form.comment.data,
+            processor=current_user
+        )
         flash(u'Nutzer zieht am %s vorübegehend aus' % form.date.data,
             'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))

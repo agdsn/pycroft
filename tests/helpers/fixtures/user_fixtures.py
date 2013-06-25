@@ -80,7 +80,7 @@ class PropertyGroupData(DataSet):
         name = u"NegativKonto"
 
     class tmpAusgezogen:
-        name = u"tmpAusgezogen"
+        name = u"Vorübergehend ausgezogen"
 
     class benutzer:
         name = u"Benutzer"
