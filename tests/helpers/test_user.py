@@ -332,7 +332,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
         # check for tmpAusgezogen group membership
         away_group = property.PropertyGroup.q.filter(
-            property.PropertyGroup.name == config["groups"]["away"]).one()
+            property.PropertyGroup.name == config["move_out_tmp"]["group"]).one()
         self.assertIn(new_user, away_group.active_users)
         self.assertIn(away_group, new_user.active_property_groups)
         self.assertTrue(new_user.has_property("away"))

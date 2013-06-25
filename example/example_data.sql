@@ -94,7 +94,7 @@ INSERT INTO "group" VALUES(7,'Root','propertygroup');
 INSERT INTO "group" VALUES(8,'Finanzen','propertygroup');
 INSERT INTO "group" VALUES(9,'Exaktiv','propertygroup');
 INSERT INTO "group" VALUES(10,'NegativKonto','propertygroup');
-INSERT INTO "group" VALUES(11,'tmpAusgezogen', 'propertygroup');
+INSERT INTO "group" VALUES(11,'Vorübergehend ausgezogen', 'propertygroup');
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL, 
 	number VARCHAR(3) NOT NULL, 
