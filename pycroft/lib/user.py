@@ -382,19 +382,23 @@ def move_out_tmp(user, date, comment, processor):
     :param processor: The admin who is going to move out the user.
     :return: The user to move out.
     """
-
-    away_group_name = config["groups"]["away"]
     away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == away_group_name
+        PropertyGroup.name == config["groups"]["away"]
     ).one()
+
+    if not isinstance(date, datetime):
+        raise ValueError("Date should be a datetime object!")
 
     new_membership = Membership(group=away_group, user=user, start_date=date)
     session.session.add(new_membership)
-    session.session.delete(user.user_host.user_net_device.ips[0])
 
-    log_message = user.name + " wird zum " + date.strftime("%d.%m.%Y") + " temporaer ausziehen."
+    #TODO: the ip should be deleted just! if the user moves out now!
+    if user.user_host is not None:
+        session.session.delete(user.user_host.user_net_device.ips[0])
+
+    log_message = u"%s wird zum %s temporär ausziehen" % (user.name, date.strftime("%d.%m.%Y"))
     if comment:
-        log_message += "Kommentar: " + comment
+        log_message += u"\nKommentar: %s" % (comment,)
 
     new_log_entry = UserLogEntry(
         message=log_message,
@@ -417,28 +421,34 @@ def user_is_back(user, processor):
     :param processor: The admin recognizing the users return.
     :return: The user who returned.
     """
-    away_group_name = config["groups"]["away"]
-    away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == away_group_name
+    membership = Membership.q.join(
+        (PropertyGroup, Membership.group_id == PropertyGroup.id)
+    ).filter(
+        PropertyGroup.name == config["groups"]["away"],
+        Membership.user_id == user.id,
+        Membership.active
     ).one()
 
-    for membership in user.memberships:
-        if membership.group == away_group:
-            membership.disable()
+    membership.disable()
 
     subnets = user.room.dormitory.subnets
     ip_address = host.get_free_ip(subnets)
     subnet = host.select_subnet_for_ip(ip_address, subnets)
 
-    new_ip = Ip(address=ip_address, subnet=subnet,
-        net_device=user.user_host.user_net_device)
+    new_ip = Ip(
+        address=ip_address,
+        subnet=subnet,
+        net_device=user.user_host.user_net_device
+    )
 
     session.session.add(new_ip)
 
-    new_log_entry = UserLogEntry(message=u"Nutzer ist zurück.",
+    new_log_entry = UserLogEntry(
+        message=u"Nutzer ist zurück.",
         timestamp=datetime.now(),
         author=processor,
-        user=user)
+        user=user
+    )
 
     session.session.add(new_log_entry)
     session.session.commit()
