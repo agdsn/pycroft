@@ -10,7 +10,8 @@ from pycroft.model import session
 from pycroft.lib import config
 
 
-def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
+def create_semester(name, registration_fee, semester_fee, begin_date, end_date,
+                    commit=True):
     """
     This function creates a new Semester.
     There are created a registration fee account and a semester fee account
@@ -21,6 +22,8 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     :param semester_fee: The fee a student have to pay every semester.
     :param begin_date: Date when the semester starts.
     :param end_date: Date when semester ends.
+    :param commit: flag which indicates whether the session should be committed
+                   or not. Default: True
     :return: The created Semester.
     """
     semester = Semester(name=name,
@@ -36,12 +39,13 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
                            semester=semester, tag=account["tag"]))
 
     session.session.add_all(objects)
-    session.session.commit()
+    if commit:
+        session.session.commit()
     return semester
 
 
 def simple_transaction(message, debit_account, credit_account, semester, amount,
-                       date=None):
+                       date=None, commit=True):
     """
     Creates a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits.
@@ -51,6 +55,8 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     :param credit_account: Credit (germ. Haben) account
     :param semester: Semester of the transaction.
     :param amount: Amount in Eurocents
+    :param commit: flag which indicates whether the session should be committed
+                   or not. Default: True
     """
     if date is None:
         date = datetime.now()
@@ -68,3 +74,5 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     session.session.add_all(
         [new_transaction, new_debit_split, new_credit_split]
     )
+    if commit:
+        session.session.commit()
