@@ -3,104 +3,106 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if user.user_host %}
-    <h4 class="row hoverable">
-        <small style="float: right"><a class="" title="Löschen!" href="#"><i
-                class="icon-remove"></i></a></small>
-        <span class="span6">Host: {{ user.user_host|host_cname }} ({{ user.user_host|host_name }})</span>
-        <small class="span2">
-            {% if user.user_host.room %}
-                {{ user.user_host.room.dormitory.short_name }} {{ user.user_host.room.level }}-{{ user.user_host.room.number }}
-            {% else %}
-                no room
-            {% endif %}
-        </small>
-        <small class="span1">Alias:
-            {% if user.user_host.aliases %}
-                {{ user.user_host.aliases|length }}
-            {% else %}
-                0
-            {% endif %}
-        </small>
-        <small class="span1">IPs:
-            {% if user.user_host.ips %}
-                {{ user.user_host.ips|length }}</small>
-            {% else %}
-                0
-            {% endif %}
-        </small>
-        <small class="span1">Traffic: {{ user.user_host|host_traffic }}</small>
-    </h4>
+{% if user.user_hosts %}
+    {% for host in user.user_hosts %}
+        <h4 class="row hoverable">
+            <small style="float: right"><a class="" title="Löschen!" href="#"><i
+                    class="icon-remove"></i></a></small>
+            <span class="span6">Host: {{ host|host_cname }} ({{ host|host_name }})</span>
+            <small class="span2">
+                {% if host.room %}
+                    {{ host.room.dormitory.short_name }} {{ host.room.level }}-{{ host.room.number }}
+                {% else %}
+                    no room
+                {% endif %}
+            </small>
+            <small class="span1">Alias:
+                {% if host.aliases %}
+                    {{ host.aliases|length }}
+                {% else %}
+                    0
+                {% endif %}
+            </small>
+            <small class="span1">IPs:
+                {% if host.ips %}
+                    {{ host.ips|length }}</small>
+                {% else %}
+                    0
+                {% endif %}
+            </small>
+            <small class="span1">Traffic: {{ host|host_traffic }}</small>
+        </h4>
 
-    {% if user.user_host.aliases %}
-        <h5>
-            <span class="span5">Records <small><a class="" title="Hinzufügen"
-                  href="{{ url_for("infrastructure.record_create", user_id=user.id, host_id=user.user_host.id) }}">
-                <i class="icon-plus-sign"></i></a></small></span>
-            <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseAliases{{ user.user_host.id }}">
-                <i id="icon_collapseAliases{{ user.user_host.id }} "class="icon-arrow-down"></i></a></small>
-        </h5><br/>
-        <div class="accordion-toggle collapse in" id="collapseAliases{{ user.user_host.id }}">
-            <table class="table">
-                 <thead>
-                 <tr>
-                    <th>Type</th>
-                    <th>Information</th>
-                    <th></th>
-                 </tr>
-                 </thead>
-                 <tbody>
-                 {% for alias in user.user_host.aliases %}
-                 <tr>
-                    <td>{{ alias|record_readable_name }}</td>
-                    <td>{{ alias.information_human }}</td>
-                    <td style="text-align: right">
-                        {% if alias|record_editable %}
-                            <a href="{{ url_for("infrastructure.record_edit", user_id=user.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a>
-                        {% endif %}
-                        {% if alias|record_removable %}
-                            <a href="{{ url_for("infrastructure.record_delete", user_id=user.id, alias_id=alias.id) }}" title="Löschen"><i class="icon-remove"></i></a>
-                        {% endif %}
-                    </td>
-                 </tr>
-                 {% endfor %}
-            </tbody>
-            </table>
-        </div>
-    {% endif %}
-
-    {% if user.user_host.ips %}
-        <h5>
-            <span class="span5">IPs</span>
-            <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseIPs{{ user.user_host.id }}">
-                <i id="icon_collapseIPs{{ user.user_host.id }}" class="icon-arrow-down"></i></a></small>
-        </h5><br/>
-        <div class="accordion-toggle collapse in" id="collapseIPs{{ user.user_host.id }}">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Mac-Adresse</th>
-                    <th>IP-Adresse</th>
-                    <th>Switch</th>
-                    <th>Port(s)</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for ip in user.user_host.ips %}
-                    <tr>
-                        <td><a href="{{ url_for(".change_mac", user_net_device_id=ip.net_device.id) }}" title="Bearbeiten">{{ ip.net_device.mac }}</a></td>
-                        <td>{{ ip.address }}</td>
-                        <td>{{ user.user_host | get_switch(ip)}}</td>
-                        <td>{{ user.user_host | get_switch_port(ip)}}</td>
-                        <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
-                    </tr>
-                {% endfor %}
+        {% if host.aliases %}
+            <h5>
+                <span class="span5">Records <small><a class="" title="Hinzufügen"
+                      href="{{ url_for("infrastructure.record_create", user_id=user.id, host_id=host.id) }}">
+                    <i class="icon-plus-sign"></i></a></small></span>
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseAliases{{ host.id }}">
+                    <i id="icon_collapseAliases{{ host.id }} "class="icon-arrow-down"></i></a></small>
+            </h5><br/>
+            <div class="accordion-toggle collapse in" id="collapseAliases{{ host.id }}">
+                <table class="table">
+                     <thead>
+                     <tr>
+                        <th>Type</th>
+                        <th>Information</th>
+                        <th></th>
+                     </tr>
+                     </thead>
+                     <tbody>
+                     {% for alias in host.aliases %}
+                     <tr>
+                        <td>{{ alias|record_readable_name }}</td>
+                        <td>{{ alias.information_human }}</td>
+                        <td style="text-align: right">
+                            {% if alias|record_editable %}
+                                <a href="{{ url_for("infrastructure.record_edit", user_id=user.id, alias_id=alias.id) }}" title="Bearbeiten"><i class="icon-edit"></i></a>
+                            {% endif %}
+                            {% if alias|record_removable %}
+                                <a href="{{ url_for("infrastructure.record_delete", user_id=user.id, alias_id=alias.id) }}" title="Löschen"><i class="icon-remove"></i></a>
+                            {% endif %}
+                        </td>
+                     </tr>
+                     {% endfor %}
                 </tbody>
-            </table>
-        </div>
-    {% endif %}
-    <p>&nbsp;</p>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if host.ips %}
+            <h5>
+                <span class="span5">IPs</span>
+                <small style="float: right"><a class="accordion-toggle" data-toggle="collapse" title="Anzeigen" href="#collapseIPs{{ host.id }}">
+                    <i id="icon_collapseIPs{{ host.id }}" class="icon-arrow-down"></i></a></small>
+            </h5><br/>
+            <div class="accordion-toggle collapse in" id="collapseIPs{{ host.id }}">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Mac-Adresse</th>
+                        <th>IP-Adresse</th>
+                        <th>Switch</th>
+                        <th>Port(s)</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for ip in host.ips %}
+                        <tr>
+                            <td><a href="{{ url_for(".change_mac", user_net_device_id=ip.net_device.id) }}" title="Bearbeiten">{{ ip.net_device.mac }}</a></td>
+                            <td>{{ ip.address }}</td>
+                            <td>{{ host | get_switch(ip)}}</td>
+                            <td>{{ host | get_switch_port(ip)}}</td>
+                            <td style="text-align: right"><a href="#" title="Bearbeiten"><i class="icon-edit"></i></a> <a href="#" title="Löschen"><i class="icon-remove"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        <p>&nbsp;</p>
+    {% endfor %}
 {% else %}
     Nutzer hat keine UserHosts.
 {% endif %}
