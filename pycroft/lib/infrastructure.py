@@ -1,15 +1,17 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model import session
 from pycroft.model.port import SwitchPort, DestinationPort, PatchPort, \
     PhonePort, Port
 
-def _create_port(type, *args, **kwargs):
+def _create_port(type, commit=True, *args, **kwargs):
     """
     This method will create a new port.
 
     :param type: the type of the port.
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
     :return: the newly created port.
@@ -26,49 +28,60 @@ def _create_port(type, *args, **kwargs):
         raise ValueError("Unknown port type!")
 
     session.session.add(port)
-    session.session.commit()
+    if commit:
+        session.session.commit()
 
     return port
 
 
-def create_patch_port(*args, **kwargs):
+def create_patch_port(name, room_id, destination_port_id=None, commit=True):
     """
     This method will create a new PatchPort.
 
-    :param args: the positionals which will be passed to the constructor.
-    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :param name: the name of the port
+    :param room_id: the id of the room
+    :param destination_port_id: the id of the port this port is connected to
+    :param commit: flag which indicates whether the session should be commited
+                   or not. Default: True
     :return: the newly created PatchPort.
     """
-    return _create_port("patch_port", *args, **kwargs)
+    return _create_port("patch_port", name=name, room_id=room_id,
+                        destination_port_id=destination_port_id, commit=commit)
 
 
-def create_phone_port(*args, **kwargs):
+def create_phone_port(name, commit=True):
     """
     This method will create a new PhonePort.
 
-    :param args: the positionals which will be passed to the constructor.
-    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :param name: the name of the port
+    :param commit: flag which indicates whether the session should be commited
+                   or not. Default: True
     :return: the newly created PhonePort.
     """
-    return _create_port("phone_port", *args, **kwargs)
+    return _create_port("phone_port", name=name, commit=commit)
 
 
-def create_switch_port(*args, **kwargs):
+def create_switch_port(name, switch_id, commit=True):
     """
     This method will create a new SwitchPort.
 
-    :param args: the positionals which will be passed to the constructor.
-    :param kwargs: the keyword arguments which will be passed to the constructor.
+    :param name: the name of the port
+    :param switch_id: the switch which has the port
+    :param commit: flag which indicates whether the session should be commited
+                   or not. Default: True
     :return: the newly created SwitchPort.
     """
-    return _create_port("switch_port", *args, **kwargs)
+    return _create_port("switch_port", name=name, switch_id=switch_id,
+                        commit=commit)
 
 
-def delete_port(port_id):
+def delete_port(port_id, commit=True):
     """
     This method will remove the Port for the given id.
 
     :param port_id: the id of the Port which should be removed.
+    :param commit: flag which indicates whether the session should be commited
+                   or not. Default: True
     :return: the removed Port.
     """
     port = Port.q.get(port_id)
@@ -85,6 +98,7 @@ def delete_port(port_id):
         raise ValueError("Unknown port type!")
 
     session.session.delete(del_port)
-    session.session.commit()
+    if commit:
+        session.session.commit()
 
     return del_port

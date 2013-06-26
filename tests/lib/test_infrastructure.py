@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from tests import FixtureDataTestBase
@@ -26,7 +26,7 @@ class Test_010_PatchPort(FixtureDataTestBase):
         room = Room.q.first()
 
         patch_port = create_patch_port(name=name,
-            destination_port=destination_port, room=room)
+            destination_port_id=destination_port.id, room_id=room.id)
 
         self.assertIsNotNone(PatchPort.q.get(patch_port.id))
 
@@ -83,7 +83,7 @@ class Test_030_SwitchPort(FixtureDataTestBase):
         name = "S101"
         switch = Switch.q.first()
 
-        switch_port = create_switch_port(name=name, switch=switch)
+        switch_port = create_switch_port(name=name, switch_id=switch.id)
 
         self.assertIsNotNone(SwitchPort.q.get(switch_port.id))
 
@@ -113,7 +113,7 @@ class Test_040_MalformedPort(FixtureDataTestBase):
         __mapper_args__ = {'polymorphic_identity': "malformed_port"}
 
     def test_0010_create_malformed_port(self):
-        self.assertRaises(ValueError, _create_port, 'malformed_port', id=1000)
+        self.assertRaises(ValueError, _create_port, 'malformed_port')
 
     def test_0020_delete_malformed_port(self):
         name = "M100"
