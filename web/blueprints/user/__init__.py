@@ -102,18 +102,25 @@ def add_membership(user_id):
 
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        newMembership = Membership(user=user,
-            group=form.group_id.data,
-            start_date=datetime.combine(form.begin_date.data,time(0)),
-            end_date=datetime.combine(form.end_date.data,time(0)))
+        if form.begin_date.data is not None:
+            start_date = datetime.combine(form.begin_date.data, time(0))
+        else:
+            start_date = datetime.now()
+        if form.end_date.data is not None:
+            end_date = datetime.combine(form.end_date.data, time(0))
+        else:
+            end_date=None
+        lib.property.create_membership(
+            user_id=user.id,
+            group_id=form.group_id.data.id,
+            start_date=start_date,
+            end_date=end_date)
         lib.logging.create_user_log_entry(author_id=current_user.id,
                 message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
                 form.group_id.data.name,
                 timestamp=datetime.now(),
                 user_id=user_id)
 
-        session.add(newMembership)
-        session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
         return redirect(url_for(".user_show", user_id=user_id))
