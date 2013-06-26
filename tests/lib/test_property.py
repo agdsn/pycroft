@@ -85,7 +85,7 @@ class Test_030_Membership(FixtureDataTestBase):
         user = User.q.first()
 
         membership = create_membership(start_date=start_date, end_date=end_date,
-            group=group, user=user)
+            group_id=group.id, user_id=user.id)
 
         self.assertIsNotNone(Membership.q.get(membership.id))
 
@@ -116,7 +116,8 @@ class Test_040_Property(FixtureDataTestBase):
         name = "dummy_property2"
         property_group = PropertyGroup.q.first()
 
-        (_, property) = create_property(property_group.id, name=name, granted=True)
+        (_, property) = create_property(property_group_id=property_group.id,
+                                        name=name, granted=True)
 
         self.assertIsNotNone(Property.q.get(property.id))
 
@@ -132,17 +133,17 @@ class Test_040_Property(FixtureDataTestBase):
         name = "dummy_property3"
         property_group_id = PropertyData.dummy_property1.property_group.id
 
-        self.assertRaises(ValueError, create_property, property_group_id + 100,
-            name=name)
-        self.assertRaises(ValueError, create_property, property_group_id,
-            name=name, property_group_id=property_group_id + 100)
-
+        self.assertRaises(ValueError, create_property,
+                          property_group_id=property_group_id + 100,
+                          name=name,
+                          granted=True)
 
     def test_0020_delete_property(self):
         property_name = PropertyData.dummy_property1.name
         group_id = PropertyData.dummy_property1.property_group.id
 
-        (_, del_property) = delete_property(group_id, property_name)
+        (_, del_property) = delete_property(property_group_id=group_id,
+                                            name=property_name)
 
         self.assertIsNone(Property.q.get(del_property.id))
 
@@ -151,12 +152,15 @@ class Test_040_Property(FixtureDataTestBase):
         group_id = PropertyData.dummy_property1.property_group.id
         empty_group_id = PropertyGroupData.dummy_property_group2.id
 
-        self.assertRaises(ValueError, delete_property, group_id,
-            property_name + "_fail")
-        self.assertRaises(ValueError, delete_property, group_id + 100,
-            property_name)
-        self.assertRaises(ValueError, delete_property, empty_group_id,
-            property_name)
+        self.assertRaises(ValueError, delete_property,
+                          property_group_id=group_id,
+                          name=property_name + "_fail")
+        self.assertRaises(ValueError, delete_property,
+                          property_group_id=group_id + 100,
+                          name=property_name)
+        self.assertRaises(ValueError, delete_property,
+                          property_group_id=empty_group_id,
+                          name=property_name)
 
 
 class Test_050_MalformedGroup(FixtureDataTestBase):
