@@ -44,7 +44,7 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.new_room_other_dormitory.level,
             self.new_room_other_dormitory.number, self.processing_user)
         self.assertEqual(self.user.room, self.new_room_other_dormitory)
-        self.assertEqual(self.user.user_host.room, self.new_room_other_dormitory)
+        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_dormitory)
         #TODO test for changing ip
 
 
@@ -99,7 +99,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.dormitory, test_dormitory)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
-        self.assertEqual(new_user.user_host.user_net_device.mac, test_mac)
+        self.assertEqual(new_user.user_hosts[0].user_net_device.mac, test_mac)
 
         user_host = host.UserHost.q.filter_by(user=new_user).one()
         user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
@@ -338,7 +338,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         self.assertTrue(new_user.has_property("away"))
 
         # check if user has no ips left
-        self.assertEqual(new_user.user_host.user_net_device.ips, [])
+        self.assertEqual(new_user.user_hosts[0].user_net_device.ips, [])
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
@@ -394,7 +394,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         UserHelper.is_back(self.user, self.processing_user)
 
         # check whether user has at least one ip
-        self.assertNotEqual(self.user.user_host.user_net_device.ips, [])
+        self.assertNotEqual(self.user.user_hosts[0].user_net_device.ips, [])
 
         # check log message
         log_entry = self.user.user_log_entries[-1]

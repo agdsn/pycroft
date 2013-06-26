@@ -41,8 +41,7 @@ class UserHost(Host):
 
     # one to one from Host to User
     user = relationship("User",
-        backref=backref("user_host", cascade="all, delete-orphan",
-            uselist=False))
+        backref=backref("user_hosts", cascade="all, delete-orphan"))
 
 
 class ServerHost(Host):

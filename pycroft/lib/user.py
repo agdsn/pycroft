@@ -184,27 +184,29 @@ def move(user, dormitory, level, room_number, processor):
     )
 
     # assign a new IP to each net_device
-    net_dev = user.user_host.user_net_device
+    for user_host in user.user_hosts:
+        net_dev = user_host.user_net_device
 
     if old_room.dormitory_id != new_room.dormitory_id:
-        assert len(net_dev.ips) == 1, "A user should only have one ip!"
-        ip_addr = net_dev.ips[0]
-        old_ip = ip_addr.address
-        new_ip = host.get_free_ip(dormitory.subnets)
-        new_subnet = host.select_subnet_for_ip(new_ip,
-                                            dormitory.subnets)
+            assert len(net_dev.ips) == 1, "A user should only have one ip!"
+            ip_addr = net_dev.ips[0]
+            old_ip = ip_addr.address
+            new_ip = host.get_free_ip(dormitory.subnets)
+            new_subnet = host.select_subnet_for_ip(new_ip,
+                                                   dormitory.subnets)
 
-        ip_addr.change_ip(new_ip, new_subnet)
+            ip_addr.change_ip(new_ip, new_subnet)
 
-        create_user_log_entry(author_id=processor.id,
-            message=config["move"]["ip_change_log_message"].format(
-                old_ip=old_ip, new_ip=new_ip),
-            timestamp=datetime.now(), user_id=user.id,
-            commit=False)
+            create_user_log_entry(author_id=processor.id,
+                message=config["move"]["ip_change_log_message"].format(
+                    old_ip=old_ip, new_ip=new_ip),
+                timestamp=datetime.now(), user_id=user.id,
+                commit=False)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
-    user.user_host.room = new_room
+    for user_host in user.user_hosts:
+        user_host.room = new_room
 
     session.session.commit()
     return user
@@ -266,7 +268,7 @@ def has_exceeded_traffic(user):
     ).join(
         User.active_traffic_groups
     ).join(
-        User.user_host
+        User.user_hosts
     ).join(
         Host.ips
     ).join(
@@ -430,8 +432,9 @@ def move_out_tmp(user, date, comment, processor):
                       end_date=None, commit=False)
 
     #TODO: the ip should be deleted just! if the user moves out now!
-    if user.user_host is not None:
-        session.session.delete(user.user_host.user_net_device.ips[0])
+    for user_host in user.user_hosts:
+        if user_host is not None:
+            session.session.delete(user_host.user_net_device.ips[0])
 
     log_message = config["move_out_tmp"]["log_message"].format(
         date=date.strftime("%d.%m.%Y")
@@ -476,12 +479,13 @@ def is_back(user, processor):
     ip_address = host.get_free_ip(subnets)
     subnet = host.select_subnet_for_ip(ip_address, subnets)
 
-    create_ip(
-        address=ip_address,
-        subnet_id=subnet.id,
-        net_device_id=user.user_host.user_net_device.id,
-        commit=False
-    )
+    for user_host in user.user_hosts:
+        create_ip(
+            address=ip_address,
+            subnet_id=subnet.id,
+            net_device_id=user_host.user_net_device.id,
+            commit=False
+        )
 
     create_user_log_entry(
         message=config["move_out_tmp"]["log_message_back"],
