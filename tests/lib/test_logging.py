@@ -3,7 +3,7 @@ from sqlalchemy import Column, ForeignKey
 from sqlalchemy.types import Integer
 
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData,\
+from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData, \
     RoomData, RoomLogEntryData
 
 from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
@@ -11,8 +11,9 @@ from pycroft.model.user import User
 from pycroft.model.dormitory import Room
 from pycroft.model import session
 
-from pycroft.lib.logging import create_user_log_entry, delete_log_entry,\
+from pycroft.lib.logging import create_user_log_entry, delete_log_entry, \
     _create_log_entry, create_room_log_entry
+
 
 class Test_010_UserLogEntry(FixtureDataTestBase):
     datasets = [UserData, UserLogEntryData]
@@ -24,7 +25,9 @@ class Test_010_UserLogEntry(FixtureDataTestBase):
         user = User.q.first()
 
         user_log_entry = create_user_log_entry(message=message,
-            timestamp=timestamp, author=author, user=user)
+                                               timestamp=timestamp,
+                                               author_id=author.id,
+                                               user_id=user.id)
 
         self.assertIsNotNone(UserLogEntry.q.get(user_log_entry.id))
 
@@ -46,7 +49,7 @@ class Test_010_UserLogEntry(FixtureDataTestBase):
 
     def test_0025_delete_wrong_user_log_entry(self):
         self.assertRaises(ValueError, delete_log_entry,
-            UserLogEntryData.dummy_log_entry1.id + 100)
+                          UserLogEntryData.dummy_log_entry1.id + 100)
 
 
 class Test_020_MalformedTypes(FixtureDataTestBase):
@@ -58,7 +61,7 @@ class Test_020_MalformedTypes(FixtureDataTestBase):
 
     def test_0010_create_malformed_log_entry(self):
         self.assertRaises(ValueError, _create_log_entry, 'malformedlogentry',
-            id=100)
+                          id=100)
 
     def test_0020_delete_malformed_log_entry(self):
         message = "malformed_type"
@@ -88,8 +91,8 @@ class Test_030_RoomLogEntry(FixtureDataTestBase):
 
         room_log_entry = create_room_log_entry(message=message,
                                                timestamp=timestamp,
-                                               author=author,
-                                               room=room)
+                                               author_id=author.id,
+                                               room_id=room.id)
 
         self.assertIsNotNone(RoomLogEntry.q.get(room_log_entry.id))
 
