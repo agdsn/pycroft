@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ forms.simple_form(form, '', url_for('.block_user',user_id=user_id)  ) }}
+    {{ forms.simple_form(form, '', url_for('.block',user_id=user_id)  ) }}
 {% endblock %}
 
 {% block page_script %}

@@ -25,7 +25,7 @@ from pycroft.model.user import User
 from pycroft.lib.host_alias import create_arecord, create_cnamerecord
 
 
-def moves_in(name, login, email, dormitory, level, room_number, mac,
+def move_in(name, login, email, dormitory, level, room_number, mac,
              current_semester, processor, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
@@ -313,7 +313,7 @@ def has_internet(user):
         and has_positive_balance(user)
 
 
-def block_user(user, reason, processor, date=None):
+def block(user, reason, processor, date=None):
     """
     This function blocks a user for a certain time.
     A logmessage with a reason is created.
@@ -444,7 +444,7 @@ def move_out_tmp(user, date, comment, processor):
     return user
 
 
-def user_is_back(user, processor):
+def is_back(user, processor):
     """
     After a user moved temporarily out, this function sets group memberships and
      creates a log message
