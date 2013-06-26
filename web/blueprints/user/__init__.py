@@ -328,22 +328,6 @@ def search():
     return render_template('user/user_search.html', form=form)
 
 
-@bp.route('/host_create', methods=['GET', 'POST'])
-@nav.navigate(u"Host erstellen")
-def host_create():
-    form = hostCreateForm()
-    hostResult = Host.q.all()
-    if form.validate_on_submit():
-        myHost = Host(hostname=form.name.data)
-        session.add(myHost)
-        session.commit()
-        flash(u'Host angelegt', 'success')
-        return render_template('user/host_create.html', form=form,
-            results=hostResult)
-    return render_template('user/host_create.html', form=form,
-        results=hostResult)
-
-
 @bp.route('/block/<int:user_id>', methods=['GET', 'POST'])
 def block(user_id):
     form = UserBlockForm()
