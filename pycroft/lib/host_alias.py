@@ -2,11 +2,14 @@ from pycroft.model import session
 from pycroft.model.host_alias import HostAlias, ARecord, AAAARecord, MXRecord, \
     CNameRecord, NSRecord, SRVRecord
 
-def delete_alias(alias_id):
+
+def delete_alias(alias_id, commit=True):
     """
     This method deletes an alias.
 
     :param alias_id: the id of the alias which should be deleted
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the deleted alias
     """
     alias = HostAlias.q.get(alias_id)
@@ -30,7 +33,8 @@ def delete_alias(alias_id):
         raise ValueError("Unknown record type: %s" % (alias.discriminator))
 
     session.session.delete(record)
-    session.session.commit()
+    if commit:
+        session.session.commit()
 
     return alias
 
@@ -54,16 +58,20 @@ def change_alias(alias, **kwargs):
 
     session.session.commit()
 
-    return  alias
+    return alias
 
 
-def _create_alias(type, *args, **kwargs):
+def _create_alias(type, commit=True, *args, **kwargs):
     """
     This method will create a new dns record.
 
     :param type: the type of the alias (equals the discriminator of the alias)
-    :param args: the positionals which will be passed to the constructor of the alias
-    :param kwargs: the arguments which will be passed to the constructor of the alias
+    :param args: the positionals which will be passed to the constructor of
+                 the alias
+    :param kwargs: the arguments which will be passed to the constructor of
+                   the alias
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created record
     """
 
@@ -85,80 +93,121 @@ def _create_alias(type, *args, **kwargs):
         raise ValueError("unknown record type: %s" % (type))
 
     session.session.add(alias)
-    session.session.commit()
+    if commit:
+        session.session.commit()
 
     return alias
 
-
 # Wrapper functions around the _create_alias function for each record type
 
-def create_arecord(*args, **kwargs):
+def create_arecord(host_id, name, address_id, time_to_live=None, commit=True):
     """
     This method will create a new a-record
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the id of the host
+    :param name: the name of the alias
+    :param time_to_live: the ttl of the alias
+    :param address_id: the ip address which should be associated with the
+                       a-record
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created a-record
     """
 
-    return _create_alias("arecord", *args, **kwargs)
+    return _create_alias("arecord", host_id=host_id, name=name,
+                         time_to_live=time_to_live, address_id=address_id,
+                         commit=commit)
 
 
-def create_aaaarecord(*args, **kwargs):
+def create_aaaarecord(host_id, name, address_id, time_to_live=None,
+                      commit=True):
     """
     This method will create a new aaaa-record
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the id of the host
+    :param name: the name of the alias
+    :param time_to_live: the ttl of the alias
+    :param address_id: the ip address which should be associated with the
+                       aaaa-record
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created aaaa-record
     """
 
-    return _create_alias("aaaarecord", *args, **kwargs)
+    return _create_alias("aaaarecord", name=name, host_id=host_id,
+                         time_to_live=time_to_live, address_id=address_id,
+                         commit=commit)
 
 
-def create_mxrecord(*args, **kwargs):
+def create_mxrecord(host_id, server, domain, priority, commit=True):
     """
     This method will create a new mx-record
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the id of the host
+    :param server: the server
+    :param domain: the domain
+    :param priority: priority
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created mx-record
     """
 
-    return _create_alias("mxrecord", *args, **kwargs)
+    return _create_alias("mxrecord", host_id=host_id, server=server,
+                         domain=domain, priority=priority, commit=commit)
 
 
-def create_cnamerecord(*args, **kwargs):
+def create_cnamerecord(host_id, name, alias_for_id, commit=True):
     """
     This method will create a new cname-record
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the od of the host
+    :param name: the alias for the a- or aaaarecord
+    :param alias_for_id: the id of the record we want to specify an alias
+    :param commit: flag which indicates whether the sesssion should
+                   be commited or not. Default: True
     :return: the created cname-record
     """
 
-    return _create_alias("cnamerecord", *args, **kwargs)
+    return _create_alias("cnamerecord", host_id=host_id, name=name,
+                         alias_for_id=alias_for_id, commit=commit)
 
 
-def create_nsrecord(*args, **kwargs):
+def create_nsrecord(host_id, domain, server, time_to_live=None, commit=True):
     """
     This method will create a new ns-record.
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the id of the host
+    :param domain: the domain
+    :param server: the server
+    :param time_to_live: the time the record should be valid
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created ns-record
     """
 
-    return _create_alias("nsrecord", *args, **kwargs)
+    return _create_alias("nsrecord", host_id=host_id, domain=domain,
+                         server=server, time_to_live=time_to_live,
+                         commit=commit)
 
 
-def create_srvrecord(*args, **kwargs):
+def create_srvrecord(host_id, service, priority, weight, port, target,
+                     time_to_live=None, commit=True):
     """
     This method will create a new srv-record.
 
-    :param args: the positionals which will be passed to the constructor
-    :param kwargs: the keyword arguments which will be passed to the constructor
+    :param host_id: the id of the host
+    :param service: the service
+    :param priority: the priority
+    :param weight: the weight
+    :param port: the port
+    :param target: the target
+    :param time_to_live: the time the record should be valid
+    :param commit: flag which indicates whether the session should be
+                   commited or not. Default: True
     :return: the created srv-record
     """
 
-    return _create_alias("srvrecord", *args, **kwargs)
+    return _create_alias("srvrecord", host_id=host_id, service=service,
+                         priority=priority, weight=weight, port=port,
+                         target=target, time_to_live=time_to_live,
+                         commit=commit)

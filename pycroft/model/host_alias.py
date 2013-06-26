@@ -66,9 +66,9 @@ class AAAARecord(HostAlias):
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    #TODO Delete cascades
-    address = relationship("Ip")
-    address_id = Column(Integer, ForeignKey("ip.id"),
+    address = relationship("Ip",
+        backref=backref("aaaarecords", cascade="all, delete-orphan"))
+    address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
         nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'aaaarecord'}

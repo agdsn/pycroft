@@ -220,7 +220,7 @@ class Test_040_Cascades(FixtureDataTestBase):
 
     def test_0040_arecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
-        arecord_id = ARecord.q.first().id
+        arecord_id = ARecord.q.filter(ARecord.address == ip).first().id
         session.session.delete(ip)
 
         session.session.commit()
@@ -229,7 +229,9 @@ class Test_040_Cascades(FixtureDataTestBase):
 
     def test_0045_aaaarecord_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()
+        aaaarecord_id = AAAARecord.q.filter(AAAARecord.address == ip).first().id
         session.session.delete(ip)
 
-        self.assertRaises(ValueError, session.session.commit)
-        session.session.rollback()
+        session.session.commit()
+
+        self.assertIsNone(AAAARecord.q.get(aaaarecord_id))
