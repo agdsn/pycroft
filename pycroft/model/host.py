@@ -20,7 +20,7 @@ from sqlalchemy.types import Integer
 from sqlalchemy.types import String
 import ipaddr
 import re
-from pycroft.model.host_alias import  ARecord, AAAARecord
+from pycroft.model.host_alias import ARecord, AAAARecord
 
 
 class Host(ModelBase):

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
@@ -46,7 +46,7 @@ class Test_010_UserHost(FixtureDataTestBase):
         room = Room.q.get(RoomData.dummy_room1.id)
         user = User.q.get(UserData.dummy_user1.id)
 
-        new_user_host = create_user_host(user=user, room=room)
+        new_user_host = create_user_host(user_id=user.id, room_id=room.id)
 
         self.assertIsNotNone(UserHost.q.get(new_user_host.id))
 
@@ -75,7 +75,7 @@ class Test_020_ServerHost(FixtureDataTestBase):
         room = Room.q.get(RoomData.dummy_room1.id)
         user = User.q.get(UserData.dummy_user1.id)
 
-        new_server_host = create_server_host(room=room, user=user)
+        new_server_host = create_server_host(room_id=room.id, user_id=user.id)
 
         self.assertIsNotNone(ServerHost.q.get(new_server_host.id))
 
@@ -108,12 +108,12 @@ class Test_030_Switch(FixtureDataTestBase):
         name = "dummy_switch2"
         management_ip = "141.30.216.16"
 
-        switch =  create_switch(user=user, room=room, name=name,
-            management_ip=management_ip)
+        switch = create_switch(user_id=user.id, room_id=room.id, name=name,
+                               management_ip=management_ip)
 
         self.assertIsNotNone(Switch.q.get(switch.id))
 
-        db_switch =  Switch.q.get(switch.id)
+        db_switch = Switch.q.get(switch.id)
 
         self.assertEqual(db_switch.user, user)
         self.assertEqual(db_switch.room, room)
@@ -141,7 +141,7 @@ class Test_040_UserNetDevice(FixtureDataTestBase):
         host = UserHost.q.get(UserHostData.dummy_user_host1.id)
 
         user_net_device = create_user_net_device(mac="00:00:00:00:00:00",
-            host=host)
+                                                 host_id=host.id)
 
         self.assertIsNotNone(UserNetDevice.q.get(user_net_device.id))
 
@@ -173,7 +173,7 @@ class Test_050_ServerNetDevice(FixtureDataTestBase):
         switch_port = SwitchPort.q.get(SwitchPortData.dummy_switch_port1.id)
 
         server_net_device = create_server_net_device(mac="00:00:00:00:00:00",
-            host=host, switch_port=switch_port)
+            host_id=host.id, switch_port_id=switch_port.id)
 
         self.assertIsNotNone(ServerNetDevice.q.get(server_net_device.id))
 
@@ -204,7 +204,7 @@ class Test_060_SwitchNetDevice(FixtureDataTestBase):
         host =  Switch.q.get(SwitchData.dummy_switch1.id)
         mac = "00:00:00:00:00:00"
 
-        switch_net_device = create_switch_net_device(mac=mac, host=host)
+        switch_net_device = create_switch_net_device(mac=mac, host_id=host.id)
 
         self.assertIsNotNone(SwitchNetDevice.q.get(switch_net_device.id))
 
@@ -236,17 +236,19 @@ class Test_070_Ip(FixtureDataTestBase):
             SwitchNetDeviceData.dummy_switch_device1.id)
         subnet = Subnet.q.get(SubnetData.dummy_subnet1.id)
 
-        ip = create_ip(address=address, net_device=net_device, subnet=subnet)
+        ip = create_ip(address=address, net_device_id=net_device.id,
+                       subnet_id=subnet.id)
 
         self.assertIsNotNone(Ip.q.get(ip.id))
 
-        db_ip =  Ip.q.get(ip.id)
+        db_ip = Ip.q.get(ip.id)
 
         self.assertEqual(db_ip.address, address)
         self.assertEqual(db_ip.net_device, net_device)
         self.assertEqual(db_ip.subnet, subnet)
 
-        session.session
+        session.session.delete(db_ip)
+        session.session.commit()
 
     def test_0020_delete_ip(self):
         del_ip = delete_ip(IpData.dummy_ip1.id)
