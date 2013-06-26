@@ -201,7 +201,7 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         try:
-            new_user = lib.user.moves_in(name=form.name.data,
+            new_user = lib.user.move_in(name=form.name.data,
                 login=form.login.data,
                 dormitory=form.dormitory.data, level=form.level.data,
                 room_number=form.room_number.data,
@@ -339,12 +339,13 @@ def host_create():
     return render_template('user/host_create.html', form=form,
         results=hostResult)
 
+
 @bp.route('/block/<int:user_id>', methods=['GET', 'POST'])
-def block_user(user_id):
+def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        blocked_user = lib.user.block_user(
+        blocked_user = lib.user.block(
             user=myUser,
             date=datetime.combine(form.date.data, time(0)),
             reason=form.reason.data,
@@ -353,8 +354,9 @@ def block_user(user_id):
         return redirect(url_for('.user_show', user_id=blocked_user.id))
     return render_template('user/user_block.html', form=form, user_id=user_id)
 
-@bp.route('/user_moveout/<int:user_id>', methods=['GET', 'POST'])
-def user_moveout(user_id):
+
+@bp.route('/move_out/<int:user_id>', methods=['GET', 'POST'])
+def move_out(user_id):
     form = UserMoveOutForm()
     myUser = User.q.get(user_id)
     if myUser is None:
@@ -407,9 +409,9 @@ def move_out_tmp(user_id):
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
-@bp.route('/come_back/<int:user_id>')
-def come_back(user_id):
+@bp.route('/is_back/<int:user_id>')
+def is_back(user_id):
     my_user = User.q.get(user_id)
-    changed_user = lib.user.user_is_back(user=my_user, processor=current_user)
+    changed_user = lib.user.is_back(user=my_user, processor=current_user)
     flash(u'Nutzer ist zurück', 'success')
     return redirect(url_for('.user_show', user_id=changed_user.id))

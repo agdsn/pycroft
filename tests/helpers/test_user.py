@@ -84,7 +84,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.moves_in(test_name,
+        new_user = UserHelper.move_in(test_name,
             test_login,
             test_email,
             test_dormitory,
@@ -152,7 +152,7 @@ class Test_0030_User_Move_Out(FixtureDataTestBase):
         test_dormitory = dormitory.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.moves_in(test_name,
+        new_user = UserHelper.move_in(test_name,
             test_login,
             test_email,
             test_dormitory,
@@ -254,7 +254,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         test_dormitory = dormitory.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.moves_in(test_name,
+        new_user = UserHelper.move_in(test_name,
             test_login,
             test_email,
             test_dormitory,
@@ -302,7 +302,7 @@ class Test_080_User_Block(FixtureDataTestBase):
 #       self.assertTrue(u.has_property("internet"))
         self.assertNotIn(verstoss, u.active_property_groups)
 
-        blocked_user = UserHelper.block_user(u, u"test", u)
+        blocked_user = UserHelper.block(u, u"test", u)
 
         self.assertFalse(blocked_user.has_property("internet"))
         self.assertIn(verstoss, blocked_user.active_property_groups)
@@ -330,7 +330,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
 
     def test_0010_user_is_back(self):
         self.assertTrue(self.user.has_property("away"))
-        UserHelper.user_is_back(self.user, self.processing_user)
+        UserHelper.is_back(self.user, self.processing_user)
 
         # check whether user has at least one ip
         self.assertNotEqual(self.user.user_host.user_net_device.ips, [])
