@@ -1,22 +1,20 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord,\
-    create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord,\
+from sqlalchemy.types import Integer
+from sqlalchemy import ForeignKey, Column
+
+from pycroft.lib.host_alias import delete_alias, change_alias, create_arecord, \
+    create_cnamerecord, create_aaaarecord, create_mxrecord, create_nsrecord, \
     create_srvrecord, _create_alias
-
 from pycroft.model.host import Ip, UserHost
-
 from pycroft.model import session
 from pycroft.model.host_alias import ARecord, AAAARecord, MXRecord, CNameRecord, \
     NSRecord, SRVRecord, HostAlias
-
-from tests.lib.fixtures.host_alias_fixtures import ARecordData, AAAARecordData,\
+from tests.lib.fixtures.host_alias_fixtures import ARecordData, AAAARecordData, \
     NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData
 from tests import FixtureDataTestBase
 
-from sqlalchemy.types import Integer
-from sqlalchemy import ForeignKey, Column
 
 class Test_010_RemovingOFAlias(FixtureDataTestBase):
     datasets = [ARecordData, AAAARecordData, NSRecordData, CNameRecordData,
@@ -82,7 +80,7 @@ class Test_020_ChangingOfAlias(FixtureDataTestBase):
         record = CNameRecord.q.first()
 
         self.assertRaises(ValueError, change_alias, alias=record,
-            test="wrong_attribute")
+                          test="wrong_attribute")
 
 
 class Test_030_CreatingOfAlias(FixtureDataTestBase):
@@ -93,161 +91,175 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         address = Ip.q.filter(Ip.id == IpData.ip_v4.id).one()
         host = UserHost.q.first()
         name = "test"
-        id = 1000
 
-        create_arecord(id=id, address_id=address.id, name=name,
-            host=host)
+        record = create_arecord(address_id=address.id, name=name,
+                                host_id=host.id)
 
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().name, name)
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().address,
+        self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().name,
+                         name)
+        self.assertEqual(
+            ARecord.q.filter(ARecord.id == record.id).one().address,
             address)
-        self.assertIsNone(ARecord.q.filter(ARecord.id == id).one().time_to_live)
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().host,
-            host)
+        self.assertIsNone(
+            ARecord.q.filter(ARecord.id == record.id).one().time_to_live)
+        self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().host,
+                         host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0015_arecord_with_ttl(self):
         address = Ip.q.filter(Ip.id == IpData.ip_v4.id).one()
         host = UserHost.q.first()
         name = "test"
         ttl = 100
-        id = 1000
 
-        create_arecord(id=id, address_id=address.id, name=name,
-            time_to_live=ttl, host=host)
+        record = create_arecord(address_id=address.id, name=name,
+                                time_to_live=ttl, host_id=host.id)
 
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().name, name)
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().address,
+        self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().name,
+                         name)
+        self.assertEqual(
+            ARecord.q.filter(ARecord.id == record.id).one().address,
             address)
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().time_to_live,
+        self.assertEqual(
+            ARecord.q.filter(ARecord.id == record.id).one().time_to_live,
             ttl)
-        self.assertEqual(ARecord.q.filter(ARecord.id == id).one().host,
-            host)
+        self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().host,
+                         host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0020_aaaarecord_without_ttl(self):
         address = Ip.q.filter(Ip.id == IpData.ip_v6.id).one()
         host = UserHost.q.first()
         name = "test"
-        id = 1000
 
-        create_aaaarecord(id=id, address_id=address.id, name=name,
-            host=host)
+        record = create_aaaarecord(address_id=address.id, name=name,
+                                   host_id=host.id)
 
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().name,
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().name,
             name)
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().address,
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().address,
             address)
         self.assertIsNone(
-            AAAARecord.q.filter(AAAARecord.id == id).one().time_to_live)
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().host,
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().time_to_live)
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().host,
             host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0025_aaaarecord_with_ttl(self):
         address = Ip.q.filter(Ip.id == IpData.ip_v6.id).one()
         host = UserHost.q.first()
         name = "test"
         ttl = 100
-        id = 1000
 
-        create_aaaarecord(id=id, address_id=address.id, name=name,
-            time_to_live=ttl, host=host)
+        record = create_aaaarecord(address_id=address.id, name=name,
+                                   time_to_live=ttl, host_id=host.id)
 
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().name,
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().name,
             name)
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().address,
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().address,
             address)
         self.assertEqual(
-            AAAARecord.q.filter(AAAARecord.id == id).one().time_to_live, ttl)
-        self.assertEqual(AAAARecord.q.filter(AAAARecord.id == id).one().host,
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().time_to_live,
+            ttl)
+        self.assertEqual(
+            AAAARecord.q.filter(AAAARecord.id == record.id).one().host,
             host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0030_cnamerecord(self):
         alias_for = ARecord.q.first()
         host = UserHost.q.first()
         name = "test"
-        id = 1000
 
-        create_cnamerecord(id=id, alias_for=alias_for, name=name,
-            host=host)
+        record = create_cnamerecord(alias_for_id=alias_for.id, name=name,
+                                    host_id=host.id)
 
         self.assertEqual(
-            CNameRecord.q.filter(CNameRecord.id == id).one().alias_for,
+            CNameRecord.q.filter(CNameRecord.id == record.id).one().alias_for,
             alias_for)
-        self.assertEqual(CNameRecord.q.filter(CNameRecord.id == id).one().name,
+        self.assertEqual(
+            CNameRecord.q.filter(CNameRecord.id == record.id).one().name,
             name)
-        self.assertEqual(CNameRecord.q.filter(CNameRecord.id == id).one().host,
+        self.assertEqual(
+            CNameRecord.q.filter(CNameRecord.id == record.id).one().host,
             host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0040_mxrecord(self):
         host = UserHost.q.first()
         server = "server"
         domain = "domain"
-        id = 1000
         priority = 10
 
-        create_mxrecord(id=id, priority=priority, server=server,
-            domain=domain, host=host)
+        record = create_mxrecord(priority=priority, server=server,
+                                 domain=domain, host_id=host.id)
 
-        self.assertEqual(MXRecord.q.filter(MXRecord.id == id).one().server,
+        self.assertEqual(
+            MXRecord.q.filter(MXRecord.id == record.id).one().server,
             server)
-        self.assertEqual(MXRecord.q.filter(MXRecord.id == id).one().domain,
+        self.assertEqual(
+            MXRecord.q.filter(MXRecord.id == record.id).one().domain,
             domain)
-        self.assertEqual(MXRecord.q.filter(MXRecord.id == id).one().priority,
+        self.assertEqual(
+            MXRecord.q.filter(MXRecord.id == record.id).one().priority,
             priority)
-        self.assertEqual(MXRecord.q.filter(MXRecord.id == id).one().host,
-            host)
+        self.assertEqual(MXRecord.q.filter(MXRecord.id == record.id).one().host,
+                         host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0050_nsrecord_without_ttl(self):
         host = UserHost.q.first()
         domain = "domain"
         server = "server"
-        id = 1000
 
-        create_nsrecord(id=id, domain=domain, server=server,
-            host=host)
+        record = create_nsrecord(domain=domain, server=server,
+                                 host_id=host.id)
 
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().domain,
+        self.assertEqual(
+            NSRecord.q.filter(NSRecord.id == record.id).one().domain,
             domain)
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().server,
+        self.assertEqual(
+            NSRecord.q.filter(NSRecord.id == record.id).one().server,
             server)
         self.assertIsNone(
-            NSRecord.q.filter(NSRecord.id == id).one().time_to_live)
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().host,
-            host)
+            NSRecord.q.filter(NSRecord.id == record.id).one().time_to_live)
+        self.assertEqual(NSRecord.q.filter(NSRecord.id == record.id).one().host,
+                         host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0055_nsrecord_with_ttl(self):
         host = UserHost.q.first()
         domain = "domain"
         server = "server"
         ttl = 10
-        id = 1000
 
-        create_nsrecord(id=id, domain=domain, server=server,
-            time_to_live=ttl, host=host)
+        record = create_nsrecord(domain=domain, server=server,
+                                 time_to_live=ttl, host_id=host.id)
 
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().domain,
+        self.assertEqual(
+            NSRecord.q.filter(NSRecord.id == record.id).one().domain,
             domain)
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().server,
+        self.assertEqual(
+            NSRecord.q.filter(NSRecord.id == record.id).one().server,
             server)
         self.assertEqual(
-            NSRecord.q.filter(NSRecord.id == id).one().time_to_live, ttl)
-        self.assertEqual(NSRecord.q.filter(NSRecord.id == id).one().host,
-            host)
+            NSRecord.q.filter(NSRecord.id == record.id).one().time_to_live, ttl)
+        self.assertEqual(NSRecord.q.filter(NSRecord.id == record.id).one().host,
+                         host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0060_srvrecord_without_ttl(self):
         host = UserHost.q.first()
@@ -256,27 +268,33 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         weight = 100
         port = 1010
         target = "target"
-        id = 1000
 
-        create_srvrecord(id=id, priority=priority, service=service,
-            weight=weight, port=port, target=target, host=host)
+        record = create_srvrecord(priority=priority, service=service,
+                                  weight=weight, port=port, target=target,
+                                  host_id=host.id)
 
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().service,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().service,
             service)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().priority,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().priority,
             priority)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().weight,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().weight,
             weight)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().port,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().port,
             port)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().target,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().target,
             target)
         self.assertIsNone(
-            SRVRecord.q.filter(SRVRecord.id == id).one().time_to_live)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().host,
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().time_to_live)
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().host,
             host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
     def test_0065_srvrecord_without_ttl(self):
         host = UserHost.q.first()
@@ -286,28 +304,35 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         port = 1010
         ttl = 10000
         target = "target"
-        id = 1000
 
-        create_srvrecord(id=id, priority=priority, service=service,
-            weight=weight, port=port, target=target, time_to_live=ttl,
-            host=host)
+        record = create_srvrecord(priority=priority, service=service,
+                                  weight=weight, port=port, target=target,
+                                  time_to_live=ttl,
+                                  host_id=host.id)
 
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().service,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().service,
             service)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().priority,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().priority,
             priority)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().weight,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().weight,
             weight)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().port,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().port,
             port)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().target,
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().target,
             target)
         self.assertEqual(
-            SRVRecord.q.filter(SRVRecord.id == id).one().time_to_live, ttl)
-        self.assertEqual(SRVRecord.q.filter(SRVRecord.id == id).one().host,
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().time_to_live,
+            ttl)
+        self.assertEqual(
+            SRVRecord.q.filter(SRVRecord.id == record.id).one().host,
             host)
 
-        delete_alias(id)
+        delete_alias(record.id)
 
 
 class Test_040_MalformedTypes(FixtureDataTestBase):
@@ -318,10 +343,10 @@ class Test_040_MalformedTypes(FixtureDataTestBase):
         __mapper_args__ = {'polymorphic_identity': 'malformedrecord'}
 
     def test_0010_create_malformed_record(self):
-        self.assertRaises(ValueError, _create_alias, 'malformedrecord', id=100)
+        self.assertRaises(ValueError, _create_alias, 'malformedrecord')
 
     def test_0020_delete_malformed_record(self):
-        alias = Test_040_MalformedTypes.MalformedRecord(id=10000,
+        alias = Test_040_MalformedTypes.MalformedRecord(
             host=UserHost.q.first())
         session.session.add(alias)
         session.session.commit()

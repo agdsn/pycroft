@@ -131,20 +131,19 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(account_sum,4000)
         self.assertFalse(new_user.has_property("away"))
 
-class Test_0030_User_Move_Out(FixtureDataTestBase):
+class Test_030_User_Move_Out(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, FinanceAccountData]
 
     def setUp(self):
-        super(Test_0030_User_Move_Out, self).setUp()
+        super(Test_030_User_Move_Out, self).setUp()
         self.processing_user = user.User.q.get(1)
 
     def tearDown(self):
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
         session.session.commit()
-        super(Test_0030_User_Move_Out, self).tearDown()
-
+        super(Test_030_User_Move_Out, self).tearDown()
 
     def test_0030_move_out(self):
         test_name = u"Hans"

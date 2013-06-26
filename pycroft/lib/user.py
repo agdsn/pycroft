@@ -73,7 +73,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    new_host = UserHost(user_id = new_user.id, user=new_user,room=room)
+    new_host = UserHost(user_id=new_user.id, user=new_user, room=room)
 
     new_net_device = UserNetDevice(mac=mac, host=new_host)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
@@ -81,10 +81,14 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     session.session.add(new_host)
     session.session.add(new_net_device)
     session.session.add(new_ip)
+    session.session.commit()
 
-    new_arecord = create_arecord( host=new_host, time_to_live=None, name=host.generate_hostname(ip_address), address=new_ip)
+    new_arecord = create_arecord(host_id=new_host.id, time_to_live=None,
+                                 name=host.generate_hostname(ip_address),
+                                 address_id=new_ip.id)
     if host_name:
-        create_cnamerecord(host=new_host, name=host_name, alias_for=new_arecord)
+        create_cnamerecord(host_id=new_host.id, name=host_name,
+                           alias_for_id=new_arecord.id)
 
     conf = config["move_in"]
     for membership in conf["group_memberships"]:
