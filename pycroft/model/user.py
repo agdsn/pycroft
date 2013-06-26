@@ -19,10 +19,10 @@ from sqlalchemy import ForeignKey, Column, and_, DateTime, Integer, \
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.orm.util import has_identity
 from base import ModelBase
-from pycroft.model.dormitory import Room
 from pycroft.model.property import Membership, Property, PropertyGroup, \
     TrafficGroup
 from pycroft.helpers.user import hash_password, verify_password
+
 
 class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False)
@@ -34,9 +34,10 @@ class User(ModelBase, UserMixin):
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
-    room = relationship("Room", backref=backref("users", order_by='User.id'),
-                        primaryjoin=lambda: and_(not_(User.has_property("away")),
-                                                 Room.id == User.room_id))
+    room = relationship(
+        "Room",
+        backref=backref("users", order_by='User.id')
+    )
 
     traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,
@@ -48,8 +49,8 @@ class User(ModelBase, UserMixin):
     active_traffic_groups = relationship("TrafficGroup",
         secondary=Membership.__tablename__,
         primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=lambda: and_(Membership.group_id == TrafficGroup.id,
-                                   Membership.active),
+        secondaryjoin=and_(Membership.group_id == TrafficGroup.id,
+                           Membership.active),
         foreign_keys=[Membership.user_id, Membership.group_id],
         viewonly=True)
 
@@ -63,8 +64,8 @@ class User(ModelBase, UserMixin):
     active_property_groups = relationship("PropertyGroup",
         secondary=Membership.__tablename__,
         primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=lambda: and_(Membership.group_id == PropertyGroup.id,
-                                   Membership.active),
+        secondaryjoin=and_(Membership.group_id == PropertyGroup.id,
+                           Membership.active),
         foreign_keys=[Membership.user_id, Membership.group_id],
         viewonly=True)
 
