@@ -11,4 +11,4 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-import user, host, logging, config
+import user, host, logging, config, property
