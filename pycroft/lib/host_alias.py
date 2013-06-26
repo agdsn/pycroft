@@ -9,7 +9,7 @@ def delete_alias(alias_id, commit=True):
 
     :param alias_id: the id of the alias which should be deleted
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the deleted alias
     """
     alias = HostAlias.q.get(alias_id)
@@ -71,7 +71,7 @@ def _create_alias(type, commit=True, *args, **kwargs):
     :param kwargs: the arguments which will be passed to the constructor of
                    the alias
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created record
     """
 
@@ -110,7 +110,7 @@ def create_arecord(host_id, name, address_id, time_to_live=None, commit=True):
     :param address_id: the ip address which should be associated with the
                        a-record
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created a-record
     """
 
@@ -130,7 +130,7 @@ def create_aaaarecord(host_id, name, address_id, time_to_live=None,
     :param address_id: the ip address which should be associated with the
                        aaaa-record
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created aaaa-record
     """
 
@@ -148,7 +148,7 @@ def create_mxrecord(host_id, server, domain, priority, commit=True):
     :param domain: the domain
     :param priority: priority
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created mx-record
     """
 
@@ -164,7 +164,7 @@ def create_cnamerecord(host_id, name, alias_for_id, commit=True):
     :param name: the alias for the a- or aaaarecord
     :param alias_for_id: the id of the record we want to specify an alias
     :param commit: flag which indicates whether the sesssion should
-                   be commited or not. Default: True
+                   be committed or not. Default: True
     :return: the created cname-record
     """
 
@@ -181,7 +181,7 @@ def create_nsrecord(host_id, domain, server, time_to_live=None, commit=True):
     :param server: the server
     :param time_to_live: the time the record should be valid
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created ns-record
     """
 
@@ -203,7 +203,7 @@ def create_srvrecord(host_id, service, priority, weight, port, target,
     :param target: the target
     :param time_to_live: the time the record should be valid
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the created srv-record
     """
 

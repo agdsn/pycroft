@@ -10,7 +10,7 @@ def create_dormitory(number, short_name, street, commit=True):
     :param street: the street where the dormitory is located.
     :param number: the number of the dormitory
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created dormitory
     """
     dormitory = Dormitory(number=number, short_name=short_name, street=street)
@@ -27,7 +27,7 @@ def delete_dormitory(dormitory_id, commit=True):
 
     :param dormitory_id: the id of the dormitory which should be removed
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the deleted dormitory
     """
     dormitory = Dormitory.q.get(dormitory_id)
@@ -51,7 +51,7 @@ def create_room(number, level, inhabitable, dormitory_id, commit=True):
     :param inhabitable: whether or not someone can live in the room.
     :param dormitory_id: the id of the dormitory in which the room is located.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created room
     """
     room = Room(number=number, level=level, inhabitable=inhabitable,
@@ -69,7 +69,7 @@ def delete_room(room_id, commit=True):
 
     :param room_id: the id of the room which should be deleted
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the deleted room
     """
     room = Room.q.get(room_id)
@@ -95,7 +95,7 @@ def create_subnet(address, gateway, dns_domain, reserved_addresses, ip_type,
     :param reserved_addresses: the number of reserved addresses
     :param ip_type: the ip version which should be used
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created subnet.
     """
     subnet = Subnet(address=address, gateway=gateway, dns_domain=dns_domain,
@@ -112,7 +112,7 @@ def delete_subnet(subnet_id, commit=True):
     This method will remove the subnet for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param subnet_id: the id of the subnet which should be removed.
     :return: the removed subnet.
     """
@@ -135,7 +135,7 @@ def create_vlan(name, tag, commit=True):
     :param name: the name of the vlan
     :param tag: the tag which should be used for this vlan
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created vlan.
     """
     vlan = VLan(name=name, tag=tag)
@@ -151,7 +151,7 @@ def delete_vlan(vlan_id, commit=True):
     This method will remove the vlan for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param vlan_id: the id of the vlan which should be removed.
     :return: the removed vlan.
     """
