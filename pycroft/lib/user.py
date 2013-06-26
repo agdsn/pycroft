@@ -126,14 +126,16 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         new_finance_account,
         registration_fee_account,
         current_semester,
-        current_semester.registration_fee
+        current_semester.registration_fee,
+        commit=False
     )
     simple_transaction(
         conf["semester_fee_message"].format(**format_args),
         new_finance_account,
         semester_fee_account,
         current_semester,
-        current_semester.semester_fee
+        current_semester.semester_fee,
+        commit=False
     )
 
     move_in_user_log_entry = UserLogEntry(
