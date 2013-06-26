@@ -11,7 +11,7 @@ def _create_group(type, commit=True, *args, **kwargs):
     This method will create a new Group.
 
     :param type: the type of the group. Equals the discriminator.
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
@@ -38,7 +38,7 @@ def _delete_group(group_id, commit = True):
     This method will remove the Group for the given id.
 
     :param group_id: the id of the Group which should be removed.
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the removed Group.
     """
@@ -66,7 +66,7 @@ def create_traffic_group(name, traffic_limit, commit=True):
 
     :param name: the name of the group
     :param traffic_limit: the traffic limit of the group
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created traffic group
     """
@@ -79,7 +79,7 @@ def delete_traffic_group(traffic_group_id, commit=True):
     This method will remove the traffic group for the given id.
 
     :param traffic_group_id: the if of the group which should be deleted
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the deleted traffic group
     """

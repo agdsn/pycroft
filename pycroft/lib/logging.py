@@ -11,7 +11,7 @@ def _create_log_entry(type, commit=True, *args, **kwargs):
     arguments.
 
     :param type: the type of the LogEntry which should be created.
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
@@ -38,7 +38,7 @@ def delete_log_entry(log_entry_id, commit=True):
     This method will remove the LogEntry for the given id.
 
     :param log_entry_id: the id of the LogEntry which should be removed.
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the removed LogEntry.
     """
@@ -68,7 +68,7 @@ def create_user_log_entry(message, timestamp, author_id, user_id, commit=True):
     :param timestamp: the timestamp of the log
     :param author_id: the id of the user which created the log
     :param user_id: the id of the user for which the log should be created
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created UserLogEntry.
     """
@@ -85,7 +85,7 @@ def create_room_log_entry(message, timestamp, author_id, room_id, commit=True):
     :param timestamp: the timestamp of the log
     :param author_id: the id of the user which created the log
     :param room_id: the id of the room for which the log should be created
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created RoomLogEntry.
     """

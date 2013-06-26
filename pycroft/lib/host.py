@@ -21,7 +21,7 @@ def change_mac(net_device, mac, processor, commit=True):
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the changed netdevice with the new mac address.
     """
     net_device.mac = mac
@@ -45,7 +45,7 @@ def create_user_host(user_id, room_id, commit=True):
     :param user_id: the id of the user
     :param room_id: the id of the room
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created UserHost.
     """
     user_host = UserHost(user_id=user_id, room_id=room_id)
@@ -62,7 +62,7 @@ def delete_user_host(user_host_id, commit=True):
     This method will remove the UserHost for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param user_host_id: the id of the UserHost, which should be removed.
     :return: the removed UserHost.
     """
@@ -85,7 +85,7 @@ def create_server_host(user_id, room_id, commit=True):
     :param user_id: the id of the user
     :param room_id: the id of the room
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created ServerHost.
     """
     server_host = ServerHost(user_id=user_id, room_id=room_id)
@@ -101,7 +101,7 @@ def delete_server_host(server_host_id, commit=True):
     This method will remove a ServerHost for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param server_host_id: the id of the ServerHost which should be removed.
     :return: the removed ServerHost.
     """
@@ -125,7 +125,7 @@ def create_switch(user_id, room_id, name, management_ip, commit=True):
     :param name: the name of the switch
     :param management_ip: the management ip which is used to access the switch
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created switch.
     """
     switch = Switch(user_id=user_id, room_id=room_id, name=name,
@@ -142,7 +142,7 @@ def delete_switch(switch_id, commit=True):
     This method will remove the switch for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param switch_id: the id of the switch which should be removed.
     :return: the removed switch.
     """
@@ -164,7 +164,7 @@ def create_user_net_device(mac, host_id, commit=True):
     :param mac: the mac of the device
     :param host_id: the id of the host
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created UserNetDevice.
     """
     user_net_device = UserNetDevice(mac=mac, host_id=host_id)
@@ -182,7 +182,7 @@ def delete_user_net_device(user_net_device_id, commit=True):
     :param user_net_device_id: the id of the UserNetDevice which should be
                                deleted.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the removed UserNetDevice.
     """
     del_user_net_device = UserNetDevice.q.get(user_net_device_id)
@@ -205,7 +205,7 @@ def create_server_net_device(mac, host_id, switch_port_id, commit=True):
     :param host_id: the id of the host
     :param switch_port_id: the id of the switch_port
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created ServerNetDevice.
     """
     server_net_device = ServerNetDevice(mac=mac, host_id=host_id,
@@ -222,7 +222,7 @@ def delete_server_net_device(server_net_device_id, commit=True):
     This method will the ServerNetDevice for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param server_net_device_id: the id of the ServerNetDevice which should be
                                  removed.
     :return: the removed ServerNetDevice.
@@ -245,7 +245,7 @@ def create_switch_net_device(mac, host_id, commit=True):
     :param mac: the mac of the device
     :param host_id: the id of the host
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created SwitchNetDevice.
     """
     switch_net_device = SwitchNetDevice(mac=mac, host_id=host_id)
@@ -261,7 +261,7 @@ def delete_switch_net_device(switch_net_device_id, commit=True):
     This method will remove the SwitchNetDevice for the given id.
 
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param switch_net_device_id: the id of the SwitchNetDevice which should be
                                  deleted.
     :return: the removed SwitchNetDevice.
@@ -285,7 +285,7 @@ def create_ip(address, net_device_id, subnet_id, commit=True):
     :param net_device_id: the id of the net_device.
     :param subnet_id: the id of the subnet the ip is part of.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the newly created Ip.
     """
     ip = Ip(address=address, net_device_id=net_device_id, subnet_id=subnet_id)
@@ -302,7 +302,7 @@ def delete_ip(ip_id, commit=True):
 
     :param ip_id: the id of the Ip which should be removed.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :return: the removed Ip.
     """
     del_ip = Ip.q.get(ip_id)

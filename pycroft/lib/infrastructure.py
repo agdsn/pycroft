@@ -11,7 +11,7 @@ def _create_port(type, commit=True, *args, **kwargs):
 
     :param type: the type of the port.
     :param commit: flag which indicates whether the session should be
-                   commited or not. Default: True
+                   committed or not. Default: True
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
     :return: the newly created port.
@@ -41,7 +41,7 @@ def create_patch_port(name, room_id, destination_port_id=None, commit=True):
     :param name: the name of the port
     :param room_id: the id of the room
     :param destination_port_id: the id of the port this port is connected to
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created PatchPort.
     """
@@ -54,7 +54,7 @@ def create_phone_port(name, commit=True):
     This method will create a new PhonePort.
 
     :param name: the name of the port
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created PhonePort.
     """
@@ -67,7 +67,7 @@ def create_switch_port(name, switch_id, commit=True):
 
     :param name: the name of the port
     :param switch_id: the switch which has the port
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created SwitchPort.
     """
@@ -80,7 +80,7 @@ def delete_port(port_id, commit=True):
     This method will remove the Port for the given id.
 
     :param port_id: the id of the Port which should be removed.
-    :param commit: flag which indicates whether the session should be commited
+    :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the removed Port.
     """
