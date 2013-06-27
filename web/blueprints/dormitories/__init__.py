@@ -75,8 +75,8 @@ def room_show(room_id):
     if form.validate_on_submit():
         lib.logging.create_room_log_entry(message=form.message.data,
                                           timestamp=datetime.now(),
-                                          author_id=current_user.id,
-                                          room_id=room_id)
+                                          author=current_user,
+                                          room=room)
         flash(u'Kommentar hinzugefügt', 'success')
 
     room_log_list = room.room_log_entries[::-1]
@@ -98,7 +98,7 @@ def room_create():
             number=form.number.data,
             level=form.level.data,
             inhabitable=form.inhabitable.data,
-            dormitory_id=form.dormitory_id.data.id)
+            dormitory=form.dormitory_id.data)
         flash(u'Raum angelegt', 'success')
         return redirect(url_for('.room_show', room_id=room.id))
     return render_template('dormitories/dormitory_create.html', form=form)

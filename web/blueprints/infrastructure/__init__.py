@@ -10,7 +10,7 @@
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
-from pycroft.model.host import Switch
+from pycroft.model.host import Switch, Host
 from pycroft.model.host_alias import HostAlias, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
@@ -137,9 +137,10 @@ def aaaarecord_create(user_id, host_id):
 def cnamerecord_create(user_id, host_id):
     form = CNameRecordCreateForm()
     form.alias_for.query = arecords_query(host_id)
+    host = Host.q.get(host_id)
 
     if form.validate_on_submit():
-        create_cnamerecord(host_id=host_id, name=form.name.data,
+        create_cnamerecord(host=host, name=form.name.data,
             alias_for=form.alias_for.data)
 
         flash(u"Neuer CNameRecord angelegt", 'success')
@@ -181,7 +182,7 @@ def switch_port_create(switch_id):
     form = SwitchPortForm()
     switch = Switch.q.get(switch_id)
     if form.validate_on_submit():
-        create_switch_port(name=form.name.data, switch_id=switch_id)
+        create_switch_port(name=form.name.data, switch=switch)
         flash(u'Neuer Switch Port angelegt', 'success')
         return redirect(url_for('.switch_show', switch_id=switch_id))
     return render_template('infrastructure/switch_port_create.html',

@@ -57,35 +57,35 @@ def delete_log_entry(log_entry_id, commit=True):
     return del_entry
 
 
-def create_user_log_entry(message, timestamp, author_id, user_id, commit=True):
+def create_user_log_entry(message, timestamp, author, user, commit=True):
     """
     This method will create a new UserLogEntry.
 
     :param message: the message of the log
     :param timestamp: the timestamp of the log
-    :param author_id: the id of the user which created the log
-    :param user_id: the id of the user for which the log should be created
+    :param author: the user which created the log
+    :param user: the user for which the log should be created
     :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry("userlogentry", message=message,
-                             timestamp=timestamp, author_id=author_id,
-                             user_id=user_id, commit=commit)
+                             timestamp=timestamp, author=author,
+                             user=user, commit=commit)
 
 
-def create_room_log_entry(message, timestamp, author_id, room_id, commit=True):
+def create_room_log_entry(message, timestamp, author, room, commit=True):
     """
     This method will create a new RoomLogEntry.
 
     :param message: the message of the log
     :param timestamp: the timestamp of the log
-    :param author_id: the id of the user which created the log
-    :param room_id: the id of the room for which the log should be created
+    :param author: the user which created the log
+    :param room: the room for which the log should be created
     :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry("roomlogentry", message=message,
-                             timestamp=timestamp, author_id=author_id,
-                             room_id=room_id, commit=commit)
+                             timestamp=timestamp, author=author,
+                             room=room, commit=commit)

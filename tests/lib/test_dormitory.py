@@ -43,8 +43,9 @@ class Test_020_Room(FixtureDataTestBase):
     datasets = [RoomData]
 
     def test_0010_create_room(self):
+        dormitory = Dormitory.q.get(DormitoryData.dummy_dormitory1.id)
         new_room = create_room(number="102", level=0, inhabitable=True,
-            dormitory_id=DormitoryData.dummy_dormitory1.id)
+            dormitory=dormitory)
 
         self.assertIsNotNone(Room.q.get(new_room.id))
 

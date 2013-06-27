@@ -26,8 +26,8 @@ class Test_010_UserLogEntry(FixtureDataTestBase):
 
         user_log_entry = create_user_log_entry(message=message,
                                                timestamp=timestamp,
-                                               author_id=author.id,
-                                               user_id=user.id)
+                                               author=author,
+                                               user=user)
 
         self.assertIsNotNone(UserLogEntry.q.get(user_log_entry.id))
 
@@ -91,8 +91,8 @@ class Test_030_RoomLogEntry(FixtureDataTestBase):
 
         room_log_entry = create_room_log_entry(message=message,
                                                timestamp=timestamp,
-                                               author_id=author.id,
-                                               room_id=room.id)
+                                               author=author,
+                                               room=room)
 
         self.assertIsNotNone(RoomLogEntry.q.get(room_log_entry.id))
 
