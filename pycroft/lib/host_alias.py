@@ -103,50 +103,50 @@ def _create_alias(type, commit=True, *args, **kwargs):
 
 # Wrapper functions around the _create_alias function for each record type
 
-def create_arecord(host_id, name, address_id, time_to_live=None, commit=True):
+def create_arecord(host, name, address, time_to_live=None, commit=True):
     """
     This method will create a new a-record
 
-    :param host_id: the id of the host
+    :param host: the host
     :param name: the name of the alias
     :param time_to_live: the ttl of the alias
-    :param address_id: the ip address which should be associated with the
+    :param address: the ip address which should be associated with the
                        a-record
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the created a-record
     """
 
-    return _create_alias("arecord", host_id=host_id, name=name,
-                         time_to_live=time_to_live, address_id=address_id,
+    return _create_alias("arecord", host=host, name=name,
+                         time_to_live=time_to_live, address=address,
                          commit=commit)
 
 
-def create_aaaarecord(host_id, name, address_id, time_to_live=None,
+def create_aaaarecord(host, name, address, time_to_live=None,
                       commit=True):
     """
     This method will create a new aaaa-record
 
-    :param host_id: the id of the host
+    :param host: the host
     :param name: the name of the alias
     :param time_to_live: the ttl of the alias
-    :param address_id: the ip address which should be associated with the
+    :param address: the ip address which should be associated with the
                        aaaa-record
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the created aaaa-record
     """
 
-    return _create_alias("aaaarecord", name=name, host_id=host_id,
-                         time_to_live=time_to_live, address_id=address_id,
+    return _create_alias("aaaarecord", name=name, host=host,
+                         time_to_live=time_to_live, address=address,
                          commit=commit)
 
 
-def create_mxrecord(host_id, server, domain, priority, commit=True):
+def create_mxrecord(host, server, domain, priority, commit=True):
     """
     This method will create a new mx-record
 
-    :param host_id: the id of the host
+    :param host: the host
     :param server: the server
     :param domain: the domain
     :param priority: priority
@@ -155,31 +155,31 @@ def create_mxrecord(host_id, server, domain, priority, commit=True):
     :return: the created mx-record
     """
 
-    return _create_alias("mxrecord", host_id=host_id, server=server,
+    return _create_alias("mxrecord", host=host, server=server,
                          domain=domain, priority=priority, commit=commit)
 
 
-def create_cnamerecord(host_id, name, alias_for_id, commit=True):
+def create_cnamerecord(host, name, alias_for, commit=True):
     """
     This method will create a new cname-record
 
-    :param host_id: the od of the host
+    :param host: the host
     :param name: the alias for the a- or aaaarecord
-    :param alias_for_id: the id of the record we want to specify an alias
+    :param alias_for: the record we want to specify an alias
     :param commit: flag which indicates whether the sesssion should
                    be committed or not. Default: True
     :return: the created cname-record
     """
 
-    return _create_alias("cnamerecord", host_id=host_id, name=name,
-                         alias_for_id=alias_for_id, commit=commit)
+    return _create_alias("cnamerecord", host=host, name=name,
+                         alias_for=alias_for, commit=commit)
 
 
-def create_nsrecord(host_id, domain, server, time_to_live=None, commit=True):
+def create_nsrecord(host, domain, server, time_to_live=None, commit=True):
     """
     This method will create a new ns-record.
 
-    :param host_id: the id of the host
+    :param host: the host
     :param domain: the domain
     :param server: the server
     :param time_to_live: the time the record should be valid
@@ -188,17 +188,17 @@ def create_nsrecord(host_id, domain, server, time_to_live=None, commit=True):
     :return: the created ns-record
     """
 
-    return _create_alias("nsrecord", host_id=host_id, domain=domain,
+    return _create_alias("nsrecord", host=host, domain=domain,
                          server=server, time_to_live=time_to_live,
                          commit=commit)
 
 
-def create_srvrecord(host_id, service, priority, weight, port, target,
+def create_srvrecord(host, service, priority, weight, port, target,
                      time_to_live=None, commit=True):
     """
     This method will create a new srv-record.
 
-    :param host_id: the id of the host
+    :param host: the host
     :param service: the service
     :param priority: the priority
     :param weight: the weight
@@ -210,7 +210,7 @@ def create_srvrecord(host_id, service, priority, weight, port, target,
     :return: the created srv-record
     """
 
-    return _create_alias("srvrecord", host_id=host_id, service=service,
+    return _create_alias("srvrecord", host=host, service=service,
                          priority=priority, weight=weight, port=port,
                          target=target, time_to_live=time_to_live,
                          commit=commit)

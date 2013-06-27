@@ -12,7 +12,9 @@ from pycroft.model import session
 from pycroft.model.host_alias import ARecord, AAAARecord, MXRecord, CNameRecord, \
     NSRecord, SRVRecord, HostAlias
 from tests.lib.fixtures.host_alias_fixtures import ARecordData, AAAARecordData, \
-    NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData
+    NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData, \
+    SubnetData
+
 from tests import FixtureDataTestBase
 
 
@@ -85,15 +87,18 @@ class Test_020_ChangingOfAlias(FixtureDataTestBase):
 
 class Test_030_CreatingOfAlias(FixtureDataTestBase):
     datasets = [ARecordData, AAAARecordData, NSRecordData, CNameRecordData,
-                MXRecordData, SRVRecordData, IpData]
+                MXRecordData, SRVRecordData, IpData, SubnetData]
 
     def test_0010_arecord_without_ttl(self):
-        address = Ip.q.filter(Ip.id == IpData.ip_v4.id).one()
+        address = Ip.q.get(IpData.ip_v4.id)
         host = UserHost.q.first()
         name = "test"
 
-        record = create_arecord(address_id=address.id, name=name,
-                                host_id=host.id)
+        record = create_arecord(address=address, name=name,
+                                host=host)
+
+        session.session.add(record)
+        session.session.commit()
 
         self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().name,
                          name)
@@ -108,13 +113,13 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         delete_alias(record.id)
 
     def test_0015_arecord_with_ttl(self):
-        address = Ip.q.filter(Ip.id == IpData.ip_v4.id).one()
+        address = Ip.q.get(IpData.ip_v4.id)
         host = UserHost.q.first()
         name = "test"
         ttl = 100
 
-        record = create_arecord(address_id=address.id, name=name,
-                                time_to_live=ttl, host_id=host.id)
+        record = create_arecord(address=address, name=name,
+                                time_to_live=ttl, host=host)
 
         self.assertEqual(ARecord.q.filter(ARecord.id == record.id).one().name,
                          name)
@@ -130,12 +135,12 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         delete_alias(record.id)
 
     def test_0020_aaaarecord_without_ttl(self):
-        address = Ip.q.filter(Ip.id == IpData.ip_v6.id).one()
+        address = Ip.q.get(IpData.ip_v6.id)
         host = UserHost.q.first()
         name = "test"
 
-        record = create_aaaarecord(address_id=address.id, name=name,
-                                   host_id=host.id)
+        record = create_aaaarecord(address=address, name=name,
+                                   host=host)
 
         self.assertEqual(
             AAAARecord.q.filter(AAAARecord.id == record.id).one().name,
@@ -157,8 +162,8 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         name = "test"
         ttl = 100
 
-        record = create_aaaarecord(address_id=address.id, name=name,
-                                   time_to_live=ttl, host_id=host.id)
+        record = create_aaaarecord(address=address, name=name,
+                                   time_to_live=ttl, host=host)
 
         self.assertEqual(
             AAAARecord.q.filter(AAAARecord.id == record.id).one().name,
@@ -180,8 +185,8 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         host = UserHost.q.first()
         name = "test"
 
-        record = create_cnamerecord(alias_for_id=alias_for.id, name=name,
-                                    host_id=host.id)
+        record = create_cnamerecord(alias_for=alias_for, name=name,
+                                    host=host)
 
         self.assertEqual(
             CNameRecord.q.filter(CNameRecord.id == record.id).one().alias_for,
@@ -202,7 +207,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         priority = 10
 
         record = create_mxrecord(priority=priority, server=server,
-                                 domain=domain, host_id=host.id)
+                                 domain=domain, host=host)
 
         self.assertEqual(
             MXRecord.q.filter(MXRecord.id == record.id).one().server,
@@ -224,7 +229,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         server = "server"
 
         record = create_nsrecord(domain=domain, server=server,
-                                 host_id=host.id)
+                                 host=host)
 
         self.assertEqual(
             NSRecord.q.filter(NSRecord.id == record.id).one().domain,
@@ -246,7 +251,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         ttl = 10
 
         record = create_nsrecord(domain=domain, server=server,
-                                 time_to_live=ttl, host_id=host.id)
+                                 time_to_live=ttl, host=host)
 
         self.assertEqual(
             NSRecord.q.filter(NSRecord.id == record.id).one().domain,
@@ -271,7 +276,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
 
         record = create_srvrecord(priority=priority, service=service,
                                   weight=weight, port=port, target=target,
-                                  host_id=host.id)
+                                  host=host)
 
         self.assertEqual(
             SRVRecord.q.filter(SRVRecord.id == record.id).one().service,
@@ -308,7 +313,7 @@ class Test_030_CreatingOfAlias(FixtureDataTestBase):
         record = create_srvrecord(priority=priority, service=service,
                                   weight=weight, port=port, target=target,
                                   time_to_live=ttl,
-                                  host_id=host.id)
+                                  host=host)
 
         self.assertEqual(
             SRVRecord.q.filter(SRVRecord.id == record.id).one().service,

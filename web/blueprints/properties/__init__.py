@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -75,8 +75,9 @@ def property_group_create():
 
 @bp.route('/property_group/<group_id>/add/<property_name>')
 def property_group_add_property(group_id, property_name):
-    (group, property) = create_property(group_id=group_id, name=property_name,
-        property_group_id= group_id)
+    property_group = PropertyGroup.q.get(group_id)
+    (group, property) = create_property(name=property_name,
+        property_group= property_group, granted=True)
     flash(u'Eigenschaft {} zur Gruppe {} hinzugefügt'.format(property.name,
         group.name), 'success')
     return redirect(url_for('.property_groups'))

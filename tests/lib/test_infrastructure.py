@@ -26,7 +26,7 @@ class Test_010_PatchPort(FixtureDataTestBase):
         room = Room.q.first()
 
         patch_port = create_patch_port(name=name,
-            destination_port_id=destination_port.id, room_id=room.id)
+            destination_port=destination_port, room=room)
 
         self.assertIsNotNone(PatchPort.q.get(patch_port.id))
 
@@ -83,7 +83,7 @@ class Test_030_SwitchPort(FixtureDataTestBase):
         name = "S101"
         switch = Switch.q.first()
 
-        switch_port = create_switch_port(name=name, switch_id=switch.id)
+        switch_port = create_switch_port(name=name, switch=switch)
 
         self.assertIsNotNone(SwitchPort.q.get(switch_port.id))
 

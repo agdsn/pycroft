@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
@@ -46,8 +46,9 @@ class Test_020_Room(FixtureDataTestBase):
     datasets = [RoomData]
 
     def test_0010_create_room(self):
+        dormitory = Dormitory.q.get(DormitoryData.dummy_dormitory1.id)
         new_room = create_room(number="102", level=0, inhabitable=True,
-            dormitory_id=DormitoryData.dummy_dormitory1.id)
+            dormitory=dormitory)
 
         self.assertIsNotNone(Room.q.get(new_room.id))
 

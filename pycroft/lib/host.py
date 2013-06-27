@@ -37,18 +37,18 @@ def change_mac(net_device, mac, processor, commit=True):
     return net_device
 
 
-def create_user_host(user_id, room_id, commit=True):
+def create_user_host(user, room, commit=True):
     """
     This method will create a new UerHost.
 
 
-    :param user_id: the id of the user
-    :param room_id: the id of the room
+    :param user: the user
+    :param room: the room
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created UserHost.
     """
-    user_host = UserHost(user_id=user_id, room_id=room_id)
+    user_host = UserHost(user=user, room=room)
 
     session.session.add(user_host)
     if commit:
@@ -78,17 +78,17 @@ def delete_user_host(user_host_id, commit=True):
     return del_user_host
 
 
-def create_server_host(user_id, room_id, commit=True):
+def create_server_host(user, room, commit=True):
     """
     This method will create a new ServerHost.
 
-    :param user_id: the id of the user
-    :param room_id: the id of the room
+    :param user: the user
+    :param room: the room
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created ServerHost.
     """
-    server_host = ServerHost(user_id=user_id, room_id=room_id)
+    server_host = ServerHost(user=user, room=room)
     session.session.add(server_host)
     if commit:
         session.session.commit()
@@ -116,19 +116,19 @@ def delete_server_host(server_host_id, commit=True):
     return del_server_host
 
 
-def create_switch(user_id, room_id, name, management_ip, commit=True):
+def create_switch(user, room, name, management_ip, commit=True):
     """
     This method will create a new switch.
 
-    :param user_id: the id of the user
-    :param room_id: the id of the room
+    :param user: the id of the user
+    :param room: the id of the room
     :param name: the name of the switch
     :param management_ip: the management ip which is used to access the switch
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created switch.
     """
-    switch = Switch(user_id=user_id, room_id=room_id, name=name,
+    switch = Switch(user=user, room=room, name=name,
                     management_ip=management_ip)
     session.session.add(switch)
     if commit:
@@ -157,17 +157,17 @@ def delete_switch(switch_id, commit=True):
     return del_switch
 
 
-def create_user_net_device(mac, host_id, commit=True):
+def create_user_net_device(mac, host, commit=True):
     """
     This method will create a new UserNetDevice.
 
     :param mac: the mac of the device
-    :param host_id: the id of the host
+    :param host: the host
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created UserNetDevice.
     """
-    user_net_device = UserNetDevice(mac=mac, host_id=host_id)
+    user_net_device = UserNetDevice(mac=mac, host=host)
     session.session.add(user_net_device)
     if commit:
         session.session.commit()
@@ -196,20 +196,20 @@ def delete_user_net_device(user_net_device_id, commit=True):
     return del_user_net_device
 
 
-def create_server_net_device(mac, host_id, switch_port_id, commit=True):
+def create_server_net_device(mac, host, switch_port, commit=True):
     """
     This method will create a new ServerNetDevice.
 
 
     :param mac: the mac of the net device
-    :param host_id: the id of the host
-    :param switch_port_id: the id of the switch_port
+    :param host: the host
+    :param switch_port: the switch_port
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created ServerNetDevice.
     """
-    server_net_device = ServerNetDevice(mac=mac, host_id=host_id,
-                                        switch_port_id=switch_port_id)
+    server_net_device = ServerNetDevice(mac=mac, host=host,
+                                        switch_port=switch_port)
     session.session.add(server_net_device)
     if commit:
         session.session.commit()
@@ -238,17 +238,17 @@ def delete_server_net_device(server_net_device_id, commit=True):
     return del_server_net_device
 
 
-def create_switch_net_device(mac, host_id, commit=True):
+def create_switch_net_device(mac, host, commit=True):
     """
     This method will create a new SwitchNetDevice.
 
     :param mac: the mac of the device
-    :param host_id: the id of the host
+    :param host: the id of the host
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created SwitchNetDevice.
     """
-    switch_net_device = SwitchNetDevice(mac=mac, host_id=host_id)
+    switch_net_device = SwitchNetDevice(mac=mac, host=host)
     session.session.add(switch_net_device)
     if commit:
         session.session.commit()
@@ -277,18 +277,18 @@ def delete_switch_net_device(switch_net_device_id, commit=True):
     return del_switch_net_device
 
 
-def create_ip(address, net_device_id, subnet_id, commit=True):
+def create_ip(address, net_device, subnet, commit=True):
     """
     This method will create a new Ip.
 
     :param address: the address which is represented by this object.
-    :param net_device_id: the id of the net_device.
-    :param subnet_id: the id of the subnet the ip is part of.
+    :param net_device: the net_device.
+    :param subnet: the subnet the ip is part of.
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created Ip.
     """
-    ip = Ip(address=address, net_device_id=net_device_id, subnet_id=subnet_id)
+    ip = Ip(address=address, net_device=net_device, subnet=subnet)
     session.session.add(ip)
     if commit:
         session.session.commit()

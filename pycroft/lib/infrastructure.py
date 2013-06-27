@@ -34,19 +34,19 @@ def _create_port(type, commit=True, *args, **kwargs):
     return port
 
 
-def create_patch_port(name, room_id, destination_port_id=None, commit=True):
+def create_patch_port(name, room, destination_port=None, commit=True):
     """
     This method will create a new PatchPort.
 
     :param name: the name of the port
-    :param room_id: the id of the room
-    :param destination_port_id: the id of the port this port is connected to
+    :param room: the room
+    :param destination_port: the port this port is connected to
     :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created PatchPort.
     """
-    return _create_port("patch_port", name=name, room_id=room_id,
-                        destination_port_id=destination_port_id, commit=commit)
+    return _create_port("patch_port", name=name, room=room,
+                        destination_port=destination_port, commit=commit)
 
 
 def create_phone_port(name, commit=True):
@@ -61,17 +61,17 @@ def create_phone_port(name, commit=True):
     return _create_port("phone_port", name=name, commit=commit)
 
 
-def create_switch_port(name, switch_id, commit=True):
+def create_switch_port(name, switch, commit=True):
     """
     This method will create a new SwitchPort.
 
     :param name: the name of the port
-    :param switch_id: the switch which has the port
+    :param switch: the switch which has the port
     :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created SwitchPort.
     """
-    return _create_port("switch_port", name=name, switch_id=switch_id,
+    return _create_port("switch_port", name=name, switch=switch,
                         commit=commit)
 
 

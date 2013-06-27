@@ -110,23 +110,19 @@ def delete_property_group(property_group_id, commit=True):
     return _delete_group(property_group_id, commit=commit)
 
 
-def create_property(name, property_group_id, granted, commit=True):
+def create_property(name, property_group, granted, commit=True):
     """
     This method will create a new property and add it to the property group
     represented by the id.
 
     :param name: the name of the property
-    :param property_group_id: the property group which should have the property
+    :param property_group: the property group which should have the property
     :param granted: the granted status of the property
     :param commit: frag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created property and the group it was added to
     """
-    property_group = PropertyGroup.q.get(property_group_id)
-    if property_group is None:
-        raise ValueError("The given id is wrong! No property group exists!")
-
-    property = Property(name=name, property_group_id=property_group_id,
+    property = Property(name=name, property_group=property_group,
                         granted=granted)
     session.session.add(property)
     if commit:
@@ -164,20 +160,20 @@ def delete_property(property_group_id, name, commit=True):
     return group, property
 
 
-def create_membership(start_date, end_date, user_id, group_id, commit=True):
+def create_membership(start_date, end_date, user, group, commit=True):
     """
     This method will create a new Membership.
 
     :param start_date: the start date of the membership
     :param end_date: the end date of the membership
-    :param user_id: the id of the user
-    :param group_id: the id of the group
+    :param user: the user
+    :param group: the group
     :param commit: flag which indicates whether the session should be committed
                    or not. Default: True
     :return: the newly created Membership
     """
     membership = Membership(start_date=start_date, end_date=end_date,
-                            user_id=user_id, group_id=group_id)
+                            user=user, group=group)
     session.session.add(membership)
     if commit:
         session.session.commit()

@@ -214,7 +214,7 @@ class Ip(ModelBase):
         viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
-    subnet = relationship("Subnet", backref=backref("ips"))
+    subnet = relationship("Subnet", backref=backref("ips"), lazy='joined')
 
     def change_ip(self, ip, subnet):
         self.subnet = None

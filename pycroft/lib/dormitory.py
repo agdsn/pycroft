@@ -44,7 +44,7 @@ def delete_dormitory(dormitory_id, commit=True):
     return dormitory
 
 
-def create_room(number, level, inhabitable, dormitory_id, commit=True):
+def create_room(number, level, inhabitable, dormitory, commit=True):
     """
     This method creates a new room.
 
@@ -52,13 +52,13 @@ def create_room(number, level, inhabitable, dormitory_id, commit=True):
     :param number: the number of the room.
     :param level: the level within the dormitory where the room is located.
     :param inhabitable: whether or not someone can live in the room.
-    :param dormitory_id: the id of the dormitory in which the room is located.
+    :param dormitory: the dormitory in which the room is located.
     :param commit: flag which indicates whether the session should be
                    committed or not. Default: True
     :return: the newly created room
     """
     room = Room(number=number, level=level, inhabitable=inhabitable,
-                dormitory_id=dormitory_id)
+                dormitory=dormitory)
     session.session.add(room)
     if commit:
         session.session.commit()

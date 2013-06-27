@@ -61,8 +61,8 @@ def user_show(user_id):
     if form.validate_on_submit():
         lib.logging.create_user_log_entry(message=form.message.data,
             timestamp=datetime.now(),
-            author_id=current_user.id,
-            user_id=user_id)
+            author=current_user,
+            user=user)
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = user.user_log_entries + room.room_log_entries
@@ -111,15 +111,15 @@ def add_membership(user_id):
         else:
             end_date=None
         lib.property.create_membership(
-            user_id=user.id,
-            group_id=form.group_id.data.id,
+            user=user,
+            group=form.group_id.data,
             start_date=start_date,
             end_date=end_date)
-        lib.logging.create_user_log_entry(author_id=current_user.id,
+        lib.logging.create_user_log_entry(author=current_user,
                 message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
                 form.group_id.data.name,
                 timestamp=datetime.now(),
-                user_id=user_id)
+                user=user)
 
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
@@ -136,12 +136,12 @@ def end_membership(membership_id):
     membership.disable()
 
     # ToDo: Make the log messages not Frontend specific (a helper?)
-    lib.logging.create_user_log_entry(author_id=current_user.id,
+    lib.logging.create_user_log_entry(author=current_user,
             message=u"hat die Mitgliedschaft des Nutzers"
                 u" in der Gruppe '%s' beendet." %
                 membership.group.name,
             timestamp=datetime.now(),
-            user_id=membership.user_id)
+            user=membership.user)
 
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
