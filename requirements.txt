@@ -16,3 +16,5 @@ Werkzeug>=0.8.3
 wsgiref>=0.1.2
 WTForms>=1.0.1
 fixture>=1.4
+Flask-Testing>=0.4
+blinker>=1.3
