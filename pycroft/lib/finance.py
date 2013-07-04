@@ -8,10 +8,11 @@ from datetime import datetime
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split
 from pycroft.model import session
 from pycroft.lib import config
+from pycroft.lib.all import with_transaction
 
 
-def create_semester(name, registration_fee, semester_fee, begin_date, end_date,
-                    commit=True):
+@with_transaction
+def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
     """
     This function creates a new Semester.
     There are created a registration fee account and a semester fee account
@@ -22,8 +23,6 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date,
     :param semester_fee: The fee a student have to pay every semester.
     :param begin_date: Date when the semester starts.
     :param end_date: Date when semester ends.
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     :return: The created Semester.
     """
     semester = Semester(name=name,
@@ -39,24 +38,20 @@ def create_semester(name, registration_fee, semester_fee, begin_date, end_date,
                            semester=semester, tag=account["tag"]))
 
     session.session.add_all(objects)
-    if commit:
-        session.session.commit()
     return semester
 
 
+@with_transaction
 def simple_transaction(message, debit_account, credit_account, semester, amount,
-                       date=None, commit=True):
+                       date=None):
     """
     Creates a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits.
-    This function does not commit the changes to the database.
     :param message: Transaction message
     :param debit_account: Debit (germ. Soll) account.
     :param credit_account: Credit (germ. Haben) account
     :param semester: Semester of the transaction.
     :param amount: Amount in Eurocents
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     """
     if date is None:
         date = datetime.now()
@@ -74,5 +69,3 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     session.session.add_all(
         [new_transaction, new_debit_split, new_credit_split]
     )
-    if commit:
-        session.session.commit()
