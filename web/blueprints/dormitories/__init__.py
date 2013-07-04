@@ -31,7 +31,7 @@ def overview():
         dormitories=dormitories_list)
 
 
-@bp.route('/')
+@bp.route('/list')
 @nav.navigate(u"Wohnheime")
 def dormitories():
     dormitories_list = Dormitory.q.all()
