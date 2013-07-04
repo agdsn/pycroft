@@ -25,8 +25,9 @@ from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
 from pycroft.lib.finance import simple_transaction
+from pycroft.lib.all import with_transaction
 
-
+@with_transaction
 def move_in(name, login, email, dormitory, level, room_number, mac,
              current_semester, processor, host_name=None):
     """
@@ -74,17 +75,17 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    new_host = create_user_host(user=new_user, room=room, commit=False)
-    new_net_device = create_user_net_device(mac=mac, host=new_host, commit=False)
+    new_host = create_user_host(user=new_user, room=room)
+    new_net_device = create_user_net_device(mac=mac, host=new_host)
     new_ip = create_ip(net_device=new_net_device, address=ip_address,
-                       subnet=subnet, commit=False)
+                       subnet=subnet)
 
     new_arecord = create_arecord(host=new_host, time_to_live=None,
                                  name=host.generate_hostname(ip_address),
-                                 address=new_ip, commit=False)
+                                 address=new_ip)
     if host_name:
         create_cnamerecord(host=new_host, name=host_name,
-                           alias_for=new_arecord, commit=False)
+                           alias_for=new_arecord)
 
     conf = config["move_in"]
     for membership in conf["group_memberships"]:
@@ -96,8 +97,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             start_date=start_date,
             end_date=None,
             group=group,
-            user=new_user,
-            commit=False)
+            user=new_user
+        )
         if membership.get("duration"):
             assert membership["duration"] > 0
             new_membership.end_date = datetime.now() + timedelta(membership["duration"])
@@ -127,32 +128,28 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         new_finance_account,
         registration_fee_account,
         current_semester,
-        current_semester.registration_fee,
-        commit=False
+        current_semester.registration_fee
     )
     simple_transaction(
         conf["semester_fee_message"].format(**format_args),
         new_finance_account,
         semester_fee_account,
         current_semester,
-        current_semester.semester_fee,
-        commit=False
+        current_semester.semester_fee
     )
 
     move_in_user_log_entry = create_user_log_entry(
         author=processor,
         message=conf["log_message"],
         timestamp=datetime.now(),
-        user=new_user,
-        commit=False
+        user=new_user
     )
-
-    session.session.commit()
 
     return new_user
 
 
 #TODO ensure serializability
+@with_transaction
 def move(user, dormitory, level, room_number, processor):
     """
     Moves the user into another room.
@@ -180,8 +177,7 @@ def move(user, dormitory, level, room_number, processor):
         author=processor,
         message=config["move"]["log_message"].format(
             from_room=old_room, to_room=new_room),
-        timestamp=datetime.now(), user=user,
-        commit=False
+        timestamp=datetime.now(), user=user
     )
 
     # assign a new IP to each net_device
@@ -201,18 +197,17 @@ def move(user, dormitory, level, room_number, processor):
             create_user_log_entry(author=processor,
                 message=config["move"]["ip_change_log_message"].format(
                     old_ip=old_ip, new_ip=new_ip),
-                timestamp=datetime.now(), user=user,
-                commit=False)
+                timestamp=datetime.now(), user=user)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
     for user_host in user.user_hosts:
         user_host.room = new_room
 
-    session.session.commit()
     return user
 
 
+@with_transaction
 def edit_name(user, name, processor):
     """
     Changes the name of the user and creates a log entry.
@@ -226,14 +221,12 @@ def edit_name(user, name, processor):
 
         create_user_log_entry(author=processor,
             message=u"Nutzer %s umbenannt in %s" % (oldName, name),
-            timestamp=datetime.now(), user=user,
-            commit=False)
-
-        session.session.commit()
+            timestamp=datetime.now(), user=user)
 
     return user
 
 
+@with_transaction
 def edit_email(user, email, processor):
     """
     Changes the email address of a user and creates a log entry.
@@ -248,9 +241,7 @@ def edit_email(user, email, processor):
 
         create_user_log_entry(author=processor,
             message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
-            timestamp=datetime.now(), user=user,
-            commit=False)
-        session.session.commit()
+            timestamp=datetime.now(), user=user)
 
     return user
 
@@ -334,6 +325,7 @@ def has_internet(user):
         and has_positive_balance(user)
 
 
+@with_transaction
 def block(user, reason, processor, date=None):
     """
     This function blocks a user for a certain time.
@@ -356,25 +348,22 @@ def block(user, reason, processor, date=None):
 
     if date is not None:
         create_membership(start_date=datetime.now(), end_date=date,
-                          group=block_group, user=user,
-                          commit=False)
+                          group=block_group, user=user)
         log_message = config["block"]["log_message_with_enddate"].format(
             date=date.strftime("%d.%m.%Y"), reason=reason)
     else:
         create_membership(start_date=datetime.now(), end_date=None,
-                          group=block_group, user=user,
-                          commit=False)
+                          group=block_group, user=user)
         log_message = config["block"]["log_message_without_enddate"].format(
             reason=reason)
 
     create_user_log_entry(message=log_message, timestamp=datetime.now(),
-                          author=processor, user=user,
-                          commit=False)
+                          author=processor, user=user)
 
-    session.session.commit()
     return user
 
 
+@with_transaction
 def move_out(user, date, comment, processor):
     """
     This function moves out a user and finishes all his memberships. A logmessage is created.
@@ -405,14 +394,13 @@ def move_out(user, date, comment, processor):
         message=log_message,
         timestamp=datetime.now(),
         author=processor,
-        user=user,
-        commit=False
+        user=user
     )
 
-    session.session.commit()
     return user
 
 
+@with_transaction
 def move_out_tmp(user, date, comment, processor):
     """
     This function moves a user temporally. A logmessage is created.
@@ -430,7 +418,7 @@ def move_out_tmp(user, date, comment, processor):
         raise ValueError("Date should be a datetime object!")
 
     create_membership(group=away_group, user=user, start_date=date,
-                      end_date=None, commit=False)
+                      end_date=None)
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
@@ -449,15 +437,13 @@ def move_out_tmp(user, date, comment, processor):
         message=log_message,
         timestamp=datetime.now(),
         author=processor,
-        user=user,
-        commit=False
+        user=user
     )
-
-    session.session.commit()
 
     return user
 
 
+@with_transaction
 def is_back(user, processor):
     """
     After a user moved temporarily out, this function sets group memberships and
@@ -484,18 +470,14 @@ def is_back(user, processor):
         create_ip(
             address=ip_address,
             subnet=subnet,
-            net_device=user_host.user_net_device,
-            commit=False
+            net_device=user_host.user_net_device
         )
 
     create_user_log_entry(
         message=config["move_out_tmp"]["log_message_back"],
         timestamp=datetime.now(),
         author=processor,
-        user=user,
-        commit=False
+        user=user
     )
-
-    session.session.commit()
 
     return user

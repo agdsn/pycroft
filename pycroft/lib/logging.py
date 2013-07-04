@@ -1,15 +1,14 @@
 from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 from pycroft.model import session
+from pycroft.lib.all import with_transaction
 
 
-def _create_log_entry(type, commit=True, *args, **kwargs):
+def _create_log_entry(type, *args, **kwargs):
     """
     This method will create a new LogEntry of the given type with the given
     arguments.
 
     :param type: the type of the LogEntry which should be created.
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
     :return: the newly created LogEntry.
@@ -24,19 +23,15 @@ def _create_log_entry(type, commit=True, *args, **kwargs):
         raise ValueError("Unknown LogEntry type!")
 
     session.session.add(entry)
-    if commit:
-        session.session.commit()
-
     return entry
 
 
-def delete_log_entry(log_entry_id, commit=True):
+@with_transaction
+def delete_log_entry(log_entry_id):
     """
     This method will remove the LogEntry for the given id.
 
     :param log_entry_id: the id of the LogEntry which should be removed.
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     :return: the removed LogEntry.
     """
     entry = LogEntry.q.get(log_entry_id)
@@ -51,13 +46,11 @@ def delete_log_entry(log_entry_id, commit=True):
         raise ValueError("Unknown LogEntry type!")
 
     session.session.delete(del_entry)
-    if commit:
-        session.session.commit()
-
     return del_entry
 
 
-def create_user_log_entry(message, timestamp, author, user, commit=True):
+@with_transaction
+def create_user_log_entry(message, timestamp, author, user):
     """
     This method will create a new UserLogEntry.
 
@@ -65,16 +58,15 @@ def create_user_log_entry(message, timestamp, author, user, commit=True):
     :param timestamp: the timestamp of the log
     :param author: the user which created the log
     :param user: the user for which the log should be created
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry("userlogentry", message=message,
                              timestamp=timestamp, author=author,
-                             user=user, commit=commit)
+                             user=user)
 
 
-def create_room_log_entry(message, timestamp, author, room, commit=True):
+@with_transaction
+def create_room_log_entry(message, timestamp, author, room):
     """
     This method will create a new RoomLogEntry.
 
@@ -82,10 +74,8 @@ def create_room_log_entry(message, timestamp, author, room, commit=True):
     :param timestamp: the timestamp of the log
     :param author: the user which created the log
     :param room: the room for which the log should be created
-    :param commit: flag which indicates whether the session should be committed
-                   or not. Default: True
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry("roomlogentry", message=message,
                              timestamp=timestamp, author=author,
-                             room=room, commit=commit)
+                             room=room)
