@@ -1,6 +1,10 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from flask.ext import testing
+from pycroft.model.user import User
+from web import make_app
+
 __author__ = 'jan'
 
 from fixture.style import TrimmedNameStyle
@@ -44,3 +48,46 @@ class FixtureDataTestBase(DataTestCase, OldPythonTestCase):
     def tearDown(self):
         super(FixtureDataTestBase, self).tearDown()
         session.session.remove()
+
+
+class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
+    """A TestCase baseclass that handeles frontend tests.
+
+    Like the FixtureDataTestBase you have to define a dataset.
+    If you want a user to be logged in than you have to overwrite the 'setUp' method
+    and set self.login and self.password with a user login and password.
+    Do not forget to call the setUp method from the super class.
+
+    You have to provide an user in the fixtures with the needed properties.
+    """
+    def _login(self, login, password):
+        self.client.post('/login', data=dict(
+            username=login,
+            password=password),
+            follow_redirects=True)
+
+    def tearDown(self):
+        self.client.get("/logout")
+        super(FrontendDataTestBase, self).tearDown()
+
+    def setUp(self):
+        super(FrontendDataTestBase, self).setUp()
+        if self.login is not None and self.password is not None:
+            self._login(login=self.login, password=self.password)
+
+    def create_app(self):
+        """
+        Create your Flask app here, with any
+        configuration you need
+        """
+        app = make_app()
+        app.testing = True
+
+        return app
+
+    def assert_template_get_request(self, endpoint, template):
+        response = self.client.get(endpoint)
+        self.assert200(response)
+        if template:
+            self.assertTemplateUsed(name=template)
+        return response
