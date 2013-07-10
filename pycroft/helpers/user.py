@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -28,6 +28,13 @@ def generatePassword(length):
     return password
 
 
+def generate_crypt_salt(salt_length):
+    allowed_letters = [chr(x) for x in
+                       range(ord("a"), ord("z") + 1) +
+                       range(ord("A"), ord("Z") + 1) +
+                       range(ord("0"), ord("9") + 1)] + \
+                      [".", "/"]
+    return "".join(random.sample(allowed_letters, salt_length))
 
 
 def hash_password(plaintext_passwd):
