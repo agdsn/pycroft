@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import random
@@ -52,8 +52,8 @@ class Test_020_PasswdHashes(unittest.TestCase):
                         "MD5": ldap_md5_crypt.encrypt,
                         "SSHA": ldap_salted_sha1.encrypt}
 
-        for len in range(4,20):
-            pw = generatePassword(len)
+        for length in range(4,20):
+            pw = generatePassword(length)
             hash_dict = {"plain": pw}
             for method in self.methods:
                 hash_dict[method] = self.methods[method](pw)
