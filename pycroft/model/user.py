@@ -28,6 +28,13 @@ class User(ModelBase, UserMixin):
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
 
+    # one to one from User to FinanceAccount
+    finance_account = relationship(
+        "FinanceAccount", backref=backref("user", uselist=False)
+    )
+    finance_account_id = Column(
+        Integer, ForeignKey("financeaccount.id"), nullable=True
+    )
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)

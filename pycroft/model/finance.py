@@ -27,16 +27,17 @@ class Semester(ModelBase):
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
-    #LIABILITY=Passivkonto, EXPENSE=Aufwandskonto, ASSET=Aktivkonto, INCOME=Ertragskonto
-    type = Column(Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
-                        name="financeaccounttypes"), nullable=False)
+    # LIABILITY=Passivkonto,
+    # EXPENSE=Aufwandskonto,
+    # ASSET=Aktivkonto,
+    # INCOME=Ertragskonto
+    type = Column(
+        Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
+             name="financeaccounttypes"),
+        nullable=False
+    )
 
     transactions = relationship("Transaction", secondary="split")
-
-    # one to one from FinanceAccount to User
-    user = relationship("User", backref=backref("finance_account",
-                                                uselist=False))
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     semester_id = Column(Integer, ForeignKey('semester.id'), nullable=True)
     semester = relationship("Semester", backref=backref("accounts"))
     tag = Column(Enum("registration_fee","additional_fee","regular_fee","arrears_fee"), nullable=True)

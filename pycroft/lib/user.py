@@ -117,7 +117,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     }
     new_finance_account = FinanceAccount(
         name=conf["financeaccount_name"].format(**format_args),
-        type="EQUITY", user=new_user)
+        type="EQUITY")
+    new_user.finance_account = new_finance_account
     session.session.add(new_finance_account)
 
     # Initial fees

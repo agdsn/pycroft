@@ -116,16 +116,16 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         self.assertEqual(UserHelper.has_internet(new_user), True)
 
-        user_account = finance.FinanceAccount.q.filter(
-                finance.FinanceAccount.user == new_user
-            ).filter(
-                finance.FinanceAccount.name == config["move_in"]["financeaccount_name"].format(user_id=new_user.id)
-            ).one()
+        finance_account = new_user.finance_account
         splits = finance.Split.q.filter(
-                finance.Split.account_id == user_account.id
-            ).all()
+            finance.Split.account_id == finance_account.id
+        ).all()
+        self.assertEqual(
+            finance_account.name,
+            config["move_in"]["financeaccount_name"].format(user_id=new_user.id)
+        )
         account_sum = sum([split.amount for split in splits])
-        self.assertEqual(account_sum,4000)
+        self.assertEqual(account_sum, 4000)
         self.assertFalse(new_user.has_property("away"))
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
@@ -170,12 +170,8 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             self.assertLessEqual(membership.end_date, out_time)
 
         # check if users finance account still exists
-        user_account = finance.FinanceAccount.q.filter(
-            finance.FinanceAccount.user == new_user
-        ).filter(
-            finance.FinanceAccount.name == u"Konto von %d" % new_user.id
-        ).first()
-        self.assertIsNotNone(user_account)
+        finance_account = new_user.finance_account
+        self.assertIsNotNone(finance_account)
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
     datasets = [RoomData, DormitoryData, UserData]
