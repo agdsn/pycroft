@@ -8,7 +8,7 @@ from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
 from pycroft.model import user, dormitory, session
-from pycroft.helpers.user import generatePassword, hash_password, verify_password, generate_crypt_salt
+from pycroft.helpers.user import generate_password, hash_password, verify_password, generate_crypt_salt
 from tests import FixtureDataTestBase
 
 
@@ -23,13 +23,13 @@ class Test_010_PasswordGenerator(unittest.TestCase):
     def test_0010_pw_length(self):
         for i in range(0, 100):
             length = random.randint(2, 12)
-            pw = generatePassword(length)
+            pw = generate_password(length)
             self.assertEqual(len(pw), length)
             self.pws.append(pw)
 
     def test_0020_unique(self):
         for i in range(0, 100):
-            self.pws.append(generatePassword(8))
+            self.pws.append(generate_password(8))
 
         self.assertEqual(len(self.pws), len(set(self.pws)))
 
@@ -53,7 +53,7 @@ class Test_020_PasswdHashes(unittest.TestCase):
                         "SSHA": ldap_salted_sha1.encrypt}
 
         for length in range(4,20):
-            pw = generatePassword(length)
+            pw = generate_password(length)
             hash_dict = {"plain": pw}
             for method in self.methods:
                 hash_dict[method] = self.methods[method](pw)
@@ -76,7 +76,7 @@ class Test_020_PasswdHashes(unittest.TestCase):
         pw_list = []
         hash_list = []
         for num in range(1, 500):
-            pw = generatePassword(9)
+            pw = generate_password(9)
             self.assertEqual(len(pw), 9)
             self.assertFalse(pw in pw_list)
             pw_list.append(pw)
@@ -89,7 +89,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
 
     def test_0010_password_hash_validator(self):
         u = user.User.q.get(1)
-        password = generatePassword(4)
+        password = generate_password(4)
         pw_hash = hash_password(password)
 
         def set_hash(h):
@@ -107,7 +107,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
 
     def test_0020_set_and_verify_password(self):
         u = user.User.q.get(1)
-        password = generatePassword(4)
+        password = generate_password(4)
         pw_hash = hash_password(password)
 
         u.set_password(password)
@@ -122,7 +122,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
 
         for length in range(0, 10):
             for cnt in range(1, 3):
-                pw = generatePassword(length)
+                pw = generate_password(length)
                 if pw != password:
                     self.assertFalse(u.check_password(pw))
                     self.assertIsNone(user.User.verify_and_get(u.login, pw))

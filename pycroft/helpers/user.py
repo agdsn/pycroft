@@ -17,14 +17,14 @@ from passlib.apps import ldap_context
 ldap_context = ldap_context.replace(default="ldap_salted_sha1")
 
 
-def generatePassword(length):
-    allowedLetters = "abcdefghijklmnopqrstuvwxyz!$%&()=.,"\
+def generate_password(length):
+    allowed_letters = "abcdefghijklmnopqrstuvwxyz!$%&()=.,"\
                      ":;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     passwordLength = length
     password = ""
     for i in range(passwordLength):
-        password += allowedLetters[random.choice(range(len
-            (allowedLetters)))]
+        password += allowed_letters[random.choice(range(len
+            (allowed_letters)))]
     return password
 
 
