@@ -49,8 +49,8 @@ class Test_020_PasswdHashes(unittest.TestCase):
                         "MD5": ldap_md5_crypt.encrypt,
                         "SSHA": ldap_salted_sha1.encrypt}
 
-        for len in range(4,20):
-            pw = generatePassword(len)
+        for length in range(4,20):
+            pw = generatePassword(length)
             hash_dict = {"plain": pw}
             for method in self.methods:
                 hash_dict[method] = self.methods[method](pw)
