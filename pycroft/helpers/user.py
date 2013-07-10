@@ -25,6 +25,13 @@ def generatePassword(length):
     return password
 
 
+def generate_crypt_salt(salt_length):
+    allowed_letters = [chr(x) for x in
+                       range(ord("a"), ord("z") + 1) +
+                       range(ord("A"), ord("Z") + 1) +
+                       range(ord("0"), ord("9") + 1)] + \
+                      [".", "/"]
+    return "".join(random.sample(allowed_letters, salt_length))
 
 
 def hash_password(plaintext_passwd):
