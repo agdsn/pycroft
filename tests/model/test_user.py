@@ -3,12 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import random
 import unittest
-from crypt import crypt
+from crypt import crypt as python_crypt
 from datetime import datetime
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
 from pycroft.model import user, dormitory, session
-from pycroft.helpers.user import generatePassword, hash_password, verify_password
+from pycroft.helpers.user import generatePassword, hash_password, verify_password, generate_crypt_salt
 from tests import FixtureDataTestBase
 
 
@@ -45,7 +45,7 @@ class Test_020_PasswdHashes(unittest.TestCase):
         self.hashes = []
 
         def crypt_pw(pw):
-            return "{crypt}" + crypt(pw, generatePassword(2))
+            return "{crypt}" + python_crypt(pw, generate_crypt_salt(2))
 
         self.methods = {"crypt": crypt_pw,
                         "CRYPT": ldap_sha1_crypt.encrypt,
