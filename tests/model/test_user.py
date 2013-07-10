@@ -80,9 +80,9 @@ class Test_020_PasswdHashes(unittest.TestCase):
             self.assertEqual(len(pw), 9)
             self.assertFalse(pw in pw_list)
             pw_list.append(pw)
-            hash = hash_password(pw)
-            self.assertFalse(hash in hash_list)
-            hash_list.append(hash)
+            pw_hash = hash_password(pw)
+            self.assertFalse(pw_hash in hash_list)
+            hash_list.append(pw_hash)
 
 class Test_030_User_Passwords(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
@@ -90,12 +90,12 @@ class Test_030_User_Passwords(FixtureDataTestBase):
     def test_0010_password_hash_validator(self):
         u = user.User.q.get(1)
         password = generatePassword(4)
-        hash = hash_password(password)
+        pw_hash = hash_password(password)
 
         def set_hash(h):
             u.passwd_hash = h
 
-        set_hash(hash)
+        set_hash(pw_hash)
         session.session.commit()
 
         self.assertRaisesRegexp(AssertionError, "A password-hash with les than 9 chars is not correct!", set_hash, password)
@@ -108,7 +108,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
     def test_0020_set_and_verify_password(self):
         u = user.User.q.get(1)
         password = generatePassword(4)
-        hash = hash_password(password)
+        pw_hash = hash_password(password)
 
         u.set_password(password)
         session.session.commit()
