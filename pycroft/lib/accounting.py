@@ -215,7 +215,7 @@ def _traffic_groups_by_userid():
     ).join(
         (Membership, and_(Membership.user_id == User.id,
                           Membership.active,
-                          Membership.start_date))
+                          Membership.start_date == start_dates.c.start_date))
     ).join(
         (TrafficGroup, TrafficGroup.id == Membership.group_id)
     ).group_by(
@@ -295,9 +295,9 @@ def grant_all_traffic():
                                    grant_date=now,
                                    amount=entry.new_amount,
                                    added_amount=entry.new_amount - entry.old_amount)
-        newest_credits.append(new_credit)
+        new_credits.append(new_credit)
 
-    session.session.add_al(newest_credits)
+    session.session.add_all(new_credits)
     session.session.commit()
 
 
