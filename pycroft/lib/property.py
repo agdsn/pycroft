@@ -4,20 +4,20 @@ from pycroft.model.property import TrafficGroup, PropertyGroup, Property,\
 from pycroft.lib.all import with_transaction
 
 
-def _create_group(type, *args, **kwargs):
+def _create_group(group_type, *args, **kwargs):
     """
     This method will create a new Group.
 
-    :param type: the type of the group. Equals the discriminator.
+    :param group_type: the type of the group. Equals the discriminator.
     :param args: the positionals which will be passed to the constructor.
     :param kwargs: the keyword arguments which will be passed to the constructor.
     :return: the newly created group.
     """
-    type = str(type).lower()
+    group_type = str(group_type).lower()
 
-    if type == "property_group":
+    if group_type == "property_group":
         group = PropertyGroup(*args, **kwargs)
-    elif type == "traffic_group":
+    elif group_type == "traffic_group":
         group = TrafficGroup(*args, **kwargs)
     else:
         raise ValueError("Unknown group type!")
@@ -105,10 +105,10 @@ def create_property(name, property_group, granted):
     :param granted: the granted status of the property
     :return: the newly created property and the group it was added to
     """
-    property = Property(name=name, property_group=property_group,
+    new_property = Property(name=name, property_group=property_group,
                         granted=granted)
-    session.session.add(property)
-    return property_group, property
+    session.session.add(new_property)
+    return property_group, new_property
 
 
 @with_transaction
@@ -124,16 +124,16 @@ def delete_property(property_group_id, name):
     if group is None:
         raise ValueError("The given group id is wrong!")
 
-    property = Property.q.filter(Property.name == name).first()
-    if property is None:
+    new_property = Property.q.filter(Property.name == name).first()
+    if new_property is None:
         raise ValueError("The given property name is wrong!")
 
-    if not group.has_property(property.name):
+    if not group.has_property(new_property.name):
         raise ValueError(
             "The given property group doesn't have the given property")
 
-    session.session.delete(property)
-    return group, property
+    session.session.delete(new_property)
+    return group, new_property
 
 
 @with_transaction
