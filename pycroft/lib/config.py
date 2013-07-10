@@ -10,7 +10,7 @@ from os.path import isfile
 class Config(object):
     def __init__(self):
         self._configdata = None
-        self._configpath = "pycroft/config.json"
+        self._configpath = "../../example/test_config.json"
 
     def load(self):
         if not isfile(self._configpath):

@@ -1,0 +1,61 @@
+{
+    "finance": {
+        "semester_accounts": [
+            {
+                "name": "Anmeldegebühren",
+                "tag": "registration_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Semesterbeiträge",
+                "tag": "regular_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Zusatzbeitrag",
+                "tag": "additional_fee",
+                "type": "EQUITY"
+            },
+            {
+                "name": "Versäumnisgebühren",
+                "tag": "arrears_fee",
+                "type": "EQUITY"
+            }
+        ]
+    },
+    "move_in": {
+        "group_memberships": [
+            {
+                "name": "Bewohner",
+                "duration": null
+            },
+            {
+                "name": "Kürzlich eingezogen",
+                "duration": 31
+            }
+        ],
+        "financeaccount_name": "Konto von {user_id}",
+        "registration_fee_message": "Anmeldegebühr",
+        "semester_fee_message": "Semestergebühr {semester}",
+        "log_message": "Anmeldung."
+    },
+    "move":{
+        "log_message": "Umzug von {from_room} nach {to_room}.",
+        "ip_change_log_message": "IPv4 von {old_ip} zu {new_ip} geändert."
+    },
+    "move_out":{
+        "log_message": "Auszug am {date}.",
+        "log_message_comment": "\nKommentar: {comment}"
+    },
+    "move_out_tmp":{
+        "log_message": "Temporärer Auszug am {date}.",
+        "log_message_comment": "\nKommentar: {comment}",
+        "log_message_back": "Nutzer ist zurück.",
+        "group": "Vorübergehend ausgezogen"
+    },
+    "block":{
+        "log_message_with_enddate": "Sperrung bis {date}.\nGrund: {reason}",
+        "log_message_without_enddate": "Sperrung für immer.\nGrund: {reason}",
+        "group": "Verstoß"
+    }
+}
