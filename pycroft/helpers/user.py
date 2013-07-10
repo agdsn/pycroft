@@ -17,12 +17,7 @@ ldap_context = ldap_context.replace(default="ldap_salted_sha1")
 def generate_password(length):
     allowed_letters = "abcdefghijklmnopqrstuvwxyz!$%&()=.,"\
                      ":;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    passwordLength = length
-    password = ""
-    for i in range(passwordLength):
-        password += allowed_letters[random.choice(range(len
-            (allowed_letters)))]
-    return password
+    return "".join(random.sample(allowed_letters, length))
 
 
 def generate_crypt_salt(salt_length):
