@@ -57,7 +57,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         room=room,
         registration_date=datetime.now()
     )
-    plain_password = user.generatePassword(12)
+    plain_password = user.generate_password(12)
 
     #TODO: print plain password on paper instead
     print u"new password: " + plain_password
