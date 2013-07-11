@@ -22,7 +22,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen)
-from pycroft.lib.accounting import has_exceeded_traffic
+from pycroft.lib.accounting import grant_traffic, has_exceeded_traffic
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.accounting import TrafficVolume
