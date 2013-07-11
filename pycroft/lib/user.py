@@ -467,6 +467,8 @@ def is_back(user, processor):
     for user_host in user.user_hosts:
         setup_ipv4_networking(user_host)
 
+    grant_traffic(user, initial_credit=True)
+
     log_user_event(message=deferred_gettext(u"Moved back in.").to_json(),
                    author=processor, user=user)
     return user

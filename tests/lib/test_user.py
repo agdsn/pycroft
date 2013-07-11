@@ -5,7 +5,7 @@
 from datetime import timedelta
 
 from pycroft.model.port import PatchPort
-from pycroft.model.user import Membership, PropertyGroup
+from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen
@@ -278,16 +278,21 @@ class Test_080_User_Block(FixtureDataTestBase):
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = (ConfigData, IPData, PropertyData, SwitchPatchPortData, UserData)
+    datasets = (ConfigData, IPData, PropertyData, SwitchPatchPortData, TrafficGroupData, UserData)
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        UserHelper.move_out_temporarily(user=self.user, comment='',
-                                        processor=self.processing_user)
+        self.processing_user = user.User.q.filter_by(login='admin').one()
+        self.user = user.User.q.filter_by(login='test').one()
+        traffic = Membership(group=TrafficGroup.q.filter_by(
+            name=TrafficGroupData.dummy.name).one(),
+                            user=self.user)
+        session.session.add(traffic)
         session.session.commit()
+        UserHelper.move_out_temporarily(
+            user=self.user, during=None, comment=u'',
+            processor=self.processing_user
+        )
 
     def test_0010_user_is_back(self):
         self.assertTrue(self.user.has_property("reduced_semester_fee"))
