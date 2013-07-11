@@ -65,9 +65,9 @@ class UserData(DataSet):
 
 class TrafficGroupData(DataSet):
     class standard_traffic:
-        name = "standard_traffic"
-        grant_amount = 7000
-        saving_amount = 21000
+        name = "Normaltraffic"
+        grant_amount = 2000
+        saving_amount = 48000
 
 
 class PropertyGroupData(DataSet):
