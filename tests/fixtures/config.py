@@ -44,10 +44,18 @@ class PropertyGroupData(DataSet):
         name = u"Beitrag bereits gezahlt"
 
 
+class TrafficGroupData(DataSet):
+    class default:
+        name = u"Normaltraffic"
+        grant_amount = 3000
+        saving_amount = 63000
+
+
 class ConfigData(DataSet):
     class config:
         id = 1
         member_group = PropertyGroupData.member
+        default_traffic_group = TrafficGroupData.default
         network_access_group = PropertyGroupData.network_access
         away_group = PropertyGroupData.away
         violation_group = PropertyGroupData.violation

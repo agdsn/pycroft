@@ -6,13 +6,16 @@ from sqlalchemy.orm import relationship
 from pycroft.model.base import ModelBase
 from pycroft.model.dns import DNSZone
 from pycroft.model.finance import Account
-from pycroft.model.user import PropertyGroup
+from pycroft.model.user import PropertyGroup, TrafficGroup
 
 
 class Config(ModelBase):
     member_group_id = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     member_group = relationship(PropertyGroup, foreign_keys=[member_group_id])
+    default_traffic_group_id = Column(
+        Integer, ForeignKey(TrafficGroup.id), nullable=False)
+    default_traffic_group = relationship(TrafficGroup)
     network_access_group_id = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     network_access_group = relationship(
