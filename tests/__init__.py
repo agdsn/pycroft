@@ -71,8 +71,13 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def setUp(self):
         super(FrontendDataTestBase, self).setUp()
-        if self.login is not None and self.password is not None:
-            self._login(login=self.login, password=self.password)
+        #TODO: really ugly... feel free to bring beauty
+        try:
+            if self.__getattr__("login") is not None and self.__getattr__("password") is not None:
+                self._login(login=self.login, password=self.password)
+        except AttributeError:
+            self.__setattr__("login", None)
+            self.__setattr__("Password", None)
 
     def create_app(self):
         """
