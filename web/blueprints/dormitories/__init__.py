@@ -59,7 +59,7 @@ def dormitory_create():
 def room_delete(room_id):
     delete_room(room_id)
     flash(u'Raum gelöscht', 'success')
-    return redirect(url_for('.dormitories'))
+    return redirect(url_for('.overview'))
 
 
 @bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
@@ -103,7 +103,7 @@ def room_create():
 @bp.route('/levels/<int:dormitory_id>')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = session.query(Room.level.label('level')).filter_by(
+    rooms_list = Room.q.filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
     levels_list = [room.level for room in rooms_list]
 
