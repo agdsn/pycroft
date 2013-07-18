@@ -1,15 +1,14 @@
-from flask.ext import testing
-from pycroft.model.user import User
-from web import make_app
-
-__author__ = 'jan'
-
+# -*- coding: utf-8 -*-
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
 from pycroft.model import drop_db_model, create_db_model
+from flask.ext import testing
+from web import make_app
 
 from tests.unittest26_compat import OldPythonTestCase
+
+__author__ = 'jan'
 
 
 def make_fixture():
