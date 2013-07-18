@@ -27,19 +27,11 @@ nav = BlueprintNavigation(bp, "Wohnheime")
 
 
 @bp.route('/')
+@nav.navigate(u"Wohnheime")
 def overview():
     dormitories_list = Dormitory.q.all()
     dormitories_list = dormitory.sort_dormitories(dormitories_list)
     return render_template('dormitories/overview.html',
-        dormitories=dormitories_list)
-
-
-@bp.route('/list')
-@nav.navigate(u"Wohnheime")
-def dormitories():
-    dormitories_list = Dormitory.q.all()
-    dormitories_list = dormitory.sort_dormitories(dormitories_list)
-    return render_template('dormitories/dormitories_list.html',
         dormitories=dormitories_list)
 
 
