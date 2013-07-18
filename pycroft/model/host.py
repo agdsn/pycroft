@@ -15,6 +15,7 @@ from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
+from pycroft.model.session import session
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
@@ -256,19 +257,3 @@ def _check_correct_ip_subnet(mapper, connection, target):
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
-
-def _delete_corresponding_record(mapper, connection, target):
-    ip_id = target.id
-
-    # First check for ARecords
-    record = ARecord.q.filter(ARecord.address_id == ip_id).first()
-    if record is not None:
-        raise ValueError("There is still an ARecord which points to this address")
-
-    # Afterwards check for AAAARecords
-    record =  AAAARecord.q.filter(AAAARecord.address_id == ip_id).first()
-    if record is not None:
-        raise ValueError("There is still an AAAARecord which points to this address")
-
-
-event.listen(Ip, 'before_delete', _delete_corresponding_record)
