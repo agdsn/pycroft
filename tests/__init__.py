@@ -1,18 +1,17 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from flask.ext import testing
-from pycroft.model.user import User
-from web import make_app
-
-__author__ = 'jan'
-
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
 from pycroft.model import drop_db_model, create_db_model
+from flask.ext import testing
+from web import make_app
 
 from tests.unittest26_compat import OldPythonTestCase
+
+__author__ = 'jan'
 
 
 def make_fixture():
