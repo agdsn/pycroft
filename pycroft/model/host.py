@@ -340,19 +340,3 @@ event.listen(Ip, "before_insert", _check_correct_ip_subnet)
 event.listen(Ip, "before_insert", _check_subnet_macs_unique)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
 event.listen(Ip, "before_update", _check_subnet_macs_unique)
-
-def _delete_corresponding_record(mapper, connection, target):
-    ip_id = target.id
-
-    # First check for ARecords
-    record = ARecord.q.filter(ARecord.address_id == ip_id).first()
-    if record is not None:
-        raise ValueError("There is still an ARecord which points to this address")
-
-    # Afterwards check for AAAARecords
-    record =  AAAARecord.q.filter(AAAARecord.address_id == ip_id).first()
-    if record is not None:
-        raise ValueError("There is still an AAAARecord which points to this address")
-
-
-event.listen(Ip, 'before_delete', _delete_corresponding_record)
