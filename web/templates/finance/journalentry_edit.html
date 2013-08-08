@@ -1,0 +1,57 @@
+{#
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% set page_title = "Journalentry editieren" %}
+
+{% block content %}
+    <a href="{{ url_for('finance.journals') }}">Zurück zur Übersicht</a><br />
+
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <table class="table table-striped">
+            <tr>
+                <td>Quellkonto</td>
+                {% if entry.amount < 0 %}
+                    <td>{{ entry.journal.account }}</td>
+                {% else %}
+                    <td>{{ form.linked_accounts }}</td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Zielkonto</td>
+                {% if entry.amount < 0 %}
+                    <td>{{ form.linked_accounts }}</td>
+                {% else %}
+                    <td>{{ entry.journal.account }}</td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Datum</td>
+                <td>{{ entry.timestamp|date }}</td>
+            </tr>
+            <tr>
+                <td>Betrag</td>
+                <td>{{ entry.amount|money }}</td>
+            </tr>
+            <tr>
+                <td>Nachricht</td>
+                <td>{{ entry.message }}</td>
+            </tr>
+            <tr>
+                <td>Fremdkonto</td>
+                <td>{{ entry.other_account }}</td>
+            </tr>
+            <tr>
+                <td>Fremdbank</td>
+                <td>{{ entry.other_bank }}</td>
+            </tr>
+            <tr>
+                <td>Fremdperson</td>
+                <td>{{ entry.other_person }}</td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}
