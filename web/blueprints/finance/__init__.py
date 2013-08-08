@@ -10,10 +10,10 @@
 
 from flask import Blueprint, render_template, redirect, url_for
 from web.blueprints.navigation import BlueprintNavigation
-from forms import SemesterCreateForm
+from forms import SemesterCreateForm, JournalLinkForm
 from pycroft.lib import finance
 from datetime import datetime, timedelta
-from pycroft.model.finance import Semester
+from pycroft.model.finance import Semester, Journal, JournalEntry
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
@@ -23,7 +23,23 @@ nav = BlueprintNavigation(bp, "Finanzen")
 @bp.route('/journals')
 @nav.navigate(u"Journale")
 def journals():
-    return render_template('finance/base.html')
+    journals_list = JournalEntry.q.all()
+
+    return render_template('finance/journal_list.html',
+                           journals=journals_list)
+
+
+@bp.route('/journalentry/edit/<int:entryid>')
+def journalentry_edit(entryid):
+    journalentry = JournalEntry.q.get(entryid)
+    form = JournalLinkForm()
+
+    if form.validate_on_submit():
+        #finance.simple_transaction()
+        pass
+
+    return render_template('finance/journalentry_edit.html',
+                           entry=journalentry, form=form)
 
 
 @bp.route('/accounts')

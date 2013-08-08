@@ -4,54 +4,58 @@ CREATE TABLE journal (
 	id INTEGER NOT NULL,
 	account VARCHAR(255) NOT NULL,bank VAR
 	CHAR(255) NOT NULL,
-  hbci_url VARCHAR(255) NOT NULL,
-  last_update DATETIME NOT NULL,
-  account_number INTEGER NOT NULL,
-  bank_identification_code VARCHAR(255) NOT NULL,
-  PRIMARY KEY (id)
+  	hbci_url VARCHAR(255) NOT NULL,
+  	last_update DATETIME NOT NULL,
+  	account_number INTEGER NOT NULL,
+  	bank_identification_code VARCHAR(255) NOT NULL,
+  	PRIMARY KEY (id)
 );
-
+INSERT INTO "journal" VALUES(1, 'Bankkonto', 'Bank123', 'http://www.com', '2012-10-01 00:00:00.000');
 CREATE TABLE journalentry (
-        id INTEGER NOT NULL,
-        amount INTEGER NOT NULL,
-        message TEXT NOT NULL,
-        journal_id INTEGER NOT NULL,
-        other_account VARCHAR(255) NOT NULL,
-        other_bank VARCHAR(255) NOT NULL,
-        other_person VARCHAR(255) NOT NULL,
-        original_message TEXT NOT NULL,
-        import_date DATETIME NOT NULL,
-        transaction_date DATE NOT NULL,
-        valid_date DATE NOT NULL,
-        PRIMARY KEY (id),
-        FOREIGN KEY(journal_id) REFERENCES journal (id)
+    id INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    journal_id INTEGER NOT NULL,
+    other_account VARCHAR(255) NOT NULL,
+    other_bank VARCHAR(255) NOT NULL,
+    other_person VARCHAR(255) NOT NULL,
+    original_message TEXT NOT NULL,
+    import_date DATETIME NOT NULL,
+    transaction_date DATE NOT NULL,
+    valid_date DATE NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY(journal_id) REFERENCES journal (id)
 );
+INSERT INTO "journalentry" VALUES(1, 1500, 'Mitgliedsbeitrag 1', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag',  '2012-10-01 00:00:00.000');
+INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag', '2012-10-01 00:00:00.000');
+INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000');
 CREATE TABLE "transaction" (
-        id INTEGER NOT NULL,
-        message TEXT NOT NULL,
-        transaction_date DATETIME NOT NULL,
-        journal_entry_id INTEGER,
-        semester_id INTEGER,
-        PRIMARY KEY (id),
-        FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
-        FOREIGN KEY(semester_id) REFERENCES semester (id)
+	id INTEGER NOT NULL, 
+	message TEXT NOT NULL,
+	transaction_date DATETIME NOT NULL,
+	journal_entry_id INTEGER, 
+    semester_id INTEGER,
+	PRIMARY KEY (id), 
+	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
+    FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
 CREATE TABLE financeaccount (
-        id INTEGER NOT NULL,
-        name VARCHAR(127) NOT NULL,
-        type VARCHAR(9) NOT NULL,
-        semester_id INTEGER,
-        tag VARCHAR(16),
-        PRIMARY KEY (id),
-        UNIQUE (semester_id, tag),
-        CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')),
-        FOREIGN KEY(semester_id) REFERENCES semester (id),
-        CHECK (tag IN ('registration_fee', 'additional_fee', 'regular_fee', 'arrears_fee'))
+    id INTEGER NOT NULL,
+    name VARCHAR(127) NOT NULL,
+    type VARCHAR(9) NOT NULL,
+    semester_id INTEGER,
+    tag VARCHAR(16),
+    PRIMARY KEY (id),
+    UNIQUE (semester_id, tag),
+    CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')),
+    FOREIGN KEY(semester_id) REFERENCES semester (id),
+    CHECK (tag IN ('registration_fee', 'additional_fee', 'regular_fee', 'arrears_fee'))
 );
 INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','EXPENSE',1,'registration_fee');
 INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','EXPENSE',1,'regular_fee');
 INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','EXPENSE',1,'additional_fee');
 INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',1,'arrears_fee');
+INSERT INTO "financeaccount" VALUES(5,'Konto Nutzer ag_dsn','EXPENSE',1,NULL);
 CREATE TABLE split (
 	id INTEGER NOT NULL, 
 	amount INTEGER NOT NULL, 
