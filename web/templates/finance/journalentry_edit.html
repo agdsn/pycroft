@@ -2,9 +2,9 @@
 {% set page_title = "Journalentry editieren" %}
 
 {% block content %}
-    <a href="{{ url_for('finance.journals') }}">Zurück zur Übersicht</a><br />
+    <a href="{{ url_for('.journals') }}">Zurück zur Übersicht</a><br />
 
-    <form method="POST" action="">
+    <form method="GET" action="">
         {{ form.hidden_tag() }}
         <table class="table table-striped">
             <tr>
@@ -12,13 +12,13 @@
                 {% if entry.amount < 0 %}
                     <td>{{ entry.journal.account }}</td>
                 {% else %}
-                    <td>{{ form.linked_accounts }}</td>
+                    <td>{{ form.search }}</td>
                 {% endif %}
             </tr>
             <tr>
                 <td>Zielkonto</td>
                 {% if entry.amount < 0 %}
-                    <td>{{ form.linked_accounts }}</td>
+                    <td>{{ form.search }}</td>
                 {% else %}
                     <td>{{ entry.journal.account }}</td>
                 {% endif %}
@@ -48,5 +48,31 @@
                 <td>{{ entry.other_person }}</td>
             </tr>
         </table>
+    <button type="submit">Abschicken</button>
     </form>
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript">
+        $('#search').typeahead({
+            source: function (query, process) {
+                return $.getJSON(
+                    '{{ url_for('.json_search_accounts', search_str='') }}'+query,
+                    function (data) {
+                        window.keymap = {};
+                        var result = [];
+                        $.each(data.result, function(index, item) {
+                            window.keymap[item.name] = item.id;
+                            result.push(item.name);
+                        });
+                        return process(result);
+                    });
+            },
+            updater: function (item) {
+                $('#account_id').val(window.keymap[item]);
+                return item;
+            },
+            minLength: 2
+        });
+    </script>
 {% endblock %}

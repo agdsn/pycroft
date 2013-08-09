@@ -2,7 +2,7 @@
 __author__ = 'florian'
 
 from web.form.fields import DatePickerField
-from flask.ext.wtf import Form, TextField, IntegerField, QuerySelectField
+from flask.ext.wtf import Form, TextField, IntegerField, QuerySelectField, HiddenField
 from pycroft.model.finance import FinanceAccount
 
 
@@ -19,7 +19,9 @@ class SemesterCreateForm(Form):
 
 
 class JournalLinkForm(Form):
-    linked_accounts = QuerySelectField(u"Zugehoeriges Konto",
-                          get_label='name',
-                          query_factory=financeaccounts_query,
-                          allow_blank=True)
+    search = TextField()
+    account_id = HiddenField()
+    #linked_accounts = QuerySelectField(u"Zugehoeriges Konto",
+                          # get_label='name',
+                          # query_factory=financeaccounts_query,
+                          # allow_blank=True)
