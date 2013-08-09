@@ -11,12 +11,15 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm, JournalLinkForm
 from pycroft.lib import finance
 from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry
+from pycroft.model.session import session
+from pycroft.model.user import User
+from pycroft.model.finance import FinanceAccount
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
@@ -95,3 +98,14 @@ def semester_create():
         end_date=form.end_date.data)
         return redirect(url_for(".semester_list"))
     return render_template('finance/semester_create.html', form=form)
+
+
+@bp.route('/json/search_accounts/<string:search_str>')
+def json_search_accounts(search_str):
+    result = session.query(FinanceAccount).filter(FinanceAccount.name.like("%%%s%%" % search_str)).all()
+
+    r = []
+    for user in result:
+        r.append({"id": user.id, "name": user.name})
+
+    return jsonify({"result": r})
