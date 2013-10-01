@@ -15,7 +15,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Enum, Integer, Text, DateTime, String
+from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Date
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy import event
 
@@ -52,18 +52,22 @@ class Journal(ModelBase):
     bank = Column(String(255), nullable=False)
     hbci_url = Column(String(255), nullable=False)
     last_update = Column(DateTime, nullable=False)
+    account_number = Column(Integer, nullable=False)
+    bank_identification_code = Column(String(255), nullable=False)
 
 
 class JournalEntry(ModelBase):
     amount = Column(Integer, nullable=False)
-    message = Column(Text, nullable=True)
+    message = Column(Text, nullable=False)
     journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
     journal = relationship("Journal", backref=backref("entries"))
     other_account = Column(String(255), nullable=False)
     other_bank = Column(String(255), nullable=False)
     other_person = Column(String(255), nullable=False)
     original_message = Column(Text, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
+    import_date = Column(DateTime, nullable=False)
+    transaction_date = Column(Date, nullable=False)
+    valid_date = Column(Date, nullable=False)
 
 
 class Transaction(ModelBase):
@@ -73,7 +77,7 @@ class Transaction(ModelBase):
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
-                                    backref=backref("transaction"))
+                                    backref=backref("transactionu"))
 
     semester_id = Column(Integer, ForeignKey("semester.id"))
     semester = relationship("Semester", backref=backref("transactions"))

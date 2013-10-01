@@ -5,9 +5,11 @@
 __author__ = 'Florian Österreich'
 
 from datetime import datetime
-from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split
+from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
+    Journal, JournalEntry
 from pycroft.model import session
 from pycroft.lib import config
+import csv
 from pycroft.lib.all import with_transaction
 
 
@@ -69,3 +71,47 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     session.session.add_all(
         [new_transaction, new_debit_split, new_credit_split]
     )
+    if commit:
+        session.session.commit()
+
+
+def import_csv(csv_file):
+
+    with open(csv_file, 'r') as csv_file_handle:
+        content = csv.reader(csv_file_handle, delimiter=";")
+
+    journals = Journal.q.all()
+
+    for fields in content:
+
+        if fields[9] != "EUR":
+            raise Exception("The only supported currency is EUR! "
+                            + fields[9] + " is invalid!")
+
+        for journal in journals:
+            if journal.account_number == fields[0]:
+                valid_journal = journal
+                break
+
+        if valid_journal == None:
+            raise Exception("The Journal with the account number '" + fields[0]
+                            + "' does not exist in the database!")
+
+        transaction_date_split = fields[1].split(".")
+        valid_date_split = fields[2].split(".")
+
+        JournalEntry(amount=float(fields[8]),
+                     message=fields[4],
+                     journal=valid_journal,
+                     other_account=fields[6],
+                     other_bank=fields[7],
+                     other_person=fields[5],
+                     original_message=fields[4],
+                     import_date=datetime.date.today(),
+                     transaction_date=datetime.date(year=datetime.date.today().year,
+                                                    month=transaction_date_split[1],
+                                                    day=transaction_date_split[0]),
+                     valid_date=datetime.date(year=valid_date_split[2],
+                                              month=valid_date_split[1],
+                                              day=valid_date_split[0])
+        )
