@@ -16,6 +16,7 @@ from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
 from pycroft.model.session import session
+from pycroft.helpers.host import MacExistsException
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
