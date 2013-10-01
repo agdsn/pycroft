@@ -1,35 +1,40 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE journal (
-	id INTEGER NOT NULL, 
-	account VARCHAR(255) NOT NULL, 
-	bank VARCHAR(255) NOT NULL, 
-	hbci_url VARCHAR(255) NOT NULL, 
-	last_update DATETIME NOT NULL, 
-	PRIMARY KEY (id)
+	id INTEGER NOT NULL,
+	account VARCHAR(255) NOT NULL,bank VAR
+	CHAR(255) NOT NULL,
+  hbci_url VARCHAR(255) NOT NULL,
+  last_update DATETIME NOT NULL,
+  account_number INTEGER NOT NULL,
+  bank_identification_code VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id)
 );
+
 CREATE TABLE journalentry (
-	id INTEGER NOT NULL, 
-	amount INTEGER NOT NULL,
-	message TEXT, 
-	journal_id INTEGER NOT NULL, 
-	other_account VARCHAR(255) NOT NULL, 
-	other_bank VARCHAR(255) NOT NULL, 
-	other_person VARCHAR(255) NOT NULL, 
-	original_message TEXT NOT NULL, 
-	timestamp DATETIME NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(journal_id) REFERENCES journal (id)
+        id INTEGER NOT NULL,
+        amount INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        journal_id INTEGER NOT NULL,
+        other_account VARCHAR(255) NOT NULL,
+        other_bank VARCHAR(255) NOT NULL,
+        other_person VARCHAR(255) NOT NULL,
+        original_message TEXT NOT NULL,
+        import_date DATETIME NOT NULL,
+        transaction_date DATE NOT NULL,
+        valid_date DATE NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY(journal_id) REFERENCES journal (id)
 );
 CREATE TABLE "transaction" (
-	id INTEGER NOT NULL, 
-	message TEXT NOT NULL,
-	transaction_date DATETIME NOT NULL,
-	journal_entry_id INTEGER, 
-    semester_id INTEGER,
-	PRIMARY KEY (id), 
-	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
-    FOREIGN KEY(semester_id) REFERENCES semester (id)
+        id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        transaction_date DATETIME NOT NULL,
+        journal_entry_id INTEGER,
+        semester_id INTEGER,
+        PRIMARY KEY (id),
+        FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
+        FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
 CREATE TABLE financeaccount (
         id INTEGER NOT NULL,
