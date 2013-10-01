@@ -1,16 +1,16 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE journal (
-	id INTEGER NOT NULL,
-	account VARCHAR(255) NOT NULL,bank VAR
-	CHAR(255) NOT NULL,
+	  id INTEGER NOT NULL,
+	  account VARCHAR(255) NOT NULL,bank VAR
+	  CHAR(255) NOT NULL,
   	hbci_url VARCHAR(255) NOT NULL,
   	last_update DATETIME NOT NULL,
   	account_number INTEGER NOT NULL,
   	bank_identification_code VARCHAR(255) NOT NULL,
   	PRIMARY KEY (id)
 );
-INSERT INTO "journal" VALUES(1, 'Bankkonto', 'Bank123', 'http://www.com', '2012-10-01 00:00:00.000');
+INSERT INTO "journal" VALUES(1, 'Bankkonto', 'Bank123', 'http://www.com', '2012-10-01 00:00:00.000', 12345, 67890);
 CREATE TABLE journalentry (
     id INTEGER NOT NULL,
     amount INTEGER NOT NULL,
@@ -26,16 +26,16 @@ CREATE TABLE journalentry (
     PRIMARY KEY (id),
     FOREIGN KEY(journal_id) REFERENCES journal (id)
 );
-INSERT INTO "journalentry" VALUES(1, 1500, 'Mitgliedsbeitrag 1', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag',  '2012-10-01 00:00:00.000');
-INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag', '2012-10-01 00:00:00.000');
-INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000');
+INSERT INTO "journalentry" VALUES(1, 1500, 'Mitgliedsbeitrag 1', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag',  '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
+INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
+INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
 CREATE TABLE "transaction" (
-	id INTEGER NOT NULL, 
+	id INTEGER NOT NULL,
 	message TEXT NOT NULL,
 	transaction_date DATETIME NOT NULL,
-	journal_entry_id INTEGER, 
+	journal_entry_id INTEGER,
     semester_id INTEGER,
-	PRIMARY KEY (id), 
+	PRIMARY KEY (id),
 	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
     FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
@@ -57,11 +57,11 @@ INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','EXPENSE',1,'additional_fe
 INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',1,'arrears_fee');
 INSERT INTO "financeaccount" VALUES(5,'Konto Nutzer ag_dsn','EXPENSE',1,NULL);
 CREATE TABLE split (
-	id INTEGER NOT NULL, 
-	amount INTEGER NOT NULL, 
+	id INTEGER NOT NULL,
+	amount INTEGER NOT NULL,
 	account_id INTEGER NOT NULL,
-	transaction_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	transaction_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(account_id) REFERENCES financeaccount (id),
 	FOREIGN KEY(transaction_id) REFERENCES "transaction" (id)
 );
@@ -86,9 +86,9 @@ CREATE TABLE semester (
 );
 INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000');
 CREATE TABLE "group" (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	type VARCHAR(17) NOT NULL, 
+	id INTEGER NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	type VARCHAR(17) NOT NULL,
 	PRIMARY KEY (id)
 );
 INSERT INTO "group" VALUES(1,'Hausmeister','propertygroup');
@@ -103,12 +103,12 @@ INSERT INTO "group" VALUES(9,'Exaktiv','propertygroup');
 INSERT INTO "group" VALUES(10,'NegativKonto','propertygroup');
 INSERT INTO "group" VALUES(11,'Vorübergehend ausgezogen', 'propertygroup');
 CREATE TABLE dormitory (
-	id INTEGER NOT NULL, 
-	number VARCHAR(3) NOT NULL, 
-	short_name VARCHAR(5) NOT NULL, 
-	street VARCHAR(20) NOT NULL, 
-	PRIMARY KEY (id), 
-	UNIQUE (number), 
+	id INTEGER NOT NULL,
+	number VARCHAR(3) NOT NULL,
+	short_name VARCHAR(5) NOT NULL,
+	street VARCHAR(20) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (number),
 	UNIQUE (short_name)
 );
 INSERT INTO "dormitory" VALUES(1,'5','Wu5','Wundtstrasse');
@@ -123,9 +123,9 @@ INSERT INTO "dormitory" VALUES(9,'41B','ZW41B','Zellescher Weg');
 INSERT INTO "dormitory" VALUES(10,'41C','ZW41C','Zellescher Weg');
 INSERT INTO "dormitory" VALUES(11,'41D','ZW41D','Zellescher Weg');
 CREATE TABLE vlan (
-	id INTEGER NOT NULL, 
-	name VARCHAR(127) NOT NULL, 
-	tag INTEGER NOT NULL, 
+	id INTEGER NOT NULL,
+	name VARCHAR(127) NOT NULL,
+	tag INTEGER NOT NULL,
 	PRIMARY KEY (id)
 );
 INSERT INTO "vlan" VALUES(1,'Wu5',15);
@@ -138,13 +138,13 @@ INSERT INTO "vlan" VALUES(7,'ZellescherWeg',41);
 INSERT INTO "vlan" VALUES(8,'UNEPWeb',348);
 INSERT INTO "vlan" VALUES(9,'ZellescherWeg',41);
 CREATE TABLE subnet (
-	id INTEGER NOT NULL, 
-	address VARCHAR(51) NOT NULL, 
-	gateway VARCHAR(51) NOT NULL, 
-	dns_domain VARCHAR, 
-	reserved_addresses INTEGER NOT NULL, 
-	ip_type VARCHAR(1) NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	address VARCHAR(51) NOT NULL,
+	gateway VARCHAR(51) NOT NULL,
+	dns_domain VARCHAR,
+	reserved_addresses INTEGER NOT NULL,
+	ip_type VARCHAR(1) NOT NULL,
+	PRIMARY KEY (id),
 	CONSTRAINT iptypes CHECK (ip_type IN ('4', '6'))
 );
 INSERT INTO "subnet" VALUES(1,'141.30.228.0/24','141.30.228.1','wh2.tu-dresden.de',0,'4');
@@ -157,9 +157,9 @@ INSERT INTO "subnet" VALUES(7,'141.30.227.0/24','141.30.227.1','wh3.tu-dresden.d
 INSERT INTO "subnet" VALUES(8,'141.30.242.128/26','141.30.242.129','whunep.tu-dresden.de',0,'4');
 INSERT INTO "subnet" VALUES(9,'141.30.216.0/24','141.30.216.1','wh16.tu-dresden.de',0,'4');
 CREATE TABLE port (
-	id INTEGER NOT NULL, 
-	type VARCHAR(15) NOT NULL, 
-	name VARCHAR(4) NOT NULL, 
+	id INTEGER NOT NULL,
+	type VARCHAR(15) NOT NULL,
+	name VARCHAR(4) NOT NULL,
 	PRIMARY KEY (id)
 );
 INSERT INTO "port" VALUES(1,'switch_port','D20');
@@ -3427,8 +3427,8 @@ INSERT INTO "port" VALUES(3262,'patch_port','3/06 2');
 INSERT INTO "port" VALUES(3263,'patch_port','3/07 1');
 INSERT INTO "port" VALUES(3264,'patch_port','3/07 2');
 CREATE TABLE destinationport (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES port (id)
 );
 INSERT INTO "destinationport" VALUES(1);
@@ -5064,9 +5064,9 @@ INSERT INTO "destinationport" VALUES(1630);
 INSERT INTO "destinationport" VALUES(1631);
 INSERT INTO "destinationport" VALUES(1632);
 CREATE TABLE association_dormitory_vlan (
-	dormitory_id INTEGER, 
-	vlan_id INTEGER, 
-	FOREIGN KEY(dormitory_id) REFERENCES dormitory (id), 
+	dormitory_id INTEGER,
+	vlan_id INTEGER,
+	FOREIGN KEY(dormitory_id) REFERENCES dormitory (id),
 	FOREIGN KEY(vlan_id) REFERENCES vlan (id)
 );
 INSERT INTO "association_dormitory_vlan" VALUES(3,3);
@@ -5087,9 +5087,9 @@ INSERT INTO "association_dormitory_vlan" VALUES(9,7);
 INSERT INTO "association_dormitory_vlan" VALUES(10,7);
 INSERT INTO "association_dormitory_vlan" VALUES(11,7);
 CREATE TABLE association_subnet_vlan (
-	subnet_id INTEGER, 
-	vlan_id INTEGER, 
-	FOREIGN KEY(subnet_id) REFERENCES subnet (id), 
+	subnet_id INTEGER,
+	vlan_id INTEGER,
+	FOREIGN KEY(subnet_id) REFERENCES subnet (id),
 	FOREIGN KEY(vlan_id) REFERENCES vlan (id)
 );
 INSERT INTO "association_subnet_vlan" VALUES(8,8);
@@ -5102,19 +5102,19 @@ INSERT INTO "association_subnet_vlan" VALUES(2,2);
 INSERT INTO "association_subnet_vlan" VALUES(3,3);
 INSERT INTO "association_subnet_vlan" VALUES(7,7);
 CREATE TABLE trafficgroup (
-	id INTEGER NOT NULL, 
-	traffic_limit BIGINT NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	traffic_limit BIGINT NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES "group" (id)
 );
 CREATE TABLE room (
-	id INTEGER NOT NULL, 
-	number VARCHAR(36) NOT NULL, 
-	level INTEGER NOT NULL, 
-	inhabitable BOOLEAN NOT NULL, 
-	dormitory_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	CHECK (inhabitable IN (0, 1)), 
+	id INTEGER NOT NULL,
+	number VARCHAR(36) NOT NULL,
+	level INTEGER NOT NULL,
+	inhabitable BOOLEAN NOT NULL,
+	dormitory_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	CHECK (inhabitable IN (0, 1)),
 	FOREIGN KEY(dormitory_id) REFERENCES dormitory (id)
 );
 INSERT INTO "room" VALUES(1,'1',0,1,1);
@@ -6753,8 +6753,8 @@ INSERT INTO "room" VALUES(1633,'Dach',17,0,4);
 INSERT INTO "room" VALUES(1634,'Keller',0,0,1);
 INSERT INTO "room" VALUES(1635,'Dach',16,0,3);
 CREATE TABLE propertygroup (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES "group" (id)
 );
 INSERT INTO "propertygroup" VALUES(1);
@@ -6769,11 +6769,11 @@ INSERT INTO "propertygroup" VALUES(9);
 INSERT INTO "propertygroup" VALUES(10);
 INSERT INTO "propertygroup" VALUES(11);
 CREATE TABLE "user" (
-	id INTEGER NOT NULL, 
-	login VARCHAR(40) NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	registration_date DATETIME NOT NULL, 
-	passwd_hash VARCHAR, 
+	id INTEGER NOT NULL,
+	login VARCHAR(40) NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	registration_date DATETIME NOT NULL,
+	passwd_hash VARCHAR,
 	email VARCHAR(255),
 	finance_account_id INTEGER,
 	room_id INTEGER NOT NULL,
@@ -8219,12 +8219,12 @@ INSERT INTO "user" VALUES(9588,'login9588','name9588 nutzer9588','2012-11-08 00:
 INSERT INTO "user" VALUES(9589,'login9589','name9589 nutzer9589','2012-11-08 00:00:00.000000',NULL,NULL,NULL,433);
 INSERT INTO "user" VALUES(9590,'login9590','name9590 nutzer9590','2012-11-19 00:00:00.000000',NULL,NULL,NULL,209);
 CREATE TABLE patchport (
-	id INTEGER NOT NULL, 
-	destination_port_id INTEGER, 
-	room_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES port (id), 
-	FOREIGN KEY(destination_port_id) REFERENCES destinationport (id), 
+	id INTEGER NOT NULL,
+	destination_port_id INTEGER,
+	room_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES port (id),
+	FOREIGN KEY(destination_port_id) REFERENCES destinationport (id),
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
 INSERT INTO "patchport" VALUES(1633,1,1);
@@ -9860,15 +9860,15 @@ INSERT INTO "patchport" VALUES(3262,1630,1630);
 INSERT INTO "patchport" VALUES(3263,1631,1631);
 INSERT INTO "patchport" VALUES(3264,1632,1632);
 CREATE TABLE phoneport (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES destinationport (id)
 );
 CREATE TABLE property (
-	id INTEGER NOT NULL, 
+	id INTEGER NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	granted BOOLEAN NOT NULL,
-	property_group_id INTEGER NOT NULL, 
+	property_group_id INTEGER NOT NULL,
 	PRIMARY KEY (id),
 	CHECK (granted IN (0, 1)),
 	FOREIGN KEY(property_group_id) REFERENCES propertygroup (id)
@@ -9881,12 +9881,12 @@ INSERT INTO "property" VALUES(5,'internet',0,5);
 INSERT INTO "property" VALUES(6,'internet',0,6);
 INSERT INTO "property" VALUES(7,'away',1,11);
 CREATE TABLE logentry (
-	id INTEGER NOT NULL, 
-	type TEXT, 
-	message TEXT NOT NULL, 
-	timestamp DATETIME NOT NULL, 
-	author_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	type TEXT,
+	message TEXT NOT NULL,
+	timestamp DATETIME NOT NULL,
+	author_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(author_id) REFERENCES user (id)
 );
 INSERT INTO "logentry" VALUES(1,'userlogentry','Alte Kommentare: Wohnbereichsleiterin (bezahlt nicht!)','2013-01-30 20:55:17.284700',1);
@@ -10296,12 +10296,12 @@ INSERT INTO "logentry" VALUES(404,'userlogentry','Alte Kommentare: Es fehlen 15 
 INSERT INTO "logentry" VALUES(405,'userlogentry','name9531 nutzer9531 wird zum 30.01.2013 temporaer ausziehen. Kommentar: ip weg?','2013-01-30 20:59:19.389787',1);
 INSERT INTO "logentry" VALUES(406,'userlogentry','Nutzer ist zurück.','2013-01-30 20:59:29.201474',1);
 CREATE TABLE host (
-	id INTEGER NOT NULL, 
-	type VARCHAR(50), 
-	user_id INTEGER, 
-	room_id INTEGER, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(user_id) REFERENCES user (id) ON DELETE CASCADE, 
+	id INTEGER NOT NULL,
+	type VARCHAR(50),
+	user_id INTEGER,
+	room_id INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY(user_id) REFERENCES user (id) ON DELETE CASCADE,
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
 INSERT INTO "host" VALUES(1,'switch',NULL,NULL);
@@ -11773,13 +11773,13 @@ INSERT INTO "host" VALUES(1466,'server_host',1,1635);
 INSERT INTO "host" VALUES(1467,'server_host',1,1635);
 INSERT INTO "host" VALUES(1468,'server_host',1,1635);
 CREATE TABLE membership (
-	id INTEGER NOT NULL, 
-	start_date DATETIME NOT NULL, 
-	end_date DATETIME, 
-	group_id INTEGER NOT NULL, 
-	user_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(group_id) REFERENCES "group" (id) ON DELETE CASCADE, 
+	id INTEGER NOT NULL,
+	start_date DATETIME NOT NULL,
+	end_date DATETIME,
+	group_id INTEGER NOT NULL,
+	user_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(group_id) REFERENCES "group" (id) ON DELETE CASCADE,
 	FOREIGN KEY(user_id) REFERENCES user (id) ON DELETE CASCADE
 );
 INSERT INTO "membership" VALUES(1,'2013-01-30 20:59:19.370923',NULL,5,9531);
@@ -11788,9 +11788,9 @@ INSERT INTO "membership" VALUES(3,'2013-01-30 20:59:19.370923',NULL,4,7934);
 INSERT INTO "membership" VALUES(4,'2013-01-30 20:59:19.370923',NULL,7,7934);
 INSERT INTO "membership" VALUES(5,'2013-01-30 20:59:19.370923',NULL,8,7934);
 CREATE TABLE serverhost (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255), 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	name VARCHAR(255),
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES host (id)
 );
 INSERT INTO "serverhost" VALUES(1457,NULL);
@@ -11806,10 +11806,10 @@ INSERT INTO "serverhost" VALUES(1466,NULL);
 INSERT INTO "serverhost" VALUES(1467,NULL);
 INSERT INTO "serverhost" VALUES(1468,'pan');
 CREATE TABLE hostalias (
-	id INTEGER NOT NULL, 
-	type VARCHAR(50), 
-	host_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	type VARCHAR(50),
+	host_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(host_id) REFERENCES host (id) ON DELETE CASCADE
 );
 INSERT INTO "hostalias" VALUES(1,'arecord',21);
@@ -13393,10 +13393,10 @@ INSERT INTO "hostalias" VALUES(1579,'arecord',1468);
 INSERT INTO "hostalias" VALUES(1580,'arecord',1468);
 INSERT INTO "hostalias" VALUES(1581,'arecord',1468);
 CREATE TABLE switch (
-	id INTEGER NOT NULL, 
-	name VARCHAR(127) NOT NULL, 
-	management_ip VARCHAR(127) NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	name VARCHAR(127) NOT NULL,
+	management_ip VARCHAR(127) NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES host (id)
 );
 INSERT INTO "switch" VALUES(1,'switch-wu5-ke','141.30.228.252');
@@ -13420,11 +13420,11 @@ INSERT INTO "switch" VALUES(18,'switch3','141.30.227.4');
 INSERT INTO "switch" VALUES(19,'switch4','141.30.227.5');
 INSERT INTO "switch" VALUES(20,'switch5','141.30.227.6');
 CREATE TABLE netdevice (
-	id INTEGER NOT NULL, 
-	type VARCHAR(50), 
-	mac VARCHAR(17) NOT NULL, 
-	host_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	type VARCHAR(50),
+	mac VARCHAR(17) NOT NULL,
+	host_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(host_id) REFERENCES host (id) ON DELETE CASCADE
 );
 INSERT INTO "netdevice" VALUES(1,'switch_net_device','00:21:f7:0c:2d:00',1);
@@ -14903,8 +14903,8 @@ INSERT INTO "netdevice" VALUES(1473,'server_net_device','00:0c:db:42:c4:00',1468
 INSERT INTO "netdevice" VALUES(1474,'server_net_device','00:0c:db:42:c4:00',1468);
 INSERT INTO "netdevice" VALUES(1475,'server_net_device','00:0c:db:42:c4:00',1468);
 CREATE TABLE userhost (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES host (id)
 );
 INSERT INTO "userhost" VALUES(21);
@@ -16344,10 +16344,10 @@ INSERT INTO "userhost" VALUES(1454);
 INSERT INTO "userhost" VALUES(1455);
 INSERT INTO "userhost" VALUES(1456);
 CREATE TABLE userlogentry (
-	id INTEGER NOT NULL, 
-	user_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES logentry (id), 
+	id INTEGER NOT NULL,
+	user_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES logentry (id),
 	FOREIGN KEY(user_id) REFERENCES user (id)
 );
 INSERT INTO "userlogentry" VALUES(1,128);
@@ -16757,13 +16757,13 @@ INSERT INTO "userlogentry" VALUES(404,8389);
 INSERT INTO "userlogentry" VALUES(405,9531);
 INSERT INTO "userlogentry" VALUES(406,9531);
 CREATE TABLE ip (
-	id INTEGER NOT NULL, 
-	address VARCHAR(51) NOT NULL, 
-	net_device_id INTEGER NOT NULL, 
-	subnet_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	UNIQUE (address), 
-	FOREIGN KEY(net_device_id) REFERENCES netdevice (id) ON DELETE CASCADE, 
+	id INTEGER NOT NULL,
+	address VARCHAR(51) NOT NULL,
+	net_device_id INTEGER NOT NULL,
+	subnet_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (address),
+	FOREIGN KEY(net_device_id) REFERENCES netdevice (id) ON DELETE CASCADE,
 	FOREIGN KEY(subnet_id) REFERENCES subnet (id)
 );
 INSERT INTO "ip" VALUES(1,'141.30.228.252',1,1);
@@ -18242,8 +18242,8 @@ INSERT INTO "ip" VALUES(1474,'141.30.216.1',1474,9);
 INSERT INTO "ip" VALUES(1475,'141.30.202.1',1475,3);
 INSERT INTO "ip" VALUES(1476,'141.30.216.2',1340,9);
 CREATE TABLE switchnetdevice (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES netdevice (id)
 );
 INSERT INTO "switchnetdevice" VALUES(1);
@@ -18267,8 +18267,8 @@ INSERT INTO "switchnetdevice" VALUES(18);
 INSERT INTO "switchnetdevice" VALUES(19);
 INSERT INTO "switchnetdevice" VALUES(20);
 CREATE TABLE usernetdevice (
-	id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES netdevice (id)
 );
 INSERT INTO "usernetdevice" VALUES(21);
@@ -19708,30 +19708,30 @@ INSERT INTO "usernetdevice" VALUES(1454);
 INSERT INTO "usernetdevice" VALUES(1455);
 INSERT INTO "usernetdevice" VALUES(1456);
 CREATE TABLE srvrecord (
-	id INTEGER NOT NULL, 
-	service VARCHAR(255) NOT NULL, 
-	time_to_live INTEGER, 
-	priority INTEGER NOT NULL, 
-	weight INTEGER NOT NULL, 
-	port INTEGER NOT NULL, 
-	target VARCHAR(255) NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	service VARCHAR(255) NOT NULL,
+	time_to_live INTEGER,
+	priority INTEGER NOT NULL,
+	weight INTEGER NOT NULL,
+	port INTEGER NOT NULL,
+	target VARCHAR(255) NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES hostalias (id)
 );
 CREATE TABLE nsrecord (
-	id INTEGER NOT NULL, 
-	domain VARCHAR(255) NOT NULL, 
-	server VARCHAR(255) NOT NULL, 
-	time_to_live INTEGER, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	domain VARCHAR(255) NOT NULL,
+	server VARCHAR(255) NOT NULL,
+	time_to_live INTEGER,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES hostalias (id)
 );
 CREATE TABLE cnamerecord (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	alias_for_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES hostalias (id), 
+	id INTEGER NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	alias_for_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES hostalias (id),
 	FOREIGN KEY(alias_for_id) REFERENCES hostalias (id) ON DELETE CASCADE
 );
 INSERT INTO "cnamerecord" VALUES(2,'ute',1);
@@ -19861,18 +19861,18 @@ INSERT INTO "cnamerecord" VALUES(1530,'horst',1529);
 INSERT INTO "cnamerecord" VALUES(1533,'hp-yevi',1532);
 INSERT INTO "cnamerecord" VALUES(1549,'steinhoff',1548);
 CREATE TABLE mxrecord (
-	id INTEGER NOT NULL, 
-	server VARCHAR(255) NOT NULL, 
-	domain VARCHAR(255) NOT NULL, 
-	priority INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
+	id INTEGER NOT NULL,
+	server VARCHAR(255) NOT NULL,
+	domain VARCHAR(255) NOT NULL,
+	priority INTEGER NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY(id) REFERENCES hostalias (id)
 );
 CREATE TABLE switchport (
-	id INTEGER NOT NULL, 
-	switch_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES destinationport (id), 
+	id INTEGER NOT NULL,
+	switch_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES destinationport (id),
 	FOREIGN KEY(switch_id) REFERENCES switch (id)
 );
 INSERT INTO "switchport" VALUES(1,1);
@@ -21508,19 +21508,19 @@ INSERT INTO "switchport" VALUES(1630,20);
 INSERT INTO "switchport" VALUES(1631,20);
 INSERT INTO "switchport" VALUES(1632,20);
 CREATE TABLE aaaarecord (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	time_to_live INTEGER, 
-	address_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES hostalias (id), 
+	id INTEGER NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	time_to_live INTEGER,
+	address_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES hostalias (id),
 	FOREIGN KEY(address_id) REFERENCES ip (id)
 );
 CREATE TABLE servernetdevice (
-	id INTEGER NOT NULL, 
-	switch_port_id INTEGER, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES netdevice (id), 
+	id INTEGER NOT NULL,
+	switch_port_id INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES netdevice (id),
 	FOREIGN KEY(switch_port_id) REFERENCES switchport (id)
 );
 INSERT INTO "servernetdevice" VALUES(1457,NULL);
@@ -21543,12 +21543,12 @@ INSERT INTO "servernetdevice" VALUES(1473,NULL);
 INSERT INTO "servernetdevice" VALUES(1474,NULL);
 INSERT INTO "servernetdevice" VALUES(1475,NULL);
 CREATE TABLE arecord (
-	id INTEGER NOT NULL, 
-	name VARCHAR(255) NOT NULL, 
-	time_to_live INTEGER, 
-	address_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES hostalias (id), 
+	id INTEGER NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	time_to_live INTEGER,
+	address_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES hostalias (id),
 	FOREIGN KEY(address_id) REFERENCES ip (id)
 );
 INSERT INTO "arecord" VALUES(1,'x0114a',NULL,21);
@@ -23007,10 +23007,10 @@ INSERT INTO "arecord" VALUES(1580,'pan.wh16.tu-dresden.de',NULL,1474);
 INSERT INTO "arecord" VALUES(1581,'pan.wh30.tu-dresden.de',NULL,1475);
 
 CREATE TABLE roomlogentry (
-	id INTEGER NOT NULL, 
-	room_id INTEGER NOT NULL, 
-	PRIMARY KEY (id), 
-	FOREIGN KEY(id) REFERENCES logentry (id), 
+	id INTEGER NOT NULL,
+	room_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(id) REFERENCES logentry (id),
 	FOREIGN KEY(room_id) REFERENCES room (id)
 );
 COMMIT;
