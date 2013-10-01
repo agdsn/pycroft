@@ -32,6 +32,10 @@ class SubnetFullException(Exception):
     pass
 
 
+class MacExistsException(Exception):
+    pass
+
+
 def get_free_ip(subnets):
     for subnet in subnets:
         reserved = subnet.reserved_addresses

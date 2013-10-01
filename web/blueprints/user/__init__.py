@@ -216,6 +216,9 @@ def create():
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
+        except host.MacExistsException, error:
+            flash(u'Duplicate MAC address (already present on one of the connected subnets)', 'error')
+
         except host.SubnetFullException, error:
             flash(u'Subnetz voll', 'error')
 

@@ -13,6 +13,7 @@ from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
 from pycroft.model.session import session
+from pycroft.helpers.host import MacExistsException
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
@@ -200,8 +201,7 @@ def _check_mac_unique_in_subnets(mapper, connection, target):
     other_subnets = _other_subnets_for_mac(target)
 
     if len(set(own_subnets).intersection(other_subnets)) > 0:
-        raise Exception("Duplicate MAC address (already present on one "
-                        "of the connected subnets)")
+        raise MacExistsException("Mac already exists in this subnet!")
 
 
 event.listen(NetDevice, "before_insert", _check_mac_unique_in_subnets,
@@ -332,8 +332,7 @@ def _check_subnet_macs_unique(mapper, connection, target):
         ).all()
 
         if own_subnet in [net for (_, _, net) in other_subnets]:
-            raise Exception("Duplicate MAC address (already present on one "
-                            "of the connected subnets)")
+            raise Exception()
 
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)

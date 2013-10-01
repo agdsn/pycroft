@@ -69,7 +69,8 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
-    email = TextField(u"E-Mail")
+    email = TextField(u"E-Mail", [Regexp(regex=User.email_regex,
+                                         message=u"E-Mail ist ungueltig!")])
     semester = QuerySelectField(u"aktuelles Semester", get_label="name",
         query_factory=semester_query)
 
