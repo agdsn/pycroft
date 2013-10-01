@@ -27,7 +27,7 @@
                     <td class="text-error">Nicht zugeordnet</td>
                     <td>{{ j.journal.account }}</td>
                 {% endif %}
-                <td>{{ j.timestamp|date }}</td>
+                <td>{{ j.valid_date|date }}</td>
                 <td>{{ j.amount|money }}</td>
                 <td>{{ j.message }}</td>
                 <td>{{ j.other_account }}</td>
