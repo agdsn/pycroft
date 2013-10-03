@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
@@ -10,7 +10,7 @@ from pycroft.model import session, host, dormitory, user, accounting
 from tests.model.fixtures.host_fixtures import DormitoryData, VLanData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
     TrafficVolumeData
-from pycroft.helpers.host import get_free_ip
+from pycroft.helpers.host import get_free_ip, MacExistsException
 
 
 class Test_010_NetDeviceValidators(OldPythonTestCase):
