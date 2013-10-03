@@ -7,7 +7,7 @@ from pycroft.model import session, host, dormitory, user, accounting
 from tests.model.fixtures.host_fixtures import DormitoryData, VLanData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
     TrafficVolumeData
-from pycroft.helpers.host import get_free_ip
+from pycroft.helpers.host import get_free_ip, MacExistsException
 
 
 class Test_010_NetDeviceValidators(OldPythonTestCase):
@@ -262,7 +262,7 @@ class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
         super(Test_070_DuplicateMACAdresses, self).tearDown()
 
     def test_0010_duplicate_mac_on_mac_change(self):
-        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+        with self.assertRaisesRegexp(MacExistsException, "Mac already exists in this subnet!"):
             self.nd.mac = "00:00:00:00:00:00"
             session.session.add(self.nd)
             session.session.commit()
@@ -282,7 +282,7 @@ class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
 
     def test_0020_duplicate_mac_on_ip_change(self):
         (_, _, ip) = self._add_second_host()
-        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+        with self.assertRaisesRegexp(MacExistsException, "Duplicate MAC"):
             ip.change_ip(ip="141.30.216.4",
                          subnet=dormitory.Subnet.q.first())
             session.session.commit()
@@ -290,7 +290,7 @@ class Test_070_DuplicateMACAdresses(FixtureDataTestBase):
     def test_0030_duplicate_mac_on_ip_insert(self):
         (uh, nd, _) = self._add_second_host()
 
-        with self.assertRaisesRegexp(Exception, "Duplicate MAC"):
+        with self.assertRaisesRegexp(MacExistsException, "Mac already exists in this subnet!"):
             ip = host.Ip(address="141.30.227.4",
                          subnet=dormitory.Subnet.q.get(2),
                          net_device=self.nd)
