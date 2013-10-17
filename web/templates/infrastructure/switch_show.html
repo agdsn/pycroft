@@ -1,11 +1,31 @@
 {% extends "layout.html" %}
 
 {% block content %}
+    <p>Management IP: {{ switch.management_ip }}</p>
 <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
+    <p></p>
     <ul class="unstyled">
 	<p>switch ports:</p>
-        {% for switch_port in switch_ports %}
-            <li>{{switch_port.name}}</li>
-        {% endfor %}
+   	<table class="table table-hover">
+    <thead>
+				<tr>
+                  <th>Name</th>
+				  <th>Raum</th>
+				</tr>
+			  </thead>
+			  <tbody>
+			  {% for switch_port in switch_ports %}
+				  <tr>
+                    <td>{{ switch_port.name }}</td>
+					<td>{{ switch_port.patch_port.room.id }}</td>
+                  </tr>
+
+			  {% endfor %}
+
+			  </tbody>
+	</table>
+        <!--{% for switch_port in switch_ports %}
+            <li>{{switch_port.name}} {{ switch_port.patch_port.room_id }}</li>
+        {% endfor %}-->
     </ul>
 {% endblock %}
