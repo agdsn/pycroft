@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+	<ul class="unstyled">
+	<p></p>
+	<table class="table table-hover">
+	<thead>
+				<tr>
+				  <th>#</th>
+				  <th>Domain</th>
+				  <th>IP</th>
+				  <th>Gateway</th>
+				  <th>IP-Version</th>
+				</tr>
+			  </thead>
+			  <tbody>
+			  {% for subnet in subnets %}
+				  <tr>
+					<td>{{ subnet.id}}</td>
+					<td>{{ subnet.dns_domain}}</td>
+					<td>{{ subnet.address }}</td>
+					<td>{{ subnet.gateway }}</td>
+					<td>IPv{{ subnet.ip_type }}</td>
+				  </tr>
+
+			  {% endfor %}
+
+			  </tbody>
+	</table>
+	</ul>
+{% endblock %}
