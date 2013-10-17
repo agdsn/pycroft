@@ -1,16 +1,36 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 
 {% block content %}
+    <p>Management IP: {{ switch.management_ip }}</p>
 <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
+    <p></p>
     <ul class="unstyled">
 	<p>switch ports:</p>
-        {% for switch_port in switch_ports %}
-            <li>{{switch_port.name}}</li>
-        {% endfor %}
+   	<table class="table table-hover">
+    <thead>
+				<tr>
+                  <th>Name</th>
+				  <th>Raum</th>
+				</tr>
+			  </thead>
+			  <tbody>
+			  {% for switch_port in switch_ports %}
+				  <tr>
+                    <td>{{ switch_port.name }}</td>
+					<td>{{ switch_port.patch_port.room.id }}</td>
+                  </tr>
+
+			  {% endfor %}
+
+			  </tbody>
+	</table>
+        <!--{% for switch_port in switch_ports %}
+            <li>{{switch_port.name}} {{ switch_port.patch_port.room_id }}</li>
+        {% endfor %}-->
     </ul>
 {% endblock %}
