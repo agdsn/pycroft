@@ -106,6 +106,7 @@ def dormitory_levels(dormitory_id):
     rooms_list = Room.q.filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
     levels_list = [room.level for room in rooms_list]
+    levels_list = list(set(levels_list))
 
     return render_template('dormitories/levels.html',
         levels=levels_list, dormitory_id=dormitory_id, dormitory=dormitory,
