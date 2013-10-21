@@ -17,15 +17,13 @@
 			  {% for switch_port in switch_ports %}
 				  <tr>
                     <td>{{ switch_port.name }}</td>
-					<td>{{ switch_port.patch_port.room.id }}</td>
+                    <td><li><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.id }}</a></li></td>
                   </tr>
 
 			  {% endfor %}
 
 			  </tbody>
 	</table>
-        <!--{% for switch_port in switch_ports %}
-            <li>{{switch_port.name}} {{ switch_port.patch_port.room_id }}</li>
-        {% endfor %}-->
+
     </ul>
 {% endblock %}
