@@ -4,8 +4,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
-from flask.ext.wtf import Form, TextField, validators, BooleanField, \
-    QuerySelectField, TextAreaField
+from flask.ext.wtf import Form
+from wtforms import TextField, validators, BooleanField, TextAreaField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import Required
 from pycroft.model.dormitory import Dormitory
 
