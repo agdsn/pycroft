@@ -4,7 +4,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'Florian Österreich'
 
-from datetime import datetime, date
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.model import session
@@ -90,8 +91,13 @@ def import_csv(csv_file):
             raise Exception("The Journal with the account number '" + fields[0]
                             + "' does not exist in the database!")
 
+        now = datetime.now()
+        parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
+        if parsed_transaction_date + relativedelta(year=now.year) <= now:
+            transaction_date = parsed_transaction_date + relativedelta(year=now.year)
+        else:
+            transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
 
-        transaction_date_split = fields[1].split(".")
         valid_date_split = fields[2].split(".")
 
         JournalEntry(amount=float(fields[8]),
@@ -102,9 +108,7 @@ def import_csv(csv_file):
                      other_person=fields[5],
                      original_message=fields[4],
                      import_date=datetime.now(),
-                     transaction_date=datetime.date(year=datetime.date.today().year,
-                                                    month=transaction_date_split[1],
-                                                    day=transaction_date_split[0]),
+                     transaction_date=transaction_date.date(),
                      valid_date=datetime.date(year=valid_date_split[2],
                                               month=valid_date_split[1],
                                               day=valid_date_split[0])
