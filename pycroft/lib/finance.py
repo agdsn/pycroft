@@ -71,8 +71,6 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     session.session.add_all(
         [new_transaction, new_debit_split, new_credit_split]
     )
-    if commit:
-        session.session.commit()
 
 
 def import_csv(csv_file):
