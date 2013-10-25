@@ -332,7 +332,8 @@ def _check_subnet_macs_unique(mapper, connection, target):
         ).all()
 
         if own_subnet in [net for (_, _, net) in other_subnets]:
-            raise Exception()
+            raise MacExistsException("Duplicate MAC address (already present on one "
+                            "of the connected subnets)")
 
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
