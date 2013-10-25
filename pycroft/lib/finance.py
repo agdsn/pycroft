@@ -97,14 +97,15 @@ def import_csv(csv_file):
 
         valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
-        JournalEntry(amount=float(fields[8]),
-                     message=fields[4],
-                     journal=valid_journal,
-                     other_account=fields[6],
-                     other_bank=fields[7],
-                     other_person=fields[5],
-                     original_message=fields[4],
-                     import_date=datetime.now(),
-                     transaction_date=transaction_date.date(),
-                     valid_date=valid_date.date()
+        entry = JournalEntry(amount=float(fields[8]),
+                             message=fields[4],
+                             journal=valid_journal,
+                             other_account=fields[6],
+                             other_bank=fields[7],
+                             other_person=fields[5],
+                             original_message=fields[4],
+                             import_date=datetime.now(),
+                             transaction_date=transaction_date.date(),
+                             valid_date=valid_date.date()
         )
+        session.session().add(entry)
