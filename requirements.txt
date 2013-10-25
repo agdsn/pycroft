@@ -9,7 +9,7 @@ passlib>=1.6
 pydot>=1.0.28
 PyMySQL>=0.5
 pyparsing==1.5.7
-pysqlite>=2.6.3
+pysqlite>=2.6
 SQLAlchemy>=0.7.6
 sqlalchemy-schemadisplay>=1.1
 Werkzeug>=0.8.3
@@ -18,3 +18,4 @@ WTForms>=1.0.1
 fixture>=1.4
 Flask-Testing>=0.4
 blinker>=1.3
+dateutils>=0.6
