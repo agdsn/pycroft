@@ -98,7 +98,7 @@ def import_csv(csv_file):
         else:
             transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
 
-        valid_date_split = fields[2].split(".")
+        valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
         JournalEntry(amount=float(fields[8]),
                      message=fields[4],
@@ -109,7 +109,5 @@ def import_csv(csv_file):
                      original_message=fields[4],
                      import_date=datetime.now(),
                      transaction_date=transaction_date.date(),
-                     valid_date=datetime.date(year=valid_date_split[2],
-                                              month=valid_date_split[1],
-                                              day=valid_date_split[0])
+                     valid_date=valid_date.date()
         )
