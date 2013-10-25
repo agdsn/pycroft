@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from flask.ext.wtf import Form, TextField, SelectField, QuerySelectField
+from flask.ext.wtf import Form
+from wtforms import TextField, SelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import Required, Regexp
 from pycroft.model.host_alias import ARecord
 from pycroft.model.port import Port

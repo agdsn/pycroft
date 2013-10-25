@@ -1,5 +1,5 @@
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
-from flask.ext.wtf import TextField
+from wtforms import TextField
 from wtforms import fields
 import datetime
 

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from flask.ext.wtf import Form, TextField
+from flask.ext.wtf import Form
+from wtforms import TextField
 from wtforms.validators import Required, Regexp
 
 class TrafficGroupForm(Form):

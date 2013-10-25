@@ -2,7 +2,8 @@
 __author__ = 'florian'
 
 from web.form.fields import DatePickerField
-from flask.ext.wtf import Form, TextField, IntegerField, QuerySelectField, HiddenField
+from flask.ext.wtf import Form
+from wtforms import TextField, IntegerField, HiddenField
 from pycroft.model.finance import FinanceAccount
 
 
