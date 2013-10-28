@@ -74,41 +74,43 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     )
 
 
-def import_csv(csv_file):
+def import_csv(csv_file, import_date=None):
+    if import_date is None:
+        now = datetime.now()
+    else:
+        now = import_date
 
     with open(csv_file, 'r') as csv_file_handle:
         content = csv.reader(csv_file_handle, delimiter=";")
 
-    for fields in content:
+        for fields in content:
 
-        if fields[9] != "EUR":
-            raise Exception("The only supported currency is EUR! "
-                            + fields[9] + " is invalid!")
+            if fields[9] != "EUR":
+                raise Exception("The only supported currency is EUR! "
+                                + fields[9] + " is invalid!")
 
-        valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
+            valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
 
-        if valid_journal is None:
-            raise Exception("The Journal with the account number '" + fields[0]
-                            + "' does not exist in the database!")
+            if valid_journal is None:
+                raise Exception("The Journal with the account number '" + fields[0]
+                                + "' does not exist in the database!")
 
-        now = datetime.now()
-        parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
-        if parsed_transaction_date + relativedelta(year=now.year) <= now:
-            transaction_date = parsed_transaction_date + relativedelta(year=now.year)
-        else:
-            transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
+            parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
+            if parsed_transaction_date + relativedelta(year=now.year) <= now:
+                transaction_date = parsed_transaction_date + relativedelta(year=now.year)
+            else:
+                transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
 
-        valid_date = datetime.strptime(fields[2], "%d.%m.%y")
+            valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
-        entry = JournalEntry(amount=float(fields[8]),
-                             message=fields[4],
-                             journal=valid_journal,
-                             other_account=fields[6],
-                             other_bank=fields[7],
-                             other_person=fields[5],
-                             original_message=fields[4],
-                             import_date=datetime.now(),
-                             transaction_date=transaction_date.date(),
-                             valid_date=valid_date.date()
-        )
-        session.session().add(entry)
+            entry = JournalEntry(amount=float(fields[8].replace(u",", u".")),
+                                 message=fields[4],
+                                 journal=valid_journal,
+                                 other_account=fields[6],
+                                 other_bank=fields[7],
+                                 other_person=fields[5],
+                                 original_message=fields[4],
+                                 import_date=datetime.now(),
+                                 transaction_date=transaction_date.date(),
+                                 valid_date=valid_date)
+            session.session.add(entry)
