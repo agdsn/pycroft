@@ -49,7 +49,7 @@ class Journal(ModelBase):
     bank = Column(String(255), nullable=False)
     hbci_url = Column(String(255), nullable=False)
     last_update = Column(DateTime, nullable=False)
-    account_number = Column(Integer, nullable=False)
+    account_number = Column(String(34), nullable=False)
     bank_identification_code = Column(String(255), nullable=False)
 
 
