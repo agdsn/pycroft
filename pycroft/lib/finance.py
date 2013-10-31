@@ -86,14 +86,14 @@ def import_csv(csv_file, import_date=None):
         for fields in content:
 
             if fields[9] != "EUR":
-                raise Exception("The only supported currency is EUR! "
-                                + fields[9] + " is invalid!")
+                raise Exception("Die einzige aktuell unterstütze Währung ist Euro! "
+                                + fields[9] + " ist ungültig!")
 
             valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
 
             if valid_journal is None:
-                raise Exception("The Journal with the account number '" + fields[0]
-                                + "' does not exist in the database!")
+                raise Exception("Das externe Konto mit der Nummer '" + fields[0]
+                                + "' existiert nicht!")
 
             parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
             if parsed_transaction_date + relativedelta(year=now.year) <= now:
@@ -114,3 +114,5 @@ def import_csv(csv_file, import_date=None):
                                  transaction_date=transaction_date.date(),
                                  valid_date=valid_date)
             session.session.add(entry)
+
+        session.session.commit()

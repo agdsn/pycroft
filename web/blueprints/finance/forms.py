@@ -2,11 +2,12 @@
 # Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+
 __author__ = 'florian'
 
 from web.form.fields import DatePickerField
 from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, HiddenField
+from wtforms import TextField, IntegerField, HiddenField, FileField
 from pycroft.model.finance import FinanceAccount
 
 
@@ -29,3 +30,6 @@ class JournalLinkForm(Form):
                           # get_label='name',
                           # query_factory=financeaccounts_query,
                           # allow_blank=True)
+
+class JournalImportForm(Form):
+    csv_file = FileField()

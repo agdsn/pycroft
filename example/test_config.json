@@ -1,4 +1,8 @@
 {
+    "file_upload": {
+        "max_file_size": "67108864",
+        "temp_dir": "/tmp"
+    },
     "finance": {
         "semester_accounts": [
             {
