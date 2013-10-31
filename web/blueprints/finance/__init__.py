@@ -8,28 +8,51 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, render_template, redirect, url_for, jsonify
+from flask import Blueprint, render_template, redirect, url_for, jsonify,\
+    request, flash
 from web.blueprints.navigation import BlueprintNavigation
-from forms import SemesterCreateForm, JournalLinkForm
-from pycroft.lib import finance
+from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm
+from pycroft.lib import finance, config
 from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import FinanceAccount
+import os
 
 bp = Blueprint('finance', __name__, )
 nav = BlueprintNavigation(bp, "Finanzen")
 
-
 @bp.route('/')
 @bp.route('/journals')
-@nav.navigate(u"Journale")
+@nav.navigate(u"Letzte Überweisungen")
 def journals():
     journals_list = JournalEntry.q.all()
 
     return render_template('finance/journal_list.html',
                            journals=journals_list)
+
+
+@bp.route('/journals/import', methods=['GET', 'POST'])
+@nav.navigate(u"Buchungen importieren")
+def journal_import():
+    #TODO felix_kluge: secure fileupload
+    if(request.method == 'POST'):
+        file = request.files['csv_file']
+        if file:
+            filename = file.filename
+            locatefile = os.path.join(config.get("file_upload")['temp_dir'], filename)
+            file.save(locatefile)
+            try:
+                finance.import_csv(locatefile)
+                flash(u"Der CSV-Import war erfolgreich!", "success")
+            except Exception as error:
+                flash(u"Der CSV-Import ist fehlgeschlagen! " + error.message, "error")
+
+    form = JournalImportForm()
+
+    return render_template('finance/journal_import.html',
+                           form=form)
 
 
 @bp.route('/journalentry/edit/<int:entryid>')

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+
 __author__ = 'florian'
 
 from web.form.fields import DatePickerField
 from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, HiddenField
+from wtforms import TextField, IntegerField, HiddenField, FileField
 from pycroft.model.finance import FinanceAccount
 
 
@@ -26,3 +27,6 @@ class JournalLinkForm(Form):
                           # get_label='name',
                           # query_factory=financeaccounts_query,
                           # allow_blank=True)
+
+class JournalImportForm(Form):
+    csv_file = FileField()

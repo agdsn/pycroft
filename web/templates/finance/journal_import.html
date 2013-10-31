@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% set page_title = "Buchungen importieren" %}
+
+{% block content %}
+
+    <form action="" method="POST" enctype="multipart/form-data" class="form form-inline">
+        <p>{{ form.csv_file }}</p>
+        <p></p><button type="submit">Importieren</button></p>
+    </form>
+{% endblock %}
