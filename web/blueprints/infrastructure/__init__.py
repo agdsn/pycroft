@@ -11,7 +11,7 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
 from pycroft.model.host import Switch, Host
-from pycroft.model.dormitory import Subnet
+from pycroft.model.dormitory import Subnet, VLan
 from pycroft.model.host_alias import HostAlias, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
@@ -194,6 +194,8 @@ def switch_port_create(switch_id):
 
 
 @bp.route('/vlans')
-@nav.navigate(u"Vlans")
+@nav.navigate(u"VLan")
 def vlans():
-    return render_template('infrastructure/base.html')
+    vlans_list = VLan.q.all()
+    return render_template('infrastructure/vlan_list.html',
+                           vlans=vlans_list)
