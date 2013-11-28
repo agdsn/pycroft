@@ -1,9 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
+{% extends "layout.html" %}
 
-</body>
-</html>
+{% block content %}
+    <table class="table table-striped">
+        <tr>
+            <th>Kontoname</th>
+            <th>Kontotyp</th>
+            <th>Semester</th>
+        </tr>
+        {% for a in accounts %}
+            <tr>
+                <td>{{ a.name }}</td>
+                <td>
+                    {% if a.type == "LIABILITY" %}Passivkonto
+                    {% elif a.type == "EXPENSE" %}Aufwandskonto
+                    {% elif a.type == "ASSET" %}Aktivkonto
+                    {% elif a.type == "INCOME" %}Ertragskonto
+                    {% endif %}
+                </td>
+                <td>{{ a.semester.name }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
