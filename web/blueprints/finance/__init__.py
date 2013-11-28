@@ -58,12 +58,12 @@ def journal_import():
                            form=form)
 
 
-@bp.route('/journalentry/edit/<int:entryid>')
+@bp.route('/journalentry/edit/<int:entryid>', methods=["GET", "POST"])
 def journalentry_edit(entryid):
     journalentry = JournalEntry.q.get(entryid)
     form = JournalLinkForm()
 
-    if form.validate_on_submit():
+    if form.validate():
         #finance.simple_transaction()
         pass
 
@@ -74,7 +74,9 @@ def journalentry_edit(entryid):
 @bp.route('/accounts')
 @nav.navigate(u"Konten")
 def accounts():
-    return render_template('finance/base.html')
+    accounts_list = FinanceAccount.q.all()
+
+    return render_template('finance/accounts_list.html', accounts=accounts_list)
 
 
 @bp.route('/transactions')
