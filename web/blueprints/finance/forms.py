@@ -31,8 +31,8 @@ class JournalCreateForm(Form):
     name = TextField(u"Name")
     bank = TextField(u"Bank")
     hbci_url = TextField(u"HBCI-URL")
-    account_number = IntegerField(u"Kontonummer")
-    bank_identification_code = IntegerField(u"Banknummer")
+    account_number = TextField(u"Kontonummer")
+    bank_identification_code = TextField(u"Banknummer")
 
 
 class JournalLinkForm(Form):
