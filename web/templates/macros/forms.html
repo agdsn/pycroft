@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -23,7 +23,7 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to) -%}
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen") -%}
     <form method="POST" action="{{ submit_to }}" class="form-horizontal">
         {{ form.hidden_tag() }}
         {% for field in form %}
@@ -31,6 +31,6 @@
                 {{ bootstrap_simple_field(field) }}
             {% endif %}
         {% endfor %}
-    {{ form_actions(cancel_to) }}
+    {{ form_actions(cancel_to, submit_text) }}
     </form>
 {%- endmacro %}
