@@ -92,6 +92,11 @@ class UserAddGroupMembership(Form):
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
     end_date = DatePickerField(u"Ende",with_today_button=True)
 
+class UserEditGroupMembership(Form):
+    begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
+    unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
+    end_date = DatePickerField(u"Ende",with_today_button=True)
+
 class UserBlockForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
     date = DatePickerField(u"Gesperrt bis", with_today_button=True, default=datetime.now)

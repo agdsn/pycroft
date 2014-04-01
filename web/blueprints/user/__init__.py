@@ -10,6 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from rlcompleter import get_class_members
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 from pycroft import lib
@@ -25,7 +26,7 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
-    NetDeviceChangeMacForm
+    NetDeviceChangeMacForm, UserEditGroupMembership
 from web.blueprints.access import login_required, BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
@@ -265,6 +266,44 @@ def move(user_id):
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_move.html', user_id=user_id, form=form)
+
+
+@bp.route('edit_membership/<int:membership_id>', methods=['GET', 'POST'])
+@access.login_required
+def edit_membership(membership_id):
+    membership = Membership.q.get(membership_id)
+
+    if membership is None:
+        flash(u"Gruppenmitgliedschaft mit ID %s existiert nicht!" % (
+        membership_id), 'error')
+        abort(404)
+
+    form = UserEditGroupMembership()
+    if request.method == 'GET':
+        form.begin_date.data = membership.start_date
+        if membership.start_date < datetime.now():
+            form.begin_date.disabled = True
+
+        if membership.end_date is not None:
+            form.end_date.data = membership.end_date
+
+    if form.validate_on_submit():
+        membership.start_date = datetime.combine(form.begin_date.data, datetime.min.time())
+        if form.unlimited.data:
+            membership.end_date = None
+        else:
+            membership.end_date = datetime.combine(form.end_date.data, datetime.min.time())
+
+        session.commit()
+        flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
+        return redirect(url_for('.user_show', user_id=membership.user_id))
+
+    return render_template('user/user_edit_membership.html', membership_id=membership_id,
+                           form = form)
+
+
+
+
 
 
 @bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
