@@ -1,0 +1,20 @@
+{% if user.user_hosts %}
+    <table class="table">
+        <tr>
+            <th>IP-Adresse</th>
+            <th>Mac-Adresse</th>
+            <th>Anschluss</th>
+        </tr>
+    {% for host in user.user_hosts %}
+        {% for ip in host.ips %}
+            <tr>
+                <td>{{ ip.address }}</td>
+                <td>{{ ip.net_device.mac }}</td>
+                <td>{{ host | get_switch(ip)}} - {{ host | get_switch_port(ip)}}</td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    </table>
+{% else %}
+    Der Nutzer hat keine registrierten Geräte.
+{% endif %}

@@ -7,11 +7,12 @@
     <div class="subnav">
         <ul class="nav nav-pills">
             <li><a href="#basedata">Basisdaten</a></li>
+            <li><a href="#devices">Geräte</a></li>
             <li><a href="#traffic">Traffic</a></li>
-            <li><a href="#hosts">Hosts</a></li>
             <li><a href="#logs">Logeinträge</a></li>
             <li><a href="#finance">Kontoeinträge</a></li>
             <li><a href="#groups">Gruppen</a></li>
+            <li><a href="#hosts">Hosts</a></li>
         </ul>
     </div>
 
@@ -19,26 +20,24 @@
     {# Stammdaten #}
     <section id="basedata">
         <div class="page-header"><h2>Basisdaten</h2></div>
-        <div>
+        <div class="body">
             {% include "user/_user_show_basedata.html" with context %}
         </div>
     </section>
 
+    {# Nutzergeräte #}
+    <section id="devices">
+        <div class="page-header"><h2>Geräte</h2></div>
+        <div>
+            {% include "user/_user_show_devices.html" with context %}
+        </div>
+    </section>
 
     {# Traffic #}
     <section id="traffic">
         <div class="page-header"><h2>Traffic</h2></div>
         <div class="body">
             {% include "user/_user_show_traffic.html" with context %}
-        </div>
-    </section>
-
-
-    {# Hosts-Tabelle #}
-    <section id="hosts">
-        <div class="page-header"><h2>Hosts</h2></div>
-        <div class="body">
-            {% include "user/_user_show_hosts.html" with context %}
         </div>
     </section>
 
@@ -66,6 +65,15 @@
         <div class="page-header"><h2>Gruppen</h2></div>
         <div class="body">
             {% include "user/_user_show_groups.html" with context %}
+        </div>
+    </section>
+
+
+    {# Hosts-Tabelle #}
+    <section id="hosts">
+        <div class="page-header"><h2>Hosts</h2></div>
+        <div class="body">
+            {% include "user/_user_show_hosts.html" with context %}
         </div>
     </section>
 {% endblock %}
