@@ -2,6 +2,11 @@
 
 {% block content %}
     <p>Management IP: {{ switch.management_ip }}</p>
+    {% if switch.room != None %}
+        <p>Standort: {{ switch.room.dormitory.name }} / {{ switch.room.level }}-{{ switch.room.number }}</p>
+    {% else %}
+        <p>Der Standort der Switch ist nicht angegeben!</p>
+    {% endif %}
 <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
     <p></p>
     <ul class="unstyled">
@@ -17,7 +22,7 @@
 			  {% for switch_port in switch_ports %}
 				  <tr>
                     <td>{{ switch_port.name }}</td>
-                    <td><li><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.id }}</a></li></td>
+                    <td><li><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.level }}-{{ switch_port.patch_port.room.number }}</a></li></td>
                   </tr>
 
 			  {% endfor %}
