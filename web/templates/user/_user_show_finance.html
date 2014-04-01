@@ -8,7 +8,7 @@
     <tbody>
         {% for transaction in user.finance_account.transactions %}
             {% for split in transaction.splits %}
-                {% if split.account.user_id == user.id %}
+                {% if split.account.user.id == user.id %}
                     {% if split.amount < 0 %}
                         <tr class="success">
                             <td>
