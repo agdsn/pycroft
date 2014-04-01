@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import json
@@ -63,7 +63,7 @@ class DatePickerWidget(widgets.TextInput):
         if self.with_today_button:
             html = u'<div class="input-append">'
             html += field_html
-            html += u'<a href="#" title="%s" class="btn" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
+            html += u'<a href="#" title="%s" class="btn btn-default" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
             html += u'</div>'
             return html
         else:

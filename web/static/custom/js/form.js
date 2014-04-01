@@ -74,7 +74,7 @@
  */
 
 $(function(){
-    $(".control-group:first .controls:first :first").focus();
+    $(".form-group:first .controls:first :first").focus();
 });
 
 
