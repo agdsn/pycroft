@@ -369,21 +369,24 @@ def block(user, reason, unlimited, processor, date=None):
 @with_transaction
 def move_out(user, date, comment, processor):
     """
-    This function moves out a user and finishes all his memberships. A logmessage is created.
+    This function moves out a user and finishes all move_in memberships.
+    move_in memberships are parsed from config.
+    A log message is created.
     :param user: The user to move out.
     :param date: The date the user is going to move out.
     :param processor: The admin who is going to move out the user.
     :return: The user to move out.
     """
-    if not isinstance(date,datetime):
+    if not isinstance(date, datetime):
         raise ValueError("Date should be a datetime object!")
 
+    move_in_groups = config["move_in"]["group_memberships"]
     for membership in user.memberships:
-        if membership.end_date is None or membership.end_date > date:
-            if membership.start_date > date:
-                membership.end_date = membership.start_date
-            else:
-                membership.end_date = date
+        if membership.active:
+            for move_in_group in move_in_groups:
+                if move_in_group["name"] == membership.group.name:
+                    membership.end_date = date
+
 
     log_message = config["move_out"]["log_message"].format(
         date=date.strftime("%d.%m.%Y")
@@ -406,27 +409,38 @@ def move_out(user, date, comment, processor):
 @with_transaction
 def move_out_tmp(user, date, comment, processor):
     """
-    This function moves a user temporally. A logmessage is created.
+    This function moves a user temporally. A log message is created.
     :param user: The user to move out.
     :param date: The date the user is going to move out.
     :param comment: Comment for temp moveout
     :param processor: The admin who is going to move out the user.
     :return: The user to move out.
     """
-    away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == config["move_out_tmp"]["group"]
-    ).one()
 
     if not isinstance(date, datetime):
         raise ValueError("Date should be a datetime object!")
 
-    create_membership(group=away_group, user=user, start_date=date,
-                      end_date=None)
+    away_group = PropertyGroup.q.filter(
+        PropertyGroup.name == config["move_out_tmp"]["group"]
+    ).one()
+
+    tmp_memberships = Membership.q.join(PropertyGroup).filter(
+        PropertyGroup.id == away_group.id).all()
+
+    if len(tmp_memberships) > 0:
+        # change the existing memberships for tmp_move_out
+        for membership in tmp_memberships:
+            membership.end_date = None
+            membership.start_date = date
+    else:
+        # if there is no move out membership for the user jet, create one
+        create_membership(group=away_group, user=user, start_date=date,
+                          end_date=None)
 
     #TODO: the ip should be deleted just! if the user moves out now!
-    for user_host in user.user_hosts:
-        if user_host is not None:
-            session.session.delete(user_host.user_net_device.ips[0])
+    #for user_host in user.user_hosts:
+    #    if user_host is not None:
+    #        session.session.delete(user_host.user_net_device.ips[0])
 
     log_message = config["move_out_tmp"]["log_message"].format(
         date=date.strftime("%d.%m.%Y")

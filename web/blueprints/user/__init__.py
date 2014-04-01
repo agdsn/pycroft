@@ -103,7 +103,7 @@ def add_membership(user_id):
             start_date = datetime.combine(form.begin_date.data, time(0))
         else:
             start_date = datetime.now()
-        if form.end_date.data is not None:
+        if form.unlimited is False:
             end_date = datetime.combine(form.end_date.data, time(0))
         else:
             end_date=None
