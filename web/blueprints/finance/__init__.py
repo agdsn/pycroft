@@ -14,7 +14,8 @@
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
     request, flash
 from web.blueprints.navigation import BlueprintNavigation
-from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, JournalCreateForm
+from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, \
+    JournalCreateForm, FinanceaccountCreateForm
 from pycroft.lib import finance, config
 from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry
@@ -98,6 +99,29 @@ def accounts():
     accounts_list = FinanceAccount.q.all()
 
     return render_template('finance/accounts_list.html', accounts=accounts_list)
+
+
+@bp.route('/accounts/create', methods=['GET', 'POST'])
+def accounts_create():
+    form = FinanceaccountCreateForm()
+
+    if form.validate_on_submit():
+        # "Semester" wird hier als Integer übergeben, wenn kein Semester
+        # verlinkt werden soll, wird "0" übergeben, was aber keine gültige
+        # Relationship darstellt.
+        semester_id = form.semester_id.data
+        if semester_id == 0:
+            semester_id = None
+
+        new_account = FinanceAccount(name=form.name.data,
+                                     type=form.type.data,
+                                     semester_id=semester_id)
+        session.add(new_account)
+        session.commit()
+        return redirect(url_for('.accounts'))
+
+    return render_template('finance/accounts_create.html', form=form,
+                           page_title=u"Konto erstellen")
 
 
 @bp.route('/transactions')
