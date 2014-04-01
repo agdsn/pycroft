@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -342,6 +342,7 @@ def block(user_id):
         blocked_user = lib.user.block(
             user=myUser,
             date=datetime.combine(form.date.data, time(0)),
+            unlimited=form.unlimited,
             reason=form.reason.data,
             processor=current_user)
         flash(u'Nutzer gesperrt', 'success')

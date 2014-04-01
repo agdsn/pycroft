@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -294,7 +294,7 @@ def has_internet(user):
 
 
 @with_transaction
-def block(user, reason, processor, date=None):
+def block(user, reason, unlimited, processor, date=None):
     """
     This function blocks a user for a certain time.
     A logmessage with a reason is created.
@@ -304,11 +304,14 @@ def block(user, reason, processor, date=None):
     :param processor: The admin who blocked the user.
     :return: The blocked user.
     """
-    if date is not None and not isinstance(date, datetime):
-        raise ValueError("Date should be a datetime object")
+    if unlimited:
+        date = None
+    else:
+        if date is not None and not isinstance(date, datetime):
+            raise ValueError("Date should be a datetime object")
 
-    if date is not None and date < datetime.now():
-        raise ValueError("Date should be in the future")
+        if date is not None and date < datetime.now():
+            raise ValueError("Date should be in the future")
 
     block_group = PropertyGroup.q.filter(
         PropertyGroup.name == config["block"]["group"]
