@@ -69,8 +69,7 @@
  */
 
 $(function(){
-    var inputele = $(".control-group:first .controls:first :first").get(0);
-    if(inputele) inputele.focus();
+    $(".control-group:first .controls:first :first").focus();
 });
 
 
