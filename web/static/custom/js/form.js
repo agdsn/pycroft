@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ * Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
@@ -94,7 +94,7 @@
         for(var i = 0; i < field_ids.length; i++) {
             this.fields.push($("#" + field_ids[i]));
         }
-        this.bind()
+        this.bind();
     };
 
     LazyLoadSelect.prototype = {
@@ -115,8 +115,12 @@
             return query_data
         },
 
-        reload: function( ev ) {
-            $.getJSON(this.dataUrl, this.queryData(), $.proxy(this.replaceOptions, this));
+        reload: function( ev, cb ) {
+            var self = this;
+            $.getJSON(this.dataUrl, this.queryData(), function(data){
+                self.replaceOptions.call(self, data);
+                if(cb) cb();
+            });
         },
 
         replaceOptions: function(data) {
@@ -132,12 +136,23 @@
     };
 
     $.fn.lazyLoadSelect = function (options) {
-        return this.each(function () {
+        var toPreload = [];
+        function loadNext(){
+            var next = toPreload.shift();
+            if(next) next.reload.call(next, null, loadNext);
+        }
+
+        var result = this.each(function () {
             if (undefined == $(this).data('lazyLoadSelect')) {
                 var plugin = new LazyLoadSelect(this, options);
                 $(this).data('lazyLoadSelect', plugin);
+                toPreload.push(plugin);
             }
         });
+
+        loadNext();
+
+        return result;
     };
 
     $.fn.lazyLoadSelect.defaults = {};
