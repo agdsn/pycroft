@@ -28,8 +28,8 @@
                         {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for(".end_membership", membership_id=membership.id) }}">
-                                beenden</a>
+                            <a href="{{ url_for(".edit_membership", membership_id=membership.id) }}">
+                                bearbeiten</a>
                         </td>
                     </tr>
                 {% endfor %}
