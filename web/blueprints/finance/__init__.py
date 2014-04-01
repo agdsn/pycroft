@@ -72,7 +72,8 @@ def journal_create():
         session.commit()
         return redirect(url_for('.journals'))
 
-    return render_template('finance/journal_create.html', form=form)
+    return render_template('finance/journal_create.html',
+                           form=form, page_title=u"Journal erstellen")
 
 
 @bp.route('/journalentry/edit/<int:entryid>', methods=["GET", "POST"])
