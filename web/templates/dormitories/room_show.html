@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -30,6 +30,21 @@
         <li>Etage: {{ room.level }}</li>
         <li>Bewohnbar: {{ room.inhabitable }}</li>
     </ul>
+
+    {% if room.inhabitable %}
+        {% if room.users|length == 0 %}
+            <h4>In diesem Zimmer wohnt niemand, oder derjenige bekommt von uns kein Netz.</h4>
+        {% else %}
+            <h4>Bewohner dieses Zimmers:</h4>
+            <ul class="unstyled">
+                {% for user in room.users %}
+                    <li><a href="{{ url_for('user.user_show', user_id=user.id) }}">{{ user.name }}</a> </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+
+    <hr/>
 
     <div class="row">
         <div class="span6">
