@@ -2,7 +2,7 @@
 
 
 from flask.ext.wtf import Form
-from wtforms import TextField, TextAreaField
+from wtforms import TextField, TextAreaField, BooleanField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import Required, EqualTo, Regexp
 from pycroft.model.user import User
@@ -89,7 +89,8 @@ class UserAddGroupMembership(Form):
     end_date = DatePickerField(u"Ende",with_today_button=True)
 
 class UserBlockForm(Form):
-    date = DatePickerField(u"Gesperrt bis", [Required()], with_today_button=True, default=datetime.now)
+    unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
+    date = DatePickerField(u"Gesperrt bis", with_today_button=True, default=datetime.now)
     reason = TextAreaField(u"Grund")
 
 class UserMoveOutForm(Form):

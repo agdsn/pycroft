@@ -339,6 +339,7 @@ def block(user_id):
         blocked_user = lib.user.block(
             user=myUser,
             date=datetime.combine(form.date.data, time(0)),
+            unlimited=form.unlimited,
             reason=form.reason.data,
             processor=current_user)
         flash(u'Nutzer gesperrt', 'success')
