@@ -9,15 +9,14 @@
             {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
             {% call info_row("Name") %}
-                {{ user.name }} /
-                 <a href="{{ url_for(".edit_name", user_id=user.id) }}">ändern</a>
+                <a href="{{ url_for(".edit_name", user_id=user.id) }}">{{ user.name }}</a>
+
             {% endcall %}
 
             {% call info_row("Login") %}{{ user.login }}{% endcall %}
 
             {% call info_row("E-Mail") %}
-                {{ user.email }}
-                <a href="{{ url_for(".edit_email", user_id=user.id) }}">ändern</a>
+                <a href="{{ url_for(".edit_email", user_id=user.id) }}">{{ user.email }}</a>
             {% endcall %}
 
             {% call info_row("Anmeldedatum") %}
