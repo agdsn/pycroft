@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -14,7 +14,7 @@
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
     request, flash
 from web.blueprints.navigation import BlueprintNavigation
-from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm
+from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, JournalCreateForm
 from pycroft.lib import finance, config
 from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry
@@ -28,12 +28,14 @@ nav = BlueprintNavigation(bp, "Finanzen")
 
 @bp.route('/')
 @bp.route('/journals')
-@nav.navigate(u"Letzte Überweisungen")
+@nav.navigate(u"Journals")
 def journals():
-    journals_list = JournalEntry.q.all()
+    journals_list = Journal.q.all()
+    journal_entries_list = JournalEntry.q.all()
 
     return render_template('finance/journal_list.html',
-                           journals=journals_list)
+                           journals=journals_list,
+                           journal_entries=journal_entries_list)
 
 
 @bp.route('/journals/import', methods=['GET', 'POST'])
@@ -56,6 +58,24 @@ def journal_import():
 
     return render_template('finance/journal_import.html',
                            form=form)
+
+
+@bp.route('/journals/create', methods=['GET', 'POST'])
+def journal_create():
+    form = JournalCreateForm()
+
+    if form.validate_on_submit():
+        new_journal = Journal(account=form.name.data,
+                              bank=form.bank.data,
+                              hbci_url=form.hbci_url.data,
+                              last_update=datetime.now(),
+                              account_number=form.account_number.data,
+                              bank_identification_code=form.bank_identification_code.data)
+        session.add(new_journal)
+        session.commit()
+        return redirect(url_for('.journals'))
+
+    return render_template('finance/journal_create.html', form=form)
 
 
 @bp.route('/journalentry/edit/<int:entryid>', methods=["GET", "POST"])
