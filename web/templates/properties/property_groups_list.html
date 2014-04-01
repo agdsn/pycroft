@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <a href="{{ url_for(".property_group_create") }}" class="btn">neue Eigenschaften Gruppe</a>
+    <a href="{{ url_for(".property_group_create") }}" class="btn">Neue Eigenschaftengruppe</a>
     {% if property_groups %}
     <table class="table">
         <thead>
         <tr>
             <th></th>
             {% for property_group in property_groups %}
-            <th>{{ property_group.name }} <br> <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a></th>
+            <th>{{ property_group.name }} <br> <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">Löschen</a></th>
             {% endfor %}
         </tr>
         </thead>
@@ -27,11 +27,11 @@
                 <td>
                     {% if  property_group.has_property(property[0]) %}
                         <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ok remove-button" title="Löschen">
+                           class="glyphicon glyphicon-ok" title="Löschen">
                         </a>
                     {% else %}
                         <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="icon-ban-circle add-button" title="Hinzufügen">
+                           class="glyphicon glyphicon-remove" title="Hinzufügen">
                         </a>
                     {% endif %}
                 </td>
