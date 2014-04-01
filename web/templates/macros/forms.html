@@ -18,15 +18,17 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen") -%}
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true) -%}
     <form method="POST" action="{{ submit_to }}" class="form-horizontal">
         {{ form.hidden_tag() }}
+        {% if split_cols %}
         <div class="row">
-            <div class="col-md-5">
+           <div class="col-md-5">
+            {% endif %}
             {% set secondcol = true %}
             {% for field in form %}
                 {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                    {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol %}
+                    {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol and split_cols %}
                         </div>
                         <div class="col-md-5 col-md-offset-1">
                         {% set secondcol = false %}
@@ -34,7 +36,9 @@
                     {{ bootstrap_simple_field(field) }}
                 {% endif %}
             {% endfor %}
+            {% if split_cols %}
             </div>
+            {% endif %}
         </div>
     {{ form_actions(cancel_to, submit_text) }}
     </form>
