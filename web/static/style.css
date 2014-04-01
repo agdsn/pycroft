@@ -16,7 +16,7 @@ h2 {
     z-index: -50;
 }
 
-.level a{
+.level a {{
     width: 70%;
     margin: 0.5em;
 }
@@ -53,9 +53,6 @@ h2 {
     background-position: -312px 0;
 }
 
-
-
-
 section {
     border: 0;
     padding-top: 40px;
@@ -75,26 +72,11 @@ section > .body {
     padding: 10px;
 }
 */
+
 .subnav {
-    background-color: #EEEEEE;
-    background-image: -moz-linear-gradient(center top , #F5F5F5 0%, #EEEEEE 50%);
-    background-repeat: repeat-x;
-    border: 1px solid #E5E5E5;
-    border-radius: 4px 4px 4px 4px;
-    height: 36px;
-    width: 100%;
+    left: 0;
 }
-.subnav .nav {
-    margin-bottom: 0;
-}
-.subnav .nav > li > a {
-    border-left: 1px solid #F5F5F5;
-    border-radius: 0 0 0 0;
-    border-right: 1px solid #E5E5E5;
-    margin: 0;
-    padding-bottom: 11px;
-    padding-top: 11px;
-}
+
 .subnav .nav > .active > a, .subnav .nav > .active > a:hover {
     background-color: #E9E9E9;
     border-left: 0 none;
@@ -114,24 +96,23 @@ section > .body {
 .subnav .nav > li:last-child > a {
     border-right: 0 none;
 }
+
 .subnav-fixed {
     border-color: #D5D5D5;
     border-radius: 0 0 0 0;
     border-width: 0 0 1px;
+    background-color: rgba(248,248,255, 200);
     box-shadow: 0 1px 0 #FFFFFF inset, 0 1px 5px rgba(0, 0, 0, 0.1);
     left: 0;
     position: fixed;
     right: 0;
-    top: 40px;
+    top: 50px;
     z-index: 1020;
 }
 .subnav-fixed .nav {
     margin: 0 auto;
     padding: 0 1px;
     width: 938px;
-}
-.subnav .nav > li:first-child > a, .subnav .nav > li:first-child > a:hover {
-    border-radius: 0 0 0 0;
 }
 
 .flash-messages {
