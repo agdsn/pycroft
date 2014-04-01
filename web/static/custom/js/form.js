@@ -3,7 +3,7 @@
  *
  * This file contains javascript code used with the forms
  *
- * copyright (c) 2012 by AG DSN.
+ * copyright (c) 2012, 2014 AG DSN.
  */
 
 /**
@@ -60,6 +60,18 @@
 	$.fn.todayButton.Constructor = TodayButton;
 
 }(window.jQuery);
+
+/**
+ * AutoLoadFocus
+ *
+ * Automatically focuses the first input element of the first input group after
+ * loading the page.
+ */
+
+$(function(){
+    var inputele = $(".control-group:first .controls:first :first").get(0);
+    if(inputele) inputele.focus();
+});
 
 
 /**
