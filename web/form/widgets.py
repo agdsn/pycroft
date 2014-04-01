@@ -60,7 +60,7 @@ class DatePickerWidget(widgets.TextInput):
         if self.with_today_button:
             html = u'<div class="input-append">'
             html += field_html
-            html += u'<a href="#" title="%s" class="btn" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
+            html += u'<a href="#" title="%s" class="btn btn-default" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
             html += u'</div>'
             return html
         else:

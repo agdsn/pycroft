@@ -9,7 +9,7 @@
     </ul>
     <div>
         {%- for level in levels %}
-            <div class="level"><a href="{{url_for('.dormitory_level_rooms', dormitory_id=dormitory_id, level=level)}}" class="btn btn-large">{{ level }}</a></div>
+            <div class="level"><a href="{{url_for('.dormitory_level_rooms', dormitory_id=dormitory_id, level=level)}}" class="btn btn-default btn-large">{{ level }}</a></div>
         {%- endfor %}
     </div>
 {% endblock %}

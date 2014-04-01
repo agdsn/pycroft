@@ -1,16 +1,16 @@
 {% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen") -%}
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
-        <a href="{{ cancel_to }}" class="btn">{{ cancel_text }}</a>
+        <button type="submit" class="btn btn-default btn-primary">{{ submit_text }}</button>
+        <a href="{{ cancel_to }}" class="btn btn-default">{{ cancel_text }}</a>
     </div>
 {%- endmacro %}
 
 
 {% macro bootstrap_simple_field(field) -%}
-    <div class="control-group{% if field.errors %} error{% endif %}">
+    <div class="form-group{% if field.errors %} error{% endif %}">
         {{ field.label(class="control-label") }}
         <div class="controls">
-            {{ field }}
+            {{ field(class="form-control") }}
             {% if field.errors -%}
                 <span class="help-inline">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
             {%- endif %}
@@ -21,11 +21,21 @@
 {% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen") -%}
     <form method="POST" action="{{ submit_to }}" class="form-horizontal">
         {{ form.hidden_tag() }}
-        {% for field in form %}
-            {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                {{ bootstrap_simple_field(field) }}
-            {% endif %}
-        {% endfor %}
+        <div class="row">
+            <div class="col-md-5">
+            {% set secondcol = true %}
+            {% for field in form %}
+                {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
+                    {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol %}
+                        </div>
+                        <div class="col-md-5 col-md-offset-1">
+                        {% set secondcol = false %}
+                    {% endif %}
+                    {{ bootstrap_simple_field(field) }}
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
     {{ form_actions(cancel_to, submit_text) }}
     </form>
 {%- endmacro %}
