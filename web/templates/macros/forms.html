@@ -18,7 +18,7 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to) -%}
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen") -%}
     <form method="POST" action="{{ submit_to }}" class="form-horizontal">
         {{ form.hidden_tag() }}
         {% for field in form %}
@@ -26,6 +26,6 @@
                 {{ bootstrap_simple_field(field) }}
             {% endif %}
         {% endfor %}
-    {{ form_actions(cancel_to) }}
+    {{ form_actions(cancel_to, submit_text) }}
     </form>
 {%- endmacro %}
