@@ -67,7 +67,7 @@ class Test_020_Journal(OldPythonTestCase):
                           account_number=u"DE32444433332222111100",
                           bank_identification_code=u"000000")
         session.session.add(journal_sepa)
-        import_csv("example/example.csv", datetime(2013, 1, 5, 0, 0, 0))
+        import_csv(open("example/example.csv", "r"), datetime(2013, 1, 5, 0, 0, 0))
         session.session.commit()
 
         # test for correct dataimport

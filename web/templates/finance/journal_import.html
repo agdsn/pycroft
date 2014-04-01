@@ -1,10 +1,7 @@
 {% extends "layout.html" %}
+{% import "macros/forms.html" as forms %}
 {% set page_title = "Buchungen importieren" %}
 
 {% block content %}
-
-    <form action="" method="POST" enctype="multipart/form-data" class="form form-inline">
-        <p>{{ form.csv_file }}</p>
-        <p></p><button type="submit" class="btn btn-primary">Importieren</button></p>
-    </form>
+    {{ forms.upload_form(form, '', url_for('.journals')) }}
 {% endblock %}
