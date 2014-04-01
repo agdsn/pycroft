@@ -1,6 +1,30 @@
 {% extends "layout.html" %}
 
 {% block content %}
+    <h3>Angelegte Journals</h3>
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Bank</th>
+            <th>HBCI-Url</th>
+            <th>Aktualisiert am</th>
+            <th>Kontonummer</th>
+            <th>Banknummer</th>
+        </tr>
+        {% for j in journals %}
+            <tr>
+                <td>{{ j.account }}</td>
+                <td>{{ j.bank }}</td>
+                <td>{{ j.hbci_url }}</td>
+                <td>{{ j.last_update|date }}</td>
+                <td>{{ j.account_number }}</td>
+                <td>{{ j.bank_identification_code }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <a href="{{ url_for('.journal_create') }}">Neues Journal anlegen</a>
+
+    <h3>Nicht zugeordnete Journaleinträge</h3>
     <table class="table table-striped">
         <tr>
             <th>Quellkonto</th>
@@ -13,7 +37,7 @@
             <th>Fremdperson</th>
             <th></th>
         </tr>
-        {% for j in journals %}
+        {% for j in journal_entries %}
             <tr>
                 {% if j.amount < 0 %}
                     <td>{{ j.journal.account }}</td>

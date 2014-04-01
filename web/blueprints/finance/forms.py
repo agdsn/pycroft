@@ -20,6 +20,14 @@ class SemesterCreateForm(Form):
     end_date = DatePickerField(u"Ende")
 
 
+class JournalCreateForm(Form):
+    name = TextField(u"Name")
+    bank = TextField(u"Bank")
+    hbci_url = TextField(u"HBCI-URL")
+    account_number = IntegerField(u"Kontonummer")
+    bank_identification_code = IntegerField(u"Banknummer")
+
+
 class JournalLinkForm(Form):
     search = TextField()
     account_id = HiddenField()
