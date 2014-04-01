@@ -4,12 +4,16 @@ __author__ = 'florian'
 
 from web.form.fields import DatePickerField
 from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, HiddenField, FileField
-from pycroft.model.finance import FinanceAccount
+from wtforms import TextField, IntegerField, HiddenField, FileField, SelectField
+from pycroft.model.finance import FinanceAccount, Semester
 
 
 def financeaccounts_query():
     return FinanceAccount.q.order_by(FinanceAccount.name)
+
+
+def semester_query():
+    return Semester.q.all()
 
 
 class SemesterCreateForm(Form):
@@ -36,5 +40,14 @@ class JournalLinkForm(Form):
                           # query_factory=financeaccounts_query,
                           # allow_blank=True)
 
+
 class JournalImportForm(Form):
     csv_file = FileField()
+
+
+class FinanceaccountCreateForm(Form):
+    name = TextField(u"Name")
+    type = SelectField(u"Typ", choices=[("LIABILITY","Passivkonto"), ("EXPENSE", "Aufwandskonto"),
+                                        ("ASSET", "Aktivkonto"), ("INCOME", "Ertragskonto"), ("EQUITY", "Equity")])
+    semester_id = SelectField(u"Semester", coerce=int, choices=[(0, '')]+[(s.id, s.name) for s in semester_query()])
+    tag = HiddenField() #TODO
