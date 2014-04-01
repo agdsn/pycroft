@@ -24,8 +24,8 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true) -%}
-    <form method="POST" action="{{ submit_to }}" class="form-horizontal">
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true, upload=false) -%}
+    <form method="POST" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal">
         {{ form.hidden_tag() }}
         <div class="row">
            <div class="col-md-5">
@@ -44,4 +44,8 @@
         </div>
     {{ form_actions(cancel_to, submit_text) }}
     </form>
+{%- endmacro %}
+
+{% macro upload_form(form, submit_to, cancel_to) -%}
+    {{ simple_form(form, submit_to, cancel_to, upload=true) }}
 {%- endmacro %}

@@ -47,19 +47,14 @@ def journals():
 @nav.navigate(u"Buchungen importieren")
 def journal_import():
     #TODO felix_kluge: secure fileupload
-    if(request.method == 'POST'):
-        file = request.files['csv_file']
-        if file:
-            filename = file.filename
-            locatefile = os.path.join(config.get("file_upload")['temp_dir'], filename)
-            file.save(locatefile)
-            try:
-                finance.import_csv(locatefile)
-                flash(u"Der CSV-Import war erfolgreich!", "success")
-            except Exception as error:
-                flash(u"Der CSV-Import ist fehlgeschlagen! " + error.message, "error")
-
     form = JournalImportForm()
+
+    if form.validate_on_submit():
+        try:
+            finance.import_csv(form.csv_file.data)
+            flash(u"Der CSV-Import war erfolgreich!", "success")
+        except Exception as error:
+            flash(u"Der CSV-Import ist fehlgeschlagen! " + error.message, "error")
 
     return render_template('finance/journal_import.html',
                            form=form)
