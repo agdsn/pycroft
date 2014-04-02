@@ -296,9 +296,18 @@ def edit_membership(membership_id):
 
         session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
+        lib.logging.create_user_log_entry(author=current_user,
+            message=u"hat die Mitgliedschaft des Nutzers"
+                u" in der Gruppe '%s' bearbeitet." %
+                membership.group.name,
+            timestamp=datetime.now(),
+            user=membership.user)
         return redirect(url_for('.user_show', user_id=membership.user_id))
 
-    return render_template('user/user_edit_membership.html', membership_id=membership_id,
+    return render_template('user/user_edit_membership.html',
+                           page_title=u"Mitgliedschaft %s für %s bearbeiten" % (membership.group.name, membership.user.name),
+                           membership_id=membership_id,
+                           user = membership.user,
                            form = form)
 
 

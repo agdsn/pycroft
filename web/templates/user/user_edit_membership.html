@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ forms.simple_form(form, '', url_for('.user_show',user_id=user_id)  ) }}
+    {{ forms.simple_form(form, '', url_for('.user_show',user_id=user.id)  ) }}
 {% endblock %}
 
 {% block page_script %}
