@@ -155,7 +155,7 @@ property_categories = [
      [
          (u"user_show", u"Nutzer darf andere Nutzer in der Usersuite sehen"),
          (u"user_change", u"Nutzer darf Nutzer erstellen, ändern, löschen"),
-         (u"mac_change", u"Nutzer darf MAC Adressen ändern")
+         (u"user_mac_change", u"Nutzer darf MAC Adressen ändern")
      ]
         ),
     (u"Finanzadministration",
@@ -168,6 +168,13 @@ property_categories = [
      [
          (u"infrastructure_show", u"Nutzer darf Infrastruktur ansehen"),
          (u"infrastructure_change", u"Nutzer darf Infrastruktur verwalten")
+     ]
+        ),
+    (u"Pycroftadministration",
+     [
+         (u"groups_change_user", u"Nutzer darf Gruppenmitgliedschaften erstellen, ändern, löschen"),
+         (u"groups_change", u"Nutzer darf Eigenschaftengruppen bearbeiten"),
+         (u"groups_traffic_change", u"Nutzer darf Trafficgruppen bearbeiten")
      ]
         )
 ]
