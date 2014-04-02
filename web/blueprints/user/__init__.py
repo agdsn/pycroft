@@ -48,7 +48,7 @@ def overview():
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
-@access.login_required
+@access.require('user_show')
 def user_show(user_id):
 
     user = User.q.get(user_id)
@@ -94,6 +94,7 @@ def user_show(user_id):
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
+@access.require('groups_change_user')
 def add_membership(user_id):
 
     user = User.q.get(user_id)
@@ -132,6 +133,7 @@ def add_membership(user_id):
 
 
 @bp.route('/delete_membership/<int:membership_id>')
+@access.require('groups_change_user')
 def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
     membership.disable()
@@ -172,6 +174,7 @@ def json_rooms():
 
 
 @bp.route('/json/traffic/<int:user_id>')
+@access.require('user_show')
 def json_trafficdata(user_id):
     traffic_timespan = datetime.now() - timedelta(days=7)
 
@@ -204,7 +207,7 @@ def json_trafficdata(user_id):
 
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate(u"Anlegen")
-@access.login_required
+@access.require('user_change')
 def create():
     form = UserCreateForm()
     if form.validate_on_submit():
@@ -230,7 +233,7 @@ def create():
 
 
 @bp.route('/move/<int:user_id>', methods=['GET', 'POST'])
-@access.login_required
+@access.require('user_change')
 def move(user_id):
     user = User.q.get(user_id)
     if user is None:
@@ -269,7 +272,7 @@ def move(user_id):
 
 
 @bp.route('edit_membership/<int:membership_id>', methods=['GET', 'POST'])
-@access.login_required
+@access.require('groups_change_user')
 def edit_membership(membership_id):
     membership = Membership.q.get(membership_id)
 
@@ -316,7 +319,7 @@ def edit_membership(membership_id):
 
 
 @bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
-@access.login_required
+@access.require('user_change')
 def edit_name(user_id):
     user = User.q.get(user_id)
     if user is None:
@@ -339,7 +342,7 @@ def edit_name(user_id):
 
 
 @bp.route('/edit_email/<int:user_id>', methods=['GET', 'POST'])
-@access.login_required
+@access.require('user_change')
 def edit_email(user_id):
     user = User.q.get(user_id)
     if user is None:
@@ -363,6 +366,7 @@ def edit_email(user_id):
 
 @bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate(u"Suchen")
+@access.require('user_show')
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
@@ -383,6 +387,7 @@ def search():
 
 
 @bp.route('/block/<int:user_id>', methods=['GET', 'POST'])
+@access.require('user_change')
 def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
@@ -406,6 +411,7 @@ def block(user_id):
 
 
 @bp.route('/move_out/<int:user_id>', methods=['GET', 'POST'])
+@access.require('user_change')
 def move_out(user_id):
     form = UserMoveOutForm()
     myUser = User.q.get(user_id)
@@ -425,6 +431,7 @@ def move_out(user_id):
 
 
 @bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
+@access.require('user_mac_change')
 def change_mac(user_net_device_id):
     form = NetDeviceChangeMacForm()
     my_net_device = UserNetDevice.q.get(user_net_device_id)
@@ -440,6 +447,7 @@ def change_mac(user_net_device_id):
 
 
 @bp.route('/move_out_tmp/<int:user_id>', methods=['GET', 'POST'])
+@access.require('user_change')
 def move_out_tmp(user_id):
     form = UserMoveOutForm()
     my_user = User.q.get(user_id)
@@ -460,6 +468,7 @@ def move_out_tmp(user_id):
 
 
 @bp.route('/is_back/<int:user_id>')
+@access.require('user_change')
 def is_back(user_id):
     my_user = User.q.get(user_id)
     changed_user = lib.user.is_back(user=my_user, processor=current_user)
