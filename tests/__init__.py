@@ -10,6 +10,8 @@ from tests.unittest26_compat import OldPythonTestCase
 
 __author__ = 'jan'
 
+REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) NOT NULL constraint failed:"
+
 
 def make_fixture():
     """A helper to create a database fixture.

@@ -8,6 +8,7 @@ from tests.model.fixtures.host_fixtures import DormitoryData, VLanData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
     TrafficVolumeData
 from pycroft.helpers.host import get_free_ip, MacExistsException
+from tests import REGEX_NOT_NULL_CONSTRAINT
 
 
 class Test_010_NetDeviceValidators(OldPythonTestCase):
@@ -48,7 +49,7 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
 
         # Assert that we have no mac assigned
         session.session.add(nd)
-        self.assertRaisesRegexp(Exception, "\(IntegrityError\) netdevice.mac may not be NULL", session.session.commit)
+        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
         session.session.rollback()
 
         # Assert a correct mac
@@ -117,7 +118,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.address = None
         self.assertIsNone(ip_addr.address)
 
-        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.address may not be NULL.*", session.session.commit)
+        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
 
     def test_0040_delete_subnet(self):
         subnet = dormitory.Subnet.q.first()
@@ -131,7 +132,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.subnet = None
         self.assertIsNone(ip_addr.subnet)
 
-        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.subnet_id may not be NULL.*", session.session.commit)
+        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
@@ -170,7 +171,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def commit():
             session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.subnet_id may not be NULL .*", commit)
+        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, commit)
 
     def test_0030_missing_ip(self):
         subnet = dormitory.Subnet.q.first()
@@ -182,7 +183,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def commit():
             session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(Exception, r"\(IntegrityError\) ip.address may not be NULL .*", commit)
+        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, commit)
 
     def test_0040_wrong_subnet(self):
         subnets = dormitory.Subnet.q.all()
