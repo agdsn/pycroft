@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% set page_title = "Nutzer sperren" %}
 
 {% import "macros/forms.html" as forms %}
 
@@ -20,5 +21,15 @@
     <script type="text/javascript">
         $('[data-role=datepicker]').datepicker();
         $('[data-role=today-btn]').todayButton();
+    </script>
+    <script type="text/javascript">
+        // disables the datepicker field, if the block is marked as unlimited
+        $("#unlimited").click(function () {
+            if($(this).is(":checked")) {
+                $("#date").prop('disabled', true);
+            } else {
+                $("#date").prop('disabled', false);
+            }
+        });
     </script>
 {% endblock %}
