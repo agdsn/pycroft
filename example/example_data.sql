@@ -9880,6 +9880,16 @@ INSERT INTO "property" VALUES(4,'homepage_helios',1,3);
 INSERT INTO "property" VALUES(5,'internet',0,5);
 INSERT INTO "property" VALUES(6,'internet',0,6);
 INSERT INTO "property" VALUES(7,'away',1,11);
+INSERT INTO "property" VALUES(8,'user_show',1,7);
+INSERT INTO "property" VALUES(9,'user_change',1,7);
+INSERT INTO "property" VALUES(10,'user_mac_change',1,7);
+INSERT INTO "property" VALUES(11,'finance_show',1,7);
+INSERT INTO "property" VALUES(12,'finance_change',1,7);
+INSERT INTO "property" VALUES(13,'infrastructure_show',1,7);
+INSERT INTO "property" VALUES(14,'infrastructure_change',1,7);
+INSERT INTO "property" VALUES(15,'groups_change_user',1,7);
+INSERT INTO "property" VALUES(16,'groups_change',1,7);
+INSERT INTO "property" VALUES(17,'groups_traffic_change',1,7);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL,
 	type TEXT,
@@ -11787,6 +11797,7 @@ INSERT INTO "membership" VALUES(2,'2013-01-30 20:59:19.370923',NULL,3,7934);
 INSERT INTO "membership" VALUES(3,'2013-01-30 20:59:19.370923',NULL,4,7934);
 INSERT INTO "membership" VALUES(4,'2013-01-30 20:59:19.370923',NULL,7,7934);
 INSERT INTO "membership" VALUES(5,'2013-01-30 20:59:19.370923',NULL,8,7934);
+INSERT INTO "membership" VALUES(6,'2014-04-02 00:00:00.000000',NULL,7,1);
 CREATE TABLE serverhost (
 	id INTEGER NOT NULL,
 	name VARCHAR(255),
