@@ -8,13 +8,14 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, request
 from blueprints import finance, infrastructure, properties, user, dormitories, login
 import template_filters
 import template_tests
 
 from pycroft.model import session
 from web.blueprints.login import login_manager
+from flask.ext.login import current_user, current_app
 
 
 def make_app():
@@ -55,5 +56,15 @@ def make_app():
     @app.teardown_request
     def shutdown_session(exception=None):
         session.session.remove()
+
+    @app.before_request
+    def require_login():
+        """Request a login for every page
+        except the login blueprint and the static folder.
+
+        Blueprint "None" is needed for "/static/*" GET requests.
+        """
+        if current_user.is_anonymous() and request.blueprint not in ("login", None):
+            return current_app.login_manager.unauthorized()
 
     return app
