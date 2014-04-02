@@ -4,13 +4,13 @@
 from flask.ext.wtf import Form
 from wtforms import TextField, TextAreaField, BooleanField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import Required, EqualTo, Regexp, NumberRange
+from wtforms.validators import Required, EqualTo, Regexp, NumberRange, ValidationError
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
-from web.form.fields import DatePickerField
+from web.form.fields import DatePickerField, LazyLoadSelectField
 from datetime import datetime
 
 
@@ -21,11 +21,18 @@ def user_query():
 def host_query():
     return Host.q.order_by(Host.id)
 
+
 def group_query():
     return PropertyGroup.q.order_by(PropertyGroup.name)
 
+
 def semester_query():
     return Semester.q.order_by(Semester.name)
+
+
+def validate_unique_login(form, field):
+        if User.q.filter_by(login=field.data).first():
+            raise ValidationError(u"Nutzerlogin schon vergeben!")
 
 
 class UserSearchForm(Form):
@@ -34,7 +41,6 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
-from web.form.fields import LazyLoadSelectField
 
 class UserEditNameForm(Form):
     name = TextField(u"Name", [Required(message=u"Name wird benötigt!")])
@@ -66,7 +72,8 @@ class UserMoveForm(Form):
 class UserCreateForm(UserEditNameForm, UserMoveForm):
     login = TextField(u"Login", [Required(message=u"Login?"),
                                  Regexp(regex=User.login_regex,
-                                     message=u"Login ist ungültig!")])
+                                     message=u"Login ist ungültig!"),
+                                 validate_unique_login])
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
@@ -74,6 +81,8 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
                                          message=u"E-Mail ist ungueltig!")])
     semester = QuerySelectField(u"aktuelles Semester", get_label="name",
         query_factory=semester_query)
+
+
 
 
 class hostCreateForm(Form):
