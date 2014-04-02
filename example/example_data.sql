@@ -6770,7 +6770,7 @@ INSERT INTO "propertygroup" VALUES(10);
 INSERT INTO "propertygroup" VALUES(11);
 CREATE TABLE "user" (
 	id INTEGER NOT NULL,
-	login VARCHAR(40) NOT NULL,
+	login VARCHAR(40) NOT NULL UNIQUE,
 	name VARCHAR(255) NOT NULL,
 	registration_date DATETIME NOT NULL,
 	passwd_hash VARCHAR,

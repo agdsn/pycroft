@@ -22,7 +22,7 @@ from pycroft.helpers.user import hash_password, verify_password
 
 
 class User(ModelBase, UserMixin):
-    login = Column(String(40), nullable=False)
+    login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registration_date = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
