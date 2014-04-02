@@ -7,7 +7,7 @@
 from flask.ext.wtf import Form
 from wtforms import TextField, TextAreaField, BooleanField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import Required, EqualTo, Regexp
+from wtforms.validators import Required, EqualTo, Regexp, NumberRange
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
@@ -53,7 +53,7 @@ class UserMoveForm(Form):
         get_label='short_name',
         query_factory=dormitory_query)
     level = LazyLoadSelectField(u"Etage",
-        validators=[Required(message=u"Etage?")],
+        validators=[NumberRange(message=u"Etage?")],
         coerce=int,
         choices=[],
         conditions=["dormitory"],
