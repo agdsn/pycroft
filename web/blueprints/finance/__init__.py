@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.finance import FinanceAccount
+from pycroft.model.finance import FinanceAccount, Transaction
 import os
 
 bp = Blueprint('finance', __name__, )
@@ -124,7 +124,9 @@ def accounts_create():
 @bp.route('/transactions')
 @nav.navigate(u"Transaktionen")
 def transactions():
-    return render_template('finance/base.html')
+    transactions_list = Transaction.q.all()
+
+    return render_template('finance/transactions_list.html', transactions=transactions_list)
 
 
 @bp.route("/semester")
