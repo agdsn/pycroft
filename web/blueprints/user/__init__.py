@@ -33,11 +33,6 @@ nav = BlueprintNavigation(bp, "Nutzer")
 access = BlueprintAccess(bp)
 
 
-@bp.errorhandler(404)
-def error_404(e):
-    return render_template('errorpages/404.html', ref=request.referrer)
-
-
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
