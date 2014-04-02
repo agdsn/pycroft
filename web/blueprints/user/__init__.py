@@ -336,14 +336,21 @@ def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        blocked_user = lib.user.block(
-            user=myUser,
-            date=datetime.combine(form.date.data, time(0)),
-            unlimited=form.unlimited,
-            reason=form.reason.data,
-            processor=current_user)
-        flash(u'Nutzer gesperrt', 'success')
-        return redirect(url_for('.user_show', user_id=blocked_user.id))
+        end_date = datetime.combine(form.date.data, time(0))
+        if form.unlimited.data:
+            end_date = None
+
+        try:
+            blocked_user = lib.user.block(
+                user=myUser,
+                date=end_date,
+                reason=form.reason.data,
+                processor=current_user)
+        except ValueError as e:
+            flash(e.message, 'error')
+        else:
+            flash(u'Nutzer gesperrt', 'success')
+            return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_block.html', form=form, user_id=user_id)
 
 
