@@ -91,7 +91,7 @@ def _today():
     return datetime.combine(date.today(), time())
 
 
-def _trafic_by_userid(today, yesterday):
+def _traffic_by_userid(today, yesterday):
     volume = session.session.query(
         User.id.label("user_id"),
         func.sum(TrafficVolume.size).label("amount")
@@ -109,7 +109,7 @@ def _trafic_by_userid(today, yesterday):
     return volume
 
 
-def _unaccountet_by_userid():
+def _unaccounted_by_userid():
     unlimited = session.session.query(
         User.id.label("user_id"),
     ).join(
@@ -139,10 +139,10 @@ def users_with_exceeded_traffic():
     yesterday = today - timedelta(days=1)
 
     # used user traffic by user_id
-    volume = _trafic_by_userid(today, yesterday)
+    volume = _traffic_by_userid(today, yesterday)
 
     # users without accounting
-    unlimited = _unaccountet_by_userid()
+    unlimited = _unaccounted_by_userid()
 
     # ids of the newest user credit entries
     newest_credits = _latest_credits_by_userid()
@@ -254,10 +254,10 @@ def grant_all_traffic():
     yesterday = today - timedelta(days=1)
 
     # used user traffic by user_id
-    volume = _trafic_by_userid(today, yesterday)
+    volume = _traffic_by_userid(today, yesterday)
 
     # users without accounting
-    unlimited = _unaccountet_by_userid()
+    unlimited = _unaccounted_by_userid()
 
     # ids of the newest user credit entries
     newest_credits = _latest_credits_by_userid()
