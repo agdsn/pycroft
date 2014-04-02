@@ -294,7 +294,7 @@ def has_internet(user):
 
 
 @with_transaction
-def block(user, reason, unlimited, processor, date=None):
+def block(user, reason, processor, date=None):
     """
     This function blocks a user for a certain time.
     A logmessage with a reason is created.
@@ -304,14 +304,11 @@ def block(user, reason, unlimited, processor, date=None):
     :param processor: The admin who blocked the user.
     :return: The blocked user.
     """
-    if unlimited:
-        date = None
-    else:
-        if date is not None and not isinstance(date, datetime):
-            raise ValueError("Date should be a datetime object")
+    if date is not None and not isinstance(date, datetime):
+        raise ValueError("Date should be a datetime object")
 
-        if date is not None and date < datetime.now():
-            raise ValueError("Date should be in the future")
+    if date is not None and date < datetime.now():
+        raise ValueError("Date should be in the future")
 
     block_group = PropertyGroup.q.filter(
         PropertyGroup.name == config["block"]["group"]
@@ -406,9 +403,9 @@ def move_out_tmp(user, date, comment, processor):
                           end_date=None)
 
     #TODO: the ip should be deleted just! if the user moves out now!
-    #for user_host in user.user_hosts:
-    #    if user_host is not None:
-    #        session.session.delete(user_host.user_net_device.ips[0])
+    for user_host in user.user_hosts:
+        if user_host is not None:
+            session.session.delete(user_host.user_net_device.ips[0])
 
     log_message = config["move_out_tmp"]["log_message"].format(
         date=date.strftime("%d.%m.%Y")
