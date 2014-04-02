@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture.style import TrimmedNameStyle
@@ -12,6 +12,8 @@ from web import make_app
 from tests.unittest26_compat import OldPythonTestCase
 
 __author__ = 'jan'
+
+REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) NOT NULL constraint failed:"
 
 
 def make_fixture():
