@@ -12,14 +12,12 @@
 
 
 {% macro bootstrap_simple_field(field) -%}
-    <div class="form-group{% if field.errors %} error{% endif %}">
+    <div class="form-group{% if field.errors %} has-error{% endif %}">
         {{ field.label(class="control-label") }}
-        <div class="controls">
             {{ field(class="form-control") }}
-            {% if field.errors -%}
-                <span class="help-inline">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
-            {%- endif %}
-        </div>
+            {% if field.errors %}
+                <span class="help-block text-error">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
+            {% endif %}
     </div>
 {%- endmacro %}
 
