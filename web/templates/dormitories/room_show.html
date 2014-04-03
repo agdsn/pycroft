@@ -1,5 +1,24 @@
 {% extends "layout.html" %}
 
+{% macro log_list(logs) -%}
+    <p>
+        {% if logs %}
+            <table class="table table-striped">
+                <tr><th>Zeit</th><th>Benutzer</th><th>Nachricht</th></tr>
+               {% for entry in logs %}
+                    <td class="shrink">{{ entry.timestamp|datetime }}</td>
+                    <td class="shrink"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
+                    <td class="grow">{{ entry.message }}</td>
+                {% endfor %}
+            </table>
+        {% else %}
+        <div class="alert alert-info">
+            Keine Logeinträge vorhanden.
+        </div>
+        {% endif %}
+    </p>
+{%- endmacro %}
+
 {% block content %}
     <ul class="breadcrumb">
         <li>
@@ -43,29 +62,20 @@
 
     <div class="row">
         <div class="span6">
-        {% if room_logs %}
-            <dl>
-                {% for entry in room_logs %}
-                    <dt>
-                        {{ entry.timestamp|datetime }} von <a href="{{ url_for("user.user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
-                    </dt>
-                    <dd><p>{{ entry.message }}</p></dd>
-                {% endfor %}
-            </dl>
-        {% else %}
-            <p>Raum hat keine Logeinträge.</p>
-        {% endif %}
+            {{ log_list(room_logs) }}
         </div>
 
         <div class="span6">
             <form method="POST" action="" class="form-horizontal">
+                <p>
                 {{ form.hidden_tag() }}
                 {% for field in form %}
                     {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                        {{ field(placeholder='Nachricht', class='span6') }}
+                        {{ field(placeholder='Nachricht', class='span6 form-control') }}
                     {% endif %}
                 {% endfor %}
-                <button type="submit" class="btn btn-primary">Absenden</button>
+                </p>
+                <button type="submit" class="btn btn-default btn-primary">Absenden</button>
             </form>
         </div>
     </div>

@@ -133,3 +133,11 @@ section > .body {
 .hoverable:hover {
     background-color: whiteSmoke;
 }
+
+td .shrink {
+    white-space: nowrap;
+}
+
+td .grow {
+    width: 99%;
+}
