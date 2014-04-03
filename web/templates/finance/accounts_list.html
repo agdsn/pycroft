@@ -21,5 +21,8 @@
             </tr>
         {% endfor %}
     </table>
-    <a href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
+
+    <p>
+        <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
+    </p>
 {% endblock %}
