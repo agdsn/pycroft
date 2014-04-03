@@ -30,7 +30,7 @@
                 </ul>
                 {% if current_user.is_authenticated() %}
                     <ul class="nav navbar-nav pull-right"><li><a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
-                    <p class="navbar-text pull-right">Angemeldet als <a href="#">{{ current_user.name }}</a></p>
+                    <p class="navbar-text pull-right">Angemeldet als <a href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a></p>
                 {% else %}
                     <ul class="nav navbar-nav pull-right"><li><a href="{{ url_for("login.login") }}">Anmelden <span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
                 {% endif %}
