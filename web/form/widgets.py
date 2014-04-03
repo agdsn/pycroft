@@ -5,6 +5,7 @@ from flask import url_for
 from wtforms import widgets
 from wtforms.widgets.core import html_params
 
+from markupsafe import Markup
 
 class DatePickerWidget(widgets.TextInput):
     """This is a Datepicker widget usinng bootstrap-datepicker.
@@ -58,13 +59,13 @@ class DatePickerWidget(widgets.TextInput):
         kwargs['data-date-format'] = self.date_format
         field_html = super(DatePickerWidget, self).__call__(field, **kwargs)
         if self.with_today_button:
-            html = u'<div class="input-append">'
+            html = u'<div class="input-group">'
             html += field_html
-            html += u'<a href="#" title="%s" class="btn btn-default" data-role="today-btn" data-target="%s"><i class="icon-retweet"></i></a>' % (self.today_title, field.id)
+            html += u'<a href="#" title="%s" class="btn btn-default input-group-addon glyphicon glyphicon-retweet" data-role="today-btn" data-target="%s"></a>' % (self.today_title, field.id)
             html += u'</div>'
-            return html
+            return Markup(html)
         else:
-            return field_html
+            return Markup(field_html)
 
 
 class CheckBoxWidget(widgets.Select):
