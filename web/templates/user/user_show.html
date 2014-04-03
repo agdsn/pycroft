@@ -15,9 +15,13 @@
             <li><a href="#devices">Geräte</a></li>
             <li><a href="#traffic">Traffic</a></li>
             <li><a href="#logs">Logeinträge</a></li>
-            <li><a href="#finance">Kontoeinträge</a></li>
+            {% if current_user is privileged_for('finance_show') %}
+                <li><a href="#finance">Kontoeinträge</a></li>
+            {% endif %}
             <li><a href="#groups">Gruppen</a></li>
-            <li><a href="#hosts">Hosts</a></li>
+            {% if current_user is privileged_for('infrastructure_show') %}
+                <li><a href="#hosts">Hosts</a></li>
+        {% endif %}
         </ul>
     </div>
 
@@ -55,14 +59,15 @@
         </div>
     </section>
 
-
-    {# Kontostand des Nutzers #}
-    <section id="finance">
-        <div class="page-header"><h2>Kontoeinträge</h2></div>
-        <div class="body">
-            {% include "user/_user_show_finance.html" with context %}
-        </div>
-    </section>
+    {% if current_user is privileged_for('finance_show') %}
+        {# Kontostand des Nutzers #}
+        <section id="finance">
+            <div class="page-header"><h2>Kontoeinträge</h2></div>
+            <div class="body">
+                {% include "user/_user_show_finance.html" with context %}
+            </div>
+        </section>
+    {% endif %}
 
 
     {# Gruppen des Nutzers #}
@@ -74,13 +79,15 @@
     </section>
 
 
-    {# Hosts-Tabelle #}
-    <section id="hosts">
-        <div class="page-header"><h2>Hosts</h2></div>
-        <div class="body">
-            {% include "user/_user_show_hosts.html" with context %}
-        </div>
-    </section>
+    {% if current_user is privileged_for('infrastructure_show') %}
+        {# Hosts-Tabelle #}
+        <section id="hosts">
+            <div class="page-header"><h2>Hosts</h2></div>
+            <div class="body">
+                {% include "user/_user_show_hosts.html" with context %}
+            </div>
+        </section>
+    {% endif %}
 {% endblock %}
 
 
