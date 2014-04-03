@@ -26,23 +26,23 @@
                         {% else %}
                             {% for user in room.users %}
                                 {% if user is not user_with_positive_balance %}
-                                    <tr class="warning">
-                                        <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                        <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                    <tr>
+                                        <td><a class="text-warning" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                        <td><a class="text-warning" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
                                 {% else %}
                                     {% if user is user_with_no_internet %}
-                                        <tr class="error">
-                                            <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                            <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                        <tr>
+                                            <td><a class="text-danger" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                            <td><a class="text-danger" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
                                     {% else %}
                                         {% if user is user_with_traffic_exceeded %}
-                                            <tr class="info">
-                                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                                <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                            <tr>
+                                                <td><a class="text-info" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                                <td><a class="text-info" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
                                         {% else %}
-                                            <tr class="success">
-                                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                                <td><a href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
+                                            <tr>
+                                                <td><a class="text-success" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                                                <td><a class="text-success" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
                                         {% endif %}
                                     {% endif %}
                                 {% endif %}
