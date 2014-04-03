@@ -6782,6 +6782,9 @@ CREATE TABLE "user" (
 	FOREIGN KEY(finance_account_id) REFERENCES financeaccount (id)
 );
 INSERT INTO "user" VALUES(1,'ag_dsn','System User','2013-01-30 20:55:11.774249','{SSHA}6ebtKeFxGseWvSE0LOafqJAlkBcOwVjr',NULL,NULL,11);
+INSERT INTO "user" VALUES(2,'nutzerverwalter','Ein Nutzer Verwalter','2013-01-30 20:55:11.774249','{SSHA}6ebtKeFxGseWvSE0LOafqJAlkBcOwVjr',NULL,NULL,11);
+INSERT INTO "user" VALUES(3,'admin','Wald Und Wiesen Admin','2013-01-30 20:55:11.774249','{SSHA}6ebtKeFxGseWvSE0LOafqJAlkBcOwVjr',NULL,NULL,11);
+INSERT INTO "user" VALUES(4,'finanzer','Es Ist Ein Finanzer','2013-01-30 20:55:11.774249','{SSHA}6ebtKeFxGseWvSE0LOafqJAlkBcOwVjr',NULL,NULL,11);
 INSERT INTO "user" VALUES(128,'login128','name128 nutzer128','1997-03-25 00:00:00.000000',NULL,NULL,NULL,1088);
 INSERT INTO "user" VALUES(1547,'login1547','name1547 nutzer1547','2000-10-11 00:00:00.000000',NULL,NULL,NULL,668);
 INSERT INTO "user" VALUES(2584,'login2584','name2584 nutzer2584','2002-11-07 00:00:00.000000',NULL,NULL,NULL,661);
@@ -9877,8 +9880,8 @@ INSERT INTO "property" VALUES(1,'internet',1,3);
 INSERT INTO "property" VALUES(2,'mail',1,3);
 INSERT INTO "property" VALUES(3,'ssh_helios',1,3);
 INSERT INTO "property" VALUES(4,'homepage_helios',1,3);
-INSERT INTO "property" VALUES(5,'internet',0,5);
-INSERT INTO "property" VALUES(6,'internet',0,6);
+INSERT INTO "property" VALUES(5,'no_pay',1,5);
+INSERT INTO "property" VALUES(6,'no_pay',1,1);
 INSERT INTO "property" VALUES(7,'away',1,11);
 INSERT INTO "property" VALUES(8,'user_show',1,7);
 INSERT INTO "property" VALUES(9,'user_change',1,7);
@@ -9889,7 +9892,29 @@ INSERT INTO "property" VALUES(13,'infrastructure_show',1,7);
 INSERT INTO "property" VALUES(14,'infrastructure_change',1,7);
 INSERT INTO "property" VALUES(15,'groups_change_user',1,7);
 INSERT INTO "property" VALUES(16,'groups_change',1,7);
-INSERT INTO "property" VALUES(17,'groups_traffic_change',1,7);
+INSERT INTO "property" VALUES(17,'groups_show',1,7);
+INSERT INTO "property" VALUES(18,'groups_traffic_show',1,7);
+INSERT INTO "property" VALUES(19,'groups_traffic_change',1,7);
+INSERT INTO "property" VALUES(20, 'user_change', 1, 2);
+INSERT INTO "property" VALUES(21, 'user_show', 1, 2);
+INSERT INTO "property" VALUES(22, 'user_change_mac', 1, 2);
+INSERT INTO "property" VALUES(23, 'user_show', 1, 4);
+INSERT INTO "property" VALUES(24, 'user_mac_change', 1, 4);
+INSERT INTO "property" VALUES(25, 'infrastructure_show', 1, 4);
+INSERT INTO "property" VALUES(26, 'no_internet', 1, 6);
+INSERT INTO "property" VALUES(27, 'no_ssh_helios', 1, 6);
+INSERT INTO "property" VALUES(28, 'finance_show', 1, 8);
+INSERT INTO "property" VALUES(29, 'finance_change', 1, 8);
+INSERT INTO "property" VALUES(30, 'mail', 1, 9);
+INSERT INTO "property" VALUES(31, 'ssh_helios', 1, 9);
+INSERT INTO "property" VALUES(32, 'homepage_helios', 1, 9);
+INSERT INTO "property" VALUES(33, 'no_internet', 1, 11);
+INSERT INTO "property" VALUES(34, 'no_pay', 1, 10);
+INSERT INTO "property" VALUES(35, 'internet', 1, 1);
+INSERT INTO "property" VALUES(36, 'mail', 1, 1);
+INSERT INTO "property" VALUES(37, 'ssh_helios', 1, 1);
+INSERT INTO "property" VALUES(38, 'homepage_helios', 1, 1);
+INSERT INTO "property" VALUES(39, 'user_mac_change', 1, 2);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL,
 	type TEXT,
@@ -11798,6 +11823,9 @@ INSERT INTO "membership" VALUES(3,'2013-01-30 20:59:19.370923',NULL,4,7934);
 INSERT INTO "membership" VALUES(4,'2013-01-30 20:59:19.370923',NULL,7,7934);
 INSERT INTO "membership" VALUES(5,'2013-01-30 20:59:19.370923',NULL,8,7934);
 INSERT INTO "membership" VALUES(6,'2014-04-02 00:00:00.000000',NULL,7,1);
+INSERT INTO "membership" VALUES(7,'2014-04-02 00:00:00.000000',NULL,2,2);
+INSERT INTO "membership" VALUES(8,'2014-04-02 00:00:00.000000',NULL,4,3);
+INSERT INTO "membership" VALUES(9,'2014-04-02 00:00:00.000000',NULL,8,4);
 CREATE TABLE serverhost (
 	id INTEGER NOT NULL,
 	name VARCHAR(255),
