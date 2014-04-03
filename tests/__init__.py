@@ -6,6 +6,7 @@ from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
 from pycroft.model import drop_db_model, create_db_model
+from flask import url_for, request
 from flask.ext import testing
 from web import make_app
 
@@ -62,8 +63,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
     You have to provide an user in the fixtures with the needed properties.
     """
     def _login(self, login, password):
-        self.client.post('/login', data=dict(
-            username=login,
+        self.client.post(url_for("login.login"), data=dict(
+            login=login,
             password=password),
             follow_redirects=True)
 
@@ -73,9 +74,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def setUp(self):
         super(FrontendDataTestBase, self).setUp()
-        #TODO: really ugly... feel free to bring beauty
         try:
-            if self.__getattr__("login") is not None and self.__getattr__("password") is not None:
+            if getattr(self, "login") is not None and getattr(self, "password") is not None:
                 self._login(login=self.login, password=self.password)
         except AttributeError:
             self.__setattr__("login", None)
@@ -88,6 +88,9 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         """
         app = make_app()
         app.testing = True
+
+        # Disable the CSRF in testing mode
+        app.config["WTF_CSRF_ENABLED"] = False
 
         return app
 
