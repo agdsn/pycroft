@@ -28,17 +28,14 @@
     <ul class="breadcrumb">
         <li>
             <a href="{{ url_for('dormitories.overview') }}">Wohnheime</a>
-            <span class="divider">/</span>
         </li>
         <li>
             <a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=room.dormitory.id) }}">{{ room.dormitory.short_name }}</a>
-            <span class="divider">/</span>
         </li>
         <li>
             <a href="{{url_for('.dormitory_level_rooms', dormitory_id=room.dormitory_id, level=room.level)}}">
                 Etage {{ room.level|level_number }}
             </a>
-            <span class="divider">/</span>
         </li>
         <li class="active">Zimmer {{ room.number }}</li>
     </ul>
