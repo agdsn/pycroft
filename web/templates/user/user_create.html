@@ -4,7 +4,7 @@
 
 {% import "macros/forms.html" as forms %}
 {% block content %}
-    {{ forms.simple_form(form, '', url_for('.create')  ) }}
+    {{ forms.simple_form(form, '', url_for('dormitories.overview')  ) }}
 {% endblock %}
 
 {% block page_script %}
