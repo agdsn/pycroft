@@ -8,4 +8,13 @@
 
 {% block content %}
     {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login"  ) }}
+
+    <p>Testaccounts:</p>
+    <ul>
+        <li>ag_dsn</li>
+        <li>nutzerverwalter</li>
+        <li>admin</li>
+        <li>finanzer</li>
+    </ul>
+    <p>PW ist immer test. wär ganz gut wenn ihr euch mal hier ein wenig durchklickt um das access system zu testen</p>
 {% endblock %}
