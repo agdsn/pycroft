@@ -1,16 +1,20 @@
 {% macro log_list(logs) -%}
+    <p>
         {% if logs %}
-                <dl>
-                    {% for entry in logs %}
-                <dt>
-                    {{ entry.timestamp|datetime }} von <a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a>
-                </dt>
-                <dd><p>{{ entry.message }}</p></dd>
+            <table class="table table-striped">
+                <tr><th>Zeit</th><th>Benutzer</th><th>Nachricht</th></tr>
+               {% for entry in logs %}
+                    <td style="white-space: nowrap;">{{ entry.timestamp|datetime }}</td>
+                    <td style="white-space: nowrap;"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
+                    <td style="width: 99%;">{{ entry.message }}</td>
             {% endfor %}
-        </dl>
+            </table>
         {% else %}
-        <p>Keine Logeinträge vorhanden.</p>
+        <div class="alert alert-info">
+            Keine Logeinträge vorhanden.
+        </div>
         {% endif %}
+    </p>
 {%- endmacro %}
 
 <ul id="myTab" class="nav nav-tabs">
