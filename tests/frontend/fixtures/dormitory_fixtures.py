@@ -34,6 +34,6 @@ class UserData(DataSet):
     class dummy_user1:
         login = "test"
         name = "John Doe"
-        password = hash_password("password")
+        passwd_hash = hash_password("password")
         registration_date = datetime.datetime.now()
         room = RoomData.dummy_room1
