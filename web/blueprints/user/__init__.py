@@ -27,7 +27,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
     NetDeviceChangeMacForm, UserEditGroupMembership
-from web.blueprints.access import login_required, BlueprintAccess
+from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 

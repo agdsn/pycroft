@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -19,13 +19,16 @@ from pycroft.model.property import PropertyGroup, TrafficGroup, \
 from pycroft.lib.property import delete_property, delete_property_group, \
     delete_traffic_group, create_property, create_property_group, \
     create_traffic_group
+from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('properties', __name__, )
 nav = BlueprintNavigation(bp, "Eigenschaften")
+access = BlueprintAccess(bp)
 
 
 @bp.route('/traffic_groups')
 @nav.navigate(u"Traffic Gruppen")
+@access.require('groups_traffic_show')
 def traffic_groups():
     traffic_groups_list = TrafficGroup.q.all()
     return render_template('properties/traffic_groups_list.html',
@@ -33,6 +36,7 @@ def traffic_groups():
 
 
 @bp.route('/traffic_group/create', methods=['GET', 'POST'])
+@access.require('groups_traffic_change')
 def traffic_group_create():
     form = TrafficGroupForm()
     if form.validate_on_submit():
@@ -46,6 +50,7 @@ def traffic_group_create():
 
 
 @bp.route('/traffic_group/<group_id>/delete')
+@access.require('groups_traffic_change')
 def traffic_group_delete(group_id):
     group = delete_traffic_group(group_id)
     flash(u'Traffic Gruppe {} gelöscht'.format(group.name), 'success')
@@ -53,6 +58,7 @@ def traffic_group_delete(group_id):
 
 
 @bp.route('/property_groups')
+@access.require('groups_show')
 @nav.navigate(u"Eigenschaften Gruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
@@ -63,6 +69,7 @@ def property_groups():
 
 
 @bp.route('/property_group/create', methods=['GET', 'POST'])
+@access.require('groups_change')
 def property_group_create():
     form = PropertyGroupForm()
     if form.validate_on_submit():
@@ -74,6 +81,7 @@ def property_group_create():
 
 
 @bp.route('/property_group/<group_id>/add/<property_name>')
+@access.require('groups_change')
 def property_group_add_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
     (group, property) = create_property(name=property_name,
@@ -84,6 +92,7 @@ def property_group_add_property(group_id, property_name):
 
 
 @bp.route('/property_group/<group_id>/delete/<property_name>')
+@access.require('groups_change')
 def property_group_delete_property(group_id, property_name):
     (group, property) = delete_property(group_id, property_name)
     flash(u'Eigenschaft {} von Gruppe {} entfernt'.format(property.name,
@@ -92,6 +101,7 @@ def property_group_delete_property(group_id, property_name):
 
 
 @bp.route('/property_group/<group_id>/delete')
+@access.require('groups_change')
 def property_group_delete(group_id):
     group = delete_property_group(group_id)
     flash(u'Eigenschaften Gruppe {} gelöscht'.format(group.name), 'success')

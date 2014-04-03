@@ -173,10 +173,12 @@ property_categories = [
          (u"infrastructure_change", u"Nutzer darf Infrastruktur verwalten")
      ]
         ),
-    (u"Pycroftadministration",
+    (u"Gruppenadministration",
      [
          (u"groups_change_user", u"Nutzer darf Gruppenmitgliedschaften erstellen, ändern, löschen"),
+         (u"groups_show", u"Nutzer darf EIgenschaftengruppen sehen"),
          (u"groups_change", u"Nutzer darf Eigenschaftengruppen bearbeiten"),
+         (u"groups_traffic_show", u"Nutzer darf Trafficgruppen sehen"),
          (u"groups_traffic_change", u"Nutzer darf Trafficgruppen bearbeiten")
      ]
         )
