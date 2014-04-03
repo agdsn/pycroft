@@ -134,10 +134,10 @@ section > .body {
     background-color: whiteSmoke;
 }
 
-td .shrink {
+td.shrink {
     white-space: nowrap;
 }
 
-td .grow {
+td.grow {
     width: 99%;
 }
