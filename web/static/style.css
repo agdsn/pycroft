@@ -141,3 +141,20 @@ td.shrink {
 td.grow {
     width: 99%;
 }
+
+.table-fat > tbody > tr > td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-fat > * > tr > th {
+    text-align: center;
+}
+
+.table-fat > tbody > tr > td > a {
+    font-size: 1.3em;
+}
+
+.table-fat > tbody > tr > td > a:hover {
+    text-decoration: none;
+}
