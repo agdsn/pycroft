@@ -9,7 +9,7 @@
 {%- endmacro %}
 
 <div class="row">
-    <div class="span6">
+    <div class="col-md-6">
         <dl class="dl-horizontal">
             {% call info_row("ID") %}{{ user.id }}{% endcall %}
 
@@ -51,15 +51,15 @@
         </dl>
     </div>
     {% if current_user is privileged_for('user_change') %}
-        <div class="span6">
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Umziehen</a></div>
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".block", user_id=user.id) }}">Sperren</a></div>
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">Ausziehen</a></div>
-            {% if not user.has_property("away") %}
-                <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_tmp", user_id=user.id) }}">Temporär Ausziehen</a></div>
-            {% else %}
-                <div class="user"><a class="btn btn-info" href="{{ url_for(".is_back", user_id=user.id) }}">Wieder einziehen</a></div>
-            {% endif %}
-        </div>
+    <div class="col-md-6">
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Umziehen</a></div>
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".block", user_id=user.id) }}">Sperren</a></div>
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">Ausziehen</a></div>
+        {% if not user.has_property("away") %}
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_tmp", user_id=user.id) }}">Temporär Ausziehen</a></div>
+        {% else %}
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".is_back", user_id=user.id) }}">Wieder einziehen</a></div>
+        {% endif %}
+    </div>
     {% endif %}
 </div>
