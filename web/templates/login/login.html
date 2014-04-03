@@ -7,7 +7,9 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
-    {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login"  ) }}
+    <p>
+        {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login"  ) }}
+    </p>
 
     <p>Testaccounts:</p>
     <ul>
