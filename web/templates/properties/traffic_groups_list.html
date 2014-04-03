@@ -1,15 +1,32 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 
 {% block content %}
-    <ul class="unstyled">
-    {% for traffic_group in traffic_groups %}
-        <li>{{ traffic_group.name }} – Limit: {{ traffic_group.traffic_limit/1024/1024 }} MB <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">löschen</a> </li>
-    {% endfor %}
-    </ul>
-    <a href="{{ url_for(".traffic_group_create") }}" class="btn">neue Traffic Gruppe</a>
+    <table class="table table-striped">
+        <thead>
+            <th>Bezeichnung</th>
+            <th>Limit</th>
+            <th>Löschen</th>
+        </thead>
+        <tbody>
+            {% for traffic_group in traffic_groups %}
+                <tr>
+                    <td class="grow">{{ traffic_group.name }}</td>
+                    <td class="shrink">{{ traffic_group.traffic_limit/1024/1024 }} MB</td>
+                    <td class="shrink">
+                        <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p>
+        <a class="btn btn-primary" href="{{ url_for(".traffic_group_create") }}" class="btn">Neue Traffic Gruppe</a>
+    </p>
 {% endblock %}
