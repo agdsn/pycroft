@@ -9,10 +9,10 @@
             <table class="table table-striped">
                 <tr><th>Zeit</th><th>Benutzer</th><th>Nachricht</th></tr>
                {% for entry in logs %}
-                    <td style="white-space: nowrap;">{{ entry.timestamp|datetime }}</td>
-                    <td style="white-space: nowrap;"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
-                    <td style="width: 99%;">{{ entry.message }}</td>
-            {% endfor %}
+                    <td class="shrink">{{ entry.timestamp|datetime }}</td>
+                    <td class="shrink"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
+                    <td class="grow">{{ entry.message }}</td>
+                {% endfor %}
             </table>
         {% else %}
         <div class="alert alert-info">
