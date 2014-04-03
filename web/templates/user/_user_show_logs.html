@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -42,10 +42,14 @@
             {{ form.hidden_tag() }}
             {% for field in form %}
                 {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                    {{ field(placeholder='Nachricht', class='span6') }}
+                    <p>
+                        {{ field(placeholder='Nachricht', class='span6 form-control') }}
+                    </p>
                 {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary">Nutzerlog anlegen</button>
+            <p>
+                <button type="submit" class="btn btn-primary">Nutzerlog anlegen</button>
+            </p>
         </form>
         {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
     </div>
