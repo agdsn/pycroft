@@ -11,7 +11,10 @@
         {{ field.label(class="control-label") }}
             {{ field(class="form-control") }}
             {% if field.errors %}
-                <span class="help-block text-error">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
+                <span class="help-block text-error">
+                      <span class="glyphicon glyphicon-remove form-control-feedback"></span>
+                    {% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}
+                </span>
             {% endif %}
     </div>
 {%- endmacro %}
