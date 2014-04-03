@@ -27,7 +27,9 @@
             </tr>
         {% endfor %}
     </table>
-    <a class="btn btn-primary" href="{{ url_for('.journal_create') }}">Neues Journal anlegen</a>
+    {% if current_user is privileged_for('finance_change') %}
+        <a class="btn btn-primary" href="{{ url_for('.journal_create') }}">Neues Journal anlegen</a>
+    {% endif %}
 
     <h3>Nicht zugeordnete Journaleinträge</h3>
     <table class="table table-striped">
@@ -57,7 +59,11 @@
                 <td>{{ j.other_account }}</td>
                 <td>{{ j.other_bank }}</td>
                 <td>{{ j.other_person }}</td>
-                <td><a href="{{ url_for('.journalentry_edit', entryid=j.id) }}"><i class="icon-edit"></i></a></td>
+                {% if current_user is privileged_for('finance_change') %}
+                    <td><a href="{{ url_for('.journalentry_edit', entryid=j.id) }}"><i class="icon-edit"></i></a></td>
+                {% else %}
+                     <td></td>
+                {% endif %}
             </tr>
         {% endfor %}
     </table>

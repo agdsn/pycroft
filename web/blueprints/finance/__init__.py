@@ -23,12 +23,15 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import FinanceAccount, Transaction
 import os
+from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('finance', __name__, )
+access = BlueprintAccess(bp, ['finance_show'])
 nav = BlueprintNavigation(bp, "Finanzen")
 
 @bp.route('/')
 @bp.route('/journals')
+@access.require('finance_show')
 @nav.navigate(u"Journals")
 def journals():
     journals_list = Journal.q.all()
@@ -40,6 +43,7 @@ def journals():
 
 
 @bp.route('/journals/import', methods=['GET', 'POST'])
+@access.require('finance_change')
 @nav.navigate(u"Buchungen importieren")
 def journal_import():
     #TODO felix_kluge: secure fileupload
@@ -62,6 +66,7 @@ def journal_import():
 
 
 @bp.route('/journals/create', methods=['GET', 'POST'])
+@access.require('finance_change')
 def journal_create():
     form = JournalCreateForm()
 
@@ -81,6 +86,7 @@ def journal_create():
 
 
 @bp.route('/journalentry/edit/<int:entryid>', methods=["GET", "POST"])
+@access.require('finance_change')
 def journalentry_edit(entryid):
     journalentry = JournalEntry.q.get(entryid)
     form = JournalLinkForm()
@@ -95,6 +101,7 @@ def journalentry_edit(entryid):
 
 @bp.route('/accounts')
 @nav.navigate(u"Konten")
+@access.require('finance_show')
 def accounts():
     accounts_list = FinanceAccount.q.all()
 
@@ -102,6 +109,7 @@ def accounts():
 
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])
+@access.require('finance_change')
 def accounts_create():
     form = FinanceaccountCreateForm()
 
@@ -125,6 +133,7 @@ def accounts_create():
 
 
 @bp.route('/transactions')
+@access.require('finance_show')
 @nav.navigate(u"Transaktionen")
 def transactions():
     transactions_list = Transaction.q.all()
@@ -133,6 +142,7 @@ def transactions():
 
 
 @bp.route("/semester")
+@access.require('finance_show')
 @nav.navigate(u"Semesterliste")
 def semester_list():
     semesters = Semester.q.order_by(Semester.begin_date.desc()).all()
@@ -140,6 +150,7 @@ def semester_list():
 
 
 @bp.route('/semester/create', methods=("GET", "POST"))
+@access.require('finance_change')
 @nav.navigate(u"Erstelle Semester")
 def semester_create():
     previous_semester = Semester.q.order_by(Semester.begin_date.desc()).first()
@@ -173,6 +184,7 @@ def semester_create():
 
 
 @bp.route('/json/search_accounts/<string:search_str>')
+@access.require('finance_show')
 def json_search_accounts(search_str):
     result = session.query(FinanceAccount).filter(FinanceAccount.name.like("%%%s%%" % search_str)).all()
 

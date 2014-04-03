@@ -26,8 +26,9 @@
             </tr>
         {% endfor %}
     </table>
-
-    <p>
-        <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
-    </p>
+    {% if current_user is privileged_for('finance_change') %}
+        <p>
+            <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
+        </p>
+    {% endif %}
 {% endblock %}
