@@ -12,28 +12,24 @@
     {% else %}
         <p>Der Standort der Switch ist nicht angegeben!</p>
     {% endif %}
-<a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
-    <p></p>
-    <ul class="unstyled">
-	<p>Switch Ports:</p>
+    <p>
+        <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}" class="btn btn-primary">Neuer Switch Port</a>
+    </p>
+	<h3>Switch Ports</h3>
    	<table class="table table-hover">
-    <thead>
-				<tr>
-                  <th>Name</th>
-				  <th>Raum</th>
-				</tr>
-			  </thead>
-			  <tbody>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Raum</th>
+            </tr>
+        </thead>
+        <tbody>
 			  {% for switch_port in switch_ports %}
 				  <tr>
                     <td>{{ switch_port.name }}</td>
-                    <td><li><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.level }}-{{ switch_port.patch_port.room.number }}</a></li></td>
+                    <td><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.level }}-{{ switch_port.patch_port.room.number }}</a></td>
                   </tr>
-
 			  {% endfor %}
-
-			  </tbody>
+	    </tbody>
 	</table>
-
-    </ul>
 {% endblock %}

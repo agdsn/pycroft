@@ -1,30 +1,26 @@
 {#
- Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 
 {% block content %}
-    <ul class="unstyled">
     <table class="table table-hover">
-	<thead>
-				<tr>
-				  <th>#</th>
-				  <th>Name</th>
-				  <th>Management IP</th>
-				</tr>
-			  </thead>
-			  <tbody>
-			  {% for switch in switches %}
-				  <tr>
-					<td>{{ switch.id}}</td>
-					<td><li><a href="{{ url_for(".switch_show", switch_id=switch.id) }}">{{ switch.name }}</a></li></td>
-					<td>{{ switch.management_ip }}</td>                  </tr>
-
-			  {% endfor %}
-
-			  </tbody>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Management IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for switch in switches %}
+                <tr>
+                    <td>{{ switch.id}}</td>
+                    <td><a href="{{ url_for(".switch_show", switch_id=switch.id) }}">{{ switch.name }}</a></td>
+                    <td>{{ switch.management_ip }}</td>                  </tr>
+            {% endfor %}
+        </tbody>
 	</table>
-    </ul>
 {% endblock %}
