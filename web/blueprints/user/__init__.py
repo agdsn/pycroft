@@ -29,8 +29,8 @@ from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 
 bp = Blueprint('user', __name__, )
-nav = BlueprintNavigation(bp, "Nutzer")
-access = BlueprintAccess(bp)
+access = BlueprintAccess(bp, ['user_show'])
+nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 
 
 @bp.route('/')

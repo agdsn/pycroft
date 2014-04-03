@@ -32,6 +32,15 @@ def exceeded_traffic_check(user):
     """
     return has_exceeded_traffic(user)
 
+@template_check("privileged_for")
+def privilege_check(user, *required_privileges):
+    """Tests if the user has one of the required_privileges to view the
+    requested component.
+    """
+    for perm in required_privileges:
+        if user.has_property(perm):
+            return True
+    return False
 
 def register_checks(app):
     for name in _check_registry:

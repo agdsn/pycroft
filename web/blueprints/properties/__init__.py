@@ -19,8 +19,8 @@ from pycroft.lib.property import delete_property, delete_property_group, \
 from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('properties', __name__, )
-nav = BlueprintNavigation(bp, "Eigenschaften")
-access = BlueprintAccess(bp)
+access = BlueprintAccess(bp, ['groups_traffic_show', 'groups_show'])
+nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
 
 
 @bp.route('/traffic_groups')
