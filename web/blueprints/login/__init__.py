@@ -45,5 +45,5 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash(u"Sie sind jetzt abgemeldet!", "message")
+    flash(u"Sie sind jetzt abgemeldet!", "info")
     return redirect(url_for(".login"))
