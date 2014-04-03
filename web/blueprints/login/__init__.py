@@ -17,7 +17,7 @@ bp = Blueprint('login', __name__, )
 
 login_manager = LoginManager()
 login_manager.login_view = "login.login"
-login_manager.login_message = u"Bitte melden Sie sich an um diese Seite zu benutzen!"
+login_manager.login_message = u"Bitte melden Sie sich an, um diese Seite zu benutzen!"
 
 
 @login_manager.user_loader
