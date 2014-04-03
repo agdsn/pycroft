@@ -19,12 +19,14 @@ from web.blueprints.infrastructure.forms import CNameRecordEditForm
 from web.blueprints.infrastructure.forms import CNameRecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import arecords_query
+from web.blueprints.access import BlueprintAccess
 
 from pycroft.lib.host_alias import delete_alias, change_alias, create_cnamerecord
 from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
-nav = BlueprintNavigation(bp, "Infrastruktur")
+access = BlueprintAccess(bp, ['infrastructure_show'])
+nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 
 
 @bp.route('/subnets')
@@ -44,6 +46,7 @@ def switches():
 
 
 @bp.route('/user/<int:user_id>/record_delete/<int:alias_id>')
+@access.require('infrastructure_change')
 def record_delete(user_id, alias_id):
     delete_alias(alias_id)
     flash(u"Record gelöscht", 'success')
@@ -53,6 +56,7 @@ def record_delete(user_id, alias_id):
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>',
     methods=['GET', 'POST'])
+@access.require('infrastructure_change')
 def record_edit(user_id, alias_id):
     alias = HostAlias.q.get(alias_id)
 
@@ -63,17 +67,20 @@ def record_edit(user_id, alias_id):
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/a')
+@access.require('infrastructure_change')
 def arecord_edit(user_id, alias_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/aaaa')
+@access.require('infrastructure_change')
 def aaaarecord_edit(user_id, alias_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/cname',
     methods=['GET', 'POST'])
+@access.require('infrastructure_change')
 def cnamerecord_edit(user_id, alias_id):
     alias = CNameRecord.q.get(alias_id)
 
@@ -92,22 +99,26 @@ def cnamerecord_edit(user_id, alias_id):
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/mx')
+@access.require('infrastructure_change')
 def mxrecord_edit(user_id, alias_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/ns')
+@access.require('infrastructure_change')
 def nsrecord_edit(user_id, alias_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/srv')
+@access.require('infrastructure_change')
 def srvrecord_edit(user_id, alias_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>',
     methods=['GET', 'POST'])
+@access.require('infrastructure_change')
 def record_create(user_id, host_id):
     form = RecordCreateForm()
 
@@ -126,17 +137,20 @@ def record_create(user_id, host_id):
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/a')
+@access.require('infrastructure_change')
 def arecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/aaaa')
+@access.require('infrastructure_change')
 def aaaarecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/cname',
     methods=['GET', 'POST'])
+@access.require('infrastructure_change')
 def cnamerecord_create(user_id, host_id):
     form = CNameRecordCreateForm()
     form.alias_for.query = arecords_query(host_id)
@@ -156,16 +170,19 @@ def cnamerecord_create(user_id, host_id):
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/mx')
+@access.require('infrastructure_change')
 def mxrecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/ns')
+@access.require('infrastructure_change')
 def nsrecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/srv')
+@access.require('infrastructure_change')
 def srvrecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
@@ -181,6 +198,7 @@ def switch_show(switch_id):
 
 
 @bp.route('/switch/<switch_id>/switch_port/create', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
 def switch_port_create(switch_id):
     form = SwitchPortForm()
     switch = Switch.q.get(switch_id)
