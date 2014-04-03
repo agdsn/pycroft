@@ -12,10 +12,12 @@
     {% else %}
         <p>Der Standort der Switch ist nicht angegeben!</p>
     {% endif %}
-    <p>
-        <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}" class="btn btn-primary">Neuer Switch Port</a>
-    </p>
-	<h3>Switch Ports</h3>
+    {% if current_user is privileged_for('infrastructure_change') %}
+        <p>
+            <a href="{{url_for(".switch_port_create", switch_id = switch.id)}}">neuer Switch Port</a>
+        </p>
+    {% endif %}
+	<h3>Switch Ports:</h3>
    	<table class="table table-hover">
         <thead>
             <tr>
