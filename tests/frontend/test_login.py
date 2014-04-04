@@ -4,8 +4,7 @@
 from flask import url_for
 
 from tests import FrontendDataTestBase
-from tests.frontend.fixtures.login_fixtures import DormitoryData, RoomData, UserData, \
-    MembershipData, PropertyData, PropertyGroupData
+from tests.frontend.fixtures import *
 
 
 class Test_010_Anonymous(FrontendDataTestBase):
@@ -13,9 +12,9 @@ class Test_010_Anonymous(FrontendDataTestBase):
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
     """
-    datasets = [DormitoryData, RoomData, UserData]
+    datasets = [UserData]
 
-    def test_0010_access_forbidden(self):
+    def test_0010_access_anonymous(self):
         # Login is OK
         self.assert_response_code(url_for('login.login'), 200)
 
@@ -27,20 +26,38 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code(url_for('infrastructure.switches'), 302)
 
 
-class Test_020_Login(FrontendDataTestBase):
+class Test_020_Login_Admin(FrontendDataTestBase):
     """Now log the user in and test some requests he is now allowed to do.
-    This test can be buggy, if
     """
-    datasets = [DormitoryData, RoomData, UserData, MembershipData, PropertyData, PropertyGroupData]
+    datasets = [MembershipData, PropertyData]
 
     def setUp(self):
-        self.login = "test"
+        self.login = "admin"
         self.password = "password"
-        #super(Test_020_Login, self).setUp()
+        FrontendDataTestBase.setUp(self)
+
+    def test_0010_access_dormitories(self):
+        # Admin has access to view the dormitories overview
+        self.assert_response_code(url_for('dormitories.overview'), 200)
+
+    def test_0020_access_finance(self):
+        # Admin has no access to finance
+        self.assert_response_code(url_for('finance.journals'), 302)
+
+
+class Test_030_Login_Finance(FrontendDataTestBase):
+    """Log in a user with advanced permissions.
+    Here he may view the finance pages.
+    """
+    datasets = [MembershipData, PropertyData]
+
+    def setUp(self):
+        self.login = "finanzer"
+        self.password = "password"
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_dormitories(self):
         self.assert_response_code(url_for('dormitories.overview'), 200)
 
-    def test_0020_finance(self):
+    def test_0020_access_finance(self):
         self.assert_response_code(url_for('finance.journals'), 200)
