@@ -18,13 +18,16 @@ from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.dormitories.forms import RoomForm, DormitoryForm, \
     RoomLogEntry
+from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('dormitories', __name__, )
-nav = BlueprintNavigation(bp, "Wohnheime")
+access = BlueprintAccess(bp, ['dormitories_show'])
+nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
 
 @bp.route('/')
 @nav.navigate(u"Wohnheime")
+# careful with permissions here, redirects!
 def overview():
     dormitories_list = Dormitory.q.all()
     dormitories_list = dormitory.sort_dormitories(dormitories_list)
@@ -33,6 +36,7 @@ def overview():
 
 
 @bp.route('/show/<dormitory_id>')
+@access.require('dormitories_show')
 def dormitory_show(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = dormitory.rooms
@@ -42,6 +46,7 @@ def dormitory_show(dormitory_id):
 
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate(u"Neues Wohnheim")
+@access.require('dormitories_change')
 def dormitory_create():
     form = DormitoryForm()
     if form.validate_on_submit():
@@ -53,6 +58,7 @@ def dormitory_create():
 
 
 @bp.route('/room/delete/<room_id>')
+@access.require('dormitories_change')
 def room_delete(room_id):
     delete_room(room_id)
     flash(u'Raum gelöscht', 'success')
@@ -60,6 +66,7 @@ def room_delete(room_id):
 
 
 @bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
+@access.require('dormitories_show')
 def room_show(room_id):
     room = Room.q.get(room_id)
     form = RoomLogEntry()
@@ -83,6 +90,7 @@ def room_show(room_id):
 
 @bp.route('/room/create', methods=['GET', 'POST'])
 @nav.navigate(u"Neuer Raum")
+@access.require('dormitories_change')
 def room_create():
     form = RoomForm()
     if form.validate_on_submit():
@@ -98,6 +106,7 @@ def room_create():
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>')
+@access.require('dormitories_show')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = Room.q.filter_by(
@@ -112,6 +121,7 @@ def dormitory_levels(dormitory_id):
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
+@access.require('dormitories_show')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = Room.q.filter_by(

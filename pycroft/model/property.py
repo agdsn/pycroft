@@ -167,7 +167,9 @@ property_categories = [
     (u"Infrastrukturadministration",
      [
          (u"infrastructure_show", u"Nutzer darf Infrastruktur ansehen"),
-         (u"infrastructure_change", u"Nutzer darf Infrastruktur verwalten")
+         (u"infrastructure_change", u"Nutzer darf Infrastruktur verwalten"),
+         (u"dormitories_show", u"Nutzer darf Wohnheime einsehen"),
+         (u"dormitories_change", u"Nutzer darf Wohnheime anlegen und bearbeiten")
      ]
         ),
     (u"Gruppenadministration",

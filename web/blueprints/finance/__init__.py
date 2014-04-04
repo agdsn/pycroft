@@ -24,7 +24,7 @@ from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('finance', __name__, )
 access = BlueprintAccess(bp, ['finance_show'])
-nav = BlueprintNavigation(bp, "Finanzen")
+nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 
 @bp.route('/')
 @bp.route('/journals')
