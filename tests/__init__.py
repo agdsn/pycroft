@@ -100,3 +100,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         if template:
             self.assertTemplateUsed(name=template)
         return response
+
+    def assert_response_code(self, endpoint, code):
+        response = self.client.get(endpoint)
+        self.assertStatus(response, code)
+        return response
