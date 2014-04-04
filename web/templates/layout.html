@@ -44,9 +44,8 @@
             <div class="flash-messages">
             {% for category, message in messages -%}
                 {% set cat = category %}
-                {% if cat == "message" %}
-                    {% set cat = "info" %}
-                {% endif %}
+                {% if cat == "message" %}{% set cat = "info" %}{% endif %}
+                {% if cat == "error" %}{% set cat = "danger" %}{% endif %}
                 <div class="alert fade in alert-{{ cat }}">
                     <a class="close" data-dismiss="alert" href="#">×</a>
                     <strong>{{ category|pretty_category }}:</strong> {{ message }}
