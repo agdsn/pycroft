@@ -11,7 +11,7 @@ from tests.unittest26_compat import OldPythonTestCase
 
 __author__ = 'jan'
 
-REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) NOT NULL constraint failed:"
+REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) (NOT NULL constraint failed:|([a-z_]*\.?[a-z_]*) may not be NULL)"
 
 
 def make_fixture():
