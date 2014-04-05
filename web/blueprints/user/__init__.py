@@ -166,10 +166,18 @@ def json_rooms():
 
 
 @bp.route('/json/traffic/<int:user_id>')
+@bp.route('/json/traffic/<int:user_id>/<int:days>')
 @access.require('user_show')
-def json_trafficdata(user_id):
-    traffic_timespan = datetime.now() - timedelta(days=7)
+def json_trafficdata(user_id, days=7):
+    """Generate a Highcharts compatible JSON file to use with traffic graphs.
 
+    :param user_id:
+    :param days: optional amount of days to be included
+    :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
+    """
+    traffic_timespan = datetime.now() - timedelta(days=days)
+
+    # get all trafficvolumes for the user in the timespan
     trafficvolumes = session.query(
         TrafficVolume
     ).join(
@@ -181,15 +189,21 @@ def json_trafficdata(user_id):
     ).filter(
         TrafficVolume.timestamp > traffic_timespan)
 
+    # filter for INPUT and OUTPUT
     trafficvolume_in = trafficvolumes.filter(TrafficVolume.type == 'IN').all()
     trafficvolume_out = trafficvolumes.filter(TrafficVolume.type == 'OUT').all()
 
+    # generate the data arrays which will be used in the JSON
     tv_in = []
     for entry in trafficvolume_in:
-        tv_in.append(entry.size / 1024 / 1024)
+        tv_in.append([entry.timestamp, entry.size / 1024 / 1024])
     tv_out = []
     for entry in trafficvolume_out:
-        tv_out.append(entry.size / 1024 / 1024)
+        tv_out.append([entry.timestamp, entry.size / 1024 / 1024])
+
+    # reverse, so data is in chronological order
+    for tv in (tv_in, tv_out):
+        tv.reverse()
 
     trafficdata = [{ "name": 'Input', "data": tv_in, "stack": 0 },
             { "name": 'Output', "data": tv_out, "stack": 1 }]
