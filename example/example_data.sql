@@ -9915,6 +9915,8 @@ INSERT INTO "property" VALUES(36, 'mail', 1, 1);
 INSERT INTO "property" VALUES(37, 'ssh_helios', 1, 1);
 INSERT INTO "property" VALUES(38, 'homepage_helios', 1, 1);
 INSERT INTO "property" VALUES(39, 'user_mac_change', 1, 2);
+INSERT INTO "property" VALUES(40, 'dormitories_show', 1, 7);
+INSERT INTO "property" VALUES(41, 'dormitories_change', 1, 7);
 CREATE TABLE logentry (
 	id INTEGER NOT NULL,
 	type TEXT,
