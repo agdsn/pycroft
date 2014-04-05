@@ -98,4 +98,17 @@
     <script type="text/javascript">
         $(".subnav").subNavBar();
     </script>
+    <script type="text/javascript">
+        /*
+        Message AJAX POST
+         */
+        $("#message-form").live("submit", function(e) {
+            e.preventDefault();
+            $.post("", $("#message-form").serialize(), function() {
+                $("#message-overview").load("{{ url_for('.user_show', user_id=user.id) }} #message-overview > *", function() {
+                    $("textarea#message").val('');
+                });
+            });
+        })
+    </script>
 {% endblock %}
