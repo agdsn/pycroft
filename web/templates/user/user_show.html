@@ -7,6 +7,21 @@
 {% set page_title = "Nutzer anzeigen" %}
 {% import "macros/forms.html" as forms %}
 
+{% block page_css %}
+<style type="text/css">
+#trafficgraph-day-selector {
+    float: left;
+    overflow: hidden;
+}
+#select-days {
+    margin: -5px -20px -23px -5px;
+    padding: 10px;
+}
+
+
+</style>
+{% endblock %}
+
 {% block content %}
 
     <div class="subnav">
@@ -96,7 +111,7 @@
     <script type="text/javascript" src="{{ url_for("static", filename="custom/js/trafficgraph.js") }}"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            load_trafficchart();
+            load_trafficchart(7);
         });
     </script>
     <script type="text/javascript" src="{{ url_for("static", filename="custom/js/navigation.js") }}"></script>
@@ -115,5 +130,11 @@
                 });
             });
         })
+    </script>
+    <script type="text/javascript">
+        $("#select-days").change(function() {
+            var days = $("#select-days option:selected").val();
+            load_trafficchart(days);
+        });
     </script>
 {% endblock %}

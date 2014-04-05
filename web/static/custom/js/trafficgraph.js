@@ -3,7 +3,7 @@
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
-function load_trafficchart() {
+function load_trafficchart(days) {
     var date_ago = function(delta) {
         /*
         Get the milliseconds of "today-delta".
@@ -36,7 +36,7 @@ function load_trafficchart() {
         chart: {
             renderTo: 'trafficchart',
             type:'column',
-            width: 800,
+            width: 700,
             height: 350,
             animation: false
         },
@@ -46,7 +46,7 @@ function load_trafficchart() {
         plotOptions: {
             series: {
                 animation: false,
-                pointStart: date_ago(6),
+                pointStart: date_ago(days-1),
                 pointInterval: DAY_IN_MILLISECONDS,
                 groupPadding: 0.1
             }
@@ -56,27 +56,29 @@ function load_trafficchart() {
         },
         tooltip: {
             formatter: function () {
-                var tooltip = '<b>' + format_date_to_string(new Date(this.x)) + '</b>';
+                var date = new Date(this.x);
+                var tooltip = DAYNAMES[date.getDay()] + ',<br/><b>' + format_date_to_string(date) + '</b>';
                 $.each(this.points, function (i, point) {
-                    tooltip += '<br />' + point.series.name + ': ' + point.y + 'MB';
+                    tooltip += '<br />' + point.series.name + ': ' + point.y + ' MB';
                 });
                 return tooltip;
             },
             positioner: function(w, h, p) {
-                return { x: (trafficchart.plotLeft + p.plotX - (w/2)), y: trafficchart.plotTop };
+                return { x: (trafficchart.plotSizeX/2), y: trafficchart.plotTop };
             },
             enabled: true,
             shared: true,
             animation: false,
             crosshairs: {
                 color: '#CFCFCF',
-                width: 100
+                width: 700/days
             }
         },
         xAxis: {
             type: 'datetime',
             tickInterval: DAY_IN_MILLISECONDS,
             labels: {
+                enabled: days <= 7,
                 formatter: function() {
                     var date = new Date(this.value);
                     return DAYNAMES[date.getDay()] + '<br>' + format_date_to_string(date);
@@ -91,7 +93,7 @@ function load_trafficchart() {
         series: []
     });
 
-    $.getJSON($("#trafficchart").data("trafficurl"), null, function(response) {
+    $.getJSON($("#trafficchart").data("trafficurl")+'/'+days, null, function(response) {
         $(response.series).each(function(idx, data) {
             trafficchart.addSeries(data);
         });
