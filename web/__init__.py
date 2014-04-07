@@ -18,12 +18,12 @@ from web.blueprints.login import login_manager
 from flask.ext.login import current_user, current_app
 
 
-def make_app():
+def make_app(connection_string="sqlite:////tmp/test.db"):
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
     """
-    session.init_session()
+    session.init_session(connection_string=connection_string)
 
     app = Flask(__name__)
 
