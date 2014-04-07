@@ -8,7 +8,7 @@ from pycroft.model import session, _all
 from pycroft.model import drop_db_model, create_db_model
 from flask import url_for, request
 from flask.ext import testing
-from web import make_app
+
 
 from tests.unittest26_compat import OldPythonTestCase
 
@@ -23,7 +23,7 @@ def make_fixture():
     fixture = SQLAlchemyFixture(
             env=_all,
             style=TrimmedNameStyle(suffix="Data"),
-            engine=session.session.get_engine() )
+            engine=session.session.get_engine())
     return fixture
 
 
@@ -74,6 +74,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def setUp(self):
         super(FrontendDataTestBase, self).setUp()
+
         try:
             if getattr(self, "login") is not None and getattr(self, "password") is not None:
                 self._login(login=self.login, password=self.password)
@@ -86,8 +87,10 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         Create your Flask app here, with any
         configuration you need
         """
-        app = make_app()
+        from web import make_app
+        app = make_app(connection_string="sqlite://")
         app.testing = True
+        app.debug = True
 
         # Disable the CSRF in testing mode
         app.config["WTF_CSRF_ENABLED"] = False
