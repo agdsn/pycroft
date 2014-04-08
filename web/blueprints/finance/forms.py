@@ -53,5 +53,5 @@ class FinanceaccountCreateForm(Form):
     name = TextField(u"Name")
     type = SelectField(u"Typ", choices=[("LIABILITY","Passivkonto"), ("EXPENSE", "Aufwandskonto"),
                                         ("ASSET", "Aktivkonto"), ("INCOME", "Ertragskonto"), ("EQUITY", "Equity")])
-    semester_id = QuerySelectField(u"Semester", get_label='name', query_factory=semester_query, allow_blank=True)
+    semester = QuerySelectField(u"Semester", get_label='name', query_factory=semester_query, allow_blank=True)
     tag = HiddenField() #TODO
