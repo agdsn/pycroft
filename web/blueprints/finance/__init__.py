@@ -114,16 +114,16 @@ def accounts_create():
     form = FinanceaccountCreateForm()
 
     if form.validate_on_submit():
-        # "Semester" wird hier als Integer übergeben, wenn kein Semester
-        # verlinkt werden soll, wird "0" übergeben, was aber keine gültige
-        # Relationship darstellt.
-        semester_id = form.semester_id.data
-        if semester_id == 0:
-            semester_id = None
+        # If the account does not need a related Semester, the formdata
+        # here is "__None". If there is a valid Semester posted,
+        # the formdata is the Semester object.
+        semester = form.semester_id.data
+        if semester == "__None":
+            semester = None
 
         new_account = FinanceAccount(name=form.name.data,
                                      type=form.type.data,
-                                     semester_id=semester_id)
+                                     semester=semester)
         session.add(new_account)
         session.commit()
         return redirect(url_for('.accounts'))
