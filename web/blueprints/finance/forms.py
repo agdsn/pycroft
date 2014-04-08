@@ -5,6 +5,7 @@ __author__ = 'florian'
 from web.form.fields import DatePickerField
 from flask.ext.wtf import Form
 from wtforms import TextField, IntegerField, HiddenField, FileField, SelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from pycroft.model.finance import FinanceAccount, Semester
 
 
@@ -49,5 +50,5 @@ class FinanceaccountCreateForm(Form):
     name = TextField(u"Name")
     type = SelectField(u"Typ", choices=[("LIABILITY","Passivkonto"), ("EXPENSE", "Aufwandskonto"),
                                         ("ASSET", "Aktivkonto"), ("INCOME", "Ertragskonto"), ("EQUITY", "Equity")])
-    semester_id = SelectField(u"Semester", coerce=int, choices=[(0, '')]+[(s.id, s.name) for s in semester_query()])
+    semester_id = QuerySelectField(u"Semester", coerce=int, query_factory=semester_query, allow_blank=True)
     tag = HiddenField() #TODO

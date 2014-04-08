@@ -74,7 +74,7 @@ class Transaction(ModelBase):
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)
     journal_entry = relationship("JournalEntry",
-                                    backref=backref("transactionu"))
+                                    backref=backref("transactions"))
 
     semester_id = Column(Integer, ForeignKey("semester.id"))
     semester = relationship("Semester", backref=backref("transactions"))
