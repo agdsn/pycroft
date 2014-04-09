@@ -29,8 +29,8 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code(url_for('infrastructure.switches'), 302)
 
 
-class Test_020_Login_Admin(FrontendDataTestBase):
-    """Now log the user in and test some requests he is now allowed to do.
+class Test_020_Permissions_Admin(FrontendDataTestBase):
+    """Test permissions for admin usergroup.
     """
     datasets = [MembershipData, PropertyData]
 
@@ -48,9 +48,8 @@ class Test_020_Login_Admin(FrontendDataTestBase):
         self.assert_response_code(url_for('finance.journals'), 302)
 
 
-class Test_030_Login_Finance(FrontendDataTestBase):
-    """Log in a user with advanced permissions.
-    Here he may view the finance pages.
+class Test_030_Permissions_Finance(FrontendDataTestBase):
+    """Test permissions for finance usergroup (advanced).
     """
     datasets = [MembershipData, PropertyData]
 
