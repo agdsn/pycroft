@@ -27,3 +27,7 @@ class UserData(DataSet):
     class user2_finance(BaseUser):
         # Admin with permission to view Finance
         login = "finanzer"
+
+    class user3_user(BaseUser):
+        # User without any usergroup
+        login = "user"
