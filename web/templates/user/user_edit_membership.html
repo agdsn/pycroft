@@ -17,5 +17,14 @@
         $('[data-role=datepicker]').datepicker();
         $('[data-role=today-btn]').todayButton();
     </script>
+    <script type="text/javascript">
+        // disables the datepicker field, if the block is marked as unlimited
+        $("#unlimited").click(function () {
+            if($(this).is(":checked")) {
+                $("#end_date").prop('disabled', true);
+            } else {
+                $("#end_date").prop('disabled', false);
+            }
+        });
+    </script>
 {% endblock %}
-
