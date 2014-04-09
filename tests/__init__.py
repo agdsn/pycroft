@@ -108,3 +108,9 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         response = self.client.get(endpoint)
         self.assertStatus(response, code)
         return response
+
+    def assert_access_allowed(self, endpoint):
+        return self.assert_response_code(endpoint, 200)
+
+    def assert_access_forbidden(self, endpoint):
+        return self.assert_response_code(endpoint, 302)
