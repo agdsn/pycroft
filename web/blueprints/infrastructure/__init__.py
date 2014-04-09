@@ -34,6 +34,7 @@ nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 
 @bp.route('/subnets')
 @nav.navigate(u"Subnetze")
+@access.require('infrastructure_show')
 def subnets():
     subnets_list = Subnet.q.all()
     return render_template('infrastructure/subnets_list.html',
@@ -42,6 +43,7 @@ def subnets():
 
 @bp.route('/switches')
 @nav.navigate(u"Switche")
+@access.require('infrastructure_show')
 def switches():
     switches_list = Switch.q.all()
     return render_template('infrastructure/switches_list.html',
@@ -193,6 +195,9 @@ def srvrecord_create(user_id, host_id):
 @bp.route('/switch/show/<switch_id>')
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
+    if not switch:
+        flash(u"Switch mit ID %s nicht gefunden!" % switch_id, "error")
+        return redirect(url_for('.switches'))
     switch_port_list = switch.ports
     switch_port_list = host.sort_ports(switch_port_list)
     return render_template('infrastructure/switch_show.html',
@@ -216,6 +221,7 @@ def switch_port_create(switch_id):
 
 @bp.route('/vlans')
 @nav.navigate(u"VLan")
+@access.require('infrastructure_show')
 def vlans():
     vlans_list = VLan.q.all()
     return render_template('infrastructure/vlan_list.html',
