@@ -7,14 +7,14 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="utf-8">​
+    <meta charset="utf-8"/>​
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}"/>​
+    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}"/>
+    {% block page_css %}{% endblock %}
+    <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>​
     <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}
     </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
-    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
-    {% block page_css %}{% endblock %}
-    <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}">​
 </head>
 
 <body>
