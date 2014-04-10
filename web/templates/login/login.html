@@ -3,7 +3,7 @@
 
 {% block content %}
     <p>
-        {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login"  ) }}
+        {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login", split_cols=false  ) }}
     </p>
 
     <p>Testaccounts:</p>
