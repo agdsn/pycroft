@@ -1,12 +1,84 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from cgi import escape
 import json
 
 from flask import url_for
 
 from wtforms import widgets
-from wtforms.widgets.core import html_params
+from flask.ext import wtf
+from wtforms.widgets.core import html_params, HTMLString
+
+
+class BootstrapHorizontalFieldWidget(object):
+    """
+    Renders a field in Bootstrap's horizontal layout.
+    Wraps the output of an existing widget in <div> tags.
+    """
+    def __init__(self, widget):
+        """
+        :param widget: Original widget
+        :return:
+        """
+        self.widget = widget
+
+    def __call__(self, field, **kwargs):
+        classes = [u'control-group']
+        if field.errors:
+            classes.append(u'error')
+        html = [
+            u'<div class="%s">' % u' '.join(classes),
+            field.label(class_="control-label"),
+            u'<div class="controls">',
+            self.widget(field, **kwargs)
+        ]
+        if field.errors:
+            html.append(u'<span class="help-inline">')
+            html.append(escape(u';'.join(field.errors)))
+            html.append(u'</span>')
+        html.append(u'</div></div>')
+        return HTMLString(u''.join(html))
+
+
+class BootstrapFieldListWidget(object):
+    def __call__(self, field):
+        html = map(lambda f: f(), list(field))
+        return HTMLString(u''.join(html))
+
+
+class BootstrapFormFieldWidget(object):
+    def __call__(self, field):
+        html = map(lambda f: f(), list(field))
+        return HTMLString(u''.join(html))
+
+
+def replace_with_horizontal(field):
+    field.widget = BootstrapHorizontalFieldWidget(field.widget)
+
+
+# wtforms.fields.core fields
+replace_with_horizontal(wtf.SelectField)
+replace_with_horizontal(wtf.SelectMultipleField)
+replace_with_horizontal(wtf.RadioField)
+replace_with_horizontal(wtf.StringField)
+replace_with_horizontal(wtf.IntegerField)
+replace_with_horizontal(wtf.DecimalField)
+replace_with_horizontal(wtf.FloatField,)
+replace_with_horizontal(wtf.BooleanField)
+replace_with_horizontal(wtf.DateTimeField)
+replace_with_horizontal(wtf.DateField)
+wtf.FormField.widget = BootstrapFormFieldWidget()
+wtf.FieldList.widget = BootstrapFieldListWidget()
+# wtforms.fields.simple fields
+replace_with_horizontal(wtf.TextAreaField)
+replace_with_horizontal(wtf.PasswordField)
+replace_with_horizontal(wtf.FileField)
+# wtf.HiddenField is omitted
+replace_with_horizontal(wtf.SubmitField)
+# wtforms.ext.sqlalchemy.fields
+replace_with_horizontal(wtf.QuerySelectField)
+replace_with_horizontal(wtf.QuerySelectMultipleField)
 
 from markupsafe import Markup
 
