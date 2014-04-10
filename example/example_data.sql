@@ -51,10 +51,10 @@ CREATE TABLE financeaccount (
     FOREIGN KEY(semester_id) REFERENCES semester (id),
     CHECK (tag IN ('registration_fee', 'additional_fee', 'regular_fee', 'arrears_fee'))
 );
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','EXPENSE',1,'registration_fee');
-INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','EXPENSE',1,'regular_fee');
-INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','EXPENSE',1,'additional_fee');
-INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','EXPENSE',1,'arrears_fee');
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','INCOME',1,'registration_fee');
+INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','INCOME',1,'regular_fee');
+INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','INCOME',1,'additional_fee');
+INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','INCOME',1,'arrears_fee');
 INSERT INTO "financeaccount" VALUES(5,'Konto Nutzer ag_dsn','EXPENSE',1,NULL);
 CREATE TABLE split (
 	id INTEGER NOT NULL,
