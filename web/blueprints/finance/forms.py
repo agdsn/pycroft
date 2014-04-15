@@ -8,6 +8,7 @@ __author__ = 'florian'
 from web.form.fields import DatePickerField
 from flask.ext.wtf import Form
 from wtforms import TextField, IntegerField, HiddenField, FileField, SelectField
+from wtforms.validators import DataRequired, NumberRange
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from pycroft.model.finance import FinanceAccount, Semester
 
@@ -21,11 +22,21 @@ def semester_query():
 
 
 class SemesterCreateForm(Form):
-    name = TextField(u"Semestername")
-    registration_fee = IntegerField(u"Anmeldegebühr")
-    semester_fee = IntegerField(u"Semesterbeitrag")
-    begin_date = DatePickerField(u"Anfang")
-    end_date = DatePickerField(u"Ende")
+    name = TextField(u"Semestername", validators=[DataRequired()])
+    registration_fee = IntegerField(
+        u"Anmeldegebühr", validators=[DataRequired(), NumberRange(min=1)])
+    regular_membership_fee = IntegerField(
+        u"Regulärer Beitrag", validators=[DataRequired(), NumberRange(min=1)])
+    reduced_membership_fee = IntegerField(
+        u"Ermäßigter Beitrag", validators=[DataRequired(), NumberRange(min=1)])
+    overdue_fine = IntegerField(
+        u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)])
+    premature_begin_date = DatePickerField(
+        u"Vorzeitiger Anfang", validators=[DataRequired()])
+    begin_date = DatePickerField(u"Anfang", validators=[DataRequired()])
+    end_date = DatePickerField(u"Ende", validators=[DataRequired()])
+    belated_end_date = DatePickerField(
+        u"Verspätetes Ende", validators=[DataRequired()])
 
 
 class JournalCreateForm(Form):
