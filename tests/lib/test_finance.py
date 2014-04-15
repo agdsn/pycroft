@@ -73,7 +73,7 @@ class Test_020_Journal(OldPythonTestCase):
         # test for correct dataimport
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "0000-3, SCH, AAA, ZW41D/01 99 1, SS 13").first()
+            JournalEntry.original_description == "0000-3, SCH, AAA, ZW41D/01 99 1, SS 13").first()
         self.assertEquals(entry.other_account, "12345678")
         self.assertEquals(entry.other_bank, "80040400")
         self.assertEquals(entry.other_person, "SCH, AAA")
@@ -84,7 +84,7 @@ class Test_020_Journal(OldPythonTestCase):
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "Pauschalen").first()
+            JournalEntry.original_description == "Pauschalen").first()
         self.assertEquals(entry.transaction_date, date(2012, 12, 24))
         self.assertEquals(entry.valid_date, date(2012, 12, 24))
 
@@ -95,6 +95,6 @@ class Test_020_Journal(OldPythonTestCase):
         # which is in the next year
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "BESTELLUNG SUPERMEGATOLLER SERVER").first()
+            JournalEntry.original_description == "BESTELLUNG SUPERMEGATOLLER SERVER").first()
         self.assertEquals(entry.transaction_date, date(2012, 12, 29))
         self.assertEquals(entry.valid_date, date(2013, 1, 10))
