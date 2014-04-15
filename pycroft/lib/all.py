@@ -1,9 +1,12 @@
+from functools import wraps
 from pycroft.model import session
 
 _transactions = []
 
 
 def with_transaction(func):
+
+    @wraps(func)
     def helper(*args, **kwargs):
         if not _transactions:
             transaction = session.session
@@ -14,9 +17,9 @@ def with_transaction(func):
         try:
             ret = func(*args, **kwargs)
             transaction.commit()
-        except Exception, e:
+        except:
             transaction.rollback()
-            raise e
+            raise
         finally:
             _transactions.pop()
 
