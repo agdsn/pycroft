@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'florian'
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from fixture import DataSet
 
 class VLanData(DataSet):
@@ -166,10 +166,15 @@ class IpData(DataSet):
 class SemesterData(DataSet):
     class dummy_semester1:
         name = "first semester"
-        semester_fee = 2500
-        registration_fee = 1500
-        begin_date = datetime.now()
-        end_date = datetime.now()
+        registration_fee = 2500
+        regular_membership_fee = 1500
+        reduced_membership_fee = 450
+        overdue_fine = 150
+        today = date.today()
+        premature_begin_date = today - timedelta(1)
+        begin_date = today
+        end_date = today + timedelta(1)
+        belated_end_date = today + timedelta(2)
 
 
 class FinanceAccountData(DataSet):

@@ -17,9 +17,11 @@ class Test_010_Semester(OldPythonTestCase):
         been created.
         """
         new_semester = create_semester("NewSemesterName",
-                                       2500, 1500,
+                                       2500, 1500, 450, 150,
                                        date(2013, 9, 1),
-                                       date(2014, 2, 1))
+                                       date(2013, 10, 1),
+                                       date(2014, 4, 1),
+                                       date(2014, 5, 1),)
         config._configpath = "../tests/example/test_config.json"
         for account in config["finance"]["semester_accounts"]:
             new_created_account = FinanceAccount.q.filter(

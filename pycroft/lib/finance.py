@@ -12,24 +12,39 @@ from pycroft.lib.all import with_transaction
 
 
 @with_transaction
-def create_semester(name, registration_fee, semester_fee, begin_date, end_date):
+def create_semester(name, registration_fee, regular_membership_fee,
+                    reduced_membership_fee, overdue_fine, premature_begin_date,
+                    begin_date, end_date, belated_end_date):
     """
-    This function creates a new Semester.
-    There are created a registration fee account and a semester fee account
-    which ones are attached to the semester
+    Creates a new Semester.
+    Finance accounts are created according to the configuration, e.g.
+    registration fee account, membership fee account for the newly created
+    semester.
     The name could be something like: "Wintersemester 2012/13"
     :param name: A useful name for the semester.
-    :param registration_fee: The fee a student have to pay when he moves in first.
-    :param semester_fee: The fee a student have to pay every semester.
+    :param registration_fee: Fee every new member is required to pay after
+        sign-up.
+    :param regular_membership_fee: Regular per semester membership fee.
+    :param reduced_membership_fee: Reduced per semester membership fee.
+    :param overdue_fine: Fine for not paying fees in acceptable time.
+    :param premature_begin_date: Date before begin_date, after which members
+        will not be charged for the previous semester
     :param begin_date: Date when the semester starts.
-    :param end_date: Date when semester ends.
-    :return: The created Semester.
+    :param end_date: Date when semester ends..
+    :param belated_end_date: Date after end_date, before which members will not
+        be charged for the next semester.
+    :return The created Semester.
     """
     semester = Semester(name=name,
                         registration_fee=registration_fee,
-                        semester_fee=semester_fee,
+                        regular_membership_fee=regular_membership_fee,
+                        reduced_membership_fee=reduced_membership_fee,
+                        overdue_fine=overdue_fine,
+                        premature_begin_date=premature_begin_date,
                         begin_date=begin_date,
-                        end_date=end_date)
+                        end_date=end_date,
+                        belated_end_date=belated_end_date,
+                        )
 
     objects = [semester]
     for account in config.get("finance")["semester_accounts"]:

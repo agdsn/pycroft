@@ -7,22 +7,35 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-import datetime
+from datetime import datetime
 from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Date
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy import event
 
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    semester_fee = Column(Integer, nullable=False)
     registration_fee = Column(Integer, nullable=False)
-    begin_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
+    regular_membership_fee = Column(Integer, nullable=False)
+    reduced_membership_fee = Column(Integer, nullable=False)
+    overdue_fine = Column(Integer, nullable=False)
+    premature_begin_date = Column(Date, nullable=False)
+    begin_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    belated_end_date = Column(Date, nullable=False)
+    __table_args__ = (
+        CheckConstraint('registration_fee > 0'),
+        CheckConstraint('regular_membership_fee > 0'),
+        CheckConstraint('reduced_membership_fee > 0'),
+        CheckConstraint('overdue_fine > 0'),
+        CheckConstraint('premature_begin_date < begin_date'),
+        CheckConstraint('begin_date < end_date'),
+        CheckConstraint('end_date < belated_end_date'),
+    )
 
 
 class FinanceAccount(ModelBase):
@@ -69,7 +82,7 @@ class JournalEntry(ModelBase):
 
 class Transaction(ModelBase):
     message = Column(Text(), nullable=False)
-    transaction_date = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    transaction_date = Column(DateTime, nullable=False, default=datetime.now)
 
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
                                                             nullable=True)

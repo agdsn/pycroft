@@ -77,14 +77,25 @@ CREATE TABLE trafficvolume (
 );
 CREATE TABLE semester (
     id INTEGER NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR NOT NULL,
     registration_fee INTEGER NOT NULL,
-    semester_fee INTEGER NOT NULL,
-    begin_date DATETIME NOT NULL,
-    end_date DATETIME NOT NULL,
-    PRIMARY KEY (id)
+    regular_membership_fee INTEGER NOT NULL,
+    reduced_membership_fee INTEGER NOT NULL,
+    overdue_fine INTEGER NOT NULL,
+    premature_begin_date DATE NOT NULL,
+    begin_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    belated_end_date DATE NOT NULL,
+    PRIMARY KEY (id),
+    CHECK (registration_fee > 0),
+    CHECK (regular_membership_fee > 0),
+    CHECK (reduced_membership_fee > 0),
+    CHECK (overdue_fine > 0),
+    CHECK (premature_begin_date < begin_date),
+    CHECK (begin_date < end_date),
+    CHECK (end_date < belated_end_date)
 );
-INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,'2012-10-01 00:00:00.000','2013-04-01 00:00:00.000');
+INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,450,150,'2012-09-01','2012-10-01','2013-03-31','2013-05-01');
 CREATE TABLE "group" (
 	id INTEGER NOT NULL,
 	name VARCHAR(255) NOT NULL,
