@@ -71,20 +71,20 @@ class Journal(ModelBase):
 
 class JournalEntry(ModelBase):
     amount = Column(Integer, nullable=False)
-    message = Column(Text, nullable=False)
+    description = Column(Text, nullable=False)
     journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
     journal = relationship("Journal", backref=backref("entries"))
     other_account = Column(String(255), nullable=False)
     other_bank = Column(String(255), nullable=False)
     other_person = Column(String(255), nullable=False)
-    original_message = Column(Text, nullable=False)
+    original_description = Column(Text, nullable=False)
     import_date = Column(DateTime, nullable=False)
     transaction_date = Column(Date, nullable=False)
     valid_date = Column(Date, nullable=False)
 
 
 class Transaction(ModelBase):
-    message = Column(Text(), nullable=False)
+    description = Column(Text(), nullable=False)
     transaction_date = Column(DateTime, nullable=False, default=datetime.now)
 
     journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
@@ -101,7 +101,7 @@ class Transaction(ModelBase):
 
 
 def check_transaction_balance_on_save(mapper, connection, target):
-    assert target.is_balanced, 'Transaction "%s" is not balanced!' % target.message
+    assert target.is_balanced, 'Transaction "%s" is not balanced!' % target.description
 
 
 event.listen(Transaction, "before_insert", check_transaction_balance_on_save)

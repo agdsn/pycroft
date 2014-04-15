@@ -60,12 +60,12 @@ def create_semester(name, registration_fee, regular_membership_fee,
 
 
 @with_transaction
-def simple_transaction(message, debit_account, credit_account, semester, amount,
-                       date=None):
+def simple_transaction(description, debit_account, credit_account, semester,
+                       amount, date=None):
     """
     Creates a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits.
-    :param message: Transaction message
+    :param description: Description
     :param debit_account: Debit (germ. Soll) account.
     :param credit_account: Credit (germ. Haben) account
     :param semester: Semester of the transaction.
@@ -74,7 +74,7 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     if date is None:
         date = datetime.now()
     new_transaction = Transaction(
-        message=message,
+        description=description,
         transaction_date=date, semester=semester)
     new_debit_split = Split(
         amount=amount,
@@ -119,12 +119,12 @@ def import_csv(csv_file, import_date=None):
             valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
             entry = JournalEntry(amount=float(fields[8].replace(u",", u".")),
-                                 message=fields[4],
+                                 description=fields[4],
                                  journal=valid_journal,
                                  other_account=fields[6],
                                  other_bank=fields[7],
                                  other_person=fields[5],
-                                 original_message=fields[4],
+                                 original_description=fields[4],
                                  import_date=datetime.now(),
                                  transaction_date=transaction_date.date(),
                                  valid_date=valid_date)
