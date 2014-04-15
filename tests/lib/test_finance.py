@@ -21,7 +21,7 @@ class Test_010_Semester(OldPythonTestCase):
         been created.
         """
         new_semester = create_semester("NewSemesterName",
-                                       2500, 1500, 450, 150,
+                                       2500, 1500, 450, 250,
                                        date(2013, 9, 1),
                                        date(2013, 10, 1),
                                        date(2014, 4, 1),
