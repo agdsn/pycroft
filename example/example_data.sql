@@ -90,7 +90,7 @@ CREATE TABLE semester (
     CHECK (begin_date < end_date),
     CHECK (end_date < belated_end_date)
 );
-INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,450,150,'2012-09-01','2012-10-01','2013-03-31','2013-05-01');
+INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,450,250,'2012-09-01','2012-10-01','2013-03-31','2013-05-01');
 CREATE TABLE "group" (
 	id INTEGER NOT NULL,
 	name VARCHAR(255) NOT NULL,
