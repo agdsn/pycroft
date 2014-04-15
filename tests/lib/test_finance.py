@@ -4,14 +4,15 @@ __author__ = 'felix_kluge'
 
 from pycroft.lib.finance import create_semester, import_csv
 from pycroft.lib.config import get, config
-from pycroft.model.finance import FinanceAccount, Journal, JournalEntry
+from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
+    Semester
 from pycroft.model import session
 from datetime import date, datetime
 
 
 class Test_010_Semester(OldPythonTestCase):
 
-    def test_0010_create_semester_accounts(self):
+    def test_0010_create_semester(self):
         """
         This test should verify that all semester-related finance-accounts have
         been created.
@@ -22,15 +23,11 @@ class Test_010_Semester(OldPythonTestCase):
                                        date(2013, 10, 1),
                                        date(2014, 4, 1),
                                        date(2014, 5, 1),)
-        config._configpath = "../tests/example/test_config.json"
-        for account in config["finance"]["semester_accounts"]:
-            new_created_account = FinanceAccount.q.filter(
-                FinanceAccount.semester == new_semester,
-                FinanceAccount.tag == account["tag"]).first()
-            self.assertEqual(new_created_account.name, account["name"])
-            self.assertEqual(new_created_account.type, account["type"])
+        queried_semester = Semester.q.filter(
+            Semester.name == "NewSemesterName"
+        ).one()
+        self.assertEqual(new_semester, queried_semester)
         session.session.commit()
-
 
 
 class Test_020_Journal(OldPythonTestCase):
