@@ -48,19 +48,12 @@ def create_semester(name, registration_fee, regular_membership_fee,
                         end_date=end_date,
                         belated_end_date=belated_end_date,
                         )
-
-    objects = [semester]
-    for account in config.get("finance")["semester_accounts"]:
-        objects.append(
-            FinanceAccount(type=account["type"], name=account["name"],
-                           semester=semester, tag=account["tag"]))
-
-    session.session.add_all(objects)
+    session.session.add(semester)
     return semester
 
 
 @with_transaction
-def simple_transaction(description, debit_account, credit_account, semester,
+def simple_transaction(description, debit_account, credit_account,
                        amount, date=None):
     """
     Creates a simple transaction.
@@ -68,14 +61,13 @@ def simple_transaction(description, debit_account, credit_account, semester,
     :param description: Description
     :param debit_account: Debit (germ. Soll) account.
     :param credit_account: Credit (germ. Haben) account
-    :param semester: Semester of the transaction.
     :param amount: Amount in Eurocents
     """
     if date is None:
         date = datetime.now()
     new_transaction = Transaction(
         description=description,
-        transaction_date=date, semester=semester)
+        transaction_date=date)
     new_debit_split = Split(
         amount=amount,
         account=debit_account,

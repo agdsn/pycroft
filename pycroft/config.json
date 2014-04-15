@@ -4,28 +4,10 @@
         "temp_dir": "/tmp"
     },
     "finance": {
-        "semester_accounts": [
-            {
-                "name": "Anmeldegebühren",
-                "tag": "registration_fee",
-                "type": "EQUITY"
-            },
-            {
-                "name": "Semesterbeiträge",
-                "tag": "regular_fee",
-                "type": "EQUITY"
-            },
-            {
-                "name": "Zusatzbeitrag",
-                "tag": "additional_fee",
-                "type": "EQUITY"
-            },
-            {
-                "name": "Versäumnisgebühren",
-                "tag": "arrears_fee",
-                "type": "EQUITY"
-            }
-        ]
+        "registration_fee_account_id": 1,
+        "membership_fee_account_id": 2,
+        "additional_fee_account_id": 3,
+        "overdue_fine_account_id": 4
     },
     "move_in": {
         "group_memberships": [

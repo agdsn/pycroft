@@ -52,12 +52,7 @@ class FinanceAccount(ModelBase):
              name="financeaccounttypes"),
         nullable=False
     )
-
     transactions = relationship("Transaction", secondary="split")
-    semester_id = Column(Integer, ForeignKey('semester.id'), nullable=True)
-    semester = relationship("Semester", backref=backref("accounts"))
-    tag = Column(Enum("registration_fee","additional_fee","regular_fee","arrears_fee"), nullable=True)
-    __table_args__ = (UniqueConstraint("semester_id", "tag"),)
 
 
 class Journal(ModelBase):
@@ -87,13 +82,11 @@ class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
     transaction_date = Column(DateTime, nullable=False, default=datetime.now)
 
-    journal_entry_id = Column(Integer(), ForeignKey("journalentry.id"),
-                                                            nullable=True)
-    journal_entry = relationship("JournalEntry",
-                                    backref=backref("transactions"))
-
-    semester_id = Column(Integer, ForeignKey("semester.id"))
-    semester = relationship("Semester", backref=backref("transactions"))
+    journal_entry_id = Column(
+        Integer(), ForeignKey("journalentry.id"),
+        nullable=True)
+    journal_entry = relationship(
+        "JournalEntry", backref=backref("transactions"))
 
     @property
     def is_balanced(self):
@@ -111,11 +104,11 @@ event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 #soll ist positiv, haben ist negativ
 class Split(ModelBase):
     amount = Column(Integer, nullable=False)
-    account_id = Column(Integer, ForeignKey("financeaccount.id"),
-                                nullable=False)
+    account_id = Column(
+        Integer, ForeignKey("financeaccount.id"), nullable=False)
     account = relationship("FinanceAccount")
-
-    transaction_id = Column(Integer, ForeignKey("transaction.id",
-                                ondelete='CASCADE'),
-                                nullable=False)
-    transaction = relationship("Transaction", backref=backref("splits", cascade="all, delete-orphan"))
+    transaction_id = Column(
+        Integer, ForeignKey("transaction.id", ondelete='CASCADE'),
+        nullable=False)
+    transaction = relationship(
+        "Transaction", backref=backref("splits", cascade="all, delete-orphan"))
