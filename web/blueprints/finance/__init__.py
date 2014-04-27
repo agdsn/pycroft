@@ -141,7 +141,6 @@ def semester_list():
 
 @bp.route('/semester/create', methods=("GET", "POST"))
 @access.require('finance_change')
-@nav.navigate(u"Erstelle Semester")
 def semester_create():
     previous_semester = Semester.q.order_by(Semester.begin_date.desc()).first()
     if previous_semester:
