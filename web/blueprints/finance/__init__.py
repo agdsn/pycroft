@@ -148,7 +148,7 @@ def semester_create():
         begin_date_default = previous_semester.end_date + timedelta(1)
         end_date_default = previous_semester.begin_date.replace(
             year=previous_semester.begin_date.year + 1
-        )
+        ) - timedelta(1)
         premature_begin_date_default = begin_date_default - timedelta(30)
         belated_end_date_default = end_date_default + timedelta(30)
         if begin_date_default.year == end_date_default.year:
