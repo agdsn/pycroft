@@ -54,20 +54,25 @@ def create_semester(name, registration_fee, regular_membership_fee,
 
 @with_transaction
 def simple_transaction(description, debit_account, credit_account,
-                       amount, date=None):
+                       amount, valid_date=None):
     """
-    Creates a simple transaction.
+    Posts a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits.
-    :param description: Description
-    :param debit_account: Debit (germ. Soll) account.
-    :param credit_account: Credit (germ. Haben) account
-    :param amount: Amount in Eurocents
+    The current system date will be used as transaction date, an optional valid
+    date may be specified.
+    :param str description: Description
+    :param FinanceAccount debit_account: Debit (germ. Soll) account.
+    :param FinanceAccount credit_account: Credit (germ. Haben) account
+    :param int amount: Amount in Eurocents
+    :param valid_date: Date, when the transaction should be valid. Current
+    system date, if omitted.
+    :type valid_date: date or None
     """
-    if date is None:
-        date = datetime.now()
+    if valid_date is None:
+        valid_date = date.today()
     new_transaction = Transaction(
         description=description,
-        transaction_date=date)
+        valid_date=valid_date)
     new_debit_split = Split(
         amount=amount,
         account=debit_account,

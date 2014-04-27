@@ -15,9 +15,9 @@
         </tr>
         {% for t in transactions %}
             <tr>
-                <td>{{ t.message }}</td>
+                <td>{{ t.description }}</td>
                 <td>{{ t.transaction_date|date }}</td>
-                <td>{{ t.journal_entry.amount }}</td>
+                <td>{{ t.amount }}</td>
                 <td>{{ t.semester.name }}</td>
             </tr>
         {% endfor %}
