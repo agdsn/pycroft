@@ -78,12 +78,7 @@ class JournalEntry(ModelBase):
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
     transaction_date = Column(DateTime, nullable=False, default=datetime.now)
-
-    journal_entry_id = Column(
-        Integer(), ForeignKey("journalentry.id"),
-        nullable=True)
-    journal_entry = relationship(
-        "JournalEntry", backref=backref("transactions"))
+    valid_date = Column(Date, nullable=False, default=datetime.now)
 
     @property
     def is_balanced(self):

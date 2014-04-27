@@ -30,14 +30,11 @@ INSERT INTO "journalentry" VALUES(1, 1500, 'Mitgliedsbeitrag 1', 1, '25243262', 
 INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
 INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
 CREATE TABLE "transaction" (
-	id INTEGER NOT NULL,
-	description TEXT NOT NULL,
-	transaction_date DATETIME NOT NULL,
-	journal_entry_id INTEGER,
-    semester_id INTEGER,
-	PRIMARY KEY (id),
-	FOREIGN KEY(journal_entry_id) REFERENCES journalentry (id),
-    FOREIGN KEY(semester_id) REFERENCES semester (id)
+	id INTEGER NOT NULL, 
+	description TEXT NOT NULL, 
+	transaction_date DATETIME NOT NULL, 
+	valid_date DATE NOT NULL, 
+	PRIMARY KEY (id)
 );
 CREATE TABLE financeaccount (
 	id INTEGER NOT NULL, 
