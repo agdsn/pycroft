@@ -189,18 +189,18 @@ class FinanceAccountData(DataSet):
     class semester_fee:
         name = u"Semestergebühren first semester"
         semester = SemesterData.dummy_semester1
-        type = "INCOME"
+        type = "REVENUE"
         tag = "regular_fee"
 
     class registration_fee:
         name = u"Anmeldegebühren first semester"
         semester = SemesterData.dummy_semester1
-        type = "INCOME"
+        type = "REVENUE"
         tag = "registration_fee"
 
     class dummy_user_account2:
         name = 'dummy user 2 finance account'
-        type = 'EQUITY'
+        type = 'ASSET'
 
 UserData.dummy_user2.finance_account = FinanceAccountData.dummy_user_account2
 

@@ -40,17 +40,18 @@ CREATE TABLE "transaction" (
     FOREIGN KEY(semester_id) REFERENCES semester (id)
 );
 CREATE TABLE financeaccount (
-    id INTEGER NOT NULL,
-    name VARCHAR(127) NOT NULL,
-    type VARCHAR(9) NOT NULL,
-    PRIMARY KEY (id),,
-    CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')),
+	id INTEGER NOT NULL, 
+	name VARCHAR(127) NOT NULL, 
+	type VARCHAR(9) NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT financeaccounttypes CHECK (type IN ('ASSET', 'LIABILITY', 'EXPENSE', 'REVENUE'))
 );
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','INCOME');
-INSERT INTO "financeaccount" VALUES(2,'Mitgliedsbeiträge','INCOME');
-INSERT INTO "financeaccount" VALUES(3,'Zusatzbeiträge','INCOME');
-INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','INCOME');
-INSERT INTO "financeaccount" VALUES(5,'Nutzer ag_dsn','EXPENSE');
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','REVENUE');
+INSERT INTO "financeaccount" VALUES(2,'Mitgliedsbeiträge','REVENUE');
+INSERT INTO "financeaccount" VALUES(3,'Zusatzbeiträge','REVENUE');
+INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','REVENUE');
+INSERT INTO "financeaccount" VALUES(5,'Bankkonto 3120219540','ASSET');
+INSERT INTO "financeaccount" VALUES(6,'Nutzer ag_dsn','ASSET');
 CREATE TABLE split (
 	id INTEGER NOT NULL,
 	amount INTEGER NOT NULL,
