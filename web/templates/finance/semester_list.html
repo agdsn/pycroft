@@ -27,4 +27,7 @@
             </tr>
         {% endfor %}
     </table>
+    {% if current_user is privileged_for('finance_change') %}
+        <a class="btn btn-primary" href="{{ url_for('.semester_create') }}">Semester erstellen</a>
+    {% endif %}
 {% endblock %}
