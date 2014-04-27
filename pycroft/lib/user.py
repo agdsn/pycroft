@@ -126,7 +126,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     }
     new_finance_account = FinanceAccount(
         name=conf["financeaccount_name"].format(**format_args),
-        type="EQUITY")
+        type="REVENUE")
     new_user.finance_account = new_finance_account
     session.session.add(new_finance_account)
 

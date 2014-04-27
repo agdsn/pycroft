@@ -192,13 +192,13 @@ class FinanceAccountData(DataSet):
     class semester_fee:
         name = u"Semestergebühren first semester"
         semester = SemesterData.dummy_semester1
-        type = "INCOME"
+        type = "REVENUE"
         tag = "regular_fee"
 
     class registration_fee:
         name = u"Anmeldegebühren first semester"
         semester = SemesterData.dummy_semester1
-        type = "INCOME"
+        type = "REVENUE"
         tag = "registration_fee"
 
 

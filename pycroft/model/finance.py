@@ -43,13 +43,13 @@ class Semester(ModelBase):
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
-    # LIABILITY=Passivkonto,
-    # EXPENSE=Aufwandskonto,
-    # ASSET=Aktivkonto,
-    # INCOME=Ertragskonto
     type = Column(
-        Enum("LIABILITY", "EXPENSE", "ASSET", "INCOME", "EQUITY",
-             name="financeaccounttypes"),
+        Enum(
+            "ASSET",      # Aktivkonto
+            "LIABILITY",  # Passivkonto
+            "EXPENSE",    # Aufwandskonto
+            "REVENUE",    # Ertragskonto
+            name="financeaccounttypes"),
         nullable=False
     )
     transactions = relationship("Transaction", secondary="split")
