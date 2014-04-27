@@ -6784,7 +6784,7 @@ CREATE TABLE "user" (
 	finance_account_id INTEGER,
 	room_id INTEGER NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY(room_id) REFERENCES room (id)
+	FOREIGN KEY(room_id) REFERENCES room (id),
 	FOREIGN KEY(finance_account_id) REFERENCES financeaccount (id)
 );
 INSERT INTO "user" VALUES(1,'ag_dsn','System User','2013-01-30 20:55:11.774249','{SSHA}6ebtKeFxGseWvSE0LOafqJAlkBcOwVjr',NULL,NULL,11);
