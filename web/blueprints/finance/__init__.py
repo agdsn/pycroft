@@ -7,15 +7,17 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from itertools import imap, groupby
 
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
     request, flash
+from sqlalchemy import func, desc
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, \
     JournalCreateForm, FinanceaccountCreateForm
 from pycroft.lib import finance, config
 from datetime import datetime, timedelta
-from pycroft.model.finance import Semester, Journal, JournalEntry
+from pycroft.model.finance import Semester, Journal, JournalEntry, Split
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import FinanceAccount, Transaction
@@ -95,9 +97,27 @@ def journalentry_edit(entryid):
 @nav.navigate(u"Konten")
 @access.require('finance_show')
 def accounts():
-    accounts_list = FinanceAccount.q.all()
+    accounts_by_type = dict(imap(
+        lambda t: (t[0], list(t[1])),
+        groupby(
+            FinanceAccount.q.order_by(FinanceAccount.type).all(),
+            lambda a: a.type
+        )
+    ))
+    return render_template(
+        'finance/accounts_list.html', accounts=accounts_by_type
+    )
 
-    return render_template('finance/accounts_list.html', accounts=accounts_list)
+
+@bp.route('/accounts/<int:account_id>')
+def show_account(account_id):
+    account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
+    splits = Split.q.filter(Split.account_id == account_id)
+    balance = sum(imap(lambda s: s.amount, splits))
+    return render_template(
+        'finance/account_show.html',
+        name=account.name, splits=splits, balance=balance
+    )
 
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])

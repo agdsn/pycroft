@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% set page_title = "Konto " + name %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Buchungsdatum</th>
+                <th>Valutadatum</th>
+                <th>Beschreibung</th>
+                <th>Wert</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for split in splits %}
+            <tr class="{{ "success" if split.amount > 0 else "error" }}">
+                <td>{{ split.transaction.transaction_date }}</td>
+                <td>{{ split.transaction.valid_date }}</td>
+                <td><a href="{{ url_for(".transaction_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
+                <td>{{ split.amount }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Saldo</td>
+                <td>{{ balance }}</td>
+            </tr>
+        </tfoot>
+    </table>
+{% endblock %}
