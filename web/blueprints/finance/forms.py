@@ -51,11 +51,7 @@ class JournalCreateForm(Form):
 
 class JournalLinkForm(Form):
     search = TextField()
-    account_id = HiddenField()
-    #linked_accounts = QuerySelectField(u"Zugehoeriges Konto",
-                          # get_label='name',
-                          # query_factory=financeaccounts_query,
-                          # allow_blank=True)
+    linked_financeaccount = HiddenField(validators=[DataRequired()])
 
 
 class JournalImportForm(Form):

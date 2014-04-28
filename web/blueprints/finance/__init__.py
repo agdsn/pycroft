@@ -37,7 +37,7 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 @nav.navigate(u"Journals")
 def journals():
     journals_list = Journal.q.all()
-    journal_entries_list = JournalEntry.q.all()
+    journal_entries_list = JournalEntry.q.filter(JournalEntry.transaction_id == None).all()
 
     return render_template('finance/journal_list.html',
                            journals=journals_list,
@@ -89,8 +89,22 @@ def journalentry_edit(entryid):
     form = JournalLinkForm()
 
     if form.validate():
-        #finance.simple_transaction()
-        pass
+        credit_account = journalentry.journal.financeaccount
+        debit_account = FinanceAccount.q.filter(
+            FinanceAccount.id == form.linked_financeaccount.data).one()
+
+        if journalentry.amount > 0:
+            credit_account, debit_account = debit_account, credit_account
+
+        journalentry.transaction = finance.simple_transaction(
+            description=journalentry.description,
+            credit_account=credit_account, debit_account=debit_account,
+            amount=journalentry.amount)
+
+        session.add(journalentry)
+        session.commit()
+
+        return redirect(url_for('.journals'))
 
     return render_template('finance/journalentry_edit.html',
                            entry=journalentry, form=form)
@@ -122,6 +136,10 @@ def show_account(account_id):
         name=account.name, splits=splits, balance=balance
     )
 
+
+@bp.route('/transaction/<int:transaction_id>')
+def show_transaction(transaction_id):
+    pass
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
