@@ -138,6 +138,7 @@ def show_account(account_id):
 def show_transaction(transaction_id):
     pass
 
+
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
 def accounts_create():
@@ -155,15 +156,6 @@ def accounts_create():
 
     return render_template('finance/accounts_create.html', form=form,
                            page_title=u"Konto erstellen")
-
-
-@bp.route('/transactions')
-@access.require('finance_show')
-@nav.navigate(u"Transaktionen")
-def transactions():
-    transactions_list = Transaction.q.all()
-
-    return render_template('finance/transactions_list.html', transactions=transactions_list)
 
 
 @bp.route("/semester")
