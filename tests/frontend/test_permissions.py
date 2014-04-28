@@ -105,7 +105,8 @@ class Test_040_Permissions_User(FrontendDataTestBase):
             url_for('finance.journalentry_edit', entryid=1),
             url_for('finance.accounts'),
             url_for('finance.accounts_create'),
-            url_for('finance.transactions'),
+            url_for('finance.show_account', account_id=1),
+            url_for('finance.show_transaction', transaction_id=1),
             url_for('finance.semester_list'),
             url_for('finance.semester_create'),
             url_for('finance.json_search_accounts', search_str="Teststring")
