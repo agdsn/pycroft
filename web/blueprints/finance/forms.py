@@ -39,9 +39,11 @@ class SemesterCreateForm(Form):
 class JournalCreateForm(Form):
     name = TextField(u"Name")
     bank = TextField(u"Bank")
-    hbci_url = TextField(u"HBCI-URL")
     account_number = TextField(u"Kontonummer")
-    bank_identification_code = TextField(u"Banknummer")
+    routing_number = TextField(u"Bankleitzahl (BLZ)")
+    iban = TextField(u"IBAN")
+    bic = TextField(u"BIC")
+    hbci_url = TextField(u"HBCI-URL")
 
 
 class JournalLinkForm(Form):

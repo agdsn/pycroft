@@ -45,18 +45,16 @@ def journals():
 @access.require('finance_change')
 @nav.navigate(u"Buchungen importieren")
 def journal_import():
-    #TODO felix_kluge: secure fileupload
     form = JournalImportForm()
-
     if form.validate_on_submit():
         try:
-            finance.import_csv(form.csv_file.data)
+            finance.import_journal_csv(form.csv_file.data)
             flash(u"Der CSV-Import war erfolgreich!", "success")
         except Exception as error:
-            flash(u"Der CSV-Import ist fehlgeschlagen! " + error.message, "error")
+            message = u"Der CSV-Import ist fehlgeschlagen! "
+            flash(message.format(error.message), "error")
 
-    return render_template('finance/journal_import.html',
-                           form=form)
+    return render_template('finance/journal_import.html', form=form)
 
 
 @bp.route('/journals/create', methods=['GET', 'POST'])
@@ -65,12 +63,14 @@ def journal_create():
     form = JournalCreateForm()
 
     if form.validate_on_submit():
-        new_journal = Journal(account=form.name.data,
-                              bank=form.bank.data,
-                              hbci_url=form.hbci_url.data,
-                              last_update=datetime.now(),
-                              account_number=form.account_number.data,
-                              bank_identification_code=form.bank_identification_code.data)
+        new_journal = Journal(
+            name=form.name.data,
+            bank=form.bank.data,
+            account_number=form.account_number.data,
+            routing_number=form.routing_number.data,
+            iban=form.iban.data,
+            bic=form.bic.data,
+            hbci_url=form.hbci_url.data)
         session.add(new_journal)
         session.commit()
         return redirect(url_for('.journals'))

@@ -1,34 +1,39 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE journal (
-	  id INTEGER NOT NULL,
-	  account VARCHAR(255) NOT NULL,bank VAR
-	  CHAR(255) NOT NULL,
-  	hbci_url VARCHAR(255) NOT NULL,
-  	last_update DATETIME NOT NULL,
-  	account_number INTEGER NOT NULL,
-  	bank_identification_code VARCHAR(255) NOT NULL,
-  	PRIMARY KEY (id)
+	id INTEGER NOT NULL, 
+	name VARCHAR(255) NOT NULL, 
+	bank VARCHAR(255) NOT NULL, 
+	account_number VARCHAR(10) NOT NULL, 
+	routing_number VARCHAR(8) NOT NULL, 
+	iban VARCHAR(34) NOT NULL, 
+	bic VARCHAR(11) NOT NULL, 
+	hbci_url VARCHAR(255) NOT NULL, 
+	financeaccount_id INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(financeaccount_id) REFERENCES financeaccount (id)
 );
-INSERT INTO "journal" VALUES(1, 'Bankkonto', 'Bank123', 'http://www.com', '2012-10-01 00:00:00.000', 12345, 67890);
+INSERT INTO "journal" VALUES(1, 'Bankkonto 3120219540', 'Ostsächsische Sparkasse Dresden', '3120219540', '85050300', 'DE61850503003120219540', 'OSDDDE81XXX', 'https://hbci.example.com/', 6);
 CREATE TABLE journalentry (
-    id INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
-    message TEXT NOT NULL,
-    journal_id INTEGER NOT NULL,
-    other_account VARCHAR(255) NOT NULL,
-    other_bank VARCHAR(255) NOT NULL,
-    other_person VARCHAR(255) NOT NULL,
-    original_message TEXT NOT NULL,
-    import_date DATETIME NOT NULL,
-    transaction_date DATE NOT NULL,
-    valid_date DATE NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY(journal_id) REFERENCES journal (id)
+	id INTEGER NOT NULL, 
+	journal_id INTEGER NOT NULL, 
+	amount INTEGER NOT NULL, 
+	description TEXT NOT NULL, 
+	original_description TEXT NOT NULL, 
+	other_account_number VARCHAR(255) NOT NULL, 
+	other_routing_number VARCHAR(255) NOT NULL, 
+	other_name VARCHAR(255) NOT NULL, 
+	import_time DATETIME NOT NULL, 
+	transaction_date DATE NOT NULL, 
+	valid_date DATE NOT NULL, 
+	transaction_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(journal_id) REFERENCES journal (id), 
+	FOREIGN KEY(transaction_id) REFERENCES "transaction" (id)
 );
-INSERT INTO "journalentry" VALUES(1, 1500, 'Mitgliedsbeitrag 1', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag',  '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
-INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', '2556223', 'Nguyen Ling', 'Mitgliedsbeitrag', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
-INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
+INSERT INTO "journalentry" VALUES(1, 1, 1500, 'Mitgliedsbeitrag 1', 'Mitgliedsbeitrag', '25243262', '2556223', 'Nguyen Ling',  '2012-12-21 00:00:00.000', '2012-10-01', '2012-10-01', NULL);
+INSERT INTO "journalentry" VALUES(2, 1, 4500, 'Mitgliedsbeitrag 2', 'Mitgliedsbeitrag', '25243262', '2556223', 'Nguyen Ling', '2012-12-21 00:00:00.000', '2012-10-01', '2012-10-01', NULL);
+INSERT INTO "journalentry" VALUES(3, 1, -20022, 'Soerver', 'Server', '216621', '3257', 'Ab Ba', '2012-12-21 00:00:00.000', '2012-10-01', '2012-10-01', NULL);
 CREATE TABLE "transaction" (
 	id INTEGER NOT NULL, 
 	description TEXT NOT NULL, 
