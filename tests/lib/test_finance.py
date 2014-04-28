@@ -7,33 +7,30 @@ __author__ = 'felix_kluge'
 
 from pycroft.lib.finance import create_semester, import_csv
 from pycroft.lib.config import get, config
-from pycroft.model.finance import FinanceAccount, Journal, JournalEntry
+from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
+    Semester
 from pycroft.model import session
 from datetime import date, datetime
 
 
 class Test_010_Semester(OldPythonTestCase):
 
-    def test_0010_create_semester_accounts(self):
+    def test_0010_create_semester(self):
         """
         This test should verify that all semester-related finance-accounts have
         been created.
         """
         new_semester = create_semester("NewSemesterName",
-                                       2500, 1500, 450, 150,
+                                       2500, 1500, 450, 250,
                                        date(2013, 9, 1),
                                        date(2013, 10, 1),
                                        date(2014, 4, 1),
                                        date(2014, 5, 1),)
-        config._configpath = "../tests/example/test_config.json"
-        for account in config["finance"]["semester_accounts"]:
-            new_created_account = FinanceAccount.q.filter(
-                FinanceAccount.semester == new_semester,
-                FinanceAccount.tag == account["tag"]).first()
-            self.assertEqual(new_created_account.name, account["name"])
-            self.assertEqual(new_created_account.type, account["type"])
+        queried_semester = Semester.q.filter(
+            Semester.name == "NewSemesterName"
+        ).one()
+        self.assertEqual(new_semester, queried_semester)
         session.session.commit()
-
 
 
 class Test_020_Journal(OldPythonTestCase):
@@ -76,7 +73,7 @@ class Test_020_Journal(OldPythonTestCase):
         # test for correct dataimport
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "0000-3, SCH, AAA, ZW41D/01 99 1, SS 13").first()
+            JournalEntry.original_description == "0000-3, SCH, AAA, ZW41D/01 99 1, SS 13").first()
         self.assertEquals(entry.other_account, "12345678")
         self.assertEquals(entry.other_bank, "80040400")
         self.assertEquals(entry.other_person, "SCH, AAA")
@@ -87,7 +84,7 @@ class Test_020_Journal(OldPythonTestCase):
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "Pauschalen").first()
+            JournalEntry.original_description == "Pauschalen").first()
         self.assertEquals(entry.transaction_date, date(2012, 12, 24))
         self.assertEquals(entry.valid_date, date(2012, 12, 24))
 
@@ -98,6 +95,6 @@ class Test_020_Journal(OldPythonTestCase):
         # which is in the next year
         entry = JournalEntry.q.filter(
             JournalEntry.journal == journal,
-            JournalEntry.original_message == "BESTELLUNG SUPERMEGATOLLER SERVER").first()
+            JournalEntry.original_description == "BESTELLUNG SUPERMEGATOLLER SERVER").first()
         self.assertEquals(entry.transaction_date, date(2012, 12, 29))
         self.assertEquals(entry.valid_date, date(2013, 1, 10))

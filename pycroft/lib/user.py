@@ -30,6 +30,19 @@ from pycroft.lib.config import config
 from pycroft.lib.finance import simple_transaction
 from pycroft.lib.all import with_transaction
 
+
+def get_registration_fee_account():
+    return FinanceAccount.q.filter(
+        FinanceAccount.id == config['finance']['registration_fee_account_id']
+    ).one()
+
+
+def get_membership_fee_account():
+    return FinanceAccount.q.filter(
+        FinanceAccount.id == config['finance']['membership_fee_account_id']
+    ).one()
+
+
 @with_transaction
 def move_in(name, login, email, dormitory, level, room_number, mac,
              current_semester, processor, host_name=None):
@@ -106,14 +119,6 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             assert membership["duration"] > 0
             new_membership.end_date = datetime.now() + timedelta(membership["duration"])
 
-    registration_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.semester == current_semester,
-        FinanceAccount.tag == "registration_fee").one()
-    semester_fee_account = FinanceAccount.q.filter(
-        FinanceAccount.semester == current_semester,
-        FinanceAccount.tag == "regular_fee").one()
-
-
     format_args = {
         "user_id": new_user.id,
         "user_name": new_user.name,
@@ -129,15 +134,13 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     simple_transaction(
         conf["registration_fee_message"].format(**format_args),
         new_finance_account,
-        registration_fee_account,
-        current_semester,
+        get_registration_fee_account(),
         current_semester.registration_fee
     )
     simple_transaction(
         conf["semester_fee_message"].format(**format_args),
         new_finance_account,
-        semester_fee_account,
-        current_semester,
+        get_membership_fee_account(),
         current_semester.regular_membership_fee
     )
 
