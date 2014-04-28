@@ -31,7 +31,7 @@ INSERT INTO "journalentry" VALUES(2, 4500, 'Mitgliedsbeitrag 2', 1, '25243262', 
 INSERT INTO "journalentry" VALUES(3, -20022, 'Soerver', 1, '216621', '3257', 'Ab Ba', 'Server', '2012-12-21 00:00:00.000', '2012-10-01 00:00:00.000', '2012-10-01 00:00:00.000');
 CREATE TABLE "transaction" (
 	id INTEGER NOT NULL,
-	message TEXT NOT NULL,
+	description TEXT NOT NULL,
 	transaction_date DATETIME NOT NULL,
 	journal_entry_id INTEGER,
     semester_id INTEGER,
@@ -43,19 +43,14 @@ CREATE TABLE financeaccount (
     id INTEGER NOT NULL,
     name VARCHAR(127) NOT NULL,
     type VARCHAR(9) NOT NULL,
-    semester_id INTEGER,
-    tag VARCHAR(16),
-    PRIMARY KEY (id),
-    UNIQUE (semester_id, tag),
+    PRIMARY KEY (id),,
     CONSTRAINT financeaccounttypes CHECK (type IN ('LIABILITY', 'EXPENSE', 'ASSET', 'INCOME', 'EQUITY')),
-    FOREIGN KEY(semester_id) REFERENCES semester (id),
-    CHECK (tag IN ('registration_fee', 'additional_fee', 'regular_fee', 'arrears_fee'))
 );
-INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','INCOME',1,'registration_fee');
-INSERT INTO "financeaccount" VALUES(2,'Semesterbeiträge','INCOME',1,'regular_fee');
-INSERT INTO "financeaccount" VALUES(3,'Zusatzbeitrag','INCOME',1,'additional_fee');
-INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','INCOME',1,'arrears_fee');
-INSERT INTO "financeaccount" VALUES(5,'Konto Nutzer ag_dsn','EXPENSE',1,NULL);
+INSERT INTO "financeaccount" VALUES(1,'Anmeldegebühren','INCOME');
+INSERT INTO "financeaccount" VALUES(2,'Mitgliedsbeiträge','INCOME');
+INSERT INTO "financeaccount" VALUES(3,'Zusatzbeiträge','INCOME');
+INSERT INTO "financeaccount" VALUES(4,'Versäumnisgebühren','INCOME');
+INSERT INTO "financeaccount" VALUES(5,'Nutzer ag_dsn','EXPENSE');
 CREATE TABLE split (
 	id INTEGER NOT NULL,
 	amount INTEGER NOT NULL,
@@ -95,7 +90,7 @@ CREATE TABLE semester (
     CHECK (begin_date < end_date),
     CHECK (end_date < belated_end_date)
 );
-INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,450,150,'2012-09-01','2012-10-01','2013-03-31','2013-05-01');
+INSERT INTO "semester" VALUES(1,'Wintersemester 2012/13',2500,1500,450,250,'2012-09-01','2012-10-01','2013-03-31','2013-05-01');
 CREATE TABLE "group" (
 	id INTEGER NOT NULL,
 	name VARCHAR(255) NOT NULL,

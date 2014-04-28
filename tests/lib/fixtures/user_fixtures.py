@@ -169,7 +169,7 @@ class SemesterData(DataSet):
         registration_fee = 2500
         regular_membership_fee = 1500
         reduced_membership_fee = 450
-        overdue_fine = 150
+        overdue_fine = 250
         today = date.today()
         premature_begin_date = today - timedelta(1)
         begin_date = today

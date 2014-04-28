@@ -45,34 +45,26 @@ def create_semester(name, registration_fee, regular_membership_fee,
                         end_date=end_date,
                         belated_end_date=belated_end_date,
                         )
-
-    objects = [semester]
-    for account in config.get("finance")["semester_accounts"]:
-        objects.append(
-            FinanceAccount(type=account["type"], name=account["name"],
-                           semester=semester, tag=account["tag"]))
-
-    session.session.add_all(objects)
+    session.session.add(semester)
     return semester
 
 
 @with_transaction
-def simple_transaction(message, debit_account, credit_account, semester, amount,
-                       date=None):
+def simple_transaction(description, debit_account, credit_account,
+                       amount, date=None):
     """
     Creates a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits.
-    :param message: Transaction message
+    :param description: Description
     :param debit_account: Debit (germ. Soll) account.
     :param credit_account: Credit (germ. Haben) account
-    :param semester: Semester of the transaction.
     :param amount: Amount in Eurocents
     """
     if date is None:
         date = datetime.now()
     new_transaction = Transaction(
-        message=message,
-        transaction_date=date, semester=semester)
+        description=description,
+        transaction_date=date)
     new_debit_split = Split(
         amount=amount,
         account=debit_account,
@@ -86,44 +78,45 @@ def simple_transaction(message, debit_account, credit_account, semester, amount,
     )
 
 
-def import_csv(csv_file_handle, import_date=None):
+def import_csv(csv_file, import_date=None):
     if import_date is None:
         now = datetime.now()
     else:
         now = import_date
 
-    content = csv.reader(csv_file_handle, delimiter=";")
+    with open(csv_file, 'r') as csv_file_handle:
+        content = csv.reader(csv_file_handle, delimiter=";")
 
-    for fields in content:
+        for fields in content:
 
-        if fields[9] != "EUR":
-            raise Exception("Die einzige aktuell unterstütze Währung ist Euro! "
-                            + fields[9] + " ist ungültig!")
+            if fields[9] != "EUR":
+                raise Exception("Die einzige aktuell unterstütze Währung ist Euro! "
+                                + fields[9] + " ist ungültig!")
 
-        valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
+            valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
 
-        if valid_journal is None:
-            raise Exception("Das externe Konto mit der Nummer '" + fields[0]
-                            + "' existiert nicht!")
+            if valid_journal is None:
+                raise Exception("Das externe Konto mit der Nummer '" + fields[0]
+                                + "' existiert nicht!")
 
-        parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
-        if parsed_transaction_date + relativedelta(year=now.year) <= now:
-            transaction_date = parsed_transaction_date + relativedelta(year=now.year)
-        else:
-            transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
+            parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
+            if parsed_transaction_date + relativedelta(year=now.year) <= now:
+                transaction_date = parsed_transaction_date + relativedelta(year=now.year)
+            else:
+                transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
 
-        valid_date = datetime.strptime(fields[2], "%d.%m.%y")
+            valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
-        entry = JournalEntry(amount=float(fields[8].replace(u",", u".")),
-                             message=fields[4],
-                             journal=valid_journal,
-                             other_account=fields[6],
-                             other_bank=fields[7],
-                             other_person=fields[5],
-                             original_message=fields[4],
-                             import_date=datetime.now(),
-                             transaction_date=transaction_date.date(),
-                             valid_date=valid_date)
-        session.session.add(entry)
+            entry = JournalEntry(amount=float(fields[8].replace(u",", u".")),
+                                 description=fields[4],
+                                 journal=valid_journal,
+                                 other_account=fields[6],
+                                 other_bank=fields[7],
+                                 other_person=fields[5],
+                                 original_description=fields[4],
+                                 import_date=datetime.now(),
+                                 transaction_date=transaction_date.date(),
+                                 valid_date=valid_date)
+            session.session.add(entry)
 
-    session.session.commit()
+        session.session.commit()

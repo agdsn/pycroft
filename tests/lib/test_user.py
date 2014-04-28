@@ -236,8 +236,7 @@ class Test_060_User_Balance(FixtureDataTestBase):
         return UserHelper.has_balance_of_at_least(self.user, amount)
 
     def _add_amount(self, amount):
-        transaction = finance.Transaction(message=self.msg,
-                                          semester=self.semester)
+        transaction = finance.Transaction(description=self.description)
         user_split = finance.Split(amount=amount,
                                    account=self.user.finance_account,
                                    transaction=transaction)
@@ -253,11 +252,11 @@ class Test_060_User_Balance(FixtureDataTestBase):
         self.user = user.User.q.filter(user.User.login == 'admin').first()
         self.account = finance.FinanceAccount.q.first()
         self.semester = finance.Semester.q.first()
-        self.msg = repr(self) + repr(self.semester)
+        self.description = repr(self) + repr(self.semester)
 
     def tearDown(self):
         finance.Transaction.q.filter(
-            finance.Transaction.message == self.msg
+            finance.Transaction.description == self.description
         ).delete()
         session.session.commit()
         super(Test_060_User_Balance, self).tearDown()
