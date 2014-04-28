@@ -11,19 +11,25 @@
         <tr>
             <th>Name</th>
             <th>Bank</th>
-            <th>HBCI-Url</th>
-            <th>Aktualisiert am</th>
             <th>Kontonummer</th>
-            <th>Banknummer</th>
+            <th>Bankleitzahl</th>
+            <th>IBAN</th>
+            <th>SWIFT-BIC</th>
+            <th>Konto</th>
+            <th>HBCI-URL</th>
+            <th>Aktualisiert am</th>
         </tr>
         {% for j in journals %}
             <tr>
-                <td>{{ j.account }}</td>
+                <td>{{ j.name }}</td>
                 <td>{{ j.bank }}</td>
+                <td>{{ j.account_number }}</td>
+                <td>{{ j.routing_number }}</td>
+                <td>{{ j.iban }}</td>
+                <td>{{ j.bic }}</td>
+                <td><a class="btn btn-primary" href="{{ url_for('.show_account', account_id=j.financeaccount_id) }}">Konto anzeigen</a></td>
                 <td>{{ j.hbci_url }}</td>
                 <td>{{ j.last_update|date }}</td>
-                <td>{{ j.account_number }}</td>
-                <td>{{ j.bank_identification_code }}</td>
             </tr>
         {% endfor %}
     </table>
@@ -38,10 +44,11 @@
             <th>Zielkonto</th>
             <th>Datum</th>
             <th>Betrag</th>
-            <th>Nachricht</th>
-            <th>Fremdkonto</th>
-            <th>Fremdbank</th>
-            <th>Fremdperson</th>
+            <th>Verwendung</th>
+            <th>Ursprüngliche Verwendung</th>
+            <th>Kontonummer</th>
+            <th>Bankleitzahl</th>
+            <th>Begünstigter/Zahlungspflichtiger</th>
             <th></th>
         </tr>
         {% for j in journal_entries %}
@@ -55,7 +62,8 @@
                 {% endif %}
                 <td>{{ j.valid_date|date }}</td>
                 <td>{{ j.amount|money }}</td>
-                <td>{{ j.message }}</td>
+                <td>{{ j.description }}</td>
+                <td>{{ j.original_description }}</td>
                 <td>{{ j.other_account }}</td>
                 <td>{{ j.other_bank }}</td>
                 <td>{{ j.other_person }}</td>

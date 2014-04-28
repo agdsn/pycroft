@@ -11,8 +11,10 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
+from itertools import imap
+from sqlalchemy.ext.hybrid import hybrid_property
 from base import ModelBase
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func, select
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Date
@@ -56,26 +58,49 @@ class FinanceAccount(ModelBase):
 
 
 class Journal(ModelBase):
-    account = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=False)
     bank = Column(String(255), nullable=False)
+    account_number = Column(String(10), nullable=False)
+    routing_number = Column(String(8), nullable=False)
+    iban = Column(String(34), nullable=False)
+    bic = Column(String(11), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    last_update = Column(DateTime, nullable=False)
-    account_number = Column(String(34), nullable=False)
-    bank_identification_code = Column(String(255), nullable=False)
+    financeaccount_id = Column(
+        Integer, ForeignKey("financeaccount.id"), nullable=False)
+    financeaccount = relationship("FinanceAccount")
+    __tableargs__ = [
+        UniqueConstraint(account_number, routing_number),
+        UniqueConstraint(iban),
+    ]
+
+    @hybrid_property
+    def last_update(self):
+        return max(imap(lambda e: e.import_time, self.entries))
+
+
+    @last_update.expression
+    def last_update(self):
+        return (
+            select(func.max(JournalEntry.import_time))
+            .where(JournalEntry.journal_id == self.id)
+            .label("last_update")
+        )
 
 
 class JournalEntry(ModelBase):
-    amount = Column(Integer, nullable=False)
-    description = Column(Text, nullable=False)
     journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
     journal = relationship("Journal", backref=backref("entries"))
-    other_account = Column(String(255), nullable=False)
-    other_bank = Column(String(255), nullable=False)
-    other_person = Column(String(255), nullable=False)
+    amount = Column(Integer, nullable=False)
+    description = Column(Text, nullable=False)
     original_description = Column(Text, nullable=False)
-    import_date = Column(DateTime, nullable=False)
+    other_account_number = Column(String(255), nullable=False)
+    other_routing_number = Column(String(255), nullable=False)
+    other_name = Column(String(255), nullable=False)
+    import_time = Column(DateTime, nullable=False)
     transaction_date = Column(Date, nullable=False)
     valid_date = Column(Date, nullable=False)
+    transaction_id = Column(Integer, ForeignKey("transaction.id"))
+    transaction = relationship("Transaction")
 
 
 class Transaction(ModelBase):

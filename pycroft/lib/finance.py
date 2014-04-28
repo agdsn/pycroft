@@ -2,14 +2,18 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import cStringIO
+from itertools import imap, groupby
+from collections import namedtuple
+from sqlalchemy.orm.exc import NoResultFound
+
 __author__ = 'Florian Österreich'
 
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, date
+from sqlalchemy import desc
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.model import session
-from pycroft.lib import config
 import csv
 from pycroft.lib.all import with_transaction
 
@@ -86,45 +90,129 @@ def simple_transaction(description, debit_account, credit_account,
     )
 
 
-def import_csv(csv_file, import_date=None):
-    if import_date is None:
-        now = datetime.now()
-    else:
-        now = import_date
+@with_transaction
+def complex_transaction(description, splits, valid_date=None):
+    if valid_date is None:
+        valid_date = date.now()
+    objects = []
+    new_transaction = Transaction(
+        description=description,
+        valid_date=valid_date)
+    objects.append(new_transaction)
+    transaction_sum = 0
+    for (account, amount) in splits:
+        transaction_sum += amount
+        new_split = Split(
+            amount=amount, account=account, transaction=new_transaction)
+        objects.append(new_split)
+    if transaction_sum != 0:
+        raise ValueError('Split amounts do not sum up to zero.')
+    session.session.add_all(objects)
 
-    with open(csv_file, 'r') as csv_file_handle:
-        content = csv.reader(csv_file_handle, delimiter=";")
 
-        for fields in content:
+MT940_FIELDNAMES = [
+    'our_account_number',
+    'transaction_date',
+    'valid_date',
+    'type',
+    'description',
+    'other_name',
+    'other_account_number',
+    'other_routing_number',
+    'amount',
+    'currency',
+    'info',
+]
 
-            if fields[9] != "EUR":
-                raise Exception("Die einzige aktuell unterstütze Währung ist Euro! "
-                                + fields[9] + " ist ungültig!")
 
-            valid_journal = Journal.q.filter_by(account_number=fields[0]).first()
+MT940Record = namedtuple("MT940Record", MT940_FIELDNAMES)
 
-            if valid_journal is None:
-                raise Exception("Das externe Konto mit der Nummer '" + fields[0]
-                                + "' existiert nicht!")
 
-            parsed_transaction_date = datetime.strptime(fields[1], "%d.%m")
-            if parsed_transaction_date + relativedelta(year=now.year) <= now:
-                transaction_date = parsed_transaction_date + relativedelta(year=now.year)
-            else:
-                transaction_date = parsed_transaction_date + relativedelta(year=now.year - 1)
+class MT940Dialect(csv.Dialect):
+    delimiter = ";"
+    quotechar = '"'
+    doublequote = True
+    skipinitialspace = True
+    lineterminator = '\n'
+    quoting = csv.QUOTE_ALL
 
-            valid_date = datetime.strptime(fields[2], "%d.%m.%y")
 
-            entry = JournalEntry(amount=float(fields[8].replace(u",", u".")),
-                                 description=fields[4],
-                                 journal=valid_journal,
-                                 other_account=fields[6],
-                                 other_bank=fields[7],
-                                 other_person=fields[5],
-                                 original_description=fields[4],
-                                 import_date=datetime.now(),
-                                 transaction_date=transaction_date.date(),
-                                 valid_date=valid_date)
-            session.session.add(entry)
+def import_journal_csv(csv_file, import_time=None):
+    if import_time is None:
+        import_time = datetime.now()
 
-        session.session.commit()
+    # Convert to MT940Record and enumerate
+    reader = csv.DictReader(csv_file, MT940_FIELDNAMES, dialect=MT940Dialect)
+    records = enumerate(imap(lambda r: MT940Record(**r), reader), 1)
+    # Skip first record (header)
+    try:
+        records.next()
+    except StopIteration:
+        raise Exception(u"Leerer Datensatz.")
+
+    session.session.add_all(imap(
+        lambda r: process_record(r[0], r[1], import_time),
+        reversed(list(records))
+    ))
+    session.session.commit()
+
+
+def cleanup_description(description):
+    return description
+
+
+def restore_record(record):
+    string_buffer = cStringIO.StringIO()
+    csv.DictWriter(
+        string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect
+    ).writerow(record._asdict())
+    restored_record = string_buffer.getvalue()
+    string_buffer.close()
+    return restored_record
+
+
+def process_record(index, record, import_time):
+    if record.currency != "EUR":
+        message = u"Nicht unterstützte Währung {} in Datensatz {}: {}"
+        raw_record = restore_record(record)
+        raise Exception(
+            message.format(record.currency, index, raw_record)
+        )
+    try:
+        journal = Journal.q.filter_by(
+            account_number=record.our_account_number
+        ).one()
+    except NoResultFound:
+        message = u"Kein Journal mit der Kontonummer {} gefunden."
+        raise Exception(message.format(record.our_account_number))
+
+    try:
+        valid_date = datetime.strptime(record.valid_date, "%d.%m.%y").date()
+        transaction_date = (datetime
+                            .strptime(record.transaction_date, "%d.%m")
+                            .date())
+    except ValueError:
+        message = u"Unbekanntes Datumsformat in Datensatz {}: {}"
+        raw_record = restore_record(record)
+        raise Exception(message.format(index, raw_record))
+
+    # Assume that transaction_date's year is the same
+    transaction_date = transaction_date.replace(year=valid_date.year)
+    # The transaction_date may not be after valid_date, if it is, our
+    # assumption was wrong
+    if transaction_date > valid_date:
+        transaction_date = transaction_date.replace(
+            year=transaction_date.year - 1
+        )
+    return JournalEntry(
+        amount=int(record.amount.replace(u",", u"")),
+        journal=journal,
+        description=cleanup_description(record.description),
+        original_description=record.description,
+        other_account_number=record.other_account_number,
+        other_routing_number=record.other_routing_number,
+        other_name=record.other_name,
+        import_time=import_time,
+        transaction_date=transaction_date,
+        valid_date=valid_date
+    )
