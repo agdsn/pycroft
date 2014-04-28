@@ -124,6 +124,7 @@ def accounts():
 
 
 @bp.route('/accounts/<int:account_id>')
+@access.require('finance_show')
 def show_account(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
     splits = Split.q.filter(Split.account_id == account_id)
@@ -135,6 +136,7 @@ def show_account(account_id):
 
 
 @bp.route('/transaction/<int:transaction_id>')
+@access.require('finance_show')
 def show_transaction(transaction_id):
     pass
 
