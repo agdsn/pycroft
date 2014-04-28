@@ -85,6 +85,7 @@ def simple_transaction(description, debit_account, credit_account,
     session.session.add_all(
         [new_transaction, new_debit_split, new_credit_split]
     )
+    return new_transaction
 
 
 @with_transaction

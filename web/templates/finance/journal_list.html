@@ -35,26 +35,19 @@
     <h3>Nicht zugeordnete Journaleinträge</h3>
     <table class="table table-striped">
         <tr>
-            <th>Quellkonto</th>
-            <th>Zielkonto</th>
+            <th>Journal</th>
             <th>Datum</th>
             <th>Betrag</th>
             <th>Verwendung</th>
             <th>Ursprüngliche Verwendung</th>
             <th>Kontonummer</th>
             <th>Bankleitzahl</th>
-            <th>Begünstigter/Zahlungspflichtiger</th>
+            <th>Name</th>
             <th></th>
         </tr>
         {% for j in journal_entries %}
             <tr>
-                {% if j.amount < 0 %}
-                    <td>{{ j.journal.account }}</td>
-                    <td class="text-error">Nicht zugeordnet</td>
-                {% else %}
-                    <td class="text-error">Nicht zugeordnet</td>
-                    <td>{{ j.journal.account }}</td>
-                {% endif %}
+                <td>{{ j.journal.name }}</td>
                 <td>{{ j.valid_date|date }}</td>
                 <td>{{ j.amount|money }}</td>
                 <td>{{ j.description }}</td>
@@ -63,7 +56,7 @@
                 <td>{{ j.other_bank }}</td>
                 <td>{{ j.other_person }}</td>
                 {% if current_user is privileged_for('finance_change') %}
-                    <td><a href="{{ url_for('.journalentry_edit', entryid=j.id) }}"><i class="icon-edit"></i></a></td>
+                    <td><a href="{{ url_for('.journalentry_edit', entryid=j.id) }}"><span class="glyphicon glyphicon-pencil"></span></a></td>
                 {% else %}
                      <td></td>
                 {% endif %}
