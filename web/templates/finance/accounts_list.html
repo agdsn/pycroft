@@ -5,27 +5,26 @@
 #}
 {% extends "layout.html" %}
 
-{% block content %}
-    <table class="table table-striped">
-        <tr>
-            <th>Kontoname</th>
-            <th>Kontotyp</th>
-            <th>Semester</th>
-        </tr>
+{%  macro list_accounts(type, accounts) %}
+    <div class="col-sm-6">
+        <h2>{{ type }}</h2>
+        <ul class="list-unstyled">
         {% for a in accounts %}
-            <tr>
-                <td>{{ a.name }}</td>
-                <td>
-                    {% if a.type == "LIABILITY" %}Passivkonto
-                    {% elif a.type == "EXPENSE" %}Aufwandskonto
-                    {% elif a.type == "ASSET" %}Aktivkonto
-                    {% elif a.type == "INCOME" %}Ertragskonto
-                    {% endif %}
-                </td>
-                <td>{{ a.semester.name }}</td>
-            </tr>
+            <li><a href="{{ url_for('.show_account', account_id=a.id) }}">{{ a.name }}</a></li>
         {% endfor %}
-    </table>
+        </ul>
+    </div>
+{% endmacro %}
+
+{% block content %}
+    <div class="row">
+        {{ list_accounts("Aktivkonten", accounts["ASSET"]) }}
+        {{ list_accounts("Passivkonten", accounts["LIABILITY"]) }}
+    </div>
+    <div class="row">
+        {{ list_accounts("Aufwandskonten", accounts["EXPENSE"]) }}
+        {{ list_accounts("Ertragskonten", accounts["REVENUE"]) }}
+    </div>
     {% if current_user is privileged_for('finance_change') %}
         <p>
             <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
