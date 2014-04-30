@@ -42,6 +42,31 @@ def privilege_check(user, *required_privileges):
             return True
     return False
 
+
+@template_check("greater")
+def greater(value, other):
+    """Tests if another value is greater than a given value."""
+    return value < other
+
+
+@template_check("less")
+def less(value, other):
+    """Tests if another value is less than a given value."""
+    return value > other
+
+
+@template_check("greater_equal")
+def greater_equal(value, other):
+    """Tests if another value is greater than or equal a given value."""
+    return value <= other
+
+
+@template_check("less_equal")
+def less_equal(value, other):
+    """Tests if another value is less than or equal a given value."""
+    return value >= other
+
+
 def register_checks(app):
     for name in _check_registry:
         app.jinja_env.tests[name] = _check_registry[name]
