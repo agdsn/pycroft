@@ -10,7 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from itertools import imap, groupby
+from itertools import imap, groupby, izip_longest, ifilter
 
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
     request, flash
@@ -130,11 +130,21 @@ def accounts():
 @access.require('finance_show')
 def show_account(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
-    splits = Split.q.filter(Split.account_id == account_id)
+    splits = (
+        Split.q
+        .join(Transaction)
+        .filter(Split.account_id == account_id)
+        .order_by(Transaction.valid_date)
+    )
+    typed_splits = izip_longest(
+        ifilter(lambda s: s.amount > 0, splits),
+        ifilter(lambda s: s.amount <= 0, splits)
+    )
     balance = sum(imap(lambda s: s.amount, splits))
     return render_template(
         'finance/account_show.html',
-        name=account.name, splits=splits, balance=balance
+        name=account.name, balance=balance,
+        splits=splits, typed_splits=typed_splits
     )
 
 
