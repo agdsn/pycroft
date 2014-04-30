@@ -13,7 +13,7 @@
 from itertools import imap, groupby, izip_longest, ifilter
 
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
-    request, flash
+    request, flash, abort
 from sqlalchemy import func, desc
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, \
@@ -151,7 +151,13 @@ def show_account(account_id):
 @bp.route('/transaction/<int:transaction_id>')
 @access.require('finance_show')
 def show_transaction(transaction_id):
-    pass
+    transaction = Transaction.q.get(transaction_id)
+    if transaction is None:
+        abort(404)
+    return render_template(
+        'finance/transaction_show.html',
+        transaction=transaction
+    )
 
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])
