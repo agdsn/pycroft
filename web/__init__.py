@@ -13,6 +13,7 @@
 
 from flask import Flask, redirect, url_for, request, flash
 from blueprints import finance, infrastructure, properties, user, dormitories, login
+from web.form import widgets
 import template_filters
 import template_tests
 
