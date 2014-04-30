@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% set page_title = "Buchung" %}
+
+{% set inverted = false %}
+
+{% block content %}
+    <div class="col-sm-4">
+        <dl class="dl-horizontal">
+            <dt>Beschreibung</dt>
+            <dd>{{ transaction.description }}</dd>
+            <dt>Buchungszeit</dt>
+            <dd>{{ transaction.transaction_date|datetime }}</dd>
+            <dt>Gültigkeitsdatum</dt>
+            <dd>{{ transaction.valid_date|date }}</dd>
+        </dl>
+    </div>
+    <div class="col-sm-8">
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Konto</th>
+                    <th>Wert</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for split in transaction.splits %}
+                <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
+                    <td><a href="{{ url_for("finance.show_account", account_id=split.account_id) }}">{{ split.account.name }}</a></td>
+                    <td>{{ split.amount|money }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
