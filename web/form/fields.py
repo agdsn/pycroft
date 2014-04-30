@@ -1,4 +1,5 @@
-from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget
+from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget, \
+    BootstrapHorizontalFieldWidget
 from wtforms import TextField
 from wtforms import fields
 import datetime
@@ -99,7 +100,7 @@ class LazyLoadSelectField(fields.SelectField):
     :param data_endpoint: The name of the endpoint that provides the data.
     """
 
-    widget = LazyLoadSelectWidget()
+    widget = BootstrapHorizontalFieldWidget(LazyLoadSelectWidget())
 
     def __init__(self, *args, **kwargs):
         self.conditions = kwargs.pop("conditions")

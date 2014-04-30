@@ -26,14 +26,12 @@
            <div class="col-md-5">
             {% set secondcol = true %}
             {% for field in form %}
-                {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                    {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol and split_cols %}
-                        </div>
-                        <div class="col-md-5 col-md-offset-1">
-                        {% set secondcol = false %}
-                    {% endif %}
-                    {{ bootstrap_simple_field(field) }}
+                {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol and split_cols %}
+                    </div>
+                    <div class="col-md-5 col-md-offset-1">
+                    {% set secondcol = false %}
                 {% endif %}
+                {{ field }}
             {% endfor %}
             </div>
         </div>
