@@ -14,7 +14,7 @@ from flask import Blueprint, render_template, redirect, url_for, jsonify,\
 from sqlalchemy import func, desc
 from web.blueprints.navigation import BlueprintNavigation
 from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, \
-    JournalCreateForm, FinanceaccountCreateForm
+    JournalCreateForm, FinanceAccountCreateForm
 from pycroft.lib import finance, config
 from datetime import datetime, timedelta
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
@@ -160,7 +160,7 @@ def show_transaction(transaction_id):
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
 def accounts_create():
-    form = FinanceaccountCreateForm()
+    form = FinanceAccountCreateForm()
 
     if form.validate_on_submit():
         # With QuerySelectField the form.data contains a valid Semester object.

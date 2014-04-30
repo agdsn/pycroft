@@ -55,7 +55,7 @@ class JournalImportForm(Form):
     csv_file = FileField()
 
 
-class FinanceaccountCreateForm(Form):
+class FinanceAccountCreateForm(Form):
     name = TextField(u"Name")
     type = SelectField(u"Typ", choices=[("LIABILITY","Passivkonto"), ("EXPENSE", "Aufwandskonto"),
                                         ("ASSET", "Aktivkonto"), ("INCOME", "Ertragskonto"), ("EQUITY", "Equity")])
