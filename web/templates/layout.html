@@ -18,50 +18,60 @@
 </head>
 
 <body>
-    <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="/">Userman</a>
+    {% block navbar %}
+        <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/">Userman</a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        {% for element in config.blueprint_navigation -%}
+                            {{ navigation.blueprint_element(element) }}
+                        {%- endfor %}
+                    </ul>
+                    {% if current_user.is_authenticated() %}
+                        <ul class="nav navbar-nav navbar-right"><li><a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
+                        <p class="navbar-text navbar-right">Angemeldet als <a href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a></p>
+                    {% else %}
+                        <ul class="nav navbar-nav navbar-right"><li><a href="{{ url_for("login.login") }}">Anmelden <span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
+                    {% endif %}
+                </div><!--/.nav-collapse -->
             </div>
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                    {% for element in config.blueprint_navigation -%}
-                        {{ navigation.blueprint_element(element) }}
-                    {%- endfor %}
-                </ul>
-                {% if current_user.is_authenticated() %}
-                    <ul class="nav navbar-nav navbar-right"><li><a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
-                    <p class="navbar-text navbar-right">Angemeldet als <a href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a></p>
-                {% else %}
-                    <ul class="nav navbar-nav navbar-right"><li><a href="{{ url_for("login.login") }}">Anmelden <span style="color: white;" class="glyphicon glyphicon-off"></span></a></li></ul>
-                {% endif %}
-            </div><!--/.nav-collapse -->
         </div>
-    </div>
+    {% endblock %}
 
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) -%}
-            {% if messages -%}
-                <div class="row">
-                    <div class="flash-messages">
-                    {% for category, message in messages -%}
-                        {% set cat = category %}
-                        {% if cat == "message" %}{% set cat = "info" %}{% endif %}
-                        {% if cat == "error" %}{% set cat = "danger" %}{% endif %}
-                        <div class="alert fade in alert-{{ cat }}">
-                            <a class="close" data-dismiss="alert" href="#">×</a>
-                            <strong>{{ category|pretty_category }}:</strong> {{ message }}
+        {% block content_container %}
+            {% block messages %}
+                {% with messages = get_flashed_messages(with_categories=true) -%}
+                    {% if messages -%}
+                        <div class="row">
+                            <div class="flash-messages">
+                            {% for category, message in messages -%}
+                                {% set cat = category %}
+                                {% if cat == "message" %}{% set cat = "info" %}{% endif %}
+                                {% if cat == "error" %}{% set cat = "danger" %}{% endif %}
+                                <div class="alert fade in alert-{{ cat }}">
+                                    <a class="close" data-dismiss="alert" href="#">×</a>
+                                    <strong>{{ category|pretty_category }}:</strong> {{ message }}
+                                </div>
+                            {%- endfor %}
+                            </div>
                         </div>
-                    {%- endfor %}
+                        <hr/>
+                    {%- endif %}
+                {%- endwith %}
+            {% endblock %}
+            <div class="row">
+                {% block page_header %}
+                    <div class="page-header">
+                        <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
                     </div>
-                </div>
-                <hr/>
-            {%- endif %}
-        {%- endwith %}
-        <div class="row">
-            <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
-            {% block content %}{% endblock %}
-        </div>
+                {% endblock %}
+                {% block content %}{% endblock %}
+            </div>
+        {% endblock %}
     </div> <!-- /container -->
 
 <script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery-1.7.2.min.js") }}"></script>
