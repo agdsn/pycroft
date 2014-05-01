@@ -100,7 +100,7 @@ class BootstrapHorizontalWithoutLabelWidget(BootstrapBaseWidget):
 
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
-            u'<div class="col-sm-offset-2 col-sm-10">',
+            u'<div class="col-sm-offset-2 col-sm-3">',
             self.widget(field, **kwargs),
             u'</div>',
         ]))
