@@ -171,7 +171,7 @@ def restore_record(record):
 
 def process_record(index, record, import_time):
     if record.currency != "EUR":
-        message = u"Nicht unterstützte Währung {} in Datensatz {}: {}"
+        message = u"Nicht unterstützte Währung {0} in Datensatz {1}: {2}"
         raw_record = restore_record(record)
         raise Exception(
             message.format(record.currency, index, raw_record)
@@ -181,7 +181,7 @@ def process_record(index, record, import_time):
             account_number=record.our_account_number
         ).one()
     except NoResultFound:
-        message = u"Kein Journal mit der Kontonummer {} gefunden."
+        message = u"Kein Journal mit der Kontonummer {0} gefunden."
         raise Exception(message.format(record.our_account_number))
 
     try:
@@ -190,7 +190,7 @@ def process_record(index, record, import_time):
                             .strptime(record.transaction_date, "%d.%m")
                             .date())
     except ValueError:
-        message = u"Unbekanntes Datumsformat in Datensatz {}: {}"
+        message = u"Unbekanntes Datumsformat in Datensatz {0}: {1}"
         raw_record = restore_record(record)
         raise Exception(message.format(index, raw_record))
 
