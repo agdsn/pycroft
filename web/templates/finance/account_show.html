@@ -20,36 +20,36 @@
     {% endif %}
 {% endmacro %}
 
+{% block page_header %}
+    <div class="btn-group pull-right">
+        <button id="account-form-button" type="button" class="btn btn-default">Kontenform</button>
+        <button id="report-form-button" type="button" class="btn btn-default">Staffelform</button>
+    </div>
+    {{ super() }}
+{% endblock %}
+
 {% block content %}
-    <div class="btn-group right">
-        <button type="button" class="btn btn-default">Kontenform</button>
-        <button type="button" class="btn btn-default">Staffelform</button>
-    </div>
-    <h2>Staffelform</h2>
-    <div class="row">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    {{ render_column_headings() }}
-                </tr>
-            </thead>
-            <tbody>
-            {%- for split in splits %}
-                <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
-                    {{ render_split(split) }}
-                </tr>
-            {%- endfor %}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3">Saldo</td>
-                    <td>{{ balance|money }}</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    <h2>Kontenform</h2>
-    <table class="table table-bordered">
+    <table id="report-form" class="table table-striped">
+        <thead>
+            <tr>
+                {{ render_column_headings() }}
+            </tr>
+        </thead>
+        <tbody>
+        {%- for split in splits %}
+            <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
+                {{ render_split(split) }}
+            </tr>
+        {%- endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Saldo</td>
+                <td>{{ balance|money }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    <table id="account-form" class="table table-bordered">
         <thead>
             <tr>
                 <th colspan="4" style="width: 50%;" class="text-center">Soll</th>
@@ -76,4 +76,23 @@
             </tr>
         </tfoot>
     </table>
+{% endblock %}
+
+{% block page_script  %}
+    <script type="application/javascript">
+        create_toggle_handler = (function(activeButton, passiveButton, visibleElement, hiddenElement) {
+            return (function() {
+                visibleElement.addClass('hidden');
+                hiddenElement.removeClass('hidden');
+                activeButton.removeClass('active');
+                passiveButton.addClass('active');
+            });
+        });
+        accountFormButton = $('#account-form-button');
+        reportFormButton = $('#report-form-button');
+        accountFormElement = $('#account-form');
+        reportFormElement = $('#report-form');
+        accountFormButton.click(create_toggle_handler(reportFormButton, accountFormButton, reportFormElement, accountFormElement)).trigger('click');
+        reportFormButton.click(create_toggle_handler(accountFormButton, reportFormButton, accountFormElement, reportFormElement));
+    </script>
 {% endblock %}
