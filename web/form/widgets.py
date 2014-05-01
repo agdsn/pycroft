@@ -2,43 +2,147 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from cgi import escape
-import json
+from itertools import imap
 
 from flask import url_for
 
-from wtforms import widgets
-from flask.ext import wtf
 from wtforms.widgets.core import html_params, HTMLString
+import wtforms.fields
+import wtforms.ext.sqlalchemy.fields
 
 
-class BootstrapHorizontalFieldWidget(object):
+class BootstrapBaseWidget(object):
     """
-    Renders a field in Bootstrap's horizontal layout.
-    Wraps the output of an existing widget in <div> tags.
+    Augments existing widgets to be Bootstrap compatible.
+
+    Horizontal layout is a two column layout, where the label is placed in the
+    left column and the field is placed right next to it.
+    The field is wrapped in a Bootstrap form-group. Field errors are
+    displayed in Bootstrap help-blocks.
     """
-    def __init__(self, widget):
+
+    def __init__(self, widget=None):
         """
         :param widget: Original widget
         :return:
         """
         self.widget = widget
 
+    def decorate(self, widget):
+        """
+        Replace a field's widget with an instance of this widget.
+
+        The replaced widget is preserved and used to render the actual field.
+        """
+        self.widget = widget
+        return self
+
+
+class BootstrapFormGroupWidget(BootstrapBaseWidget):
+    """Wraps an existing widget inside a Bootstrap form-group."""
     def __call__(self, field, **kwargs):
-        classes = [u'control-group']
+        classes = [u'form-group']
         if field.errors:
-            classes.append(u'error')
+            classes.append(u'has-error')
         html = [
             u'<div class="%s">' % u' '.join(classes),
-            field.label(class_="control-label"),
-            u'<div class="controls">',
-            self.widget(field, **kwargs)
+            self.widget(field, **kwargs),
         ]
-        if field.errors:
-            html.append(u'<span class="help-inline">')
-            html.append(escape(u';'.join(field.errors)))
-            html.append(u'</span>')
-        html.append(u'</div></div>')
+        html.extend(imap(
+            lambda e: u'<p class="help-block">{}</p>'.format(escape(e)),
+            field.errors
+        ))
+        html.append(u'</div>')
         return HTMLString(u''.join(html))
+
+
+class BootstrapFormControlWidget(BootstrapBaseWidget):
+    def __call__(self, field, **kwargs):
+        if kwargs.has_key('class_'):
+            kwargs['class_'] = u'form-control ' + kwargs['class_']
+        else:
+            kwargs['class_'] = u'form-control'
+        return self.widget(field, **kwargs)
+
+
+class BootstrapHorizontalWidget(BootstrapBaseWidget):
+    """
+    Renders a field in horizontal layout.
+
+    Horizontal layout is a two column layout, where the label is placed in the
+    left column and the field is placed right next to it.
+    """
+
+    def __init__(self, widget=None):
+        super(BootstrapHorizontalWidget, self).__init__(widget)
+
+    def __call__(self, field, **kwargs):
+        return HTMLString(u''.join([
+            u'<div class="col-sm-2">',
+            field.label(class_=u'control-label'),
+            u'</div>',
+            u'<div class="col-sm-3">',
+            self.widget(field, **kwargs),
+            u'</div>',
+        ]))
+
+
+class BootstrapHorizontalWithoutLabelWidget(BootstrapBaseWidget):
+    """
+    Renders a field in horizontal layout.
+
+    Horizontal layout is a two column layout, where the label is placed in the
+    left column and the field is placed right next to it.
+    """
+
+    def __init__(self, widget=None, omit_label=False):
+        super(BootstrapHorizontalWithoutLabelWidget, self).__init__(widget)
+
+    def __call__(self, field, **kwargs):
+        return HTMLString(u''.join([
+            u'<div class="col-sm-offset-2 col-sm-10">',
+            self.widget(field, **kwargs),
+            u'</div>',
+        ]))
+
+
+
+class BootstrapRadioCheckboxWidget(BootstrapBaseWidget):
+
+    wrapper_class = ""
+
+    def __init__(self, widget=None):
+        super(BootstrapRadioCheckboxWidget, self).__init__(widget)
+
+    def __call__(self, field, **kwargs):
+        return HTMLString(u''.join([
+            u'<div class="',
+            self.wrapper_class,
+            u'">',
+            field.label(
+                u"{} {}".format(
+                    self.widget(field, **kwargs),
+                    field.label.text
+                ),
+                class_=u'control-label'),
+            u'</div>',
+        ]))
+
+
+class BootstrapRadioWidget(BootstrapRadioCheckboxWidget):
+    wrapper_class = "radio"
+
+
+class BootstrapRadioInlineWidget(BootstrapRadioCheckboxWidget):
+    wrapper_class = "radio-inline"
+
+
+class BootstrapCheckboxWidget(BootstrapRadioCheckboxWidget):
+    wrapper_class = "checkbox"
+
+
+class BootstrapCheckboxInlineWidget(BootstrapRadioCheckboxWidget):
+    wrapper_class = "checkbox-inline"
 
 
 class BootstrapFieldListWidget(object):
@@ -53,36 +157,116 @@ class BootstrapFormFieldWidget(object):
         return HTMLString(u''.join(html))
 
 
-def replace_with_horizontal(field):
-    field.widget = BootstrapHorizontalFieldWidget(field.widget)
+def decorate(widget, *widgets):
+    return reduce(lambda w, d: d.decorate(w), widgets, widget)
 
 
-# wtforms.fields.core fields
-replace_with_horizontal(wtf.SelectField)
-replace_with_horizontal(wtf.SelectMultipleField)
-replace_with_horizontal(wtf.RadioField)
-replace_with_horizontal(wtf.StringField)
-replace_with_horizontal(wtf.IntegerField)
-replace_with_horizontal(wtf.DecimalField)
-replace_with_horizontal(wtf.FloatField,)
-replace_with_horizontal(wtf.BooleanField)
-replace_with_horizontal(wtf.DateTimeField)
-replace_with_horizontal(wtf.DateField)
-wtf.FormField.widget = BootstrapFormFieldWidget()
-wtf.FieldList.widget = BootstrapFieldListWidget()
-# wtforms.fields.simple fields
-replace_with_horizontal(wtf.TextAreaField)
-replace_with_horizontal(wtf.PasswordField)
-replace_with_horizontal(wtf.FileField)
-# wtf.HiddenField is omitted
-replace_with_horizontal(wtf.SubmitField)
-# wtforms.ext.sqlalchemy.fields
-replace_with_horizontal(wtf.QuerySelectField)
-replace_with_horizontal(wtf.QuerySelectMultipleField)
+def replace_with_decorations(field, *widgets):
+    field.widget = decorate(field.widget, *widgets)
+
+
+def monkey_patch_wtforms():
+    replace_with_decorations(
+        wtforms.fields.SelectField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.SelectMultipleField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.RadioField,
+        BootstrapRadioWidget(),
+        BootstrapHorizontalWithoutLabelWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.StringField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.IntegerField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.DecimalField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.FloatField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.BooleanField,
+        BootstrapRadioWidget(),
+        BootstrapHorizontalWithoutLabelWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.DateTimeField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.DateField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.TextAreaField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.PasswordField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.fields.FileField,
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    # wtforms.fields.HiddenField is not decorated
+    replace_with_decorations(
+        wtforms.fields.SubmitField,
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.ext.sqlalchemy.fields.QuerySelectField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+    replace_with_decorations(
+        wtforms.ext.sqlalchemy.fields.QuerySelectMultipleField,
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+
+
+monkey_patch_wtforms()
 
 from markupsafe import Markup
 
-class DatePickerWidget(widgets.TextInput):
+class DatePickerWidget(wtforms.widgets.TextInput):
     """This is a Datepicker widget usinng bootstrap-datepicker.
 
     It has three optional arguments:
@@ -143,7 +327,7 @@ class DatePickerWidget(widgets.TextInput):
             return Markup(field_html)
 
 
-class CheckBoxWidget(widgets.Select):
+class CheckBoxWidget(wtforms.widgets.Select):
     """A simple multi selection widget rendered as Checkbox list.
     
     It uses the bootstrap markup.
@@ -164,7 +348,7 @@ class CheckBoxWidget(widgets.Select):
         return u''.join(html)
 
 
-class LazyLoadSelectWidget(widgets.Select):
+class LazyLoadSelectWidget(wtforms.widgets.Select):
     """This is the widget for the LazyLoadSelectField
 
     Please look at web.form.fields.LazyLoadSelectField for more information.

@@ -2,9 +2,11 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget, \
-    BootstrapHorizontalFieldWidget
+    BootstrapFormControlWidget, BootstrapHorizontalWidget, \
+    BootstrapFormGroupWidget, decorate
 from wtforms import TextField
 from wtforms import fields
+import wtforms.widgets
 import datetime
 
 
@@ -33,7 +35,13 @@ class DatePickerField(fields.DateField):
             $('[data-role=today-btn]').todayButton();
         </script>
     """
-    widget = None
+    widget = decorate(
+        wtforms.widgets.TextInput(),
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
+
     def __init__(self, *args, **kwargs):
         if "with_today_button" in kwargs:
             self.with_today_button = kwargs.pop("with_today_button")
@@ -103,7 +111,12 @@ class LazyLoadSelectField(fields.SelectField):
     :param data_endpoint: The name of the endpoint that provides the data.
     """
 
-    widget = BootstrapHorizontalFieldWidget(LazyLoadSelectWidget())
+    widget = decorate(
+        LazyLoadSelectWidget(),
+        BootstrapFormControlWidget(),
+        BootstrapHorizontalWidget(),
+        BootstrapFormGroupWidget()
+    )
 
     def __init__(self, *args, **kwargs):
         self.conditions = kwargs.pop("conditions")

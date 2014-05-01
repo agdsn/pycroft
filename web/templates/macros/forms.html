@@ -24,23 +24,12 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true, upload=false) -%}
-    <form method="POST" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal">
-        {{ form.hidden_tag() }}
-        <div class="row">
-           <div class="col-md-5">
-            {% set secondcol = true %}
-            {% for field in form %}
-                {% if (loop.index0 - 1) / loop.length >= 0.5 and secondcol and split_cols %}
-                    </div>
-                    <div class="col-md-5 col-md-offset-1">
-                    {% set secondcol = false %}
-                {% endif %}
-                {{ field }}
-            {% endfor %}
-            </div>
-        </div>
-    {{ form_actions(cancel_to, submit_text) }}
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true, upload=false, method="POST") -%}
+    <form method="{{ method }}" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal" role="form">
+        {% for field in form %}
+            {{ field }}
+        {% endfor %}
+        {{ form_actions(cancel_to, submit_text) }}
     </form>
 {%- endmacro %}
 
