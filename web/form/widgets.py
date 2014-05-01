@@ -49,7 +49,7 @@ class BootstrapFormGroupWidget(BootstrapBaseWidget):
             self.widget(field, **kwargs),
         ]
         html.extend(imap(
-            lambda e: u'<p class="help-block">{}</p>'.format(escape(e)),
+            lambda e: u'<p class="help-block">{0}</p>'.format(escape(e)),
             field.errors
         ))
         html.append(u'</div>')
@@ -120,7 +120,7 @@ class BootstrapRadioCheckboxWidget(BootstrapBaseWidget):
             self.wrapper_class,
             u'">',
             field.label(
-                u"{} {}".format(
+                u"{0} {1}".format(
                     self.widget(field, **kwargs),
                     field.label.text
                 ),

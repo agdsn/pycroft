@@ -43,7 +43,8 @@ def traffic_group_create():
         # traffic limit in byte per seven days
         group = create_traffic_group(name=form.name.data,
             traffic_limit=int(form.traffic_limit.data)*1024*1024*1024)
-        flash(u'Traffic Gruppe {} angelegt'.format(group.name), 'success')
+        message = u'Traffic Gruppe {0} angelegt'
+        flash(message.format(group.name), 'success')
         return redirect(url_for('.traffic_groups'))
     return render_template('properties/traffic_group_create.html', form=form,
     page_title = u"Neue Traffic Gruppe")
@@ -53,7 +54,8 @@ def traffic_group_create():
 @access.require('groups_traffic_change')
 def traffic_group_delete(group_id):
     group = delete_traffic_group(group_id)
-    flash(u'Traffic Gruppe {} gelöscht'.format(group.name), 'success')
+    message = u'Traffic Gruppe {0} gelöscht'
+    flash(message.format(group.name), 'success')
     return redirect(url_for('.traffic_groups'))
 
 
@@ -74,7 +76,8 @@ def property_group_create():
     form = PropertyGroupForm()
     if form.validate_on_submit():
         group = create_property_group(name=form.name.data)
-        flash(u'Eigenschaften Gruppe {} angelegt'.format(group.name), 'success')
+        message = u'Eigenschaften Gruppe {0} angelegt.'
+        flash(message.format(group.name), 'success')
         return redirect(url_for('.property_groups'))
     return render_template('properties/property_group_create.html', form=form,
         page_title = u"Neue Eigenschaften Gruppe")
@@ -86,8 +89,8 @@ def property_group_add_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
     (group, property) = create_property(name=property_name,
         property_group= property_group, granted=True)
-    flash(u'Eigenschaft {} zur Gruppe {} hinzugefügt'.format(property.name,
-        group.name), 'success')
+    message = u'Eigenschaft {0} zur Gruppe {1} hinzugefügt.'
+    flash(message.format(property.name, group.name), 'success')
     return redirect(url_for('.property_groups'))
 
 
@@ -95,8 +98,8 @@ def property_group_add_property(group_id, property_name):
 @access.require('groups_change')
 def property_group_delete_property(group_id, property_name):
     (group, property) = delete_property(group_id, property_name)
-    flash(u'Eigenschaft {} von Gruppe {} entfernt'.format(property.name,
-        group.name), 'success')
+    message = u'Eigenschaft {0} von Gruppe {1} entfernt'
+    flash(message.format(property.name, group.name), 'success')
     return redirect(url_for('.property_groups'))
 
 
@@ -104,5 +107,6 @@ def property_group_delete_property(group_id, property_name):
 @access.require('groups_change')
 def property_group_delete(group_id):
     group = delete_property_group(group_id)
-    flash(u'Eigenschaften Gruppe {} gelöscht'.format(group.name), 'success')
+    message = u'Eigenschaften Gruppe {0} gelöscht'
+    flash(message.format(group.name), 'success')
     return redirect(url_for('.property_groups'))

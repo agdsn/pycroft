@@ -54,7 +54,7 @@ def journal_import():
             finance.import_journal_csv(form.csv_file.data)
             flash(u"Der CSV-Import war erfolgreich!", "success")
         except Exception as error:
-            message = u"Der CSV-Import ist fehlgeschlagen! "
+            message = u"Der CSV-Import ist fehlgeschlagen: {0}"
             flash(message.format(error.message), "error")
 
     return render_template('finance/journal_import.html', form=form)
