@@ -26,7 +26,9 @@
             {% for field in form %}
                 {{ field() }}
             {% endfor %}
-            {{ form_actions(cancel_to, submit_text) }}
+            <div class="form-group">
+                <div class="col-sm-offset-5 col-sm-7">{{ form_actions(cancel_to, submit_text) }}</div>
+            </div>
         </div>
     </form>
 {%- endmacro %}
