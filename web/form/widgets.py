@@ -241,6 +241,8 @@ def monkey_patch_wtforms():
         BootstrapHorizontalDecorator,
         BootstrapFormGroupDecorator
     )
+    wtforms.fields.FieldList.widget = BootstrapFieldListWidget()
+    wtforms.fields.FormField.widget = BootstrapFormFieldWidget()
 
 
 monkey_patch_wtforms()
