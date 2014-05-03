@@ -21,10 +21,13 @@
 
 {% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true, upload=false, method="POST") -%}
     <form method="{{ method }}" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal" role="form">
-        {% for field in form %}
-            {{ field }}
-        {% endfor %}
-        {{ form_actions(cancel_to, submit_text) }}
+        {{ form.hidden_tag() if form.hidden_tag() }}
+        <div class="col-sm-6">
+            {% for field in form %}
+                {{ field() }}
+            {% endfor %}
+            {{ form_actions(cancel_to, submit_text) }}
+        </div>
     </form>
 {%- endmacro %}
 
