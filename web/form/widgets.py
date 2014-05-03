@@ -78,10 +78,10 @@ class BootstrapHorizontalWidget(BootstrapBaseWidget):
 
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
-            u'<div class="col-sm-2">',
+            u'<div class="col-sm-5">',
             field.label(class_=u'control-label'),
             u'</div>',
-            u'<div class="col-sm-3">',
+            u'<div class="col-sm-7">',
             self.widget(field, **kwargs),
             u'</div>',
         ]))
@@ -100,7 +100,7 @@ class BootstrapHorizontalWithoutLabelWidget(BootstrapBaseWidget):
 
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
-            u'<div class="col-sm-offset-2 col-sm-3">',
+            u'<div class="col-sm-offset-5 col-sm-7">',
             self.widget(field, **kwargs),
             u'</div>',
         ]))
