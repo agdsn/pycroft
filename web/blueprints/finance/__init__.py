@@ -89,18 +89,15 @@ def journalentry_edit(entryid):
     form = JournalLinkForm()
 
     if form.validate():
-        credit_account = journalentry.journal.financeaccount
-        debit_account = FinanceAccount.q.filter(
-            FinanceAccount.id == form.linked_financeaccount.data).one()
-
-        if journalentry.amount > 0:
-            credit_account, debit_account = debit_account, credit_account
-
+        debit_account = journalentry.journal.financeaccount
+        credit_account = FinanceAccount.q.filter(
+            FinanceAccount.id == form.linked_financeaccount.data
+        ).one()
         journalentry.transaction = finance.simple_transaction(
             description=journalentry.description,
             credit_account=credit_account, debit_account=debit_account,
-            amount=journalentry.amount)
-
+            amount=journalentry.amount, valid_date=journalentry.valid_date
+        )
         session.add(journalentry)
         session.commit()
 
