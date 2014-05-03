@@ -11,35 +11,25 @@ import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
 
 
-class BootstrapBaseWidget(object):
-    """
-    Augments existing widgets to be Bootstrap compatible.
+class WidgetDecorator(object):
+    """Decorate widgets."""
 
-    Horizontal layout is a two column layout, where the label is placed in the
-    left column and the field is placed right next to it.
-    The field is wrapped in a Bootstrap form-group. Field errors are
-    displayed in Bootstrap help-blocks.
-    """
-
-    def __init__(self, widget=None):
+    def __init__(self, widget):
         """
-        :param widget: Original widget
-        :return:
+        :param widget: Original widget to be decorated.
         """
+        if widget is None:
+            raise ValueError('Parameter widget may not be None.')
         self.widget = widget
 
-    def decorate(self, widget):
-        """
-        Replace a field's widget with an instance of this widget.
 
-        The replaced widget is preserved and used to render the actual field.
-        """
-        self.widget = widget
-        return self
+class BootstrapFormGroupDecorator(WidgetDecorator):
+    """
+    Wraps a widget inside a Bootstrap form-group and prints errors.
 
-
-class BootstrapFormGroupWidget(BootstrapBaseWidget):
-    """Wraps an existing widget inside a Bootstrap form-group."""
+    The widget's output is wrapped in a Bootstrap form-group. Any field errors
+    are displayed in Bootstrap help-blocks after the widget.
+    """
     def __call__(self, field, **kwargs):
         classes = [u'form-group']
         if field.errors:
@@ -56,7 +46,8 @@ class BootstrapFormGroupWidget(BootstrapBaseWidget):
         return HTMLString(u''.join(html))
 
 
-class BootstrapFormControlWidget(BootstrapBaseWidget):
+class BootstrapFormControlDecorator(WidgetDecorator):
+    """Adds the Bootstrap form-control class to a widget."""
     def __call__(self, field, **kwargs):
         if kwargs.has_key('class_'):
             kwargs['class_'] = u'form-control ' + kwargs['class_']
@@ -65,17 +56,13 @@ class BootstrapFormControlWidget(BootstrapBaseWidget):
         return self.widget(field, **kwargs)
 
 
-class BootstrapHorizontalWidget(BootstrapBaseWidget):
+class BootstrapHorizontalDecorator(WidgetDecorator):
     """
     Renders a field in horizontal layout.
 
     Horizontal layout is a two column layout, where the label is placed in the
     left column and the field is placed right next to it.
     """
-
-    def __init__(self, widget=None):
-        super(BootstrapHorizontalWidget, self).__init__(widget)
-
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="col-sm-5">',
@@ -87,17 +74,13 @@ class BootstrapHorizontalWidget(BootstrapBaseWidget):
         ]))
 
 
-class BootstrapHorizontalWithoutLabelWidget(BootstrapBaseWidget):
+class BootstrapHorizontalWithoutLabelDecorator(WidgetDecorator):
     """
     Renders a field in horizontal layout.
 
     Horizontal layout is a two column layout, where the label is placed in the
     left column and the field is placed right next to it.
     """
-
-    def __init__(self, widget=None, omit_label=False):
-        super(BootstrapHorizontalWithoutLabelWidget, self).__init__(widget)
-
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="col-sm-offset-5 col-sm-7">',
@@ -106,13 +89,9 @@ class BootstrapHorizontalWithoutLabelWidget(BootstrapBaseWidget):
         ]))
 
 
-
-class BootstrapRadioCheckboxWidget(BootstrapBaseWidget):
-
-    wrapper_class = ""
-
-    def __init__(self, widget=None):
-        super(BootstrapRadioCheckboxWidget, self).__init__(widget)
+class BootstrapRadioCheckboxDecorator(WidgetDecorator):
+    """Wraps a widget with its label inside a div."""
+    wrapper_class = None
 
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join([
@@ -129,20 +108,20 @@ class BootstrapRadioCheckboxWidget(BootstrapBaseWidget):
         ]))
 
 
-class BootstrapRadioWidget(BootstrapRadioCheckboxWidget):
-    wrapper_class = "radio"
+class BootstrapRadioDecorator(BootstrapRadioCheckboxDecorator):
+    wrapper_class = u"radio"
 
 
-class BootstrapRadioInlineWidget(BootstrapRadioCheckboxWidget):
-    wrapper_class = "radio-inline"
+class BootstrapRadioInlineDecorator(BootstrapRadioCheckboxDecorator):
+    wrapper_class = u"radio-inline"
 
 
-class BootstrapCheckboxWidget(BootstrapRadioCheckboxWidget):
-    wrapper_class = "checkbox"
+class BootstrapCheckboxDecorator(BootstrapRadioCheckboxDecorator):
+    wrapper_class = u"checkbox"
 
 
-class BootstrapCheckboxInlineWidget(BootstrapRadioCheckboxWidget):
-    wrapper_class = "checkbox-inline"
+class BootstrapCheckboxInlineDecorator(BootstrapRadioCheckboxDecorator):
+    wrapper_class = u"checkbox-inline"
 
 
 class BootstrapFieldListWidget(object):
@@ -157,108 +136,110 @@ class BootstrapFormFieldWidget(object):
         return HTMLString(u''.join(html))
 
 
-def decorate(widget, *widgets):
-    return reduce(lambda w, d: d.decorate(w), widgets, widget)
+def decorate(widget, *decorators):
+    """Decorate a widget with a list of decorators."""
+    return reduce(lambda w, d: d(w), decorators, widget)
 
 
-def replace_with_decorations(field, *widgets):
-    field.widget = decorate(field.widget, *widgets)
+def decorate_field(field, *decorators):
+    """Replace a field's widget by  decorators and replace ."""
+    field.widget = decorate(field.widget, *decorators)
 
 
 def monkey_patch_wtforms():
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.SelectField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.SelectMultipleField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.RadioField,
-        BootstrapRadioWidget(),
-        BootstrapHorizontalWithoutLabelWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapRadioDecorator,
+        BootstrapHorizontalWithoutLabelDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.StringField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.IntegerField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.DecimalField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.FloatField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.BooleanField,
-        BootstrapRadioWidget(),
-        BootstrapHorizontalWithoutLabelWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapRadioDecorator,
+        BootstrapHorizontalWithoutLabelDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.DateTimeField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.DateField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.TextAreaField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.PasswordField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.FileField,
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
     # wtforms.fields.HiddenField is not decorated
-    replace_with_decorations(
+    decorate_field(
         wtforms.fields.SubmitField,
-        BootstrapFormGroupWidget()
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.ext.sqlalchemy.fields.QuerySelectField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
-    replace_with_decorations(
+    decorate_field(
         wtforms.ext.sqlalchemy.fields.QuerySelectMultipleField,
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
 
 
