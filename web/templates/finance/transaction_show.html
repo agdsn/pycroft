@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% set page_title = "Buchung" %}
+{% set page_title = "Buchung anzeigen" %}
 
 {% set inverted = false %}
 
@@ -9,9 +9,9 @@
         <dl class="dl-horizontal">
             <dt>Beschreibung</dt>
             <dd>{{ transaction.description }}</dd>
-            <dt>Buchungszeit</dt>
+            <dt>Erstellt am</dt>
             <dd>{{ transaction.transaction_date|datetime }}</dd>
-            <dt>Gültigkeitsdatum</dt>
+            <dt>Gültig ab</dt>
             <dd>{{ transaction.valid_date|date }}</dd>
         </dl>
     </div>
