@@ -1,6 +1,6 @@
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget, \
-    BootstrapFormControlWidget, BootstrapHorizontalWidget, \
-    BootstrapFormGroupWidget, decorate
+    BootstrapFormControlDecorator, BootstrapHorizontalDecorator, \
+    BootstrapFormGroupDecorator, decorate
 from wtforms import TextField
 from wtforms import fields
 import wtforms.widgets
@@ -34,9 +34,9 @@ class DatePickerField(fields.DateField):
     """
     widget = decorate(
         wtforms.widgets.TextInput(),
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
 
     def __init__(self, *args, **kwargs):
@@ -110,9 +110,9 @@ class LazyLoadSelectField(fields.SelectField):
 
     widget = decorate(
         LazyLoadSelectWidget(),
-        BootstrapFormControlWidget(),
-        BootstrapHorizontalWidget(),
-        BootstrapFormGroupWidget()
+        BootstrapFormControlDecorator,
+        BootstrapHorizontalDecorator,
+        BootstrapFormGroupDecorator
     )
 
     def __init__(self, *args, **kwargs):
