@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="typeahead.bundle.js" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/web/static/typeahead/typeahead.bundle.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/web/static/typeahead/typeahead.bundle.js" />
+    </CLASSES>
+    <SOURCES />
+  </library>
+</component>
