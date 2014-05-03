@@ -217,7 +217,7 @@ def switch_port_create(switch_id):
 
 
 @bp.route('/vlans')
-@nav.navigate(u"VLan")
+@nav.navigate(u"VLANs")
 @access.require('infrastructure_show')
 def vlans():
     vlans_list = VLan.q.all()
