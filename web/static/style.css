@@ -4,17 +4,8 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 body {
-    padding-top: 40px;
+    padding-top: 70px;
 }
-
-h1 {
-    margin-bottom: 18px;
-}
-/*
-h2 {
-    margin-bottom: 1em;
-}
-*/
 
 .dropdown:hover .dropdown-menu {
     display: block;
