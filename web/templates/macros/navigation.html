@@ -26,16 +26,14 @@
     {% if bp_nav.is_allowed %}
         <li class="{{ bp_nav.css_classes|join(" ") }}">
             {%- if bp_nav.dropdown -%}
-                <a  href="{{ url_for(bp_nav.first.endpoint) }}" {% if bp_nav.is_active %} style="background-color: #222"{% endif %}>{{ bp_nav.text }}</a>
-            {%- else -%}
-                <a  href="{{ url_for(bp_nav.first.endpoint) }}">{{ bp_nav.text }}</a>
-            {%- endif -%}
-            {%- if bp_nav.dropdown -%}
+                <a href="{{ url_for(bp_nav.first.endpoint) }}" class="dropdown-toggle" data-toggle="dropdown">{{ bp_nav.text }}<strong class="caret"></strong></a>
                 <ul class="dropdown-menu">
                     {% for element in bp_nav -%}
                         <li><a href="{{ url_for(element.endpoint) }}">{{ element.text }}</a></li>
                     {%- endfor %}
                 </ul>
+            {%- else -%}
+                <a href="{{ url_for(bp_nav.first.endpoint) }}">{{ bp_nav.text }}</a>
             {%- endif -%}
         </li>
     {% endif %}
