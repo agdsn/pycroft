@@ -82,19 +82,21 @@
 
 {% block page_script  %}
     <script type="application/javascript">
-        create_toggle_handler = (function(activeButton, passiveButton, visibleElement, hiddenElement) {
-            return (function() {
-                visibleElement.addClass('hidden');
-                hiddenElement.removeClass('hidden');
-                activeButton.removeClass('active');
-                passiveButton.addClass('active');
+        $(function() {
+            var create_toggle_handler = (function(activeButton, passiveButton, visibleElement, hiddenElement) {
+                return (function() {
+                    visibleElement.addClass('hidden');
+                    hiddenElement.removeClass('hidden');
+                    activeButton.removeClass('active');
+                    passiveButton.addClass('active');
+                });
             });
+            var accountFormButton = $('#account-form-button');
+            var reportFormButton = $('#report-form-button');
+            var accountFormTable = $('#account-form');
+            var reportFormTable = $('#report-form');
+            accountFormButton.on('click', create_toggle_handler(reportFormButton, accountFormButton, reportFormTable, accountFormTable)).trigger('click');
+            reportFormButton.on('click', create_toggle_handler(accountFormButton, reportFormButton, accountFormTable, reportFormTable));
         });
-        accountFormButton = $('#account-form-button');
-        reportFormButton = $('#report-form-button');
-        accountFormElement = $('#account-form');
-        reportFormElement = $('#report-form');
-        accountFormButton.click(create_toggle_handler(reportFormButton, accountFormButton, reportFormElement, accountFormElement)).trigger('click');
-        reportFormButton.click(create_toggle_handler(accountFormButton, reportFormButton, accountFormElement, reportFormElement));
     </script>
 {% endblock %}
