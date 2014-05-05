@@ -18,7 +18,7 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.property import Membership
 from pycroft.model.accounting import TrafficVolume
-from sqlalchemy.sql.expression import or_
+from sqlalchemy.sql.expression import or_, func
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
@@ -37,6 +37,19 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 @nav.navigate(u"Übersicht")
 def overview():
     return redirect(url_for("dormitories.overview"))
+
+
+@bp.route('/json/search')
+@access.require('user_show')
+def json_search():
+    query = request.args['query']
+    return jsonify(users=map(
+        lambda u: {"id": u.id, "name": u.name},
+        session.query(User.id, User.name).filter(or_(
+            func.lower(User.name).like(func.lower(u"%{}%".format(query))),
+            User.id.like(u"{}%".format(query))
+        ))
+    ))
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
