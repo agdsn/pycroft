@@ -10,7 +10,7 @@
         <h2>{{ type }}</h2>
         <ul class="list-unstyled">
         {% for a in accounts %}
-            <li><a href="{{ url_for('.show_account', account_id=a.id) }}">{{ a.name }}</a></li>
+            <li><a href="{{ url_for('.accounts_show', account_id=a.id) }}">{{ a.name }}</a></li>
         {% endfor %}
         </ul>
     </div>

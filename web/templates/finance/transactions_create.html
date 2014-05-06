@@ -5,7 +5,15 @@
 #}
 {% extends "layout.html" %}
 
+{% set page_title = "Buchung erstellen" %}
+
 {% import "macros/forms.html" as forms %}
 {% block content %}
-    {{ forms.simple_form(form, '', url_for('.journals')  ) }}
+    {{ forms.simple_form(form, '', url_for('.')  ) }}
+{% endblock %}
+
+{% block page_script %}
+    <script type="application/javascript">
+        $('#')
+    </script>
 {% endblock %}

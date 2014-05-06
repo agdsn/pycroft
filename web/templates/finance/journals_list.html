@@ -27,14 +27,14 @@
                 <td>{{ j.routing_number }}</td>
                 <td>{{ j.iban }}</td>
                 <td>{{ j.bic }}</td>
-                <td><a class="btn btn-primary" href="{{ url_for('.show_account', account_id=j.financeaccount_id) }}">Konto anzeigen</a></td>
+                <td><a class="btn btn-primary" href="{{ url_for('.accounts_show', account_id=j.financeaccount_id) }}">Konto anzeigen</a></td>
                 <td>{{ j.hbci_url }}</td>
                 <td>{{ j.last_update|date }}</td>
             </tr>
         {% endfor %}
     </table>
     {% if current_user is privileged_for('finance_change') %}
-        <a class="btn btn-primary" href="{{ url_for('.journal_create') }}">Neues Journal anlegen</a>
+        <a class="btn btn-primary" href="{{ url_for('.journals_create') }}">Neues Journal anlegen</a>
     {% endif %}
 
     <h3>Nicht zugeordnete Journaleinträge</h3>

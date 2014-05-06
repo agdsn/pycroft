@@ -20,7 +20,7 @@
     {% if split %}
         <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.transaction_date|datetime }}</td>
         <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_date|date }}</td>
-        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for(".show_transaction", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
+        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for(".transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
         <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
     {% else %}
         <td colspan="4"></td>
