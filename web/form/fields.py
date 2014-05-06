@@ -3,7 +3,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget, \
     BootstrapFormControlDecorator, BootstrapHorizontalDecorator, \
-    BootstrapFormGroupDecorator, decorate
+    BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
+    WidgetDecorator, decorators
 from wtforms import TextField
 from wtforms import fields
 import wtforms.widgets
@@ -127,6 +128,14 @@ class LazyLoadSelectField(fields.SelectField):
     def pre_validate(self, form):
         pass
 
+
+def static(field):
+    widget = field.kwargs.get("widget", field.field_class.widget)
+    field.kwargs["widget"] = decorate(
+        BootstrapStaticFieldWidget(),
+        *reversed(list(decorators(widget)))
+    )
+    return field
 
 
 class ReadonlyTextField(TextField):

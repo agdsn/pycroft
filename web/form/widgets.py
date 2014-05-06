@@ -134,6 +134,28 @@ class BootstrapFormFieldWidget(object):
         return HTMLString(u''.join(imap(lambda f: f(**kwargs), field)))
 
 
+class BootstrapStaticFieldWidget(object):
+    """Render a static Bootstrap control."""
+    def __call__(self, field, **kwargs):
+        kwargs["class_"] = u"form-control-static"
+        # Assume that the field provides access to the value.
+        value = field._value()
+        return HTMLString(u''.join([
+            u'<p {}>'.format(html_params(**kwargs)),
+            value,
+            u'</p>',
+        ]))
+
+
+def decorators(widget):
+    """
+    Yields all decorators of a widget starting from the outermost.
+    """
+    while isinstance(widget, WidgetDecorator):
+        yield type(widget)
+        widget = widget.widget
+
+
 def decorate(widget, *decorators):
     """Decorate a widget with a list of decorators."""
     return reduce(lambda w, d: d(w), decorators, widget)
