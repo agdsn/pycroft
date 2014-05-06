@@ -34,6 +34,16 @@
                     <ul class="nav navbar-nav navbar-right">
                         {% if current_user.is_authenticated() %}
                             <li>
+                                <form class="navbar-form" method="get">
+                                    <div class="input-group">
+                                      <input type="text" class="typeahead form-control" id="nav_search" name="nav_search" autocomplete="on" placeholder="Suchen">
+                                      <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                                      </span>
+                                    </div>
+                                </form>
+                            </li>
+                            <li>
                                 <p class="navbar-text navbar-right">Angemeldet als <a class="navbar-link" href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a> <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></p>
                             </li>
                         {% else %}
@@ -82,7 +92,11 @@
 <script type="text/javascript" src="{{ url_for("static", filename="handlebars/handlebars.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="typeahead/typeahead.bundle.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
-
+{% raw %}
+<script type="text/x-handlebars-template" id="nav_search_suggestion">
+    <a href="{% endraw %}{{ url_for('user.user_show', user_id=0)|replace('0', '') }}{% raw %}{{ id }}">{{ name }} ({{ id }})</a>
+</script>
+{% endraw %}
 <script type="text/javascript">
     $(function() {
         var isFixed = 0,
@@ -123,7 +137,39 @@
         }
 
         $(window).on("scroll", place_alerts);
-    })
+        var users = new Bloodhound({
+            name: 'users',
+            datumTokenizer: (function() {
+                var t = Bloodhound.tokenizers.whitespace;
+                return function(r) { return t(r['name']).push(r['id']); };
+            })(),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: {
+                url: '{{ url_for('user.json_search') }}?query=%QUERY',
+                ttl: 60,
+                filter: function(response) { return response.users; }
+            }
+        });
+        users.initialize();
+        $('#nav_search').typeahead(
+            {
+                hint: true,
+                highlight: true,
+                minLength: 1
+            },
+            {
+                name: 'users',
+                displayKey: function(record) {
+                    return record['name'] + ' (' + record['id'] + ')';
+                },
+                source: users.ttAdapter(),
+                templates: {
+                    empty: 'Keine Ergebnisse',
+                    suggestion: Handlebars.compile($('#nav_search_suggestion').html())
+                }
+            }
+        );
+    });
 </script>
 {% block page_script %}{% endblock %}
 </body>
