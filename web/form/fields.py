@@ -119,7 +119,7 @@ class LazyLoadSelectField(fields.SelectField):
         self.conditions = kwargs.pop("conditions")
         self.data_endpoint = kwargs.pop("data_endpoint")
 
-        super(LazyLoadSelectField,self).__init__(*args, **kwargs)
+        super(LazyLoadSelectField, self).__init__(*args, **kwargs)
 
     def pre_validate(self, form):
         pass

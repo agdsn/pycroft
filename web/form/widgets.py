@@ -32,7 +32,7 @@ class BootstrapFormGroupDecorator(WidgetDecorator):
         if field.errors:
             classes.append(u'has-error')
         html = [
-            u'<div class="%s">' % u' '.join(classes),
+            u'<div class="{0}">'.format(u' '.join(classes)),
             self.widget(field, **kwargs),
         ]
         html.extend(imap(
@@ -46,7 +46,7 @@ class BootstrapFormGroupDecorator(WidgetDecorator):
 class BootstrapFormControlDecorator(WidgetDecorator):
     """Adds the Bootstrap form-control class to a widget."""
     def __call__(self, field, **kwargs):
-        if kwargs.has_key('class_'):
+        if 'class_' in kwargs:
             kwargs['class_'] = u'form-control ' + kwargs['class_']
         else:
             kwargs['class_'] = u'form-control'
@@ -122,15 +122,13 @@ class BootstrapCheckboxInlineDecorator(BootstrapRadioCheckboxDecorator):
 
 
 class BootstrapFieldListWidget(object):
-    def __call__(self, field):
-        html = map(lambda f: f(), list(field))
-        return HTMLString(u''.join(html))
+    def __call__(self, field, **kwargs):
+        return HTMLString(u''.join(imap(lambda f: f(**kwargs), field)))
 
 
 class BootstrapFormFieldWidget(object):
-    def __call__(self, field):
-        html = map(lambda f: f(), list(field))
-        return HTMLString(u''.join(html))
+    def __call__(self, field, **kwargs):
+        return HTMLString(u''.join(imap(lambda f: f(**kwargs), field)))
 
 
 def decorate(widget, *decorators):
