@@ -24,9 +24,7 @@ def create_semester(name, registration_fee, regular_membership_fee,
                     begin_date, end_date, belated_end_date):
     """
     Creates a new Semester.
-    Finance accounts are created according to the configuration, e.g.
-    registration fee account, membership fee account for the newly created
-    semester.
+
     The name could be something like: "Wintersemester 2012/13"
     :param name: A useful name for the semester.
     :param registration_fee: Fee every new member is required to pay after
