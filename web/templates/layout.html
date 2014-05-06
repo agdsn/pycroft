@@ -5,6 +5,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}"/>
+    <link rel="stylesheet" href="{{ url_for("static", filename="typeahead/typeahead.css") }}"/>
     <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}"/>
     {% block page_css %}{% endblock %}
     <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>
@@ -78,6 +79,7 @@
 
 <script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="bootstrap/js/bootstrap.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="typeahead/typeahead.bundle.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
 
 <script type="text/javascript">
