@@ -17,10 +17,6 @@ def financeaccounts_query():
     return FinanceAccount.q.order_by(FinanceAccount.name)
 
 
-def semester_query():
-    return Semester.q.all()
-
-
 class SemesterCreateForm(Form):
     name = TextField(u"Semestername", validators=[DataRequired()])
     registration_fee = IntegerField(
@@ -68,8 +64,11 @@ class JournalImportForm(Form):
 
 
 class FinanceAccountCreateForm(Form):
-    name = TextField(u"Name")
-    type = SelectField(u"Typ", choices=[("LIABILITY","Passivkonto"), ("EXPENSE", "Aufwandskonto"),
-                                        ("ASSET", "Aktivkonto"), ("INCOME", "Ertragskonto"), ("EQUITY", "Equity")])
-    semester = QuerySelectField(u"Semester", get_label='name', query_factory=semester_query, allow_blank=True)
-    tag = HiddenField() #TODO
+    name = TextField(u"Name", validators=[DataRequired()])
+    type = SelectField(
+        u"Typ", validators=[DataRequired()],
+        choices=[
+            ("ASSET", "Aktivkonto"), ("LIABILITY", "Passivkonto"),
+            ("EXPENSE", "Aufwandskonto"), ("REVENUE", "Ertragskonto"),
+        ]
+    )
