@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="handlebars" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/web/static/handlebars/handlebars.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/web/static/handlebars/handlebars.js" />
+    </CLASSES>
+    <SOURCES />
+  </library>
+</component>
