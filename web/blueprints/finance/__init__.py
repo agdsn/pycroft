@@ -11,9 +11,9 @@ from itertools import imap, groupby, izip_longest, ifilter
 
 from flask import Blueprint, render_template, redirect, url_for, jsonify,\
     request, flash, abort
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from web.blueprints.navigation import BlueprintNavigation
-from forms import SemesterCreateForm, JournalLinkForm, JournalImportForm, \
+from forms import SemesterCreateForm, JournalEntryEditForm, JournalImportForm, \
     JournalCreateForm, FinanceAccountCreateForm
 from pycroft.lib import finance, config
 from datetime import datetime, timedelta
@@ -79,29 +79,32 @@ def journal_create():
                            form=form, page_title=u"Journal erstellen")
 
 
-@bp.route('/journalentry/edit/<int:entryid>', methods=["GET", "POST"])
+@bp.route('/journals/<int:journal_id>/entries/edit/<int:entry_id>', methods=["GET", "POST"])
 @access.require('finance_change')
-def journalentry_edit(entryid):
-    journalentry = JournalEntry.q.get(entryid)
-    form = JournalLinkForm()
+def journals_entries_edit(journal_id, entry_id):
+    entry = JournalEntry.q.get(entry_id)
+    form = JournalEntryEditForm(obj=entry, journal_name=entry.journal.name)
 
     if form.validate():
-        debit_account = journalentry.journal.financeaccount
+        debit_account = entry.journal.financeaccount
         credit_account = FinanceAccount.q.filter(
-            FinanceAccount.id == form.linked_financeaccount.data
+            FinanceAccount.id == form.finance_account_id.data
         ).one()
-        journalentry.transaction = finance.simple_transaction(
-            description=journalentry.description,
+        entry.transaction = finance.simple_transaction(
+            description=entry.description,
             credit_account=credit_account, debit_account=debit_account,
-            amount=journalentry.amount, valid_date=journalentry.valid_date
+            amount=entry.amount, valid_date=entry.valid_date
         )
-        session.add(journalentry)
+        entry.description = form.description.data
+        session.add(entry)
         session.commit()
 
         return redirect(url_for('.journals'))
 
-    return render_template('finance/journalentry_edit.html',
-                           entry=journalentry, form=form)
+    return render_template(
+        'finance/journals_entries_edit.html',
+        entry=entry, form=form
+    )
 
 
 @bp.route('/accounts')
@@ -224,13 +227,35 @@ def semester_create():
     return render_template('finance/semester_create.html', form=form)
 
 
-@bp.route('/json/search_accounts/<string:search_str>')
+@bp.route('/json/accounts/system')
 @access.require('finance_show')
-def json_search_accounts(search_str):
-    result = session.query(FinanceAccount).filter(FinanceAccount.name.like("%%%s%%" % search_str)).all()
+def json_accounts_system():
+    return jsonify(accounts=map(
+        lambda account: {
+            "account_id": account.id,
+            "account_name": account.name
+        },
+        session.query(FinanceAccount).outerjoin(User).filter(
+            User.finance_account == None
+        ).all()
+    ))
 
-    r = []
-    for user in result:
-        r.append({"id": user.id, "name": user.name})
 
-    return jsonify({"result": r})
+@bp.route('/json/accounts/user-search')
+@access.require('finance_show')
+def json_accounts_user_search():
+    query = request.args['query']
+    return jsonify(accounts=map(
+        lambda result: {
+            "account_id": result[0],
+            "user_id": result[1],
+            "user_name": result[2]
+        },
+        session.query(FinanceAccount.id, User.id, User.name).filter(
+            FinanceAccount.id == User.finance_account_id,
+            or_(
+                func.lower(User.name).like(func.lower("%{0}%".format(query))),
+                User.id.like("{0}%".format(query))
+            )
+        ).all()
+    ))

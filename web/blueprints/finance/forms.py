@@ -2,12 +2,12 @@
 
 __author__ = 'florian'
 
-from web.form.fields import DatePickerField
+from web.form.fields import DatePickerField, TypeaheadField, static
 from flask.ext.wtf import Form
-from wtforms import TextField, IntegerField, HiddenField, FileField, SelectField
-from wtforms.validators import DataRequired, NumberRange
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from pycroft.model.finance import FinanceAccount, Semester
+from wtforms import TextField, IntegerField, HiddenField, FileField, \
+    SelectField, FormField, FieldList, StringField
+from wtforms.validators import DataRequired, NumberRange, Optional
+from pycroft.model.finance import FinanceAccount
 
 
 def financeaccounts_query():
@@ -46,9 +46,18 @@ class JournalCreateForm(Form):
     hbci_url = TextField(u"HBCI-URL")
 
 
-class JournalLinkForm(Form):
-    search = TextField()
-    linked_financeaccount = HiddenField(validators=[DataRequired()])
+class JournalEntryEditForm(Form):
+    finance_account = TypeaheadField(u"Gegenkonto")
+    finance_account_id = HiddenField(validators=[DataRequired()])
+    journal_name = static(StringField(u"Bankkonto"))
+    amount = static(IntegerField(u"Wert"))
+    description = StringField(u"Beschreibung")
+    original_description = static(StringField(u"Ursprüngliche Beschreibung"))
+    other_account_number = static(StringField(u"Kontonummer"))
+    other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
+    other_name = static(StringField(u"Name"))
+    valid_date = static(StringField(u"Valutadatum"))
+    transaction_date = static(StringField(u"Buchungsdatum"))
 
 
 class JournalImportForm(Form):

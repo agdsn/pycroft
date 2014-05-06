@@ -45,18 +45,18 @@
             <th>Name</th>
             <th></th>
         </tr>
-        {% for j in journal_entries %}
+        {% for entry in journal_entries %}
             <tr>
-                <td>{{ j.journal.name }}</td>
-                <td>{{ j.valid_date|date }}</td>
-                <td>{{ j.amount|money }}</td>
-                <td>{{ j.description }}</td>
-                <td>{{ j.original_description }}</td>
-                <td>{{ j.other_account }}</td>
-                <td>{{ j.other_bank }}</td>
-                <td>{{ j.other_person }}</td>
+                <td>{{ entry.journal.name }}</td>
+                <td>{{ entry.valid_date|date }}</td>
+                <td>{{ entry.amount|money }}</td>
+                <td>{{ entry.description }}</td>
+                <td>{{ entry.original_description }}</td>
+                <td>{{ entry.other_account }}</td>
+                <td>{{ entry.other_bank }}</td>
+                <td>{{ entry.other_person }}</td>
                 {% if current_user is privileged_for('finance_change') %}
-                    <td><a href="{{ url_for('.journalentry_edit', entryid=j.id) }}"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                    <td><a href="{{ url_for('.journals_entries_edit', journal_id=entry.journal_id, entry_id=entry.id) }}"><span class="glyphicon glyphicon-pencil"></span></a></td>
                 {% else %}
                      <td></td>
                 {% endif %}

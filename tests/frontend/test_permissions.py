@@ -99,14 +99,15 @@ class Test_040_Permissions_User(FrontendDataTestBase):
             url_for('finance.journals'),
             url_for('finance.journal_import'),
             url_for('finance.journal_create'),
-            url_for('finance.journalentry_edit', entryid=1),
+            url_for('finance.journals_entries_edit', journal_id=1, entry_id=1),
             url_for('finance.accounts'),
             url_for('finance.accounts_create'),
             url_for('finance.show_account', account_id=1),
             url_for('finance.show_transaction', transaction_id=1),
             url_for('finance.semester_list'),
             url_for('finance.semester_create'),
-            url_for('finance.json_search_accounts', search_str="Teststring")
+            url_for('finance.json_accounts_system'),
+            url_for('finance.json_accounts_user_search', query="Teststring"),
         ):
             self.assert_access_forbidden(url)
 
