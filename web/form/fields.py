@@ -5,7 +5,7 @@ from web.form.widgets import DatePickerWidget, LazyLoadSelectWidget, \
     BootstrapFormControlDecorator, BootstrapHorizontalDecorator, \
     BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
     WidgetDecorator, decorators
-from wtforms import TextField
+from wtforms import TextField, StringField
 from wtforms import fields
 import wtforms.widgets
 import datetime
@@ -127,6 +127,14 @@ class LazyLoadSelectField(fields.SelectField):
 
     def pre_validate(self, form):
         pass
+
+
+class TypeaheadField(StringField):
+    """A Twitter typeahead.js field."""
+    def __call__(self, **kwargs):
+        return super(TypeaheadField, self).__call__(
+            class_='typeahead', **kwargs
+        )
 
 
 def static(field):
