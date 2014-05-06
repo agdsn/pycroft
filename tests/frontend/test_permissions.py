@@ -22,7 +22,7 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code('/static/style.css', 200)
 
         # Access to other pages/blueprints is NOT OK
-        self.assert_response_code(url_for('finance.journals'), 302)
+        self.assert_response_code(url_for('finance.journals_list'), 302)
         self.assert_response_code(url_for('infrastructure.switches'), 302)
 
 
@@ -42,7 +42,7 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
 
     def test_0020_access_finance(self):
         # Admin has no access to finance
-        self.assert_response_code(url_for('finance.journals'), 302)
+        self.assert_response_code(url_for('finance.journals_list'), 302)
 
 
 class Test_030_Permissions_Finance(FrontendDataTestBase):
@@ -59,7 +59,7 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
         self.assert_response_code(url_for('dormitories.overview'), 200)
 
     def test_0020_access_finance(self):
-        self.assert_response_code(url_for('finance.journals'), 200)
+        self.assert_response_code(url_for('finance.journals_list'), 200)
 
 
 class Test_040_Permissions_User(FrontendDataTestBase):
@@ -96,16 +96,16 @@ class Test_040_Permissions_User(FrontendDataTestBase):
 
     def test_0020_access_finance(self):
         for url in (
-            url_for('finance.journals'),
-            url_for('finance.journal_import'),
-            url_for('finance.journal_create'),
+            url_for('finance.journals_list'),
+            url_for('finance.journals_import'),
+            url_for('finance.journals_create'),
             url_for('finance.journals_entries_edit', journal_id=1, entry_id=1),
-            url_for('finance.accounts'),
+            url_for('finance.accounts_list'),
             url_for('finance.accounts_create'),
-            url_for('finance.show_account', account_id=1),
-            url_for('finance.show_transaction', transaction_id=1),
-            url_for('finance.semester_list'),
-            url_for('finance.semester_create'),
+            url_for('finance.accounts_show', account_id=1),
+            url_for('finance.transactions_show', transaction_id=1),
+            url_for('finance.semesters_list'),
+            url_for('finance.semesters_create'),
             url_for('finance.json_accounts_system'),
             url_for('finance.json_accounts_user_search', query="Teststring"),
         ):

@@ -26,7 +26,7 @@
             <tbody>
             {% for split in transaction.splits %}
                 <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
-                    <td><a href="{{ url_for("finance.show_account", account_id=split.account_id) }}">{{ split.account.name }}</a></td>
+                    <td><a href="{{ url_for(".accounts_show", account_id=split.account_id) }}">{{ split.account.name }}</a></td>
                     <td>{{ split.amount|money }}</td>
                 </tr>
             {% endfor %}

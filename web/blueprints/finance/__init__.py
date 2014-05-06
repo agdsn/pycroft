@@ -30,13 +30,14 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 
 @bp.route('/')
 @bp.route('/journals')
+@bp.route('/journals/list')
 @access.require('finance_show')
 @nav.navigate(u"Journals")
-def journals():
+def journals_list():
     journals_list = Journal.q.all()
     journal_entries_list = JournalEntry.q.filter(JournalEntry.transaction_id == None).all()
 
-    return render_template('finance/journal_list.html',
+    return render_template('finance/journals_list.html',
                            journals=journals_list,
                            journal_entries=journal_entries_list)
 
@@ -44,7 +45,7 @@ def journals():
 @bp.route('/journals/import', methods=['GET', 'POST'])
 @access.require('finance_change')
 @nav.navigate(u"Buchungen importieren")
-def journal_import():
+def journals_import():
     form = JournalImportForm()
     if form.validate_on_submit():
         try:
@@ -54,12 +55,12 @@ def journal_import():
             message = u"Der CSV-Import ist fehlgeschlagen: {0}"
             flash(message.format(error.message), "error")
 
-    return render_template('finance/journal_import.html', form=form)
+    return render_template('finance/journals_import.html', form=form)
 
 
 @bp.route('/journals/create', methods=['GET', 'POST'])
 @access.require('finance_change')
-def journal_create():
+def journals_create():
     form = JournalCreateForm()
 
     if form.validate_on_submit():
@@ -75,11 +76,11 @@ def journal_create():
         session.commit()
         return redirect(url_for('.journals'))
 
-    return render_template('finance/journal_create.html',
+    return render_template('finance/journals_create.html',
                            form=form, page_title=u"Journal erstellen")
 
 
-@bp.route('/journals/<int:journal_id>/entries/edit/<int:entry_id>', methods=["GET", "POST"])
+@bp.route('/journals/<int:journal_id>/entries/<int:entry_id>', methods=["GET", "POST"])
 @access.require('finance_change')
 def journals_entries_edit(journal_id, entry_id):
     entry = JournalEntry.q.get(entry_id)
@@ -108,9 +109,10 @@ def journals_entries_edit(journal_id, entry_id):
 
 
 @bp.route('/accounts')
+@bp.route('/accounts/list')
 @nav.navigate(u"Konten")
 @access.require('finance_show')
-def accounts():
+def accounts_list():
     accounts_by_type = dict(imap(
         lambda t: (t[0], list(t[1])),
         groupby(
@@ -125,7 +127,7 @@ def accounts():
 
 @bp.route('/accounts/<int:account_id>')
 @access.require('finance_show')
-def show_account(account_id):
+def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
     splits = (
         Split.q
@@ -139,20 +141,20 @@ def show_account(account_id):
     )
     balance = sum(imap(lambda s: s.amount, splits))
     return render_template(
-        'finance/account_show.html',
+        'finance/accounts_show.html',
         name=account.name, balance=balance,
         splits=splits, typed_splits=typed_splits
     )
 
 
-@bp.route('/transaction/<int:transaction_id>')
+@bp.route('/transactions/<int:transaction_id>')
 @access.require('finance_show')
-def show_transaction(transaction_id):
+def transactions_show(transaction_id):
     transaction = Transaction.q.get(transaction_id)
     if transaction is None:
         abort(404)
     return render_template(
-        'finance/transaction_show.html',
+        'finance/transactions_show.html',
         transaction=transaction
     )
 
@@ -176,17 +178,17 @@ def accounts_create():
                            page_title=u"Konto erstellen")
 
 
-@bp.route("/semester")
+@bp.route("/semesters")
 @access.require('finance_show')
 @nav.navigate(u"Semesterliste")
-def semester_list():
+def semesters_list():
     semesters = Semester.q.order_by(Semester.begin_date.desc()).all()
-    return render_template('finance/semester_list.html', semesters=semesters)
+    return render_template('finance/semesters_list.html', semesters=semesters)
 
 
-@bp.route('/semester/create', methods=("GET", "POST"))
+@bp.route('/semesters/create', methods=("GET", "POST"))
 @access.require('finance_change')
-def semester_create():
+def semesters_create():
     previous_semester = Semester.q.order_by(Semester.begin_date.desc()).first()
     if previous_semester:
         begin_date_default = previous_semester.end_date + timedelta(1)
@@ -223,8 +225,8 @@ def semester_create():
             begin_date=form.begin_date.data,
             end_date=form.end_date.data,
             belated_end_date=form.belated_end_date.data)
-        return redirect(url_for(".semester_list"))
-    return render_template('finance/semester_create.html', form=form)
+        return redirect(url_for(".semesters_list"))
+    return render_template('finance/semesters_create.html', form=form)
 
 
 @bp.route('/json/accounts/system')
