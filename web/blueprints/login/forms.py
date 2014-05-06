@@ -1,5 +1,6 @@
 from flask.ext.wtf.form import Form
-from wtforms import TextField, PasswordField
+from web.form.fields.core import TextField, PasswordField
+
 
 class LoginForm(Form):
     login = TextField()

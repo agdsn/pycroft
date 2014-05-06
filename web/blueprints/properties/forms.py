@@ -2,8 +2,8 @@
 
 
 from flask.ext.wtf import Form
-from wtforms import TextField
 from wtforms.validators import Required, Regexp
+from web.form.fields.core import TextField
 
 class TrafficGroupForm(Form):
     name = TextField(u"Gruppenname",[Required(message=u"Name?")])

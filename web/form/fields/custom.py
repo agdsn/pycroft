@@ -134,15 +134,6 @@ class TypeaheadField(StringField):
         )
 
 
-def static(field):
-    widget = field.kwargs.get("widget", field.field_class.widget)
-    field.kwargs["widget"] = decorate(
-        BootstrapStaticFieldWidget(),
-        *reversed(list(decorators(widget)))
-    )
-    return field
-
-
 class ReadonlyTextField(TextField):
     def __call__(self, **kwargs):
         return self.widget(self, disabled=True )

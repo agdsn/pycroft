@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-
-
+from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms import TextField, TextAreaField, BooleanField
-from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import Required, EqualTo, Regexp, NumberRange, ValidationError
+from wtforms.validators import Required, Regexp, NumberRange, ValidationError
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
-from web.form.fields import DatePickerField, LazyLoadSelectField
-from datetime import datetime
+from web.form.fields.core import TextField, TextAreaField, BooleanField,\
+    QuerySelectField
+from web.form.fields.custom import DatePickerField, LazyLoadSelectField
 
 
 def user_query():
