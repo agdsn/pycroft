@@ -38,7 +38,18 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 @nav.navigate(u"Journals")
 def journals_list():
     journals_list = Journal.q.all()
-    journal_entries_list = JournalEntry.q.filter(JournalEntry.transaction_id == None).all()
+
+    offset = request.args.get("offset")
+    limit = request.args.get("limit")
+
+    if offset is None:
+        offset = 0
+    if limit is None:
+        limit = 10
+
+    journal_entries_list = JournalEntry.q.filter(
+        JournalEntry.transaction_id == None
+    ).offset(offset).limit(limit)
 
     return render_template('finance/journals_list.html',
                            journals=journals_list,
