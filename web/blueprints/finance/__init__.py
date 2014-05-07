@@ -25,6 +25,7 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import FinanceAccount, Transaction
 import os
+import math
 from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('finance', __name__, )
@@ -37,23 +38,29 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 @access.require('finance_show')
 @nav.navigate(u"Journals")
 def journals_list():
-    journals_list = Journal.q.all()
+    journals = Journal.q.all()
 
-    offset = request.args.get("offset")
-    limit = request.args.get("limit")
+    page = request.args.get("page", 1, type=int)
+    limit = request.args.get("limit", 25, type=int)
 
-    if offset is None:
-        offset = 0
-    if limit is None:
-        limit = 10
+    count = JournalEntry.q.filter(
+        JournalEntry.transaction_id == None
+    ).count()
+
+    page_count = int(math.ceil(count/float(limit)))
+
+    offset = (page-1)*limit
 
     journal_entries_list = JournalEntry.q.filter(
         JournalEntry.transaction_id == None
     ).offset(offset).limit(limit)
 
     return render_template('finance/journals_list.html',
-                           journals=journals_list,
-                           journal_entries=journal_entries_list)
+                           journals=journals,
+                           journal_entries=journal_entries_list,
+                           page=page,
+                           page_count=page_count,
+                           limit = limit)
 
 
 @bp.route('/journals/import', methods=['GET', 'POST'])
