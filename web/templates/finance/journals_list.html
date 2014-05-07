@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% import 'macros/pagination.html' as p %}
 
 {% block content %}
     <h3>Angelegte Journals</h3>
@@ -32,35 +33,39 @@
         <a class="btn btn-primary" href="{{ url_for('.journals_create') }}">Neues Journal anlegen</a>
     {% endif %}
 
-    <h3>Nicht zugeordnete Journaleinträge</h3>
-    <table class="table table-striped">
-        <tr>
-            <th>Journal</th>
-            <th>Datum</th>
-            <th>Betrag</th>
-            <th>Verwendung</th>
-            <th>Ursprüngliche Verwendung</th>
-            <th>Kontonummer</th>
-            <th>Bankleitzahl</th>
-            <th>Name</th>
-            <th></th>
-        </tr>
-        {% for entry in journal_entries %}
+    <div class = "row">
+        <span class="pull-right">{{ p.pagination(request.endpoint, page, page_count, limit) }}</span>
+        <h3>Nicht zugeordnete Journaleinträge</h3>
+        <table class="table table-striped">
             <tr>
-                <td>{{ entry.journal.name }}</td>
-                <td>{{ entry.valid_date|date }}</td>
-                <td>{{ entry.amount|money }}</td>
-                <td>{{ entry.description }}</td>
-                <td>{{ entry.original_description }}</td>
-                <td>{{ entry.other_account }}</td>
-                <td>{{ entry.other_bank }}</td>
-                <td>{{ entry.other_person }}</td>
-                {% if current_user is privileged_for('finance_change') %}
-                    <td><a href="{{ url_for('.journals_entries_edit', journal_id=entry.journal_id, entry_id=entry.id) }}"><span class="glyphicon glyphicon-pencil"></span></a></td>
-                {% else %}
-                     <td></td>
-                {% endif %}
+                <th>Journal</th>
+                <th>Datum</th>
+                <th>Betrag</th>
+                <th>Verwendung</th>
+                <th>Ursprüngliche Verwendung</th>
+                <th>Kontonummer</th>
+                <th>Bankleitzahl</th>
+                <th>Name</th>
+                <th></th>
             </tr>
-        {% endfor %}
-    </table>
+            {% for entry in journal_entries %}
+                <tr>
+                    <td>{{ entry.journal.name }}</td>
+                    <td>{{ entry.valid_date|date }}</td>
+                    <td>{{ entry.amount|money }}</td>
+                    <td>{{ entry.description }}</td>
+                    <td>{{ entry.original_description }}</td>
+                    <td>{{ entry.other_account }}</td>
+                    <td>{{ entry.other_bank }}</td>
+                    <td>{{ entry.other_person }}</td>
+                    {% if current_user is privileged_for('finance_change') %}
+                        <td><a href="{{ url_for('.journals_entries_edit', journal_id=entry.journal_id, entry_id=entry.id) }}"><span class="glyphicon glyphicon-pencil"></span></a></td>
+                    {% else %}
+                         <td></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
 {% endblock %}

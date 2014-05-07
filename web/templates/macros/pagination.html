@@ -1,0 +1,14 @@
+{% macro pagination(endpoint, page, page_count, limit) %}
+    {% if page_count > 1 %}
+       <ul class = "pagination">
+            {% for i in range(1, page_count + 1) %}
+                {% if i == page %}
+                    <li class = "active"><a href="{{ url_for(endpoint, page=i, limit=limit, **kwargs) }}" >{{ i }}</a></li>
+                {% else %}
+                    <li><a href="{{ url_for(endpoint, page=i, limit=limit, **kwargs) }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
+
