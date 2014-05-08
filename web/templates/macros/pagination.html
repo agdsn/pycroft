@@ -17,3 +17,7 @@
     {% endif %}
 {% endmacro %}
 
+{% macro sortbuttons(columnname, page, limit) %}
+   <a href={{ url_for(request.endpoint, order=columnname, page=page, limit=limit, **kwargs) }}><span class="glyphicon glyphicon-circle-arrow-down"></span></a><a href="{{ url_for(request.endpoint, order=columnname, page=page, limit=limit, **kwargs) }} desc"><span class="glyphicon glyphicon-circle-arrow-up"></span></a>
+{% endmacro %}
+

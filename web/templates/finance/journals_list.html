@@ -43,14 +43,14 @@
         <h3>Nicht zugeordnete Journaleinträge</h3>
         <table class="table table-striped">
             <tr>
-                <th>Journal</th>
-                <th>Datum</th>
-                <th>Betrag</th>
-                <th>Verwendung</th>
-                <th>Ursprüngliche Verwendung</th>
-                <th>Kontonummer</th>
-                <th>Bankleitzahl</th>
-                <th>Name</th>
+                <th>Journal {{ p.sortbuttons("journal_id", page, limit) }}</th>
+                <th>Datum {{ p.sortbuttons("valid_date", page, limit) }}</th>
+                <th>Betrag {{ p.sortbuttons("amount", page, limit) }}</th>
+                <th>Verwendung {{ p.sortbuttons("description", page, limit) }}</th>
+                <th>Ursprüngliche Verwendung {{ p.sortbuttons("original_description", page, limit) }}</th>
+                <th>Kontonummer {{ p.sortbuttons("other_account_number", page, limit) }}</th>
+                <th>Bankleitzahl {{ p.sortbuttons("other_account_routing", page, limit) }}</th>
+                <th>Name {{ p.sortbuttons("other_name", page, limit) }}</th>
                 <th></th>
             </tr>
             {% for entry in journal_entries %}
