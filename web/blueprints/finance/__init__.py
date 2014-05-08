@@ -39,6 +39,8 @@ def journals_list():
 
     page = request.args.get("page", 1, type=int)
     limit = request.args.get("limit", 25, type=int)
+    order = request.args.get("order", "transaction_date", type=str)
+
 
     count = JournalEntry.q.filter(
         JournalEntry.transaction_id == None
@@ -50,7 +52,8 @@ def journals_list():
 
     journal_entries_list = JournalEntry.q.filter(
         JournalEntry.transaction_id == None
-    ).offset(offset).limit(limit)
+    ).order_by(order).offset(offset).limit(limit)
+
 
     return render_template('finance/journals_list.html',
                            journals=journals,
