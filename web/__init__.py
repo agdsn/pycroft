@@ -35,7 +35,7 @@ def make_app(connection_string="sqlite:////tmp/test.db"):
     app.secret_key = \
         r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
-    login_manager.setup_app(app)
+    login_manager.init_app(app)
 
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
