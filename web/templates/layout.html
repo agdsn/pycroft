@@ -4,14 +4,15 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {%- import "macros/navigation.html" as navigation with context -%}
+{%- import "macros/resources.html" as resources with context -%}
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}"/>
-    <link rel="stylesheet" href="{{ url_for("static", filename="typeahead/typeahead.css") }}"/>
-    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}"/>
+    {{ resources.link_css("bootstrap/css/bootstrap.min.css") }}
+    {{ resources.link_css("typeahead/typeahead.css") }}
+    {{ resources.link_css("style.css") }}
     {% block page_css %}{% endblock %}
     <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>
     <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
@@ -97,6 +98,7 @@
 <script type="text/javascript" src="{{ url_for("static", filename="handlebars/handlebars.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="typeahead/typeahead.bundle.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
+{{ resources.linked_script_files() }}
 {% raw %}
 <script type="text/x-handlebars-template" id="nav_search_suggestion">
     <a href="{% endraw %}{{ url_for('user.user_show', user_id=0)|replace('0', '') }}{% raw %}{{ id }}">{{ name }} ({{ id }})</a>
@@ -176,6 +178,7 @@
         );
     });
 </script>
+{{ resources.ready_scripts() }}
 {% block page_script %}{% endblock %}
 </body>
 </html>

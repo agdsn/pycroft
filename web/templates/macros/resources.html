@@ -1,0 +1,32 @@
+{#
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{%- macro link_css(path) -%}
+    <link rel="stylesheet" href="{{ url_for("static", filename=path) }}">
+{%- endmacro -%}
+
+{%- macro link_script_file(path, mime_type="text/javascript") -%}
+    <script type="{{ mime_type }}" src="{{ url_for("static", filename=path) }}"></script>
+{% endmacro %}
+
+{%- macro linked_script_files() -%}
+    {%- for script_file in page_resources.script_files.values() -%}
+        <script type="{{ script_file.mime_type }}" src="{{ script_file.url }}"></script>
+    {%- endfor -%}
+{%- endmacro -%}
+
+{%- macro ready_scripts() -%}
+    {%- if page_resources.ready_scripts  -%}
+        <script type="text/javascript">
+            $(function() {
+                (function() {
+                    {%- for ready_script in page_resources.ready_scripts -%}
+                        {{ ready_script|safe }}
+                    {%- endfor -%}
+                })();
+            });
+        </script>
+    {%- endif -%}
+{%- endmacro -%}

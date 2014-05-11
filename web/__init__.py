@@ -20,6 +20,7 @@ import template_tests
 from pycroft.model import session
 from web.blueprints.login import login_manager
 from flask.ext.login import current_user, current_app
+from web.templates import page_resources
 
 
 def make_app(connection_string="sqlite:////tmp/test.db"):
@@ -46,6 +47,8 @@ def make_app(connection_string="sqlite:////tmp/test.db"):
 
     template_filters.register_filters(app)
     template_tests.register_tests(app)
+
+    page_resources.init_app(app)
 
     user.nav.register_on(app)
     finance.nav.register_on(app)
