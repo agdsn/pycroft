@@ -42,7 +42,7 @@ def make_app(connection_string="sqlite:////tmp/test.db"):
     app.register_blueprint(login.bp)
 
     template_filters.register_filters(app)
-    template_tests.register_checks(app)
+    template_tests.register_tests(app)
 
     user.nav.register_on(app)
     finance.nav.register_on(app)
