@@ -7,8 +7,8 @@ from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, NumberRange, Optional
 from pycroft.model.finance import FinanceAccount
 from web.form.fields.core import TextField, IntegerField, HiddenField,\
-    FileField, SelectField, FormField, FieldList, StringField
-from web.form.fields.custom import DatePickerField, TypeaheadField
+    FileField, SelectField, FormField, FieldList, StringField, DateField
+from web.form.fields.custom import TypeaheadField
 
 
 def financeaccounts_query():
@@ -25,12 +25,17 @@ class SemesterCreateForm(Form):
         u"Ermäßigter Beitrag", validators=[DataRequired(), NumberRange(min=1)])
     overdue_fine = IntegerField(
         u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)])
-    premature_begin_date = DatePickerField(
-        u"Vorzeitiger Anfang", validators=[DataRequired()])
-    begin_date = DatePickerField(u"Anfang", validators=[DataRequired()])
-    end_date = DatePickerField(u"Ende", validators=[DataRequired()])
-    belated_end_date = DatePickerField(
-        u"Verspätetes Ende", validators=[DataRequired()])
+    premature_begin_date = DateField(
+        u"Vorzeitiger Anfang", validators=[DataRequired()], today_btn=True,
+        today_highlight=True)
+    begin_date = DateField(
+        u"Anfang", validators=[DataRequired()], today_btn=True,
+        today_highlight=True)
+    end_date = DateField(u"Ende", validators=[DataRequired()], today_btn=True,
+        today_highlight=True)
+    belated_end_date = DateField(
+        u"Verspätetes Ende", validators=[DataRequired()], today_btn=True,
+        today_highlight=True)
 
 
 class JournalCreateForm(Form):
@@ -53,8 +58,8 @@ class JournalEntryEditForm(Form):
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
-    valid_date = static(StringField(u"Valutadatum"))
-    transaction_date = static(StringField(u"Buchungsdatum"))
+    valid_date = static(DateField(u"Valutadatum"))
+    transaction_date = static(DateField(u"Buchungsdatum"))
 
 
 class JournalImportForm(Form):

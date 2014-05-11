@@ -1,5 +1,6 @@
 __author__ = 'shreyder'
 
+import re
 import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
 
@@ -7,7 +8,7 @@ from ..widgets import decorate_field, BootstrapFormControlDecorator, \
     BootstrapHorizontalDecorator, BootstrapFormGroupDecorator, \
     BootstrapRadioDecorator, BootstrapHorizontalWithoutLabelDecorator, \
     BootstrapCheckboxDecorator, BootstrapFieldListWidget, \
-    BootstrapFormFieldWidget
+    BootstrapFormFieldWidget, BootstrapDatepickerWidget, decorate
 
 
 class SelectField(wtforms.fields.SelectField):
@@ -87,8 +88,8 @@ class BooleanField(wtforms.fields.BooleanField):
 
 
 class DateTimeField(wtforms.fields.DateTimeField):
-    widget = decorate_field(
-        wtforms.fields.DateTimeField,
+    widget = decorate(
+        BootstrapDatepickerWidget(),
         BootstrapFormControlDecorator,
         BootstrapHorizontalDecorator,
         BootstrapFormGroupDecorator
@@ -96,12 +97,73 @@ class DateTimeField(wtforms.fields.DateTimeField):
 
 
 class DateField(wtforms.fields.DateField):
-    widget = decorate_field(
-        wtforms.fields.DateField,
+    widget = decorate(
+        BootstrapDatepickerWidget(),
         BootstrapFormControlDecorator,
         BootstrapHorizontalDecorator,
         BootstrapFormGroupDecorator
     )
+    supported_directives = {
+        'd': 'dd',
+        'm': 'mm',
+        'a': 'D',
+        'A': 'DD',
+        'b': 'M',
+        'B': 'MM',
+        'y': 'yy',
+        'Y': 'yyyy',
+    }
+    unsupported_directives = set(iter("wHIPMSfzZjUWcxX"))
+    format_string_pattern = re.compile(r"(%+)([^%]|$)", re.M)
+    # Set literals are only supported in Python 2.7 or higher
+    available_datepicker_options = set([
+        "autoclose", "before_show_day", "calendar_weeks", "clear_btn",
+        "days_of_week_disabled", "end_date", "force_parse", "format",
+        "keyboard_navigation", "language", "min_view_mode", "multidate",
+        "multidate_separator", "orientation", "start_date", "start_view",
+        "today_btn", "today_highlight", "week_start"
+    ])
+
+    def __init__(self, label=None, validators=None, format='%Y-%m-%d',
+                 **kwargs):
+        # Move Bootstrap datepicker specific options to its own dict
+        self.datepicker_options = dict((
+            (option, value) for (option, value) in kwargs.iteritems()
+            if option in self.available_datepicker_options
+        ))
+        for option in self.datepicker_options.iterkeys():
+            kwargs.pop(option)
+        # The format option is used by both DateField and Bootstrap datepicker,
+        # albeit with a different format string syntax.
+        self.datepicker_options['format'] = self.convert_format_string(format)
+        super(DateField, self).__init__(label, validators, format, **kwargs)
+
+    @classmethod
+    def _replacement_function(cls, match):
+        percentage_signs = match.group(1)
+        percentage_sign_count = len(percentage_signs)
+        directive = match.group(2)
+        # Even number of percentage signs => all percentages are escaped
+        if percentage_sign_count % 2 == 0:
+            replacement = directive
+        elif directive in cls.supported_directives:
+            replacement = cls.supported_directives[directive]
+        elif directive in cls.unsupported_directives:
+            message = "Format directive %{} not supported by " \
+                      "Bootstrap datepicker.".format(directive)
+            raise ValueError(message)
+        else:
+            message = "Unknown format directive: %{}".format(directive)
+            raise ValueError(message)
+        return percentage_signs[0:percentage_sign_count/2] + replacement
+
+    @classmethod
+    def convert_format_string(cls, format):
+        """
+        Convert a datetime strftime/strptime to a Bootstrap datepicker format
+        string.
+        """
+        return cls.format_string_pattern.sub(cls._replacement_function, format)
 
 
 class TextAreaField(wtforms.fields.TextAreaField):

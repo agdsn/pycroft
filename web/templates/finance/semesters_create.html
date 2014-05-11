@@ -1,18 +1,8 @@
 {% extends "layout.html" %}
-
-{% block page_css %}
-    <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
-{% endblock %}
-
 {% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
+{% set page_title = "Semester erstellen" %}
+{% block page_css %}{{ resources.link_css('datepicker/css/datepicker3.css') }}{% endblock %}
 {% block content %}
     {{ forms.simple_form(form, '', url_for('.semesters_list')  ) }}
-{% endblock %}
-
-{% block page_script %}
-    <script type="text/javascript" src="{{ url_for("static", filename="datepicker/js/bootstrap-datepicker.js") }}"></script>
-    <script type="text/javascript">
-        $('[data-role=datepicker]').datepicker();
-        $('[data-role=today-btn]').todayButton();
-    </script>
 {% endblock %}
