@@ -9,6 +9,7 @@ from flask import url_for
 from wtforms.widgets.core import html_params, HTMLString
 import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
+from web.templates import page_resources
 
 
 class WidgetDecorator(object):
@@ -168,65 +169,21 @@ def decorate_field(field, *decorators):
 
 from markupsafe import Markup
 
-class DatePickerWidget(wtforms.widgets.TextInput):
-    """This is a Datepicker widget usinng bootstrap-datepicker.
 
-    It has three optional arguments:
-    :param date_format: The dateformat - default is yyyy-mm-dd
-    :param with_today_button: If set to True a button will be rendered
-                              behind the field to set the value to "today".
-                              The default is false.
-    :param today_title: The title of the today button. Default is "Set today!"
-
-    It needs the datepicker css and js files!
-        <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
-        <script type="text/javascript" src="{{ url_for("static", filename="datepicker/js/bootstrap-datepicker.js") }}"></script>
-        <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
-
-    You must also activate the
-    datepicker for the widget with a js snipped:
-        <script type="text/javascript">
-            $('[data-role=datepicker]').datepicker();
-        </script>
-
-    To use the Today Button You also need this:
-        <script type="text/javascript">
-            $('[data-role=today-btn]').todayButton();
-        </script>
-    """
-    # ToDo: Develop a media framework like the Django fields-media stuff
-
-    def __init__(self, *args, **kwargs):
-        if "date_format" in kwargs:
-            self.date_format = kwargs.pop("date_format")
-        else:
-            self.date_format = u"yyyy-mm-dd"
-
-        if "with_today_button" in kwargs:
-            self.with_today_button = kwargs.pop("with_today_button")
-        else:
-            self.with_today_button = False
-
-        if "today_title" in kwargs:
-            self.today_title = kwargs.pop("today_title")
-        else:
-            self.today_title = u"Set today!"
-
-        super(DatePickerWidget, self).__init__(*args, **kwargs)
-
-
+class BootstrapDatepickerWidget(object):
+    """Renders datetime fields using bootstrap-datepicker."""
     def __call__(self, field, **kwargs):
-        kwargs['data-role'] = u'datepicker'
-        kwargs['data-date-format'] = self.date_format
-        field_html = super(DatePickerWidget, self).__call__(field, **kwargs)
-        if self.with_today_button:
-            html = u'<div class="input-group">'
-            html += field_html
-            html += u'<a href="#" title="%s" class="btn btn-default input-group-addon glyphicon glyphicon-retweet" data-role="today-btn" data-target="%s"></a>' % (self.today_title, field.id)
-            html += u'</div>'
-            return Markup(html)
-        else:
-            return Markup(field_html)
+        kwargs["data-provide"] = u"datepicker"
+        for (option, value) in field.datepicker_options.iteritems():
+            attribute = 'data-date-{}'.format(option.replace('_', '-'))
+            kwargs[attribute] = value
+        page_resources.link_script(url_for(
+            "static", filename="datepicker/js/bootstrap-datepicker.js"
+        ))
+        page_resources.link_script(url_for(
+            "static", filename="datepicker/js/locales/bootstrap-datepicker.de.js"
+        ))
+        return HTMLString(u"<input {}>".format(html_params(**kwargs)))
 
 
 class CheckBoxWidget(wtforms.widgets.Select):

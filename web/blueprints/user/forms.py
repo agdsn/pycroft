@@ -11,8 +11,8 @@ from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
-    QuerySelectField
-from web.form.fields.custom import DatePickerField, LazyLoadSelectField
+    QuerySelectField, DateField
+from web.form.fields.custom import LazyLoadSelectField
 
 
 def user_query():
@@ -95,23 +95,30 @@ class UserLogEntry(Form):
 
 class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
-    begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
+    begin_date = DateField(
+        u"Beginn", [Required()], default=datetime.now, today_btn=True,
+        today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
-    end_date = DatePickerField(u"Ende",with_today_button=True)
+    end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
 
 class UserEditGroupMembership(Form):
-    begin_date = DatePickerField(u"Beginn", [Required()], with_today_button=True, default=datetime.now)
+    begin_date = DateField(
+        u"Beginn", [Required()], default=datetime.now, today_btn=True,
+        today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
-    end_date = DatePickerField(u"Ende",with_today_button=True)
+    end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
 
 class UserBlockForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
-    date = DatePickerField(u"Gesperrt bis", with_today_button=True, default=datetime.now)
+    date = DateField(
+        u"Gesperrt bis", default=datetime.now, today_btn=True,
+        today_highlight=True)
     reason = TextAreaField(u"Grund")
 
 class UserMoveOutForm(Form):
-    date = DatePickerField(u"Auszug am", [Required()], with_today_button=True,
-        default=datetime.now)
+    date = DateField(
+        u"Auszug am", [Required()], default=datetime.now, today_btn=True,
+        today_highlight=True)
     comment = TextAreaField(u"Kommentar")
 
 class NetDeviceChangeMacForm(Form):
