@@ -4,24 +4,16 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-
 {% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
+{% block page_css %}{{ resources.link_css("datepicker/css/datepicker3.css") }}{% endblock %}
 
-{% block page_css %}
-    <link rel="stylesheet" href="{{ url_for("static", filename="datepicker/css/datepicker.css") }}">
-{% endblock %}
-
-{% block content %}
+{% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.user_show',user_id=user.id)  ) }}
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript" src="{{ url_for("static", filename="datepicker/js/bootstrap-datepicker.js") }}"></script>
     <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
-    <script type="text/javascript">
-        $('[data-role=datepicker]').datepicker();
-        $('[data-role=today-btn]').todayButton();
-    </script>
     <script type="text/javascript">
         // disables the datepicker field, if the block is marked as unlimited
         $("#unlimited").click(function () {

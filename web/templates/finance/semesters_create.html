@@ -8,6 +8,6 @@
 {% import "macros/resources.html" as resources %}
 {% set page_title = "Semester erstellen" %}
 {% block page_css %}{{ resources.link_css('datepicker/css/datepicker3.css') }}{% endblock %}
-{% block content %}
+{% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.semesters_list')  ) }}
 {% endblock %}
