@@ -1,24 +1,22 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <table class="table table-striped">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Tag</th>
+                <th class="col-sm-1">#</th>
+                <th class="col-sm-8">Name</th>
+                <th class="col-sm-3">Tag</th>
             </tr>
         </thead>
         <tbody>
-            {% for vlan in vlans %}
-                <tr>
-                    <td class="shrink">{{ vlan.id}}</td>
-                    <td class="grow">{{ vlan.name }}</td>
-                    <td class="shrink">{{ vlan.tag }}</td>
-                </tr>
-
-                  {% endfor %}
-
+            {% for vlan in vlans -%}
+            <tr>
+                <td>{{ vlan.id}}</td>
+                <td>{{ vlan.name }}</td>
+                <td>{{ vlan.tag }}</td>
+            </tr>
+            {%- endfor %}
         </tbody>
-	</table>
+    </table>
 {% endblock %}

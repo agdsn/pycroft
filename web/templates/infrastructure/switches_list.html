@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <table class="table table-hover">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>#</th>
@@ -10,12 +10,13 @@
             </tr>
         </thead>
         <tbody>
-            {% for switch in switches %}
-                <tr>
-                    <td>{{ switch.id}}</td>
-                    <td><a href="{{ url_for(".switch_show", switch_id=switch.id) }}">{{ switch.name }}</a></td>
-                    <td>{{ switch.management_ip }}</td>                  </tr>
-            {% endfor %}
+            {% for switch in switches -%}
+            <tr>
+                <td>{{ switch.id}}</td>
+                <td><a href="{{ url_for(".switch_show", switch_id=switch.id) }}">{{ switch.name }}</a></td>
+                <td>{{ switch.management_ip }}</td>
+            </tr>
+            {%- endfor %}
         </tbody>
-	</table>
+    </table>
 {% endblock %}
