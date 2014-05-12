@@ -18,7 +18,7 @@ class Config(object):
             raise Exception("Config must be a JSON object!")
 
     def __getitem__(self, key):
-        if self._configdata == None:
+        if self._configdata is None:
             self.load()
         return self._configdata[key]
 
@@ -27,7 +27,3 @@ class Config(object):
 
 
 config = Config()
-
-
-def get(key):
-    return config[key]
