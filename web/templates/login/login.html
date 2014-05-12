@@ -2,16 +2,18 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
-    <p>
+    <section>
         {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login", split_cols=false  ) }}
-    </p>
+    </section>
 
-    <p>Testaccounts:</p>
-    <ul>
-        <li>ag_dsn</li>
-        <li>nutzerverwalter</li>
-        <li>admin</li>
-        <li>finanzer</li>
-    </ul>
-    <p>PW ist immer test. wär ganz gut wenn ihr euch mal hier ein wenig durchklickt um das access system zu testen</p>
+    <section>
+        <h2>Testbenutzer</h2>
+        <ul>
+            <li>ag_dsn</li>
+            <li>nutzerverwalter</li>
+            <li>admin</li>
+            <li>finanzer</li>
+        </ul>
+        <p>Das Passwort ist jeweils test.</p>
+    </section>
 {% endblock %}
