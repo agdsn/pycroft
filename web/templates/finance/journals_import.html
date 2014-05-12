@@ -2,6 +2,6 @@
 {% import "macros/forms.html" as forms %}
 {% set page_title = "Buchungen importieren" %}
 
-{% block content %}
+{% block single_row_content %}
     {{ forms.upload_form(form, '', url_for('.journals_list')) }}
 {% endblock %}

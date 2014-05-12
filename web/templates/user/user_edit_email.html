@@ -2,6 +2,6 @@
 {% set page_title = "E-Mail ändern" %}
 {% import "macros/forms.html" as forms %}
 
-{% block content %}
+{% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
 {% endblock %}

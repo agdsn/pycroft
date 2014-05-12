@@ -56,7 +56,7 @@
         </nav>
     {% endblock %}
 
-    <div class="container">
+    <div class="container main">
         {% block content_container %}
             {% block messages %}
                 {% with messages = get_flashed_messages(with_categories=true) -%}
@@ -77,14 +77,16 @@
                     {%- endif %}
                 {%- endwith %}
             {% endblock %}
-            <div class="row">
-                {% block page_header %}
-                    <div class="page-header">
-                        <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
-                    </div>
-                {% endblock %}
-                {% block content %}{% endblock %}
-            </div>
+            {% block page_header %}
+                <div class="page-header">
+                    <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
+                </div>
+            {% endblock %}
+            {% block content %}
+                <div class="row">
+                    {% block single_row_content %}{% endblock %}
+                </div>
+            {% endblock %}
         {% endblock %}
     </div> <!-- /container -->
 

@@ -3,7 +3,7 @@
 {% set page_title = "Buchung erstellen" %}
 
 {% import "macros/forms.html" as forms %}
-{% block content %}
+{% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.')  ) }}
 {% endblock %}
 

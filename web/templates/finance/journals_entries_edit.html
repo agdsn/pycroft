@@ -4,7 +4,7 @@
 
 {% set page_title = "Journaleintrag bearbeiten" %}
 
-{% block content %}
+{% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.journals_list')) }}
 {% endblock %}
 
