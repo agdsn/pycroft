@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block single_row_content %}
-    <ul class="unstyled">
+    <ul class="list-unstyled">
     {% for dormitory in dormitories %}
         <li><a href="{{ url_for(".dormitory_show", dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
     {% endfor %}

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <ul class="unstyled">
+    <ul class="list-unstyled">
         {% for user in users %}
             <li><a href="{{ url_for(".user_show", user_id = user.id) }}">{{
                     user.name }}</a> ({{ user.login }})</li>
