@@ -27,7 +27,7 @@ nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
 
 
 @bp.route('/traffic_groups')
-@nav.navigate(u"Traffic Gruppen")
+@nav.navigate(u"Trafficgruppen")
 @access.require('groups_traffic_show')
 def traffic_groups():
     traffic_groups_list = TrafficGroup.q.all()
@@ -61,7 +61,7 @@ def traffic_group_delete(group_id):
 
 @bp.route('/property_groups')
 @access.require('groups_show')
-@nav.navigate(u"Eigenschaften Gruppen")
+@nav.navigate(u"Eigenschaftsgruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
     return render_template('properties/property_groups_list.html',
