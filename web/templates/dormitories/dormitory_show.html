@@ -7,9 +7,8 @@
 
 {% block single_row_content %}
     <ul class="list-unstyled">
-        {% for room in rooms %}
-            <li><a href="{{ url_for('.room_show', room_id=room.id) }}">Raum:
-                {{ room.level }}-{{ room.number }}</a></li>
-        {% endfor %}
+        {% for room in rooms -%}
+        <li><a href="{{ url_for('.room_show', room_id=room.id) }}">{{ room.level }}-{{ room.number }}</a></li>
+        {%- endfor %}
     </ul>
 {% endblock %}

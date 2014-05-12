@@ -5,56 +5,43 @@
 #}
 {% extends "layout.html" %}
 
+{% macro user_btn_class(user) %}
+    {% if user is not user_with_positive_balance -%}
+    btn-warning
+    {% elif user is user_with_no_internet -%}
+    btn-danger
+    {% elif user is user_with_traffic_exceeded -%}
+    btn-info
+    {% else -%}
+    btn-success
+    {%- endif %}
+{% endmacro %}
+
 {% block content %}
     <ul class="breadcrumb">
-        <li>
-            <a href="{{ url_for('dormitories.overview') }}">Wohnheime</a>
-        </li>
-        <li>
-            <a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=dormitory.id) }}">
-                {{ dormitory.short_name }}
-            </a>
-        </li>
+        <li><a href="{{ url_for('dormitories.overview') }}">Wohnheime</a></li>
+        <li><a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
-    <div class="span6">
+    <div class="row">
         <table class="table table-striped">
             <thead>
-                <tr><th>Raum</th><th>Bewohner</th></tr>
+                <tr>
+                    <th class="col-sm-2">Raum</th>
+                    <th class="col-sm-10">Bewohner</th>
+                </tr>
             </thead>
             <tbody>
-                {% for room in rooms %}
-                        {% if not room.users %}
-                            <tr>
-                                <td><a href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                <td>&nbsp;</td>
-                        {% else %}
-                            {% for user in room.users %}
-                                {% if user is not user_with_positive_balance %}
-                                    <tr>
-                                        <td><a class="text-warning" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                        <td><a class="text-warning" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
-                                {% else %}
-                                    {% if user is user_with_no_internet %}
-                                        <tr>
-                                            <td><a class="text-danger" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                            <td><a class="text-danger" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
-                                    {% else %}
-                                        {% if user is user_with_traffic_exceeded %}
-                                            <tr>
-                                                <td><a class="text-info" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                                <td><a class="text-info" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
-                                        {% else %}
-                                            <tr>
-                                                <td><a class="text-success" href="{{ url_for(".room_show",room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                                                <td><a class="text-success" href="{{ url_for("user.user_show",user_id=user.id) }}">{{ user.name }}</a></td>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                    {% endfor %}
+                {% for room in rooms -%}
+                <tr>
+                    <td><a href="{{ url_for(".room_show", room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
+                    <td>
+                        {% for user in room.users -%}
+                        <a class="btn {{ user_btn_class(user) }}" href="{{ url_for("user.user_show", user_id=user.id) }}">{{ user.name }}</a>
+                        {%- endfor %}
+                    </td>
+                </tr>
+                {%- endfor %}
             </tbody>
         </table>
     </div>
