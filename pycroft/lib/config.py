@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -21,7 +21,7 @@ class Config(object):
             raise Exception("Config must be a JSON object!")
 
     def __getitem__(self, key):
-        if self._configdata == None:
+        if self._configdata is None:
             self.load()
         return self._configdata[key]
 
@@ -30,7 +30,3 @@ class Config(object):
 
 
 config = Config()
-
-
-def get(key):
-    return config[key]
