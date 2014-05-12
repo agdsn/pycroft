@@ -5,29 +5,31 @@
 #}
 {% extends "layout.html" %}
 
-{%  macro list_accounts(type, accounts) %}
-    <div class="col-sm-6">
-        <h2>{{ type }}</h2>
+{%  macro list_accounts(type, accounts) -%}
+    <div class="col-sm-6 col-md-5 col-lg-4">
+        <h3>{{ type }}</h3>
         <ul class="list-unstyled">
         {% for a in accounts %}
             <li><a href="{{ url_for('.accounts_show', account_id=a.id) }}">{{ a.name }}</a></li>
         {% endfor %}
         </ul>
     </div>
-{% endmacro %}
+{%- endmacro %}
 
 {% block content %}
+    <h2>Bestandskonten</h2>
     <div class="row">
         {{ list_accounts("Aktivkonten", accounts["ASSET"]) }}
         {{ list_accounts("Passivkonten", accounts["LIABILITY"]) }}
     </div>
+    <h2>Erfolgskonten</h2>
     <div class="row">
         {{ list_accounts("Aufwandskonten", accounts["EXPENSE"]) }}
         {{ list_accounts("Ertragskonten", accounts["REVENUE"]) }}
     </div>
-    {% if current_user is privileged_for('finance_change') %}
-        <p>
-            <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Konto anlegen</a>
-        </p>
-    {% endif %}
+    {% if current_user is privileged_for('finance_change') -%}
+    <p>
+        <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Neues Konto</a>
+    </p>
+    {%- endif %}
 {% endblock %}
