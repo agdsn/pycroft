@@ -1,102 +1,87 @@
 {% extends "layout.html" %}
-
-{% set page_title = "Konto: " + name %}
-
+{% set page_title = "Konto: " + account.name %}
 {% set inverted = false %}
 
-{% macro render_column_headings() %}
+{% macro render_column_headings() -%}
     <th>Erstellt am</th>
     <th>Gültig ab</th>
     <th>Beschreibung</th>
     <th>Wert</th>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro render_split(split, cell_class=None, absolute=false) %}
-    {% if split %}
-        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.transaction_date|datetime }}</td>
-        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_date|date }}</td>
-        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for(".transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
-        <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
-    {% else %}
-        <td colspan="4"></td>
-    {% endif %}
+    {% if split -%}
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.transaction_date|datetime }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_date|date }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for(".transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
+    {%- else -%}
+    <td colspan="4"></td>
+    {%- endif %}
 {% endmacro %}
 
-{% block page_header %}
-    <div class="btn-group pull-right">
-        <button id="account-form-button" type="button" class="btn btn-default">Kontenform</button>
-        <button id="report-form-button" type="button" class="btn btn-default">Staffelform</button>
-    </div>
-    {{ super() }}
-{% endblock %}
-
 {% block content %}
-    <table id="report-form" class="table table-striped">
-        <thead>
-            <tr>
-                {{ render_column_headings() }}
-            </tr>
-        </thead>
-        <tbody>
-        {%- for split in splits %}
-            <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
-                {{ render_split(split) }}
-            </tr>
-        {%- endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3">Saldo</td>
-                <td>{{ balance|money }}</td>
-            </tr>
-        </tfoot>
-    </table>
-    <table id="account-form" class="table table-striped">
-        <thead>
-            <tr>
-                <th colspan="4" style="width: 50%;" class="text-center">Soll</th>
-                <th colspan="4" style="width: 50%;" class="text-center">Haben</th>
-            </tr>
-            <tr>
-                {% for ignore in range(2) %}
-                    {{ render_column_headings() }}
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for debit_split, credit_split in typed_splits %}
-                <tr>
-                    {{ render_split(debit_split, "danger" if inverted else "success", true) }}
-                    {{ render_split(credit_split, "success" if inverted else "danger", true) }}
-                </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="7" class="text-right">Saldo</td>
-                <td colspan="1">{{ balance|money }}</td>
-            </tr>
-        </tfoot>
-    </table>
-{% endblock %}
-
-{% block page_script  %}
-    <script type="application/javascript">
-        $(function() {
-            var create_toggle_handler = (function(activeButton, passiveButton, visibleElement, hiddenElement) {
-                return (function() {
-                    visibleElement.addClass('hidden');
-                    hiddenElement.removeClass('hidden');
-                    activeButton.removeClass('active');
-                    passiveButton.addClass('active');
-                });
-            });
-            var accountFormButton = $('#account-form-button');
-            var reportFormButton = $('#report-form-button');
-            var accountFormTable = $('#account-form');
-            var reportFormTable = $('#report-form');
-            accountFormButton.on('click', create_toggle_handler(reportFormButton, accountFormButton, reportFormTable, accountFormTable)).trigger('click');
-            reportFormButton.on('click', create_toggle_handler(accountFormButton, reportFormButton, accountFormTable, reportFormTable));
-        });
-    </script>
+    <dl>
+        <dt>Name</dt>
+        <dd>{{ account.name }}</dd>
+        <dt>Typ</dt>
+        <dd>{{ account.type }}</dd>
+    </dl>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#report-form" data-toggle="tab">Kontenform</a></li>
+        <li><a href="#account-form" data-toggle="tab">Staffelform</a></li>
+    </ul>
+    <div class="tab-content">
+        <div id="report-form"  class="tab-pane active">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        {{ render_column_headings() }}
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">Saldo</td>
+                        <td>{{ balance|money }}</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for split in splits -%}
+                    <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
+                        {{ render_split(split) }}
+                    </tr>
+                    {%- endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="account-form" class="tab-pane">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th colspan="4" class="col-xs-6 text-center">Soll</th>
+                        <th colspan="4" class="col-xs-6 text-center">Haben</th>
+                    </tr>
+                    <tr>
+                        {% for ignore in range(2) -%}
+                        {{ render_column_headings() }}
+                        {%- endfor %}
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td colspan="7" class="text-right">Saldo</td>
+                        <td colspan="1">{{ balance|money }}</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for debit_split, credit_split in typed_splits %}
+                    <tr>
+                        {{ render_split(debit_split, "danger" if inverted else "success", true) }}
+                        {{ render_split(credit_split, "success" if inverted else "danger", true) }}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
