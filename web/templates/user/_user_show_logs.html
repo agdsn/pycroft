@@ -3,62 +3,27 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% macro log_list(logs) -%}
-    <p>
-        {% if logs %}
-            <table class="table table-striped">
-                <tr><th>Zeit</th><th>Benutzer</th><th>Nachricht</th></tr>
-                {% for entry in logs %}
-                <tr>
-                    <td class="shrink">{{ entry.timestamp|datetime }}</td>
-                    <td class="shrink"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
-                    <td class="grow">{{ entry.message }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-        <div class="alert alert-info">
-            Keine Logeinträge vorhanden.
-        </div>
-        {% endif %}
-    </p>
-{%- endmacro %}
+{% import "macros/forms.html" as forms %}
+{% import "macros/logs.html" as logs %}
 
-<ul id="myTab" class="nav nav-tabs">
-    <li class="active"><a href="#log_entries_all" data-toggle="tab">Alle</a></li>
-    <li><a href="#log_entries_user" data-toggle="tab">Nutzer</a></li>
-    <li><a href="#log_entries_room" data-toggle="tab">Raum</a></li>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#log-entries-all" data-toggle="tab">Alle</a></li>
+    <li><a href="#log-entries-user" data-toggle="tab">Nutzer</a></li>
+    <li><a href="#log-entries-room" data-toggle="tab">Raum</a></li>
 </ul>
 
-<div class="row">
-    <div id="message-overview">
-        <div id="myTabContent" class="tab-content span6">
-            <div class="tab-pane active" id="log_entries_all">
-                {{ log_list(all_log) }}
-            </div>
-            <div class="tab-pane" id="log_entries_user">
-                {{ log_list(user_log) }}
-            </div>
-            <div class="tab-pane" id="log_entries_room">
-                {{ log_list(room_log) }}
-            </div>
-        </div>
+<div class="tab-content">
+    <div class="tab-pane fade in active" id="log-entries-all">
+        {{ logs.render_log(all_log) }}
     </div>
+    <div class="tab-pane fade" id="log-entries-user">
+        {{ logs.render_log(user_log) }}
+    </div>
+    <div class="tab-pane fade" id="log-entries-room">
+        {{ logs.render_log(room_log) }}
+    </div>
+</div>
 
-    <div class="span6">
-        <form method="POST" action="" class="form-horizontal" id="message-form">
-            {{ form.hidden_tag() }}
-            {% for field in form %}
-                {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
-                    <p>
-                        {{ field(placeholder='Nachricht', class='span6 form-control') }}
-                    </p>
-                {% endif %}
-            {% endfor %}
-            <p>
-                <button type="submit" class="btn btn-primary">Nutzerlog anlegen</button>
-            </p>
-        </form>
-        {# {{ forms.simple_form(form, '', url_for('.create')) }} #}
-    </div>
+<div class="row">
+    {{ forms.simple_form(form, '') }}
 </div>
