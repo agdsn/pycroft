@@ -1,0 +1,24 @@
+{% macro render_log(entries) -%}
+    {% if logs %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Zeit</th>
+                    <th>Benutzer</th>
+                    <th>Nachricht</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                    <tr>
+                        <td class="shrink">{{ entry.timestamp|datetime }}</td>
+                        <td class="shrink"><a href="{{ url_for(".user_show", user_id=entry.author.id) }}">{{ entry.author.name }}</a></td>
+                        <td class="grow">{{ entry.message }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">Keine Einträge vorhanden.</div>
+    {% endif %}
+{%- endmacro %}
