@@ -12,6 +12,11 @@ import wtforms.ext.sqlalchemy.fields
 from web.templates import page_resources
 
 
+class RenderMode(object):
+    BASIC, HORIZONTAL, INLINE = range(3)
+    DEFAULT = HORIZONTAL
+
+
 class WidgetDecorator(object):
     """Decorate widgets."""
 
@@ -57,14 +62,14 @@ class BootstrapFormControlDecorator(WidgetDecorator):
         return self.widget(field, **kwargs)
 
 
-class BootstrapHorizontalDecorator(WidgetDecorator):
+class BootstrapStandardDecorator(WidgetDecorator):
     """
     Renders a field in horizontal layout.
 
     Horizontal layout is a two column layout, where the label is placed in the
     left column and the field is placed right next to it.
     """
-    def __call__(self, field, **kwargs):
+    def _render_horizontal(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="col-sm-5">',
             field.label(class_=u'control-label'),
@@ -74,30 +79,43 @@ class BootstrapHorizontalDecorator(WidgetDecorator):
             u'</div>',
         ]))
 
+    def _render_inline(self, field, **kwargs):
+        return HTMLString(u''.join([
+            field.label(class_=u'sr-only'),
+            self.widget(field, placeholder=field.label.text, **kwargs),
+        ]))
 
-class BootstrapHorizontalWithoutLabelDecorator(WidgetDecorator):
+    def _render_basic(self, field, **kwargs):
+        return HTMLString(u''.join([
+            field.label(),
+            self.widget(field, **kwargs),
+        ]))
+
+    def __call__(self, field, **kwargs):
+        render_mode = kwargs.pop("render_mode", RenderMode.DEFAULT)
+        if render_mode is RenderMode.BASIC:
+            return self._render_basic(field, **kwargs)
+        elif render_mode is RenderMode.HORIZONTAL:
+            return self._render_horizontal(field, **kwargs)
+        elif render_mode is RenderMode.INLINE:
+            return self._render_inline(field, **kwargs)
+        else:
+            raise TypeError("Unknown render mode.")
+
+
+class BootstrapRadioCheckboxDecorator(WidgetDecorator):
     """
     Renders a field in horizontal layout.
 
     Horizontal layout is a two column layout, where the label is placed in the
     left column and the field is placed right next to it.
     """
-    def __call__(self, field, **kwargs):
-        return HTMLString(u''.join([
-            u'<div class="col-sm-offset-5 col-sm-7">',
-            self.widget(field, **kwargs),
-            u'</div>',
-        ]))
-
-
-class BootstrapRadioCheckboxDecorator(WidgetDecorator):
-    """Wraps a widget with its label inside a div."""
     wrapper_class = None
 
-    def __call__(self, field, **kwargs):
+    def _render(self, field, wrapper_class, **kwargs):
         return HTMLString(u''.join([
             u'<div class="',
-            self.wrapper_class,
+            wrapper_class,
             u'">',
             field.label(
                 u"{0} {1}".format(
@@ -108,21 +126,37 @@ class BootstrapRadioCheckboxDecorator(WidgetDecorator):
             u'</div>',
         ]))
 
+    def _render_basic(self, field, **kwargs):
+        return self._render(field, self.wrapper_class, **kwargs)
+
+    def _render_horizontal(self, field, **kwargs):
+        return HTMLString(u''.join([
+            u'<div class="col-sm-offset-5 col-sm-7">',
+            self._render(field, self.wrapper_class, **kwargs),
+            u'</div>',
+        ]))
+
+    def _render_inline(self, field, **kwargs):
+        return self._render(field, self.wrapper_class + '-inline', **kwargs)
+
+    def __call__(self, field, **kwargs):
+        render_mode = kwargs.pop("render_mode", RenderMode.DEFAULT)
+        if render_mode is RenderMode.BASIC:
+            return self._render_basic(field, **kwargs)
+        elif render_mode is RenderMode.HORIZONTAL:
+            return self._render_horizontal(field, **kwargs)
+        elif render_mode is RenderMode.INLINE:
+            return self._render_inline(field, **kwargs)
+        else:
+            raise TypeError("Unknown render mode.")
+
 
 class BootstrapRadioDecorator(BootstrapRadioCheckboxDecorator):
     wrapper_class = u"radio"
 
 
-class BootstrapRadioInlineDecorator(BootstrapRadioCheckboxDecorator):
-    wrapper_class = u"radio-inline"
-
-
 class BootstrapCheckboxDecorator(BootstrapRadioCheckboxDecorator):
     wrapper_class = u"checkbox"
-
-
-class BootstrapCheckboxInlineDecorator(BootstrapRadioCheckboxDecorator):
-    wrapper_class = u"checkbox-inline"
 
 
 class BootstrapFieldListWidget(object):

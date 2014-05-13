@@ -1,6 +1,8 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from web.form.widgets import RenderMode
+
 __author__ = 'shreyder'
 
 import re
@@ -8,17 +10,17 @@ import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
 
 from ..widgets import decorate_field, BootstrapFormControlDecorator, \
-    BootstrapHorizontalDecorator, BootstrapFormGroupDecorator, \
-    BootstrapRadioDecorator, BootstrapHorizontalWithoutLabelDecorator, \
-    BootstrapCheckboxDecorator, BootstrapFieldListWidget, \
-    BootstrapFormFieldWidget, BootstrapDatepickerWidget, decorate
+    BootstrapStandardDecorator, BootstrapFormGroupDecorator, \
+    BootstrapRadioDecorator, BootstrapCheckboxDecorator, \
+    BootstrapFieldListWidget, BootstrapFormFieldWidget, \
+    BootstrapDatepickerWidget, decorate
 
 
 class SelectField(wtforms.fields.SelectField):
     widget = decorate_field(
         wtforms.fields.SelectField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -27,7 +29,7 @@ class SelectMultipleField(wtforms.fields.SelectMultipleField):
     widget = decorate_field(
         wtforms.fields.SelectMultipleField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -36,7 +38,6 @@ class RadioField(wtforms.fields.RadioField):
     widget = decorate_field(
         wtforms.fields.RadioField,
         BootstrapRadioDecorator,
-        BootstrapHorizontalWithoutLabelDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -45,7 +46,7 @@ class StringField(wtforms.fields.StringField):
     widget = decorate_field(
         wtforms.fields.StringField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -58,7 +59,7 @@ class IntegerField(wtforms.fields.IntegerField):
     widget = decorate_field(
         wtforms.fields.IntegerField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -67,7 +68,7 @@ class DecimalField(wtforms.fields.DecimalField):
     widget = decorate_field(
         wtforms.fields.DecimalField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -76,7 +77,7 @@ class FloatField(wtforms.fields.FloatField):
     widget = decorate_field(
         wtforms.fields.FloatField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -85,7 +86,6 @@ class BooleanField(wtforms.fields.BooleanField):
     widget = decorate_field(
         wtforms.fields.BooleanField,
         BootstrapCheckboxDecorator,
-        BootstrapHorizontalWithoutLabelDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -94,7 +94,7 @@ class DateTimeField(wtforms.fields.DateTimeField):
     widget = decorate(
         BootstrapDatepickerWidget(),
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -103,7 +103,7 @@ class DateField(wtforms.fields.DateField):
     widget = decorate(
         BootstrapDatepickerWidget(),
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
     supported_directives = {
@@ -173,7 +173,7 @@ class TextAreaField(wtforms.fields.TextAreaField):
     widget = decorate_field(
         wtforms.fields.TextAreaField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -182,7 +182,7 @@ class PasswordField(wtforms.fields.PasswordField):
     widget = decorate_field(
         wtforms.fields.PasswordField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -190,13 +190,13 @@ class PasswordField(wtforms.fields.PasswordField):
 class FileField(wtforms.fields.FileField):
     widget = decorate_field(
         wtforms.fields.FileField,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
 
-# wtforms.fields.HiddenField is not decorated
-from wtforms.fields import HiddenField
+# No need to decorate wtforms.fields.HiddenField
+HiddenField = wtforms.fields.HiddenField
 
 
 class SubmitField(wtforms.fields.SubmitField):
@@ -206,11 +206,13 @@ class SubmitField(wtforms.fields.SubmitField):
     )
 
 
-class QuerySelectField(wtforms.ext.sqlalchemy.fields.QuerySelectField):
+class QuerySelectField(
+    wtforms.ext.sqlalchemy.fields.QuerySelectField
+):
     widget = decorate_field(
         wtforms.ext.sqlalchemy.fields.QuerySelectField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
@@ -221,7 +223,7 @@ class QuerySelectMultipleField(
     widget = decorate_field(
         wtforms.ext.sqlalchemy.fields.QuerySelectMultipleField,
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 

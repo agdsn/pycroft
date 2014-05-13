@@ -2,8 +2,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import LazyLoadSelectWidget,\
-    BootstrapFormControlDecorator, BootstrapHorizontalDecorator, \
-    BootstrapFormGroupDecorator, BootstrapStaticFieldWidget, decorate \
+    BootstrapFormControlDecorator, BootstrapStandardDecorator, \
+    BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
     decorators
 from wtforms import TextField, StringField
 from wtforms import fields
@@ -57,7 +57,7 @@ class LazyLoadSelectField(fields.SelectField):
     widget = decorate(
         LazyLoadSelectWidget(),
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
