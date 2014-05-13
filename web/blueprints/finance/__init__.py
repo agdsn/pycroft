@@ -164,7 +164,7 @@ def accounts_show(account_id):
     balance = sum(imap(lambda s: s.amount, splits))
     return render_template(
         'finance/accounts_show.html',
-        name=account.name, balance=balance,
+        account=account, balance=balance,
         splits=splits, typed_splits=typed_splits
     )
 
