@@ -39,9 +39,9 @@ class PatchPort(Port):
     __mapper_args__ = {'polymorphic_identity': 'patch_port'}
 
     # one to one from PatchPort to DestinationPort
-    destination_port_id = Column(Integer, ForeignKey('destinationport.id'),
+    destination_port_id = Column(Integer, ForeignKey('destination_port.id'),
                                     nullable=True)
-    destination_port = relationship("DestinationPort", primaryjoin=("patchport.c.destination_port_id==destinationport.c.id"),
+    destination_port = relationship("DestinationPort", primaryjoin=("patch_port.c.destination_port_id==destination_port.c.id"),
                                     backref=backref(
                                     "patch_port", uselist=False))
 
@@ -52,14 +52,14 @@ class PatchPort(Port):
 
 class PhonePort(DestinationPort):
     # Joined table inheritance
-    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
+    id = Column(Integer, ForeignKey('destination_port.id'), primary_key=True,
                     nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'phone_port'}
 
 
 class SwitchPort(DestinationPort):
     # Joined table inheritance
-    id = Column(Integer, ForeignKey('destinationport.id'), primary_key=True,
+    id = Column(Integer, ForeignKey('destination_port.id'), primary_key=True,
                     nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'switch_port'}
 

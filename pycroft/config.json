@@ -20,7 +20,7 @@
                 "duration": 31
             }
         ],
-        "financeaccount_name": "Konto von {user_id}",
+        "finance_account_name": "Konto von {user_id}",
         "registration_fee_message": "Anmeldegebühr",
         "semester_fee_message": "Semestergebühr {semester}",
         "log_message": "Anmeldung."

@@ -17,17 +17,17 @@ def delete_record(record_id):
     if (record is None):
         raise ValueError("The given id is not correct!")
 
-    if (record.discriminator == "arecord"):
+    if record.discriminator == "a_record":
         record = ARecord.q.filter(ARecord.id == record_id).one()
-    elif (record.discriminator == "aaaarecord"):
+    elif record.discriminator == "aaaa_record":
         record = AAAARecord.q.filter(AAAARecord.id == record_id).one()
-    elif (record.discriminator == "cnamerecord"):
+    elif record.discriminator == "cname_record":
         record = CNameRecord.q.filter(CNameRecord.id == record_id).one()
-    elif (record.discriminator == "mxrecord"):
+    elif record.discriminator == "mx_record":
         record = MXRecord.q.filter(MXRecord.id == record_id).one()
-    elif (record.discriminator == "srvrecord"):
+    elif record.discriminator == "srv_record":
         record = SRVRecord.q.filter(SRVRecord.id == record_id).one()
-    elif (record.discriminator == "nsrecord"):
+    elif record.discriminator == "ns_record":
         record = NSRecord.q.filter(NSRecord.id == record_id).one()
     else:
         raise ValueError("Unknown record type: %s" % (record.discriminator))
@@ -71,17 +71,17 @@ def _create_record(type, *args, **kwargs):
 
     discriminator = str(type).lower()
 
-    if (discriminator == "arecord"):
+    if discriminator == "a_record":
         record = ARecord(*args, **kwargs)
-    elif (discriminator == "aaaarecord"):
+    elif discriminator == "aaaa_record":
         record = AAAARecord(*args, **kwargs)
-    elif (discriminator == "cnamerecord"):
+    elif discriminator == "cname_record":
         record = CNameRecord(*args, **kwargs)
-    elif (discriminator == "mxrecord"):
+    elif discriminator == "mx_record":
         record = MXRecord(*args, **kwargs)
-    elif (discriminator == "nsrecord"):
+    elif discriminator == "ns_record":
         record = NSRecord(*args, **kwargs)
-    elif (discriminator == "srvrecord"):
+    elif discriminator == "srv_record":
         record = SRVRecord(*args, **kwargs)
     else:
         raise ValueError("unknown record type: %s" % (type))
@@ -92,91 +92,91 @@ def _create_record(type, *args, **kwargs):
 # Wrapper functions around the _create_record function for each record type
 
 @with_transaction
-def create_arecord(host, name, address, time_to_live=None):
+def create_a_record(host, name, address, time_to_live=None):
     """
-    This method will create a new a-record
+    This method will create a new A record
 
     :param host: the host
     :param name: the name of the record
     :param time_to_live: the ttl of the record
     :param address: the ip address which should be associated with the
-                       a-record
-    :return: the created a-record
+                       A record
+    :return: the created A record
     """
 
-    return _create_record("arecord", host=host, name=name,
+    return _create_record("a_record", host=host, name=name,
                          time_to_live=time_to_live, address=address)
 
 
 @with_transaction
-def create_aaaarecord(host, name, address, time_to_live=None):
+def create_aaaa_record(host, name, address, time_to_live=None):
     """
-    This method will create a new aaaa-record
+    This method will create a new AAAA record
 
     :param host: the host
     :param name: the name of the record
     :param time_to_live: the ttl of the record
     :param address: the ip address which should be associated with the
-                       aaaa-record
-    :return: the created aaaa-record
+                       AAAA record
+    :return: the created AAAA record
     """
 
-    return _create_record("aaaarecord", name=name, host=host,
+    return _create_record("aaaa_record", name=name, host=host,
                          time_to_live=time_to_live, address=address)
 
 
 @with_transaction
-def create_mxrecord(host, server, domain, priority):
+def create_mx_record(host, server, domain, priority):
     """
-    This method will create a new mx-record
+    This method will create a new MX record
 
     :param host: the host
     :param server: the server
     :param domain: the domain
     :param priority: priority
-    :return: the created mx-record
+    :return: the created MX record
     """
 
-    return _create_record("mxrecord", host=host, server=server,
+    return _create_record("mx_record", host=host, server=server,
                          domain=domain, priority=priority)
 
 
 @with_transaction
-def create_cnamerecord(host, name, record_for):
+def create_cname_record(host, name, record_for):
     """
-    This method will create a new cname-record
+    This method will create a new CNAME record
 
     :param host: the host
-    :param name: the record for the a- or aaaarecord
+    :param name: the record for the A or AAAA record
     :param record_for: the record we want to specify an record
-    :return: the created cname-record
+    :return: the created CNAME record
     """
 
-    return _create_record("cnamerecord", host=host, name=name,
+    return _create_record("cname_record", host=host, name=name,
                          record_for=record_for)
 
 
 @with_transaction
-def create_nsrecord(host, domain, server, time_to_live=None):
+def create_ns_record(host, domain, server, time_to_live=None):
     """
-    This method will create a new ns-record.
+    This method will create a new NS record.
 
     :param host: the host
     :param domain: the domain
     :param server: the server
     :param time_to_live: the time the record should be valid
-    :return: the created ns-record
+    :return: the created NS record
     """
 
-    return _create_record("nsrecord", host=host, domain=domain,
+    return _create_record("ns_record", host=host, domain=domain,
                          server=server, time_to_live=time_to_live)
 
 
 @with_transaction
-def create_srvrecord(host, service, priority, weight, port, target,
+def create_srv_record(host, service, priority, weight, port, target,
                      time_to_live=None):
     """
-    This method will create a new srv-record.
+    This method will create a new SRV record.
 
     :param host: the host
     :param service: the service
@@ -185,9 +185,9 @@ def create_srvrecord(host, service, priority, weight, port, target,
     :param port: the port
     :param target: the target
     :param time_to_live: the time the record should be valid
-    :return: the created srv-record
+    :return: the created SRV record
     """
 
-    return _create_record("srvrecord", host=host, service=service,
+    return _create_record("srv_record", host=host, service=service,
                          priority=priority, weight=weight, port=port,
                          target=target, time_to_live=time_to_live)

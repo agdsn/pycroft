@@ -47,28 +47,28 @@ class Test_025_CNameRecordValidator(FixtureDataTestBase):
     datasets = [ARecordData, MXRecordData, UserHostData]
 
     def test_0010_record_for_name_validator(self):
-        arecord = ARecord.q.first()
+        a_record = ARecord.q.first()
         host = UserHost.q.first()
 
-        self.assertRaises(AssertionError, CNameRecord, name=arecord.name,
-            record_for=arecord, host_id=host.id)
+        self.assertRaises(AssertionError, CNameRecord, name=a_record.name,
+            record_for=a_record, host_id=host.id)
 
-        new_record = CNameRecord(name=arecord.name + "_test",
-            record_for=arecord, host_id=host.id)
+        new_record = CNameRecord(name=a_record.name + "_test",
+            record_for=a_record, host_id=host.id)
 
     def test_0020_record_for_type_validator(self):
-        mxrecord = MXRecord.q.first()
+        mx_record = MXRecord.q.first()
         host = UserHost.q.first()
 
         self.assertRaises(AssertionError, CNameRecord, name="test",
-            record_for=mxrecord, host_id=host.id)
+            record_for=mx_record, host_id=host.id)
 
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
     datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData,
                 NSRecordData, SRVRecordData]
 
-    def test_0010_arecord_without_ttl(self):
+    def test_0010_a_record_without_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live == None).first()
         entry = record.gen_entry
         entry_expected = u"%s IN A %s" % (record.name, record.address.address)
@@ -81,7 +81,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(rev_entry, rev_entry_expected)
 
-    def test_0015_arecord_with_ttl(self):
+    def test_0015_a_record_with_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live != None).first()
         entry = record.gen_entry
         entry_expected = u"%s %s IN A %s" % (
@@ -96,7 +96,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(rev_entry, rev_entry_expected)
 
-    def test_0020_aaaarecord_without_ttl(self):
+    def test_0020_aaaa_record_without_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live == None).first()
         entry = record.gen_entry
         entry_expected = u"%s IN AAAA %s" % (
@@ -112,7 +112,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(rev_entry, rev_entry_expected)
 
-    def test_0025_aaaarecord_with_ttl(self):
+    def test_0025_aaaa_record_with_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live != None).first()
         entry = record.gen_entry
         entry_expected = u"%s %s IN AAAA %s" % (record.name,\
@@ -129,7 +129,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(rev_entry, rev_entry_expected)
 
-    def test_0030_mxrecord(self):
+    def test_0030_mx_record(self):
         record = MXRecord.q.first()
         entry = record.gen_entry
         entry_expected = u"%s IN MX %s %s" % (
@@ -137,7 +137,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
-    def test_0040_cnamerecord(self):
+    def test_0040_cname_record(self):
         record = CNameRecord.q.first()
         entry = record.gen_entry
         entry_expected = u"%s IN CNAME %s" % (
@@ -145,14 +145,14 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
-    def test_0050_nsrecord_without_ttl(self):
+    def test_0050_ns_record_without_ttl(self):
         record = NSRecord.q.filter(NSRecord.time_to_live == None).first()
         entry = record.gen_entry
         entry_expected = u"%s IN NS %s" % (record.domain, record.server)
 
         self.assertEqual(entry, entry_expected)
 
-    def test_0055_nsrecord_with_ttl(self):
+    def test_0055_ns_record_with_ttl(self):
         record = NSRecord.q.filter(NSRecord.time_to_live != None).first()
         entry = record.gen_entry
         entry_expected = u"%s %s IN NS %s" % (
@@ -160,7 +160,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
-    def test_0060_srvrecord_without_ttl(self):
+    def test_0060_srv_record_without_ttl(self):
         record = SRVRecord.q.filter(SRVRecord.time_to_live == None).first()
         entry = record.gen_entry
         entry_expected = u"%s IN SRV %s %s %s %s" % (
@@ -169,7 +169,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
         self.assertEqual(entry, entry_expected)
 
-    def test_0065_srvrecord_with_ttl(self):
+    def test_0065_srv_record_with_ttl(self):
         record = SRVRecord.q.filter(SRVRecord.time_to_live != None).first()
         entry = record.gen_entry
         entry_expected = u"%s %s IN SRV %s %s %s %s" % (
@@ -198,7 +198,7 @@ class Test_040_Cascades(FixtureDataTestBase):
         self.assertIsNone(NSRecord.q.first())
 
 
-    def test_0020_cname_on_arecord_delete(self):
+    def test_0020_cname_on_a_record_delete(self):
         for record in ARecord.q.all():
             session.session.delete(record)
 
@@ -208,7 +208,7 @@ class Test_040_Cascades(FixtureDataTestBase):
             CNameRecord.id == CNameRecordData.dummy_record.id).first())
 
 
-    def test_0030_cname_on_aaaarecord_delete(self):
+    def test_0030_cname_on_aaaa_record_delete(self):
         for record in AAAARecord.q.all():
             session.session.delete(record)
 
@@ -218,20 +218,20 @@ class Test_040_Cascades(FixtureDataTestBase):
             CNameRecord.id == CNameRecordData.dummy_record2.id).first())
 
 
-    def test_0040_arecord_on_ip_delete(self):
+    def test_0040_a_record_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
-        arecord_id = ARecord.q.filter(ARecord.address == ip).first().id
+        a_record_id = ARecord.q.filter(ARecord.address == ip).first().id
         session.session.delete(ip)
 
         session.session.commit()
 
-        self.assertIsNone(ARecord.q.get(arecord_id))
+        self.assertIsNone(ARecord.q.get(a_record_id))
 
-    def test_0045_aaaarecord_on_ip_delete(self):
+    def test_0045_aaaa_record_on_ip_delete(self):
         ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()
-        aaaarecord_id = AAAARecord.q.filter(AAAARecord.address == ip).first().id
+        aaaa_record_id = AAAARecord.q.filter(AAAARecord.address == ip).first().id
         session.session.delete(ip)
 
         session.session.commit()
 
-        self.assertIsNone(AAAARecord.q.get(aaaarecord_id))
+        self.assertIsNone(AAAARecord.q.get(aaaa_record_id))

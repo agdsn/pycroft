@@ -190,8 +190,8 @@ def json_trafficdata(user_id, days=7):
     """
     traffic_timespan = datetime.now() - timedelta(days=days)
 
-    # get all trafficvolumes for the user in the timespan
-    trafficvolumes = session.query(
+    # get all traffic volumes for the user in the timespan
+    traffic_volumes = session.query(
         TrafficVolume
     ).join(
         TrafficVolume.ip
@@ -203,25 +203,27 @@ def json_trafficdata(user_id, days=7):
         TrafficVolume.timestamp > traffic_timespan)
 
     # filter for INPUT and OUTPUT
-    trafficvolume_in = trafficvolumes.filter(TrafficVolume.type == 'IN').all()
-    trafficvolume_out = trafficvolumes.filter(TrafficVolume.type == 'OUT').all()
+    traffic_volume_in = traffic_volumes.filter(TrafficVolume.type == 'IN').all()
+    traffic_volume_out = traffic_volumes.filter(TrafficVolume.type == 'OUT').all()
 
     # generate the data arrays which will be used in the JSON
     tv_in = []
-    for entry in trafficvolume_in:
-        tv_in.append([entry.timestamp, entry.size / 1024 / 1024])
+    for volume in traffic_volume_in:
+        tv_in.append([volume.timestamp, volume.size / 1024 / 1024])
     tv_out = []
-    for entry in trafficvolume_out:
-        tv_out.append([entry.timestamp, entry.size / 1024 / 1024])
+    for volume in traffic_volume_out:
+        tv_out.append([volume.timestamp, volume.size / 1024 / 1024])
 
     # reverse, so data is in chronological order
     for tv in (tv_in, tv_out):
         tv.reverse()
 
-    trafficdata = [{ "name": 'Input', "data": tv_in, "stack": 0 },
-            { "name": 'Output', "data": tv_out, "stack": 1 }]
-
-    return jsonify({"series" : trafficdata})
+    return jsonify(
+        series=[
+            {"name": 'Input', "data": tv_in, "stack": 0},
+            {"name": 'Output', "data": tv_out, "stack": 1}
+        ]
+    )
 
 
 @bp.route('/create', methods=['GET', 'POST'])

@@ -14,7 +14,7 @@ class DormitoryData(DataSet):
         street = "dummy"
 
 
-class VLanData(DataSet):
+class VLANData(DataSet):
     class vlan1:
         name = "vlan1"
         tag = "1"

@@ -20,4 +20,4 @@ class JournalData(DataSet):
         iban = "DE61850503003120219540"
         bic = "OSDDDE81XXX"
         hbci_url = "https://hbci.example.com/"
-        financeaccount = FinanceAccountData.BankAccount
+        finance_account = FinanceAccountData.BankAccount

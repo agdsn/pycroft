@@ -9,7 +9,7 @@ from web.form.fields.core import TextField, SelectField, QuerySelectField
 from web.form.fields.custom import ReadonlyTextField
 
 
-def arecords_query(host_id):
+def a_records_query(host_id):
     return ARecord.q.filter(
         ARecord.host_id == host_id
     ).order_by(ARecord.id)
@@ -29,9 +29,9 @@ class CNameRecordEditForm(Form):
 
 class RecordCreateForm(Form):
     type = SelectField(u"Type",
-        choices=[('arecord', 'ARecord'), ('aaaarecord', 'AAAARecord'),
-                 ('cnamerecord', 'CNameRecord'), ('mxrecord', 'MXRecord'),
-                 ('nsrecord', 'NSRecord'), ('srvrecord', 'SRVRecord')])
+        choices=[('a_record', 'ARecord'), ('aaaa_record', 'AAAARecord'),
+                 ('cname_record', 'CNameRecord'), ('mx_record', 'MXRecord'),
+                 ('ns_record', 'NSRecord'), ('srv_record', 'SRVRecord')])
 
 
 class CNameRecordCreateForm(Form):

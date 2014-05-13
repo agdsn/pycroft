@@ -40,11 +40,11 @@ def do_convert():
                 computer = my_session.query(Computer).filter(Computer.c_ip == pub_ip).first()
                 hostname = computer.c_hname
                 mac = computer.c_etheraddr
-                new_switch_netdevice = host.SwitchNetDevice(mac=mac)
-                mgmt_ip = host.Ip(address=pub_ip, net_device=new_switch_netdevice)
+                new_switch_net_device = host.SwitchNetDevice(mac=mac)
+                mgmt_ip = host.Ip(address=pub_ip, net_device=new_switch_net_device)
                 new_switch = host.Switch(name=hostname, management_ip=mgmt_ip.address)
-                new_switch_netdevice.host = new_switch
-                net_devices.append(new_switch_netdevice)
+                new_switch_net_device.host = new_switch
+                net_devices.append(new_switch_net_device)
                 ips.append(mgmt_ip)
                 switches[port.ip] = new_switch
             new_swport = port_model.SwitchPort(name=port.port, switch=switches[port.ip])
@@ -95,7 +95,7 @@ def do_convert():
                                       ip_type="4")
         subnets[subnet.subnet_id] = new_subnet
 
-        vlans[subnet.vlan_name] = dormitory.VLan(name=subnet.vlan_name,
+        vlans[subnet.vlan_name] = dormitory.VLAN(name=subnet.vlan_name,
                                                  tag=vlan_tags[subnet.vlan_name])
 
         new_subnet.vlans.append(vlans[subnet.vlan_name])
@@ -151,7 +151,7 @@ def do_convert():
 
     logs = []
     user_hosts = []
-    user_netdevices = []
+    user_net_devices = []
     ips = []
     a_records = []
     cname_records = []
@@ -176,22 +176,22 @@ def do_convert():
                 new_host = host.UserHost(user=new_user, room=user_room)
                 user_hosts.append(new_host)
 
-                new_netdevice = host.UserNetDevice(mac=computer.c_etheraddr,
+                new_net_device = host.UserNetDevice(mac=computer.c_etheraddr,
                     host=new_host)
-                user_netdevices.append(new_netdevice)
+                user_net_devices.append(new_net_device)
 
-                new_ip = host.Ip(address=computer.c_ip, net_device=new_netdevice,
+                new_ip = host.Ip(address=computer.c_ip, net_device=new_net_device,
                                 subnet=subnets[computer.c_subnet_id])
                 ips.append(new_ip)
 
-                new_arecord = ARecord(name=computer.c_hname,
+                new_a_record = ARecord(name=computer.c_hname,
                                         address=new_ip, host=new_host)
-                a_records.append(new_arecord)
+                a_records.append(new_a_record)
 
                 if (computer.c_alias is not None) and (len(computer.c_alias) is not 0):
-                    new_cnamerecord = CNameRecord(name=computer.c_alias,
-                                                record_for=new_arecord, host=new_host)
-                    cname_records.append(new_cnamerecord)
+                    new_cname_record = CNameRecord(name=computer.c_alias,
+                                                record_for=new_a_record, host=new_host)
+                    cname_records.append(new_cname_record)
 
                 if (old_user.comment is not None) and (len(old_user.comment) is not 0):
                     new_log = logging.UserLogEntry(message=u"Alte Kommentare: "+
@@ -205,7 +205,7 @@ def do_convert():
     session.session.add_all(users)
     session.session.add_all(logs)
     session.session.add_all(user_hosts)
-    session.session.add_all(user_netdevices)
+    session.session.add_all(user_net_devices)
     session.session.add_all(ips)
     session.session.add_all(a_records)
     session.session.add_all(cname_records)

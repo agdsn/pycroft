@@ -10,10 +10,10 @@ random_amount() {
 
 for i in {0..20}
 do
-    echo "INSERT INTO 'trafficvolume' VALUES($[$i+1], $(random_amount), '$(timestamp "$i days ago") 00:00:00.000000', 'OUT', 1234);" | sqlite3 /tmp/test.db
+    echo "INSERT INTO 'traffic_volume' VALUES($[$i+1], $(random_amount), '$(timestamp "$i days ago") 00:00:00.000000', 'OUT', 1234);" | sqlite3 /tmp/test.db
 done
 
 for i in {21..41}
 do
-    echo "INSERT INTO 'trafficvolume' VALUES($[$i+1], $(random_amount), '$(timestamp "$[$i-21] days ago") 00:00:00.000000', 'IN', 1234);" | sqlite3 /tmp/test.db
+    echo "INSERT INTO 'traffic_volume' VALUES($[$i+1], $(random_amount), '$(timestamp "$[$i-21] days ago") 00:00:00.000000', 'IN', 1234);" | sqlite3 /tmp/test.db
 done

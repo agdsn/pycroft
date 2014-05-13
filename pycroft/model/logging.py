@@ -31,8 +31,8 @@ class LogEntry(ModelBase):
 
 
 class UserLogEntry(LogEntry):
-    __mapper_args__ = {'polymorphic_identity': 'userlogentry'}
-    id = Column(Integer, ForeignKey('logentry.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'user_log_entry'}
+    id = Column(Integer, ForeignKey('log_entry.id'), primary_key=True)
 
     # many to one from UserLogEntry to User
     user = relationship("User", backref=backref("user_log_entries"))
@@ -40,8 +40,8 @@ class UserLogEntry(LogEntry):
 
 
 class RoomLogEntry(LogEntry):
-    __mapper_args__ = {'polymorphic_identity': 'roomlogentry'}
-    id = Column(Integer, ForeignKey('logentry.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'room_log_entry'}
+    id = Column(Integer, ForeignKey('log_entry.id'), primary_key=True)
 
     # many to one from RoomLogEntry to Room
     room = relationship("Room", backref=backref("room_log_entries"))

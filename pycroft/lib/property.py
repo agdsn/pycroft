@@ -15,9 +15,9 @@ def _create_group(type, *args, **kwargs):
     """
     type = str(type).lower()
 
-    if type == "propertygroup":
+    if type == "property_group":
         group = PropertyGroup(*args, **kwargs)
-    elif type == "trafficgroup":
+    elif type == "traffic_group":
         group = TrafficGroup(*args, **kwargs)
     else:
         raise ValueError("Unknown group type!")
@@ -38,9 +38,9 @@ def _delete_group(group_id):
     if group is None:
         raise ValueError("The given id is wrong!")
 
-    if group.discriminator == "propertygroup":
+    if group.discriminator == "property_group":
         del_group = PropertyGroup.q.get(group_id)
-    elif group.discriminator == "trafficgroup":
+    elif group.discriminator == "traffic_group":
         del_group = TrafficGroup.q.get(group_id)
     else:
         raise ValueError("Unknown group type")
@@ -58,7 +58,7 @@ def create_traffic_group(name, traffic_limit):
     :param traffic_limit: the traffic limit of the group
     :return: the newly created traffic group
     """
-    return _create_group("trafficgroup", name=name, traffic_limit=traffic_limit)
+    return _create_group("traffic_group", name=name, traffic_limit=traffic_limit)
 
 
 @with_transaction
@@ -80,7 +80,7 @@ def create_property_group(name):
     :param name: the name of the group
     :return: the newly created property group
     """
-    return _create_group("propertygroup", name=name)
+    return _create_group("property_group", name=name)
 
 
 @with_transaction

@@ -56,11 +56,11 @@ class Test_020_MalformedTypes(FixtureDataTestBase):
     datasets = [UserData]
 
     class MalformedLogEntry(LogEntry):
-        id = Column(Integer, ForeignKey("logentry.id"), primary_key=True)
-        __mapper_args__ = {'polymorphic_identity': 'malformedlogentry'}
+        id = Column(Integer, ForeignKey("log_entry.id"), primary_key=True)
+        __mapper_args__ = {'polymorphic_identity': 'malformed_log_entry'}
 
     def test_0010_create_malformed_log_entry(self):
-        self.assertRaises(ValueError, _create_log_entry, 'malformedlogentry',
+        self.assertRaises(ValueError, _create_log_entry, 'malformed_log_entry',
                           id=100)
 
     def test_0020_delete_malformed_log_entry(self):

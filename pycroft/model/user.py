@@ -33,7 +33,7 @@ class User(ModelBase, UserMixin):
         "FinanceAccount", backref=backref("user", uselist=False)
     )
     finance_account_id = Column(
-        Integer, ForeignKey("financeaccount.id"), nullable=True
+        Integer, ForeignKey("finance_account.id"), nullable=True
     )
 
     # many to one from User to Room

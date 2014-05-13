@@ -1,4 +1,4 @@
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 from pycroft.model import session
 from pycroft.lib.all import with_transaction
 
@@ -113,7 +113,7 @@ def create_vlan(name, tag):
     :param tag: the tag which should be used for this vlan
     :return: the newly created vlan.
     """
-    vlan = VLan(name=name, tag=tag)
+    vlan = VLAN(name=name, tag=tag)
     session.session.add(vlan)
     return vlan
 
@@ -126,7 +126,7 @@ def delete_vlan(vlan_id):
     :param vlan_id: the id of the vlan which should be removed.
     :return: the removed vlan.
     """
-    vlan = VLan.q.get(vlan_id)
+    vlan = VLAN.q.get(vlan_id)
     if vlan is None:
         raise ValueError("The given id is wrong!")
 

@@ -21,11 +21,11 @@ class ARecord(Record):
 
     # many to one from ARecord to Ip
     address = relationship("Ip",
-        backref=backref("arecords", cascade="all, delete-orphan"))
+        backref=backref("a_records", cascade="all, delete-orphan"))
     address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
         nullable=False)
 
-    __mapper_args__ = {'polymorphic_identity': 'arecord'}
+    __mapper_args__ = {'polymorphic_identity': 'a_record'}
 
     @validates('address')
     def validate_address(self, _, value):
@@ -67,11 +67,11 @@ class AAAARecord(Record):
 
     # many to one from ARecord to Ip
     address = relationship("Ip",
-        backref=backref("aaaarecords", cascade="all, delete-orphan"))
+        backref=backref("aaaa_records", cascade="all, delete-orphan"))
     address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
         nullable=False)
 
-    __mapper_args__ = {'polymorphic_identity': 'aaaarecord'}
+    __mapper_args__ = {'polymorphic_identity': 'aaaa_record'}
 
     @validates('address')
     def validate_address(self, _, value):
@@ -111,7 +111,7 @@ class MXRecord(Record):
     server = Column(String(255), nullable=False)
     domain = Column(String(255), nullable=False)
     priority = Column(Integer, nullable=False)
-    __mapper_args__ = {'polymorphic_identity': 'mxrecord'}
+    __mapper_args__ = {'polymorphic_identity': 'mx_record'}
 
     @property
     def information_human(self):
@@ -136,16 +136,16 @@ class CNameRecord(Record):
     )
 
     __mapper_args__ = {
-        'polymorphic_identity': 'cnamerecord',
+        'polymorphic_identity': 'cname_record',
         'inherit_condition': (id == Record.id)
     }
 
     @validates('record_for')
     def validate_record_for(self, _, value):
-        # check if the record is of the correct type! just arecord and
-        # aaaarecord are allowed
-        assert value.discriminator == "arecord" or\
-               value.discriminator == "aaaarecord"
+        # check if the record is of the correct type! just A record and
+        # AAAA record are allowed
+        assert value.discriminator == "a_record" or\
+               value.discriminator == "aaaa_record"
         assert value.name != self.name
 
         return value
@@ -165,7 +165,7 @@ class NSRecord(Record):
     domain = Column(String(255), nullable=False)
     server = Column(String(255), nullable=False)
     time_to_live = Column(Integer)
-    __mapper_args__ = {'polymorphic_identity': 'nsrecord'}
+    __mapper_args__ = {'polymorphic_identity': 'ns_record'}
 
     @property
     def information_human(self):
@@ -189,7 +189,7 @@ class SRVRecord(Record):
     weight = Column(Integer, nullable=False)
     port = Column(Integer, nullable=False)
     target = Column(String(255), nullable=False)
-    __mapper_args__ = {'polymorphic_identity': 'srvrecord'}
+    __mapper_args__ = {'polymorphic_identity': 'srv_record'}
 
     @property
     def information_human(self):

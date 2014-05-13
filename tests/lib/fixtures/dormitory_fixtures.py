@@ -29,7 +29,7 @@ class SubnetData(DataSet):
         ip_type = "4"
 
 
-class VLanData(DataSet):
+class VLANData(DataSet):
     class dummy_vlan1:
         id = 1
         name = "dummy_vlan1"

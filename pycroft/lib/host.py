@@ -12,13 +12,13 @@ from pycroft.lib.all import with_transaction
 @with_transaction
 def change_mac(net_device, mac, processor):
     """
-    This method will change the mac address of the given netdevice to the new
+    This method will change the mac address of the given net device to the new
     mac address.
 
-    :param net_device: the netdevice which should become a new mac address.
+    :param net_device: the net device which should become a new mac address.
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
-    :return: the changed netdevice with the new mac address.
+    :return: the changed net device with the new mac address.
     """
     net_device.mac = mac
 

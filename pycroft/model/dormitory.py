@@ -3,7 +3,7 @@
     pycroft.model.dormitory
     ~~~~~~~~~~~~~~
 
-    This module contains the classes Dormitory, Room, Subnet, VLan.
+    This module contains the classes Dormitory, Room, Subnet, VLAN.
 
     :copyright: (c) 2011 by AG DSN.
 """
@@ -38,8 +38,8 @@ class Dormitory(ModelBase):
     short_name = Column(String(5), unique=True, nullable=False)
     street = Column(String(20), nullable=False)
 
-    #many to many from Dormitory to VLan
-    vlans = relationship("VLan",
+    # many to many from Dormitory to VLAN
+    vlans = relationship("VLAN",
         backref=backref("dormitories"),
         secondary=association_table_dormitory_vlan)
 
@@ -52,7 +52,7 @@ class Dormitory(ModelBase):
         ).join(
             Subnet.vlans
         ).join(
-            VLan.dormitories
+            VLAN.dormitories
         ).filter(
             Dormitory.id == self.id
         ).all()
@@ -81,10 +81,10 @@ class Subnet(ModelBase):
     gateway = Column(String(51), nullable=False)
     dns_domain = Column(String)
     reserved_addresses = Column(Integer, default=0, nullable=False)
-    ip_type = Column(Enum("4", "6", name="iptypes"), nullable=False)
+    ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
 
-    #many to many from Subnet to VLan
-    vlans = relationship("VLan",
+    #many to many from Subnet to VLAN
+    vlans = relationship("VLAN",
         backref=backref("subnets"),
         secondary=association_table_subnet_vlan)
 
@@ -98,6 +98,6 @@ class Subnet(ModelBase):
         return ipaddr.IPNetwork(self.address).version
 
 
-class VLan(ModelBase):
+class VLAN(ModelBase):
     name = Column(String(127), nullable=False)
     tag = Column(Integer, nullable=False)

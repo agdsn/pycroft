@@ -48,7 +48,7 @@ class FinanceAccount(ModelBase):
             "LIABILITY",  # Passivkonto
             "EXPENSE",    # Aufwandskonto
             "REVENUE",    # Ertragskonto
-            name="financeaccounttypes"),
+            name="finance_account_type"),
         nullable=False
     )
     transactions = relationship("Transaction", secondary="split")
@@ -62,9 +62,9 @@ class Journal(ModelBase):
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    financeaccount_id = Column(
-        Integer, ForeignKey("financeaccount.id"), nullable=False)
-    financeaccount = relationship("FinanceAccount")
+    finance_account_id = Column(
+        Integer, ForeignKey("finance_account.id"), nullable=False)
+    finance_account = relationship("FinanceAccount")
     __tableargs__ = [
         UniqueConstraint(account_number, routing_number),
         UniqueConstraint(iban),
@@ -123,7 +123,7 @@ class Split(ModelBase):
     amount = Column(Integer, nullable=False)
     account_id = Column(
         Integer,
-        ForeignKey("financeaccount.id", ondelete='CASCADE', onupdate='CASCADE'),
+        ForeignKey("finance_account.id", ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False
     )
     account = relationship(

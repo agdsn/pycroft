@@ -4,7 +4,7 @@ __author__ = 'florian'
 from datetime import date, datetime, timedelta
 from fixture import DataSet
 
-class VLanData(DataSet):
+class VLANData(DataSet):
     class vlan_dummy1:
         name = "vlan_dom_1"
         tag = "1"
@@ -18,12 +18,12 @@ class DormitoryData(DataSet):
         number = "01"
         short_name = "abc"
         street = "dummy"
-        vlans = [VLanData.vlan_dummy1]
+        vlans = [VLANData.vlan_dummy1]
     class dummy_house2:
         number = "02"
         short_name = "def"
         street = "dummy"
-        vlans = [VLanData.vlan_dummy2]
+        vlans = [VLANData.vlan_dummy2]
 
 
 class RoomData(DataSet):
@@ -147,13 +147,13 @@ class SubnetData(DataSet):
         address = "141.30.216.0/24"
         gateway = "141.30.216.1"
         ip_type = "4"
-        vlans = [VLanData.vlan_dummy1]
+        vlans = [VLANData.vlan_dummy1]
 
     class dummy_subnet2:
         address = "141.30.203.0/24"
         gateway = "141.30.203.1"
         ip_type = "4"
-        vlans = [VLanData.vlan_dummy2]
+        vlans = [VLANData.vlan_dummy2]
 
 
 class IpData(DataSet):

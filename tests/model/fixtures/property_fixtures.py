@@ -34,11 +34,11 @@ class PropertyGroupData(DataSet):
 
 class TrafficGroupData(DataSet):
     class group1:
-        name = "trafficgroup1"
+        name = "traffic group1"
         traffic_limit = 1000
 
     class group2:
-        name = "trafficgroup2"
+        name = "traffic group2"
         traffic_limit = 2000
 
 

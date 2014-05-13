@@ -9,7 +9,7 @@ from pycroft.helpers.host import sort_ports, generate_hostname, \
 from pycroft.model import dormitory, session, user, logging
 from pycroft.model.host import Host, UserNetDevice, Ip
 
-from tests.helpers.fixtures.host_fixtures import DormitoryData, VLanData, \
+from tests.helpers.fixtures.host_fixtures import DormitoryData, VLANData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
 
@@ -43,7 +43,7 @@ class Test_010_SimpleHostsHelper(OldPythonTestCase):
 
 
 class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def ip_s1(self, num):
         net_parts = SubnetData.subnet1.gateway.split(".")
