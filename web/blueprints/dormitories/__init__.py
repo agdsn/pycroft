@@ -84,7 +84,7 @@ def room_show(room_id):
         page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number),
         room=room,
-        room_logs=room_log_list,
+        room_log=room_log_list,
         form=form)
 
 
