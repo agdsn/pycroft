@@ -21,24 +21,23 @@
 
     <div class="subnav">
         <ul class="nav nav-pills">
-            <li><a href="#basedata">Basisdaten</a></li>
+            <li><a href="#master-data">Stammdaten</a></li>
             <li><a href="#devices">Geräte</a></li>
             <li><a href="#traffic">Traffic</a></li>
-            <li><a href="#logs">Logeinträge</a></li>
+            <li><a href="#logs">Logs</a></li>
             {% if current_user is privileged_for('finance_show') %}
-                <li><a href="#finance">Kontoeinträge</a></li>
+                <li><a href="#finance">Konto</a></li>
             {% endif %}
             <li><a href="#groups">Gruppen</a></li>
             {% if current_user is privileged_for('infrastructure_show') %}
                 <li><a href="#hosts">Hosts</a></li>
-        {% endif %}
+            {% endif %}
         </ul>
     </div>
 
-
     {# Stammdaten #}
-    <section id="basedata">
-        <div class="page-header"><h2>Basisdaten</h2></div>
+    <section id="master-data">
+        <div class="page-header"><h2>Stammdaten</h2></div>
         <div class="body">
             {% include "user/_user_show_basedata.html" with context %}
         </div>
@@ -60,25 +59,23 @@
         </div>
     </section>
 
-
-    {# Logeintrage des Nutzers #}
+    {# Logs zum Nutzers #}
     <section id="logs">
-        <div class="page-header"><h2>Logeinträge</h2></div>
+        <div class="page-header"><h2>Logs</h2></div>
         <div class="body">
             {% include "user/_user_show_logs.html" with context %}
         </div>
     </section>
 
+    {# Konto des Nutzers #}
     {% if current_user is privileged_for('finance_show') %}
-        {# Kontostand des Nutzers #}
         <section id="finance">
-            <div class="page-header"><h2>Kontoeinträge</h2></div>
+            <div class="page-header"><h2>Konto</h2></div>
             <div class="body">
                 {% include "user/_user_show_finance.html" with context %}
             </div>
         </section>
     {% endif %}
-
 
     {# Gruppen des Nutzers #}
     <section id="groups">
@@ -88,9 +85,8 @@
         </div>
     </section>
 
-
+    {# Hosts-Tabelle #}
     {% if current_user is privileged_for('infrastructure_show') %}
-        {# Hosts-Tabelle #}
         <section id="hosts">
             <div class="page-header"><h2>Hosts</h2></div>
             <div class="body">

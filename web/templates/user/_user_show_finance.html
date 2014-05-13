@@ -1,37 +1,20 @@
-{% if user.finance_account %}
-    <table class="table table-condensed">
-        <thead>
+{% if user.finance_account -%}
+<table class="table table-condensed">
+    <thead>
         <tr>
             <th>Beschreibung</th>
             <th>Betrag</th>
         </tr>
-        </thead>
-        <tbody>
-        {% for transaction in user.finance_account.transactions %}
-            {% for split in transaction.splits %}
-                {% if split.amount < 0 %}
-                    <tr class="success">
-                        <td>
-                            {{ transaction.message }}
-                        </td>
-                        <td>
-                            {{ split.amount|money }}
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr class="error">
-                        <td>
-                            {{ transaction.message }}
-                        </td>
-                        <td>
-                            -{{ split.amount|money }}
-                        </td>
-                    </tr>
-                {% endif %}
-            {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <div class="alert alert-info">Nutzer hat kein Konto!</div>
-{% endif %}
+    </thead>
+    <tbody>
+        {% for split in user.finance_account.splits -%}
+        <tr class="{{ 'success' if split.amount < 0 else 'error' }}">
+            <td>{{ split.transaction.message }}</td>
+            <td>{{ split.amount|money }}</td>
+        </tr>
+        {%- endfor %}
+    </tbody>
+</table>
+{% else -%}
+<div class="alert alert-info">Nutzer hat kein Konto.</div>
+{%- endif %}
