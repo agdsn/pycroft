@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -10,12 +10,11 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-
-
-from functools import wraps
+from cmath import log
 from datetime import datetime, timedelta
-from pycroft.model.host_alias import ARecord, CNameRecord
+from itertools import chain, imap
 
+from pycroft.model.host_alias import ARecord, CNameRecord
 from pycroft.model.session import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, Ip
@@ -93,6 +92,17 @@ def timesince_filter(dt, default="just now"):
             return "vor %d %s" % (period, singular if period == 1 else plural)
 
     return default
+
+
+def prefix_unit_filter(value, unit, factor, prefixes):
+    units = list(chain(unit, imap(lambda p: p + unit, prefixes)))
+    n = min(int(log(value, factor)), len(units)-1)
+    return "{0:,4f} {1}".format(float(value)/factor**n, units[n])
+
+
+@template_filter("byte_size")
+def byte_size_filter(value):
+    return prefix_unit_filter(value, 'B', 1024, ['Ki', 'Mi', 'Gi', 'Ti'])
 
 
 @template_filter("money")
