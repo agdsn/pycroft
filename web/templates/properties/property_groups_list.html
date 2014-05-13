@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/resources.html" as resources %}
 
 {% block page_css %}
     <style type="text/css">
@@ -15,119 +16,56 @@
 {% endblock %}
 
 {% block content %}
-
     <p>
-        <a class="btn btn-primary" href="{{ url_for(".property_group_create") }}" class="btn">Neue Eigenschaftengruppe</a>
+        <a class="btn btn-primary" href="{{ url_for(".property_group_create") }}">Neue Eigenschaftsgruppe</a>
     </p>
-    {% if property_groups %}
+    {% if property_groups -%}
     <table class="table table-fat table-fixed-header">
         <thead class="header">
-        <tr>
-            <th>&nbsp;</th>
-            {% for property_group in property_groups %}
-            <th>
-                {{ property_group.name }} <br />
-                <a class="glyphicon glyphicon-trash" href="{{ url_for(".property_group_delete", group_id=property_group.id) }}"></a>
-            </th>
-            {% endfor %}
-        </tr>
+            <tr>
+                <th>Eigenschaft</th>
+                {% for property_group in property_groups -%}
+                <th>
+                    <p>{{ property_group.name }}</p>
+                    <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </a>
+                </th>
+                {%- endfor %}
+            </tr>
         </thead>
-
         <tbody>
-        {% for category in property_categories %}
+            {% for category in property_categories -%}
             <tr>
                 <th colspan="{{ num_groups + 1 }}">{{ category[0] }}</th>
             </tr>
-            {% for property in category[1] %}
+            {% for property in category[1] -%}
             <tr>
                 <td>{{ property[1] }}</td>
-                {% for property_group in property_groups %}
+                {% for property_group in property_groups -%}
                 <td>
-                    {% if  property_group.has_property(property[0]) %}
-                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="glyphicon glyphicon-ok" title="Löschen">
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
-                           class="glyphicon glyphicon-remove" title="Hinzufügen">
-                        </a>
-                    {% endif %}
+                    {% if  property_group.has_property(property[0]) -%}
+                    <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}" title="Löschen">
+                        <span class="glyphicon glyphicon-ok"></span>
+                    </a>
+                    {% else -%}
+                    <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}" title="Hinzufügen">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </a>
+                    {%- endif %}
                 </td>
-                {% endfor %}
+                {%- endfor %}
             </tr>
-            {% endfor %}
-        {% endfor %}
+            {%- endfor %}
+            {%- endfor %}
         </tbody>
     </table>
-    {% endif %}
+    {%- endif %}
 {% endblock %}
 
 {% block page_script %}
+    {{ resources.link_script_file('table-fixed-header/table-fixed-header.js') }}
     <script type="text/javascript">
-        /*
-         source: https://github.com/oma/table-fixed-header
-         */
-        (function ($) {
-            $.fn.fixedHeader = function (options) {
-                var config = {
-                    topOffset: 40
-                };
-
-                if (options) {
-                    $.extend(config, options);
-                }
-
-                return this.each(function () {
-                    var o = $(this);
-
-                    var $win = $(window)
-                            , $head = $('thead.header', o)
-                            , isFixed = 0;
-                    var headTop = $head.length && $head.offset().top - config.topOffset;
-
-                    function processScroll() {
-                        if (!o.is(':visible')) return;
-                        if ($('thead.header-copy').size()) {
-                            $('thead.header-copy').width($head.width());
-                            var i, scrollTop = $win.scrollTop();
-                        }
-                        var t = $head.length && $head.offset().top - config.topOffset;
-                        if (!isFixed && headTop != t) {
-                            headTop = t;
-                        }
-                        if (scrollTop >= headTop && !isFixed) {
-                            isFixed = 1;
-                        } else if (scrollTop <= headTop && isFixed) {
-                            isFixed = 0;
-                        }
-                        isFixed ? $('thead.header-copy', o).show().offset({ left: $head.offset().left })
-                                : $('thead.header-copy', o).hide();
-                    }
-
-                    $win.on('scroll', processScroll);
-
-                    $head.clone().removeClass('header').addClass('header-copy header-fixed').css({'position': 'fixed', 'top': config['topOffset']}).appendTo(o);
-                    o.find('thead.header-copy').width($head.width());
-
-                    o.find('thead.header > tr > th').each(function (i, h) {
-                        var w = $(h).width();
-                        /*
-                         fixes the first cell. Without the expand, width is padding+innerwidth.
-                         means: if its originally 163px wide, the calculation for the copy will be
-                         163 = 8+147+8, not 8+163+8 as it should be. -dom
-                         */
-                        if (i == 0) w = w + 30;
-                        o.find('thead.header-copy> tr > th:eq(' + i + ')').width(w);
-                    });
-                    $head.css({ margin: '0 auto',
-                        width: o.width(),
-                        'background-color': config.bgColor });
-                    processScroll();
-                });
-            };
-
-        })(jQuery);
-
         $(document).ready(function () {
             $('.table-fixed-header').fixedHeader();
         });
