@@ -122,10 +122,20 @@ event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 class Split(ModelBase):
     amount = Column(Integer, nullable=False)
     account_id = Column(
-        Integer, ForeignKey("financeaccount.id"), nullable=False)
-    account = relationship("FinanceAccount")
+        Integer,
+        ForeignKey("financeaccount.id", ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False
+    )
+    account = relationship(
+        "FinanceAccount",
+        backref=backref("splits", cascade="all, delete-orphan")
+    )
     transaction_id = Column(
-        Integer, ForeignKey("transaction.id", ondelete='CASCADE'),
-        nullable=False)
+        Integer,
+        ForeignKey("transaction.id", ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False
+    )
     transaction = relationship(
-        "Transaction", backref=backref("splits", cascade="all, delete-orphan"))
+        "Transaction",
+        backref=backref("splits", cascade="all, delete-orphan")
+    )
