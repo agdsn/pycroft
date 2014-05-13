@@ -192,7 +192,7 @@ def srvrecord_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/switch/show/<switch_id>')
+@bp.route('/switch/show/<int:switch_id>')
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
@@ -205,7 +205,7 @@ def switch_show(switch_id):
         switch=switch, switch_ports=switch_port_list)
 
 
-@bp.route('/switch/<switch_id>/switch_port/create', methods=['GET', 'POST'])
+@bp.route('/switch/<int:switch_id>/switch_port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_port_create(switch_id):
     form = SwitchPortForm()
