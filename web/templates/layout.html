@@ -45,7 +45,7 @@
                                 </form>
                             </li>
                             <li>
-                                <p class="navbar-text navbar-right">Angemeldet als <a class="navbar-link" href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a> <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></p>
+                                <p class="navbar-text navbar-right"><a class="navbar-link" href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a> <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a></p>
                             </li>
                         {% else %}
                             <li><a class="navbar-link" href="{{ url_for("login.login") }}">Anmelden <span style="color: white;" class="glyphicon glyphicon-off"></span></a></li>
