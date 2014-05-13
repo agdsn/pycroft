@@ -3,10 +3,13 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-<div id="trafficgraph-day-selector">
-    <select id="select-days" multiple="multiple">
-        <option value="7">7 Tage</option>
-        <option value="14">14 Tage</option>
-        <option value="21">21 Tage</option></select>
-</div>
-<div id="trafficchart" data-trafficurl="{{ url_for(".json_trafficdata", user_id=user.id) }}"></div>
+
+    <div id="trafficgraph-day-selector" class="col-sm-2">
+        <label for="select-days">Zeitraum</label>
+        <select id="select-days" multiple="multiple">
+            <option value="7">7 Tage</option>
+            <option value="14">14 Tage</option>
+            <option value="21">21 Tage</option>
+        </select>
+    </div>
+    <div id="trafficchart" class="col-sm-10" data-trafficurl="{{ url_for(".json_trafficdata", user_id=user.id) }}"></div>

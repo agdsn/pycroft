@@ -3,23 +3,31 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if user.user_hosts %}
-    <table class="table">
+{% if user.user_hosts -%}
+<table class="table">
+    <thead>
         <tr>
             <th>IP-Adresse</th>
             <th>Mac-Adresse</th>
-            <th>Anschluss</th>
+            <th>Switch</th>
+            <th>Switchport</th>
         </tr>
-    {% for host in user.user_hosts %}
-        {% for ip in host.ips %}
-            <tr>
-                <td>{{ ip.address }}</td>
-                <td>{{ ip.net_device.mac }}</td>
-                <td>{{ host | get_switch(ip)}} - {{ host | get_switch_port(ip)}}</td>
-            </tr>
-        {% endfor %}
-    {% endfor %}
-    </table>
-{% else %}
+    </thead>
+    <tbody>
+        {% for host in user.user_hosts -%}
+        {% for ip in host.ips -%}
+        <tr>
+            <td>{{ ip.address }}</td>
+            <td>{{ ip.net_device.mac }}</td>
+            <td>{{ host | get_switch(ip)}}</td>
+            <td>{{ host | get_switch_port(ip)}}</td>
+        </tr>
+        {%- endfor %}
+        {%- endfor %}
+    </tbody>
+</table>
+{% else -%}
+<div class="alert alert-info">
     Der Nutzer hat keine registrierten Geräte.
-{% endif %}
+</div>
+{%- endif %}

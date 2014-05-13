@@ -1,35 +1,40 @@
 {#
- Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-
 {% import "macros/forms.html" as forms %}
+
 {% block content %}
-
-    <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="span6">
-                {{ forms.simple_form(form, '', url_for('.search')) }}
-            </div>
-            <div class="span6">
-                {% if results %}
-                    <table class="table table-striped">
-                    <thead><tr><td>ID</td><td>Name</td><td>Login</td><td>Hosts</td></tr></thead>
-                        {% for result in results %}
-                            <tr>
-                            <td>{{ result.id }}</td>
-			    <td><a href="{{ url_for('.user_show', user_id=result.id) }}">{{ result.name }}</a></td>
-                            <td>{{ result.login }}</td><td> {% for host in result.hosts %}{{ host.hostname }} {% endfor %}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                {% endif %}
-            </div>
-
-        </div>
+    <div class="row">
+        {{ forms.simple_form(form, '', url_for('.search')) }}
     </div>
-
-
+    {% if results -%}
+    <section>
+        <h2>Ergebnisse</h2>
+        <div class="row">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Login</th>
+                        <th>Hosts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in results -%}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td><a href="{{ url_for('.user_show', user_id=user.id) }}">{{ user.name }}</a></td>
+                        <td>{{ user.login }}</td>
+                        <td>{{ user.hosts|join(' ', 'hostname') }}</td>
+                    </tr>
+                    {%- endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {%- endif %}
 {% endblock %}
