@@ -19,7 +19,7 @@
 </head>
 
 <body>
-    {% block navbar %}
+    {% block navbar -%}
         <nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
             <div class="container">
                 <div class="navbar-header">
@@ -59,11 +59,11 @@
                 </div><!--/.nav-collapse -->
             </div>
         </nav>
-    {% endblock %}
+    {%- endblock %}
 
     <div class="container main">
-        {% block content_container %}
-            {% block messages %}
+        {% block content_container -%}
+            {% block messages -%}
                 {% with messages = get_flashed_messages(with_categories=true) -%}
                     {% if messages -%}
                         <div class="row">
@@ -81,18 +81,18 @@
                         </div>
                     {%- endif %}
                 {%- endwith %}
-            {% endblock %}
-            {% block page_header %}
+            {%- endblock %}
+            {% block page_header -%}
                 <div class="page-header">
                     <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
                 </div>
-            {% endblock %}
-            {% block content %}
-                <div class="row">
-                    {% block single_row_content %}{% endblock %}
-                </div>
-            {% endblock %}
-        {% endblock %}
+            {%- endblock %}
+            {% block content -%}
+            <div class="row">
+                {% block single_row_content %}{% endblock %}
+            </div>
+            {%- endblock %}
+        {%- endblock %}
     </div> <!-- /container -->
 
 <script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery.min.js") }}"></script>
