@@ -11,7 +11,7 @@ from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper
 from pycroft.lib.config import config
 from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
-    RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData, \
+    RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData, MembershipData
 from pycroft.model import user, dormitory, port, session, logging, finance, \
@@ -20,7 +20,7 @@ from pycroft.model import user, dormitory, port, session, logging, finance, \
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
-                IpData, VLanData, SubnetData, PatchPortData]
+                IpData, VLANData, SubnetData, PatchPortData]
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -53,7 +53,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
-                UserNetDeviceData, UserHostData, IpData, VLanData, SubnetData,
+                UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData,
                 PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, PropertyData]
 
@@ -107,10 +107,10 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         user_host = host.UserHost.q.filter_by(user=new_user).one()
         user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
         self.assertEqual(user_net_device.mac, test_mac)
-        user_cnamerecord = dns.CNameRecord.q.filter_by(host=user_host).one()
-        self.assertEqual(user_cnamerecord.name, test_hostname)
-        user_arecord = dns.ARecord.q.filter_by(host=user_host).one()
-        self.assertEqual(user_cnamerecord.record_for, user_arecord)
+        user_cname_record = dns.CNameRecord.q.filter_by(host=user_host).one()
+        self.assertEqual(user_cname_record.name, test_hostname)
+        user_a_record = dns.ARecord.q.filter_by(host=user_host).one()
+        self.assertEqual(user_cname_record.record_for, user_a_record)
 
         #checks the initial group memberships
         user_groups = new_user.active_property_groups + new_user.active_traffic_groups
@@ -125,7 +125,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         ).all()
         self.assertEqual(
             finance_account.name,
-            config["move_in"]["financeaccount_name"].format(user_id=new_user.id)
+            config["move_in"]["finance_account_name"].format(
+                user_id=new_user.id
+            )
         )
         account_sum = sum([split.amount for split in splits])
         self.assertEqual(account_sum, 4000)

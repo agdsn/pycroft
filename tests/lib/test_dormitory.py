@@ -1,13 +1,13 @@
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
 
 from tests import FixtureDataTestBase
 from tests.lib.fixtures.dormitory_fixtures import DormitoryData, RoomData,\
-    SubnetData, VLanData
+    SubnetData, VLANData
 
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 from pycroft.lib.dormitory import create_dormitory, create_room,\
     delete_dormitory, delete_room, create_subnet, delete_subnet, create_vlan,\
     delete_vlan
@@ -105,14 +105,14 @@ class Test_030_Subnet(FixtureDataTestBase):
 
 
 class Test_040_Vlan(FixtureDataTestBase):
-    datasets = [VLanData]
+    datasets = [VLANData]
 
     def test_0010_create_vlan(self):
         new_vlan = create_vlan(name="dummy_vlan2", tag=21)
 
-        self.assertIsNotNone(VLan.q.get(new_vlan.id))
+        self.assertIsNotNone(VLAN.q.get(new_vlan.id))
 
-        db_vlan = VLan.q.get(new_vlan.id)
+        db_vlan = VLAN.q.get(new_vlan.id)
 
         self.assertEqual(db_vlan.name, "dummy_vlan2")
         self.assertEqual(db_vlan.tag, 21)
@@ -121,10 +121,10 @@ class Test_040_Vlan(FixtureDataTestBase):
         session.session.commit()
 
     def test_0020_delete_vlan(self):
-        del_vlan = delete_vlan(VLanData.dummy_vlan1.id)
+        del_vlan = delete_vlan(VLANData.dummy_vlan1.id)
 
-        self.assertIsNone(VLan.q.get(del_vlan.id))
+        self.assertIsNone(VLAN.q.get(del_vlan.id))
 
     def test_0025_delete_wrong_vlan(self):
         self.assertRaises(ValueError, delete_vlan,
-            VLanData.dummy_vlan1.id + 100)
+            VLANData.dummy_vlan1.id + 100)

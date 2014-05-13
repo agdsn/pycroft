@@ -16,13 +16,13 @@ from flask.ext.login import current_user
 from sqlalchemy.sql.expression import func
 from pycroft.helpers import user, host
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLan
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 from pycroft.model.host import Host, Ip
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.lib.dns import create_arecord, create_cnamerecord
+from pycroft.lib.dns import create_a_record, create_cname_record
 from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
@@ -96,12 +96,12 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     new_ip = create_ip(net_device=new_net_device, address=ip_address,
                        subnet=subnet)
 
-    new_arecord = create_arecord(host=new_host, time_to_live=None,
+    new_a_record = create_a_record(host=new_host, time_to_live=None,
                                  name=host.generate_hostname(ip_address),
                                  address=new_ip)
     if host_name:
-        create_cnamerecord(host=new_host, name=host_name,
-                           record_for=new_arecord)
+        create_cname_record(host=new_host, name=host_name,
+                           record_for=new_a_record)
 
     conf = config["move_in"]
     for membership in conf["group_memberships"]:
@@ -125,7 +125,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         "semester": current_semester.name
     }
     new_finance_account = FinanceAccount(
-        name=conf["financeaccount_name"].format(**format_args),
+        name=conf["finance_account_name"].format(**format_args),
         type="REVENUE")
     new_user.finance_account = new_finance_account
     session.session.add(new_finance_account)

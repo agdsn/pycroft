@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from tests import OldPythonTestCase, FixtureDataTestBase
@@ -12,7 +12,7 @@ from pycroft.helpers.host import sort_ports, generate_hostname, \
 from pycroft.model import dormitory, session, user, logging
 from pycroft.model.host import Host, UserNetDevice, Ip
 
-from tests.helpers.fixtures.host_fixtures import DormitoryData, VLanData, \
+from tests.helpers.fixtures.host_fixtures import DormitoryData, VLANData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
 
@@ -46,7 +46,7 @@ class Test_010_SimpleHostsHelper(OldPythonTestCase):
 
 
 class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def ip_s1(self, num):
         net_parts = SubnetData.subnet1.gateway.split(".")

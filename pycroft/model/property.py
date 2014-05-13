@@ -109,7 +109,7 @@ class Property(ModelBase):
 
     # many to one from Property to PropertyGroup
     # nullable=True
-    property_group_id = Column(Integer, ForeignKey("propertygroup.id"),
+    property_group_id = Column(Integer, ForeignKey("property_group.id"),
         nullable=False)
     #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group = relationship("PropertyGroup",
@@ -117,7 +117,7 @@ class Property(ModelBase):
 
 
 class PropertyGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'propertygroup'}
+    __mapper_args__ = {'polymorphic_identity': 'property_group'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
         nullable=False)
 
@@ -130,7 +130,7 @@ class PropertyGroup(Group):
 
 
 class TrafficGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'trafficgroup'}
+    __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
         nullable=False)
     # in byte per seven days, zero is no limit

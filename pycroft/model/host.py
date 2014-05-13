@@ -163,7 +163,7 @@ class NetDevice(ModelBase):
 
 
 class UserNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "user_net_device"}
 
@@ -173,7 +173,7 @@ class UserNetDevice(NetDevice):
 
 
 class ServerNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "server_net_device"}
 
@@ -181,13 +181,13 @@ class ServerNetDevice(NetDevice):
         backref=backref("server_net_devices", cascade="all, delete-orphan"))
 
     #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
-    switch_port_id = Column(Integer, ForeignKey('switchport.id'),
+    switch_port_id = Column(Integer, ForeignKey('switch_port.id'),
         nullable=True)
     switch_port = relationship("SwitchPort")
 
 
 class SwitchNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('netdevice.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "switch_net_device"}
 
@@ -206,12 +206,12 @@ class Ip(ModelBase):
     #address = Column(postgresql.INET, nullable=True)
 
     net_device_id = Column(Integer,
-        ForeignKey('netdevice.id', ondelete="CASCADE"), nullable=False)
+        ForeignKey('net_device.id', ondelete="CASCADE"), nullable=False)
     net_device = relationship(NetDevice,
         backref=backref("ips", cascade="all, delete-orphan"))
 
     host = relationship("Host",
-        secondary="netdevice",
+        secondary="net_device",
         backref=backref("ips"),
         viewonly=True)
 

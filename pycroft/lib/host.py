@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'Florian Österreich'
@@ -15,13 +15,13 @@ from pycroft.lib.all import with_transaction
 @with_transaction
 def change_mac(net_device, mac, processor):
     """
-    This method will change the mac address of the given netdevice to the new
+    This method will change the mac address of the given net device to the new
     mac address.
 
-    :param net_device: the netdevice which should become a new mac address.
+    :param net_device: the net device which should become a new mac address.
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
-    :return: the changed netdevice with the new mac address.
+    :return: the changed net device with the new mac address.
     """
     net_device.mac = mac
 

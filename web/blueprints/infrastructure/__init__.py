@@ -14,17 +14,17 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
 from pycroft.model.host import Switch, Host
-from pycroft.model.dormitory import Subnet, VLan
+from pycroft.model.dormitory import Subnet, VLAN
 from pycroft.model.dns import Record, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm
 from web.blueprints.infrastructure.forms import CNameRecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
-from web.blueprints.infrastructure.forms import arecords_query
+from web.blueprints.infrastructure.forms import a_records_query
 from web.blueprints.access import BlueprintAccess
 
-from pycroft.lib.dns import delete_record, change_record, create_cnamerecord
+from pycroft.lib.dns import delete_record, change_record, create_cname_record
 from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
@@ -73,20 +73,20 @@ def record_edit(user_id, record_id):
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/a')
 @access.require('infrastructure_change')
-def arecord_edit(user_id, record_id):
+def a_record_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/aaaa')
 @access.require('infrastructure_change')
-def aaaarecord_edit(user_id, record_id):
+def aaaa_record_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/cname',
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def cnamerecord_edit(user_id, record_id):
+def cname_record_edit(user_id, record_id):
     record = CNameRecord.q.get(record_id)
 
     form = CNameRecordEditForm()
@@ -105,19 +105,19 @@ def cnamerecord_edit(user_id, record_id):
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/mx')
 @access.require('infrastructure_change')
-def mxrecord_edit(user_id, record_id):
+def mx_record_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/ns')
 @access.require('infrastructure_change')
-def nsrecord_edit(user_id, record_id):
+def ns_record_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_edit/<int:record_id>/srv')
 @access.require('infrastructure_change')
-def srvrecord_edit(user_id, record_id):
+def srv_record_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
@@ -143,26 +143,26 @@ def record_create(user_id, host_id):
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/a')
 @access.require('infrastructure_change')
-def arecord_create(user_id, host_id):
+def a_record_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/aaaa')
 @access.require('infrastructure_change')
-def aaaarecord_create(user_id, host_id):
+def aaaa_record_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/cname',
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def cnamerecord_create(user_id, host_id):
+def cname_record_create(user_id, host_id):
     form = CNameRecordCreateForm()
-    form.record_for.query = arecords_query(host_id)
+    form.record_for.query = a_records_query(host_id)
     host = Host.q.get(host_id)
 
     if form.validate_on_submit():
-        create_cnamerecord(host=host, name=form.name.data,
+        create_cname_record(host=host, name=form.name.data,
             record_for=form.record_for.data)
 
         flash(u"Neuer CNameRecord angelegt", 'success')
@@ -176,19 +176,19 @@ def cnamerecord_create(user_id, host_id):
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/mx')
 @access.require('infrastructure_change')
-def mxrecord_create(user_id, host_id):
+def mx_record_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/ns')
 @access.require('infrastructure_change')
-def nsrecord_create(user_id, host_id):
+def ns_record_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/srv')
 @access.require('infrastructure_change')
-def srvrecord_create(user_id, host_id):
+def srv_record_create(user_id, host_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
@@ -223,6 +223,6 @@ def switch_port_create(switch_id):
 @nav.navigate(u"VLANs")
 @access.require('infrastructure_show')
 def vlans():
-    vlans_list = VLan.q.all()
+    vlans_list = VLAN.q.all()
     return render_template('infrastructure/vlan_list.html',
                            vlans=vlans_list)

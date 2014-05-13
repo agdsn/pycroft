@@ -7,7 +7,7 @@ from tests import OldPythonTestCase, FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, host, dormitory, user, accounting
 
-from tests.model.fixtures.host_fixtures import DormitoryData, VLanData, \
+from tests.model.fixtures.host_fixtures import DormitoryData, VLANData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
     TrafficVolumeData
 from pycroft.helpers.host import get_free_ip, MacExistsException
@@ -68,14 +68,14 @@ class Test_010_NetDeviceValidators(OldPythonTestCase):
 
 
 class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     # placeholder because the set_v4 method is gone
     pass
 
 
 class Test_030_IpModel(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def tearDown(self):
         session.session.remove()
@@ -139,7 +139,7 @@ class Test_030_IpModel(FixtureDataTestBase):
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def test_0010_correct_subnet_and_ip(self):
         subnet = dormitory.Subnet.q.first()
@@ -214,7 +214,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 
 class Test_060_Cascades(FixtureDataTestBase):
-    datasets = [DormitoryData, VLanData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData]
+    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData]
 
     def test_0010_cascade_on_delete_ip(self):
         session.session.delete(host.Ip.q.get(1))

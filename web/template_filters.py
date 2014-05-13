@@ -117,7 +117,7 @@ def money_filter(amount):
 def host_traffic_filter(host):
     traffic_timespan = datetime.now() - timedelta(days=7)
 
-    trafficvolumes = session.query(
+    traffic_volumes = session.query(
         TrafficVolume
     ).join(
         TrafficVolume.ip
@@ -130,7 +130,7 @@ def host_traffic_filter(host):
     ).all()
 
     traffic_sum = 0
-    for traffic in trafficvolumes:
+    for traffic in traffic_volumes:
         traffic_sum += ( traffic.size / 1024 / 1024 )
 
     return u"%s MB" % (traffic_sum, )
@@ -138,35 +138,35 @@ def host_traffic_filter(host):
 
 @template_filter("host_name")
 def host_name_filter(host):
-    arecord = session.query(
+    a_record = session.query(
         ARecord
     ).filter(
         ARecord.host_id == host.id
     ).first()
 
-    if arecord is not None:
-        return arecord.name
+    if a_record is not None:
+        return a_record.name
     else:
         return "NoName"
 
 
 @template_filter("host_cname")
 def host_cname_filter(host):
-    cname_record = session.query(
+    c_name_record = session.query(
         CNameRecord
     ).filter(
         CNameRecord.host_id == host.id
     ).first()
 
-    if cname_record is not None:
-        return cname_record.name
+    if c_name_record is not None:
+        return c_name_record.name
     else:
         return "NoCName"
 
 
 @template_filter("record_editable")
 def record_editable_filter(record):
-    if record.discriminator == "arecord" or record.discriminator == "aaaarecord":
+    if record.discriminator == "a_record" or record.discriminator == "aaaa_record":
         return False
     else:
         return True
@@ -174,7 +174,7 @@ def record_editable_filter(record):
 
 @template_filter("record_removable")
 def record_removable_filter(record):
-    if record.discriminator == "arecord" or record.discriminator == "aaaarecord":
+    if record.discriminator == "a_record" or record.discriminator == "aaaa_record":
         return False
     else:
         return True

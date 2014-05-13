@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
@@ -18,9 +18,9 @@ def _create_log_entry(type, *args, **kwargs):
     """
     type = str(type).lower()
 
-    if type == "userlogentry":
+    if type == "user_log_entry":
         entry = UserLogEntry(*args, **kwargs)
-    elif type == "roomlogentry":
+    elif type == "room_log_entry":
         entry = RoomLogEntry(*args, **kwargs)
     else:
         raise ValueError("Unknown LogEntry type!")
@@ -41,9 +41,9 @@ def delete_log_entry(log_entry_id):
     if entry is None:
         raise ValueError("The given id is wrong!")
 
-    if entry.discriminator == "userlogentry":
+    if entry.discriminator == "user_log_entry":
         del_entry = UserLogEntry.q.get(log_entry_id)
-    elif entry.discriminator == "roomlogentry":
+    elif entry.discriminator == "room_log_entry":
         del_entry = RoomLogEntry.q.get(log_entry_id)
     else:
         raise ValueError("Unknown LogEntry type!")
@@ -63,7 +63,7 @@ def create_user_log_entry(message, timestamp, author, user):
     :param user: the user for which the log should be created
     :return: the newly created UserLogEntry.
     """
-    return _create_log_entry("userlogentry", message=message,
+    return _create_log_entry("user_log_entry", message=message,
                              timestamp=timestamp, author=author,
                              user=user)
 
@@ -79,6 +79,6 @@ def create_room_log_entry(message, timestamp, author, room):
     :param room: the room for which the log should be created
     :return: the newly created RoomLogEntry.
     """
-    return _create_log_entry("roomlogentry", message=message,
+    return _create_log_entry("room_log_entry", message=message,
                              timestamp=timestamp, author=author,
                              room=room)

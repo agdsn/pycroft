@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
@@ -17,7 +17,7 @@ class DormitoryData(DataSet):
         street = "dummy"
 
 
-class VLanData(DataSet):
+class VLANData(DataSet):
     class vlan1:
         name = "vlan1"
         tag = "1"

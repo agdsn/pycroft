@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
@@ -37,11 +37,11 @@ class PropertyGroupData(DataSet):
 
 class TrafficGroupData(DataSet):
     class group1:
-        name = "trafficgroup1"
+        name = "traffic group1"
         traffic_limit = 1000
 
     class group2:
-        name = "trafficgroup2"
+        name = "traffic group2"
         traffic_limit = 2000
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import re
 from sqlalchemy import Column
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
@@ -44,7 +45,10 @@ class _Base(object):
     def __tablename__(cls):
         """Autogenerate the tablename for the mapped objects.
         """
-        return cls.__name__.lower()
+        name = cls.__name__
+        name = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', name)
+        name = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', name)
+        return name.lower()
 
 
 ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)

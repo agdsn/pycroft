@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'l3nkz'
@@ -32,7 +32,7 @@ class SubnetData(DataSet):
         ip_type = "4"
 
 
-class VLanData(DataSet):
+class VLANData(DataSet):
     class dummy_vlan1:
         id = 1
         name = "dummy_vlan1"
