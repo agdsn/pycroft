@@ -8,14 +8,9 @@ __author__ = 'florian'
 from web.form.fields import static
 from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, NumberRange, Optional
-from pycroft.model.finance import FinanceAccount
 from web.form.fields.core import TextField, IntegerField, HiddenField,\
     FileField, SelectField, FormField, FieldList, StringField, DateField
 from web.form.fields.custom import TypeaheadField
-
-
-def financeaccounts_query():
-    return FinanceAccount.q.order_by(FinanceAccount.name)
 
 
 class SemesterCreateForm(Form):
