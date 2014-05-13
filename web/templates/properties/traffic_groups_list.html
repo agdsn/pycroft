@@ -18,7 +18,7 @@
             {% for traffic_group in traffic_groups -%}
             <tr>
                 <td>{{ traffic_group.name }}</td>
-                <td>{{ traffic_group.traffic_limit/1024/1024 }} MB</td>
+                <td>{{ traffic_group.traffic_limit|byte_size }}</td>
                 <td>
                     <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">
                         <span class="glyphicon glyphicon-trash"></span>
