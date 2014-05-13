@@ -1,6 +1,6 @@
 from web.form.widgets import LazyLoadSelectWidget,\
-    BootstrapFormControlDecorator, BootstrapHorizontalDecorator, \
-    BootstrapFormGroupDecorator, BootstrapStaticFieldWidget, decorate \
+    BootstrapFormControlDecorator, BootstrapStandardDecorator, \
+    BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
     decorators
 from wtforms import TextField, StringField
 from wtforms import fields
@@ -54,7 +54,7 @@ class LazyLoadSelectField(fields.SelectField):
     widget = decorate(
         LazyLoadSelectWidget(),
         BootstrapFormControlDecorator,
-        BootstrapHorizontalDecorator,
+        BootstrapStandardDecorator,
         BootstrapFormGroupDecorator
     )
 
