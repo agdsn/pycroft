@@ -24,7 +24,7 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", split_cols=true, upload=false, method="POST") -%}
+{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", upload=false, method="POST") -%}
     <form method="{{ method }}" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal" role="form">
         {{ form.hidden_tag() if form.hidden_tag() }}
         <div class="col-sm-6">
