@@ -15,7 +15,7 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
 from pycroft.model.host import Switch, Host
 from pycroft.model.dormitory import Subnet, VLan
-from pycroft.model.host_alias import HostAlias, CNameRecord
+from pycroft.model.dns import Record, CNameRecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNameRecordEditForm
@@ -24,7 +24,7 @@ from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import arecords_query
 from web.blueprints.access import BlueprintAccess
 
-from pycroft.lib.host_alias import delete_alias, change_alias, create_cnamerecord
+from pycroft.lib.dns import delete_record, change_record, create_cnamerecord
 from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
@@ -50,74 +50,74 @@ def switches():
         switches=switches_list)
 
 
-@bp.route('/user/<int:user_id>/record_delete/<int:alias_id>')
+@bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
 @access.require('infrastructure_change')
-def record_delete(user_id, alias_id):
-    delete_alias(alias_id)
+def record_delete(user_id, record_id):
+    delete_record(record_id)
     flash(u"Record gelöscht", 'success')
 
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>',
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>',
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def record_edit(user_id, alias_id):
-    alias = HostAlias.q.get(alias_id)
+def record_edit(user_id, record_id):
+    record = Record.q.get(record_id)
 
-    edit_function = ".%s_edit" % (alias.discriminator,)
+    edit_function = ".%s_edit" % (record.discriminator,)
 
     return redirect(
-        url_for(edit_function, user_id=user_id, alias_id=alias_id))
+        url_for(edit_function, user_id=user_id, record_id=record_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/a')
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/a')
 @access.require('infrastructure_change')
-def arecord_edit(user_id, alias_id):
+def arecord_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/aaaa')
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/aaaa')
 @access.require('infrastructure_change')
-def aaaarecord_edit(user_id, alias_id):
+def aaaarecord_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/cname',
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/cname',
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def cnamerecord_edit(user_id, alias_id):
-    alias = CNameRecord.q.get(alias_id)
+def cnamerecord_edit(user_id, record_id):
+    record = CNameRecord.q.get(record_id)
 
     form = CNameRecordEditForm()
-    form.alias_for.data = alias.alias_for.name
+    form.record_for.data = record.record_for.name
 
     if form.validate_on_submit():
-        change_alias(alias, name=form.name.data)
+        change_record(record, name=form.name.data)
 
         flash(u"Alias geändert", "success")
         return redirect(url_for("user.user_show", user_id=user_id))
 
     return render_template('infrastructure/record_edit.html',
         form=form, user_id=user_id,
-        page_title=u"Alias ändern für " + alias.alias_for.name)
+        page_title=u"Alias ändern für " + record.alias_for.name)
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/mx')
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/mx')
 @access.require('infrastructure_change')
-def mxrecord_edit(user_id, alias_id):
+def mxrecord_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/ns')
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/ns')
 @access.require('infrastructure_change')
-def nsrecord_edit(user_id, alias_id):
+def nsrecord_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
-@bp.route('/user/<int:user_id>/record_edit/<int:alias_id>/srv')
+@bp.route('/user/<int:user_id>/record_edit/<int:record_id>/srv')
 @access.require('infrastructure_change')
-def srvrecord_edit(user_id, alias_id):
+def srvrecord_edit(user_id, record_id):
     return redirect(url_for("user.user_show", user_id=user_id))
 
 
@@ -138,7 +138,7 @@ def record_create(user_id, host_id):
 
     return render_template('infrastructure/record_create.html',
         form=form, user_id=user_id, host_id=host_id,
-        page_title=u"Alias erzeugen")
+        page_title=u"DNS-Eintrag erzeugen")
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/a')
@@ -158,12 +158,12 @@ def aaaarecord_create(user_id, host_id):
 @access.require('infrastructure_change')
 def cnamerecord_create(user_id, host_id):
     form = CNameRecordCreateForm()
-    form.alias_for.query = arecords_query(host_id)
+    form.record_for.query = arecords_query(host_id)
     host = Host.q.get(host_id)
 
     if form.validate_on_submit():
         create_cnamerecord(host=host, name=form.name.data,
-            alias_for=form.alias_for.data)
+            record_for=form.record_for.data)
 
         flash(u"Neuer CNameRecord angelegt", 'success')
 
