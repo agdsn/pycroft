@@ -1,29 +1,29 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <table class="table table-striped">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>Bezeichnung</th>
-                <th>Limit</th>
-                <th>Löschen</th>
+                <th class="col-sm-6">Bezeichnung</th>
+                <th class="col-sm-4">Limit</th>
+                <th class="col-sm-2">Löschen</th>
             </tr>
         </thead>
         <tbody>
-            {% for traffic_group in traffic_groups %}
-                <tr>
-                    <td class="grow">{{ traffic_group.name }}</td>
-                    <td class="shrink">{{ traffic_group.traffic_limit/1024/1024 }} MB</td>
-                    <td class="shrink">
-                        <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">
-                            <span class="glyphicon glyphicon-trash"></span>
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
+            {% for traffic_group in traffic_groups -%}
+            <tr>
+                <td>{{ traffic_group.name }}</td>
+                <td>{{ traffic_group.traffic_limit/1024/1024 }} MB</td>
+                <td>
+                    <a href="{{ url_for(".traffic_group_delete", group_id=traffic_group.id) }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </a>
+                </td>
+            </tr>
+            {%- endfor %}
         </tbody>
     </table>
     <p>
-        <a class="btn btn-primary" href="{{ url_for(".traffic_group_create") }}">Neue Traffic Gruppe</a>
+        <a class="btn btn-primary" href="{{ url_for(".traffic_group_create") }}">Neue Trafficgruppe</a>
     </p>
 {% endblock %}
