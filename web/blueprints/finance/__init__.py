@@ -140,7 +140,8 @@ def accounts_list():
     accounts_by_type = dict(imap(
         lambda t: (t[0], list(t[1])),
         groupby(
-            FinanceAccount.q.order_by(FinanceAccount.type).all(),
+            FinanceAccount.q .outerjoin(User).filter(User.id == None)
+            .order_by(FinanceAccount.type).all(),
             lambda a: a.type
         )
     ))
