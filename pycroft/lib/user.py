@@ -19,7 +19,7 @@ from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGrou
 from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.lib.host_alias import create_arecord, create_cnamerecord
+from pycroft.lib.dns import create_arecord, create_cnamerecord
 from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
@@ -98,7 +98,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
                                  address=new_ip)
     if host_name:
         create_cnamerecord(host=new_host, name=host_name,
-                           alias_for=new_arecord)
+                           record_for=new_arecord)
 
     conf = config["move_in"]
     for membership in conf["group_memberships"]:

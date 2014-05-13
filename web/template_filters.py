@@ -11,7 +11,7 @@ from cmath import log
 from datetime import datetime, timedelta
 from itertools import chain, imap
 
-from pycroft.model.host_alias import ARecord, CNameRecord
+from pycroft.model.dns import ARecord, CNameRecord
 from pycroft.model.session import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, Ip

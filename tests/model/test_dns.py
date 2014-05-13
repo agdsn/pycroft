@@ -1,8 +1,8 @@
 __author__ = 'l3nkz'
 
-from tests.model.fixtures.host_alias_fixtures import ARecordData, AAAARecordData,\
+from tests.model.fixtures.dns_fixtures import ARecordData, AAAARecordData,\
     MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData, UserHostData
-from pycroft.model.host_alias import HostAlias, ARecord, AAAARecord, MXRecord, \
+from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
     CNameRecord, NSRecord, SRVRecord
 from tests import FixtureDataTestBase
 from pycroft.model.host import      Ip, UserHost
@@ -46,22 +46,22 @@ class Test_020_AAAARecordValidator(FixtureDataTestBase):
 class Test_025_CNameRecordValidator(FixtureDataTestBase):
     datasets = [ARecordData, MXRecordData, UserHostData]
 
-    def test_0010_alias_for_name_validator(self):
+    def test_0010_record_for_name_validator(self):
         arecord = ARecord.q.first()
         host = UserHost.q.first()
 
         self.assertRaises(AssertionError, CNameRecord, name=arecord.name,
-            alias_for=arecord, host_id=host.id)
+            record_for=arecord, host_id=host.id)
 
         new_record = CNameRecord(name=arecord.name + "_test",
-            alias_for=arecord, host_id=host.id)
+            record_for=arecord, host_id=host.id)
 
-    def test_0020_alias_for_type_validator(self):
+    def test_0020_record_for_type_validator(self):
         mxrecord = MXRecord.q.first()
         host = UserHost.q.first()
 
         self.assertRaises(AssertionError, CNameRecord, name="test",
-            alias_for=mxrecord, host_id=host.id)
+            record_for=mxrecord, host_id=host.id)
 
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
@@ -141,7 +141,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
         record = CNameRecord.q.first()
         entry = record.gen_entry
         entry_expected = u"%s IN CNAME %s" % (
-            record.name, record.alias_for.name)
+            record.name, record.record_for.name)
 
         self.assertEqual(entry, entry_expected)
 
@@ -188,8 +188,8 @@ class Test_040_Cascades(FixtureDataTestBase):
             session.session.delete(host)
 
         session.session.commit()
-        # assert that all aliases to the host are gone
-        self.assertIsNone(HostAlias.q.first())
+        # assert that all records to the host are gone
+        self.assertIsNone(Record.q.first())
         self.assertIsNone(ARecord.q.first())
         self.assertIsNone(AAAARecord.q.first())
         self.assertIsNone(CNameRecord.q.first())

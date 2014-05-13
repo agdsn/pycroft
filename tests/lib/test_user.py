@@ -12,7 +12,7 @@ from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, 
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
     PropertyData, MembershipData
 from pycroft.model import user, dormitory, port, session, logging, finance, \
-    property, host_alias, host
+    property, dns, host
 
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -104,10 +104,10 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         user_host = host.UserHost.q.filter_by(user=new_user).one()
         user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
         self.assertEqual(user_net_device.mac, test_mac)
-        user_cnamerecord = host_alias.CNameRecord.q.filter_by(host=user_host).one()
+        user_cnamerecord = dns.CNameRecord.q.filter_by(host=user_host).one()
         self.assertEqual(user_cnamerecord.name, test_hostname)
-        user_arecord = host_alias.ARecord.q.filter_by(host=user_host).one()
-        self.assertEqual(user_cnamerecord.alias_for, user_arecord)
+        user_arecord = dns.ARecord.q.filter_by(host=user_host).one()
+        self.assertEqual(user_cnamerecord.record_for, user_arecord)
 
         #checks the initial group memberships
         user_groups = new_user.active_property_groups + new_user.active_traffic_groups

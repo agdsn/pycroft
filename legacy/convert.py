@@ -7,7 +7,7 @@ from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
 from pycroft import model
 from pycroft.model import dormitory, session, port as port_model, user, host, property, logging
 from pycroft.helpers.user import hash_password
-from pycroft.model.host_alias import ARecord, CNameRecord
+from pycroft.model.dns import ARecord, CNameRecord
 
 def do_convert():
     houses = {}
@@ -190,7 +190,7 @@ def do_convert():
 
                 if (computer.c_alias is not None) and (len(computer.c_alias) is not 0):
                     new_cnamerecord = CNameRecord(name=computer.c_alias,
-                                                alias_for=new_arecord, host=new_host)
+                                                record_for=new_arecord, host=new_host)
                     cname_records.append(new_cnamerecord)
 
                 if (old_user.comment is not None) and (len(old_user.comment) is not 0):
