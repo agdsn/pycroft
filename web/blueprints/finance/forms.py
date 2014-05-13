@@ -2,12 +2,11 @@
 
 __author__ = 'florian'
 
-from web.form.fields import static
 from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, NumberRange, Optional
 from web.form.fields.core import TextField, IntegerField, HiddenField,\
     FileField, SelectField, FormField, FieldList, StringField, DateField
-from web.form.fields.custom import TypeaheadField
+from web.form.fields.custom import TypeaheadField, static
 
 
 class SemesterCreateForm(Form):
