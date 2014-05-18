@@ -110,7 +110,7 @@ def u_input(promt):
 ###############################################################################
 
 # start the interpreter
-if __name__ == "__main__"
-code.interact(
-    banner="Pycroft 0.1 \n# type h() for help #",
-    local=locals())
+if __name__ == "__main__":
+    code.interact(
+        banner="Pycroft 0.1 \n# type h() for help #",
+        local=locals())
