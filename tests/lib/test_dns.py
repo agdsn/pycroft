@@ -9,17 +9,17 @@ from pycroft.lib.dns import delete_record, change_record, create_a_record, \
     create_srv_record, _create_record
 from pycroft.model.host import Ip, UserHost
 from pycroft.model import session
-from pycroft.model.dns import ARecord, AAAARecord, MXRecord, CNameRecord, \
+from pycroft.model.dns import ARecord, AAAARecord, MXRecord, CNAMERecord, \
     NSRecord, SRVRecord, Record
 from tests.lib.fixtures.dns_fixtures import ARecordData, AAAARecordData, \
-    NSRecordData, CNameRecordData, MXRecordData, SRVRecordData, IpData, UserHostData, \
+    NSRecordData, CNAMERecordData, MXRecordData, SRVRecordData, IpData, UserHostData, \
     SubnetData
 
 from tests import FixtureDataTestBase
 
 
 class Test_010_RecordRemoval(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, NSRecordData, CNameRecordData,
+    datasets = [ARecordData, AAAARecordData, NSRecordData, CNAMERecordData,
                 MXRecordData, SRVRecordData]
 
     def test_0010_a_record(self):
@@ -42,11 +42,11 @@ class Test_010_RecordRemoval(FixtureDataTestBase):
         self.assertIsNone(NSRecord.q.filter(NSRecord.id == record.id).first())
 
     def test_0040_cname_record(self):
-        record = CNameRecord.q.first()
+        record = CNAMERecord.q.first()
         delete_record(record.id)
 
         self.assertIsNone(
-            CNameRecord.q.filter(CNameRecord.id == record.id).first())
+            CNAMERecord.q.filter(CNAMERecord.id == record.id).first())
 
     def test_0050_mx_record(self):
         record = MXRecord.q.first()
@@ -67,26 +67,26 @@ class Test_010_RecordRemoval(FixtureDataTestBase):
 
 
 class Test_020_AliasChange(FixtureDataTestBase):
-    datasets = [CNameRecordData]
+    datasets = [CNAMERecordData]
 
     def test_0010_correct_attribute(self):
-        record = CNameRecord.q.first()
+        record = CNAMERecord.q.first()
 
         change_record(record, name="correct_attribute")
 
         self.assertEqual(
-            CNameRecord.q.filter(CNameRecord.id == record.id).one().name,
+            CNAMERecord.q.filter(CNAMERecord.id == record.id).one().name,
             "correct_attribute")
 
     def test_0020_wrong_attribute(self):
-        record = CNameRecord.q.first()
+        record = CNAMERecord.q.first()
 
         self.assertRaises(ValueError, change_record, record=record,
                           test="wrong_attribute")
 
 
 class Test_030_RecordCreation(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, NSRecordData, CNameRecordData,
+    datasets = [ARecordData, AAAARecordData, NSRecordData, CNAMERecordData,
                 MXRecordData, SRVRecordData, IpData, SubnetData]
 
     def test_0010_a_record_without_ttl(self):
@@ -189,13 +189,13 @@ class Test_030_RecordCreation(FixtureDataTestBase):
                                     host=host)
 
         self.assertEqual(
-            CNameRecord.q.filter(CNameRecord.id == record.id).one().record_for,
+            CNAMERecord.q.filter(CNAMERecord.id == record.id).one().record_for,
             record_for)
         self.assertEqual(
-            CNameRecord.q.filter(CNameRecord.id == record.id).one().name,
+            CNAMERecord.q.filter(CNAMERecord.id == record.id).one().name,
             name)
         self.assertEqual(
-            CNameRecord.q.filter(CNameRecord.id == record.id).one().host,
+            CNAMERecord.q.filter(CNAMERecord.id == record.id).one().host,
             host)
 
         delete_record(record.id)

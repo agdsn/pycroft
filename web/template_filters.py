@@ -14,7 +14,7 @@ from cmath import log
 from datetime import datetime, timedelta
 from itertools import chain, imap
 
-from pycroft.model.dns import ARecord, CNameRecord
+from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.session import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, Ip
@@ -152,14 +152,14 @@ def host_name_filter(host):
 
 @template_filter("host_cname")
 def host_cname_filter(host):
-    c_name_record = session.query(
-        CNameRecord
+    cname_record = session.query(
+        CNAMERecord
     ).filter(
-        CNameRecord.host_id == host.id
+        CNAMERecord.host_id == host.id
     ).first()
 
-    if c_name_record is not None:
-        return c_name_record.name
+    if cname_record is not None:
+        return cname_record.name
     else:
         return "NoCName"
 

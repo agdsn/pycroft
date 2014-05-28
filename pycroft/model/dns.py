@@ -127,7 +127,7 @@ class MXRecord(Record):
         return u"%s IN MX %s %s" % (self.domain, self.priority, self.server)
 
 
-class CNameRecord(Record):
+class CNAMERecord(Record):
     id = Column(Integer, ForeignKey('record.id'), primary_key=True)
     name = Column(String(255), nullable=False)
 

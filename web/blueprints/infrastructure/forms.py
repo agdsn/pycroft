@@ -25,7 +25,7 @@ class SwitchPortForm(Form):
              message=u"Richtig ist z.B. A2")])
 
 
-class CNameRecordEditForm(Form):
+class CNAMERecordEditForm(Form):
     name = TextField(u"Alias Name", [Required(message=u"Alias?")])
     record_for = ReadonlyTextField(u"für")
 
@@ -33,10 +33,10 @@ class CNameRecordEditForm(Form):
 class RecordCreateForm(Form):
     type = SelectField(u"Type",
         choices=[('a_record', 'ARecord'), ('aaaa_record', 'AAAARecord'),
-                 ('cname_record', 'CNameRecord'), ('mx_record', 'MXRecord'),
+                 ('cname_record', 'CNAMERecord'), ('mx_record', 'MXRecord'),
                  ('ns_record', 'NSRecord'), ('srv_record', 'SRVRecord')])
 
 
-class CNameRecordCreateForm(Form):
+class CNAMERecordCreateForm(Form):
     name = TextField(u"Alias Name", [Required(message=u"Alias?")])
     record_for = QuerySelectField(u"für", get_label='name')
