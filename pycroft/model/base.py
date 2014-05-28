@@ -17,8 +17,7 @@ _session = None
 
 
 class _ModelMeta(DeclarativeMeta):
-    """Metaclass for all mapped Database objects.
-    """
+    """Metaclass for all mapped Database objects."""
     @property
     def q(cls):
         """This is a shortcut for easy querying of whole objects.
@@ -34,15 +33,16 @@ class _ModelMeta(DeclarativeMeta):
 
 
 class _Base(object):
-    """Baseclass for all database models.
-    """
+    """Baseclass for all database models."""
     id = Column(Integer, primary_key=True)
 
     @declared_attr
     def __tablename__(cls):
-        """Autogenerate the tablename for the mapped objects.
-        """
-        name = cls.__name__
+        """Autogenerate the tablename for the mapped objects."""
+        return cls._to_snake_case(cls.__name__)
+
+    @staticmethod
+    def _to_snake_case(name):
         name = re.sub(r"([A-Z]+)([A-Z][a-z])", r'\1_\2', name)
         name = re.sub(r"([a-z\d])([A-Z])", r'\1_\2', name)
         return name.lower()
