@@ -37,6 +37,7 @@ INSERT INTO "journal_entry" VALUES(3, 1, -20022, 'Soerver', 'Server', '216621', 
 CREATE TABLE "transaction" (
 	id INTEGER NOT NULL,
 	description TEXT NOT NULL,
+	author_id INTEGER NOT NULL,
 	transaction_date DATETIME NOT NULL,
 	valid_date DATE NOT NULL,
 	PRIMARY KEY (id)
