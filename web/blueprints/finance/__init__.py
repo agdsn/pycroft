@@ -186,11 +186,7 @@ def accounts_create():
     form = FinanceAccountCreateForm()
 
     if form.validate_on_submit():
-        # With QuerySelectField the form.data contains a valid Semester object.
-        # If no Semester is selected, data will be None.
-        new_account = FinanceAccount(name=form.name.data,
-                                     type=form.type.data,
-                                     semester=form.semester.data)
+        new_account = FinanceAccount(name=form.name.data, type=form.type.data)
         session.add(new_account)
         session.commit()
         return redirect(url_for('.accounts'))
