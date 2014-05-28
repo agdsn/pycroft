@@ -133,17 +133,14 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # Initial fees
     simple_transaction(
         conf["registration_fee_message"].format(**format_args),
-        new_finance_account,
-        get_registration_fee_account(),
-        current_semester.registration_fee
+        new_finance_account, get_registration_fee_account(),
+        current_semester.registration_fee, processor
     )
     simple_transaction(
         conf["semester_fee_message"].format(**format_args),
-        new_finance_account,
-        get_membership_fee_account(),
-        current_semester.regular_membership_fee
+        new_finance_account, get_membership_fee_account(),
+        current_semester.regular_membership_fee, processor
     )
-
     move_in_user_log_entry = create_user_log_entry(
         author=processor,
         message=conf["log_message"],

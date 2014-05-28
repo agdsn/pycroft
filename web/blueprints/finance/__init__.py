@@ -116,10 +116,9 @@ def journals_entries_edit(journal_id, entry_id):
             FinanceAccount.id == form.finance_account_id.data
         ).one()
         entry.transaction = finance.simple_transaction(
-            description=entry.description,
-            credit_account=credit_account, debit_account=debit_account,
-            amount=entry.amount, valid_date=entry.valid_date
-        )
+            description=entry.description, debit_account=debit_account,
+            credit_account=credit_account, amount=entry.amount,
+            author=current_user, valid_date=entry.valid_date)
         entry.description = form.description.data
         session.add(entry)
         session.commit()
