@@ -1,9 +1,9 @@
 __author__ = 'l3nkz'
 
 from tests.model.fixtures.dns_fixtures import ARecordData, AAAARecordData,\
-    MXRecordData, CNameRecordData, NSRecordData, SRVRecordData, IpData, UserHostData
+    MXRecordData, CNAMERecordData, NSRecordData, SRVRecordData, IpData, UserHostData
 from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
-    CNameRecord, NSRecord, SRVRecord
+    CNAMERecord, NSRecord, SRVRecord
 from tests import FixtureDataTestBase
 from pycroft.model.host import      Ip, UserHost
 from pycroft.model import session
@@ -43,29 +43,29 @@ class Test_020_AAAARecordValidator(FixtureDataTestBase):
                 break
 
 
-class Test_025_CNameRecordValidator(FixtureDataTestBase):
+class Test_025_CNAMERecordValidator(FixtureDataTestBase):
     datasets = [ARecordData, MXRecordData, UserHostData]
 
     def test_0010_record_for_name_validator(self):
         a_record = ARecord.q.first()
         host = UserHost.q.first()
 
-        self.assertRaises(AssertionError, CNameRecord, name=a_record.name,
+        self.assertRaises(AssertionError, CNAMERecord, name=a_record.name,
             record_for=a_record, host_id=host.id)
 
-        new_record = CNameRecord(name=a_record.name + "_test",
+        new_record = CNAMERecord(name=a_record.name + "_test",
             record_for=a_record, host_id=host.id)
 
     def test_0020_record_for_type_validator(self):
         mx_record = MXRecord.q.first()
         host = UserHost.q.first()
 
-        self.assertRaises(AssertionError, CNameRecord, name="test",
+        self.assertRaises(AssertionError, CNAMERecord, name="test",
             record_for=mx_record, host_id=host.id)
 
 
 class Test_030_GenEntryMethods(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData,
+    datasets = [ARecordData, AAAARecordData, MXRecordData, CNAMERecordData,
                 NSRecordData, SRVRecordData]
 
     def test_0010_a_record_without_ttl(self):
@@ -138,7 +138,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
         self.assertEqual(entry, entry_expected)
 
     def test_0040_cname_record(self):
-        record = CNameRecord.q.first()
+        record = CNAMERecord.q.first()
         entry = record.gen_entry
         entry_expected = u"%s IN CNAME %s" % (
             record.name, record.record_for.name)
@@ -180,7 +180,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
 
 
 class Test_040_Cascades(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNameRecordData,
+    datasets = [ARecordData, AAAARecordData, MXRecordData, CNAMERecordData,
                 NSRecordData, SRVRecordData, UserHostData, IpData]
 
     def test_0010_record_on_host_delete(self):
@@ -192,7 +192,7 @@ class Test_040_Cascades(FixtureDataTestBase):
         self.assertIsNone(Record.q.first())
         self.assertIsNone(ARecord.q.first())
         self.assertIsNone(AAAARecord.q.first())
-        self.assertIsNone(CNameRecord.q.first())
+        self.assertIsNone(CNAMERecord.q.first())
         self.assertIsNone(MXRecord.q.first())
         self.assertIsNone(SRVRecord.q.first())
         self.assertIsNone(NSRecord.q.first())
@@ -204,8 +204,8 @@ class Test_040_Cascades(FixtureDataTestBase):
 
         session.session.commit()
 
-        self.assertIsNone(CNameRecord.q.filter(
-            CNameRecord.id == CNameRecordData.dummy_record.id).first())
+        self.assertIsNone(CNAMERecord.q.filter(
+            CNAMERecord.id == CNAMERecordData.dummy_record.id).first())
 
 
     def test_0030_cname_on_aaaa_record_delete(self):
@@ -214,8 +214,8 @@ class Test_040_Cascades(FixtureDataTestBase):
 
         session.session.commit()
 
-        self.assertIsNone(CNameRecord.q.filter(
-            CNameRecord.id == CNameRecordData.dummy_record2.id).first())
+        self.assertIsNone(CNAMERecord.q.filter(
+            CNAMERecord.id == CNAMERecordData.dummy_record2.id).first())
 
 
     def test_0040_a_record_on_ip_delete(self):

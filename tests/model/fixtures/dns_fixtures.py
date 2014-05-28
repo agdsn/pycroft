@@ -97,7 +97,7 @@ class MXRecordData(DataSet):
         host = UserHostData.dummy_host1
 
 
-class CNameRecordData(DataSet):
+class CNAMERecordData(DataSet):
     class dummy_record:
         id = 100
         name = "dummy.net."

@@ -12,11 +12,11 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
 from pycroft.model.host import Switch, Host
 from pycroft.model.dormitory import Subnet, VLAN
-from pycroft.model.dns import Record, CNameRecord
+from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
-from web.blueprints.infrastructure.forms import CNameRecordEditForm
-from web.blueprints.infrastructure.forms import CNameRecordCreateForm
+from web.blueprints.infrastructure.forms import CNAMERecordEditForm
+from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import a_records_query
 from web.blueprints.access import BlueprintAccess
@@ -84,9 +84,9 @@ def aaaa_record_edit(user_id, record_id):
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def cname_record_edit(user_id, record_id):
-    record = CNameRecord.q.get(record_id)
+    record = CNAMERecord.q.get(record_id)
 
-    form = CNameRecordEditForm()
+    form = CNAMERecordEditForm()
     form.record_for.data = record.record_for.name
 
     if form.validate_on_submit():
@@ -125,7 +125,7 @@ def record_create(user_id, host_id):
     form = RecordCreateForm()
 
     if not form.is_submitted():
-        form.type.data = 'CNameRecord'
+        form.type.data = 'CNAMERecord'
 
     if form.validate_on_submit():
         create_function = ".%s_create" % (form.type.data,)
@@ -154,7 +154,7 @@ def aaaa_record_create(user_id, host_id):
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def cname_record_create(user_id, host_id):
-    form = CNameRecordCreateForm()
+    form = CNAMERecordCreateForm()
     form.record_for.query = a_records_query(host_id)
     host = Host.q.get(host_id)
 
@@ -162,13 +162,13 @@ def cname_record_create(user_id, host_id):
         create_cname_record(host=host, name=form.name.data,
             record_for=form.record_for.data)
 
-        flash(u"Neuer CNameRecord angelegt", 'success')
+        flash(u"Neuer CNAMERecord angelegt", 'success')
 
         return redirect(url_for("user.user_show", user_id=user_id))
 
     return render_template('infrastructure/recordtype_create.html', form=form,
         user_id=user_id, host_id=host_id,
-        page_title=u"Neuen CNameRecord erzeugen")
+        page_title=u"Neuen CNAMERecord erzeugen")
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/mx')

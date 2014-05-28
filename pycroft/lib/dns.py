@@ -1,6 +1,6 @@
 from pycroft.model import session
 from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
-    CNameRecord, NSRecord, SRVRecord
+    CNAMERecord, NSRecord, SRVRecord
 from pycroft.lib.all import with_transaction
 
 
@@ -22,7 +22,7 @@ def delete_record(record_id):
     elif record.discriminator == "aaaa_record":
         record = AAAARecord.q.filter(AAAARecord.id == record_id).one()
     elif record.discriminator == "cname_record":
-        record = CNameRecord.q.filter(CNameRecord.id == record_id).one()
+        record = CNAMERecord.q.filter(CNAMERecord.id == record_id).one()
     elif record.discriminator == "mx_record":
         record = MXRecord.q.filter(MXRecord.id == record_id).one()
     elif record.discriminator == "srv_record":
@@ -76,7 +76,7 @@ def _create_record(type, *args, **kwargs):
     elif discriminator == "aaaa_record":
         record = AAAARecord(*args, **kwargs)
     elif discriminator == "cname_record":
-        record = CNameRecord(*args, **kwargs)
+        record = CNAMERecord(*args, **kwargs)
     elif discriminator == "mx_record":
         record = MXRecord(*args, **kwargs)
     elif discriminator == "ns_record":
