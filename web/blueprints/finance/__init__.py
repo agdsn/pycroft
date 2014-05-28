@@ -108,7 +108,7 @@ def journals_entries_edit(journal_id, entry_id):
     form = JournalEntryEditForm(obj=entry, journal_name=entry.journal.name)
 
     if form.validate():
-        debit_account = entry.journal.financeaccount
+        debit_account = entry.journal.finance_account
         credit_account = FinanceAccount.q.filter(
             FinanceAccount.id == form.finance_account_id.data
         ).one()
