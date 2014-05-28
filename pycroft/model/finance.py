@@ -112,7 +112,7 @@ class Transaction(ModelBase):
 
     @property
     def is_balanced(self):
-        return sum([split.amount for split in self.splits]) == 0
+        return sum((split.amount for split in self.splits)) == 0
 
 
 def check_transaction_balance_on_save(mapper, connection, target):
