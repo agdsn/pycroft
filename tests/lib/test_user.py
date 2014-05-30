@@ -238,16 +238,20 @@ class Test_060_User_Balance(FixtureDataTestBase):
         return UserHelper.has_balance_of_at_least(self.user, amount)
 
     def _add_amount(self, amount):
-        transaction = finance.Transaction(description=self.description)
-        user_split = finance.Split(amount=amount,
-                                   account=self.user.finance_account,
-                                   transaction=transaction)
-        other_split = finance.Split(amount=-amount,
-                                    account=self.account,
-                                    transaction=transaction)
-        session.session.add(transaction)
-        session.session.add(user_split)
-        session.session.add(other_split)
+        transaction = finance.Transaction(
+            description=self.description,
+            author=self.user
+        )
+        user_split = finance.Split(
+            amount=amount,
+            account=self.user.finance_account,
+            transaction=transaction)
+        other_split = finance.Split(
+            amount=-amount,
+            account=self.account,
+            transaction=transaction
+        )
+        session.session.add_all([transaction, user_split, other_split])
 
     def setUp(self):
         super(Test_060_User_Balance, self).setUp()
