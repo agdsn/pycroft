@@ -106,7 +106,11 @@ class UnbalancedTransactionError(Exception):
 
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
-    author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    author_id = Column(
+        Integer,
+        ForeignKey("user.id", ondelete='SET NULL', onupdate='CASCADE'),
+        nullable=True
+    )
     author = relationship("User")
     transaction_date = Column(DateTime, nullable=False, default=datetime.now)
     valid_date = Column(Date, nullable=False, default=datetime.now)
