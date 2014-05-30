@@ -129,8 +129,8 @@ event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
 event.listen(Transaction, "before_update", check_transaction_balance_on_save)
 
 
-#soll ist positiv, haben ist negativ
 class Split(ModelBase):
+    # positive amount means debit (ger. Soll) and negative credit (ger. Haben)
     amount = Column(Integer, nullable=False)
     account_id = Column(
         Integer,
