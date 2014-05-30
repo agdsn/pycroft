@@ -103,6 +103,10 @@ class JournalEntry(ModelBase):
     transaction = relationship("Transaction")
 
 
+class UnbalancedTransactionError(Exception):
+    pass
+
+
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
     author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
@@ -116,7 +120,8 @@ class Transaction(ModelBase):
 
 
 def check_transaction_balance_on_save(mapper, connection, target):
-    assert target.is_balanced, 'Transaction "%s" is not balanced!' % target.description
+    if not target.is_balanced:
+        raise UnbalancedTransactionError
 
 
 event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
