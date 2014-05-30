@@ -1,64 +1,75 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import unittest
-from pycroft import model
+from pycroft.model.finance import FinanceAccount, UnbalancedTransactionError, \
+    Transaction, Split
+from pycroft.model.user import User
+from tests import FixtureDataTestBase
 from pycroft.model import session, finance
 from datetime import datetime
+from tests.model.fixtures.finance_fixtures import FinanceAccountData, UserData
 
 
-class Test_010_TransactionSplits(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        session.reinit_session("sqlite://")
-        model.drop_db_model()
-        model.create_db_model()
-        cls.account = finance.FinanceAccount(name="Testaccount", type="EXPENSE")
-        cls.s = session.session
-        cls.s.add(cls.account)
-        cls.s.commit()
+class Test_010_TransactionSplits(FixtureDataTestBase):
+    datasets = [FinanceAccountData, UserData]
+
+    def setUp(self):
+        super(Test_010_TransactionSplits, self).setUp()
+        self.author = User.q.one()
+        self.account = FinanceAccount.q.one()
 
     def tearDown(self):
+        Split.q.delete()
+        Transaction.q.delete()
         super(Test_010_TransactionSplits, self).tearDown()
-        print "bla"
-        self.s.remove()
+
+    def create_transaction(self):
+        return finance.Transaction(
+            description=u"Transaction",
+            author=self.author,
+            transaction_date=datetime.now()
+        )
+
+    def create_split(self, transaction, amount):
+        return finance.Split(
+            amount=amount,
+            account=self.account,
+            transaction=transaction
+        )
 
     def test_0010_empty_transaction(self):
-        tr = finance.Transaction(description="Transaction1", transaction_date=datetime.now())
-        self.s.add(tr)
-        self.s.commit()
-        self.assertEqual(finance.Transaction.q.filter_by(description="Transaction1").count(), 1)
+        t = self.create_transaction()
+        session.session.add(t)
+        try:
+            session.session.commit()
+        except UnbalancedTransactionError:
+            session.session.rollback()
+            self.fail()
 
     def test_0020_fail_on_unbalanced(self):
-        tr = finance.Transaction(description="Transaction2", transaction_date=datetime.now())
-        self.s.add(tr)
-        self.s.commit()
-        sp1 = finance.Split(amount=100, account=self.account, transaction=tr)
-        self.s.add(sp1)
-        self.assertRaisesRegexp(Exception, 'Transaction "Transaction2" is not balanced!', self.s.commit)
-        #self.s.rollback()
+        t = self.create_transaction()
+        s = self.create_split(t, 100)
+        session.session.add_all([t, s])
+        self.assertRaises(UnbalancedTransactionError, session.session.commit)
+        session.session.rollback()
 
     def test_0030_insert_balanced(self):
-        tr = finance.Transaction(description="Transaction3", transaction_date=datetime.now())
-        self.s.add(tr)
-        self.s.commit()
-        sp1 = finance.Split(amount=100, account=self.account, transaction=tr)
-        sp2 = finance.Split(amount=-100, account=self.account, transaction=tr)
-        self.s.add(sp1)
-        self.s.add(sp2)
-        self.s.commit()
+        t = self.create_transaction()
+        s1 = self.create_split(t, 100)
+        s2 = self.create_split(t, -100)
+        session.session.add_all([t, s1, s2])
+        try:
+            session.session.commit()
+        except UnbalancedTransactionError:
+            session.session.rollback()
+            self.fail()
 
     def test_0040_delete_cascade(self):
-        tr = finance.Transaction(description="Transaction4", transaction_date=datetime.now())
-        sp1 = finance.Split(amount=234, account=self.account, transaction=tr)
-        sp2 = finance.Split(amount=-234, account=self.account, transaction=tr)
-        self.s.add(tr)
-        self.s.add(sp1)
-        self.s.add(sp2)
-        self.s.commit()
-
-        tr = finance.Transaction.q.filter_by(description="Transaction4").one()
-        self.s.delete(tr)
-        self.s.commit()
-
-        self.assertEqual(finance.Split.q.filter_by(amount=-234).count(), 0)
+        t = self.create_transaction()
+        s1 = self.create_split(t, 100)
+        s2 = self.create_split(t, -100)
+        session.session.add_all([t, s1, s2])
+        session.session.commit()
+        session.session.delete(t)
+        session.session.commit()
+        self.assertEqual(finance.Split.q.count(), 0)
