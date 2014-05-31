@@ -2,6 +2,7 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import unittest
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
@@ -9,8 +10,6 @@ from pycroft.model import drop_db_model, create_db_model
 from flask import url_for, request
 from flask.ext import testing
 
-
-from tests.unittest26_compat import OldPythonTestCase
 
 __author__ = 'jan'
 
@@ -27,7 +26,7 @@ def make_fixture():
     return fixture
 
 
-class FixtureDataTestBase(DataTestCase, OldPythonTestCase):
+class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """A TestCase baseclass that handles database fixtures.
 
     You only need to define a `datasets` class member with a list of

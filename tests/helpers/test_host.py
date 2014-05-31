@@ -1,7 +1,8 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from tests import OldPythonTestCase, FixtureDataTestBase
+import unittest
+from tests import FixtureDataTestBase
 from random import randint
 import ipaddr
 
@@ -16,7 +17,7 @@ from tests.helpers.fixtures.host_fixtures import DormitoryData, VLANData, \
     SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
 
 
-class Test_010_SimpleHostsHelper(OldPythonTestCase):
+class Test_010_SimpleHostsHelper(unittest.TestCase):
     def test_0010_sort_ports(self):
         ports = []
         for letter in ["A", "B", "C", "D", "E", "F", "G"]:

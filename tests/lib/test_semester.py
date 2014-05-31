@@ -4,13 +4,13 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'Florian Österreich'
 
-from tests import OldPythonTestCase
+import unittest
 from pycroft.lib.finance import create_semester
 from pycroft import model
 from pycroft.model import session
 from datetime import date, timedelta
 
-class Test_010_Create_Semester(OldPythonTestCase):
+class Test_010_Create_Semester(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

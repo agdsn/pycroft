@@ -2,8 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+import unittest
 
-from tests import OldPythonTestCase, FixtureDataTestBase
+from tests import FixtureDataTestBase
 from pycroft import model
 from pycroft.model import session, host, dormitory, user, accounting
 
@@ -14,7 +15,7 @@ from pycroft.helpers.host import get_free_ip, MacExistsException
 from tests import REGEX_NOT_NULL_CONSTRAINT
 
 
-class Test_010_NetDeviceValidators(OldPythonTestCase):
+class Test_010_NetDeviceValidators(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         session.reinit_session("sqlite://")
@@ -219,25 +220,25 @@ class Test_060_Cascades(FixtureDataTestBase):
     def test_0010_cascade_on_delete_ip(self):
         session.session.delete(host.Ip.q.get(1))
         session.session.commit()
-        self._assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_netdevice(self):
         session.session.delete(host.NetDevice.q.get(1))
         session.session.commit()
-        self._assertIsNone(host.Ip.q.first())
-        self._assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertIsNone(host.Ip.q.first())
+        self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_host(self):
         session.session.delete(host.Host.q.get(1))
         session.session.commit()
-        self._assertIsNone(host.NetDevice.q.first())
-        self._assertIsNone(host.Ip.q.first())
-        self._assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertIsNone(host.NetDevice.q.first())
+        self.assertIsNone(host.Ip.q.first())
+        self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_user(self):
         session.session.delete(user.User.q.get(1))
         session.session.commit()
-        self._assertIsNone(host.Host.q.first())
-        self._assertIsNone(host.NetDevice.q.first())
-        self._assertIsNone(host.Ip.q.first())
-        self._assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertIsNone(host.Host.q.first())
+        self.assertIsNone(host.NetDevice.q.first())
+        self.assertIsNone(host.Ip.q.first())
+        self.assertIsNone(accounting.TrafficVolume.q.first())
