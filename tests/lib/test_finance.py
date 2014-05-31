@@ -1,4 +1,5 @@
-from tests import OldPythonTestCase, FixtureDataTestBase
+import unittest
+from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import JournalData
 
 __author__ = 'felix_kluge'
@@ -10,7 +11,7 @@ from pycroft.model import session
 from datetime import date, datetime
 
 
-class Test_010_Semester(OldPythonTestCase):
+class Test_010_Semester(unittest.TestCase):
 
     def test_0010_create_semester(self):
         """

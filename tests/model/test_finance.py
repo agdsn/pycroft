@@ -1,10 +1,10 @@
-from tests import OldPythonTestCase
+import unittest
 from pycroft import model
 from pycroft.model import session, finance
 from datetime import datetime
 
 
-class Test_010_TransactionSplits(OldPythonTestCase):
+class Test_010_TransactionSplits(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         session.reinit_session("sqlite://")

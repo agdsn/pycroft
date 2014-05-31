@@ -7,11 +7,10 @@ This module contains Tests for the basic model schema
 
 :copyright: (c) 2011 by AG DSN.
 """
+import unittest
 
 from sqlalchemy.orm.util import class_mapper
 import sqlalchemy.exc
-
-from tests import OldPythonTestCase
 
 
 def try_mapper(module):
@@ -27,7 +26,7 @@ def try_mapper(module):
     return None
 
 
-class Test_010_SchemaMapping(OldPythonTestCase):
+class Test_010_SchemaMapping(unittest.TestCase):
     def test_0010_mapping_base(self):
         from pycroft.model import base
         msg = try_mapper(base)

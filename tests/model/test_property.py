@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from tests import OldPythonTestCase, FixtureDataTestBase
+import unittest
+from tests import FixtureDataTestBase
 from pycroft.model import session, user, property, _all
 from tests.model.fixtures.property_fixtures import DormitoryData, RoomData, \
     UserData, PropertyData, PropertyGroupData, TrafficGroupData
@@ -427,7 +428,7 @@ class Test_050_Membership(PropertyDataTestBase):
         self.assertTrue(p1.active)
 
 
-class Test_060_Property_Module_Code(OldPythonTestCase):
+class Test_060_Property_Module_Code(unittest.TestCase):
     def test_0010_get_properties(self):
         property_list = property.get_properties()
 

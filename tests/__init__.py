@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import unittest
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
 from pycroft.model import session, _all
@@ -6,8 +7,6 @@ from pycroft.model import drop_db_model, create_db_model
 from flask import url_for, request
 from flask.ext import testing
 
-
-from tests.unittest26_compat import OldPythonTestCase
 
 __author__ = 'jan'
 
@@ -24,7 +23,7 @@ def make_fixture():
     return fixture
 
 
-class FixtureDataTestBase(DataTestCase, OldPythonTestCase):
+class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """A TestCase baseclass that handles database fixtures.
 
     You only need to define a `datasets` class member with a list of
