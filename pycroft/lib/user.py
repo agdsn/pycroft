@@ -34,9 +34,10 @@ def get_registration_fee_account():
     ).one()
 
 
-def get_membership_fee_account():
+def get_semester_contribution_account():
+    account_id = config['finance']['semester_contribution_account_id']
     return FinanceAccount.q.filter(
-        FinanceAccount.id == config['finance']['membership_fee_account_id']
+        FinanceAccount.id == account_id
     ).one()
 
 
@@ -135,8 +136,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     )
     simple_transaction(
         conf["semester_fee_message"].format(**format_args),
-        new_finance_account, get_membership_fee_account(),
-        current_semester.regular_membership_fee, processor
+        new_finance_account, get_semester_contribution_account(),
+        current_semester.regular_semester_contribution, processor
     )
     move_in_user_log_entry = create_user_log_entry(
         author=processor,

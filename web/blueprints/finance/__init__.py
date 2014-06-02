@@ -222,8 +222,8 @@ def semesters_create():
         form = SemesterCreateForm(
             name=name_default,
             registration_fee=previous_semester.registration_fee,
-            regular_membership_fee=previous_semester.regular_membership_fee,
-            reduced_membership_fee=previous_semester.reduced_membership_fee,
+            regular_semester_contribution=previous_semester.regular_semester_contribution,
+            reduced_semester_contribution=previous_semester.reduced_semester_contribution,
             overdue_fine=previous_semester.overdue_fine,
             premature_begin_date=premature_begin_date_default,
             begin_date=begin_date_default,
@@ -235,13 +235,14 @@ def semesters_create():
         Semester(
             name=form.name.data,
             registration_fee=form.registration_fee.data,
-            regular_membership_fee=form.regular_membership_fee.data,
-            reduced_membership_fee=form.reduced_membership_fee.data,
+            regular_semester_contribution=form.regular_semester_contribution.data,
+            reduced_semester_contribution=form.reduced_semester_contribution.data,
             overdue_fine=form.overdue_fine.data,
             premature_begin_date=form.premature_begin_date.data,
             begin_date=form.begin_date.data,
             end_date=form.end_date.data,
-            belated_end_date=form.belated_end_date.data)
+            belated_end_date=form.belated_end_date.data
+        )
         return redirect(url_for(".semesters_list"))
     return render_template('finance/semesters_create.html', form=form)
 

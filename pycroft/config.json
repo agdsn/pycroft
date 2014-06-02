@@ -5,7 +5,7 @@
     },
     "finance": {
         "registration_fee_account_id": 1,
-        "membership_fee_account_id": 2,
+        "semester_contribution_account_id": 2,
         "additional_fee_account_id": 3,
         "overdue_fine_account_id": 4
     },

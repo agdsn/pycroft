@@ -22,8 +22,8 @@ from sqlalchemy import event
 class Semester(ModelBase):
     name = Column(String, nullable=False)
     registration_fee = Column(Integer, nullable=False)
-    regular_membership_fee = Column(Integer, nullable=False)
-    reduced_membership_fee = Column(Integer, nullable=False)
+    regular_semester_contribution = Column(Integer, nullable=False)
+    reduced_semester_contribution = Column(Integer, nullable=False)
     overdue_fine = Column(Integer, nullable=False)
     premature_begin_date = Column(Date, nullable=False)
     begin_date = Column(Date, nullable=False)
@@ -31,8 +31,8 @@ class Semester(ModelBase):
     belated_end_date = Column(Date, nullable=False)
     __table_args__ = (
         CheckConstraint('registration_fee > 0'),
-        CheckConstraint('regular_membership_fee > 0'),
-        CheckConstraint('reduced_membership_fee > 0'),
+        CheckConstraint('regular_semester_contribution > 0'),
+        CheckConstraint('reduced_semester_contribution > 0'),
         CheckConstraint('overdue_fine > 0'),
         CheckConstraint('premature_begin_date < begin_date'),
         CheckConstraint('begin_date < end_date'),
