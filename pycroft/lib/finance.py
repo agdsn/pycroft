@@ -6,11 +6,13 @@ import cStringIO
 from itertools import imap, groupby
 from collections import namedtuple
 from sqlalchemy.orm.exc import NoResultFound
+from pycroft.lib.config import config
+from pycroft.model.user import User
 
 __author__ = 'Florian Österreich'
 
-from datetime import datetime, date
-from sqlalchemy import desc
+from datetime import datetime, date, timedelta
+from sqlalchemy import between
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.model import session
@@ -18,6 +20,40 @@ import csv
 from pycroft.lib.all import with_transaction
 
 
+def get_semester_for_date(target_date):
+    """
+    Get the semester which contains a given target date.
+    :param date target_date: The date for which a corresponding semester should
+    be found.
+    :rtype: Semester
+    :raises sqlalchemy.orm.exc.NoResultFound if no semester was found
+    :raises sqlalchemy.orm.exc.MultipleResultsFound if multiple semester were
+    found.
+    """
+    return Semester.q.filter(
+        between(target_date, Semester.begin_date, Semester.end_date)
+    ).one()
+
+
+def get_current_semester():
+    """
+    Get the current semester.
+    :rtype: Semester
+    """
+    return get_semester_for_date(date.today())
+
+
+def get_registration_fee_account():
+    return FinanceAccount.q.filter(
+        FinanceAccount.id == config['finance']['registration_fee_account_id']
+    ).one()
+
+
+def get_semester_contribution_account():
+    account_id = config['finance']['semester_contribution_account_id']
+    return FinanceAccount.q.filter(
+        FinanceAccount.id == account_id
+    ).one()
 
 
 @with_transaction
@@ -56,6 +92,34 @@ def simple_transaction(description, debit_account, credit_account, amount,
         [new_transaction, new_debit_split, new_credit_split]
     )
     return new_transaction
+
+
+def setup_finance_account(new_user, processor):
+    conf = config["finance"]
+    current_semester = get_current_semester()
+    format_args = {
+        "user_id": new_user.id,
+        "user_name": new_user.name,
+        "semester": current_semester.name
+    }
+    new_finance_account = FinanceAccount(
+        name=conf["user_finance_account_name"].format(**format_args),
+        type="REVENUE"
+    )
+    new_user.finance_account = new_finance_account
+    session.session.add(new_finance_account)
+
+    # Initial bookings
+    simple_transaction(
+        conf["registration_fee_description"].format(**format_args),
+        new_finance_account, get_registration_fee_account(),
+        current_semester.registration_fee, processor
+    )
+    simple_transaction(
+        conf["semester_contribution_description"].format(**format_args),
+        new_finance_account, get_semester_contribution_account(),
+        current_semester.regular_semester_contribution, processor
+    )
 
 
 @with_transaction

@@ -11,15 +11,15 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime, timedelta, time
-from flask.ext.login import current_user
+from datetime import datetime, timedelta
+
 from sqlalchemy.sql.expression import func
+
 from pycroft.helpers import user, host
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
+from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, Ip
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
-from pycroft.model.finance import FinanceAccount, Transaction, Split, Semester
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.lib.dns import create_a_record, create_cname_record
@@ -27,29 +27,16 @@ from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
-from pycroft.lib.finance import simple_transaction
+from pycroft.lib.finance import setup_finance_account
 from pycroft.lib.all import with_transaction
-
-
-def get_registration_fee_account():
-    return FinanceAccount.q.filter(
-        FinanceAccount.id == config['finance']['registration_fee_account_id']
-    ).one()
-
-
-def get_semester_contribution_account():
-    account_id = config['finance']['semester_contribution_account_id']
-    return FinanceAccount.q.filter(
-        FinanceAccount.id == account_id
-    ).one()
 
 
 @with_transaction
 def move_in(name, login, email, dormitory, level, room_number, mac,
-             current_semester, processor, host_name=None):
+            processor, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
-    inital groups and transactions.
+    initial groups and transactions.
     :param name: The full name of the user. (Max Mustermann)
     :param login: The unix login for the user.
     :param email: E-Mail address of the user.
@@ -57,8 +44,6 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
-    :param current_semester: The semester the user moves in.
-    :param initial_groups: The groups a user is member from beginning.
     :param host_name: An optional Hostname for the users pc.
     :return: The new user object.
     """
@@ -120,28 +105,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             assert membership["duration"] > 0
             new_membership.end_date = datetime.now() + timedelta(membership["duration"])
 
-    format_args = {
-        "user_id": new_user.id,
-        "user_name": new_user.name,
-        "semester": current_semester.name
-    }
-    new_finance_account = FinanceAccount(
-        name=conf["finance_account_name"].format(**format_args),
-        type="REVENUE")
-    new_user.finance_account = new_finance_account
-    session.session.add(new_finance_account)
+    setup_finance_account(new_user, processor)
 
-    # Initial fees
-    simple_transaction(
-        conf["registration_fee_message"].format(**format_args),
-        new_finance_account, get_registration_fee_account(),
-        current_semester.registration_fee, processor
-    )
-    simple_transaction(
-        conf["semester_fee_message"].format(**format_args),
-        new_finance_account, get_semester_contribution_account(),
-        current_semester.regular_semester_contribution, processor
-    )
     move_in_user_log_entry = create_user_log_entry(
         author=processor,
         message=conf["log_message"],

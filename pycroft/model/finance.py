@@ -56,6 +56,18 @@ class FinanceAccount(ModelBase):
     )
     transactions = relationship("Transaction", secondary="split")
 
+    @hybrid_property
+    def balance(self):
+        return sum(map(lambda s: s.amount, self.splits))
+
+    @balance.expression
+    def balance(self):
+        return select(
+            func.sum(Split.amount)
+        ).filter(
+            Split.account_id == self.id
+        )
+
 
 class Journal(ModelBase):
     name = Column(String(255), nullable=False)
