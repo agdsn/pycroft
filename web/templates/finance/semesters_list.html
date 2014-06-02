@@ -22,8 +22,8 @@
         <tr>
             <td>{{ semester.name }}</td>
             <td>{{ semester.registration_fee|money }}</td>
-            <td>{{ semester.regular_membership_fee|money }}</td>
-            <td>{{ semester.reduced_membership_fee|money }}</td>
+            <td>{{ semester.regular_semester_contribution|money }}</td>
+            <td>{{ semester.reduced_semester_contribution|money }}</td>
             <td>{{ semester.overdue_fine|money }}</td>
             <td>{{ semester.premature_begin_date|date }}</td>
             <td>{{ semester.begin_date|date }}</td>
