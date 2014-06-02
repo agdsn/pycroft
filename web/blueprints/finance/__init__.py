@@ -232,7 +232,7 @@ def semesters_create():
     else:
         form = SemesterCreateForm()
     if form.validate_on_submit():
-        finance.create_semester(
+        Semester(
             name=form.name.data,
             registration_fee=form.registration_fee.data,
             regular_membership_fee=form.regular_membership_fee.data,
