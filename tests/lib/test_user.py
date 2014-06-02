@@ -82,7 +82,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.move_in(test_name,
+        new_user = UserHelper.move_in(
+            test_name,
             test_login,
             test_email,
             test_dormitory,
@@ -90,8 +91,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             room_number="1",
             host_name=test_hostname,
             mac=test_mac,
-            current_semester=finance.Semester.q.first(),
-            processor=self.processing_user)
+            processor=self.processing_user
+        )
 
         self.assertEqual(new_user.name, test_name)
         self.assertEqual(new_user.login, test_login)
@@ -115,19 +116,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             self.assertIn(group, user_groups)
 
         self.assertEqual(UserHelper.has_internet(new_user), True)
-
-        finance_account = new_user.finance_account
-        splits = finance.Split.q.filter(
-            finance.Split.account_id == finance_account.id
-        ).all()
-        self.assertEqual(
-            finance_account.name,
-            config["move_in"]["finance_account_name"].format(
-                user_id=new_user.id
-            )
-        )
-        account_sum = sum([split.amount for split in splits])
-        self.assertEqual(account_sum, 4000)
+        self.assertIsNotNone(new_user.finance_account)
+        self.assertEqual(new_user.finance_account.balance, 4000)
         self.assertFalse(new_user.has_property("away"))
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
@@ -151,15 +141,16 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         test_dormitory = dormitory.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.move_in(test_name,
+        new_user = UserHelper.move_in(
+            test_name,
             test_login,
             test_email,
             test_dormitory,
             level=1,
             room_number="1",
             mac=test_mac,
-            current_semester=finance.Semester.q.first(),
-            processor=self.processing_user)
+            processor=self.processing_user
+        )
 
         out_time = datetime.now()
 
@@ -316,15 +307,16 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         test_dormitory = dormitory.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.move_in(test_name,
+        new_user = UserHelper.move_in(
+            test_name,
             test_login,
             test_email,
             test_dormitory,
             level=1,
             room_number="1",
             mac=test_mac,
-            current_semester=finance.Semester.q.first(),
-            processor=self.processing_user)
+            processor=self.processing_user
+        )
 
         out_time = datetime.now()
         self.assertFalse(new_user.has_property("away"))

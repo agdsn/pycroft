@@ -7,7 +7,10 @@
         "registration_fee_account_id": 1,
         "semester_contribution_account_id": 2,
         "additional_fee_account_id": 3,
-        "overdue_fine_account_id": 4
+        "overdue_fine_account_id": 4,
+        "user_finance_account_name": "Konto von {user_id}",
+        "registration_fee_description": "Anmeldegebühr",
+        "semester_contribution_description": "Semesterbeitrag {semester}"
     },
     "move_in": {
         "group_memberships": [
@@ -20,9 +23,6 @@
                 "duration": 31
             }
         ],
-        "finance_account_name": "Konto von {user_id}",
-        "registration_fee_message": "Anmeldegebühr",
-        "semester_fee_message": "Semestergebühr {semester}",
         "log_message": "Anmeldung."
     },
     "move":{

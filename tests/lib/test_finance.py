@@ -1,16 +1,17 @@
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.finance_fixtures import JournalData
+from tests.lib.fixtures.finance_fixtures import JournalData, SemesterData
 
 __author__ = 'felix_kluge'
 
-from pycroft.lib.finance import import_journal_csv
+from pycroft.lib.finance import import_journal_csv, get_current_semester
 from pycroft.model.finance import Journal, JournalEntry
 from datetime import date
 
 
 class Test_010_Journal(FixtureDataTestBase):
 
-    datasets = [JournalData]
+    datasets = [JournalData, SemesterData]
 
     def test_0010_import_journal_csv(self):
         """
@@ -53,3 +54,15 @@ class Test_010_Journal(FixtureDataTestBase):
         self.assertEquals(entry.valid_date, date(2013, 1, 10))
 
         JournalEntry.q.delete()
+
+    def test_0020_get_current_semester(self):
+        from pprint import pprint
+        from pycroft.model.finance import Semester
+        pprint(date.today())
+        pprint(Semester.q.one().__dict__)
+        try:
+            get_current_semester()
+        except NoResultFound:
+            self.fail("No semester found")
+        except MultipleResultsFound:
+            self.fail("Multiple semesters found")
