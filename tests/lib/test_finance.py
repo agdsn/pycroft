@@ -1,40 +1,17 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import unittest
 from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import JournalData
 
 __author__ = 'felix_kluge'
 
-from pycroft.lib.finance import create_semester, import_journal_csv
-from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
-    Semester
-from pycroft.model import session
-from datetime import date, datetime
+from pycroft.lib.finance import import_journal_csv
+from pycroft.model.finance import Journal, JournalEntry
+from datetime import date
 
 
-class Test_010_Semester(unittest.TestCase):
-
-    def test_0010_create_semester(self):
-        """
-        This test should verify that all semester-related finance-accounts have
-        been created.
-        """
-        new_semester = create_semester("NewSemesterName",
-                                       2500, 1500, 450, 250,
-                                       date(2013, 9, 1),
-                                       date(2013, 10, 1),
-                                       date(2014, 4, 1),
-                                       date(2014, 5, 1),)
-        queried_semester = Semester.q.filter(
-            Semester.name == "NewSemesterName"
-        ).one()
-        self.assertEqual(new_semester, queried_semester)
-        session.session.commit()
-
-
-class Test_020_Journal(FixtureDataTestBase):
+class Test_010_Journal(FixtureDataTestBase):
 
     datasets = [JournalData]
 
