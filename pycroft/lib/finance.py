@@ -166,6 +166,15 @@ class MT940Dialect(csv.Dialect):
     quoting = csv.QUOTE_ALL
 
 
+class CSVImportError(Exception):
+
+    def __init__(self, message, cause=None):
+        if cause is not None:
+            message = message + u" caused by " + repr(cause)
+        super(CSVImportError, self).__init__(message, cause)
+        self.cause = cause
+
+
 def import_journal_csv(csv_file, import_time=None):
     if import_time is None:
         import_time = datetime.now()
@@ -177,7 +186,7 @@ def import_journal_csv(csv_file, import_time=None):
     try:
         records.next()
     except StopIteration:
-        raise Exception(u"Leerer Datensatz.")
+        raise CSVImportError(u"Leerer Datensatz.")
 
     session.session.add_all(imap(
         lambda r: process_record(r[0], r[1], import_time),
@@ -204,26 +213,26 @@ def process_record(index, record, import_time):
     if record.currency != "EUR":
         message = u"Nicht unterstützte Währung {0} in Datensatz {1}: {2}"
         raw_record = restore_record(record)
-        raise Exception(
+        raise CSVImportError(
             message.format(record.currency, index, raw_record)
         )
     try:
         journal = Journal.q.filter_by(
             account_number=record.our_account_number
         ).one()
-    except NoResultFound:
+    except NoResultFound as e:
         message = u"Kein Journal mit der Kontonummer {0} gefunden."
-        raise Exception(message.format(record.our_account_number))
+        raise CSVImportError(message.format(record.our_account_number), e)
 
     try:
         valid_date = datetime.strptime(record.valid_date, "%d.%m.%y").date()
         transaction_date = (datetime
                             .strptime(record.transaction_date, "%d.%m")
                             .date())
-    except ValueError:
+    except ValueError as e:
         message = u"Unbekanntes Datumsformat in Datensatz {0}: {1}"
         raw_record = restore_record(record)
-        raise Exception(message.format(index, raw_record))
+        raise CSVImportError(message.format(index, raw_record), e)
 
     # Assume that transaction_date's year is the same
     transaction_date = transaction_date.replace(year=valid_date.year)
