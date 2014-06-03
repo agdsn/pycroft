@@ -115,7 +115,8 @@ class JournalEntry(ModelBase):
     transaction = relationship("Transaction")
 
 
-class UnbalancedTransactionError(Exception):
+class IllegalTransactionError(Exception):
+    """Indicates an attempt to persist an illegal Transaction."""
     pass
 
 
@@ -134,14 +135,30 @@ class Transaction(ModelBase):
     def is_balanced(self):
         return sum((split.amount for split in self.splits)) == 0
 
+def check_transaction_on_save(mapper, connection, target):
+    """
+    Check transaction constraints.
 
-def check_transaction_balance_on_save(mapper, connection, target):
+    Transaction must be balanced, an account mustn't be referenced by more than
+    one split and it must consist of at least two splits.
+    The last constraints prohibits transactions on the same account and
+    difficulties to calculate the transferred value between two accounts.
+    """
     if not target.is_balanced:
-        raise UnbalancedTransactionError
+        raise IllegalTransactionError("Transaction is not balanced.")
+    if len(target.splits) < 2:
+        raise IllegalTransactionError("Transaction must consist "
+                                      "of at least two splits.")
+    marked_accounts = set()
+    for split in target.splits:
+        if split.account in marked_accounts:
+            raise IllegalTransactionError("Transaction must not have multiple "
+                                          "splits with the same account.")
+        marked_accounts.add(split.account)
 
 
-event.listen(Transaction, "before_insert", check_transaction_balance_on_save)
-event.listen(Transaction, "before_update", check_transaction_balance_on_save)
+event.listen(Transaction, "before_insert", check_transaction_on_save)
+event.listen(Transaction, "before_update", check_transaction_on_save)
 
 
 class Split(ModelBase):
@@ -164,4 +181,7 @@ class Split(ModelBase):
     transaction = relationship(
         "Transaction",
         backref=backref("splits", cascade="all, delete-orphan")
+    )
+    __table_args__ = (
+        CheckConstraint("amount <> 0"),
     )
