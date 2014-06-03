@@ -12,10 +12,12 @@ This module contains.
 """
 
 from datetime import datetime, timedelta
+import re
 
 from sqlalchemy.sql.expression import func
 
 from pycroft.helpers import user, host
+from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, Ip
@@ -27,8 +29,51 @@ from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
-from pycroft.lib.finance import setup_finance_account
 from pycroft.lib.all import with_transaction
+
+
+def encode_type1_user_id(user_id):
+    """Append a type-1 error detection code to the user_id."""
+    return u"{0:04d}-{1:d}".format(user_id, Type1Code.calculate(user_id))
+
+
+type1_user_id_pattern = re.compile(ur"^(\d{4,})-(\d)$", re.UNICODE)
+
+
+def decode_type1_user_id(string):
+    """
+    If a given string is a type1 user id return a (user_id, code) tuple else
+    return None.
+    :param unicode string: Type1 encoded user ID
+    :returns (number, code) pair or None
+    :rtype (Integral, Integral) | None
+    """
+    match = type1_user_id_pattern.match(string)
+    return match.groups() if match else None
+
+
+def encode_type2_user_id(user_id):
+    """Append a type-2 error detection code to the user_id."""
+    return u"{0:04d}-{1:02d}".format(user_id, Type2Code.calculate(user_id))
+
+
+type2_user_id_pattern = re.compile(ur"^(\d{4,})-(\d{2})$", re.UNICODE)
+
+
+def decode_type2_user_id(string):
+    """
+    If a given string is a type2 user id return a (user_id, code) tuple else
+    return None.
+    :param unicode string: Type2 encoded user ID
+    :returns (number, code) pair or None
+    :rtype (Integral, Integral) | None
+    """
+    match = type2_user_id_pattern.match(string)
+    return match.groups() if match else None
+
+
+# Move down here to solve cyclic import
+from pycroft.lib.finance import setup_finance_account
 
 
 @with_transaction
