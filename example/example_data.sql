@@ -61,6 +61,7 @@ CREATE TABLE split (
 	account_id INTEGER NOT NULL,
 	transaction_id INTEGER NOT NULL,
 	PRIMARY KEY (id),
+	CHECK (amount <> 0),
 	FOREIGN KEY(account_id) REFERENCES finance_account (id),
 	FOREIGN KEY(transaction_id) REFERENCES "transaction" (id)
 );

@@ -6,8 +6,12 @@ __author__ = 'shreyder'
 
 
 class FinanceAccountData(DataSet):
-    class Dummy:
-        name = u"Dummy"
+    class Dummy1:
+        name = u"Dummy1"
+        type = "ASSET"
+
+    class Dummy2:
+        name = u"Dummy2"
         type = "ASSET"
 
 
