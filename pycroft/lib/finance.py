@@ -58,11 +58,12 @@ def simple_transaction(description, debit_account, credit_account, amount,
                        author, valid_date=None):
     """
     Posts a simple transaction.
-    A simple transaction is a transaction that consists of exactly two splits.
+    A simple transaction is a transaction that consists of exactly two splits,
+    where one account is debited and another different account is credited with
+    the same amount.
     The current system date will be used as transaction date, an optional valid
     date may be specified.
-    :param author:
-    :param str description: Description
+    :param unicode description: Description
     :param FinanceAccount debit_account: Debit (germ. Soll) account.
     :param FinanceAccount credit_account: Credit (germ. Haben) account
     :param int amount: Amount in Eurocents
@@ -70,6 +71,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :param valid_date: Date, when the transaction should be valid. Current
     system date, if omitted.
     :type valid_date: date or None
+    :rtype: Transaction
     """
     if valid_date is None:
         valid_date = date.today()
@@ -78,11 +80,11 @@ def simple_transaction(description, debit_account, credit_account, amount,
         author=author,
         valid_date=valid_date)
     new_debit_split = Split(
-        amount=amount,
+        amount=-amount,
         account=debit_account,
         transaction=new_transaction)
     new_credit_split = Split(
-        amount=-amount,
+        amount=amount,
         account=credit_account,
         transaction=new_transaction)
     session.session.add_all(
@@ -109,12 +111,12 @@ def setup_finance_account(new_user, processor):
     # Initial bookings
     simple_transaction(
         conf["registration_fee_description"].format(**format_args),
-        new_finance_account, get_registration_fee_account(),
+        get_registration_fee_account(), new_finance_account,
         current_semester.registration_fee, processor
     )
     simple_transaction(
         conf["semester_contribution_description"].format(**format_args),
-        new_finance_account, get_semester_contribution_account(),
+        get_semester_contribution_account(), new_finance_account,
         current_semester.regular_semester_contribution, processor
     )
 
