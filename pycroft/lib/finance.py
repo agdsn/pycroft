@@ -100,7 +100,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     return new_transaction
 
 
-def setup_finance_account(new_user, processor):
+def setup_user_finance_account(new_user, processor):
     conf = config["finance"]
     current_semester = get_current_semester()
     format_args = {
