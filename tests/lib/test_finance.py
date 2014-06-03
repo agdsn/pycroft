@@ -78,10 +78,6 @@ class Test_010_Journal(FixtureDataTestBase):
         JournalEntry.q.delete()
 
     def test_0020_get_current_semester(self):
-        from pprint import pprint
-        from pycroft.model.finance import Semester
-        pprint(date.today())
-        pprint(Semester.q.one().__dict__)
         try:
             get_current_semester()
         except NoResultFound:
