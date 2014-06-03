@@ -120,22 +120,20 @@ def setup_finance_account(new_user, processor):
 
 
 @with_transaction
-def complex_transaction(description, splits, valid_date=None):
+def complex_transaction(description, author, splits, valid_date=None):
     if valid_date is None:
         valid_date = date.now()
     objects = []
     new_transaction = Transaction(
         description=description,
-        valid_date=valid_date)
+        author=author,
+        valid_date=valid_date
+    )
     objects.append(new_transaction)
-    transaction_sum = 0
-    for (account, amount) in splits:
-        transaction_sum += amount
-        new_split = Split(
-            amount=amount, account=account, transaction=new_transaction)
-        objects.append(new_split)
-    if transaction_sum != 0:
-        raise ValueError('Split amounts do not sum up to zero.')
+    objects.extend(
+        Split(amount=amount, account=account, transaction=new_transaction)
+        for (account, amount) in splits
+    )
     session.session.add_all(objects)
 
 
