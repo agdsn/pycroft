@@ -3,8 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import cStringIO
-from itertools import imap, groupby
+from itertools import imap, chain
 from collections import namedtuple
+import re
+
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from pycroft.lib.config import config
@@ -245,8 +247,44 @@ def import_journal_csv(csv_file, import_time=None):
     session.session.commit()
 
 
+def remove_space_characters(field):
+    """Remove every 28th character if it is a space character."""
+    if field is None:
+        return None
+    characters = filter(
+        lambda c: (c[0] + 1) % 28 != 0 or c[1] != u' ',
+        enumerate(field)
+    )
+    return u"".join(map(lambda c: c[1], characters))
+
+
+# Banks are using the original description field to store several subfields with
+# SEPA. Subfields start with a four letter tag name and the plus sign, they
+# are separated by space characters.
+sepa_description_field_tags = (
+    u'EREF', u'KREF', u'MREF', u'CRED', u'DEBT', u'SVWZ', u'ABWA', u'ABWE'
+)
+sepa_description_pattern = re.compile(r''.join(chain(
+    ur'^',
+    map(
+        lambda tag: ur'(?:({0}\+.*?)(?: (?!$)|$))?'.format(tag),
+        sepa_description_field_tags
+    ),
+    ur'$'
+)), re.UNICODE)
+
+
 def cleanup_description(description):
-    return description
+    match = sepa_description_pattern.match(description)
+    if match is None:
+        return description
+    return u' '.join(map(
+        remove_space_characters,
+        filter(
+            lambda g: g is not None,
+            match.groups()
+        )
+    ))
 
 
 def restore_record(record):

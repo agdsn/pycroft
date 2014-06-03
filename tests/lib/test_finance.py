@@ -7,7 +7,7 @@ from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
     JournalData, SemesterData, UserData
 from pycroft.lib.finance import import_journal_csv, get_current_semester, \
-    simple_transaction, transferred_amount
+    simple_transaction, transferred_amount, cleanup_description
 from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
     Transaction
 from datetime import date, timedelta
@@ -142,3 +142,12 @@ class Test_010_Journal(FixtureDataTestBase):
             3*amount
         )
         Transaction.q.delete()
+
+    def test_0050_cleanup_non_sepa_description(self):
+        non_sepa_description = u"1234-0 Dummy, User, with a- space at postition 28"
+        self.assertEqual(cleanup_description(non_sepa_description), non_sepa_description)
+
+    def test_0060_cleanup_sepa_description(self):
+        clean_sepa_description = u"EREF+Long EREF 1234567890 with parasitic space SVWZ+A description with parasitic spaces at multiples of 28"
+        sepa_description = u"EREF+Long EREF 1234567890 w ith parasitic space SVWZ+A description with par asitic spaces at multiples  of 28"
+        self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
