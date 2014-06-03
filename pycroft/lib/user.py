@@ -70,7 +70,7 @@ def decode_type2_user_id(string):
 
 
 # Move down here to solve cyclic import
-from pycroft.lib.finance import setup_finance_account
+from pycroft.lib.finance import setup_user_finance_account
 
 
 @with_transaction
@@ -147,7 +147,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             assert membership["duration"] > 0
             new_membership.end_date = datetime.now() + timedelta(membership["duration"])
 
-    setup_finance_account(new_user, processor)
+    setup_user_finance_account(new_user, processor)
 
     move_in_user_log_entry = create_user_log_entry(
         author=processor,
