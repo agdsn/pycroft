@@ -2,6 +2,7 @@
 import cStringIO
 from itertools import imap, groupby
 from collections import namedtuple
+from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from pycroft.lib.config import config
 from pycroft.model.user import User
@@ -9,10 +10,11 @@ from pycroft.model.user import User
 __author__ = 'Florian Österreich'
 
 from datetime import datetime, date, timedelta
-from sqlalchemy import between
+from sqlalchemy import func, between, Integer, cast
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.model import session
+from pycroft.model.functions import sign, least
 import csv
 from pycroft.lib.all import with_transaction
 
@@ -137,6 +139,51 @@ def complex_transaction(description, author, splits, valid_date=None):
         for (account, amount) in splits
     )
     session.session.add_all(objects)
+
+
+def transferred_amount(from_account, to_account, begin_date=None, end_date=None):
+    """
+    Determine how much has been transferred from one account to another in a
+    given interval.
+
+    A negative value indicates that more has been transferred from to_account
+    to from_account than the other way round.
+
+    The interval boundaries may be None, which indicates no lower and upper
+    bound respectively.
+    :param FinanceAccount from_account:
+    :param FinanceAccount to_account:
+    :param date|None begin_date: since when (inclusive)
+    :param date|None end_date: till when (inclusive)
+    :rtype: int
+    """
+    split1 = aliased(Split)
+    split2 = aliased(Split)
+    query = session.session.query(
+        cast(func.sum(
+            sign(split2.amount) *
+            least(func.abs(split1.amount), func.abs(split2.amount))
+        ), Integer)
+    ).select_from(
+        split1
+    ).join(
+        (split2, split1.transaction_id == split2.transaction_id)
+    ).join(
+        Transaction, split2.transaction_id == Transaction.id
+    ).filter(
+        split1.account == from_account,
+        split2.account == to_account,
+        sign(split1.amount) != sign(split2.amount)
+    )
+    if begin_date is not None and end_date is not None:
+        query = query.filter(
+            between(Transaction.valid_date, begin_date, end_date)
+        )
+    elif begin_date is not None:
+        query = query.filter(Transaction.valid_date >= begin_date)
+    elif end_date is not None:
+        query = query.filter(Transaction.valid_date <= end_date)
+    return query.scalar()
 
 
 MT940_FIELDNAMES = [

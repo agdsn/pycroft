@@ -4,7 +4,7 @@ from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
     JournalData, SemesterData, UserData
 from pycroft.lib.finance import import_journal_csv, get_current_semester, \
-    simple_transaction
+    simple_transaction, transferred_amount
 from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
     Transaction
 from datetime import date, timedelta
@@ -99,3 +99,43 @@ class Test_010_Journal(FixtureDataTestBase):
             self.fail()
         Transaction.q.delete()
 
+    def test_0030_transferred_value(self):
+        amount = 9000
+        today = date.today()
+        simple_transaction(
+            u"transaction", self.asset_account, self.liability_account,
+            amount, self.author, today - timedelta(1)
+        )
+        simple_transaction(
+            u"transaction", self.asset_account, self.liability_account,
+            amount, self.author, today
+        )
+        simple_transaction(
+            u"transaction", self.asset_account, self.liability_account,
+            amount, self.author, today + timedelta(1)
+        )
+        self.assertEqual(
+            transferred_amount(
+                self.asset_account, self.liability_account, today, today
+            ),
+            amount
+        )
+        self.assertEqual(
+            transferred_amount(
+                self.asset_account, self.liability_account, today, None
+            ),
+            2*amount
+        )
+        self.assertEqual(
+            transferred_amount(
+                self.asset_account, self.liability_account, None, today
+            ),
+            2*amount
+        )
+        self.assertEqual(
+            transferred_amount(
+                self.asset_account, self.liability_account, None, None
+            ),
+            3*amount
+        )
+        Transaction.q.delete()
