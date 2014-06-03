@@ -213,7 +213,7 @@ def restore_record(record):
 
 
 def process_record(index, record, import_time):
-    if record.currency != "EUR":
+    if record.currency != u"EUR":
         message = u"Nicht unterstützte Währung {0} in Datensatz {1}: {2}"
         raw_record = restore_record(record)
         raise CSVImportError(
@@ -228,9 +228,9 @@ def process_record(index, record, import_time):
         raise CSVImportError(message.format(record.our_account_number), e)
 
     try:
-        valid_date = datetime.strptime(record.valid_date, "%d.%m.%y").date()
+        valid_date = datetime.strptime(record.valid_date, u"%d.%m.%y").date()
         transaction_date = (datetime
-                            .strptime(record.transaction_date, "%d.%m")
+                            .strptime(record.transaction_date, u"%d.%m")
                             .date())
     except ValueError as e:
         message = u"Unbekanntes Datumsformat in Datensatz {0}: {1}"
