@@ -1,17 +1,39 @@
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.finance_fixtures import JournalData, SemesterData
-
-__author__ = 'felix_kluge'
-
-from pycroft.lib.finance import import_journal_csv, get_current_semester
-from pycroft.model.finance import Journal, JournalEntry
-from datetime import date
+from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
+    JournalData, SemesterData, UserData
+from pycroft.lib.finance import import_journal_csv, get_current_semester, \
+    simple_transaction
+from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
+    Transaction
+from datetime import date, timedelta
 
 
 class Test_010_Journal(FixtureDataTestBase):
 
-    datasets = [JournalData, SemesterData]
+    datasets = [FinanceAccountData, JournalData, SemesterData, UserData]
+
+    def setUp(self):
+        super(Test_010_Journal, self).setUp()
+        self.asset_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.Asset.name
+        ).one()
+        self.liability_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.Liability.name
+        ).one()
+        self.expense_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.Expense.name
+        ).one()
+        self.revenue_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.Revenue.name
+        ).one()
+        self.journal = Journal.q.filter_by(
+            account_number=JournalData.Journal1.account_number
+        ).one()
+        self.author = User.q.filter_by(
+            login=UserData.Dummy.login
+        ).one()
 
     def test_0010_import_journal_csv(self):
         """
@@ -66,3 +88,14 @@ class Test_010_Journal(FixtureDataTestBase):
             self.fail("No semester found")
         except MultipleResultsFound:
             self.fail("Multiple semesters found")
+
+    def test_0030_simple_transaction(self):
+        try:
+            simple_transaction(
+                u"transaction", self.asset_account, self.liability_account,
+                9000, self.author
+            )
+        except Exception:
+            self.fail()
+        Transaction.q.delete()
+

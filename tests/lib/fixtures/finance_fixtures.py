@@ -1,14 +1,53 @@
 # coding=utf-8
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from fixture import DataSet
 
 __author__ = 'shreyder'
+
+
+class DormitoryData(DataSet):
+    class Dummy:
+        number = "01"
+        short_name = "abc"
+        street = "dummy"
+
+
+class RoomData(DataSet):
+    class Dummy:
+        number = 1
+        level = 1
+        inhabitable = True
+        dormitory = DormitoryData.Dummy
+
+
+class UserData(DataSet):
+    class Dummy:
+        login = u"dummy"
+        name = u"Dummy Dummy"
+        registration_date = datetime(2014, 1, 1)
+        room = RoomData.Dummy
 
 
 class FinanceAccountData(DataSet):
     class BankAccount:
         name = u"Bankkonto 3120219540"
         type = "ASSET"
+
+    class Asset:
+        name = u"Asset"
+        type = "ASSET"
+
+    class Liability:
+        name = u"Liability"
+        type = "LIABILITY"
+
+    class Expense:
+        name = u"Expense"
+        type = "EXPENSE"
+
+    class Revenue:
+        name = u"Revenue"
+        type = "REVENUE"
 
 
 class JournalData(DataSet):
