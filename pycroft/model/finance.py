@@ -163,7 +163,7 @@ event.listen(Transaction, "before_update", check_transaction_on_save)
 
 
 class Split(ModelBase):
-    # positive amount means debit (ger. Soll) and negative credit (ger. Haben)
+    # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
     amount = Column(Integer, nullable=False)
     account_id = Column(
         Integer,
