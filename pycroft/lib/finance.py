@@ -110,7 +110,7 @@ def setup_user_finance_account(new_user, processor):
     }
     new_finance_account = FinanceAccount(
         name=conf["user_finance_account_name"].format(**format_args),
-        type="REVENUE"
+        type="ASSET"
     )
     new_user.finance_account = new_finance_account
     session.session.add(new_finance_account)
