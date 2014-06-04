@@ -137,10 +137,15 @@ class Test_010_Journal(FixtureDataTestBase):
         Transaction.q.delete()
 
     def test_0050_cleanup_non_sepa_description(self):
-        non_sepa_description = u"1234-0 Dummy, User, with a- space at postition 28"
+        non_sepa_description = u"1234-0 Dummy, User, with " \
+                               u"a- space at postition 28"
         self.assertEqual(cleanup_description(non_sepa_description), non_sepa_description)
 
     def test_0060_cleanup_sepa_description(self):
-        clean_sepa_description = u"EREF+Long EREF 1234567890 with parasitic space SVWZ+A description with parasitic spaces at multiples of 28"
-        sepa_description = u"EREF+Long EREF 1234567890 w ith parasitic space SVWZ+A description with par asitic spaces at multiples  of 28"
+        clean_sepa_description = u"EREF+Long EREF 1234567890 with a parasitic " \
+                                 u"space SVWZ+A description with parasitic " \
+                                 u"spaces at multiples of 28"
+        sepa_description = u"EREF+Long EREF 1234567890 w ith a parasitic space " \
+                           u"SVWZ+A description with par asitic spaces at " \
+                           u"multiples  of 28"
         self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
