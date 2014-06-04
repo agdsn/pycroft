@@ -164,7 +164,8 @@ class Test_050_MalformedGroup(FixtureDataTestBase):
     def test_0010_create_malformed_group(self):
         name = "malformed_group1"
 
-        self.assertRaises(ValueError, _create_group, type='malformed_group',
+        self.assertRaises(ValueError, _create_group,
+            group_type='malformed_group',
             name=name, id=100)
 
     def test_0020_delete_malformed_group(self):
