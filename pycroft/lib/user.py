@@ -46,10 +46,10 @@ def decode_type1_user_id(string):
     return None.
     :param unicode string: Type1 encoded user ID
     :returns (number, code) pair or None
-    :rtype (Integral, Integral) | None
+    :rtype (int, int) | None
     """
     match = type1_user_id_pattern.match(string)
-    return match.groups() if match else None
+    return tuple(map(int, match.groups())) if match else None
 
 
 def encode_type2_user_id(user_id):
@@ -66,10 +66,10 @@ def decode_type2_user_id(string):
     return None.
     :param unicode string: Type2 encoded user ID
     :returns (number, code) pair or None
-    :rtype (Integral, Integral) | None
+    :rtype (int, int) | None
     """
     match = type2_user_id_pattern.match(string)
-    return match.groups() if match else None
+    return tuple(map(int, match.groups())) if match else None
 
 
 # Move down here to solve cyclic import

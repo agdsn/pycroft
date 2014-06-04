@@ -2,27 +2,34 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import cStringIO
-from itertools import imap, chain
+from __future__ import division
+
 from collections import namedtuple
+import cStringIO
+import csv
+from datetime import datetime, date
+from itertools import imap, chain
+import operator
 import re
 
+import munkres
+import Levenshtein
+from sqlalchemy import func, between, Integer, cast
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
+
+from pycroft.helpers.errorcode import Type1Code, Type2Code
+from pycroft.lib.all import with_transaction
 from pycroft.lib.config import config
-from pycroft.model.user import User
-
-__author__ = 'Florian Österreich'
-
-from datetime import datetime, date, timedelta
-from sqlalchemy import func, between, Integer, cast
+from pycroft.lib.user import decode_type1_user_id, decode_type2_user_id
+from pycroft.model import session
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.helpers.interval import single, closed
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.functions import sign, least
-import csv
+from pycroft.model.user import User
 
 
 def get_semester_for_date(target_date):
@@ -343,3 +350,229 @@ def process_record(index, record, import_time):
         transaction_date=transaction_date,
         valid_date=valid_date
     )
+
+
+keyword_pattern = re.compile(
+    ur'(Nutzer[\s\-]ID'
+    ur'|AG\s?DSN'
+    ur'|Wundt\s?str(?:a(?:ss|ß)e|\.)?\s?(?:11|1|3|5|7|9)?'
+    ur'|Zellescher\s?Weg\s?41\s?[abcd]?'
+    ur'|ZW\s?41[abcd]?'
+    ur')',
+    re.UNICODE | re.IGNORECASE | re.VERBOSE
+)
+
+
+tokenize_pattern = re.compile(
+    ur"""
+        (?:
+        [\s\+\.,;/]              # Whitespace and punctuation
+        |(?<![0-9])-(?![0-9])   # Dash not enclosed by numbers
+        |(?<=[a-z]{2})(?=[A-Z]) # Case change inside word
+        |(?<=[0-9])(?=[a-zA-Z]) # Number inside word
+        )+                      # Repeat everything
+    """,
+    re.UNICODE | re.VERBOSE
+)
+
+
+def remove_keywords(string):
+    """
+    Remove certain keywords from a description.
+
+    Must be applied before tokenization as this function is white space aware.
+    :param unicode string: bank transfer description
+    :rtype: unicode
+    """
+    match = sepa_description_pattern.search(string)
+    if match:
+        # Remove the 5 leading characters, because they are SEPA description
+        # field tags
+        string = u' '.join(
+            group[5:] for group in match.groups() if group is not None
+        )    
+    return keyword_pattern.sub(" ", string)
+
+
+def tokenize(string):
+    """
+    Split a string on whitespace, punctuation or lower to upper case change
+    into tokens.
+    :param unicode string: a character string
+    :rtype: list[unicode]
+    """
+    #print string.decode("utf-8")
+    return tokenize_pattern.sub(" ", string).lower().strip().split()
+
+
+
+def match_entries(entries, users_db):
+    """
+    
+    """
+    matched_entries = list()
+    users = {user.id: User(user.id, tokenize(user.name)) for user in users_db}
+    for entry in entries:
+        a = match_entry(entry,users)
+        map(lambda ratio,user:(ratio,users_db.find(user[0])
+            matched_entries.append((entry,match_entry(entry,users)))))
+    return matched_entries
+
+def match_entry(entry,users):    
+    """
+    Tries to match a payment entry with a user.
+    :param JournalEntry entry: a journal entry
+    :param User:
+    :rtype: list[(float, int)] 
+    """
+    
+    if entry.amount < 0:
+        return []
+    tokenized_description = tokenize(remove_keywords(entry.descrption))
+    tokenized_other_name =   tokenize(remove_keywords(entry.other_name)) 
+    matched_users = []
+    matched_users.extend(compute_matches_by_uid_in_words(tokenized_description, users))
+    matched_users.extend(compute_matches_by_user_names_in_words(tokenized_other_name, users))
+    matched_users.extend(compute_matches_by_user_names_in_words(
+        tokenized_description, 
+        users
+    ))
+    return combine_matches(matched_users)
+
+
+def combine_matches(*user_matches):
+    sorted(chain(*user_matches), reverse=True)
+    no_double_entries = []
+    found_uids = set()
+    for ratio,user in user_matches:
+        if user.id in found_uids:
+            continue
+        found_uids.add(user.id)
+        no_double_entries.append((ratio,user))
+    return no_double_entries
+            
+
+def compute_matches_by_uid_in_words(words, users):
+    """
+    :param iterable[unicode] words: a list of words
+    :param dict[int, User] users: a map from uid to user
+    :rtype: list[(float, User)]
+    """
+    matched_users = set()
+    for word in words:
+        decoded = decode_type1_user_id(word)
+        if decoded and Type1Code.is_valid(*decoded):
+            user_id, _ = decoded
+            if user_id in users:
+                matched_users.add((1.0, users[user_id]))
+        decoded = decode_type2_user_id(word)
+        if decoded and Type2Code.is_valid(*decoded):
+            user_id, _ = decoded
+            if user_id in users:
+                matched_users.add((1.0, users[user_id]))
+    return list(matched_users)
+
+
+def compute_greedy_match_ratio(required_words, sample_words):
+    """
+    Compute the best match ratio greedily. Find the best matching sample word
+    for each required word and then compute the length-weighted average over
+    all the match ratios. Use the length of the required words for
+    length-weighting.
+
+    While this is a good approximation to the optimal match ratio, it's very
+    bad in certain cases. Consider the required words ["Lang", "Lang"] and the
+    sample words ["Christian", "Lang"], the greedy match would return 1.0,
+    although only one of the required words has actually been matched. For this
+    very reason this function will return None in this case.
+    :param sequence[unicode] required_words: required words
+    :param sequence[unicode] sample_words: sample words
+    :returns: ratio between 0.0 and 1.0 indicating how much of the required
+    words was matched by the sample words or None if a greedy match would be
+    incorrect
+    :rtype: float|None
+    """
+    total_rws_len = sum(imap(len, required_words))
+    total_sws_len = sum(imap(len, sample_words))
+    if total_rws_len == 0 or total_sws_len == 0:
+        return 0.0
+    rws_count = len(required_words)
+    sws_count = len(sample_words)
+    matches = list()
+    for rw_index, rw in enumerate(required_words):
+        # Determine best matching sample word for the required word
+        sw_index, ratio = max(
+            ((sw_index, Levenshtein.ratio(rw, sw))
+             for sw_index, sw in enumerate(sample_words)),
+            key=operator.itemgetter(1)
+        )
+        matches.append((rw_index, sw_index, ratio * len(rw)))
+    # Select the best matches if less required words than sample words
+    matches.sort(key=operator.itemgetter(2), reverse=True)
+    matches = matches[:min(rws_count, sws_count)]
+    # Check for duplicate sample word matches
+    if len(set(imap(operator.itemgetter(1), matches))) != len(matches):
+        return None
+    ratio_sum = sum(imap(operator.itemgetter(2), matches))
+    return ratio_sum/total_rws_len
+
+
+def compute_optimal_match_ratio_munkres(required_words, sample_words):
+    """
+    Compute the optimal matching ratio between the required words and the sample
+    words, where each required word may match only one sample word, and each
+    sample word may match only one required word, i.e. solve a linear assignment
+    problem.
+
+    The resulting ratio is the length-weighted average of the single match
+    ratios. It is length-weighted with regard to the required word length.
+    :param iterable[unicode] required_words: required words
+    :param iterable[unicode] sample_words: sample words
+    :returns: ratio between 0.0 and 1.0 indicating how much of the required
+    words was matched by the sample words
+    :rtype: float
+    """
+    total_rws_len = sum(imap(len, required_words))
+    total_sws_len = sum(imap(len, sample_words))
+    if total_rws_len == 0 or total_sws_len == 0:
+        return 0.0
+    dim = min(len(required_words), len(sample_words))
+    # Compute the cost for each pair of required and sample word
+    cost_matrix = [
+        [total_rws_len - (len(rw) * Levenshtein.ratio(rw, sw))
+         for sw in sample_words]
+        for rw in required_words
+    ]
+    lap_solver = munkres.Munkres()
+    indices = lap_solver.compute(cost_matrix)
+    cost_sum = sum(cost_matrix[row][column] for row, column in indices)
+    return dim - cost_sum/total_rws_len
+
+
+def adaptive_match_ratio(required_words, sample_words):
+    """
+    Compute the optimal matching ratio adaptively using greedy matching if the
+    required words are not very similar else use the correct, but more expensive
+    linear assignment problem computation.
+    """
+    ratio = compute_greedy_match_ratio(required_words, sample_words)
+    if ratio is not None:
+        return ratio
+    else:
+        return compute_optimal_match_ratio_munkres(required_words, sample_words)
+
+
+def compute_matches_by_user_names_in_words(words, users, threshold=0.8):
+    """
+    :param sequence[unicode] words:
+    :param dict[int, User] users:
+    :rtype: list[(float, User)]
+    """
+    matched_users = []
+    for user in users.itervalues():
+        ratio = adaptive_match_ratio(user.name_words, words)
+        if ratio > threshold:
+            matched_users.append((ratio, user))
+    matched_users.sort()
+    return matched_users
+

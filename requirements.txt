@@ -1,15 +1,15 @@
-#MySQL-python==1.2.5
+Flask>=0.8
 Flask-Babel>=0.9
 Flask-Login>=0.1.1
 Flask-Testing>=0.4
 Flask-WTF>=0.6
-Flask>=0.8
 Jinja2>=2.6
 MarkupSafe>=0.19
+#MySQL-python==1.2.5
 PyMySQL>=0.5
 SQLAlchemy>=0.8.0,<0.9.0
-WTForms>=1.0.1
 Werkzeug>=0.8.3
+WTForms>=1.0.1
 argparse>=1.2.1
 blinker>=1.3
 dateutils>=0.6
@@ -21,5 +21,6 @@ pydot>=1.0.2
 pyparsing==1.5.7
 pysqlite>=2.6
 python-dateutil>=2.1
+python-Levenshtein
 sqlalchemy-schemadisplay>=1.1
 wsgiref>=0.1.2
