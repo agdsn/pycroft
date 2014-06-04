@@ -79,7 +79,7 @@ class User(ModelBase, UserMixin):
 
     blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
                       "lp", "mail", "news", "uucp", "proxy", "majordom",
-                      "postgres", "wwwadmin", "backup",	"msql", "operator",
+                      "postgres", "wwwadmin", "backup", "msql", "operator",
                       "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
     @validates('login')
