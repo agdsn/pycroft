@@ -1,8 +1,11 @@
+import collections
+
+
 class UnboundInterval(Exception):
     pass
 
 
-class Interval(object):
+class Interval(collections.namedtuple('BaseInterval', ['begin', 'end'])):
     """
     Represents an bound or unbound interval.
 
@@ -60,8 +63,7 @@ class Interval(object):
             raise ValueError(
                 "begin {0} is greater than end {1}.".format(begin, end)
             )
-        self.begin = begin
-        self.end = end
+        super(Interval, self).__init__((begin, end))
 
     def __eq__(self, other):
         return self.begin == other.begin and self.end == other.end
