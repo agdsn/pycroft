@@ -13,6 +13,7 @@
 from cmath import log
 from datetime import datetime, timedelta
 from itertools import chain, imap
+import flask.ext.babel
 
 from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.session import session
@@ -44,21 +45,27 @@ def pretty_category_filter(category):
 
 
 @template_filter("date")
-def date_filter(dt, format="%d.%m.%Y"):
-    """Pretty format a date.
+def date_filter(dt, format=None):
+    """Format date or datetime objects using Flask-Babel
+    :param datetime|date|None dt: a datetime object or None
+    :param str format: format as understood by Flask-Babel's format_datetime
+    :rtype: unicode
     """
     if dt is None:
-        return "k/A"
-    return  dt.strftime(format)
+        return u"k/A"
+    return flask.ext.babel.format_date(dt, format)
 
 
 @template_filter("datetime")
-def datetime_filter(dt, format="%d.%m.%Y %H:%M Uhr"):
-    """Pretty format a Date/Time.
+def datetime_filter(dt, format=None):
+    """Format datetime objects using Flask-Babel
+    :param datetime|None dt: a datetime object or None
+    :param str format: format as understood by Flask-Babel's format_datetime
+    :rtype: unicode
     """
     if dt is None:
-        return "k/A"
-    return dt.strftime(format)
+        return u"k/A"
+    return flask.ext.babel.format_datetime(dt, format)
 
 
 @template_filter("timesince")
@@ -73,7 +80,7 @@ def timesince_filter(dt, default="just now"):
     if dt is None:
         return "k/A"
 
-    now = datetime.now()
+    now = datetime.utcnow()
     diff = now - dt
 
     periods = (
@@ -115,7 +122,7 @@ def money_filter(amount):
 
 @template_filter("host_traffic")
 def host_traffic_filter(host):
-    traffic_timespan = datetime.now() - timedelta(days=7)
+    traffic_timespan = datetime.utcnow() - timedelta(days=7)
 
     traffic_volumes = session.query(
         TrafficVolume

@@ -128,8 +128,8 @@ class Transaction(ModelBase):
         nullable=True
     )
     author = relationship("User")
-    transaction_date = Column(DateTime, nullable=False, default=datetime.now)
-    valid_date = Column(Date, nullable=False, default=datetime.now)
+    transaction_date = Column(DateTime, nullable=False, default=datetime.utcnow)
+    valid_date = Column(Date, nullable=False, default=datetime.utcnow)
 
     @property
     def is_balanced(self):

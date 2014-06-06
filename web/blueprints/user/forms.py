@@ -96,14 +96,14 @@ class UserLogEntry(Form):
 class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
     begin_date = DateField(
-        u"Beginn", [Required()], default=datetime.now, today_btn=True,
+        u"Beginn", [Required()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
     end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
 
 class UserEditGroupMembership(Form):
     begin_date = DateField(
-        u"Beginn", [Required()], default=datetime.now, today_btn=True,
+        u"Beginn", [Required()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
     end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
@@ -111,13 +111,13 @@ class UserEditGroupMembership(Form):
 class UserBlockForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
     date = DateField(
-        u"Gesperrt bis", default=datetime.now, today_btn=True,
+        u"Gesperrt bis", default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     reason = TextAreaField(u"Grund")
 
 class UserMoveOutForm(Form):
     date = DateField(
-        u"Auszug am", [Required()], default=datetime.now, today_btn=True,
+        u"Auszug am", [Required()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     comment = TextAreaField(u"Kommentar")
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import random
@@ -132,7 +132,7 @@ class Test_040_User_Login(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
-        u = user.User(name="John Doe", registration_date=datetime.now(), room=dormitory.Room.q.get(1))
+        u = user.User(name="John Doe", registration_date=datetime.utcnow(), room=dormitory.Room.q.get(1))
 
         def set_login(login):
             u.login = login

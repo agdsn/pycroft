@@ -82,8 +82,8 @@ class Test_030_Membership(FixtureDataTestBase):
     datasets = [MembershipData, PropertyGroupData, UserData]
 
     def test_0010_create_membership(self):
-        start_date = datetime.now()
-        end_date = datetime.now() + timedelta(hours=1)
+        start_date = datetime.utcnow()
+        end_date = datetime.utcnow() + timedelta(hours=1)
         group = PropertyGroup.q.first()
         user = User.q.first()
 

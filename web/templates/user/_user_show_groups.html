@@ -18,8 +18,8 @@
         {% for membership in memberships -%}
         <tr>
             <td>{{ membership.group.name }}</td>
-            <td>{{ membership.start_date|date if membership.start_date is not none }}</td>
-            <td>{{ membership.end_date|date if membership.end_date is not none }}</td>
+            <td>{{ membership.start_date|datetime if membership.start_date is not none }}</td>
+            <td>{{ membership.end_date|datetime if membership.end_date is not none }}</td>
             <td>
                 <a href="{{ url_for(".edit_membership", membership_id=membership.id) }}" title="Bearbeiten">
                     <span class="glyphicon glyphicon-edit"></span>

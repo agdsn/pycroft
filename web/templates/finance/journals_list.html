@@ -19,7 +19,7 @@
                 <th>SWIFT-BIC</th>
                 <th>Konto</th>
                 <th>HBCI-URL</th>
-                <th>Aktualisiert am</th>
+                <th>Zuletzt aktualisiert</th>
             </tr>
             {% for journal in journals -%}
             <tr>
@@ -31,7 +31,7 @@
                 <td>{{ journal.bic }}</td>
                 <td><a class="btn btn-primary" href="{{ url_for('.accounts_show', account_id=journal.finance_account_id) }}">Konto anzeigen</a></td>
                 <td>{{ journal.hbci_url }}</td>
-                <td>{{ journal.last_update|date }}</td>
+                <td>{{ journal.last_update|datetime }}</td>
             </tr>
             {%- endfor %}
         </table>

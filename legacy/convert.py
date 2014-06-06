@@ -200,7 +200,7 @@ def do_convert():
                     new_log = logging.UserLogEntry(message=u"Alte Kommentare: "+
                                                            unicode(old_user.comment,
                                                                errors="ignore"),
-                        timestamp=datetime.now(), author=root, user=new_user)
+                        timestamp=datetime.utcnow(), author=root, user=new_user)
                     logs.append(new_log)
                 users.append(new_user)
 

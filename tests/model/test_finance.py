@@ -32,7 +32,7 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
         return finance.Transaction(
             description=u"Transaction",
             author=self.author,
-            transaction_date=datetime.now()
+            transaction_date=datetime.utcnow()
         )
 
     def create_split(self, transaction, account, amount):

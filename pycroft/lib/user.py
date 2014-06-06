@@ -97,12 +97,13 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         level=level, dormitory=dormitory).one()
 
     # create a new user
+    now = datetime.utcnow()
     new_user = User(
         login=login,
         name=name,
         email=email,
         room=room,
-        registration_date=datetime.now()
+        registration_date=now
     )
     plain_password = user.generate_password(12)
 
@@ -137,7 +138,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     conf = config["move_in"]
     for membership in conf["group_memberships"]:
         group = Group.q.filter(Group.name == membership["name"]).one()
-        start_date = datetime.now()
+        start_date = now
         if membership.get("offset"):
             start_date += timedelta(membership["offset"])
         new_membership = create_membership(
@@ -148,14 +149,14 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         )
         if membership.get("duration"):
             assert membership["duration"] > 0
-            new_membership.end_date = datetime.now() + timedelta(membership["duration"])
+            new_membership.end_date = now + timedelta(membership["duration"])
 
     setup_user_finance_account(new_user, processor)
 
     move_in_user_log_entry = create_user_log_entry(
         author=processor,
         message=conf["log_message"],
-        timestamp=datetime.now(),
+        timestamp=now,
         user=new_user
     )
 
@@ -187,11 +188,12 @@ def move(user, dormitory, level, room_number, processor):
 
     user.room = new_room
 
+    now = datetime.utcnow()
     create_user_log_entry(
         author=processor,
         message=config["move"]["log_message"].format(
             from_room=old_room, to_room=new_room),
-        timestamp=datetime.now(), user=user
+        timestamp=now, user=user
     )
 
     # assign a new IP to each net_device
@@ -211,7 +213,7 @@ def move(user, dormitory, level, room_number, processor):
             create_user_log_entry(author=processor,
                 message=config["move"]["ip_change_log_message"].format(
                     old_ip=old_ip, new_ip=new_ip),
-                timestamp=datetime.now(), user=user)
+                timestamp=now, user=user)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
@@ -235,7 +237,7 @@ def edit_name(user, name, processor):
 
         create_user_log_entry(author=processor,
             message=u"Nutzer %s umbenannt in %s" % (oldName, name),
-            timestamp=datetime.now(), user=user)
+            timestamp=datetime.utcnow(), user=user)
 
     return user
 
@@ -255,7 +257,7 @@ def edit_email(user, email, processor):
 
         create_user_log_entry(author=processor,
             message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
-            timestamp=datetime.now(), user=user)
+            timestamp=datetime.utcnow(), user=user)
 
     return user
 
@@ -318,7 +320,8 @@ def block(user, reason, processor, date=None):
     if date is not None and not isinstance(date, datetime):
         raise ValueError("Date should be a datetime object")
 
-    if date is not None and date < datetime.now():
+    now = datetime.utcnow()
+    if date is not None and date < now:
         raise ValueError("Date should be in the future")
 
     block_group = PropertyGroup.q.filter(
@@ -326,17 +329,17 @@ def block(user, reason, processor, date=None):
     ).one()
 
     if date is not None:
-        create_membership(start_date=datetime.now(), end_date=date,
+        create_membership(start_date=now, end_date=date,
                           group=block_group, user=user)
         log_message = config["block"]["log_message_with_enddate"].format(
             date=date.strftime("%d.%m.%Y"), reason=reason)
     else:
-        create_membership(start_date=datetime.now(), end_date=None,
+        create_membership(start_date=now, end_date=None,
                           group=block_group, user=user)
         log_message = config["block"]["log_message_without_enddate"].format(
             reason=reason)
 
-    create_user_log_entry(message=log_message, timestamp=datetime.now(),
+    create_user_log_entry(message=log_message, timestamp=now,
                           author=processor, user=user)
 
     return user
@@ -374,7 +377,7 @@ def move_out(user, date, comment, processor):
 
     create_user_log_entry(
         message=log_message,
-        timestamp=datetime.now(),
+        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )
@@ -428,7 +431,7 @@ def move_out_tmp(user, date, comment, processor):
 
     create_user_log_entry(
         message=log_message,
-        timestamp=datetime.now(),
+        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )
@@ -468,7 +471,7 @@ def is_back(user, processor):
 
     create_user_log_entry(
         message=config["move_out_tmp"]["log_message_back"],
-        timestamp=datetime.now(),
+        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )

@@ -59,12 +59,12 @@ class Membership(ModelBase):
 
     def __init__(self, *args, **kwargs):
         if self.start_date is None:
-            self.start_date = datetime.now()
+            self.start_date = datetime.utcnow()
         super(Membership, self).__init__(*args, **kwargs)
 
     @hybrid_property
     def active(self):
-        now = datetime.now()
+        now = datetime.utcnow()
 
         if self.start_date > now:
             return False
@@ -96,7 +96,7 @@ class Membership(ModelBase):
         return value
 
     def disable(self):
-        now = datetime.now()
+        now = datetime.utcnow()
         if self.start_date > now:
             self.end_date = self.start_date
         else:

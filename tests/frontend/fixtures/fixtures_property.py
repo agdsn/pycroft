@@ -12,7 +12,7 @@ from fixtures_user import UserData
 
 class BaseMembership():
     """Base class with data every membership model needs"""
-    start_date = datetime.datetime.now()
+    start_date = datetime.datetime.utcnow()
     end_date = None
 
 

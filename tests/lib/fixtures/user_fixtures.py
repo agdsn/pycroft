@@ -52,14 +52,14 @@ class UserData(DataSet):
         id = 1
         login = "test"
         name = "John Doe"
-        registration_date = datetime.now()
+        registration_date = datetime.utcnow()
         room = RoomData.dummy_room1
 
     class dummy_user2:
         id = 2
         login = "admin"
         name = "Sebsatian fucking Schrader"
-        registration_date = datetime.now()
+        registration_date = datetime.utcnow()
         room = RoomData.dummy_room3
 
 
@@ -116,8 +116,8 @@ class PropertyData(DataSet):
 
 class MembershipData(DataSet):
     class dummy_membership1:
-        start_date = datetime.now() - timedelta(hours=1)
-        end_date = datetime.now() + timedelta(hours=1)
+        start_date = datetime.utcnow() - timedelta(hours=1)
+        end_date = datetime.utcnow() + timedelta(hours=1)
         group = PropertyGroupData.dummy_group
         user = UserData.dummy_user2
 
