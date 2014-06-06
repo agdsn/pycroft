@@ -53,7 +53,7 @@ class SessionWrapper(object):
             return func.now()
         else:
             # 1 Minute modifier to fix strange unit test race
-            return func.datetime("now", "localtime", "+1 minutes")
+            return func.datetime("now", "+1 minutes")
 
 
 def with_transaction(f):

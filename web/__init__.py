@@ -9,6 +9,7 @@
 """
 
 from flask import Flask, redirect, url_for, request, flash
+from flask.ext.babel import Babel
 from blueprints import finance, infrastructure, properties, user, dormitories, login
 from web.form import widgets
 import template_filters
@@ -44,6 +45,10 @@ def make_app(connection_string="sqlite:////tmp/test.db"):
 
     template_filters.register_filters(app)
     template_tests.register_checks(app)
+
+    app.config["BABEL_DEFAULT_LOCALE"] = "de"
+    app.config["BABEL_DEFAULT_TIMEZONE"] = "Europe/Berlin"
+    babel = Babel(app)
 
     page_resources.init_app(app)
 

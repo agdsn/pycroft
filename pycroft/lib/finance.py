@@ -226,7 +226,7 @@ class CSVImportError(Exception):
 
 def import_journal_csv(csv_file, import_time=None):
     if import_time is None:
-        import_time = datetime.now()
+        import_time = datetime.utcnow()
 
     # Convert to MT940Record and enumerate
     reader = csv.DictReader(csv_file, MT940_FIELDNAMES, dialect=MT940Dialect)

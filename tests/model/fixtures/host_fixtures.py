@@ -75,13 +75,13 @@ class UserData(DataSet):
     class dummy_user:
         login = "test"
         name = "John Doe"
-        registration_date = datetime.now()
+        registration_date = datetime.utcnow()
         room = RoomData.dummy_room
 
     class dummy_user2:
         login = "test2"
         name = "John Doe2"
-        registration_date = datetime.now()
+        registration_date = datetime.utcnow()
         room = RoomData.dummy_room2
 
 
@@ -108,6 +108,6 @@ class IpData(DataSet):
 class TrafficVolumeData(DataSet):
     class dummy_volume:
         size = 1000
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
         type = "IN"
         ip = IpData.dummy_ip

@@ -20,7 +20,7 @@ class Test_010_UserLogEntry(FixtureDataTestBase):
 
     def test_0010_create_user_log_entry(self):
         message = "test_message"
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
         author = User.q.first()
         user = User.q.first()
 
@@ -65,7 +65,7 @@ class Test_020_MalformedTypes(FixtureDataTestBase):
 
     def test_0020_delete_malformed_log_entry(self):
         message = "malformed_type"
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
         author = User.q.first()
 
         malformed_log_entry = Test_020_MalformedTypes.MalformedLogEntry(
@@ -85,7 +85,7 @@ class Test_030_RoomLogEntry(FixtureDataTestBase):
 
     def test_0010_create_room_log_entry(self):
         message = "test_message"
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
         author = User.q.first()
         room = Room.q.first()
 

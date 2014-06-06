@@ -129,7 +129,7 @@ class Test_040_User_Login(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
-        u = user.User(name="John Doe", registration_date=datetime.now(), room=dormitory.Room.q.get(1))
+        u = user.User(name="John Doe", registration_date=datetime.utcnow(), room=dormitory.Room.q.get(1))
 
         def set_login(login):
             u.login = login

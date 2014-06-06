@@ -73,7 +73,7 @@ def room_show(room_id):
 
     if form.validate_on_submit():
         lib.logging.create_room_log_entry(message=form.message.data,
-                                          timestamp=datetime.now(),
+                                          timestamp=datetime.utcnow(),
                                           author=current_user,
                                           room=room)
         flash(u'Kommentar hinzugefügt', 'success')

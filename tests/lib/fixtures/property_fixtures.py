@@ -22,7 +22,7 @@ class UserData(DataSet):
         id = 1
         login = "test"
         name = "John Doe"
-        registration_date = datetime.now()
+        registration_date = datetime.utcnow()
         room = RoomData.dummy_room1
 
 
@@ -45,8 +45,8 @@ class TrafficGroupData(DataSet):
 class MembershipData(DataSet):
     class dummy_membership1:
         id = 1
-        start_data = datetime.now()
-        end_data = datetime.now()
+        start_data = datetime.utcnow()
+        end_data = datetime.utcnow()
         group = PropertyGroupData.dummy_property_group1
         user = UserData.dummy_user1
 

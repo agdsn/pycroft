@@ -152,7 +152,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             processor=self.processing_user
         )
 
-        out_time = datetime.now()
+        out_time = datetime.utcnow()
 
         UserHelper.move_out(user=new_user, date=out_time, comment="",
             processor=self.processing_user)
@@ -318,7 +318,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             processor=self.processing_user
         )
 
-        out_time = datetime.now()
+        out_time = datetime.utcnow()
         self.assertFalse(new_user.has_property("away"))
 
         UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
@@ -372,7 +372,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.processing_user = user.User.q.filter_by(login='admin').one()
         self.user = user.User.q.filter_by(login='test').one()
         UserHelper.move_out_tmp(user=self.user,
-                                date=datetime.now(),
+                                date=datetime.utcnow(),
                                 comment='',
                                 processor=self.processing_user)
 
@@ -391,7 +391,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
 
         # check log message
         log_entry = self.user.user_log_entries[-1]
-        self.assertTrue(log_entry.timestamp <= datetime.now())
+        self.assertTrue(log_entry.timestamp <= datetime.utcnow())
         self.assertEqual(log_entry.author, self.processing_user)
 
         self.assertFalse(self.user.has_property("away"))

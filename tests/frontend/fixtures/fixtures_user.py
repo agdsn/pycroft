@@ -12,7 +12,7 @@ class BaseUser():
     """Data every user model needs"""
     name = "John Die"
     passwd_hash = hash_password("password")
-    registration_date = datetime.datetime.now()
+    registration_date = datetime.datetime.utcnow()
     room = RoomData.dummy_room1  # yes, they all live in the same room
 
 

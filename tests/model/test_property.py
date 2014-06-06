@@ -37,7 +37,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         group = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
 
         # add membership to group1
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         session.session.add(membership)
         session.session.commit()
 
@@ -47,7 +47,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         # add membership to group2
         group = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
 
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         session.session.add(membership)
         session.session.commit()
 
@@ -59,7 +59,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         group = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
 
         # add membership to group1
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         membership.end_date = membership.start_date + timedelta(days=3)
         session.session.add(membership)
         session.session.commit()
@@ -71,7 +71,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # add expired membership to group2
         membership = property.Membership(user=self.user, group=group)
-        membership.start_date = datetime.now() - timedelta(days=3)
+        membership.start_date = datetime.utcnow() - timedelta(days=3)
         membership.end_date = membership.start_date + timedelta(hours=1)
         session.session.add(membership)
         session.session.commit()
@@ -84,7 +84,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         group = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
 
         # add membership to group1
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         session.session.add(membership)
         session.session.commit()
 
@@ -95,7 +95,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
 
         # add membership to group1
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         session.session.add(membership)
         session.session.commit()
 
@@ -104,7 +104,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         group = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
 
         # add membership to group2
-        membership = property.Membership(start_date=datetime.now(), user=self.user, group=group)
+        membership = property.Membership(start_date=datetime.utcnow(), user=self.user, group=group)
         session.session.add(membership)
         session.session.commit()
 
@@ -137,12 +137,12 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         # add membership to group1
         p1 = property.Membership(user=self.user, group=group)
-        p1.start_date = datetime.now()
+        p1.start_date = datetime.utcnow()
 
         def set_old_date():
             """ Set end_date before start_date
             """
-            p1.end_date = datetime.now() - timedelta(hours=2)
+            p1.end_date = datetime.utcnow() - timedelta(hours=2)
 
         self.assertRaisesRegexp(AssertionError, "you set end date before start date!", set_old_date)
 
@@ -157,7 +157,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         def set_new_start():
             """ Set start_date after end_date
             """
-            p1.start_date = datetime.now() + timedelta(hours=2)
+            p1.start_date = datetime.utcnow() + timedelta(hours=2)
 
         self.assertRaisesRegexp(AssertionError, "you set start date behind end date!", set_new_start)
 
@@ -166,14 +166,14 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         # add membership to group1
         p1 = property.Membership(user=self.user, group=group)
-        p1.start_date = datetime.now()
-        p1.end_date = datetime.now()
+        p1.start_date = datetime.utcnow()
+        p1.end_date = datetime.utcnow()
 
         session.session.add(p1)
         session.session.commit()
 
-        p1.start_date = datetime.now() - timedelta(days=3)
-        p1.end_date = datetime.now() + timedelta(days=3)
+        p1.start_date = datetime.utcnow() - timedelta(days=3)
+        p1.end_date = datetime.utcnow() + timedelta(days=3)
 
         session.session.commit()
 
@@ -182,8 +182,8 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         # add membership to group1
         p1 = property.Membership(user=self.user, group=group)
-        p1.start_date = datetime.now()
-        p1.end_date = datetime.now()
+        p1.start_date = datetime.utcnow()
+        p1.end_date = datetime.utcnow()
         session.session.add(p1)
         session.session.commit()
 
@@ -263,7 +263,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
         # reenable it - but with a deadline - both counts should be 2
-        p2.end_date = datetime.now() + timedelta(days=1)
+        p2.end_date = datetime.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
         self.assertEqual(len(self.user.active_traffic_groups), 2)
@@ -332,7 +332,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
         # reenable it - but with a deadline - both counts should be 2
-        p1.end_date = datetime.now() + timedelta(days=1)
+        p1.end_date = datetime.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
         self.assertEqual(len(self.user.active_property_groups), 2)
@@ -403,7 +403,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter(property.Membership.user==self.user).filter(property.Membership.group==group).one()
         self.assertTrue(p1.active)
 
-        p1.start_date = datetime.now() + timedelta(days=2)
+        p1.start_date = datetime.utcnow() + timedelta(days=2)
         session.session.commit()
 
         p1 = property.Membership.q.filter(property.Membership.user==self.user).filter(property.Membership.group==group).one()
@@ -421,7 +421,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter(property.Membership.user==self.user).filter(property.Membership.group==group).one()
         self.assertFalse(p1.active)
 
-        p1.start_date = datetime.now() - timedelta(days=1)
+        p1.start_date = datetime.utcnow() - timedelta(days=1)
         session.session.commit()
 
         p1 = property.Membership.q.filter(property.Membership.user==self.user).filter(property.Membership.group==group).one()
