@@ -122,14 +122,10 @@ class User(ModelBase, UserMixin):
 
     @hybrid_method
     def has_property(self, property_name):
-        granted = False
-        for group in self.active_property_groups:
-            for prop in group.properties:
-                if prop.name == property_name:
-                    if not prop.granted:
-                        return False
-                    granted = True
-        return granted
+        granted_flags = [group.property_grants[property_name]
+                         for group in self.active_property_groups
+                         if property_name in group.properties]
+        return all(granted_flags) and any(granted_flags)
 
     @has_property.expression
     def has_property(self, prop):

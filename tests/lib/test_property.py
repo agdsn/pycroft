@@ -2,10 +2,13 @@ from tests import FixtureDataTestBase
 from tests.lib.fixtures.property_fixtures import UserData, PropertyGroupData,\
     PropertyData, MembershipData, TrafficGroupData
 
-from pycroft.lib.property import create_membership, create_property,\
-    create_property_group, create_traffic_group, delete_membership,\
-    delete_property, delete_property_group, delete_traffic_group, _create_group,\
-    _delete_group
+from pycroft.lib.property import (
+    create_membership, delete_membership,
+    create_property_group, delete_property_group,
+    create_traffic_group, delete_traffic_group,
+    grant_property, deny_property, remove_property,
+    _create_group, _delete_group
+)
 
 from pycroft.model.property import TrafficGroup, PropertyGroup, Property,\
     Membership, Group
@@ -112,46 +115,65 @@ class Test_030_Membership(FixtureDataTestBase):
 class Test_040_Property(FixtureDataTestBase):
     datasets = [PropertyGroupData, PropertyData]
 
-    def test_0010_create_property(self):
-        name = "dummy_property2"
-        property_group = PropertyGroup.q.first()
+    def test_0010_grant_property(self):
+        property_name = PropertyData.dummy_property1.name
+        group_id = PropertyData.dummy_property1.property_group.id
+        group = PropertyGroup.q.get(group_id)
 
-        (_, property) = create_property(property_group=property_group,
-                                        name=name, granted=True)
+        prop = grant_property(group, property_name)
 
-        self.assertIsNotNone(Property.q.get(property.id))
+        self.assertIsNotNone(Property.q.get(prop.id))
 
-        db_property = Property.q.get(property.id)
+        db_property = Property.q.get(prop.id)
 
-        self.assertEqual(db_property.name, name)
-        self.assertEqual(db_property.property_group, property_group)
+        self.assertEqual(db_property.name, property_name)
+        self.assertEqual(db_property.property_group, group)
+        self.assertTrue(db_property.granted)
+        self.assertTrue(group.property_grants[property_name])
 
         session.session.delete(db_property)
         session.session.commit()
 
-    def test_0020_delete_property(self):
+    def test_0020_deny_property(self):
         property_name = PropertyData.dummy_property1.name
         group_id = PropertyData.dummy_property1.property_group.id
+        group = PropertyGroup.q.get(group_id)
 
-        (_, del_property) = delete_property(property_group_id=group_id,
-                                            name=property_name)
+        prop = deny_property(group, property_name)
+        self.assertIsNotNone(Property.q.get(prop.id))
 
-        self.assertIsNone(Property.q.get(del_property.id))
+        db_property = Property.q.get(prop.id)
 
-    def test_0025_delete_wrong_property(self):
+        self.assertEqual(db_property.name, property_name)
+        self.assertEqual(db_property.property_group, group)
+        self.assertFalse(db_property.granted)
+        self.assertFalse(group.property_grants[property_name])
+
+        session.session.delete(db_property)
+        session.session.commit()
+
+    def test_0030_remove_property(self):
         property_name = PropertyData.dummy_property1.name
         group_id = PropertyData.dummy_property1.property_group.id
+        group = PropertyGroup.q.get(group_id)
+
+        try:
+            remove_property(group, property_name)
+        except ValueError as e:
+            self.fail(e.message)
+
+    def test_0035_remove_wrong_property(self):
+        property_name = PropertyData.dummy_property1.name
+        group_id = PropertyData.dummy_property1.property_group.id
+        group = PropertyGroup.q.get(group_id)
         empty_group_id = PropertyGroupData.dummy_property_group2.id
+        empty_group = PropertyGroup.q.get(empty_group_id)
 
-        self.assertRaises(ValueError, delete_property,
-                          property_group_id=group_id,
-                          name=property_name + "_fail")
-        self.assertRaises(ValueError, delete_property,
-                          property_group_id=group_id + 100,
-                          name=property_name)
-        self.assertRaises(ValueError, delete_property,
-                          property_group_id=empty_group_id,
-                          name=property_name)
+        self.assertRaises(ValueError, remove_property,
+                          group, property_name + "_fail")
+        self.assertRaises(ValueError, remove_property,
+                          empty_group,
+                          property_name)
 
 
 class Test_050_MalformedGroup(FixtureDataTestBase):

@@ -39,9 +39,9 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         self.assertEqual(len(self.property_group1.properties), 1)
         self.assertEqual(len(self.property_group2.properties), 2)
-        self.assertTrue(any(p.name == PropertyData.prop_test1.name for p in self.property_group1.properties))
-        self.assertTrue(any(p.name == PropertyData.prop_test1.name for p in self.property_group2.properties))
-        self.assertTrue(any(p.name == PropertyData.prop_test2.name for p in self.property_group2.properties))
+        self.assertIn(PropertyData.prop_test1.name, self.property_group1.properties)
+        self.assertIn(PropertyData.prop_test1.name, self.property_group2.properties)
+        self.assertIn(PropertyData.prop_test2.name, self.property_group2.properties)
 
     def test_0020_add_membership(self):
         # add membership to group1
