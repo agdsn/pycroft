@@ -200,7 +200,10 @@ class Test_010_Interval(unittest.TestCase):
     def test_0130_intersect(self):
         self.assertIntervalOperationEquals(Interval.intersect, [
             (((0, 0), (0, 0)), Interval(0, 0)),
+            (((1, 1), (0, 2)), Interval(1, 1)),
             (((0, 2), (1, 3)), Interval(1, 2)),
+            (((0, 3), (1, 2)), Interval(1, 2)),
+            (((1, 2), (0, 3)), Interval(1, 2)),
             (((0, 1), (2, 3)), None),
             (((None, 2), (1, None)), Interval(1, 2)),
             (((1, 2), (None, None)), Interval(1, 2)),
