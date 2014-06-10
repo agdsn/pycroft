@@ -103,7 +103,12 @@ class Interval(collections.namedtuple('BaseInterval', ['begin', 'end'])):
         return u"[{0}, {1}]".format(self.begin, self.end)
 
     def __repr__(self):
-        return self.__str__()
+        return "{0}.{1}({2!r}, {3!r})".format(
+            self.__module__,
+            self.__class__.__name__,
+            self.begin,
+            self.end
+        )
 
     def strictly_before(self, other):
         """Alias for i1 < i2."""
