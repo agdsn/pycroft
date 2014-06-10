@@ -16,7 +16,7 @@ class Test_010_Interval(unittest.TestCase):
     def assertIntervalOperationEquals(self, operation, args_and_expected):
         """
         :param callable operation:
-        :param list[iterable[Interval], unknown)] args_and_expected:
+        :param iterable[iterable[Interval], unknown)] args_and_expected:
         """
         for intervals, expected in args_and_expected:
             intervals = map(lambda args: Interval(*args), intervals)
