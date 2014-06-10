@@ -103,7 +103,7 @@ class Interval(collections.namedtuple('BaseInterval', ['begin', 'end'])):
         return "[{0}, {1}]".format(self.begin, self.end)
 
     def __unicode__(self):
-        return unicode(self.__str__)
+        return u"[{0}, {1}]".format(self.begin, self.end)
 
     def __repr__(self):
         return self.__str__()
