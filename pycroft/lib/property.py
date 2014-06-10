@@ -98,45 +98,45 @@ def delete_property_group(property_group_id):
 
 
 @with_transaction
-def create_property(name, property_group, granted):
+def grant_property(group, name):
     """
-    This method will create a new property and add it to the property group
-    represented by the id.
+    Grants a property to a group.
 
-    :param name: the name of the property
-    :param property_group: the property group which should have the property
-    :param granted: the granted status of the property
-    :return: the newly created property and the group it was added to
+    :param PropertyGroup group: a group
+    :param str name: the name of the property
+    :return: created or changed property object
+    :rtype: Property
     """
-    new_property = Property(name=name, property_group=property_group,
-                        granted=granted)
-    session.session.add(new_property)
-    return property_group, new_property
+    group.property_grants[name] = True
+    return group.properties[name]
 
 
 @with_transaction
-def delete_property(property_group_id, name):
+def deny_property(group, name):
     """
-    This method will remove the property for the given name form the given group.
-    limit
-    :param property_group_id: the id of the property group which contains this property.
-    :param name: the name of the property which should be removed.
-    :return: the group and the property which was deleted
+    Denies a property to a group.
+
+    :param PropertyGroup group: a group
+    :param str name: the name of the property
+    :return: created or changed property object
+    :rtype: Property
     """
-    group = PropertyGroup.q.get(property_group_id)
-    if group is None:
-        raise ValueError("The given group id is wrong!")
+    group.property_grants[name] = False
+    return group.properties[name]
 
-    new_property = Property.q.filter(Property.name == name).first()
-    if new_property is None:
-        raise ValueError("The given property name is wrong!")
 
-    if not group.has_property(new_property.name):
-        raise ValueError(
-            "The given property group doesn't have the given property")
+@with_transaction
+def remove_property(group, name):
+    """
+    Removes a property association (grant or denial) with a given group.
 
-    session.session.delete(new_property)
-    return group, new_property
+    :param PropertyGroup group: a group
+    :param str name: the name of the property
+    :raises ValueError: if group doesn't have a property with the given name
+    """
+    if not group.properties.pop(name, None):
+        raise ValueError("Group {0} doesn't have property {1}"
+                         .format(group.name, name))
 
 
 @with_transaction

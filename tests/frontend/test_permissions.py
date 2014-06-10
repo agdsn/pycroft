@@ -162,8 +162,9 @@ class Test_040_Permissions_User(FrontendDataTestBase):
             url_for('properties.traffic_group_create'),
             url_for('properties.property_groups'),
             url_for('properties.property_group_create'),
-            url_for('properties.property_group_add_property', group_id=1, property_name="Testproperty"),
-            url_for('properties.property_group_delete_property', group_id=1, property_name="Testproperty"),
+            url_for('properties.property_group_grant_property', group_id=1, property_name="Testproperty"),
+            url_for('properties.property_group_deny_property', group_id=1, property_name="Testproperty"),
+            url_for('properties.property_group_remove_property', group_id=1, property_name="Testproperty"),
             url_for('properties.property_group_delete', group_id=1)
         ):
             self.assert_access_forbidden(url)
