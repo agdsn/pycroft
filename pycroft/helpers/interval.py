@@ -1,10 +1,6 @@
 import collections
 
 
-class UnboundInterval(Exception):
-    pass
-
-
 class Interval(collections.namedtuple('BaseInterval', ['begin', 'end'])):
     """
     Represents an bound or unbound interval.
