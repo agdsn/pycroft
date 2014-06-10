@@ -217,3 +217,5 @@ class Interval(collections.namedtuple('BaseInterval', ['begin', 'end'])):
             self._max(self.begin, other.begin),
             self._min(self.end, other.end)
         )
+
+UnboundedInterval = Interval(None, None)
