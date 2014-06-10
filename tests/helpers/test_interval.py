@@ -20,10 +20,13 @@ class Test_010_Interval(unittest.TestCase):
         """
         for intervals, expected in args_and_expected:
             intervals = map(lambda args: Interval(*args), intervals)
-            message = "{0}({1}) != {2}".format(
-                operation.__name__, ', '.join(map(str, intervals)), expected
+            got = operation(*intervals)
+            assert got == expected, (
+                "Evaluating {0}({1}) failed: expected {2}, got {3}".format(
+                    operation.__name__, ', '.join(map(str, intervals)),
+                    expected, got
+                )
             )
-            assert operation(*intervals) == expected, message
 
     def test_0010_begin_greater_than_end(self):
         self.assertRaises(ValueError, Interval, 1, 0)
