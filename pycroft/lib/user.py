@@ -135,18 +135,17 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     conf = config["move_in"]
     for membership in conf["group_memberships"]:
         group = Group.q.filter(Group.name == membership["name"]).one()
-        start_date = now
-        if membership.get("offset"):
-            start_date += timedelta(membership["offset"])
+        start_date = now + timedelta(membership.get("offset", 0))
+        end_date = None
+        if membership.get("duration"):
+            assert membership["duration"] > 0
+            end_date = start_date + timedelta(membership["duration"])
         new_membership = create_membership(
             start_date=start_date,
-            end_date=None,
+            end_date=end_date,
             group=group,
             user=new_user
         )
-        if membership.get("duration"):
-            assert membership["duration"] > 0
-            new_membership.end_date = now + timedelta(membership["duration"])
 
     setup_user_finance_account(new_user, processor)
 
