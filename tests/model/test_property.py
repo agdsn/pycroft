@@ -416,18 +416,6 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
 
-class Test_040_PropertyGroups(PropertyDataTestBase):
-    def test_0010_has_property(self):
-        group1 = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group1.name).one()
-        group2 = property.PropertyGroup.q.filter_by(name=PropertyGroupData.group2.name).one()
-
-        self.assertTrue(group1.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(group1.has_property(PropertyData.prop_test2.name))
-
-        self.assertTrue(group2.has_property(PropertyData.prop_test1.name))
-        self.assertTrue(group2.has_property(PropertyData.prop_test2.name))
-
-
 class Test_050_Membership(PropertyDataTestBase):
     def test_0010_active_instance_property(self):
         p1 = property.Membership(user=self.user, group=self.property_group1)
@@ -499,18 +487,3 @@ class Test_050_Membership(PropertyDataTestBase):
             user=self.user, group=self.property_group1
         ).one()
         self.assertTrue(p1.active)
-
-
-class Test_060_Property_Module_Code(unittest.TestCase):
-    def test_0010_get_properties(self):
-        property_list = property.get_properties()
-
-        self.assertIsInstance(property_list, list)
-
-        for item in property_list:
-            self.assertIsInstance(item, basestring)
-
-        property_set = list(set(property_list))
-
-        # property strings have to be unique
-        self.assertListEqual(sorted(property_list), sorted(property_set))

@@ -174,11 +174,3 @@ property_categories = {
         u"groups_traffic_change":  u"Nutzer darf Trafficgruppen bearbeiten",
     },
 }
-
-
-def get_properties():
-    """ Join all categories to one list of property strings.
-    :return: list of property identifiers
-    :rtype: list[unicode]
-    """
-    return list(chain(map(dict.keys, property_categories.values())))
