@@ -74,7 +74,7 @@ class User(ModelBase, UserMixin):
         viewonly=True)
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
-    email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:-|_|\.)[a-zA-Z0-9]+)*"
+    email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
     blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
