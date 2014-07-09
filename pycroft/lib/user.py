@@ -23,13 +23,13 @@ from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, Ip
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.user import User
 from pycroft.lib.dns import create_a_record, create_cname_record
 from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
-from pycroft.lib.all import with_transaction
 
 
 def encode_type1_user_id(user_id):

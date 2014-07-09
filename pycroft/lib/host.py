@@ -7,9 +7,9 @@ __author__ = 'Florian Österreich'
 import datetime
 from pycroft.model.logging import UserLogEntry
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.host import UserHost, ServerHost, Switch, UserNetDevice, \
     ServerNetDevice, SwitchNetDevice, Ip
-from pycroft.lib.all import with_transaction
 
 
 @with_transaction

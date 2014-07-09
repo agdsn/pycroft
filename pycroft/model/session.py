@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -13,6 +13,7 @@
 
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine, pool, func
+from functools import wraps
 
 
 class DummySession(object):
@@ -36,6 +37,8 @@ class SessionWrapper(object):
                                              autocommit=autocommit,
                                              autoflush=autoflush))
 
+        self.transaction_log = []
+
     def __getattr__(self, item):
         if not self.active:
             raise AttributeError, item
@@ -56,10 +59,44 @@ class SessionWrapper(object):
             return func.datetime("now", "localtime", "+1 minutes")
 
 
+def with_transaction(f):
+
+    # Need to define session global here so that it is also available
+    # in the wrapper function defined below.
+    global session
+
+    @wraps(f)
+    def helper(*args, **kwargs):
+        global session
+
+        # We need to check whether there is already a transaction in the log
+        # because if there is no one, no new transaction should be started.
+        if not session.transaction_log:
+            transaction = session
+        else:
+            transaction = session.begin(subtransactions=True)
+
+        session.transaction_log.append(transaction)
+
+        try:
+            ret = f(*args, **kwargs)
+            transaction.commit()
+        except:
+            transaction.rollback()
+            raise
+        finally:
+            session.transaction_log.pop()
+
+        return ret
+
+    return helper
+
+
 def init_session(connection_string=None):
     global session
     if isinstance(session, DummySession):
         session = SessionWrapper(connection_string=connection_string)
+
 
 def reinit_session(connection_string=None):
     global session
@@ -67,5 +104,6 @@ def reinit_session(connection_string=None):
     if not isinstance(session, DummySession):
         session.disable_instance()
     session = SessionWrapper(connection_string=connection_string, pooling=False)
+
 
 session = DummySession()

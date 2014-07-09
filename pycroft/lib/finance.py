@@ -19,9 +19,9 @@ from sqlalchemy import func, between, Integer, cast
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.functions import sign, least
 import csv
-from pycroft.lib.all import with_transaction
 
 
 def get_semester_for_date(target_date):

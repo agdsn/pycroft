@@ -1,9 +1,9 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 from pycroft.model import session
-from pycroft.lib.all import with_transaction
+from pycroft.model.session import with_transaction
+from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 
 
 def _create_log_entry(type, *args, **kwargs):

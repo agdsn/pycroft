@@ -1,9 +1,9 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 from pycroft.model import session
-from pycroft.lib.all import with_transaction
+from pycroft.model.session import with_transaction
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 
 
 @with_transaction

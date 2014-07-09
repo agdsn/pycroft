@@ -2,9 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
     CNAMERecord, NSRecord, SRVRecord
-from pycroft.lib.all import with_transaction
 
 
 @with_transaction
