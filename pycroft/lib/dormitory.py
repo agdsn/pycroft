@@ -1,6 +1,6 @@
-from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 from pycroft.model import session
-from pycroft.lib.all import with_transaction
+from pycroft.model.session import with_transaction
+from pycroft.model.dormitory import Dormitory, Room, Subnet, VLAN
 
 
 @with_transaction

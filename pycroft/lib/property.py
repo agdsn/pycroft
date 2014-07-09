@@ -1,7 +1,7 @@
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.property import TrafficGroup, PropertyGroup, Property,\
     Membership, Group
-from pycroft.lib.all import with_transaction
 
 
 def _create_group(group_type, *args, **kwargs):

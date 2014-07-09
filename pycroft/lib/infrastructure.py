@@ -1,7 +1,7 @@
 from pycroft.model import session
+from pycroft.model.session import with_transaction
 from pycroft.model.port import SwitchPort, DestinationPort, PatchPort, \
     PhonePort, Port
-from pycroft.lib.all import with_transaction
 
 
 def _create_port(type, *args, **kwargs):

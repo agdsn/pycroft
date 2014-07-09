@@ -1,6 +1,6 @@
-from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 from pycroft.model import session
-from pycroft.lib.all import with_transaction
+from pycroft.model.session import with_transaction
+from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
 
 
 def _create_log_entry(type, *args, **kwargs):
