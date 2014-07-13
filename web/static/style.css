@@ -12,6 +12,11 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     margin: 0;
 }
 
+.tt-suggestion.tt-cursor {
+  color: #fff !important;
+  background-color: #0097cf !important;
+}
+
 .level a {
     width: 70%;
     margin: 0.5em;

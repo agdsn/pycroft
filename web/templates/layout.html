@@ -42,12 +42,7 @@
                         {% if current_user.is_authenticated() %}
                             <li>
                                 <form class="navbar-form" method="get">
-                                    <div class="input-group">
-                                      <input type="text" class="typeahead form-control" id="nav_search" name="nav_search" autocomplete="on" placeholder="Suchen">
-                                      <span class="input-group-btn">
-                                        <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-search"></span></button>
-                                      </span>
-                                    </div>
+                                  <input type="text" class="typeahead form-control" id="nav_search" name="nav_search" autocomplete="on" placeholder="Nutzer suchen…">
                                 </form>
                             </li>
                             <li>
@@ -102,11 +97,6 @@
 <script type="text/javascript" src="{{ url_for("static", filename="typeahead/typeahead.bundle.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
 {{ resources.linked_script_files() }}
-{% raw %}
-<script type="text/x-handlebars-template" id="nav_search_suggestion">
-    <a href="{% endraw %}{{ url_for('user.user_show', user_id=0)|replace('0', '') }}{% raw %}{{ id }}">{{ name }} ({{ id }})</a>
-</script>
-{% endraw %}
 <script type="text/javascript">
     $(function() {
         var isFixed = 0,
@@ -174,11 +164,14 @@
                 },
                 source: users.ttAdapter(),
                 templates: {
-                    empty: 'Keine Ergebnisse',
-                    suggestion: Handlebars.compile($('#nav_search_suggestion').html())
+                    empty: 'Keine Ergebnisse'
                 }
             }
         );
+        var user_base_url = "{{ url_for('user.user_show', user_id=0)|replace('0', '') }}"
+        $('.typeahead').on('typeahead:selected', function(event, item, dataset) {
+            window.location = user_base_url + item.id
+        })
     });
 </script>
 {{ resources.ready_scripts() }}
