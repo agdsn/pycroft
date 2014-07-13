@@ -113,13 +113,13 @@ class DateField(wtforms.fields.DateField):
     unsupported_directives = set(iter("wHIPMSfzZjUWcxX"))
     format_string_pattern = re.compile(r"(%+)([^%]|$)", re.M)
     # Set literals are only supported in Python 2.7 or higher
-    available_datepicker_options = set([
+    available_datepicker_options = {
         "autoclose", "before_show_day", "calendar_weeks", "clear_btn",
         "days_of_week_disabled", "end_date", "force_parse", "format",
         "keyboard_navigation", "language", "min_view_mode", "multidate",
         "multidate_separator", "orientation", "start_date", "start_view",
         "today_btn", "today_highlight", "week_start"
-    ])
+    }
 
     def __init__(self, label=None, validators=None, format='%Y-%m-%d',
                  **kwargs):
