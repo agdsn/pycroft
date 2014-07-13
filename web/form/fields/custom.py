@@ -81,4 +81,4 @@ class TypeaheadField(StringField):
 
 class ReadonlyTextField(TextField):
     def __call__(self, **kwargs):
-        return self.widget(self, disabled=True )
+        return self.widget(self, disabled=True)
