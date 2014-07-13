@@ -189,12 +189,24 @@ def decorators(widget):
 
 
 def decorate(widget, *decorators):
-    """Decorate a widget with a list of decorators."""
+    """
+    Decorate a widget with a list of decorators.
+    :param widget: a widget
+    :param tuple[WidgetDecorator] decorators: some decorators
+    :rtype: WidgetDecorator
+    :returns: decorated widget
+    """
     return reduce(lambda w, d: d(w), decorators, widget)
 
 
 def decorate_field(field, *decorators):
-    """Replace a field's widget by  decorators and replace ."""
+    """
+    Return a field's widget decorated with the given decorators..
+    :param wtforms.fields.core.Field field: a WTForms field
+    :param tuple[WidgetDecorator] decorators: some decorators
+    :rtype: WidgetDecorator
+    :returns: decorated widget
+    """
     return decorate(field.widget, *decorators)
 
 
