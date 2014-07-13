@@ -167,7 +167,7 @@ class BootstrapStaticFieldWidget(object):
     """Render a static Bootstrap control."""
     def __call__(self, field, **kwargs):
         kwargs["class_"] = u"form-control-static"
-        # Assume that the field provides access to the value.
+        # Assume that the field provides access to its value.
         value = field._value()
         return HTMLString(u''.join([
             u'<p {}>'.format(html_params(**kwargs)),
