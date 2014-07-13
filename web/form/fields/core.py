@@ -32,8 +32,9 @@ class SelectMultipleField(wtforms.fields.SelectMultipleField):
 
 
 class RadioField(wtforms.fields.RadioField):
-    widget = decorate_field(
-        wtforms.fields.RadioField,
+    widget = BootstrapFieldListWidget()
+    option_widget = decorate(
+        wtforms.widgets.RadioInput(),
         BootstrapRadioDecorator,
         BootstrapFormGroupDecorator
     )
