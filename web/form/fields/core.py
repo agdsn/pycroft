@@ -1,8 +1,5 @@
-from web.form.widgets import RenderMode
-
-__author__ = 'shreyder'
-
 import re
+
 import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
 

@@ -19,12 +19,12 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, submit_text="Übernehmen", upload=false, method="POST") -%}
-    <form method="{{ method }}" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-horizontal" role="form">
+{% macro simple_form(form, submit_to, cancel_to, form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", upload=false, method="POST") -%}
+    <form method="{{ method }}" action="{{ submit_to }}" {% if upload %}enctype="multipart/form-data"{% endif %} class="form-{{ form_render_mode }}" role="form">
         {{ form.hidden_tag() if form.hidden_tag() }}
         <div class="col-sm-6">
             {% for field in form %}
-                {{ field() }}
+                {{ field(render_mode=field_render_mode) }}
             {% endfor %}
             <div class="form-group">
                 <div class="col-sm-offset-5 col-sm-7">{{ form_actions(cancel_to, submit_text) }}</div>

@@ -1,17 +1,12 @@
-from cgi import escape
 from itertools import imap
 
 from flask import url_for
-
-from wtforms.widgets.core import html_params, HTMLString
-import wtforms.fields
+from markupsafe import escape, Markup
 import wtforms.ext.sqlalchemy.fields
+import wtforms.fields
+from wtforms.widgets.core import html_params, HTMLString
+
 from web.templates import page_resources
-
-
-class RenderMode(object):
-    BASIC, HORIZONTAL, INLINE = range(3)
-    DEFAULT = HORIZONTAL
 
 
 class WidgetDecorator(object):
@@ -66,7 +61,7 @@ class BootstrapStandardDecorator(WidgetDecorator):
     Horizontal layout is a two column layout, where the label is placed in the
     left column and the field is placed right next to it.
     """
-    def _render_horizontal(self, field, **kwargs):
+    def render_horizontal(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="col-sm-5">',
             field.label(class_=u'control-label'),
@@ -76,28 +71,28 @@ class BootstrapStandardDecorator(WidgetDecorator):
             u'</div>',
         ]))
 
-    def _render_inline(self, field, **kwargs):
+    def render_inline(self, field, **kwargs):
         return HTMLString(u''.join([
             field.label(class_=u'sr-only'),
             self.widget(field, placeholder=field.label.text, **kwargs),
         ]))
 
-    def _render_basic(self, field, **kwargs):
+    def render_basic(self, field, **kwargs):
         return HTMLString(u''.join([
             field.label(),
             self.widget(field, **kwargs),
         ]))
 
     def __call__(self, field, **kwargs):
-        render_mode = kwargs.pop("render_mode", RenderMode.DEFAULT)
-        if render_mode is RenderMode.BASIC:
-            return self._render_basic(field, **kwargs)
-        elif render_mode is RenderMode.HORIZONTAL:
-            return self._render_horizontal(field, **kwargs)
-        elif render_mode is RenderMode.INLINE:
-            return self._render_inline(field, **kwargs)
+        render_mode = kwargs.pop("render_mode", "basic")
+        if render_mode == "basic":
+            return self.render_basic(field, **kwargs)
+        elif render_mode == "horizontal":
+            return self.render_horizontal(field, **kwargs)
+        elif render_mode == "inline":
+            return self.render_inline(field, **kwargs)
         else:
-            raise TypeError("Unknown render mode.")
+            raise ValueError("Unknown render mode: {0}".format(render_mode))
 
 
 class BootstrapRadioCheckboxDecorator(WidgetDecorator):
@@ -109,43 +104,45 @@ class BootstrapRadioCheckboxDecorator(WidgetDecorator):
     """
     wrapper_class = None
 
-    def _render(self, field, wrapper_class, **kwargs):
+    def _render(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="',
-            wrapper_class,
+            self.wrapper_class,
             u'">',
             field.label(
                 u"{0} {1}".format(
                     self.widget(field, **kwargs),
-                    field.label.text
-                ),
-                class_=u'control-label'),
+                    escape(field.label.text)
+                )),
             u'</div>',
         ]))
 
-    def _render_basic(self, field, **kwargs):
-        return self._render(field, self.wrapper_class, **kwargs)
+    def render_basic(self, field, **kwargs):
+        return self._render(field, **kwargs)
 
-    def _render_horizontal(self, field, **kwargs):
+    def render_horizontal(self, field, **kwargs):
         return HTMLString(u''.join([
             u'<div class="col-sm-offset-5 col-sm-7">',
-            self._render(field, self.wrapper_class, **kwargs),
+            self._render(field, **kwargs),
             u'</div>',
         ]))
 
-    def _render_inline(self, field, **kwargs):
-        return self._render(field, self.wrapper_class + '-inline', **kwargs)
+    def render_inline(self, field, **kwargs):
+        return field.label(u"{0} {1}".format(
+            self.widget(field, **kwargs),
+            escape(field.label.text)
+        ), class_=self.wrapper_class + "-inline")
 
     def __call__(self, field, **kwargs):
-        render_mode = kwargs.pop("render_mode", RenderMode.DEFAULT)
-        if render_mode is RenderMode.BASIC:
-            return self._render_basic(field, **kwargs)
-        elif render_mode is RenderMode.HORIZONTAL:
-            return self._render_horizontal(field, **kwargs)
-        elif render_mode is RenderMode.INLINE:
-            return self._render_inline(field, **kwargs)
+        render_mode = kwargs.pop("render_mode", "horizontal")
+        if render_mode == "basic":
+            return self.render_basic(field, **kwargs)
+        elif render_mode == "horizontal":
+            return self.render_horizontal(field, **kwargs)
+        elif render_mode == "inline":
+            return self.render_inline(field, **kwargs)
         else:
-            raise TypeError("Unknown render mode.")
+            raise ValueError("Unknown render mode: {0}".format(render_mode))
 
 
 class BootstrapRadioDecorator(BootstrapRadioCheckboxDecorator):
