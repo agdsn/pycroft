@@ -128,7 +128,7 @@ def setup_user_finance_account(new_user, processor):
 @with_transaction
 def complex_transaction(description, author, splits, valid_date=None):
     if valid_date is None:
-        valid_date = date.now()
+        valid_date = date.today()
     objects = []
     new_transaction = Transaction(
         description=description,
