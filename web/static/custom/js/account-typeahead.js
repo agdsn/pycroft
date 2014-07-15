@@ -19,7 +19,7 @@ var account_typeahead = (function() {
         name: 'user_accounts',
         datumTokenizer: (function() {
             var t = Bloodhound.tokenizers.whitespace;
-            return function(r) { return t(r['user_name']).push(r['user_id']); };
+            return function(r) { return t(r['user_name']).push(r['user_id'], r['user_login']); };
         })(),
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
@@ -48,7 +48,7 @@ var account_typeahead = (function() {
     var user_accounts_dataset = {
         name: 'user_accounts',
         displayKey: function (record) {
-            return record['user_name'] + ' (' + record['user_id'] + ')';
+            return record['user_name'] + ' (' + record['user_id'] + ', '  + record['user_login'] + ')';
         },
         source: user_accounts.ttAdapter(),
         templates: {
