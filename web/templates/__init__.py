@@ -1,10 +1,9 @@
 from collections import namedtuple, OrderedDict
 from flask import _request_ctx_stack
 
-__author__ = 'shreyder'
-
 
 LinkedScript = namedtuple("LinkedScript", ("url", "mime_type"))
+PageResources = namedtuple("PageResources", ("script_files", "ready_scripts"))
 
 
 class PageResourceRegistry(object):
@@ -15,9 +14,7 @@ class PageResourceRegistry(object):
         """Page resources are attached to Flask's current request context."""
         ctx = _request_ctx_stack.top
         if not hasattr(ctx, "page_resources"):
-            ctx.page_resources = namedtuple(
-                "PageResources", ("script_files", "ready_scripts")
-            )(OrderedDict(), list())
+            ctx.page_resources = PageResources(OrderedDict(), list())
         return ctx.page_resources
 
     def link_script(self, url, mime_type="text/javascript"):
@@ -25,16 +22,15 @@ class PageResourceRegistry(object):
         Link a script file using a URL.
 
         A particular URL will only be included once. Scripts are linked in the
-        order they were added.
+        order they were first added.
         """
-        print("linked {}".format(url))
         self.page_resources.script_files[url] = LinkedScript(url, mime_type)
 
-    def ready_script(self, script):
+    def append_ready_script(self, script):
         """
         Register a script as jQuery onReady handler.
 
-        The scripts will be wrapped in closure to prevent name clashes between
+        The scripts will be wrapped in a closure to prevent name clashes between
         variables.
         """
         self.page_resources.ready_scripts.append(script)
