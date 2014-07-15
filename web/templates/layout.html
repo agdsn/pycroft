@@ -86,6 +86,10 @@
         {%- endblock %}
     </div> <!-- /container -->
 
+<script type="text/javascript">
+    {# See http://flask.pocoo.org/docs/patterns/jquery/#where-is-my-site #}
+    var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
 <script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="bootstrap/js/bootstrap.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="handlebars/handlebars.js") }}"></script>
@@ -162,11 +166,9 @@
                     empty: 'Keine Ergebnisse'
                 }
             }
-        );
-        var user_base_url = "{{ url_for('user.user_show', user_id=0)|replace('0', '') }}"
-        $('.typeahead').on('typeahead:selected', function(event, item, dataset) {
-            window.location = user_base_url + item.id
-        })
+        ).on('typeahead:selected', function(event, item, dataset) {
+            window.location = $SCRIPT_ROOT + "/user/show/" + item.id
+        });
     });
 </script>
 {{ resources.ready_scripts() }}
