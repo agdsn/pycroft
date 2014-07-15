@@ -268,17 +268,18 @@ def json_accounts_system():
 @access.require('finance_show')
 def json_accounts_user_search():
     query = request.args['query']
-    return jsonify(accounts=map(
-        lambda result: {
-            "account_id": result[0],
-            "user_id": result[1],
-            "user_name": result[2]
-        },
-        session.query(FinanceAccount.id, User.id, User.name).filter(
-            FinanceAccount.id == User.finance_account_id,
-            or_(
-                func.lower(User.name).like(func.lower("%{0}%".format(query))),
-                User.id.like("{0}%".format(query))
-            )
-        ).all()
-    ))
+    results = session.query(
+        FinanceAccount.id, User.id, User.login, User.name
+    ).select_from(User).join(FinanceAccount).filter(
+        or_(func.lower(User.name).like(func.lower("%{0}%".format(query))),
+            func.lower(User.login).like(func.lower("%{0}%".format(query))),
+            User.id.like("{0}%".format(query)))
+    ).all()
+    accounts = [
+        {"account_id": account_id,
+         "user_id": user_id,
+         "user_login": user_login,
+         "user_name": user_name}
+        for account_id, user_id, user_login, user_name in results
+    ]
+    return jsonify(accounts=accounts)
