@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
 
 {% set page_title = "Journaleintrag bearbeiten" %}
 
@@ -8,64 +9,11 @@
     {{ forms.simple_form(form, '', url_for('.journals_list')) }}
 {% endblock %}
 
-{% block page_script %}
+{% block page_script -%}
+    {{ resources.link_script_file('custom/js/account-typeahead.js') }}
     <script type="application/javascript">
-        $(function() {
-            var system_accounts = new Bloodhound({
-                name: 'system_accounts',
-                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('account_name'),
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                prefetch: {
-                    url: '{{ url_for('.json_accounts_system') }}',
-                    ttl: 60,
-                    filter: function(response) { return response.accounts; }
-                }
-            });
-            var user_accounts = new Bloodhound({
-                name: 'user_accounts',
-                datumTokenizer: (function() {
-                    var t = Bloodhound.tokenizers.whitespace;
-                    return function(r) { return t(r['user_name']).push(r['user_id']); };
-                })(),
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                remote: {
-                    url: '{{ url_for('.json_accounts_user_search') }}?query=%QUERY',
-                    ttl: 60,
-                    filter: function(response) { return response.accounts; }
-                }
-            });
-            system_accounts.initialize();
-            user_accounts.initialize();
-            finance_account_id_field = $('#finance_account_id');
-            $('#finance_account').typeahead(
-                {
-                    hint: true,
-                    highlight: true,
-                    minLength: 1
-                },
-                {
-                    name: 'system_accounts',
-                    displayKey: 'account_name',
-                    source: system_accounts.ttAdapter(),
-                    templates: {
-                        empty: 'Keine Ergebnisse',
-                        header: '<h4 class="list-group-item-heading">Systemkonten</h4>'
-                    }
-                },
-                {
-                    name: 'user_accounts',
-                    displayKey: function(record) {
-                        return record['user_name'] + ' (' + record['user_id'] + ')';
-                    },
-                    source: user_accounts.ttAdapter(),
-                    templates: {
-                        empty: 'Keine Ergebnisse',
-                        header: '<h4 class="list-group-item-heading">Nutzerkonten</h2>'
-                    }
-                }
-            ).on('typeahead:selected', function(event, result, dataset) {
-                finance_account_id_field.val(result['account_id']);
-            });
+        $(function () {
+            account_typeahead($('#finance_account_id'), $('#finance_account'));
         });
     </script>
-{% endblock %}
+{%- endblock %}
