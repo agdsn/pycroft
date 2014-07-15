@@ -46,13 +46,14 @@ def overview():
 @access.require('user_show')
 def json_search():
     query = request.args['query']
-    return jsonify(users=map(
-        lambda u: {"id": u.id, "name": u.name},
-        session.query(User.id, User.name).filter(or_(
-            func.lower(User.name).like(func.lower(u"%{}%".format(query))),
-            User.id.like(u"{}%".format(query))
-        ))
-    ))
+    results = session.query(User.id, User.login, User.name).filter(or_(
+        func.lower(User.name).like(func.lower(u"%{0}%".format(query))),
+        func.lower(User.login).like(func.lower(u"%{0}%".format(query))),
+        User.id.like(u"{0}%".format(query))
+    )).all()
+    users = [{"id": user_id, "login": login, "name": name}
+             for user_id, login, name in results]
+    return jsonify(users=users)
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])

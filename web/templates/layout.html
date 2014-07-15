@@ -145,7 +145,7 @@
             name: 'users',
             datumTokenizer: (function() {
                 var t = Bloodhound.tokenizers.whitespace;
-                return function(r) { return t(r['name']).push(r['id']); };
+                return function(r) { return t(r['name']).push(r['id'], r['login']); };
             })(),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             remote: {
@@ -164,7 +164,7 @@
             {
                 name: 'users',
                 displayKey: function(record) {
-                    return record['name'] + ' (' + record['id'] + ')';
+                    return record['name'] + ' (' + record['id'] + ', ' + record['login'] + ')';
                 },
                 source: users.ttAdapter(),
                 templates: {
