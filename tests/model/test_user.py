@@ -158,4 +158,3 @@ class Test_040_User_Login(FixtureDataTestBase):
 
         u = user.User.q.get(1)
         self.assertRaisesRegexp(AssertionError, "user already in the database - cannot change login anymore!", set_login, "abc")
-

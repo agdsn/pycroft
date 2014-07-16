@@ -112,7 +112,10 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
         membership.disable()
         session.session.commit()
-        self.assertNotIn(self.property_group1, self.user.active_property_groups)
+        self.assertNotIn(
+            self.property_group1,
+            self.user.active_property_groups()
+        )
         self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
 
         # add membership to group1
@@ -169,7 +172,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         self.assertRaisesRegexp(
             AssertionError,
-            "you set end date before start date!",
+            "start date must be before end date",
             set_old_date
         )
 
@@ -186,7 +189,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         self.assertRaisesRegexp(
             AssertionError,
-            "you set start date behind end date!",
+            "start date must be before end date",
             set_new_start
         )
 
@@ -231,7 +234,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
     def test_0010_group_users(self):
         self.assertEqual(len(self.property_group1.users), 0)
-        self.assertEqual(len(self.property_group1.active_users), 0)
+        self.assertEqual(len(self.property_group1.active_users()), 0)
 
         # add membership to group1
         p1 = property.Membership(user=self.user, group=self.property_group1)
@@ -239,56 +242,47 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         session.session.commit()
 
         self.assertEqual(len(self.property_group1.users), 1)
-        self.assertEqual(len(self.property_group1.active_users), 1)
+        self.assertEqual(len(self.property_group1.active_users()), 1)
 
         p1.disable()
         session.session.commit()
         self.assertEqual(len(self.property_group1.users), 1)
-        self.assertEqual(len(self.property_group1.active_users), 0)
+        self.assertEqual(len(self.property_group1.active_users()), 0)
 
     def test_0020_user_traffic_groups(self):
         # first have no traffic group
         self.assertEqual(len(self.user.traffic_groups), 0)
-        self.assertEqual(len(self.user.active_traffic_groups), 0)
+        self.assertEqual(len(self.user.active_traffic_groups()), 0)
 
         # add one active traffic group
         p1 = property.Membership(user=self.user, group=self.traffic_group1)
         session.session.add(p1)
         session.session.commit()
         f = property.Membership.q.first()
-        self.assertTrue(f.active)
+        self.assertTrue(f.active())
         self.assertEqual(len(self.user.traffic_groups), 1)
-        self.assertEqual(len(self.user.active_traffic_groups), 1)
+        self.assertEqual(len(self.user.active_traffic_groups()), 1)
 
         # adding a property group should not affect the traffic_groups
         p1 = property.Membership(user=self.user, group=self.property_group1)
         session.session.add(p1)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 1)
-        self.assertEqual(len(self.user.active_traffic_groups), 1)
+        self.assertEqual(len(self.user.active_traffic_groups()), 1)
 
         # add a second active traffic group - count should be 2
         p2 = property.Membership(user=self.user, group=self.traffic_group2)
         session.session.add(p2)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups()), 2)
 
         # disable the second group. active should be one, all 2
         p2.disable()
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups), 1)
+        self.assertEqual(len(self.user.active_traffic_groups()), 1)
 
-        # test a join
-        res = session.session.query(
-            user.User, property.TrafficGroup.id
-        ).join(
-            user.User.active_traffic_groups
-        ).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 1)
         res = session.session.query(
             user.User, property.TrafficGroup.id
         ).join(
@@ -302,7 +296,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         p2.end_date = datetime.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups()), 2)
 
         # Add a second membership to the first group
         # should not affect the count
@@ -310,23 +304,14 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         session.session.add(p1)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups()), 2)
 
         # disabling the new one should also not affect.
         p1.disable()
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups), 2)
+        self.assertEqual(len(self.user.active_traffic_groups()), 2)
 
-        # test a join
-        res = session.session.query(
-            user.User, property.TrafficGroup.id
-        ).join(
-            user.User.active_traffic_groups
-        ).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 2)
         res = session.session.query(
             user.User, property.TrafficGroup.id
         ).join(
@@ -339,44 +324,38 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
     def test_0030_user_property_groups(self):
         # first have no property group
         self.assertEqual(len(self.user.property_groups), 0)
-        self.assertEqual(len(self.user.active_property_groups), 0)
+        self.assertEqual(len(self.user.active_property_groups()), 0)
 
         # add one active property group
         p1 = property.Membership(user=self.user, group=self.property_group1)
         session.session.add(p1)
         session.session.commit()
         f = property.Membership.q.first()
-        self.assertTrue(f.active)
+        self.assertTrue(f.active())
         self.assertEqual(len(self.user.property_groups), 1)
-        self.assertEqual(len(self.user.active_property_groups), 1)
+        self.assertEqual(len(self.user.active_property_groups()), 1)
 
         # adding a traffic group should not affect the property_group
         p1 = property.Membership(user=self.user, group=self.traffic_group2)
         session.session.add(p1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 1)
-        self.assertEqual(len(self.user.active_property_groups), 1)
+        self.assertEqual(len(self.user.active_property_groups()), 1)
 
         # add a second active property group - count should be 2
         p1 = property.Membership(user=self.user, group=self.property_group2)
         session.session.add(p1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
-        self.assertEqual(len(self.user.active_property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups()), 2)
 
         # disable the second group. active should be one, all 2
         p1.disable()
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
-        self.assertEqual(len(self.user.active_property_groups), 1)
+        self.assertEqual(len(self.user.active_property_groups()), 1)
 
         # test a join
-        res = session.session.query(
-            user.User, property.PropertyGroup.id
-        ).join(user.User.active_property_groups).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 1)
         res = session.session.query(
             user.User, property.PropertyGroup.id
         ).join(user.User.property_groups).filter(
@@ -388,7 +367,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         p1.end_date = datetime.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
-        self.assertEqual(len(self.user.active_property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups()), 2)
 
         # Add a second membership to the first group
         # should not affect the count
@@ -396,21 +375,15 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         session.session.add(p1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
-        self.assertEqual(len(self.user.active_property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups()), 2)
 
         # disabling the new one should also not affect.
         p1.disable()
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
-        self.assertEqual(len(self.user.active_property_groups), 2)
+        self.assertEqual(len(self.user.active_property_groups()), 2)
 
         # test a join
-        res = session.session.query(
-            user.User, property.PropertyGroup
-        ).join(user.User.active_property_groups).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 2)
         res = session.session.query(
             user.User, property.PropertyGroup
         ).join(user.User.property_groups).filter(
@@ -422,14 +395,14 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
 class Test_050_Membership(PropertyDataTestBase):
     def test_0010_active_instance_property(self):
         p1 = property.Membership(user=self.user, group=self.property_group1)
-        self.assertTrue(p1.active)
+        self.assertTrue(p1.active())
         session.session.add(p1)
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertTrue(p1.active)
+        self.assertTrue(p1.active())
 
         p1.disable()
         session.session.commit()
@@ -437,7 +410,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertFalse(p1.active)
+        self.assertFalse(p1.active())
 
         p1.end_date = None
         session.session.commit()
@@ -445,7 +418,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertTrue(p1.active)
+        self.assertTrue(p1.active())
 
         session.session.delete(p1)
         session.session.commit()
@@ -457,7 +430,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertTrue(p1.active)
+        self.assertTrue(p1.active())
 
         p1.start_date = datetime.utcnow() + timedelta(days=2)
         session.session.commit()
@@ -465,7 +438,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertFalse(p1.active)
+        self.assertFalse(p1.active())
 
         p1.disable()
         session.session.commit()
@@ -473,7 +446,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertFalse(p1.active)
+        self.assertFalse(p1.active())
 
         p1.end_date = p1.start_date + timedelta(days=1)
         session.session.commit()
@@ -481,7 +454,7 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertFalse(p1.active)
+        self.assertFalse(p1.active())
 
         p1.start_date = datetime.utcnow() - timedelta(days=1)
         session.session.commit()
@@ -489,4 +462,4 @@ class Test_050_Membership(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertTrue(p1.active)
+        self.assertTrue(p1.active())

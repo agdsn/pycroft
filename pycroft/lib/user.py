@@ -14,7 +14,7 @@ This module contains.
 from datetime import datetime, timedelta
 import re
 
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, literal
 
 from pycroft.helpers import user, host
 from pycroft.helpers.errorcode import Type1Code, Type2Code
@@ -262,18 +262,22 @@ def edit_email(user, email, processor):
 
 
 #ToDo: Usecases überprüfen: standardmäßig nicht False?
-def has_exceeded_traffic(user):
+def has_exceeded_traffic(user, when=None):
     """
     The function calculates the balance of the users traffic.
     :param user: The user object which has to be checked.
     :return: True if the user has more traffic than allowed and false if he
     did not exceed the limit.
     """
-    result = session.session.query(
-        User.id,
-        (func.max(TrafficGroup.traffic_limit) * 1.10) < func.sum(TrafficVolume.size).label("has_exceeded_traffic")
+    return session.session.query(
+        (
+            func.max(TrafficGroup.traffic_limit) * literal(1.10) <
+            func.sum(TrafficVolume.size)
+        ).label("has_exceeded_traffic")
+    ).select_from(
+        TrafficGroup
     ).join(
-        User.active_traffic_groups
+        Membership
     ).join(
         User.user_hosts
     ).join(
@@ -281,15 +285,9 @@ def has_exceeded_traffic(user):
     ).join(
         Ip.traffic_volumes
     ).filter(
-        User.id == user.id
-    ).group_by(
-        User.id
-    ).first()
-
-    if result is not None:
-        return result.has_exceeded_traffic
-    else:
-        return False
+        Membership.active(when),
+        Membership.user_id == user.id
+    ).scalar()
 
 #ToDo: Funktion zur Abfrage dr Kontobilanz
 def has_positive_balance(user):
@@ -360,7 +358,7 @@ def move_out(user, date, comment, processor):
 
     move_in_groups = config["move_in"]["group_memberships"]
     for membership in user.memberships:
-        if membership.active:
+        if membership.active():
             for move_in_group in move_in_groups:
                 if move_in_group["name"] == membership.group.name:
                     membership.end_date = date
@@ -452,7 +450,7 @@ def is_back(user, processor):
     ).filter(
         PropertyGroup.name == config["move_out_tmp"]["group"],
         Membership.user_id == user.id,
-        Membership.active
+        Membership.active()
     ).one()
 
     membership.disable()

@@ -10,18 +10,23 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from datetime import datetime
 import re
+
 from flask.ext.login import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.sql import true, false
-from sqlalchemy import ForeignKey, Column, and_, DateTime, Integer, \
-    String, select, exists, null, not_
+from sqlalchemy import (
+    ForeignKey, Column, and_, DateTime, Integer,
+    String, select, exists, null, not_)
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.orm.util import has_identity
-from base import ModelBase
-from pycroft.model.property import Membership, Property, PropertyGroup, \
-    TrafficGroup
+from sqlalchemy.sql import true, false
+
 from pycroft.helpers.user import hash_password, verify_password
+from pycroft.helpers.interval import Interval
+from pycroft.model.base import ModelBase
+import pycroft.model.property
+from pycroft.model.session import session
 
 
 class User(ModelBase, UserMixin):
@@ -46,35 +51,17 @@ class User(ModelBase, UserMixin):
         backref=backref("users", order_by='User.id')
     )
 
-    traffic_groups = relationship("TrafficGroup",
-        secondary=Membership.__tablename__,
-        primaryjoin="User.id==Membership.user_id",
-        secondaryjoin="Membership.group_id==TrafficGroup.id",
-        foreign_keys=[Membership.user_id, Membership.group_id],
-        viewonly=True)
+    traffic_groups = relationship(
+        "TrafficGroup",
+        secondary=lambda: pycroft.model.property.Membership.__table__,
+        viewonly=True
+    )
 
-    active_traffic_groups = relationship("TrafficGroup",
-        secondary=Membership.__tablename__,
-        primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=and_(Membership.group_id == TrafficGroup.id,
-                           Membership.active),
-        foreign_keys=[Membership.user_id, Membership.group_id],
-        viewonly=True)
-
-    property_groups = relationship("PropertyGroup",
-        secondary=Membership.__tablename__,
-        primaryjoin="User.id==Membership.user_id",
-        secondaryjoin="Membership.group_id==PropertyGroup.id",
-        foreign_keys=[Membership.user_id, Membership.group_id],
-        viewonly=True)
-
-    active_property_groups = relationship("PropertyGroup",
-        secondary=Membership.__tablename__,
-        primaryjoin="User.id==Membership.user_id",
-        secondaryjoin=and_(Membership.group_id == PropertyGroup.id,
-                           Membership.active),
-        foreign_keys=[Membership.user_id, Membership.group_id],
-        viewonly=True)
+    property_groups = relationship(
+        "PropertyGroup",
+        secondary=lambda: pycroft.model.property.Membership.__table__,
+        viewonly=True
+    )
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
@@ -117,47 +104,88 @@ class User(ModelBase, UserMixin):
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
-        user = User.q.filter(User.login == login).first()
-        if user is not None:
-            if user.check_password(plaintext_password):
-                return user
+        user = User.q.filter_by(login=login).first()
+        if user is not None and user.check_password(plaintext_password):
+            return user
         return None
 
     @hybrid_method
-    def has_property(self, property_name):
-        granted_flags = [group.property_grants[property_name]
-                         for group in self.active_property_groups
-                         if property_name in group.properties]
-        return all(granted_flags) and any(granted_flags)
+    def active_memberships(self, when=None):
+        if when is None:
+            now = datetime.utcnow()
+            when = Interval(now, now)
+        return [m for m in self.memberships
+                if when.overlaps(Interval(m.start_date, m.end_date))]
+
+    @active_memberships.expression
+    def active_memberships(cls, when=None):
+        return cls.memberships.where(pycroft.model.property.Membership.active(when))
+
+    def active_property_groups(self, when=None):
+        return session.query(
+            pycroft.model.property.PropertyGroup
+        ).join(
+            pycroft.model.property.Membership
+        ).filter(
+            pycroft.model.property.Membership.active(when),
+            pycroft.model.property.Membership.user_id == self.id
+        ).all()
+
+    def active_traffic_groups(self, when=None):
+        return session.query(
+            pycroft.model.property.TrafficGroup
+        ).join(
+            pycroft.model.property.Membership
+        ).filter(
+            pycroft.model.property.Membership.active(when),
+            pycroft.model.property.Membership.user_id == self.id
+        ).all()
+
+    @hybrid_method
+    def has_property(self, property_name, when=None):
+        """
+        :param str property_name: name of a property
+        :param Interval when:
+        """
+        if when is None:
+            now = datetime.utcnow()
+            when = Interval(now, now)
+        prop_granted_flags = [
+            group.property_grants[property_name]
+            for group in self.active_property_groups(when)
+            if property_name in group.property_grants
+        ]
+        return all(prop_granted_flags) and any(prop_granted_flags)
 
     @has_property.expression
-    def has_property(self, prop):
+    def has_property(cls, prop, when=None):
+        # TODO Use joins
         property_granted_select = select(
             [null()],
             from_obj=[
-                Property.__table__,
-                PropertyGroup.__table__,
-                Membership.__table__
+                pycroft.model.property.Property.__table__,
+                pycroft.model.property.PropertyGroup.__table__,
+                pycroft.model.property.Membership.__table__
             ]
         ).where(
             and_(
-                Property.name == prop,
-                Property.property_group_id == PropertyGroup.id,
-                PropertyGroup.id == Membership.group_id,
-                Membership.user_id == self.id,
-                Membership.active
+                pycroft.model.property.Property.name == prop,
+                pycroft.model.property.Property.property_group_id == pycroft.model.property.PropertyGroup.id,
+                pycroft.model.property.PropertyGroup.id == pycroft.model.property.Membership.group_id,
+                pycroft.model.property.Membership.user_id == cls.id,
+                pycroft.model.property.Membership.active(when)
             )
         )
         #.cte("property_granted_select")
         return and_(
             not_(exists(
                 property_granted_select.where(
-                    Property.granted == false())
+                    pycroft.model.property.Property.granted == false())
 
             )),
             exists(
                 property_granted_select.where(
-                    Property.granted == true()
+                    pycroft.model.property.Property.granted == true()
                 )
             )
-        )
+        ).label("has_property_" + prop)

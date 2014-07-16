@@ -9,17 +9,19 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
-from itertools import chain
+
+from sqlalchemy import (
+    CheckConstraint, Column, ForeignKey, and_, or_, select, literal, null)
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm.collections import attribute_mapped_collection
-from pycroft.model.session import session
-from base import ModelBase
-from sqlalchemy import ForeignKey, and_, or_
-from sqlalchemy import Column, null
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import backref, relationship, validates
-from sqlalchemy.types import BigInteger, Integer, DateTime
-from sqlalchemy.types import String, Boolean
+from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer, String
+
+from pycroft.helpers.interval import Interval
+from pycroft.model.base import ModelBase
+from pycroft.model.session import session
+import pycroft.model.user
 
 
 class Group(ModelBase):
@@ -27,23 +29,37 @@ class Group(ModelBase):
     discriminator = Column('type', String(17), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    users = relationship("User",
-        secondary="membership",
-        primaryjoin="Membership.group_id==Group.id",
-        secondaryjoin="User.id==Membership.user_id",
-        foreign_keys=lambda: [Membership.user_id, Membership.group_id],
-        viewonly=True)
+    users = relationship(
+        "User",
+        secondary=lambda: Membership.__table__,
+        viewonly=True
+    )
 
-    active_users = relationship("User",
-        secondary="membership",
-        primaryjoin=lambda: and_(Membership.group_id==Group.id, Membership.active),
-        secondaryjoin="User.id==Membership.user_id",
-        foreign_keys=lambda: [Membership.user_id, Membership.group_id],
-        viewonly=True)
+    @hybrid_method
+    def active_users(self, when=None):
+        """
+        :param Interval when:
+        :rtype: list[User]
+        """
+        return session.query(pycroft.model.user.User).join(
+            (Membership, Membership.user_id == pycroft.model.user.User.id),
+        ).filter(
+            Membership.active(when),
+            Membership.group_id == self.id
+        ).all()
+
+    @active_users.expression
+    def active_users(self, when=None):
+        return select([pycroft.model.user.User]).join(
+            (Membership, Membership.user_id == pycroft.model.user.User.id),
+        ).where(
+            Membership.active(when),
+            Membership.group_id == self.id
+        )
 
 
 class Membership(ModelBase):
-    start_date = Column(DateTime, nullable=False)
+    start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
 
     # many to one from Membership to Group
@@ -60,42 +76,57 @@ class Membership(ModelBase):
         cascade="all, delete-orphan",
         order_by='Membership.id'))
 
+    __table_args = (
+        CheckConstraint("start_date IS NULL OR "
+                        "end_date OR IS NULL OR "
+                        "start_date <= end_date")
+    )
+
     def __init__(self, *args, **kwargs):
         if self.start_date is None:
             self.start_date = datetime.utcnow()
         super(Membership, self).__init__(*args, **kwargs)
 
-    @hybrid_property
-    def active(self):
-        now = datetime.utcnow()
+    @hybrid_method
+    def active(self, when=None):
+        if when is None:
+            now = datetime.utcnow()
+            when = Interval(now, now)
 
-        if self.start_date > now:
-            return False
-        if self.end_date is not None:
-            return self.end_date > now
-        return True
+        return when.overlaps(Interval(self.start_date, self.end_date))
 
     @active.expression
-    def active(self):
-        now = session.now_sql()
+    def active(self, when=None):
+        if when is None:
+            now = datetime.utcnow()
+            when = Interval(now, now)
 
-        return and_(self.start_date <= now,
-                    or_(self.end_date == null(), self.end_date > now))
+        return and_(
+            or_(self.start_date == null(), literal(when.end) == null(),
+                self.start_date <= literal(when.end)),
+            or_(literal(when.begin) == null(), self.end_date == null(),
+                literal(when.begin) <= self.end_date)
+        ).label("active")
 
     @validates('end_date')
     def validate_end_date(self, _, value):
         if value is None:
             return value
-        assert value >= self.start_date, "you set end date before start date!"
-        assert isinstance(value, datetime), "end_date should be a datetime"
+        assert isinstance(value, datetime), \
+            "end_date must be an instanceof  datetime"
+        if self.start_date is not None:
+            assert value >= self.start_date,\
+                "start date must be before end date"
         return value
 
     @validates('start_date')
     def validate_start_date(self, _, value):
-        assert value is not None, "start_date cannot be None!"
+        if value is None:
+            return value
         assert isinstance(value, datetime), "start_date should be a datetime"
         if self.end_date is not None:
-            assert value <= self.end_date, "you set start date behind end date!"
+            assert value <= self.end_date,\
+                "start date must be before end date"
         return value
 
     def disable(self):
