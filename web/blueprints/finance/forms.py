@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
-__author__ = 'florian'
-
 from flask.ext.wtf import Form
+from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional
-from web.form.fields.core import TextField, IntegerField, HiddenField,\
-    FileField, SelectField, FormField, FieldList, StringField, DateField
+
+from web.form.fields.core import (
+    TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
+    FieldList, StringField, DateField)
 from web.form.fields.custom import TypeaheadField, static
 
 
@@ -73,3 +73,26 @@ class FinanceAccountCreateForm(Form):
             ("EXPENSE", "Aufwandskonto"), ("REVENUE", "Ertragskonto"),
         ]
     )
+
+
+# Subclass WTForms Form to disable Flask-WTF’s CSRF mechanism
+class SplitCreateForm(WTForm):
+    account = TypeaheadField(u"Konto", validators=[DataRequired()])
+    account_id = HiddenField(validators=[DataRequired()])
+    amount = IntegerField(u"Wert", validators=[DataRequired()])
+
+
+class TransactionCreateForm(Form):
+    description = TextField(u"Beschreibung", validators=[DataRequired()])
+    valid_date = DateField(
+        u"Gültig ab", validators=[Optional()], today_btn=True,
+        today_highlight=True)
+    splits = FieldList(
+        FormField(SplitCreateForm),
+        validators=[DataRequired()],
+        min_entries=2
+    )
+
+    def validate_splits(self, field):
+        if sum(split_form['amount'].data for split_form in field) != 0:
+            raise ValidationError(u"Buchung ist nicht ausgeglichen.")
