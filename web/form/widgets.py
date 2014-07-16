@@ -1,7 +1,7 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import imap
+from itertools import chain, imap
 
 from flask import url_for
 from markupsafe import escape, Markup
@@ -158,7 +158,10 @@ class BootstrapCheckboxDecorator(BootstrapRadioCheckboxDecorator):
 
 class BootstrapFieldListWidget(object):
     def __call__(self, field, **kwargs):
-        return HTMLString(u''.join(imap(lambda f: f(**kwargs), field)))
+        return HTMLString(u''.join(chain(
+            imap(lambda e: Markup(u'<p class="help-block">{0}</p>').format(e)),
+            imap(lambda f: f(**kwargs), field)
+        )))
 
 
 class BootstrapFormFieldWidget(object):
