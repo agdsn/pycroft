@@ -36,11 +36,11 @@ class BootstrapFormGroupDecorator(WidgetDecorator):
         if field.errors:
             classes.append(u'has-error')
         html = [
-            u'<div class="{0}">'.format(u' '.join(classes)),
+            Markup(u'<div class="{0}">').format(u' '.join(classes)),
             self.widget(field, **kwargs),
         ]
         html.extend(imap(
-            lambda e: u'<p class="help-block">{0}</p>'.format(escape(e)),
+            lambda e: Markup(u'<p class="help-block">{0}</p>').format(e),
             field.errors
         ))
         html.append(u'</div>')
@@ -221,7 +221,7 @@ class BootstrapDatepickerWidget(object):
     def __call__(self, field, **kwargs):
         kwargs["data-provide"] = u"datepicker"
         for (option, value) in field.datepicker_options.iteritems():
-            attribute = 'data-date-{}'.format(option.replace('_', '-'))
+            attribute = 'data-date-{0}'.format(option.replace('_', '-'))
             kwargs[attribute] = value
         page_resources.link_script(url_for(
             "static", filename="datepicker/js/bootstrap-datepicker.js"
@@ -229,7 +229,7 @@ class BootstrapDatepickerWidget(object):
         page_resources.link_script(url_for(
             "static", filename="datepicker/js/locales/bootstrap-datepicker.de.js"
         ))
-        return HTMLString(u"<input {}>".format(html_params(**kwargs)))
+        return HTMLString(u"<input {0}>".format(html_params(**kwargs)))
 
 
 class CheckBoxWidget(wtforms.widgets.Select):
