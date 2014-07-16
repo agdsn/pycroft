@@ -218,7 +218,7 @@ def accounts_create():
         new_account = FinanceAccount(name=form.name.data, type=form.type.data)
         session.add(new_account)
         session.commit()
-        return redirect(url_for('.accounts'))
+        return redirect(url_for('.accounts_list'))
 
     return render_template('finance/accounts_create.html', form=form,
                            page_title=u"Konto erstellen")
