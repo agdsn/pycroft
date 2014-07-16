@@ -20,15 +20,15 @@ from flask import (
 from flask.ext.login import current_user
 from sqlalchemy import func, or_
 
-from web.blueprints.finance.forms import (
-    SemesterCreateForm, JournalEntryEditForm, JournalImportForm,
-    JournalCreateForm, FinanceAccountCreateForm)
 from pycroft.lib import finance
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import FinanceAccount, Transaction
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.finance.forms import (
+    SemesterCreateForm, JournalEntryEditForm, JournalImportForm,
+    JournalCreateForm, FinanceAccountCreateForm, TransactionCreateForm)
 from web.blueprints.navigation import BlueprintNavigation
 
 bp = Blueprint('finance', __name__, )
@@ -184,6 +184,32 @@ def transactions_show(transaction_id):
         'finance/transactions_show.html',
         transaction=transaction
     )
+
+
+@bp.route('/transactions/create', methods=['GET', 'POST'])
+@nav.navigate(u'Buchung erstellen')
+@access.require('finance_change')
+def transactions_create():
+    form = TransactionCreateForm()
+    if form.validate_on_submit():
+        splits = []
+        for split_form in form.splits:
+            splits.append((
+                FinanceAccount.q.get(split_form.account_id.data),
+                split_form.amount.data
+            ))
+        finance.complex_transaction(
+            description=form.description.data,
+            author=current_user,
+            splits=splits,
+            valid_date=form.valid_date.data,
+        )
+        return redirect(url_for('.accounts_list'))
+    return render_template(
+        'finance/transactions_create.html',
+        form=form
+    )
+
 
 
 @bp.route('/accounts/create', methods=['GET', 'POST'])
