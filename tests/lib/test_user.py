@@ -2,10 +2,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from datetime import timedelta
 
-from datetime import datetime, timedelta
-from pycroft import config
 from tests import FixtureDataTestBase
+from pycroft import config
+from pycroft.helpers.interval import Interval
 from pycroft.lib import user as UserHelper
 from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData, \
@@ -76,7 +77,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         #TODO don't delete all log entries but the user log entries
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
-
         session.session.commit()
         super(Test_020_User_Move_In, self).tearDown()
 
@@ -126,9 +126,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         user_a_record = dns.ARecord.q.filter_by(host=user_host).one()
         self.assertEqual(user_cname_record.record_for, user_a_record)
 
-        #checks the initial group memberships
-        active_user_groups = (new_user.active_property_groups +
-                              new_user.active_traffic_groups)
+        # checks the initial group memberships
+        active_user_groups = (new_user.active_property_groups() +
+                              new_user.active_traffic_groups())
         for group in get_initial_groups():
             self.assertIn(group, active_user_groups)
 
@@ -136,6 +136,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertIsNotNone(new_user.finance_account)
         self.assertEqual(new_user.finance_account.balance, 4000)
         self.assertFalse(new_user.has_property("away"))
+
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
@@ -186,6 +187,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         # check if users finance account still exists
         finance_account = new_user.finance_account
         self.assertIsNotNone(finance_account)
+
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
     datasets = [RoomData, DormitoryData, UserData]
@@ -287,8 +289,8 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         # check for tmpAusgezogen group membership
         away_group = property.PropertyGroup.q.filter(
             property.PropertyGroup.name == config["move_out_tmp"]["group"]).one()
-        self.assertIn(new_user, away_group.active_users)
-        self.assertIn(away_group, new_user.active_property_groups)
+        self.assertIn(new_user, away_group.active_users())
+        self.assertIn(away_group, new_user.active_property_groups())
         self.assertTrue(new_user.has_property("away"))
 
         # check if user has no ips left
@@ -316,13 +318,13 @@ class Test_080_User_Block(FixtureDataTestBase):
             property.PropertyGroup.name == u"Verstoß").first()
 #       Ich weiß nicht, ob dieser Test noch gebraucht wird!
 #       self.assertTrue(u.has_property("internet"))
-        self.assertNotIn(verstoss, u.active_property_groups)
+        self.assertNotIn(verstoss, u.active_property_groups())
 
         blocked_user = UserHelper.block(u, u"test", u)
         session.session.commit()
 
         self.assertFalse(blocked_user.has_property("internet"))
-        self.assertIn(verstoss, blocked_user.active_property_groups)
+        self.assertIn(verstoss, blocked_user.active_property_groups())
 
         self.assertEqual(blocked_user.user_log_entries[0].author, u)
 
@@ -335,7 +337,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.processing_user = user.User.q.filter_by(login='admin').one()
         self.user = user.User.q.filter_by(login='test').one()
         UserHelper.move_out_tmp(user=self.user,
-                                date=datetime.utcnow(),
+                                date=session.utcnow(),
                                 comment='',
                                 processor=self.processing_user)
         session.session.commit()
@@ -367,25 +369,49 @@ class Test_100_User_has_property(FixtureDataTestBase):
 
     datasets = [PropertyData, PropertyGroupData, UserData, MembershipData]
 
-    def test_0010_positive_test(self):
-        test_user = user.User.q.filter_by(
+    def setUp(self):
+        super(Test_100_User_has_property, self).setUp()
+        self.test_user = user.User.q.filter_by(
             login=UserData.dummy_user2.login).one()
 
-        self.assertTrue(test_user.has_property("dummy"))
+    def test_0010_positive_test(self):
+        self.assertTrue(self.test_user.has_property(PropertyData.dummy.name))
         self.assertIsNotNone(
             user.User.q.filter(
-                user.User.login == test_user.login,
-                user.User.has_property("dummy")
+                user.User.login == self.test_user.login,
+                user.User.has_property(PropertyData.dummy.name)
             ).first())
 
     def test_0020_negative_test(self):
-        test_user = user.User.q.filter_by(
-            login=UserData.dummy_user1.login).one()
-
-        self.assertFalse(test_user.has_property("dummy"))
+        self.assertFalse(self.test_user.has_property(PropertyData.away.name))
         self.assertIsNone(
             user.User.q.filter(
-                user.User.login == test_user.login,
-                user.User.has_property("dummy")
+                user.User.login == self.test_user.login,
+                user.User.has_property(PropertyData.away.name)
             ).first())
 
+    def test_0030_positive_test_interval(self):
+        interval = Interval(MembershipData.dummy_membership1.start_date,
+                            MembershipData.dummy_membership1.end_date)
+        self.assertTrue(
+            self.test_user.has_property(PropertyData.dummy.name, interval)
+        )
+        self.assertIsNotNone(
+            user.User.q.filter(
+                user.User.login == self.test_user.login,
+                user.User.has_property(PropertyData.dummy.name, interval)
+            ).first())
+
+    def test_0030_negative_test_interval(self):
+        interval = Interval(
+            MembershipData.dummy_membership1.end_date + timedelta(1),
+            MembershipData.dummy_membership1.end_date + timedelta(2)
+        )
+        self.assertFalse(
+            self.test_user.has_property(PropertyData.dummy.name, interval)
+        )
+        self.assertIsNone(
+            user.User.q.filter(
+                user.User.login == self.test_user.login,
+                user.User.has_property(PropertyData.dummy.name, interval)
+            ).first())
