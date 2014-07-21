@@ -23,10 +23,10 @@ from pycroft.lib.all import with_transaction
 from pycroft.lib.config import config
 from pycroft.lib.user import decode_type1_user_id, decode_type2_user_id
 from pycroft.model import session
-from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
-    Journal, JournalEntry
 from pycroft.helpers.interval import single, closed
 from pycroft.model import session
+from pycroft.model.finance import (Semester, FinanceAccount, Transaction, Split,
+    Journal, JournalEntry)
 from pycroft.model.session import with_transaction
 from pycroft.model.functions import sign, least
 from pycroft.model.user import User
@@ -399,55 +399,83 @@ def tokenize(string):
     Split a string on whitespace, punctuation or lower to upper case change
     into tokens.
     :param unicode string: a character string
-    :rtype: list[unicode]
+    :rtype: tuple[unicode]
     """
-    #print string.decode("utf-8")
-    return tokenize_pattern.sub(" ", string).lower().strip().split()
+    return tuple(tokenize_pattern.sub(" ", string).lower().strip().split())
 
 
+MatchUser = namedtuple('MatchUser', ('user_id','name_words'))
 
-def match_entries(entries, users_db):
+
+def match_entries(entries, users):
     """
-    
+    Tries to match each entry of entries to a range of users from user_db
+    :param list[JournalEntry] entries: list of JournalEntry
+    :param list[User] users:
+    :rtype list[(JournalEntry, list[(float, User)])]
     """
-    matched_entries = list()
-    users = {user.id: User(user.id, tokenize(user.name)) for user in users_db}
-    for entry in entries:
-        a = match_entry(entry,users)
-        map(lambda ratio,user:(ratio,users_db.find(user[0])
-            matched_entries.append((entry,match_entry(entry,users)))))
-    return matched_entries
+    # Transform to dict
+    users = {user.id: user for user in users}
+    # Tokenize all user name once
+    match_users = {user.id: MatchUser(user.id, tokenize(user.name))
+                   for user in users}
+    matched_entries = map(lambda entry: match_entry(entry, match_users), entries)
+    # Convert back to User
+    result = []
+    for entry, matched_users in matched_entries:
+        matched_users = [
+            (ratio, users[matched_user.id])
+             for ratio, matched_user in matched_users]
+        result.append((entry, matched_users))
+    return result
 
-def match_entry(entry,users):    
+
+def match_entry(entry, users):    
     """
     Tries to match a payment entry with a user.
     :param JournalEntry entry: a journal entry
-    :param User:
-    :rtype: list[(float, int)] 
+    :param dict[int, MatchUser] users: Dictionary of users
+    :rtype: list[(float, MatchUser)] 
     """
-    
+    #Entries with amount < 0 will not be matched
     if entry.amount < 0:
         return []
-    tokenized_description = tokenize(remove_keywords(entry.descrption))
-    tokenized_other_name =   tokenize(remove_keywords(entry.other_name)) 
+    
+    #
+    tokenized_description = tokenize(remove_keywords(entry.description))
+    tokenized_other_name  = tokenize(remove_keywords(entry.other_name)) 
+    
+    # 
     matched_users = []
-    matched_users.extend(compute_matches_by_uid_in_words(tokenized_description, users))
-    matched_users.extend(compute_matches_by_user_names_in_words(tokenized_other_name, users))
+    matched_users.extend(compute_matches_by_uid_in_words(
+        tokenized_description,
+        users
+    ))
+    matched_users.extend(compute_matches_by_user_names_in_words(
+        tokenized_other_name, 
+        users
+    ))
     matched_users.extend(compute_matches_by_user_names_in_words(
         tokenized_description, 
         users
     ))
+    
     return combine_matches(matched_users)
 
 
+
 def combine_matches(*user_matches):
-    sorted(chain(*user_matches), reverse=True)
+    """
+    Combines list[] so that thers of evry MatchUser only the combination with the best ratio
+    :param tuple[list[(float, MatchUser)]] user_matches:a list of matched tuple
+    :rtype: list[(float,MatchUser)]
+    """
     no_double_entries = []
     found_uids = set()
-    for ratio,user in user_matches:
-        if user.id in found_uids:
+    for ratio,user in sorted(chain(*user_matches), reverse=True):
+        if user[0] in found_uids:
             continue
-        found_uids.add(user.id)
+        found_uids.add(user[0])
         no_double_entries.append((ratio,user))
     return no_double_entries
             
@@ -455,8 +483,8 @@ def combine_matches(*user_matches):
 def compute_matches_by_uid_in_words(words, users):
     """
     :param iterable[unicode] words: a list of words
-    :param dict[int, User] users: a map from uid to user
-    :rtype: list[(float, User)]
+    :param dict[int, MatchUser] users: a map from uid to user
+    :rtype: list[(float, MatchUser)]
     """
     matched_users = set()
     for word in words:
@@ -471,6 +499,20 @@ def compute_matches_by_uid_in_words(words, users):
             if user_id in users:
                 matched_users.add((1.0, users[user_id]))
     return list(matched_users)
+    
+def compute_matches_by_user_names_in_words(words, users, threshold=0.8):
+    """
+    :param sequence[unicode] words:
+    :param dict[int, MatchUser] users:
+    :rtype: list[(float, MatchUser)]
+    """
+    matched_users = []
+    for user in users.itervalues():
+        ratio = adaptive_match_ratio(user.name_words, words)
+        if ratio > threshold:
+            matched_users.append((ratio, user))
+    matched_users.sort()
+    return matched_users
 
 
 def compute_greedy_match_ratio(required_words, sample_words):
@@ -562,17 +604,4 @@ def adaptive_match_ratio(required_words, sample_words):
         return compute_optimal_match_ratio_munkres(required_words, sample_words)
 
 
-def compute_matches_by_user_names_in_words(words, users, threshold=0.8):
-    """
-    :param sequence[unicode] words:
-    :param dict[int, User] users:
-    :rtype: list[(float, User)]
-    """
-    matched_users = []
-    for user in users.itervalues():
-        ratio = adaptive_match_ratio(user.name_words, words)
-        if ratio > threshold:
-            matched_users.append((ratio, user))
-    matched_users.sort()
-    return matched_users
 

@@ -1,16 +1,22 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from datetime import date, timedelta
+
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
+from pycroft.lib.finance import (
+    import_journal_csv, get_current_semester, simple_transaction,
+    transferred_amount, cleanup_description, MatchUser, match_entry, 
+    compute_matches_by_uid_in_words, compute_matches_by_user_names_in_words,
+    combine_matches, tokenize, remove_keywords)
+from pycroft.model.finance import (
+    FinanceAccount, Journal, JournalEntry,
+    Transaction)
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
-    JournalData, SemesterData, UserData
-from pycroft.lib.finance import import_journal_csv, get_current_semester, \
-    simple_transaction, transferred_amount, cleanup_description
-from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
-    Transaction
-from datetime import date, timedelta
+from tests.lib.fixtures.finance_fixtures import (
+    FinanceAccountData, JournalData, JournalEntryData, SemesterData, UserData)
 
 
 class Test_010_Journal(FixtureDataTestBase):
@@ -124,6 +130,7 @@ class Test_010_Journal(FixtureDataTestBase):
                 self.asset_account, self.liability_account, today, None
             ),
             2*amount
+
         )
         self.assertEqual(
             transferred_amount(
@@ -152,3 +159,82 @@ class Test_010_Journal(FixtureDataTestBase):
                            u"SVWZ+A description with par asitic spaces at " \
                            u"multiples  of 28"
         self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
+
+
+class Test_020_Matching(FixtureDataTestBase):
+    datasets = [ JournalEntryData ]
+    
+    def setUp(self):
+        super(Test_020_Matching, self).setUp()
+        self.user1 = MatchUser(1234, (u"max", u"mustermann"))
+        self.user2 = MatchUser(1431, (u"max", u"musterfrau"))
+        #make dict of self.users
+        self.users = {user.user_id: user for user in (self.user1, self.user2)} 
+        #pull journal and journalentry from finance_fixture
+        self.entry = JournalEntry.q.filter_by(
+            id = JournalEntryData.entry01.id
+        ).one()
+        
+    def test_0100_match_entry(self):
+        res = match_entry(self.entry, self.users)
+        self.assertEqual(self.user1, res[0][1])
+        #self.assertEqual(self.user2, res[1][1])
+
+    def test_0200_combine_matches(self):
+        #tuple[list[(float, MatchUser)]] user_matches+
+        match1 = [(0.32, self.user1)]
+        match2 = [(1.0, self.user1)]
+        match3 = [(0.52, self.user2)]
+        self.assertEqual([(1.0, self.user1),(0.52, self.user2)], 
+                combine_matches(match1,match2,match3))
+
+    def test_0300_compute_matches_by_type1_uid_in_words(self):
+        words = [u'1234-0']
+        res = compute_matches_by_uid_in_words(words, self.users)
+        self.assertEqual(res, [(1.0, self.user1)])
+
+    def test_0300_compute_matches_by_type2_uid_in_words(self):
+        words = [u'1234-82']
+        res = compute_matches_by_uid_in_words(words, self.users)
+        self.assertEqual(res, [(1.0, self.user1)])
+
+    def test_0400_compute_matches_by_user_names_in_words(self):
+        # 
+        words = [u'123-6', u'max', u'mustermann']
+        res = compute_matches_by_user_names_in_words(words, self.users) 
+        print res
+        self.assertEqual(self.user1, res[0][1])
+        #self.assertEqual(self.user2, res[1][1])
+        
+    def test_0501_tokenize_spaces(self):
+        testString = u'Trenne Namen'
+        expString = (u'trenne', u'namen')
+        self.assertEqual(expString, tokenize(testString))
+
+    def test_0502_tokenize_case_sensitive(self):
+        testString = u'TrenneNamen'
+        expString = (u'trenne', u'namen')
+        self.assertEqual(expString, tokenize(testString))
+
+    def test_0503_tokenize_dash(self):
+        testString = u'Trenne-Namen'
+        expString = (u'trenne', u'namen')
+        self.assertEqual(expString, tokenize(testString))
+    def test_0504_tokenize_uid(self):
+        testString = u'11234-21 mehr-namen'
+        expString = (u'11234-21', u'mehr', u'namen')
+        self.assertEqual(expString, tokenize(testString))
+    def test_0505_tokenize_number_inside_word(self):
+        testString = u'Trenne4Namen'
+        expString = (u'trenne4', u'namen')
+        self.assertEqual(expString, tokenize(testString))
+
+    def test_0601_remove_keywords_agdsn(self):
+        testString = u'AGDSN Trenne Namen'
+        expString = u'  Trenne Namen'
+        self.assertEqual(expString, remove_keywords(testString))
+    def test_0602_remove_keywords_zw(self):
+        testString = u'ZW41a Trenne Namen'
+        expString = u'  Trenne Namen'
+        self.assertEqual(expString, remove_keywords(testString))
+

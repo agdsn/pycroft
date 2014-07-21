@@ -5,8 +5,6 @@
 from datetime import date, datetime, timedelta
 from fixture import DataSet
 
-__author__ = 'shreyder'
-
 
 class DormitoryData(DataSet):
     class Dummy:
@@ -65,6 +63,21 @@ class JournalData(DataSet):
         finance_account = FinanceAccountData.BankAccount
 
 
+class JournalEntryData(DataSet):
+    class entry01:
+        id = 1
+        description = u"1234-0 Mustaermann, Max"
+        original_description = description
+        journal = JournalData.Journal1
+        amount = 1500
+        other_name = u"Mustermann Max"
+        other_account_number = u"DE5508154245251415235"
+        other_routing_number = u"OSDDXABHF"
+        import_time = datetime.utcnow()
+        transaction_date = date.today()
+        valid_date = date.today()
+
+
 class SemesterData(DataSet):
     class CurrentSemester:
         name = "current semester"
@@ -77,3 +90,4 @@ class SemesterData(DataSet):
         begin_date = today
         end_date = today + timedelta(1)
         belated_end_date = today + timedelta(2)
+
