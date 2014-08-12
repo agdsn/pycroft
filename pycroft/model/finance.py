@@ -146,6 +146,7 @@ def check_transaction_on_save(mapper, connection, target):
     one split and it must consist of at least two splits.
     The last constraints prohibits transactions on the same account and
     difficulties to calculate the transferred value between two accounts.
+    :raises: IllegalTransactionError if transaction contains errors
     """
     if not target.is_balanced:
         raise IllegalTransactionError("Transaction is not balanced.")
