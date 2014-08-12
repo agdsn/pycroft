@@ -10,12 +10,14 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from itertools import chain, imap
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+import operator
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
 from pycroft.model.property import PropertyGroup, TrafficGroup, \
-    property_categories
+    property_categories, Property
 from pycroft.lib.property import create_property_group, delete_property_group,\
     create_traffic_group, delete_traffic_group, grant_property, deny_property,\
     remove_property
@@ -65,6 +67,16 @@ def traffic_group_delete(group_id):
 @nav.navigate(u"Eigenschaftsgruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
+    categories = property_categories
+    properties_with_description = set(chain(*(
+        category.iterkeys() for category in categories.itervalues()
+    )))
+    properties = set(imap(
+        operator.itemgetter(0),
+        Property.q.distinct().values(Property.name)))
+    categories[u"Ohne Beschreibung"] = {
+        p: p for p in properties if p not in properties_with_description
+    }
     return render_template(
         'properties/property_groups_list.html',
         property_categories=property_categories,

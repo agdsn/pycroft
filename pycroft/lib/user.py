@@ -295,12 +295,13 @@ def has_positive_balance(user):
 
 def has_internet(user):
     """
-    The function evaluates if the user is allowed to connect to the internet.
+    The function evaluates if the user is allowed to connect to the network.
     :param user: The user object.
-    :return: True if he is allowed to use the internet, false if he is not.
+    :return: True if he is allowed to use the network, false if he is not.
     """
-    return user.has_property("internet") and not has_exceeded_traffic(user) \
-        and has_positive_balance(user)
+    return (user.has_property("internet") and
+            not has_exceeded_traffic(user) and
+            has_positive_balance(user))
 
 
 @with_transaction
