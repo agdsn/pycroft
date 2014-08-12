@@ -226,3 +226,34 @@ class User(ModelBase, UserMixin):
                 )
             )
         ).label("has_property_" + prop)
+
+    def property_intervals(self, name, when=UnboundedInterval):
+        """
+        Get the set of intervals in which the user was granted a given property
+        :param str name:
+        :param Interval when:
+        :returns: The set of intervals in which the user was granted the
+        property
+        :rtype: IntervalSet
+        """
+        property_assignments = object_session(self).query(
+            pycroft.model.property.Property.granted,
+            pycroft.model.property.Membership.start_date,
+            pycroft.model.property.Membership.end_date
+        ).filter(
+            pycroft.model.property.Property.name == name,
+            pycroft.model.property.Property.property_group_id == pycroft.model.property.PropertyGroup.id,
+            pycroft.model.property.PropertyGroup.id == pycroft.model.property.Membership.group_id,
+            pycroft.model.property.Membership.user_id == self.id
+        ).all()
+        granted_intervals = IntervalSet(
+            closed(start_date, end_date)
+            for granted, start_date, end_date in property_assignments
+            if granted
+        )
+        denied_intervals = IntervalSet(
+            closed(start_date, end_date)
+            for granted, start_date, end_date in property_assignments
+            if not granted
+        )
+        return (granted_intervals - denied_intervals).intersect(when)
