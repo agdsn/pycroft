@@ -22,11 +22,11 @@ def positive_balance_check(user):
     return has_positive_balance(user)
 
 
-@template_check("user_with_no_internet")
-def no_internet_check(user):
-    """Tests if user has no internet
+@template_check("user_with_no_network_access")
+def no_network_access_check(user):
+    """Tests if user has network access
     """
-    return not user.has_property("internet")
+    return not user.has_property("network_access")
 
 
 @template_check("user_with_traffic_exceeded")

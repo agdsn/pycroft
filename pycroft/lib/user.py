@@ -319,13 +319,13 @@ def has_exceeded_traffic(user, when=None):
 def has_positive_balance(user):
     return True
 
-def has_internet(user):
+def has_network_access(user):
     """
     The function evaluates if the user is allowed to connect to the network.
     :param user: The user object.
     :return: True if he is allowed to use the network, false if he is not.
     """
-    return (user.has_property("internet") and
+    return (user.has_property("network_access") and
             not has_exceeded_traffic(user) and
             has_positive_balance(user))
 

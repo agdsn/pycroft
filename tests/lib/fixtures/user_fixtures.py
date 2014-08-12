@@ -91,13 +91,13 @@ class PropertyGroupData(DataSet):
 
 
 class PropertyData(DataSet):
-    class internet:
-        name = "internet"
+    class network:
+        name = "network_access"
         granted = True
         property_group = PropertyGroupData.benutzer
 
-    class no_internet:
-        name = "internet"
+    class no_network:
+        name = "network_access"
         granted = False
         property_group = PropertyGroupData.verstoss
 

@@ -125,9 +125,9 @@ def do_convert():
                        "tmpausgezogen": property.PropertyGroup(
                            name=u"tmpAusgezogen")}
 
-    properties_all = [property.Property(name="internet", granted=False,
+    properties_all = [property.Property(name="network_access", granted=False,
                           property_group=property_groups["verstoß"]),
-                      property.Property(name="internet",
+                      property.Property(name="network_access",
                           property_group=property_groups["bewohner"]),
                       property.Property(name="mail",
                           property_group=property_groups["bewohner"]),
