@@ -39,3 +39,4 @@ class UserData(DataSet):
         name = u"Dummy"
         registered_at = datetime.utcnow()
         room = RoomData.Dummy
+        finance_account = FinanceAccountData.Dummy1

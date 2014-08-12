@@ -1,30 +1,52 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
-# -*- coding: utf-8 -*-
-from itertools import imap, chain, izip_longest, ifilter
+from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+import cStringIO
+import csv
+from datetime import datetime, date, timedelta
+import difflib
+from itertools import chain, ifilter, imap, izip_longest, tee, izip, islice
+import operator
 import re
 
-import cStringIO
+from sqlalchemy import or_
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import func, between, Integer, cast
+
 from pycroft import config
+from pycroft.model import session
+from pycroft.model.finance import (
+    Semester, FinanceAccount, Transaction, Split,
+    Journal, JournalEntry)
+from pycroft.helpers.interval import (
+    closed, single, Bound, Interval, IntervalSet, UnboundedInterval)
+from pycroft.model.functions import sign, least
+from pycroft.model.session import with_transaction
 from pycroft.model.user import User
 
 
-__author__ = 'Florian Österreich'
+def get_semesters(when=UnboundedInterval):
+    """
 
-from datetime import datetime, date
-from sqlalchemy import func, between, Integer, cast
-from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
-    Journal, JournalEntry
-from pycroft.helpers.interval import single, closed
-from pycroft.model import session
-from pycroft.model.session import with_transaction
-from pycroft.model.functions import sign, least
-import csv
+    :param when:
+    :return:
+    """
+    criteria = []
+    if when.begin is not None:
+        criteria.append(or_(
+            when.begin <= Semester.begin_date,
+            between(when.begin, Semester.begin_date, Semester.end_date)
+        ))
+    if when.end is not None:
+        criteria.append(or_(
+            when.end >= Semester.end_date,
+            between(when.end, Semester.begin_date, Semester.end_date)
+        ))
+    return Semester.q.filter(*criteria).order_by(Semester.begin_date)
 
 
 def get_semester_for_date(target_date):
@@ -48,19 +70,6 @@ def get_current_semester():
     :rtype: Semester
     """
     return get_semester_for_date(datetime.utcnow().date())
-
-
-def get_registration_fee_account():
-    return FinanceAccount.q.filter(
-        FinanceAccount.id == config['finance']['registration_fee_account_id']
-    ).one()
-
-
-def get_semester_fee_account():
-    account_id = config['finance']['semester_contribution_account_id']
-    return FinanceAccount.q.filter(
-        FinanceAccount.id == account_id
-    ).one()
 
 
 @with_transaction
@@ -119,17 +128,16 @@ def setup_user_finance_account(new_user, processor):
         "semester": current_semester.name
     }
 
+    fees = [
+        RegistrationFee(FinanceAccount.q.get(
+            config["finance"]["registration_fee_account_id"]
+        )),
+        SemesterFee(FinanceAccount.q.get(
+            config["finance"]["semester_fee_account_id"]
+        )),
+    ]
     # Initial bookings
-    simple_transaction(
-        conf["registration_fee_description"].format(**format_args),
-        get_registration_fee_account(), new_user.finance_account,
-        current_semester.registration_fee, processor
-    )
-    simple_transaction(
-        conf["semester_contribution_description"].format(**format_args),
-        get_semester_fee_account(), new_user.finance_account,
-        current_semester.regular_semester_fee, processor
-    )
+    post_fees([new_user], fees, processor)
 
 
 @with_transaction
@@ -193,6 +201,249 @@ def transferred_amount(from_account, to_account, begin_date=None, end_date=None)
     elif end_date is not None:
         query = query.filter(Transaction.valid_date <= end_date)
     return query.scalar()
+
+
+@with_transaction
+def post_fees(users, fees, processor):
+    """
+    Calculate the given fees for all given user accounts from scratch and post
+    them if they have not already been posted and correct erroneous postings.
+    :param iterable[User] users:
+    :param iterable[Fee] fees:
+    :param User processor:
+    """
+    adjustment_description = config["finance"]["adjustment_description"]
+    for user in users:
+        for fee in fees:
+            computed_debts = fee.compute(user)
+            posted_transactions = fee.get_posted_transactions(user).all()
+            posted_credits = tuple(t for t in posted_transactions if t.amount > 0)
+            posted_corrections = tuple(t for t in posted_transactions if t.amount < 0)
+            missing_debts, erroneous_debts = diff(posted_credits, computed_debts)
+            computed_adjustments = tuple(
+                ((adjustment_description.format(
+                    original_description=description,
+                    original_valid_date=valid_date)),
+                 valid_date, -amount)
+                for description, valid_date, amount in erroneous_debts)
+            missing_adjustments, erroneous_adjustments = diff(
+                posted_corrections, computed_adjustments
+            )
+            missing_postings = chain(missing_debts, missing_adjustments)
+            today = datetime.utcnow().date()
+            for description, valid_date, amount in missing_postings:
+                if valid_date <= today:
+                    simple_transaction(
+                        description, fee.account, user.finance_account,
+                        amount, processor, valid_date)
+
+
+def diff(posted, computed):
+    sequence_matcher = difflib.SequenceMatcher(None, posted, computed)
+    missing_postings = []
+    erroneous_postings = []
+    for tag, i1, i2, j1, j2 in sequence_matcher.get_opcodes():
+        if 'replace' == tag:
+            erroneous_postings.extend(islice(posted, i1, i2))
+            missing_postings.extend(islice(computed, j1, j2))
+        if 'delete' == tag:
+            erroneous_postings.extend(islice(posted, i1, i2))
+        if 'insert' == tag:
+            missing_postings.extend(islice(computed, j1, j2))
+    return missing_postings, erroneous_postings
+
+
+def _to_date_interval(interval):
+    """
+    :param Interval[datetime] interval:
+    :rtype: Interval[date]
+    """
+    if interval.lower_bound.unbounded:
+        lower_bound = interval.lower_bound
+    else:
+        lower_bound = Bound(interval.lower_bound.value.date(),
+                            interval.lower_bound.closed)
+    if interval.upper_bound.unbounded:
+        upper_bound = interval.upper_bound
+    else:
+        upper_bound = Bound(interval.upper_bound.value.date(),
+                            interval.upper_bound.closed)
+    return Interval(lower_bound, upper_bound)
+
+
+def _to_date_intervals(intervals):
+    """
+    :param IntervalSet[datetime] intervals:
+    :rtype: IntervalSet[date]
+    """
+    return IntervalSet(imap(_to_date_interval, intervals))
+
+
+class Fee(object):
+    """
+    Fees must be idempotent, that means if a fee has been applied to a user,
+    another application must not result in any change. This property allows
+    all the fee to be calculated for all times instead of just the current
+    semester or the current day and makes the calculation independent of system
+    time it was running.
+    """
+    __metaclass__ = ABCMeta
+
+    validity_period = UnboundedInterval
+
+    def __init__(self, account):
+        self.account = account
+        self.session = session.session
+
+    def get_posted_transactions(self, user):
+        """
+        Get all fee transactions that have already been posted to the user's
+        finance account.
+        :param User user:
+        :return:
+        :rtype: list[(unicode, date, int)]
+        """
+        split1 = aliased(Split)
+        split2 = aliased(Split)
+        transactions = self.session.query(
+            Transaction.description, Transaction.valid_date, split1.amount
+        ).select_from(Transaction).join(
+            (split1, split1.transaction_id == Transaction.id),
+            (split2, split2.transaction_id == Transaction.id)
+        ).filter(
+            split1.account_id == user.finance_account_id,
+            split2.account_id == self.account.id
+        ).order_by(Transaction.valid_date)
+        return transactions
+
+    @abstractmethod
+    def compute(self, user):
+        """
+        Compute all debts the user owes us for this particular fee. Debts must
+        be in ascending order of valid_date.
+
+        :param User user:
+        :rtype: list[(unicode, date, int)]
+        """
+        pass
+
+
+class RegistrationFee(Fee):
+    def compute(self, user):
+        description = config['finance']['registration_fee_description']
+        when = single(user.registered_at)
+        if user.has_property("registration_fee", when):
+            try:
+                semester = get_semester_for_date(user.registered_at.date())
+            except NoResultFound:
+                return []
+            fee = semester.registration_fee
+            if fee > 0:
+                return [(description, user.registered_at.date(), fee)]
+        return []
+
+
+class SemesterFee(Fee):
+    def compute(self, user):
+        liability_intervals = _to_date_intervals(
+            user.property_intervals("semester_fee")
+        )
+        if not liability_intervals:
+            return []
+        semesters = get_semesters(closed(
+            liability_intervals[0].begin,
+            liability_intervals[-1].end
+        ))
+        away_intervals = _to_date_intervals(user.property_intervals("away"))
+        description = config["finance"]["semester_fee_description"]
+        debts = []
+        # Compute semester fee for each semester the user is liable to pay it
+        for semester in semesters:
+            semester_interval = closed(semester.begin_date, semester.end_date)
+            liable_in_semester = liability_intervals & semester_interval
+            if not liable_in_semester:
+                continue
+            if liable_in_semester.length <= semester.grace_period:
+                continue
+            away_in_semester = away_intervals & semester_interval
+            present_in_semester = liable_in_semester - away_in_semester
+            valid_date = liable_in_semester[0].begin
+            if present_in_semester.length <= semester.reduced_semester_fee_threshold:
+                amount = semester.reduced_semester_fee
+            else:
+                amount = semester.regular_semester_fee
+            if amount > 0:
+                debts.append((
+                    description.format(semester=semester.name),
+                    valid_date, amount))
+        return debts
+
+
+class LateFee(Fee):
+    def __init__(self, account, calculate_until):
+        """
+        :param date calculate_until: Date up until late fees are calculated;
+        usually the date of the last bank import
+        :param int allowed_overdraft: Amount of overdraft which does not result
+        in an late fee being charged.
+        :param payment_deadline: Timedelta after which a payment is late
+        """
+        super(LateFee, self).__init__(account)
+        self.calculate_until = calculate_until
+
+    def non_late_fee_transactions(self, user):
+        split1 = aliased(Split)
+        split2 = aliased(Split)
+        return self.session.query(
+            Transaction.valid_date, (-func.sum(split2.amount)).label("debt")
+        ).select_from(Transaction).join(
+            (split1, split1.transaction_id == Transaction.id),
+            (split2, split2.transaction_id == Transaction.id)
+        ).filter(
+            split1.account_id == user.finance_account_id,
+            split2.account_id != user.finance_account_id,
+            split2.account_id != self.account.id
+        ).group_by(
+            Transaction.id, Transaction.valid_date
+        ).order_by(Transaction.valid_date)
+
+    @staticmethod
+    def running_totals(transactions):
+        balance = 0
+        last_credit = transactions[0][0]
+        for valid_date, amount in transactions:
+            if amount > 0:
+                last_credit = valid_date
+            else:
+                delta = valid_date - last_credit
+                yield last_credit, balance, delta
+            balance += amount
+
+    def compute(self, user):
+        # Note: User finance accounts are assets accounts from our perspective,
+        # that means their balance is positive, if the user owes us money
+        transactions = self.non_late_fee_transactions(user).all()
+        # Add a pseudo transaction on the day until late fees should be
+        # calculated
+        transactions.append((self.calculate_until, 0))
+        liability_intervals = _to_date_intervals(
+            user.property_intervals("late_fee")
+        )
+        description = config["finance"]["late_fee_description"]
+        debts = []
+        for last_credit, balance, delta in self.running_totals(transactions):
+            semester = get_semester_for_date(last_credit)
+            if (balance <= semester.allowed_overdraft or
+                    delta <= semester.payment_deadline):
+                continue
+            valid_date = last_credit + semester.payment_deadline + timedelta(days=1)
+            amount = semester.late_fee
+            if liability_intervals & single(valid_date) and amount > 0:
+                debts.append((
+                    description.format(original_valid_date=last_credit),
+                    amount, valid_date
+                ))
+        return debts
 
 
 MT940_FIELDNAMES = [

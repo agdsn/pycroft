@@ -94,7 +94,7 @@ class Membership(ModelBase):
     def active(cls, when=None):
         if when is None:
             now = session.utcnow()
-            when = closed(now, now)
+            when = single(now)
 
         return and_(
             or_(cls.start_date == null(), literal(when.end) == null(),
@@ -175,14 +175,12 @@ property_categories = OrderedDict((
         (u"honorary_member", u"Ehrenmitglied"),
         (u"away", u"vorübergehend ausgezogen"),
     ))),
-    (u"Nutzerrechte", OrderedDict((
+    (u"Mitglieder", OrderedDict((
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
         (u"negative_balance",  u"darf negative Kontobilanz haben"),
-        (u"registration_fee_exemption",  u"von Anmeldegebühr befreit"),
-        (u"semester_contribution_exemption",  u"von Semesterbeitrag befreit"),
-        (u"overdue_fine_exemption",  u"von Versäumnisgebühr befreit"),
-        (u"pay_registration_fee", u"Nutzer muss Anmeldegebühr zahlen"),
-        (u"pay_semester_fee", u"Nutzer muss Semesterbeitrag zahlen"),
+        (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
+        (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
+        (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),

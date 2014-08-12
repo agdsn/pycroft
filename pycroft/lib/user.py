@@ -22,6 +22,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.dormitory import Room
+from pycroft.model.finance import FinanceAccount
 from pycroft.model.host import Host, Ip, UserHost, UserNetDevice
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model import session
@@ -98,20 +99,25 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     room = Room.q.filter_by(number=room_number,
         level=level, dormitory=dormitory).one()
 
-    # create a new user
+
     now = session.utcnow()
+    # create a new user
     new_user = User(
         login=login,
         name=name,
         email=email,
         room=room,
-        registered_at=now
+        registered_at=now,
+        finance_account=FinanceAccount(name="", type="ASSET")
     )
     plain_password = user.generate_password(12)
 
     # set random initial password
     new_user.set_password(plain_password)
     session.session.add(new_user)
+    account_name = config['finance']['user_finance_account_name'].format(
+        user_id=new_user.id)
+    new_user.finance_account.name = account_name
 
     # create one new host (including net_device) for the new user
     subnets = dormitory.subnets

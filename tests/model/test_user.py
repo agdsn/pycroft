@@ -11,9 +11,11 @@ from pycroft.helpers.interval import single
 from pycroft.model import dormitory, session, property, user
 from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
+from pycroft.model.finance import FinanceAccount
 from tests import FixtureDataTestBase
 from tests.model.fixtures.user_fixtures import (
-    DormitoryData, PropertyGroupData, RoomData, TrafficGroupData, UserData)
+    DormitoryData, FinanceAccountData, PropertyGroupData, RoomData,
+    TrafficGroupData, UserData)
 
 
 class Test_010_PasswordGenerator(unittest.TestCase):
@@ -133,9 +135,12 @@ class Test_040_User_Login(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
+        finance_account = FinanceAccount(name='', type='ASSET')
         u = user.User(name="John Doe",
                       registered_at=session.utcnow(),
-                      room=dormitory.Room.q.first())
+                      room=dormitory.Room.q.first(),
+                      finance_account=finance_account
+        )
 
         def set_login(login):
             u.login = login

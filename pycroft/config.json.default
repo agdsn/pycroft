@@ -5,12 +5,14 @@
     },
     "finance": {
         "registration_fee_account_id": 1,
-        "semester_contribution_account_id": 2,
+        "semester_fee_account_id": 2,
         "additional_fee_account_id": 3,
-        "overdue_fine_account_id": 4,
-        "user_finance_account_name": "Konto von {login}",
+        "late_fee_account_id": 4,
+        "user_finance_account_name": "Konto von {user_id}",
         "registration_fee_description": "Anmeldegebühr",
-        "semester_contribution_description": "Semesterbeitrag {semester}"
+        "semester_fee_description": "Semesterbeitrag {semester}",
+        "late_fee_description": "Versäumnisgebühr für ausstehende Zahlung vom {original_valid_date}",
+        "adjustment_description": "Gutschrift für „{original_description}“ vom {original_valid_date}"
     },
     "move_in": {
         "default_group_memberships": [

@@ -13,29 +13,41 @@
 from itertools import imap
 from sqlalchemy.ext.hybrid import hybrid_property
 from base import ModelBase
-from sqlalchemy import ForeignKey, func, select
+from sqlalchemy import ForeignKey, event, func, select
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Date
+from sqlalchemy.types import (
+    Date, DateTime, Enum, Integer, Interval, String, Text)
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
-from sqlalchemy import event
 
 from .functions import utcnow
 
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    registration_fee = Column(Integer, nullable=False)
-    regular_semester_fee = Column(Integer, nullable=False)
-    reduced_semester_fee = Column(Integer, nullable=False)
-    late_fee = Column(Integer, nullable=False)
+    registration_fee = Column(
+        Integer, CheckConstraint('registration_fee >= 0'), nullable=False)
+    regular_semester_fee = Column(
+        Integer, CheckConstraint('regular_semester_fee >= 0'), nullable=False)
+    reduced_semester_fee = Column(
+        Integer, CheckConstraint('reduced_semester_fee >= 0'), nullable=False)
+    late_fee = Column(Integer, CheckConstraint('late_fee >= 0'), nullable=False)
+    # Timedelta a person has to be member in a semester to be charged any
+    # semester fee at all(grace period)
+    grace_period = Column(Interval, nullable=False)
+    # Timedelta a member has to be present (i.e. not away although being member)
+    # in a semester to be charged the full fee
+    reduced_semester_fee_threshold = Column(Interval, nullable=False)
+    # Timedelta after which members are being charged a late fee for not paying
+    # in time
+    payment_deadline = Column(Interval, nullable=False)
+    # Amount of outstanding debt a member can have without being charged a late
+    # fee
+    allowed_overdraft = Column(
+        Integer, CheckConstraint('allowed_overdraft >= 0'), nullable=False)
     begin_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     __table_args__ = (
-        CheckConstraint('registration_fee >= 0'),
-        CheckConstraint('regular_semester_fee >= 0'),
-        CheckConstraint('reduced_semester_fee >= 0'),
-        CheckConstraint('late_fee >= 0'),
         CheckConstraint('begin_date < end_date'),
     )
 
@@ -86,7 +98,6 @@ class Journal(ModelBase):
     def last_update(self):
         return max(imap(lambda e: e.import_time, self.entries))
 
-
     @last_update.expression
     def last_update(self):
         return (
@@ -132,6 +143,10 @@ class Transaction(ModelBase):
     @property
     def is_balanced(self):
         return sum(split.amount for split in self.splits) == 0
+
+    @property
+    def is_simple(self):
+        return len(self.splits) == 2
 
 
 def check_transaction_on_save(mapper, connection, target):

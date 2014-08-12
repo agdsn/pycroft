@@ -47,18 +47,64 @@ class RoomData(DataSet):
         dormitory = DormitoryData.dummy_house1
 
 
+today = datetime.utcnow().date()
+
+
+class SemesterData(DataSet):
+    class dummy_semester1:
+        name = "first semester"
+        registration_fee = 2500
+        regular_semester_fee = 1500
+        reduced_semester_fee = 450
+        late_fee = 250
+        grace_period = timedelta(62)
+        reduced_semester_fee_threshold = timedelta(62)
+        payment_deadline = timedelta(31)
+        allowed_overdraft = 500
+        begin_date = today
+        end_date = today + timedelta(days=180)
+
+
+class FinanceAccountData(DataSet):
+    class dummy_finance_account1:
+        name = "finance account 1"
+        type = "EXPENSE"
+
+    class dummy_finance_account2:
+        name = "finance account 2"
+        type = "EXPENSE"
+
+    class semester_fee:
+        name = u"Semestergebühren first semester"
+        semester = SemesterData.dummy_semester1
+        type = "REVENUE"
+        tag = "regular_fee"
+
+    class registration_fee:
+        name = u"Anmeldegebühren first semester"
+        semester = SemesterData.dummy_semester1
+        type = "REVENUE"
+        tag = "registration_fee"
+
+    class user_account:
+        name = ''
+        type = 'ASSET'
+
+
 class UserData(DataSet):
     class dummy_user1:
         login = "test"
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
+        finance_account = FinanceAccountData.user_account
 
     class dummy_user2:
         login = "admin"
         name = "Sebsatian fucking Schrader"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room3
+        finance_account = FinanceAccountData.user_account
 
 
 class TrafficGroupData(DataSet):
@@ -93,6 +139,16 @@ class PropertyGroupData(DataSet):
 class PropertyData(DataSet):
     class network:
         name = "network_access"
+        granted = True
+        property_group = PropertyGroupData.benutzer
+
+    class registration_fee:
+        name = "registration_fee"
+        granted = True
+        property_group = PropertyGroupData.benutzer
+
+    class semester_fee:
+        name = "semester_fee"
         granted = True
         property_group = PropertyGroupData.benutzer
 
@@ -162,40 +218,3 @@ class IpData(DataSet):
         address = "141.30.216.203"
         net_device = UserNetDeviceData.dummy_device
         subnet = SubnetData.dummy_subnet1
-
-
-class SemesterData(DataSet):
-    class dummy_semester1:
-        name = "first semester"
-        registration_fee = 2500
-        regular_semester_fee = 1500
-        reduced_semester_fee = 450
-        late_fee = 250
-        today = datetime.utcnow().date()
-        begin_date = today
-        end_date = today + timedelta(1)
-
-
-class FinanceAccountData(DataSet):
-    class dummy_finance_account1:
-        name = "finance account 1"
-        type = "EXPENSE"
-
-    class dummy_finance_account2:
-        name = "finance account 2"
-        type = "EXPENSE"
-
-    class semester_fee:
-        name = u"Semestergebühren first semester"
-        semester = SemesterData.dummy_semester1
-        type = "REVENUE"
-        tag = "regular_fee"
-
-    class registration_fee:
-        name = u"Anmeldegebühren first semester"
-        semester = SemesterData.dummy_semester1
-        type = "REVENUE"
-        tag = "registration_fee"
-
-
-

@@ -349,12 +349,17 @@ def semesters_create():
         else:
             name_default = (u'Wintersemester ' + str(begin_date_default.year) +
                             u'/' + str(end_date_default.year))
+        reduced_semester_fee_threshold = previous_semester.reduced_semester_fee_threshold.days
         form = SemesterCreateForm(
             name=name_default,
             registration_fee=previous_semester.registration_fee,
             regular_semester_fee=previous_semester.regular_semester_fee,
             reduced_semester_fee=previous_semester.reduced_semester_fee,
             late_fee=previous_semester.late_fee,
+            grace_period=previous_semester.grace_period.days,
+            reduced_semester_fee_threshold=reduced_semester_fee_threshold,
+            payment_deadline=previous_semester.payment_deadline.days,
+            allowed_overdraft=previous_semester.allowed_overdraft,
             begin_date=begin_date_default,
             end_date=end_date_default,
         )
@@ -367,6 +372,10 @@ def semesters_create():
             regular_semester_fee=form.regular_semester_fee.data,
             reduced_semester_fee=form.reduced_semester_fee.data,
             late_fee=form.late_fee.data,
+            grace_period=timedelta(days=form.grace_period.data),
+            reduced_semester_fee_threshold=timedelta(days=form.reduced_semester_fee_threshold.data),
+            payment_deadline=timedelta(days=form.payment_deadline.data),
+            allowed_overdraft=form.allowed_overdraft.data,
             begin_date=form.begin_date.data,
             end_date=form.end_date.data,
         )

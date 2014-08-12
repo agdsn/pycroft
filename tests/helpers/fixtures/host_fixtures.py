@@ -74,18 +74,26 @@ class PatchPortData(DataSet):
         room = RoomData.dummy_room3
 
 
+class FinanceAccountData(DataSet):
+    class finance_account:
+        name = ''
+        type = 'ASSET'
+
+
 class UserData(DataSet):
     class dummy_user:
         login = "test"
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room
+        finance_account = FinanceAccountData.finance_account
 
     class dummy_user2:
         login = "test2"
         name = "John Doe2"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room2
+        finance_account = FinanceAccountData.finance_account
 
 
 class UserHostData(DataSet):

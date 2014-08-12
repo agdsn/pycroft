@@ -76,15 +76,6 @@ class User(ModelBase, UserMixin):
                       "postgres", "wwwadmin", "backup", "msql", "operator",
                       "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
-    def __init__(self, *args, **kwargs):
-        # executed after relationship is read in
-        # automatically creates finance account for user
-        conf = config["finance"]
-        self.finance_account = FinanceAccount(
-            name=conf["user_finance_account_name"].format(login=kwargs.get("login")),
-            type="ASSET")
-        super(User, self).__init__(*args, **kwargs)
-
     @validates('login')
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"

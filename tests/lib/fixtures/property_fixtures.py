@@ -20,12 +20,19 @@ class RoomData(DataSet):
         dormitory = DormitoryData.dummy_house1
 
 
+class FinanceAccountData(DataSet):
+    class finance_account:
+        name = ''
+        type = 'ASSET'
+
+
 class UserData(DataSet):
     class dummy_user1:
         login = "test"
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
+        finance_account = FinanceAccountData.finance_account
 
 
 class PropertyGroupData(DataSet):

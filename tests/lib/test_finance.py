@@ -1,18 +1,28 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import cStringIO as StringIO
+from datetime import date, datetime, time, timedelta
+import pkgutil
+
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
+from pycroft import config
+from pycroft.lib.finance import (
+    post_fees, cleanup_description, get_current_semester, import_journal_csv,
+    simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
+    SemesterFee, get_semester_for_date)
+from pycroft.lib.property import create_membership
+from pycroft.model.finance import (
+    FinanceAccount, Journal, JournalEntry, Transaction)
+from pycroft.model.property import PropertyGroup
 from pycroft.model import session
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
-    JournalData, SemesterData, UserData
-from pycroft.lib.finance import import_journal_csv, get_current_semester, \
-    simple_transaction, transferred_amount, cleanup_description
-from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
-    Transaction
-from datetime import date, datetime, timedelta
-import pkgutil, StringIO
+from tests.lib.fixtures.finance_fixtures import (
+    FinanceAccountData, JournalData, MembershipData, PropertyData,
+    PropertyGroupData, SemesterData, SplitData, TransactionData, UserData)
+
 
 class Test_010_Journal(FixtureDataTestBase):
 
@@ -36,7 +46,7 @@ class Test_010_Journal(FixtureDataTestBase):
             account_number=JournalData.Journal1.account_number
         ).one()
         self.author = User.q.filter_by(
-            login=UserData.Dummy.login
+            login=UserData.dummy.login
         ).one()
 
     def test_0010_import_journal_csv(self):
@@ -158,3 +168,252 @@ class Test_010_Journal(FixtureDataTestBase):
                            u"SVWZ+A description with par asitic spaces at " \
                            u"multiples  of 28"
         self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
+
+
+class FeeTestBase(FixtureDataTestBase):
+    def setUp(self):
+        super(FeeTestBase, self).setUp()
+        self.user = User.q.first()
+        self.processor = self.user
+        self.fee_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.fee_account.name
+        ).one()
+
+    def assertFeesPosted(self, user, expected_transactions):
+        actual_transactions = map(
+            lambda t: (
+                t.description,
+                t.valid_date,
+                t.splits[0].amount
+                if t.splits[0].account == user.finance_account else
+                t.splits[1].amount),
+            user.finance_account.transactions
+        )
+        self.assertEqual(expected_transactions, actual_transactions)
+
+
+class Test_Fees(FeeTestBase):
+    datasets = (FinanceAccountData, SemesterData, UserData)
+    description = u"Fee"
+    valid_date = datetime.utcnow().date()
+    amount = 9000
+    params = (description, valid_date, amount)
+
+    class FeeMock(Fee):
+        def __init__(self, account, params):
+            super(Test_Fees.FeeMock, self).__init__(account)
+            self.params = params
+
+        def compute(self, user):
+            return self.params
+
+    def test_fee_posting(self):
+        """Verify that fees are posted correctly to user accounts."""
+        fee = self.FeeMock(self.fee_account, [self.params])
+        post_fees([self.user], [fee], self.processor)
+        self.assertFeesPosted(self.user, [self.params])
+
+    def test_idempotency(self):
+        """Test that subsequent invocations won't post additional fees."""
+        fee = self.FeeMock(self.fee_account, [self.params])
+        post_fees([self.user], [fee], self.processor)
+        post_fees([self.user], [fee], self.processor)
+        self.assertFeesPosted(self.user, [self.params])
+
+    def test_automatic_adjustment(self):
+        # Post fee twice
+        double_fee = self.FeeMock(self.fee_account, [self.params] * 2)
+        post_fees([self.user], [double_fee], self.processor)
+        single_fee = self.FeeMock(self.fee_account, [self.params])
+        post_fees([self.user], [single_fee], self.processor)
+        description = config['finance']['adjustment_description'].format(
+            original_description=self.description,
+            original_valid_date=self.valid_date
+        )
+        correction = [(description, self.valid_date, -self.amount)]
+        self.assertFeesPosted(self.user, [self.params] * 2 + correction)
+
+    def test_automatic_adjustment_idempotency(self):
+        double_fee = self.FeeMock(self.fee_account, [self.params] * 2)
+        post_fees([self.user], [double_fee], self.processor)
+        single_fee = self.FeeMock(self.fee_account, [self.params])
+        post_fees([self.user], [single_fee], self.processor)
+        description = config['finance']['adjustment_description'].format(
+            original_description=self.description,
+            original_valid_date=self.valid_date
+        )
+        correction = [(description, self.valid_date, -self.amount)]
+        post_fees([self.user], [single_fee], self.processor)
+        self.assertFeesPosted(self.user, [self.params] * 2 + correction)
+
+
+class TestRegistrationFee(FeeTestBase):
+    datasets = [FinanceAccountData, MembershipData, PropertyData, SemesterData,
+                UserData]
+
+    def setUp(self):
+        super(TestRegistrationFee, self).setUp()
+        self.fee = RegistrationFee(self.fee_account)
+
+    def test_registration_fee(self):
+        description = config["finance"]["registration_fee_description"]
+        amount = SemesterData.with_registration_fee.registration_fee
+        valid_date = self.user.registered_at.date()
+        self.assertEqual(self.fee.compute(self.user), [(description, valid_date, amount)])
+
+    def test_property_absent(self):
+        self.user.memberships = []
+        self.assertEqual(self.fee.compute(self.user), [])
+
+    def test_fee_zero(self):
+        self.user.registered_at = datetime.combine(
+            SemesterData.without_registration_fee.begin_date,
+            time.min
+        )
+        self.assertEqual(self.fee.compute(self.user), [])
+
+
+class TestSemesterFee(FeeTestBase):
+    datasets = [FinanceAccountData, MembershipData, PropertyData,
+                PropertyGroupData, SemesterData, UserData]
+
+    def setUp(self):
+        super(TestSemesterFee, self).setUp()
+        self.fee = SemesterFee(self.fee_account)
+        self.away_group = PropertyGroup.q.filter_by(
+            name=PropertyGroupData.away.name
+        ).one()
+        self.garbage = []
+
+    def tearDown(self):
+        for obj in self.garbage:
+            session.session.delete(obj)
+        self.garbage = []
+        super(TestSemesterFee, self).tearDown()
+
+    def expected_debt(self, semester, regular=True):
+        description = config["finance"]["semester_fee_description"]
+        registered_at_date = self.user.registered_at.date()
+        if semester.begin_date <= registered_at_date <= semester.end_date:
+            valid_date = registered_at_date
+        else:
+            valid_date = semester.begin_date
+        amount = (semester.regular_semester_fee
+                  if regular else
+                  semester.reduced_semester_fee)
+        return description.format(semester=semester.name), valid_date, amount
+
+    def set_registered_at(self, when):
+        registered_at = datetime.combine(when, time.min)
+        self.user.registered_at = registered_at
+        for membership in self.user.memberships:
+            membership.start_date = registered_at
+
+    def test_semester_fee(self):
+        self.assertEqual(self.fee.compute(self.user), [
+            self.expected_debt(SemesterData.with_registration_fee),
+            self.expected_debt(SemesterData.without_registration_fee)
+        ])
+
+    def test_property_absent(self):
+        self.user.memberships = []
+        self.assertEqual(self.fee.compute(self.user), [])
+
+    def test_grace_period(self):
+        semester = SemesterData.with_registration_fee
+        self.set_registered_at(
+            semester.end_date - semester.grace_period)
+        self.assertEqual(self.fee.compute(self.user), [self.expected_debt(
+            SemesterData.without_registration_fee)])
+
+    def test_away(self):
+        semester = SemesterData.without_registration_fee
+        begin = datetime.combine(
+            semester.begin_date, time.min
+        )
+        end = datetime.combine(
+            semester.end_date, time.min
+        )
+        self.garbage.append(create_membership(
+            begin, end - semester.reduced_semester_fee_threshold,
+            self.user, self.away_group
+        ))
+        self.assertEqual(self.fee.compute(self.user), [
+            self.expected_debt(SemesterData.with_registration_fee),
+            self.expected_debt(semester, False)
+        ])
+
+
+class TestLateFee(FeeTestBase):
+    datasets = [FinanceAccountData, MembershipData, PropertyData,
+                PropertyGroupData, SemesterData, UserData]
+
+    allowed_overdraft = 500
+    payment_deadline = timedelta(31)
+    valid_date = SemesterData.with_registration_fee.begin_date
+    description = u"Fee description"
+    amount = 1000
+
+    def setUp(self):
+        super(TestLateFee, self).setUp()
+        self.fee_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.late_fee_account.name
+        ).one()
+        self.fee = LateFee(self.fee_account, date.today())
+        self.other_fee_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.fee_account.name
+        ).one()
+        self.bank_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.bank_account.name
+        ).one()
+
+    def late_fee_for(self, transaction):
+        description = config['finance']['late_fee_description'].format(
+            original_valid_date=transaction.valid_date)
+        valid_date = (transaction.valid_date + self.payment_deadline +
+                      timedelta(days=1))
+        amount = get_semester_for_date(valid_date).late_fee
+        return description, amount, valid_date
+
+    def book_a_fee(self):
+        return simple_transaction(
+            self.description, self.other_fee_account, self.user.finance_account,
+            self.amount, self.user, self.valid_date)
+
+    def pay_fee(self, delta):
+        return simple_transaction(
+            self.description, self.user.finance_account, self.bank_account,
+            self.amount, self.user, self.valid_date + delta)
+
+    def test_no_fees_bocked(self):
+        self.assertEqual(self.fee.compute(self.user), [])
+
+    def test_booked_fee_paid_in_time(self):
+        self.book_a_fee()
+        self.pay_fee(self.payment_deadline - timedelta(days=1))
+        session.session.commit()
+        self.assertEqual(self.fee.compute(self.user), [])
+
+    def test_booked_fee_unpaid(self):
+        transaction = self.book_a_fee()
+        session.session.commit()
+        self.assertEqual(self.fee.compute(self.user),
+                         [self.late_fee_for(transaction)])
+
+    def test_booked_fee_paid_too_late(self):
+        transaction = self.book_a_fee()
+        self.pay_fee(self.payment_deadline + timedelta(days=1))
+        session.session.commit()
+        self.assertEqual(self.fee.compute(self.user),
+                         [self.late_fee_for(transaction)])
+
+    def test_booked_fee_paid_too_late_with_late_fee_already_booked(self):
+        transaction = self.book_a_fee()
+        late_fee = self.late_fee_for(transaction)
+        simple_transaction(late_fee[0], self.fee_account,
+                           self.user.finance_account, late_fee[1], self.user,
+                           late_fee[2])
+        self.pay_fee(self.payment_deadline + timedelta(days=1))
+        session.session.commit()
+        self.assertEqual(self.fee.compute(self.user),
+                         [self.late_fee_for(transaction)])

@@ -27,6 +27,33 @@ class SemesterCreateForm(Form):
     late_fee = IntegerField(
         u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)]
     )
+    # TODO Add form fields to specify these values
+    grace_period = IntegerField(
+        u"Kulanzfrist (in Tagen)",
+        description=u"Ist ein Nutzer weniger oder gleich viele Tage innerhalb "
+                    u"eines Semesters Mitglied, so entfällt jegliche "
+                    u"Semestergebühr.",
+        validators=[DataRequired(), NumberRange(min=0)]
+    )
+    reduced_semester_fee_threshold = IntegerField(
+        u"Ermäßigung ab (in Tagen)",
+        description=u"Ist ein Nutzer innerhalb eines Semester so viele Tage "
+                    u"wie hier angeben oder länger abwesend, fällt nur der "
+                    u"ermäßigte Beitrag an.",
+        validators=[DataRequired(), NumberRange(min=0)]
+    )
+    payment_deadline = IntegerField(
+        u"Zahlungsfrist (in Tagen)",
+        description=u"Bleibt ein Mitglied mehr Tage als hier angegeben eine "
+                    u"Zahlung schuldig, so fällt die Versäumnisgebühr an.",
+        validators=[DataRequired(), NumberRange(min=0)]
+    )
+    allowed_overdraft = IntegerField(
+        u"Versäumnisgebühr ab Saldo",
+        description=u"Saldo ab dem eine Versäumnisgebühr anfallen kann. "
+                    u"Versäumnisgebühren müssen angemessen sein, ansonsten",
+        validators=[DataRequired(), NumberRange(min=0)]
+    )
     begin_date = DateField(
         u"Anfang", validators=[DataRequired()], today_btn=True,
         today_highlight=True
