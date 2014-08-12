@@ -10,9 +10,10 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from __future__ import absolute_import
 
-import base
-import session
+from . import base
+from . import session
 
 
 def create_db_model():
