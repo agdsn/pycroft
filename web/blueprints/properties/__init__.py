@@ -10,6 +10,8 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from itertools import chain, imap
+import operator
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask.json import jsonify
@@ -91,6 +93,16 @@ def traffic_group_delete(group_id):
 @nav.navigate(u"Eigenschaftsgruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
+    categories = property_categories
+    properties_with_description = set(chain(*(
+        category.iterkeys() for category in categories.itervalues()
+    )))
+    properties = set(imap(
+        operator.itemgetter(0),
+        Property.q.distinct().values(Property.name)))
+    categories[u"Ohne Beschreibung"] = {
+        p: p for p in properties if p not in properties_with_description
+    }
     return render_template(
         'properties/property_groups_list.html',
         property_categories=property_categories,

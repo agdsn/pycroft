@@ -9,6 +9,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
+from collections import OrderedDict
 
 from sqlalchemy import (
     CheckConstraint, Column, ForeignKey, and_, or_, select, literal, null)
@@ -167,42 +168,44 @@ class TrafficGroup(Group):
     traffic_limit = Column(BigInteger, nullable=False)
 
 
-property_categories = {
-    u"Rechte Nutzer": {
-        u"internet":  u"Nutzer darf sich mit dem Internet verbinden",
-        u"mail":  u"Nutzer darf E-Mails versenden (und empfangen)",
-        u"ssh_helios":  u"Nutzer darf sich mit SSH auf Helios einloggen",
-        u"homepage_helios":  u"Nutzer darf eine Hompage auf Helios anlegen",
-        u"no_pay":  u"Nutzer muss keinen Semesterbeitrag zahlen",
-        u"pay_registration_fee": u"Nutzer muss Anmeldegebühr zahlen",
-        u"pay_semester_fee": u"Nutzer muss Semesterbeitrag zahlen",
-    },
-    u"Verbote Nutzer": {
-        u"no_internet":  u"Nutzer darf sich NICHT mit dem Internet verbinden",
-        u"no_ssh_helios":  u"Nutzer darf sich NICHT mit SSH auf Helios "
-                           u"einloggen",
-    },
-    u"Nutzeradministration": {
-        u"user_show":  u"Nutzer darf andere Nutzer in der Usersuite sehen",
-        u"user_change":  u"Nutzer darf Nutzer erstellen, ändern, löschen",
-        u"user_mac_change":  u"Nutzer darf MAC Adressen ändern",
-    },
-    u"Finanzadministration": {
-        u"finance_show":  u"Nutzer darf Finanzen einsehen",
-        u"finance_change":  u"Nutzer darf Finanzen ändern",
-    },
-    u"Infrastrukturadministration": {
-        u"infrastructure_show":  u"Nutzer darf Infrastruktur ansehen",
-        u"infrastructure_change":  u"Nutzer darf Infrastruktur verwalten",
-        u"dormitories_show":  u"Nutzer darf Wohnheime einsehen",
-        u"dormitories_change":  u"Nutzer darf Wohnheime anlegen und bearbeiten",
-    },
-    u"Gruppenadministration": {
-        u"groups_change_user":  u"Nutzer darf Gruppenmitgliedschaften "
-                                u"erstellen, ändern, löschen",
-        u"groups_show":  u"Nutzer darf EIgenschaftengruppen sehen",
-        u"groups_change":  u"Nutzer darf Eigenschaftengruppen bearbeiten",
-        u"groups_traffic_show":  u"Nutzer darf Trafficgruppen sehen",
-        u"groups_traffic_change":  u"Nutzer darf Trafficgruppen bearbeiten",
-    },
-}
+property_categories = OrderedDict((
+    (u"Mitgliedstatus", OrderedDict((
+        (u"member", u"Mitglied"),
+        (u"active_member", u"aktives Mitglied"),
+        (u"former_active_member", u"ehemals aktives Mitglied"),
+        (u"advisory_member", u"beratendes Mitglied"),
+        (u"honorary_member", u"Ehrenmitglied"),
+        (u"away", u"vorübergehend ausgezogen"),
+    ))),
+    (u"Nutzerrechte", OrderedDict((
+        (u"internet",  u"besitzt Zugang zum Studentennetz"),
+        (u"negative_balance",  u"darf negative Kontobilanz haben"),
+        (u"registration_fee_exemption",  u"von Anmeldegebühr befreit"),
+        (u"semester_contribution_exemption",  u"von Semesterbeitrag befreit"),
+        (u"overdue_fine_exemption",  u"von Versäumnisgebühr befreit"),
+        (u"pay_registration_fee", u"Nutzer muss Anmeldegebühr zahlen"),
+        (u"pay_semester_fee", u"Nutzer muss Semesterbeitrag zahlen"),
+    ))),
+    (u"Nutzerverwaltung", OrderedDict((
+        (u"user_show",  u"darf Nutzerdaten einsehen"),
+        (u"user_change",  u"darf Nutzer anlegen, ändern, löschen"),
+        (u"user_mac_change",  u"darf MAC-Adressen ändern"),
+    ))),
+    (u"Finanzen", OrderedDict((
+        (u"finance_show",  u"darf Finanzendaten einsehen"),
+        (u"finance_change",  u"darf Finanzendaten ändern"),
+    ))),
+    (u"Infrastruktur", OrderedDict((
+        (u"infrastructure_show",  u"darf Infrastruktur ansehen"),
+        (u"infrastructure_change",  u"darf Infrastruktur anlegen, bearbeiten, löschen"),
+        (u"dormitories_show",  u"darf Wohnheime einsehen"),
+        (u"dormitories_change",  u"darf Wohnheime anlegen, bearbeiten, löschen"),
+    ))),
+    (u"Gruppenverwaltung", OrderedDict((
+        (u"groups_show",  u"darf Gruppen einsehen"),
+        (u"groups_change_membership",  u"darf Gruppenmitgliedschaften bearbeiten"),
+        (u"groups_change",  u"darf Gruppen anlegen, bearbeiten, löschen"),
+        (u"groups_traffic_show",  u"darf Trafficgruppen sehen"),
+        (u"groups_traffic_change",  u"darf Trafficgruppen bearbeiten"),
+    ))),
+))

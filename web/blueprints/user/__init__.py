@@ -224,7 +224,7 @@ def user_show_groups_json(user_id, group_filter="all"):
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
-@access.require('groups_change_user')
+@access.require('groups_change_membership')
 def add_membership(user_id):
 
     user = User.q.get(user_id)
@@ -260,7 +260,7 @@ def add_membership(user_id):
 
 
 @bp.route('/delete_membership/<int:membership_id>')
-@access.require('groups_change_user')
+@access.require('groups_change_membership')
 def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
     membership.disable()
@@ -425,7 +425,7 @@ def move(user_id):
 
 
 @bp.route('edit_membership/<int:membership_id>', methods=['GET', 'POST'])
-@access.require('groups_change_user')
+@access.require('groups_change_membership')
 def edit_membership(membership_id):
     membership = Membership.q.get(membership_id)
 

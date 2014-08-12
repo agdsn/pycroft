@@ -125,7 +125,7 @@ def do_convert():
                        "tmpausgezogen": property.PropertyGroup(
                            name=u"tmpAusgezogen")}
 
-    properties_all = [property.Property(name="no_internet",
+    properties_all = [property.Property(name="internet", granted=False,
                           property_group=property_groups["verstoß"]),
                       property.Property(name="internet",
                           property_group=property_groups["bewohner"]),
@@ -135,7 +135,7 @@ def do_convert():
                           property_group=property_groups["bewohner"]),
                       property.Property(name="homepage_helios",
                           property_group=property_groups["bewohner"]),
-                      property.Property(name="no_internet",
+                      property.Property(name="away",
                           property_group=property_groups["tmpausgezogen"])]
 
 

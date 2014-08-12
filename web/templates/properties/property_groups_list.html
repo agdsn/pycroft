@@ -27,7 +27,7 @@
                     <p>Eigenschaft</p>
                     <span class="glyphicon glyphicon-trash invisible"></span>
                 </th>
-                {% for property_group in property_groups -%}
+                {% for property_group in property_groups|sort(attribute="name") -%}
                 <th>
                     <p>{{ property_group.name }}</p>
                     <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">
@@ -45,7 +45,7 @@
             {% for property_name, property_description in properties.iteritems() -%}
             <tr>
                 <td>{{ property_description }}</td>
-                {% for property_group in property_groups -%}
+                {% for property_group in property_groups|sort(attribute="name") -%}
                 <td>
                     {% if property_name in property_group.properties -%}
                     {% if property_group.property_grants[property_name] %}
