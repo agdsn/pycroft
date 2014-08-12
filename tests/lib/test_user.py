@@ -120,7 +120,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         for group in get_initial_groups():
             self.assertIn(group, user_groups)
 
-        self.assertEqual(UserHelper.has_internet(new_user), True)
+        self.assertEqual(UserHelper.has_network_access(new_user), True)
         self.assertIsNotNone(new_user.finance_account)
         self.assertEqual(new_user.finance_account.balance, 4000)
         self.assertFalse(new_user.has_property("away"))
@@ -356,17 +356,17 @@ class Test_080_User_Block(FixtureDataTestBase):
         property.Membership.q.delete()
         super(Test_080_User_Block, self).tearDown()
 
-    def test_0010_user_has_no_internet(self):
+    def test_0010_user_has_no_network_access(self):
         u = user.User.q.get(1)
         verstoss = property.PropertyGroup.q.filter(
             property.PropertyGroup.name == u"Verstoß").first()
 #       Ich weiß nicht, ob dieser Test noch gebraucht wird!
-#       self.assertTrue(u.has_property("internet"))
+#       self.assertTrue(u.has_property("network_access"))
         self.assertNotIn(verstoss, u.active_property_groups())
 
         blocked_user = UserHelper.block(u, u"test", u)
 
-        self.assertFalse(blocked_user.has_property("internet"))
+        self.assertFalse(blocked_user.has_property("network_access"))
         self.assertIn(verstoss, blocked_user.active_property_groups())
 
         self.assertEqual(blocked_user.user_log_entries[0].author, u)

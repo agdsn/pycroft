@@ -182,7 +182,7 @@ property_categories = OrderedDict((
         (u"away", u"vorübergehend ausgezogen"),
     ))),
     (u"Nutzerrechte", OrderedDict((
-        (u"internet",  u"besitzt Zugang zum Studentennetz"),
+        (u"network_access",  u"besitzt Zugang zum Studentennetz"),
         (u"negative_balance",  u"darf negative Kontobilanz haben"),
         (u"registration_fee_exemption",  u"von Anmeldegebühr befreit"),
         (u"semester_contribution_exemption",  u"von Semesterbeitrag befreit"),

@@ -8,7 +8,7 @@
 {% macro user_btn_class(user) %}
     {% if user is not user_with_positive_balance -%}
     btn-warning
-    {% elif user is user_with_no_internet -%}
+    {% elif user is user_with_no_network_access -%}
     btn-danger
     {% elif user is user_with_traffic_exceeded -%}
     btn-info
