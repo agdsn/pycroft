@@ -2,7 +2,6 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.helpers.interval import Interval
 from pycroft.model.user import User
 
 __author__ = 'florian'
@@ -10,6 +9,7 @@ __author__ = 'florian'
 from datetime import datetime, timedelta
 
 from tests import FixtureDataTestBase
+from pycroft.helpers.interval import closed
 from pycroft.lib import user as UserHelper
 from pycroft.lib.config import config
 from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
@@ -432,7 +432,7 @@ class Test_100_User_has_property(FixtureDataTestBase):
     def test_0030_positive_test_interval(self):
         test_user = user.User.q.get(UserData.dummy_user2.id)
 
-        interval = Interval(MembershipData.dummy_membership1.start_date,
+        interval = closed(MembershipData.dummy_membership1.start_date,
                             MembershipData.dummy_membership1.end_date)
         self.assertTrue(
             test_user.has_property(PropertyData.dummy.name, interval)
@@ -446,7 +446,7 @@ class Test_100_User_has_property(FixtureDataTestBase):
     def test_0030_negative_test_interval(self):
         test_user = user.User.q.get(UserData.dummy_user2.id)
 
-        interval = Interval(
+        interval = closed(
             MembershipData.dummy_membership1.end_date + timedelta(1),
             MembershipData.dummy_membership1.end_date + timedelta(2)
         )
