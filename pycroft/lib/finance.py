@@ -19,6 +19,7 @@ from datetime import datetime, date
 from sqlalchemy import func, between, Integer, cast
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
+from pycroft.helpers.interval import single, closed
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.functions import sign, least

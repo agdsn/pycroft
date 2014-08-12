@@ -19,7 +19,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer, String
 
-from pycroft.helpers.interval import Interval
+from pycroft.helpers.interval import closed, single
 from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
 import pycroft.model.user
@@ -87,15 +87,15 @@ class Membership(ModelBase):
     def active(self, when=None):
         if when is None:
             now = object_session(self).query(functions.utcnow()).scalar()
-            when = Interval(now, now)
+            when = single(now)
 
-        return when.overlaps(Interval(self.start_date, self.end_date))
+        return when.overlaps(closed(self.start_date, self.end_date))
 
     @active.expression
     def active(self, when=None):
         if when is None:
             now = session.utcnow()
-            when = Interval(now, now)
+            when = closed(now, now)
 
         return and_(
             or_(self.start_date == null(), literal(when.end) == null(),

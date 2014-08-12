@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from tests import FixtureDataTestBase
 from pycroft import config
-from pycroft.helpers.interval import Interval
+from pycroft.helpers.interval import closed
 from pycroft.lib import user as UserHelper
 from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData, \
@@ -391,8 +391,8 @@ class Test_100_User_has_property(FixtureDataTestBase):
             ).first())
 
     def test_0030_positive_test_interval(self):
-        interval = Interval(MembershipData.dummy_membership1.start_date,
-                            MembershipData.dummy_membership1.end_date)
+        interval = closed(MembershipData.dummy_membership1.start_date,
+                          MembershipData.dummy_membership1.end_date)
         self.assertTrue(
             self.test_user.has_property(PropertyData.dummy.name, interval)
         )
@@ -403,7 +403,7 @@ class Test_100_User_has_property(FixtureDataTestBase):
             ).first())
 
     def test_0030_negative_test_interval(self):
-        interval = Interval(
+        interval = closed(
             MembershipData.dummy_membership1.end_date + timedelta(1),
             MembershipData.dummy_membership1.end_date + timedelta(2)
         )

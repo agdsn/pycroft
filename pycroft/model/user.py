@@ -23,8 +23,9 @@ from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
 from pycroft import config
+from pycroft.helpers.interval import (
+    IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password
-from pycroft.helpers.interval import Interval
 from pycroft.model import functions, session
 from pycroft.model.base import ModelBase
 import pycroft.model.property
@@ -125,9 +126,9 @@ class User(ModelBase, UserMixin):
     def active_memberships(self, when=None):
         if when is None:
             now = session.utcnow()
-            when = Interval(now, now)
+            when = single(now)
         return [m for m in self.memberships
-                if when.overlaps(Interval(m.start_date, m.end_date))]
+                if when.overlaps(closed(m.start_date, m.end_date))]
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
@@ -161,7 +162,7 @@ class User(ModelBase, UserMixin):
         """
         if when is None:
             now = session.utcnow()
-            when = Interval(now, now)
+            when = single(now)
         prop_granted_flags = [
             group.property_grants[property_name]
             for group in self.active_property_groups(when)
