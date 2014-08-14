@@ -15,7 +15,6 @@ from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
 from pycroft.model import dormitory
-from pycroft.model.session import session
 from pycroft.helpers.host import MacExistsException
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer
@@ -103,40 +102,49 @@ def create_mac_regex():
     SEP2_PATTERN = r'\.'
     # Allowed 3 byte separators
     SEP3_PATTERN = r'-'
-    expr = []
-    # Begin of string
-    expr.append(r'^')
-    # Most significant byte (Sixth byte)
-    # The leftmost byte has highest order due to Big Endian
-    expr.append(r'(?P<byte6>{})'.format(BYTE_PATTERN))
-    # Try to match sep1 after the 6th byte
-    expr.append(r'(?P<sep1>{})?'.format(SEP1_PATTERN))
-    # Fifth byte
-    expr.append(r'(?P<byte5>{})'.format(BYTE_PATTERN))
-    # If sep1 hasn't matched, try to match the sep2 pattern after the second
-    # byte else the same sep1 match must match here too.
-    expr.append(r'(?(sep1)(?P=sep1)|(?P<sep2>{})?)'.format(SEP2_PATTERN))
-    # Fourth byte
-    expr.append(r'(?P<byte4>{})'.format(BYTE_PATTERN))
-    # If neither sep1 nor sep2 have matched, try sep3 pattern after third byte.
-    # If sep1 has matched before, the same sep1 match must match here too.
-    expr.append(r'(?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>{})?))'.format(SEP3_PATTERN))
-    # Third byte
-    expr.append(r'(?P<byte3>{})'.format(BYTE_PATTERN))
-    # If sep1 has matched before, the same sep1 match must match after the
-    # fourth byte.
-    # The same applies to sep2.
-    expr.append(r'(?(sep1)(?P=sep1))(?(sep2)(?P=sep2))')
-    # Second byte
-    expr.append(r'(?P<byte2>{})'.format(BYTE_PATTERN))
-    # If sep1 has matched before, the same sep1 match must match after the
-    # fifth byte.
-    expr.append(r'(?(sep1)(?P=sep1))')
-    # Least significant byte (First byte)
-    expr.append(r'(?P<byte1>{})'.format(BYTE_PATTERN))
-    # End of string
-    expr.append(r'$')
-    return re.compile(''.join(expr))
+    return re.compile(r"""
+        # MAC-Addresses are in big endian, hence we rightmost is the highest
+        # byte.
+
+        # Begin of string:
+        \A
+        # First, most significant byte:
+        (?P<byte1>{BYTE_PATTERN})
+        # Try to match sep1 between 1 and 2:
+        (?P<sep1>{SEP1_PATTERN})?
+        # Second byte:
+        (?P<byte2>{BYTE_PATTERN})
+        # If sep1 has matched previously, it must also match between 2 and 3,
+        # else try to match sep2:
+        (?(sep1)(?P=sep1)|(?P<sep2>{SEP2_PATTERN})?)
+        # Third byte:
+        (?P<byte3>{BYTE_PATTERN})
+        # If sep1 has matched previously, it must also match between 3 and 4, if
+        # sep2 has matched previously, there must not be a separator here, else
+        # try to match sep3:
+        (?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>{SEP3_PATTERN})?))
+        # Fourth byte:
+        (?P<byte4>{BYTE_PATTERN})
+        # If sep1 has matched previously, it must also match between 4 and 5.
+        # The same applies to sep2:
+        (?(sep1)(?P=sep1))(?(sep2)(?P=sep2))
+        # Fifth byte:
+        (?P<byte5>{BYTE_PATTERN})
+        # If sep1 has matched previously, it must also match between 5 and 6:
+        (?(sep1)(?P=sep1))
+        # Sixth, least significant byte:
+        (?P<byte6>{BYTE_PATTERN})
+        # End of string:
+        \Z
+    """.format(**locals()), re.VERBOSE | re.IGNORECASE)
+
+
+class InvalidMACAddressException(Exception):
+    pass
+
+
+class MulticastFlagException(InvalidMACAddressException):
+    pass
 
 
 class NetDevice(ModelBase):
@@ -153,16 +161,16 @@ class NetDevice(ModelBase):
 
     @validates('mac')
     def validate_mac(self, _, value):
-        match = NetDevice.mac_regex.match(value)
+        match = self.mac_regex.match(value)
         if not match:
-            raise ValueError("Invalid MAC address!")
-        groupdict = match.groupdict()
-        bytes =  [groupdict['byte6'], groupdict['byte5'], groupdict['byte4'],
-                  groupdict['byte3'], groupdict['byte2'], groupdict['byte1']]
-        if int(bytes[0], base=16) & 1:
-            raise ValueError("Multicast-Flag (least significant bit im "
-                             "ersten Byte gesetzt)!")
-        return ':'.join(bytes).lower()
+            raise InvalidMACAddressException()
+        components = match.groupdict()
+        mac_bytes = (components['byte1'], components['byte2'],
+                     components['byte3'], components['byte4'],
+                     components['byte5'], components['byte6'])
+        if int(mac_bytes[0], base=16) & 1:
+            raise MulticastFlagException()
+        return ':'.join(mac_bytes).lower()
 
 
 class UserNetDevice(NetDevice):
