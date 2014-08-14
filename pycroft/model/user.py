@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from datetime import datetime
 import re
 
 from flask.ext.login import UserMixin
@@ -17,8 +18,7 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy import (
     ForeignKey, Column, and_, DateTime, Integer,
     String, select, join, exists, null, not_)
-from sqlalchemy.orm import backref, relationship, validates
-from sqlalchemy.orm.session import object_session
+from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 

@@ -13,10 +13,9 @@
 
 #from sqlalchemy.dialects import postgresql
 from base import ModelBase
-from pycroft.model.session import session
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy import Table, Column
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, object_session, relationship
 from sqlalchemy.types import Boolean, Integer, String, Enum
 import ipaddr
 
@@ -53,7 +52,7 @@ class Dormitory(ModelBase):
 
     @property
     def subnets(self):
-        return session.query(
+        return object_session(self).query(
             Subnet
         ).join(
             Subnet.vlans

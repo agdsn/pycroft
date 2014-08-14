@@ -15,7 +15,7 @@ from sqlalchemy import (
     CheckConstraint, Column, ForeignKey, and_, or_, select, join, literal, null)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import backref, relationship, validates
+from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer, String
