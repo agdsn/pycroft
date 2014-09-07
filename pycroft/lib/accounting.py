@@ -45,7 +45,7 @@ def traffic_consumption(user, start=None, end=None):
     :return: The amount of traffic.
     """
     if start is None:
-        start = datetime.now()
+        start = datetime.utcnow()
     if end is None:
         end = start - timedelta(days=1)
 
@@ -88,7 +88,8 @@ def _today():
 
     :return: A datetime from the start of the day
     """
-    return datetime.combine(date.today(), time())
+    tmp_datetime = datetime.utcnow()
+    return datetime.combine(tmp_datetime.date(), time())
 
 
 def _traffic_by_userid(today, yesterday):
@@ -227,7 +228,7 @@ def grant_traffic(user, initial_credit=False):
     traffic_group = find_actual_trafficgroup(user)
     assert traffic_group is not None
 
-    now = datetime.now()
+    now = datetime.utcnow()
     new_credit = TrafficCredit(user=user,
                                grant_date=now,
                                amount=traffic_group.grant_amount * 7,
