@@ -35,7 +35,7 @@ from pycroft.model.finance import FinanceAccount
 class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
-    registration_date = Column(DateTime, nullable=False)
+    registered_at = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
 

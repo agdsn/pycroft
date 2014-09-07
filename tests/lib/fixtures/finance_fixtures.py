@@ -71,7 +71,7 @@ class UserData(DataSet):
     class Dummy:
         login = u"dummy"
         name = u"Dummy Dummy"
-        registration_date = datetime(2014, 1, 1)
+        registered_at = datetime(2014, 1, 1)
         room = RoomData.Dummy
         finance_account = FinanceAccountData.Asset
 

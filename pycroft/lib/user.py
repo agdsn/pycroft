@@ -105,7 +105,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         name=name,
         email=email,
         room=room,
-        registration_date=now
+        registered_at=now
     )
     plain_password = user.generate_password(12)
 

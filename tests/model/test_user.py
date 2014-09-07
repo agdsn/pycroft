@@ -134,7 +134,7 @@ class Test_040_User_Login(FixtureDataTestBase):
 
     def test_0010_user_login_validator(self):
         u = user.User(name="John Doe",
-                      registration_date=session.utcnow(),
+                      registered_at=session.utcnow(),
                       room=dormitory.Room.q.first())
 
         def set_login(login):

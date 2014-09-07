@@ -40,7 +40,7 @@
             {% endcall %}
 
             {% call info_row("Anmeldedatum") %}
-                {{ user.registration_date|datetime }}
+                {{ user.registered_at|datetime }}
             {% endcall %}
 
             {% call info_row("Wohnort") %}

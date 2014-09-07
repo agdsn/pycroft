@@ -63,7 +63,7 @@ def do_convert():
     server_room_wu11_dach = dormitory.Room(number="Dach", level="17", inhabitable=False, dormitory_id=4)
     rooms += [server_room_wu11_dach, server_room_wu5_keller, server_room_wu9_dach]
 
-    root = user.User(login="ag_dsn", name="System User", registration_date=datetime.today(), passwd_hash=hash_password("test"))
+    root = user.User(login="ag_dsn", name="System User", registered_at=datetime.today(), passwd_hash=hash_password("test"))
     root.room = root_room
     for switch in switches.values():
         switch.user_id = root.id
@@ -170,7 +170,7 @@ def do_convert():
                 new_user = user.User(id=old_user.nutzer_id, login=old_user.unix_account,
                     name=old_user.vname + " " + old_user.name, room_id=user_room.id
                     ,
-                    registration_date=datetime.combine(old_user.anmeldedatum,time()))
+                    registered_at=datetime.combine(old_user.anmeldedatum,time()))
 
                 computer = my_session.query(Computer).filter(
                             Computer.nutzer_id == old_user.nutzer_id

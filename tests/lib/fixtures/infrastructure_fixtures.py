@@ -26,7 +26,7 @@ class UserData(DataSet):
         id = 1
         login = "test"
         name = "John Doe"
-        registration_date = datetime.utcnow()
+        registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
 
 

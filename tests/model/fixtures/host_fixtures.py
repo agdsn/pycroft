@@ -78,13 +78,13 @@ class UserData(DataSet):
     class dummy_user:
         login = "test1"
         name = "John Doe"
-        registration_date = datetime.utcnow()
+        registered_at = datetime.utcnow()
         room = RoomData.dummy_room
 
     class dummy_user2:
         login = "test2"
         name = "John Doe2"
-        registration_date = datetime.utcnow()
+        registered_at = datetime.utcnow()
         room = RoomData.dummy_room2
 
 
