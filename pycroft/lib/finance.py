@@ -55,7 +55,7 @@ def get_registration_fee_account():
     ).one()
 
 
-def get_semester_contribution_account():
+def get_semester_fee_account():
     account_id = config['finance']['semester_contribution_account_id']
     return FinanceAccount.q.filter(
         FinanceAccount.id == account_id
@@ -126,8 +126,8 @@ def setup_user_finance_account(new_user, processor):
     )
     simple_transaction(
         conf["semester_contribution_description"].format(**format_args),
-        get_semester_contribution_account(), new_user.finance_account,
-        current_semester.regular_semester_contribution, processor
+        get_semester_fee_account(), new_user.finance_account,
+        current_semester.regular_semester_fee, processor
     )
 
 

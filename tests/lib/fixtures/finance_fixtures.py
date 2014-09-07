@@ -23,14 +23,6 @@ class RoomData(DataSet):
         dormitory = DormitoryData.Dummy
 
 
-class UserData(DataSet):
-    class Dummy:
-        login = u"dummy"
-        name = u"Dummy Dummy"
-        registration_date = datetime(2014, 1, 1)
-        room = RoomData.Dummy
-
-
 class FinanceAccountData(DataSet):
     class BankAccount:
         name = u"Bankkonto 3120219540"
@@ -53,6 +45,45 @@ class FinanceAccountData(DataSet):
         type = "REVENUE"
 
 
+class PropertyGroupData(DataSet):
+    class dummy:
+        name = "dummy"
+
+
+class PropertyData(DataSet):
+    class pay_registration_fee:
+        granted = True
+        name = "pay_registration_fee"
+        property_group = PropertyGroupData.dummy
+
+    class pay_semester_fee:
+        granted = True
+        name = "pay_semester_fee"
+        property_group = PropertyGroupData.dummy
+
+    class pay_late_fee:
+        granted = True
+        name = "pay_late_fee"
+        property_group = PropertyGroupData.dummy
+
+
+class UserData(DataSet):
+    class Dummy:
+        login = u"dummy"
+        name = u"Dummy Dummy"
+        registration_date = datetime(2014, 1, 1)
+        room = RoomData.Dummy
+        finance_account = FinanceAccountData.Asset
+
+
+class MembershipData(DataSet):
+    class dummy:
+        start_date = datetime.utcnow() - timedelta(1)
+        end_date = datetime.utcnow() + timedelta(1)
+        user = UserData.Dummy
+        group = PropertyGroupData.dummy
+
+
 class JournalData(DataSet):
     class Journal1:
         name = u"Hauptkonto"
@@ -68,12 +99,19 @@ class JournalData(DataSet):
 class SemesterData(DataSet):
     class CurrentSemester:
         name = "current semester"
+        registration_fee = 0
+        regular_semester_fee = 2000
+        reduced_semester_fee = 100
+        late_fee = 250
+        begin_date = date.today()
+        end_date = begin_date + timedelta(1)
+
+    class PreviousSemester:
+        name = "previous semester"
         registration_fee = 2500
-        regular_semester_contribution = 1500
-        reduced_semester_contribution = 450
-        overdue_fine = 250
-        today = date.today()
-        premature_begin_date = today - timedelta(1)
-        begin_date = today
-        end_date = today + timedelta(1)
-        belated_end_date = today + timedelta(2)
+        regular_semester_fee = 1500
+        reduced_semester_fee = 450
+        late_fee = 250
+        end_date = date.today() - timedelta(1)
+        begin_date = end_date - timedelta(1)
+

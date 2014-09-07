@@ -318,20 +318,16 @@ def semesters_list():
 @access.require('finance_show')
 def semesters_list_json():
     return jsonify(items=map(
-        lambda semestr: {  # left the “e” to fit PEP8-width, pls dont change…
-                           'name': semestr.name,
-                           'registration_fee': money_filter(
-                               semestr.registration_fee),
-                           'standard_fee': money_filter(
-                               semestr.regular_semester_contribution),
-                           'discount_fee': money_filter(
-                               semestr.reduced_semester_contribution),
-                           'late_fee': money_filter(semestr.overdue_fine),
-                           'early_start': date_filter(
-                               semestr.premature_begin_date),
-                           'start': date_filter(semestr.begin_date),
-                           'end': date_filter(semestr.end_date),
-                           'late_end': date_filter(semestr.belated_end_date)
+        lambda semester: {
+            'name': semester.name,
+            'registration_fee': money_filter(semester.registration_fee),
+            'regular_semester_fee': money_filter(
+                semester.regular_semester_fee),
+            'reduced_semester_fee': money_filter(
+                semester.reduced_semester_fee),
+            'late_fee': money_filter(semester.late_fee),
+            'begin_date': date_filter(semester.begin_date),
+            'end_date': date_filter(semester.end_date),
         },
         Semester.q.order_by(Semester.begin_date.desc()).all()
     ))
@@ -346,8 +342,6 @@ def semesters_create():
         end_date_default = previous_semester.begin_date.replace(
             year=previous_semester.begin_date.year + 1
         ) - timedelta(1)
-        premature_begin_date_default = begin_date_default - timedelta(30)
-        belated_end_date_default = end_date_default + timedelta(30)
         if begin_date_default.year == end_date_default.year:
             name_default = u'Sommersemester ' + str(begin_date_default.year)
         else:
@@ -359,10 +353,9 @@ def semesters_create():
             regular_semester_contribution=previous_semester.regular_semester_contribution,
             reduced_semester_contribution=previous_semester.reduced_semester_contribution,
             overdue_fine=previous_semester.overdue_fine,
-            premature_begin_date=premature_begin_date_default,
             begin_date=begin_date_default,
             end_date=end_date_default,
-            belated_end_date=belated_end_date_default)
+        )
     else:
         form = SemesterCreateForm()
     if form.validate_on_submit():
@@ -372,10 +365,8 @@ def semesters_create():
             regular_semester_contribution=form.regular_semester_contribution.data,
             reduced_semester_contribution=form.reduced_semester_contribution.data,
             overdue_fine=form.overdue_fine.data,
-            premature_begin_date=form.premature_begin_date.data,
             begin_date=form.begin_date.data,
             end_date=form.end_date.data,
-            belated_end_date=form.belated_end_date.data
         )
         return redirect(url_for(".semesters_list"))
     return render_template('finance/semesters_create.html', form=form)

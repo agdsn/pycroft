@@ -26,12 +26,14 @@ class SemesterCreateForm(Form):
     )
     overdue_fine = IntegerField(
         u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)])
-    premature_begin_date = DateField(
-        u"Vorzeitiger Anfang", validators=[DataRequired()])
-    begin_date = DateField(u"Anfang", validators=[DataRequired()])
-    end_date = DateField(u"Ende", validators=[DataRequired()])
-    belated_end_date = DateField(
-        u"Verspätetes Ende", validators=[DataRequired()])
+    begin_date = DateField(
+        u"Anfang", validators=[DataRequired()], today_btn=True,
+        today_highlight=True
+    )
+    end_date = DateField(
+        u"Ende", validators=[DataRequired()], today_btn=True,
+        today_highlight=True
+    )
 
 
 class JournalCreateForm(Form):
@@ -82,7 +84,9 @@ class SplitCreateForm(WTForm):
 
 class TransactionCreateForm(Form):
     description = TextField(u"Beschreibung", validators=[DataRequired()])
-    valid_date = DateField(u"Gültig ab", validators=[Optional()])
+    valid_date = DateField(
+        u"Gültig ab", validators=[Optional()], today_btn=True,
+        today_highlight=True)
     splits = FieldList(
         FormField(SplitCreateForm),
         validators=[DataRequired()],

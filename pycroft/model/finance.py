@@ -26,21 +26,17 @@ from .functions import utcnow
 class Semester(ModelBase):
     name = Column(String, nullable=False)
     registration_fee = Column(Integer, nullable=False)
-    regular_semester_contribution = Column(Integer, nullable=False)
-    reduced_semester_contribution = Column(Integer, nullable=False)
-    overdue_fine = Column(Integer, nullable=False)
-    premature_begin_date = Column(Date, nullable=False)
+    regular_semester_fee = Column(Integer, nullable=False)
+    reduced_semester_fee = Column(Integer, nullable=False)
+    late_fee = Column(Integer, nullable=False)
     begin_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    belated_end_date = Column(Date, nullable=False)
     __table_args__ = (
-        CheckConstraint('registration_fee > 0'),
-        CheckConstraint('regular_semester_contribution > 0'),
-        CheckConstraint('reduced_semester_contribution > 0'),
-        CheckConstraint('overdue_fine > 0'),
-        CheckConstraint('premature_begin_date < begin_date'),
+        CheckConstraint('registration_fee >= 0'),
+        CheckConstraint('regular_semester_fee >= 0'),
+        CheckConstraint('reduced_semester_fee >= 0'),
+        CheckConstraint('late_fee >= 0'),
         CheckConstraint('begin_date < end_date'),
-        CheckConstraint('end_date < belated_end_date'),
     )
 
 
