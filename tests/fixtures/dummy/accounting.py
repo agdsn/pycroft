@@ -6,6 +6,7 @@ from datetime import datetime
 from fixture import DataSet
 
 from tests.fixtures.dummy.host import IPData
+from tests.fixtures.dummy.user import UserData
 
 
 class TrafficVolumeData(DataSet):
@@ -14,3 +15,12 @@ class TrafficVolumeData(DataSet):
         timestamp = datetime.utcnow()
         traffic_type = "IN"
         ip = IPData.dummy_user_ipv4
+
+
+class TrafficCreditData(DataSet):
+    class traffic_credit1:
+        id = 1
+        user = UserData.traffic_user1
+        grant_date = datetime.utcnow()
+        amount = 1000
+        added_amount = 100
