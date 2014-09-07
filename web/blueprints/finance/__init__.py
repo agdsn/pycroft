@@ -350,9 +350,9 @@ def semesters_create():
         form = SemesterCreateForm(
             name=name_default,
             registration_fee=previous_semester.registration_fee,
-            regular_semester_contribution=previous_semester.regular_semester_contribution,
-            reduced_semester_contribution=previous_semester.reduced_semester_contribution,
-            overdue_fine=previous_semester.overdue_fine,
+            regular_semester_fee=previous_semester.regular_semester_fee,
+            reduced_semester_fee=previous_semester.reduced_semester_fee,
+            late_fee=previous_semester.late_fee,
             begin_date=begin_date_default,
             end_date=end_date_default,
         )
@@ -362,9 +362,9 @@ def semesters_create():
         Semester(
             name=form.name.data,
             registration_fee=form.registration_fee.data,
-            regular_semester_contribution=form.regular_semester_contribution.data,
-            reduced_semester_contribution=form.reduced_semester_contribution.data,
-            overdue_fine=form.overdue_fine.data,
+            regular_semester_fee=form.regular_semester_fee.data,
+            reduced_semester_fee=form.reduced_semester_fee.data,
+            late_fee=form.late_fee.data,
             begin_date=form.begin_date.data,
             end_date=form.end_date.data,
         )

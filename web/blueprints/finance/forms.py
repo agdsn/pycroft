@@ -16,16 +16,17 @@ class SemesterCreateForm(Form):
     name = TextField(u"Semestername", validators=[DataRequired()])
     registration_fee = IntegerField(
         u"Anmeldegebühr", validators=[DataRequired(), NumberRange(min=1)])
-    regular_semester_contribution = IntegerField(
+    regular_semester_fee = IntegerField(
         u"Regulärer Semesterbeitrag",
         validators=[DataRequired(), NumberRange(min=1)]
     )
-    reduced_semester_contribution = IntegerField(
+    reduced_semester_fee = IntegerField(
         u"Ermäßigter Semesterbeitrag",
         validators=[DataRequired(), NumberRange(min=1)]
     )
-    overdue_fine = IntegerField(
-        u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)])
+    late_fee = IntegerField(
+        u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)]
+    )
     begin_date = DateField(
         u"Anfang", validators=[DataRequired()], today_btn=True,
         today_highlight=True
