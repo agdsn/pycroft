@@ -339,7 +339,7 @@ class Test_0200_IntervalSet(unittest.TestCase):
         ])
 
     def test_length(self):
-        self.assertIntervalSetMethodEquals(IntervalSet.length, [
+        self.assertIntervalSetMethodEquals(operator.attrgetter("length"), [
             ([[closed(0, 0)]], 0),
             ([[closed(0, 1)]], 1),
             ([[closed(0, 0), closed(1, 2), closed(3, 4)]], 2),

@@ -540,6 +540,7 @@ class IntervalSet(collections.Sequence):
     def __len__(self):
         return len(self._intervals)
 
+    @property
     def length(self):
         """
         Compute the total length of the interval set, i.e. the sum of all
