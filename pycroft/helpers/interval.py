@@ -105,10 +105,11 @@ class Bound(tuple):
 
 class Interval(tuple):
     """
-    Represents an bound or unbound interval.
+    Represents an bounded or unbounded interval.
 
     Bounds may be any comparable types. If lengths should be calculated, bounds
-    must also implement subtraction and addition.
+    must also implement subtraction and the return type of the subtraction must
+    implement addition.
 
     If a bound is None it means unbound, so a None begin is conceptually
     negative infinity and a None end positive infinity.
@@ -127,8 +128,9 @@ class Interval(tuple):
         """
         Create a new Interval instance.
 
-        Do not create Interval objects directly, use the utility functions
-        closed, closedopen, openclosed, open, single and empty instead.
+        Usually, the utility functions closed, closedopen, openclosed, open,
+        single and empty should be used instead of creating Interval objects
+        directly.
         :param Bound lower_bound: left interval bound
         :param Bound upper_bound: right interval bound
         :raises ValueError: if lower_bound greater than upper_bound
