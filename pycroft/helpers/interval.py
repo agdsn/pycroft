@@ -36,16 +36,16 @@ class Bound(tuple):
     def closed(self):
         return self[1]
 
-    def __new__(cls, value, closed):
+    def __new__(cls, value, is_closed):
         if value is NegativeInfinity or value is PositiveInfinity:
-            closed = False
-        return tuple.__new__(cls, (value, closed))
+            is_closed = False
+        return tuple.__new__(cls, (value, is_closed))
 
-    def __init__(self, value, closed):
+    def __init__(self, value, is_closed):
         """
         See __new__
         """
-        super(Bound, self).__init__((value, closed))
+        super(Bound, self).__init__((value, is_closed))
 
     def __le__(self, other):
         if self.value is PositiveInfinity:
@@ -78,7 +78,9 @@ class Bound(tuple):
         return other <= self
 
     def __eq__(self, other):
-        return isinstance(other, Bound) and self.value == other.value and self.closed == other.closed
+        return (isinstance(other, Bound) and
+                self.value == other.value and
+                self.closed == other.closed)
 
     def __sub__(self, other):
         return self.value - other.value
@@ -121,51 +123,62 @@ class Interval(tuple):
     """
     __slots__ = ()
 
-    def __new__(cls, begin, end):
+    def __new__(cls, lower_bound, upper_bound):
         """
         Create a new Interval instance.
 
         Do not create Interval objects directly, use the utility functions
         closed, closedopen, openclosed, open, single and empty instead.
-        :param Bound begin: left interval bound
-        :param Bound end: right interval bound
-        :raises ValueError: if begin greater than end
+        :param Bound lower_bound: left interval bound
+        :param Bound upper_bound: right interval bound
+        :raises ValueError: if lower_bound greater than upper_bound
         """
-        if begin > end:
-            raise ValueError("begin > end ({0} > {1})".format(begin, end))
+        if lower_bound > upper_bound:
+            raise ValueError(
+                "lower_bound > upper_bound ({0} > {1})"
+                .format(lower_bound, upper_bound)
+            )
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
-        return tuple.__new__(cls, (begin, end))
+        return tuple.__new__(cls, (lower_bound, upper_bound))
 
-    def __init__(self, begin, end):
+    def __init__(self, lower_bound, upper_bound):
         """
         See __new__
         """
-        super(Interval, self).__init__((begin, end))
+        super(Interval, self).__init__((lower_bound, upper_bound))
 
     @property
-    def _begin(self):
+    def lower_bound(self):
+        """
+        :rtype: Bound
+        :returns: The lower bound object
+        """
         return self[0]
 
     @property
-    def _end(self):
+    def upper_bound(self):
+        """
+        :rtype: Bound
+        :returns: The upper bound object
+        """
         return self[1]
 
     @property
     def begin(self):
-        if self._begin.value is NegativeInfinity:
+        if self.lower_bound.value is NegativeInfinity:
             return None
-        return self._begin.value
+        return self.lower_bound.value
 
     @property
     def end(self):
-        if self._end.value is PositiveInfinity:
+        if self.upper_bound.value is PositiveInfinity:
             return None
-        return self._end.value
+        return self.upper_bound.value
 
     @property
     def unbounded(self):
-        return self._begin.unbounded or self._end.unbounded
+        return self.lower_bound.unbounded or self.upper_bound.unbounded
 
     @property
     def empty(self):
@@ -173,8 +186,8 @@ class Interval(tuple):
         Tests if the interval is empty
         :return:
         """
-        return (self._begin.value == self._end.value and
-                not (self._begin.closed and self._end.closed))
+        return (self.lower_bound.value == self.upper_bound.value and
+                not (self.lower_bound.closed and self.upper_bound.closed))
 
     @property
     def length(self):
@@ -182,47 +195,49 @@ class Interval(tuple):
         Compute the interval's length
         :returns: None if the interval is unbound else end - begin
         """
-        return None if self.unbounded else self._end - self._begin
+        return None if self.unbounded else self.upper_bound - self.lower_bound
 
     def __eq__(self, other):
         return (isinstance(other, Interval) and
-                self._begin == other._begin and
-                self._end == other._end)
+                self.lower_bound == other.lower_bound and
+                self.upper_bound == other.upper_bound)
 
     def __le__(self, other):
-        return (self._begin < other._begin or
-                (self._begin == other._begin and self._end <= other._end))
+        return (self.lower_bound < other.lower_bound or
+                (self.lower_bound == other.lower_bound and
+                 self.upper_bound <= other.upper_bound))
 
     def __lt__(self, other):
-        return (self._begin < other._begin or
-                (self._begin == other._begin and self._end < other._end))
+        return (self.lower_bound < other.lower_bound or
+                (self.lower_bound == other.lower_bound and
+                 self.upper_bound < other.upper_bound))
 
     def __contains__(self, point):
         bound = Bound(point, True)
-        return self._begin <= bound <= self._end
+        return self.lower_bound <= bound <= self.upper_bound
 
     def __str__(self):
         return "{0}{1}, {2}{3}".format(
-            '[' if self._begin.closed else '(',
-            self._begin.value, self._end.value,
-            ']' if self._end.closed else ')',
+            '[' if self.lower_bound.closed else '(',
+            self.lower_bound.value, self.upper_bound.value,
+            ']' if self.upper_bound.closed else ')',
         )
 
     def __unicode__(self):
         return u"{0}{1}, {2}{3}".format(
-            u'[' if self._begin.closed else u'(',
-            self._begin.value, self._end.value,
-            u']' if self._end.closed else u')',
+            u'[' if self.lower_bound.closed else u'(',
+            self.lower_bound.value, self.upper_bound.value,
+            u']' if self.upper_bound.closed else u')',
         )
 
     def __repr__(self):
-        if self._begin.closed:
-            if self._end.closed:
+        if self.lower_bound.closed:
+            if self.upper_bound.closed:
                 creator = "closed"
             else:
                 creator = "closedopen"
         else:
-            if self._end.closed:
+            if self.upper_bound.closed:
                 creator = "openclosed"
             else:
                 creator = "open"
@@ -230,8 +245,8 @@ class Interval(tuple):
             self.__module__,
             self.__class__.__name__,
             creator,
-            self._begin.value,
-            self._end.value
+            self.lower_bound.value,
+            self.upper_bound.value
         )
 
     def strictly_before(self, other):
@@ -246,7 +261,7 @@ class Interval(tuple):
         :returns: True if this interval is strictly before the other else False
         :rtype: bool
         """
-        return self._end < other._begin
+        return self.upper_bound < other.lower_bound
 
     def before(self, other):
         """
@@ -260,7 +275,7 @@ class Interval(tuple):
         :returns: True if this interval is before the other else False
         :rtype: bool
         """
-        return self._end <= other._begin
+        return self.upper_bound <= other.lower_bound
 
     def strictly_after(self, other):
         """
@@ -301,8 +316,8 @@ class Interval(tuple):
         :returns: True if this intervals meets the other else False
         :rtype: bool
         """
-        return (self._end.value == other._begin.value and
-                (self._end.closed or self._begin.closed))
+        return (self.upper_bound.value == other.lower_bound.value and
+                (self.upper_bound.closed or self.lower_bound.closed))
 
     def strictly_overlaps(self, other):
         """
@@ -315,7 +330,8 @@ class Interval(tuple):
         False
         :rtype: bool
         """
-        return self._begin < other._end and other._begin < self._end
+        return (self.lower_bound < other.upper_bound and
+                other.lower_bound < self.upper_bound)
 
     def overlaps(self, other):
         """
@@ -326,7 +342,8 @@ class Interval(tuple):
         :returns: True if this interval overlaps with the other else False
         :rtype: bool
         """
-        return self._begin <= other._end and other._begin <= self._end
+        return (self.lower_bound <= other.upper_bound and
+                other.lower_bound <= self.upper_bound)
 
     def strictly_during(self, other):
         """
@@ -339,7 +356,8 @@ class Interval(tuple):
         :returns: True if this interval is strictly during the other else False
         :rtype: bool
         """
-        return other._begin < self._begin and self._end < other._end
+        return (other.lower_bound < self.lower_bound and
+                self.upper_bound < other.upper_bound)
 
     def during(self, other):
         """
@@ -351,7 +369,8 @@ class Interval(tuple):
         :returns: True if this interval is during the other else False
         :rtype: bool
         """
-        return other._begin <= self._begin and self._end <= other._end
+        return (other.lower_bound <= self.lower_bound and
+                self.upper_bound <= other.upper_bound)
 
     def strictly_contains(self, other):
         """
@@ -382,14 +401,14 @@ class Interval(tuple):
         :param Interval other: an interval
         :rtype: bool
         """
-        return self._begin == other._begin
+        return self.lower_bound == other.lower_bound
 
     def finishes(self, other):
         """
         :param Interval other: an interval
         :rtype: bool
         """
-        return self._end == other._end
+        return self.upper_bound == other.upper_bound
 
     def intersect(self, other):
         """
@@ -402,8 +421,8 @@ class Interval(tuple):
         if not self.overlaps(other):
             return None
         return Interval(
-            max(self._begin, other._begin),
-            min(self._end, other._end),
+            max(self.lower_bound, other.lower_bound),
+            min(self.upper_bound, other.upper_bound),
         )
 
     __and__ = intersect
@@ -419,8 +438,8 @@ class Interval(tuple):
         if not self.overlaps(other) and not self.meets(other):
             return None
         return Interval(
-            min(self._begin, other._begin),
-            max(self._end, other._end)
+            min(self.lower_bound, other.lower_bound),
+            max(self.upper_bound, other.upper_bound)
         )
 
     __or__ = join
@@ -653,15 +672,15 @@ def _complement(intervals):
     except StopIteration:
         yield UnboundedInterval
         raise StopIteration()
-    if not first._begin.unbounded:
-        yield Interval(Bound(NegativeInfinity, False), ~first._begin)
+    if not first.lower_bound.unbounded:
+        yield Interval(Bound(NegativeInfinity, False), ~first.lower_bound)
     a, b = tee(intervals)
     last = first
-    for current_interval, next_interval in izip(chain((first,), a), b):
-        yield Interval(~current_interval._end, ~next_interval._begin)
-        last = next_interval
-    if not last._end.unbounded:
-        yield Interval(~last._end, Bound(PositiveInfinity, False))
+    for current_, next_ in izip(chain((first,), a), b):
+        yield Interval(~current_.upper_bound, ~next_.lower_bound)
+        last = next_
+    if not last.upper_bound.unbounded:
+        yield Interval(~last.upper_bound, Bound(PositiveInfinity, False))
 
 
 def _join(intervals):
@@ -703,7 +722,7 @@ def _intersect(left, right):
         intersect = a.intersect(b)
         if intersect is not None and not intersect.empty:
             yield intersect
-        if cmp(a._end, b._end) < 0:
+        if cmp(a.upper_bound, b.upper_bound) < 0:
             a = next(left)
         else:
             b = next(right)
