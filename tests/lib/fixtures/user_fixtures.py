@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'florian'
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from fixture import DataSet
 
 class VLANData(DataSet):
@@ -171,7 +171,7 @@ class SemesterData(DataSet):
         regular_semester_fee = 1500
         reduced_semester_fee = 450
         late_fee = 250
-        today = date.today()
+        today = datetime.utcnow().date()
         begin_date = today
         end_date = today + timedelta(1)
 

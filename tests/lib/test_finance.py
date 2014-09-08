@@ -11,7 +11,7 @@ from pycroft.lib.finance import import_journal_csv, get_current_semester, \
     simple_transaction, transferred_amount, cleanup_description
 from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
     Transaction
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import pkgutil, StringIO
 
 class Test_010_Journal(FixtureDataTestBase):
@@ -105,7 +105,7 @@ class Test_010_Journal(FixtureDataTestBase):
 
     def test_0030_transferred_value(self):
         amount = 9000
-        today = date.today()
+        today = datetime.utcnow().date()
         simple_transaction(
             u"transaction", self.asset_account, self.liability_account,
             amount, self.author, today - timedelta(1)

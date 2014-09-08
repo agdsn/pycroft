@@ -47,7 +47,7 @@ def get_current_semester():
     Get the current semester.
     :rtype: Semester
     """
-    return get_semester_for_date(date.today())
+    return get_semester_for_date(datetime.utcnow().date())
 
 
 def get_registration_fee_account():
@@ -84,7 +84,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :rtype: Transaction
     """
     if valid_date is None:
-        valid_date = date.today()
+        valid_date = datetime.utcnow().date()
     new_transaction = Transaction(
         description=description,
         author=author,
@@ -135,7 +135,7 @@ def setup_user_finance_account(new_user, processor):
 @with_transaction
 def complex_transaction(description, author, splits, valid_date=None):
     if valid_date is None:
-        valid_date = date.today()
+        valid_date = datetime.utcnow().date()
     objects = []
     new_transaction = Transaction(
         description=description,
