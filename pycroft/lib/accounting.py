@@ -189,9 +189,10 @@ def find_actual_traffic_group(user):
     ).filter(
         User.id == user.id
     ).filter(
-        Membership.active()
+        Membership.active
     ).order_by(
-        Membership.begins_at.desc()
+        Membership.start_date.desc(),
+        Membership.id.desc()
     ).first()
 
 
