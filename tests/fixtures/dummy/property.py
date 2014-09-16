@@ -39,17 +39,17 @@ class TrafficGroupData(DataSet):
         grant_amount = 7000
         saving_amount = 21000
 
-    class group_high_traffic:
+    class group_1_high_traffic:
         name = u"high traffic"
         grant_amount = 0x01 << 2
         saving_amount = 0x02 << 2
 
-    class group_medium_traffic:
+    class group_2_medium_traffic:
         name = u"medium traffic"
         grant_amount = 0x01 << 1
         saving_amount = 0x02 << 1
 
-    class group_low_traffic:
+    class group_3_low_traffic:
         name = u"low traffic"
         grant_amount = 0x01
         saving_amount = 0x02
