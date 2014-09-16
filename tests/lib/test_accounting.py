@@ -135,7 +135,7 @@ class Test_050_FindActualTrafficGroup(FixtureDataTestBase):
     def test_0020_one_group(self):
         self.create_membership(
             fixture_timebase - timedelta(days=1), None, self._user,
-            TrafficGroup.q.get(TrafficGroupData.group_high_traffic.id)
+            TrafficGroup.q.get(TrafficGroupData.group_1_high_traffic.id)
         )
 
         group = find_actual_traffic_group(self._user)
@@ -145,20 +145,38 @@ class Test_050_FindActualTrafficGroup(FixtureDataTestBase):
     def test_0030_multiple_groups(self):
         self.create_membership(
             fixture_timebase - timedelta(days=1), None, self._user,
-            TrafficGroup.q.get(TrafficGroupData.group_low_traffic.id)
+            TrafficGroup.q.get(TrafficGroupData.group_3_low_traffic.id)
         )
         self.create_membership(
             fixture_timebase - timedelta(days=1), None, self._user,
-            TrafficGroup.q.get(TrafficGroupData.group_medium_traffic.id)
+            TrafficGroup.q.get(TrafficGroupData.group_2_medium_traffic.id)
         )
         self.create_membership(
             fixture_timebase - timedelta(days=1), None, self._user,
-            TrafficGroup.q.get(TrafficGroupData.group_high_traffic.id)
+            TrafficGroup.q.get(TrafficGroupData.group_1_high_traffic.id)
         )
 
         group = find_actual_traffic_group(self._user)
         self.assertIsNotNone(group)
-        self.assertEqual(group.id, TrafficGroupData.group_high_traffic.id)
+        self.assertEqual(group.id, TrafficGroupData.group_1_high_traffic.id)
+
+    def test_0040_multiple_groups_date_differ(self):
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_3_low_traffic.id)
+        )
+        self.create_membership(
+            fixture_timebase - timedelta(hours=6), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_2_medium_traffic.id)
+        )
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_1_high_traffic.id)
+        )
+
+        group = find_actual_traffic_group(self._user)
+        self.assertIsNotNone(group)
+        self.assertEqual(group.id, TrafficGroupData.group_2_medium_traffic.id)
 
 
 class Test_060_GrantTraffic(FixtureDataTestBase):
