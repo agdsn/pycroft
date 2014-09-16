@@ -170,7 +170,7 @@ def users_with_exceeded_traffic():
     return query.all()
 
 
-def find_actual_trafficgroup(user):
+def find_actual_traffic_group(user):
     """Get the current relevant traffic group for a given user.
 
     relevant means, its active and it is the one with the most
@@ -225,7 +225,7 @@ def _traffic_groups_by_userid():
 
 
 def grant_traffic(user, initial_credit=False):
-    traffic_group = find_actual_trafficgroup(user)
+    traffic_group = find_actual_traffic_group(user)
     assert traffic_group is not None
 
     now = datetime.utcnow()
