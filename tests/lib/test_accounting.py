@@ -10,9 +10,11 @@ from pycroft.lib.accounting import user_volumes, traffic_consumption, \
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import IP
-from pycroft.model.user import User
+from pycroft.model.user import Membership, TrafficGroup, User
 from tests import FixtureDataTestBase
+from tests.fixtures.dummy.accounting import TrafficCreditData, TrafficVolumeData
 from tests.fixtures.dummy.host import IPData
+from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
 
 
@@ -95,7 +97,7 @@ class Test_020_TrafficConsumption(FixtureDataTestBase):
 
 
 class Test_030_ActiveUserCredit(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData]
 
     def test_0010_active_credit(self):
         user = User.q.get(UserData.traffic_user1.id)
@@ -109,35 +111,72 @@ class Test_030_ActiveUserCredit(FixtureDataTestBase):
 
 
 class Test_040_UserWithExceededTraffic(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData]
 
     def test_0010_peng(self):
         self.fail("Implement!")
 
 
 class Test_050_FindActualTrafficGroup(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData,
+                TrafficGroupData]
 
-    def test_0010_peng(self):
-        self.fail("Implement!")
+    def create_membership(self, begins_at, ends_at, user, group):
+        session.session.add(Membership(begins_at=begins_at, ends_at=ends_at,
+                                       user=user, group=group))
+
+    @property
+    def _user(self):
+        return User.q.get(UserData.traffic_user1.id)
+
+    def test_0010_no_group(self):
+        self.assertIsNone(find_actual_traffic_group(self._user))
+
+    def test_0020_one_group(self):
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_high_traffic.id)
+        )
+
+        group = find_actual_traffic_group(self._user)
+        self.assertIsNotNone(group)
+        self.assertEqual(group.id, TrafficGroupData.group_1_high_traffic.id)
+
+    def test_0030_multiple_groups(self):
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_low_traffic.id)
+        )
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_medium_traffic.id)
+        )
+        self.create_membership(
+            fixture_timebase - timedelta(days=1), None, self._user,
+            TrafficGroup.q.get(TrafficGroupData.group_high_traffic.id)
+        )
+
+        group = find_actual_traffic_group(self._user)
+        self.assertIsNotNone(group)
+        self.assertEqual(group.id, TrafficGroupData.group_high_traffic.id)
 
 
 class Test_060_GrantTraffic(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData]
 
     def test_0010_peng(self):
         self.fail("Implement!")
 
 
 class Test_070_GrantAllTraffic(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData]
 
     def test_0010_peng(self):
         self.fail("Implement!")
 
 
 class Test_070_HasExceededTraffic(FixtureDataTestBase):
-    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+    datasets = [UserData, IPData, TrafficVolumeData, TrafficCreditData]
 
     def test_0010_peng(self):
         self.fail("Implement!")
