@@ -106,3 +106,38 @@ class Test_030_ActiveUserCredit(FixtureDataTestBase):
     def test_0020_no_active_credit(self):
         user = User.q.get(UserData.no_traffic_user1.id)
         self.assertIsNone(active_user_credit(user))
+
+
+class Test_040_UserWithExceededTraffic(FixtureDataTestBase):
+    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+
+    def test_0010_peng(self):
+        self.fail("Implement!")
+
+
+class Test_050_FindActualTrafficGroup(FixtureDataTestBase):
+    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+
+    def test_0010_peng(self):
+        self.fail("Implement!")
+
+
+class Test_060_GrantTraffic(FixtureDataTestBase):
+    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+
+    def test_0010_peng(self):
+        self.fail("Implement!")
+
+
+class Test_070_GrantAllTraffic(FixtureDataTestBase):
+    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+
+    def test_0010_peng(self):
+        self.fail("Implement!")
+
+
+class Test_070_HasExceededTraffic(FixtureDataTestBase):
+    datasets = [UserData, IpData, TrafficVolumeData, TrafficCreditData]
+
+    def test_0010_peng(self):
+        self.fail("Implement!")
