@@ -11,7 +11,7 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import re
 
 from sqlalchemy.sql.expression import func
@@ -30,7 +30,7 @@ from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
-
+from pycroft.lib.finance import get_current_semester
 
 def encode_type1_user_id(user_id):
     """Append a type-1 error detection code to the user_id."""
@@ -78,7 +78,7 @@ from pycroft.lib.finance import setup_user_finance_account
 
 @with_transaction
 def move_in(name, login, email, dormitory, level, room_number, mac,
-            processor, host_name=None):
+            processor, moved_from_division, already_paid_semester_fee, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
     initial groups and transactions.
@@ -89,6 +89,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
+    :param moved_from_division: User was already member of another division
+    :param already_paid_semester_fee: User paid at other division for current semester
     :param host_name: An optional Hostname for the users pc.
     :return: The new user object.
     """
@@ -136,7 +138,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
                            record_for=new_a_record)
 
     conf = config["move_in"]
-    for membership in conf["group_memberships"]:
+
+    for membership in conf["default_group_memberships"]:
         group = Group.q.filter(Group.name == membership["name"]).one()
         start_date = now + timedelta(membership.get("offset", 0))
         end_date = None
@@ -148,6 +151,26 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             end_date=end_date,
             group=group,
             user=new_user
+        )
+
+    if moved_from_division:
+        for membership in conf["moved_from_division"]:
+            group = Group.q.filter(Group.name == membership["name"]).one()
+            create_membership(
+                start_date=now,
+                end_date=None,
+                group=group,
+                user=new_user
+            )
+
+    if already_paid_semester_fee:
+        for membership in conf["already_paid_semester_fee"]:
+            group = Group.q.filter(Group.name == membership["name"]).one()
+            create_membership(
+                start_date=now,
+                end_date=datetime.combine(get_current_semester().end_date, time.min),
+                group=group,
+                user=new_user
         )
 
     setup_user_finance_account(new_user, processor)
@@ -358,7 +381,7 @@ def move_out(user, date, comment, processor):
     if not isinstance(date, datetime):
         raise ValueError("Date should be a datetime object!")
 
-    move_in_groups = config["move_in"]["group_memberships"]
+    move_in_groups = config["move_in"]["default_group_memberships"]
     for membership in user.memberships:
         if membership.active:
             for move_in_group in move_in_groups:

@@ -244,8 +244,11 @@ def create():
                 dormitory=form.dormitory.data, level=form.level.data,
                 room_number=form.room_number.data,
                 host_name=form.host.data, mac=form.mac.data,
-                current_semester=form.semester.data, processor=current_user,
-                email=form.email.data)
+                processor=current_user,
+                email=form.email.data,
+                moved_from_division=form.moved_from_division.data,
+                already_paid_semester_fee=form.already_paid_semester_fee.data
+            )
 
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))

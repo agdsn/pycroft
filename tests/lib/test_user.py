@@ -72,7 +72,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
     def test_0010_move_in(self):
         def get_initial_groups():
             initial_groups = []
-            for memberships in config["move_in"]["group_memberships"]:
+            for memberships in config["move_in"]["default_group_memberships"]:
                 initial_groups.append(property.Group.q.filter(
                     property.Group.name == memberships["name"]
                 ).one())
@@ -94,7 +94,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             room_number="1",
             host_name=test_hostname,
             mac=test_mac,
-            processor=self.processing_user
+            processor=self.processing_user,
+            moved_from_division=False,
+            already_paid_semester_fee=False
         )
 
         self.assertEqual(new_user.name, test_name)
@@ -152,7 +154,9 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             level=1,
             room_number="1",
             mac=test_mac,
-            processor=self.processing_user
+            processor=self.processing_user,
+            moved_from_division=False,
+            already_paid_semester_fee=False
         )
 
         out_time = datetime.utcnow()
@@ -251,7 +255,9 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             level=1,
             room_number="1",
             mac=test_mac,
-            processor=self.processing_user
+            processor=self.processing_user,
+            moved_from_division=False,
+            already_paid_semester_fee=False
         )
 
         out_time = datetime.utcnow()
