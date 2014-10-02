@@ -119,6 +119,9 @@ INSERT INTO "group" VALUES(8,'Finanzen','property_group');
 INSERT INTO "group" VALUES(9,'Exaktiv','property_group');
 INSERT INTO "group" VALUES(10,'NegativKonto','property_group');
 INSERT INTO "group" VALUES(11,'Vorübergehend ausgezogen', 'property_group');
+INSERT INTO "group" VALUES(12,'Umzug aus Fremdsektion', 'property_group');
+INSERT INTO "group" VALUES(13,'Befreit vom Semesterbeitrag', 'property_group');
+
 CREATE TABLE dormitory (
 	id INTEGER NOT NULL,
 	number VARCHAR(3) NOT NULL,
@@ -6785,6 +6788,9 @@ INSERT INTO "property_group" VALUES(8);
 INSERT INTO "property_group" VALUES(9);
 INSERT INTO "property_group" VALUES(10);
 INSERT INTO "property_group" VALUES(11);
+INSERT INTO "property_group" VALUES(12);
+INSERT INTO "property_group" VALUES(13);
+
 CREATE TABLE "user" (
 	id INTEGER NOT NULL,
 	login VARCHAR(40) NOT NULL UNIQUE,
@@ -9934,6 +9940,9 @@ INSERT INTO "property" VALUES(38, 'homepage_helios', 1, 1);
 INSERT INTO "property" VALUES(39, 'user_mac_change', 1, 2);
 INSERT INTO "property" VALUES(40, 'dormitories_show', 1, 7);
 INSERT INTO "property" VALUES(41, 'dormitories_change', 1, 7);
+INSERT INTO "property" VALUES(42, 'pay_registration_fee', 0, 12);
+INSERT INTO "property" VALUES(43, 'pay_semester_fee', 0, 13);
+
 CREATE TABLE log_entry (
 	id INTEGER NOT NULL,
 	type TEXT,

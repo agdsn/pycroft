@@ -77,10 +77,10 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
     host = TextField(u"Host")
     email = TextField(u"E-Mail", [Regexp(regex=User.email_regex,
                                          message=u"E-Mail ist ungueltig!")])
-    semester = QuerySelectField(u"aktuelles Semester", get_label="name",
-        query_factory=semester_query)
+    moved_from_division = BooleanField(u"Umzug aus anderer Sektion")
 
-
+    already_paid_semester_fee = BooleanField\
+        (u"Hat dort bereits für das aktuelle Semester Beitrag bezahlt")
 
 
 class hostCreateForm(Form):

@@ -144,6 +144,8 @@ property_categories = {
         u"ssh_helios":  u"Nutzer darf sich mit SSH auf Helios einloggen",
         u"homepage_helios":  u"Nutzer darf eine Hompage auf Helios anlegen",
         u"no_pay":  u"Nutzer muss keinen Semesterbeitrag zahlen",
+        u"pay_registration_fee": u"Nutzer muss Anmeldegebühr zahlen",
+        u"pay_semester_fee": u"Nutzer muss Semesterbeitrag zahlen",
     },
     u"Verbote Nutzer": {
         u"no_internet":  u"Nutzer darf sich NICHT mit dem Internet verbinden",
