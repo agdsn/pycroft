@@ -14,7 +14,7 @@
     <tbody>
         {% for split in user.finance_account.splits -%}
         <tr class="{{ 'success' if split.amount < 0 else 'error' }}">
-            <td>{{ split.transaction.message }}</td>
+            <td>{{ split.transaction.description}}</td>
             <td>{{ split.amount|money }}</td>
         </tr>
         {%- endfor %}
