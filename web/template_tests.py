@@ -70,6 +70,11 @@ def less_equal(value, other):
     return value >= other
 
 
+@template_check("is_dict")
+def is_dict(value):
+    return isinstance(value, dict)
+
+
 def register_checks(app):
     for name in _check_registry:
         app.jinja_env.tests[name] = _check_registry[name]
