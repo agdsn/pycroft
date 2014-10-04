@@ -94,5 +94,9 @@ class TransactionCreateForm(Form):
     )
 
     def validate_splits(self, field):
-        if sum(split_form['amount'].data for split_form in field) != 0:
+        if sum(split_form['amount'].data for split_form in field
+               if split_form['amount'].data is not None
+            ) != 0:
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
+
+

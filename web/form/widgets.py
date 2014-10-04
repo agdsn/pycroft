@@ -156,7 +156,7 @@ class BootstrapCheckboxDecorator(BootstrapRadioCheckboxDecorator):
 class BootstrapFieldListWidget(object):
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join(chain(
-            imap(lambda e: Markup(u'<p class="help-block">{0}</p>').format(e)),
+            imap(lambda e: Markup(u'<p class="help-block">{0}</p>').format(e), field.errors),
             imap(lambda f: f(**kwargs), field)
         )))
 

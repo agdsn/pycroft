@@ -16,7 +16,7 @@
             </div>
         </div>
         <label>Posten</label>
-        {% for error in form.splits.errors %}
+        {% for error in form.splits.errors|reject("is_dict") %}
         <p class="text-danger">{{ error }}</p>
         {% endfor %}
         {% for split_form_field in form['splits'] -%}
