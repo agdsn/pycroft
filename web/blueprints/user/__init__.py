@@ -7,7 +7,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from rlcompleter import get_class_members
+from itertools import chain
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 from pycroft import lib
@@ -73,8 +73,10 @@ def user_show(user_id):
             user=user)
         flash(u'Kommentar hinzugefügt', 'success')
 
-    log_list = user.user_log_entries + room.room_log_entries
-    log_list.sort(key=lambda LogEntry: LogEntry.timestamp, reverse=True)
+    log_list = sorted(
+        chain(user.user_log_entries, room.room_log_entries),
+        key="timestamp", reverse=True
+    )
     user_log_list = user.user_log_entries[::-1]
     room_log_list = room.room_log_entries[::-1]
 
