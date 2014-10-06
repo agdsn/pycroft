@@ -13,6 +13,7 @@
 from itertools import chain
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
+import operator
 from pycroft import lib
 from pycroft.helpers import host
 from pycroft.model.dormitory import Room
@@ -78,7 +79,7 @@ def user_show(user_id):
 
     log_list = sorted(
         chain(user.user_log_entries, room.room_log_entries),
-        key="timestamp", reverse=True
+        key=operator.attrgetter("timestamp"), reverse=True
     )
     user_log_list = user.user_log_entries[::-1]
     room_log_list = room.room_log_entries[::-1]
