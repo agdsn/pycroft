@@ -103,7 +103,8 @@ def user_show(user_id):
         room=room,
         form=form,
         memberships=memberships.all(),
-        memberships_active=memberships_active.all())
+        memberships_active=memberships_active.all(),
+        status=lib.user.determine_status(user))
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])

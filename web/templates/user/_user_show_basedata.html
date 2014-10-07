@@ -8,6 +8,14 @@
     <dd>{{ caller() }}</dd>
 {%- endmacro %}
 
+{% macro show_status(key) %}
+    {% if status[key] %}
+        <strong class="text-success">Ja</strong>
+    {% else %}
+        <strong class="text-danger">Nein</strong>
+    {% endif %}
+{% endmacro %}
+
 <div class="row">
     <div class="col-sm-6 col-md-5 col-lg-4">
         <dl class="dl-horizontal">
@@ -43,9 +51,20 @@
                 {% endif %}
             {% endcall %}
 
-            {% call info_row("Netzstatus") %}
-                {# TODO implementieren #}
-                #todo#
+            {% call info_row("Internetzugang") %}
+                {{ show_status("internet") }}
+            {% endcall %}
+
+            {% call info_row("Mailkonto") %}
+                {{ show_status("mail") }}
+            {% endcall %}
+
+            {% call info_row("Bezahlt") %}
+                {{ show_status("paid") }}
+            {% endcall %}
+
+            {% call info_row("Verstoßfrei") %}
+                {{ show_status("no_violation") }}
             {% endcall %}
         </dl>
     </div>

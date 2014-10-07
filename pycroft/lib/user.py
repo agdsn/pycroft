@@ -30,7 +30,7 @@ from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.config import config
-from pycroft.lib.finance import get_current_semester
+from pycroft.lib.finance import get_current_semester, user_has_paid
 
 def encode_type1_user_id(user_id):
     """Append a type-1 error detection code to the user_id."""
@@ -499,3 +499,26 @@ def is_back(user, processor):
     )
 
     return user
+
+
+def determine_status(user):
+    """Returns The Status
+    :param User user: User object
+    :return: Status dict
+    :rtype: dict[str, bool]
+    """
+    ret = {}
+    if user.has_property("internet"):
+        ret['internet'] = True
+    else:
+        ret['internet'] = False
+        # a: traffic        -> property: "traffic_exceeded"
+        if has_exceeded_traffic(user):
+            ret += u'Traffic'
+    # b: payment        -> property: "no_payment"
+    ret['paid'] = user_has_paid(user)
+    # c: Infringement   -> property: "violation"
+    ret['no_violation'] = not user.has_property("violation")
+    # has mail:
+    ret['mail'] = user.has_property("mail")
+    return ret
