@@ -339,3 +339,7 @@ def process_record(index, record, import_time):
         transaction_date=transaction_date,
         valid_date=valid_date
     )
+
+def user_has_paid(user):
+    # TODO check if user has paid
+    return True
