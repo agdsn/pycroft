@@ -273,7 +273,23 @@ def move(user_id):
 
     form = UserMoveForm()
 
-    if not form.is_submitted():
+    refill_form_data = False
+    if form.validate_on_submit():
+        if user.room == Room.q.filter_by(
+                number=form.room_number.data,
+                level=form.level.data,
+                dormitory_id=form.dormitory.data.id
+            ).one():
+            flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
+            refill_form_data = True
+        else:
+            edited_user = lib.user.move(user, form.dormitory.data,
+                form.level.data, form.room_number.data, current_user)
+
+            flash(u'Benutzer umgezogen', 'success')
+            return redirect(url_for('.user_show', user_id=edited_user.id))
+
+    if not form.is_submitted() or refill_form_data:
         form.dormitory.data = user.room.dormitory
 
         levels = session.query(Room.level.label('level')).filter_by(
@@ -291,13 +307,6 @@ def move(user_id):
         form.room_number.choices = [(entry.number, str(entry.number)) for entry
                                                                       in rooms]
         form.room_number.data = user.room
-
-    if form.validate_on_submit():
-        edited_user = lib.user.move(user, form.dormitory.data,
-            form.level.data, form.room_number.data, current_user)
-
-        flash(u'Benutzer umgezogen', 'success')
-        return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_move.html', user_id=user_id, form=form)
 
