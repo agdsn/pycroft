@@ -202,6 +202,9 @@ def move(user, dormitory, level, room_number, processor):
         dormitory_id=dormitory.id
     ).one()
 
+    assert old_room is not new_room,\
+        "A User is only allowed to move in a different room!"
+
     user.room = new_room
 
     now = datetime.utcnow()
