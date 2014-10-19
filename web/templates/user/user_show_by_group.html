@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% set page_title = "Nutzer der Gruppe " + group_name + ":" %}
+
+{% block content %}
+    {% if users %}
+    <ul class="list-inline">
+        {% for user in users %}
+        <li><a href="{{ url_for("user.user_show", user_id=user.id) }}" class="btn btn-danger">{{ user.name }}</a></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-danger">Kein Nutzer in dieser Gruppe vorhanden!</p>
+    {% endif %}
+    <a href="{{ url_for("user.show_by_group") }}" class="btn btn-default btn-primary">Zurück</a>
+{% endblock %}

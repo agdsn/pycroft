@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp, NumberRange, ValidationError
+from wtforms.validators import Required, Regexp, NumberRange, ValidationError, \
+    DataRequired
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
-    QuerySelectField, DateField
+    QuerySelectField, DateField, SelectField
 from web.form.fields.custom import LazyLoadSelectField
 
 
@@ -121,3 +122,15 @@ class UserMoveOutForm(Form):
 class NetDeviceChangeMacForm(Form):
     mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
         message=u"MAC ist ungültig!")])
+
+class UserSelectGroupForm(Form):
+    group_type = SelectField(u"Typ",
+        [DataRequired(message=u"Typ?")],
+        coerce=str,
+        choices=[('prop', u"Eigenschaft"), ('traff', u"Traffic")])
+    group = LazyLoadSelectField(u"Gruppe",
+        [DataRequired(message=u"Gruppe angeben!")],
+        coerce=str,
+        choices=[],
+        conditions=["group_type"],
+        data_endpoint="user.json_groups")
