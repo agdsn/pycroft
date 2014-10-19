@@ -20,14 +20,14 @@ from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, UserNetDevice, Ip
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.property import Membership
+from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
 from pycroft.model.accounting import TrafficVolume
 from sqlalchemy.sql.expression import or_, func
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
-    NetDeviceChangeMacForm, UserEditGroupMembership
+    NetDeviceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
@@ -358,10 +358,6 @@ def edit_membership(membership_id):
                            form = form)
 
 
-
-
-
-
 @bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
 @access.require('user_change')
 def edit_name(user_id):
@@ -428,6 +424,65 @@ def search():
             page_title=u"Suchergebnis",
             results=userResult.all(), form=form)
     return render_template('user/user_search.html', form=form)
+
+@bp.route('/json/groups')
+def json_groups():
+    if not request.is_xhr:
+        abort(404)
+    groups = []
+    group_type = request.args.get("group_type", 0, type=str)
+    if group_type == 'traff':
+        groups = [(entry.id, entry.name) for entry in TrafficGroup.q.all()]
+    elif group_type == 'prop':
+        groups = [(entry.id, entry.name) for entry in PropertyGroup.q.all()]
+
+    return jsonify(dict(items=groups))
+
+
+@bp.route('/show_by_group', methods=['GET', 'POST'])
+@nav.navigate(u"Nach Gruppe")
+@access.require('user_show')
+def show_by_group():
+    form = UserSelectGroupForm()
+
+    if form.validate_on_submit():
+        group_id = form.group.data
+        if form.group_type.data == 'traff':
+            return redirect(url_for(".list_users_by_traffic_group",
+                                    traffic_group_id=group_id))
+        elif form.group_type.data == 'prop':
+            return redirect(url_for(".list_users_by_property_group",
+                                    property_group_id=group_id))
+
+    return render_template('user/list_groups.html', groups_form=form)
+
+
+@bp.route('/show_by_group/property/<int:property_group_id>')
+@access.require('user_show')
+def list_users_by_property_group(property_group_id):
+    property_group = PropertyGroup.q.get(property_group_id)
+    user_list = []
+    for entry in Membership.q.join(PropertyGroup).filter(
+                     PropertyGroup.id == property_group_id).all():
+        user_list.append(User.q.get(entry.user_id))
+
+    return render_template('user/user_show_by_group.html',
+                           group_name=property_group.name,
+                           users=user_list)
+
+
+@bp.route('/show_by_group/traffic/<int:traffic_group_id>')
+@access.require('user_show')
+def list_users_by_traffic_group(traffic_group_id):
+    traffic_group = PropertyGroup.q.get(traffic_group_id)
+    user_list = []
+    for entry in Membership.q.join(PropertyGroup).filter(
+                     PropertyGroup.id == traffic_group_id).all():
+        user_list.append(User.q.get(entry.user_id))
+
+    return render_template('user/user_show_by_group.html',
+                           group_name=traffic_group.name,
+                           users=user_list)
 
 
 @bp.route('/block/<int:user_id>', methods=['GET', 'POST'])

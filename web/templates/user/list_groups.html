@@ -1,0 +1,18 @@
+{#
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% set page_title = "Nutzer einer Gruppe auflisten" %}
+{% import "macros/forms.html" as forms %}
+
+{% block content %}
+    {{ forms.simple_form(groups_form, '', url_for('dormitories.overview'), submit_text="Auflisten") }}
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript">
+        $('[data-role=lazyloadselect]').lazyLoadSelect()
+    </script>
+{% endblock %}

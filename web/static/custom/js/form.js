@@ -138,7 +138,7 @@ $(function(){
             var items = data[this.itemAttr];
             this.element.find("option").remove();
             for (var i = 0; i < items.length; i++) {
-                if (typeof option == 'object')
+                if (typeof items[i] == 'object')
                     this.element.append('<option value="' + items[i][0] + '">' + items[i][1] + '</option>');
                 else
                     this.element.append('<option value="' + items[i] + '">' + items[i] + '</option>');
