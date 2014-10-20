@@ -103,8 +103,9 @@ def timesince_filter(dt, default="just now"):
 
 def prefix_unit_filter(value, unit, factor, prefixes):
     units = list(chain(unit, imap(lambda p: p + unit, prefixes)))
-    n = min(int(log(value, factor)), len(units)-1)
-    return "{0:,4f} {1}".format(float(value)/factor**n, units[n])
+    n = min(int(log(value, factor).real), len(units)-1)
+    #todo change decimal formatting appropriately, previous {0:,4f} is wrong
+    return "{0:,f} {1}".format(float(value)/factor**n, units[n])
 
 
 @template_filter("byte_size")
