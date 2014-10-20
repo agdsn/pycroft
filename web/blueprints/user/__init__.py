@@ -471,7 +471,7 @@ def list_users_by_property_group(property_group_id):
 @bp.route('/show_by_group/traffic/<int:traffic_group_id>')
 @access.require('user_show')
 def list_users_by_traffic_group(traffic_group_id):
-    traffic_group = PropertyGroup.q.get(traffic_group_id)
+    traffic_group = TrafficGroup.q.get(traffic_group_id)
     user_list = []
     for entry in Membership.q.join(PropertyGroup).filter(
                      PropertyGroup.id == traffic_group_id).all():
