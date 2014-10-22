@@ -229,7 +229,8 @@ class BootstrapDatepickerWidget(object):
         page_resources.link_script(url_for(
             "static", filename="datepicker/js/locales/bootstrap-datepicker.de.js"
         ))
-        return HTMLString(u"<input {0}>".format(html_params(**kwargs)))
+        options = dict(kwargs, name=field.name)
+        return HTMLString(u"<input {0}>".format(html_params(**options)))
 
 
 class CheckBoxWidget(wtforms.widgets.Select):
