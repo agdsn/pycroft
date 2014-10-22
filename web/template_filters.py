@@ -33,7 +33,7 @@ def template_filter(name):
 _category_map = {"warning": "Warnung",
                  "error": "Fehler",
                  "info": "Hinweis",
-                 "mesage": "Hinweis",
+                 "message": "Hinweis",
                  "success": "Erfolgreich"}
 
 
