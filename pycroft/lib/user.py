@@ -507,18 +507,10 @@ def determine_status(user):
     :return: Status dict
     :rtype: dict[str, bool]
     """
-    ret = {}
-    if user.has_property("internet"):
-        ret['internet'] = True
-    else:
-        ret['internet'] = False
-        # a: traffic        -> property: "traffic_exceeded"
-        if has_exceeded_traffic(user):
-            ret += u'Traffic'
-    # b: payment        -> property: "no_payment"
-    ret['paid'] = user_has_paid(user)
-    # c: Infringement   -> property: "violation"
-    ret['no_violation'] = not user.has_property("violation")
-    # has mail:
-    ret['mail'] = user.has_property("mail")
+    ret = {
+        'internet': user.has_property("internet"),
+        'traffic_exceeded': has_exceeded_traffic(user),
+        'paid': user_has_paid(user),
+        'no_violation': not user.has_property("violation"),
+        'mail': user.has_property("mail")}
     return ret
