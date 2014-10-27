@@ -2,7 +2,7 @@
 
 
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp
+from wtforms.validators import DataRequired, Regexp
 from web.form.fields.core import TextField
 
 class TrafficGroupForm(Form):

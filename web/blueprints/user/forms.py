@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp, NumberRange, ValidationError, \
+from wtforms.validators import Regexp, NumberRange, ValidationError, \
     DataRequired
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
