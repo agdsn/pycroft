@@ -30,4 +30,4 @@ class DormitoryForm(Form):
 
 
 class RoomLogEntry(Form):
-    message = TextAreaField(u"", [Required()])
+    message = TextAreaField(u"", [DataRequired()])

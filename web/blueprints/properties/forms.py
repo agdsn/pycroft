@@ -6,12 +6,12 @@ from wtforms.validators import Required, Regexp
 from web.form.fields.core import TextField
 
 class TrafficGroupForm(Form):
-    name = TextField(u"Gruppenname",[Required(message=u"Name?")])
+    name = TextField(u"Gruppenname",[DataRequired(message=u"Name?")])
     traffic_limit = TextField(u"Traffic Limit (GB)",
-                        [Required(message=u"Wie viel GB?"),
+                        [DataRequired(message=u"Wie viel GB?"),
                         Regexp(regex=u"[0-9]+",
                         message=u"Muss eine natürliche Zahl sein!")])
 
 
 class PropertyGroupForm(Form):
-    name = TextField(u"Gruppenname",[Required(message=u"Name?")])
+    name = TextField(u"Gruppenname",[DataRequired(message=u"Name?")])
