@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp, NumberRange, ValidationError, \
+from wtforms.validators import Regexp, NumberRange, ValidationError, \
     DataRequired
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
