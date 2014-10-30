@@ -20,6 +20,7 @@ fi
 #install dependencies
 echo "Installing required python modules..."
 pip install -r $PROJDIR/requirements.txt || exit 1
+pip install psycopg2
 
 #install pre-commit pep8 check hook
 #if [ -d $PROJDIR/.git/hooks ] && [ ! -f $PROJDIR/.git/hooks/pre-commit ]; then
