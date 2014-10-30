@@ -15,7 +15,7 @@ from datetime import datetime, time, timedelta
 import re
 
 from sqlalchemy.sql.expression import func
-
+from pycroft import config
 from pycroft.helpers import user, host
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.model.accounting import TrafficVolume
@@ -29,8 +29,8 @@ from pycroft.lib.dns import create_a_record, create_cname_record
 from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
-from pycroft.lib.config import config
 from pycroft.lib.finance import get_current_semester, user_has_paid
+
 
 def encode_type1_user_id(user_id):
     """Append a type-1 error detection code to the user_id."""

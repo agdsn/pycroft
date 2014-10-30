@@ -14,12 +14,11 @@ from base import ModelBase
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Boolean, BigInteger, Integer, DateTime
-from sqlalchemy.types import Text
+from sqlalchemy.types import Integer, DateTime, Text, String
 
 
 class LogEntry(ModelBase):
-    discriminator = Column('type', Text(50))
+    discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # variably sized string

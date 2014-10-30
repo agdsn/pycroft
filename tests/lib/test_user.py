@@ -6,10 +6,9 @@
 __author__ = 'florian'
 
 from datetime import datetime
-
+from pycroft import config
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper
-from pycroft.lib.config import config
 from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
     RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData, \
     PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \

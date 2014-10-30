@@ -2,19 +2,20 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import cStringIO
 from itertools import imap, chain
 from collections import namedtuple
 import re
 
+import cStringIO
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
-from pycroft.lib.config import config
+from pycroft import config
 from pycroft.model.user import User
+
 
 __author__ = 'Florian Österreich'
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from sqlalchemy import func, between, Integer, cast
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry
