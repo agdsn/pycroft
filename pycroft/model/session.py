@@ -93,10 +93,10 @@ def with_transaction(f):
     return helper
 
 
-def init_session():
+def init_session(connection_string=None):
     global session
     if isinstance(session, DummySessionWrapper):
-        session = SessionWrapper(config['db_connection_string'])
+        session = SessionWrapper(connection_string or config['db_connection_string'])
 
 
 def reinit_session(connection_string):

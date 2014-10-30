@@ -83,6 +83,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         Create your Flask app here, with any
         configuration you need
         """
+
+        #TODO add mock configuration instead of passing arguments
         from web import make_app
         app = make_app(connection_string="sqlite://")
         app.testing = True
