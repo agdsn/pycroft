@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp, NumberRange, ValidationError, \
+from wtforms.validators import Regexp, NumberRange, ValidationError, \
     DataRequired
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
@@ -45,7 +45,7 @@ class UserSearchForm(Form):
 
 
 class UserEditNameForm(Form):
-    name = TextField(u"Name", [Required(message=u"Name wird benötigt!")])
+    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
 
 
 class UserEditEMailForm(Form):
@@ -54,7 +54,7 @@ class UserEditEMailForm(Form):
 
 class UserMoveForm(Form):
     dormitory = QuerySelectField(u"Wohnheim",
-        [Required(message=u"Wohnheim?")],
+        [DataRequired(message=u"Wohnheim?")],
         get_label='short_name',
         query_factory=dormitory_query)
     level = LazyLoadSelectField(u"Etage",
@@ -64,7 +64,7 @@ class UserMoveForm(Form):
         conditions=["dormitory"],
         data_endpoint="user.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
-        validators=[Required(message=u"Raum?")],
+        validators=[DataRequired(message=u"Raum?")],
         coerce=str,
         choices=[],
         conditions=["dormitory", "level"],
@@ -72,7 +72,7 @@ class UserMoveForm(Form):
 
 
 class UserCreateForm(UserEditNameForm, UserMoveForm):
-    login = TextField(u"Login", [Required(message=u"Login?"),
+    login = TextField(u"Login", [DataRequired(message=u"Login?"),
                                  Regexp(regex=User.login_regex,
                                      message=u"Login ist ungültig!"),
                                  validate_unique_login])
@@ -92,19 +92,19 @@ class hostCreateForm(Form):
 
 
 class UserLogEntry(Form):
-    message = TextAreaField(u"", [Required()])
+    message = TextAreaField(u"", [DataRequired()])
 
 class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
     begin_date = DateField(
-        u"Beginn", [Required()], default=datetime.utcnow, today_btn=True,
+        u"Beginn", [DataRequired()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
     end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
 
 class UserEditGroupMembership(Form):
     begin_date = DateField(
-        u"Beginn", [Required()], default=datetime.utcnow, today_btn=True,
+        u"Beginn", [DataRequired()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
     end_date = DateField(u"Ende", today_btn=True, today_highlight=True)
@@ -118,7 +118,7 @@ class UserBlockForm(Form):
 
 class UserMoveOutForm(Form):
     date = DateField(
-        u"Auszug am", [Required()], default=datetime.utcnow, today_btn=True,
+        u"Auszug am", [DataRequired()], default=datetime.utcnow, today_btn=True,
         today_highlight=True)
     comment = TextAreaField(u"Kommentar")
 
