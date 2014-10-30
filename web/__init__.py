@@ -24,7 +24,7 @@ from flask.ext.login import current_user, current_app
 from web.templates import page_resources
 
 
-def make_app(connection_string):
+def make_app(connection_string=None):
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
