@@ -21,12 +21,12 @@ from flask.ext.login import current_user, current_app
 from web.templates import page_resources
 
 
-def make_app(connection_string="sqlite:////tmp/test.db"):
+def make_app():
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
     """
-    session.init_session(connection_string=connection_string)
+    session.init_session()
 
     app = Flask(__name__)
 
@@ -69,7 +69,7 @@ def make_app(connection_string="sqlite:////tmp/test.db"):
         :param e: The error from the errorhandler
         """
         if e.code in (401, 403):
-            flash(u"Nicht genügend Rechte, um die Seite zu sehen!", "error")
+            flash(u"Nicht genügend Rechte um die Seite zu sehen!", "error")
         elif e.code in (404,):
             flash(u"Seite wurde nicht gefunden!", "error")
         elif e.code in (500,):

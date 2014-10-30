@@ -22,7 +22,7 @@ class Port(ModelBase):
     discriminator = Column('type', String(15), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    name = Column(String(4), nullable=False)
+    name = Column(String(8), nullable=False)
     
     name_regex = re.compile("[A-Z][1-9][0-9]?")
 

@@ -8,14 +8,15 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
+from functools import wraps
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine, pool, func
-from functools import wraps
+from pycroft import config
 
 
-class DummySession(object):
+class DummySessionWrapper(object):
     def __getattr__(self, item):
-        # raise Exception("Session not inizialized")
+        # raise Exception("Session not initialized")
         # Workaround for the forking debug server
         init_session()
         return getattr(session, item)
@@ -24,9 +25,12 @@ class DummySession(object):
 class SessionWrapper(object):
     active = True
 
-    def __init__(self, autocommit=False, autoflush=True, connection_string=None, pooling=True):
-        if connection_string is None:
-            connection_string = "sqlite:////tmp/test.db"
+    def __init__(self, connection_string, autocommit=False, autoflush=True,
+                 pooling=True):
+
+        """
+        :param connection_string: database to connect to
+        """
 
         self._engine = create_engine(connection_string, echo=False)
         self._scoped_session = scoped_session(
@@ -89,18 +93,18 @@ def with_transaction(f):
     return helper
 
 
-def init_session(connection_string=None):
+def init_session():
     global session
-    if isinstance(session, DummySession):
-        session = SessionWrapper(connection_string=connection_string)
+    if isinstance(session, DummySessionWrapper):
+        session = SessionWrapper(config['db_connection_string'])
 
 
-def reinit_session(connection_string=None):
+def reinit_session(connection_string):
+    #required for tests
     global session
-
-    if not isinstance(session, DummySession):
+    if not isinstance(session, DummySessionWrapper):
         session.disable_instance()
-    session = SessionWrapper(connection_string=connection_string, pooling=False)
+    session = SessionWrapper(connection_string, pooling=False)
 
 
-session = DummySession()
+session = DummySessionWrapper()

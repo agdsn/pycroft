@@ -2,7 +2,7 @@
 
 
 from flask.ext.wtf import Form
-from wtforms.validators import Required, Regexp
+from wtforms.validators import DataRequired, Regexp
 from pycroft.model.dns import ARecord
 from pycroft.model.port import Port
 from web.form.fields.core import TextField, SelectField, QuerySelectField
@@ -17,13 +17,13 @@ def a_records_query(host_id):
 
 class SwitchPortForm(Form):
     name = TextField(u"Port Name",
-        [Required(message=u"Name?"),
+        [DataRequired(message=u"Name?"),
          Regexp(regex=Port.name_regex,
              message=u"Richtig ist z.B. A2")])
 
 
 class CNAMERecordEditForm(Form):
-    name = TextField(u"Alias Name", [Required(message=u"Alias?")])
+    name = TextField(u"Alias Name", [DataRequired(message=u"Alias?")])
     record_for = ReadonlyTextField(u"für")
 
 
@@ -35,5 +35,5 @@ class RecordCreateForm(Form):
 
 
 class CNAMERecordCreateForm(Form):
-    name = TextField(u"Alias Name", [Required(message=u"Alias?")])
+    name = TextField(u"Alias Name", [DataRequired(message=u"Alias?")])
     record_for = QuerySelectField(u"für", get_label='name')
