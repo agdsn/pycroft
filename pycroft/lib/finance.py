@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-import cStringIO
 from itertools import imap, chain
 from collections import namedtuple
 import re
 
+import cStringIO
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
-from pycroft.lib.config import config
+from pycroft import config
 from pycroft.model.user import User
+
 
 __author__ = 'Florian Österreich'
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from sqlalchemy import func, between, Integer, cast
 from pycroft.model.finance import Semester, FinanceAccount, Transaction, Split,\
     Journal, JournalEntry

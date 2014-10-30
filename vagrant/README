@@ -1,0 +1,24 @@
+Usage
+=====
+
+General
+-------
+
+ - ```vagrant up <machine>``` to bring machine ```<machine>``` online
+ - ```vagrant ssh <machine>``` to ssh into ```<machine>```
+ - Other stuff: ```vagrant --help```
+
+Pycroft
+-------
+
+ - ```vagrant up [webdb-prebuilt]```
+   - clones a box created via 'vagrant up build' at an earlier time.
+
+ - ```vagrant up webdb-build```
+   - clones a debian box and automatically installs all Pycroft requirements and creates PostgreSQL DB from ```Pycroft/example/pg_schema.sql``` and ```Pycroft/example/pg_data.sql```
+    
+ - Not yet implemented machines:
+   - ```web-prebuilt```
+   - ```web-build```
+   - ```db-prebuilt```
+   - ```db-build```

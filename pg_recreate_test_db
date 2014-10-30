@@ -1,0 +1,40 @@
+#!/usr/bin/env python2
+from sys import exit
+from subprocess import call
+from shlex import split
+from os import devnull
+nulldevice = open(devnull,"w")
+
+print ("WARNING: This will delete the database pycroft.db and"
+       "recreate it from the schema")
+print "All data will be lost! Are you sure you wish to continue? [y/N]"
+if raw_input().lower() != "y":
+    print "Aborted. No data lost."
+    exit()
+
+
+dbname = "pycroft.db"
+schemadumpfname = "example/pg_schema.sql"
+datadumpfname = "example/pg_data.sql"
+
+print "Dropping DB", dbname
+call(["dropdb", dbname])
+
+print "Creating DB", dbname
+call(["createdb", dbname])
+
+print "Loading schema"
+from pycroft.model import _all
+from pycroft import model
+
+print "Writing schema to DB"
+model.create_db_model()
+
+print "Save SQL dump of schema? [y/N]"
+if raw_input().lower() == "y":
+    print "Writing SQL dump to",schemadumpfname
+    with open(schemadumpfname,"w") as f:
+        call(["pg_dump", dbname], stdout=f, stderr=f)
+
+print "Filling DB with "+datadumpfname
+call(split("psql pycroft.db -f "+datadumpfname), stdout=nulldevice)
