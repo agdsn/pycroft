@@ -20,8 +20,11 @@ class Config(object):
         self._resource = "config.json"
 
     def load(self):
-        data = (pkgutil.get_data(self._package, self._resource) or
-                pkgutil.get_data(self._package, self._resource+".default"))
+        data = None
+        try:
+            data = pkgutil.get_data(self._package, self._resource)
+        except IOError:
+            data = pkgutil.get_data(self._package, self._resource+".default")
         if data is None:
             raise Exception(
                 "Could not load config file {1} "
