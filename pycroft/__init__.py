@@ -21,7 +21,7 @@ class Config(object):
 
     def load(self):
         data = (pkgutil.get_data(self._package, self._resource) or
-                pkgutil.get_data(self._package+".default", self._resource))
+                pkgutil.get_data(self._package, self._resource+".default"))
         if data is None:
             raise Exception(
                 "Could not load config file {1} "
