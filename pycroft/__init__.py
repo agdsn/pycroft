@@ -14,13 +14,12 @@
 import json, collections, pkgutil
 
 class Config(object):
-    def __init__(self):
+    def __init__(self, fname=None):
         self._config_data = None
         self._package = "pycroft"
-        self._resource = "config.json"
+        self._resource = fname or "config.json"
 
     def load(self):
-        data = None
         try:
             data = pkgutil.get_data(self._package, self._resource)
         except IOError:

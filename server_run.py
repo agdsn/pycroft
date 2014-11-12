@@ -8,13 +8,19 @@ import argparse
 def server_run(args):
     from web import make_app
     from pycroft import config
+    from pycroft.model import session
 
     app = make_app()
+
+    app.config["DATABASE_URI"] = "sqlite:////tmp/test.db"
+    session.session.init_engine(app.config["DATABASE_URI"])
+
     app.debug = args.debug
 
     app.config['MAX_CONTENT_LENGTH'] = int(config["file_upload"]
                                             ["max_file_size"])
     app.config['UPLOAD_FOLDER'] = config["file_upload"]["temp_dir"]
+
 
     app.run(debug=args.debug, port=args.port,
             host="0.0.0.0" if args.exposed else None)

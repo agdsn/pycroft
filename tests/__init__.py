@@ -5,13 +5,14 @@
 import unittest
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
-from pycroft.model import session, _all
-from pycroft.model import drop_db_model, create_db_model
-from flask import url_for, request
+#from pycroft import model
+from pycroft.model import _all, session, drop_db_model, create_db_model
+from flask import url_for
 from flask.ext import testing
 
 
 __author__ = 'jan'
+
 
 REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) (NOT NULL constraint failed:|([a-z_]*\.?[a-z_]*) may not be NULL)"
 
@@ -38,10 +39,13 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     If you overwrite the `tearDown` or `setUpClass` methods don't forget
     to call the ones in the superclass.
     """
-
     @classmethod
     def setUpClass(cls):
-        session.reinit_session("sqlite://")
+        session.reinit_session()
+        if session.session.get_engine() is None:
+            print "session.session.get_engine() is None"
+            session.session.init_engine("sqlite:///:memory:")
+        print repr(session.session.get_engine())
         drop_db_model()
         create_db_model()
         cls.fixture = make_fixture()
@@ -52,11 +56,11 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
 
 
 class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
-    """A TestCase baseclass that handeles frontend tests.
+    """A TestCase baseclass that handles frontend tests.
 
-    Like the FixtureDataTestBase you have to define a dataset.
-    If you want a user to be logged in than you have to overwrite the 'setUp' method
-    and set self.login and self.password with a user login and password.
+    Like the FixtureDataTestBase you have to define a data set.
+    If you want a user to be logged in than you have to overwrite the 'setUp'
+    method and set self.login and self.password with a user login and password.
     Do not forget to call the setUp method from the super class.
 
     You have to provide an user in the fixtures with the needed properties.
@@ -75,7 +79,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         super(FrontendDataTestBase, self).setUp()
 
         try:
-            if getattr(self, "login") is not None and getattr(self, "password") is not None:
+            if getattr(self, "login") is not None and \
+                            getattr(self, "password") is not None:
                 self._login(login=self.login, password=self.password)
         except AttributeError:
             self.__setattr__("login", None)
@@ -87,9 +92,9 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         configuration you need
         """
 
-        #TODO add mock configuration instead of passing arguments
         from web import make_app
-        app = make_app(connection_string="sqlite://")
+        app = make_app()
+
         app.testing = True
         app.debug = True
 

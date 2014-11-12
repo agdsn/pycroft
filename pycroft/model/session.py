@@ -12,9 +12,8 @@
 """
 
 from functools import wraps
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy import create_engine, pool, func
-from pycroft import config
+from sqlalchemy.orm import create_session, scoped_session
+from sqlalchemy import create_engine, func
 
 
 class DummySessionWrapper(object):
@@ -27,19 +26,14 @@ class DummySessionWrapper(object):
 
 class SessionWrapper(object):
     active = True
+    _engine = None
 
-    def __init__(self, connection_string, autocommit=False, autoflush=True,
-                 pooling=True):
+    def __init__(self, autocommit=False, autoflush=True, pooling=True):
 
-        """
-        :param connection_string: database to connect to
-        """
-
-        self._engine = create_engine(connection_string, echo=False)
         self._scoped_session = scoped_session(
-                                sessionmaker(bind=self._engine,
-                                             autocommit=autocommit,
-                                             autoflush=autoflush))
+            lambda: create_session(bind=self._engine,
+                                   autocommit=autocommit,
+                                   autoflush=autoflush))
 
         self.transaction_log = []
 
@@ -51,12 +45,16 @@ class SessionWrapper(object):
     def get_engine(self):
         return self._engine
 
+    def init_engine(self, connection_string):
+        self._engine = create_engine(connection_string, echo=False)
+
     def disable_instance(self):
         self.active = False
 
-    # hack for postgres/sqlite "multiplexing"
+    #hack for postgres/sqlite "multiplexing"
+    #bad hack, since it breaks proper testing
     def now_sql(self):
-        if self._engine.driver == "psycopg2":
+        if self._engine and self._engine.driver == "psycopg2":
             return func.now()
         else:
             # 1 Minute modifier to fix strange unit test race
@@ -64,7 +62,6 @@ class SessionWrapper(object):
 
 
 def with_transaction(f):
-
     # Need to define session global here so that it is also available
     # in the wrapper function defined below.
     global session
@@ -95,19 +92,18 @@ def with_transaction(f):
 
     return helper
 
-
-def init_session(connection_string=None):
+def init_session():
     global session
     if isinstance(session, DummySessionWrapper):
-        session = SessionWrapper(connection_string or config['db_connection_string'])
+        session = SessionWrapper()
 
 
-def reinit_session(connection_string):
+def reinit_session():
     #required for tests
     global session
     if not isinstance(session, DummySessionWrapper):
         session.disable_instance()
-    session = SessionWrapper(connection_string, pooling=False)
+    session = SessionWrapper(pooling=False)
 
 
 session = DummySessionWrapper()

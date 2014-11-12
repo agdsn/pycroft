@@ -18,7 +18,9 @@ from tests import REGEX_NOT_NULL_CONSTRAINT
 class Test_010_NetDeviceValidators(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        session.reinit_session("sqlite://")
+        session.reinit_session()
+        if session.session.get_engine() is None:
+            session.session.init_engine("sqlite:///:memory:")
         model.drop_db_model()
         model.create_db_model()
         cls.host = host.UserHost(user_id = 1)
