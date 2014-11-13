@@ -130,7 +130,7 @@ def dormitory_level_rooms(dormitory_id, level):
     rooms_list = Room.q.filter_by(
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
 
-    level_l0 = "{:%02d}".format(level)
+    level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
     # a link to the user. If there is more then one user, the room is
