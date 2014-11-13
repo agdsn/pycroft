@@ -31,7 +31,7 @@ def load_user(userid):
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if current_user is not None and current_user.is_authenticated():
-        flash(u'Sie sind bereits als "%s" angemeldet!' % current_user.name, "warning")
+        flash(u'Sie sind bereits als "{}" angemeldet!'.format(current_user.name), "warning")
         return redirect(url_for('user.overview'))
     form = LoginForm()
     if form.validate_on_submit():

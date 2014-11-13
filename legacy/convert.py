@@ -35,7 +35,7 @@ def do_convert():
             if new_room is None:
                 new_room = dormitory.Room(number=port.zimmernr, level=port.etage, inhabitable=True, dormitory=new_house)
                 rooms.append(new_room)
-            new_port = port_model.PatchPort(name="%s/%s" % (port.etage, port.zimmernr), room=new_room)
+            new_port = port_model.PatchPort(name="{0.etage}/{0.zimmernr}".format(port), room=new_room)
             patch_ports.append(new_port)
 
             if port.ip not in switches:
@@ -92,7 +92,7 @@ def do_convert():
     subnets = {}
     for subnet in my_session.query(Subnet):
         replaced_subnet_ip = subnet.net_ip.replace("10.10", "141.30")
-        new_subnet = dormitory.Subnet(address=str(ipaddr.IPv4Network("%s/%s" % (replaced_subnet_ip, subnet.netmask))),
+        new_subnet = dormitory.Subnet(address=str(ipaddr.IPv4Network("{}/{}".format(replaced_subnet_ip, subnet.netmask))),
                                       dns_domain=subnet.domain,
                                       gateway=subnet.default_gateway,
                                       ip_type="4")

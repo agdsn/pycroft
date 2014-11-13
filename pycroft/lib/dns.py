@@ -33,7 +33,7 @@ def delete_record(record_id):
     elif record.discriminator == "ns_record":
         record = NSRecord.q.filter(NSRecord.id == record_id).one()
     else:
-        raise ValueError("Unknown record type: %s" % (record.discriminator))
+        raise ValueError("Unknown record type: {}".format(record.discriminator))
 
     session.session.delete(record)
     return record
@@ -53,7 +53,7 @@ def change_record(record, **kwargs):
         try:
             getattr(record, arg)
         except AttributeError:
-            raise ValueError("The record has no argument %s" % (arg,))
+            raise ValueError("The record has no argument {}".format(arg,))
         else:
             setattr(record, arg, kwargs[arg])
 
@@ -87,7 +87,7 @@ def _create_record(type, *args, **kwargs):
     elif discriminator == "srv_record":
         record = SRVRecord(*args, **kwargs)
     else:
-        raise ValueError("unknown record type: %s" % (type))
+        raise ValueError("unknown record type: {}".format(type))
 
     session.session.add(record)
     return record

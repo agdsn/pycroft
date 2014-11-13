@@ -74,12 +74,12 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0010_a_record_without_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live == None).first()
         entry = record.gen_entry
-        entry_expected = u"%s IN A %s" % (record.name, record.address.address)
+        entry_expected = u"{} IN A {}".format(record.name, record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
         rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"%s.in-addr.arpa. IN PTR %s" % (
+        rev_entry_expected = u"{}.in-addr.arpa. IN PTR {}".format(
             ".".join(reversed(record.address.address.split("."))), record.name)
 
         self.assertEqual(rev_entry, rev_entry_expected)
@@ -87,13 +87,13 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0015_a_record_with_ttl(self):
         record = ARecord.q.filter(ARecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"%s %s IN A %s" % (
+        entry_expected = u"{} {} IN A {}".format(
             record.name, record.time_to_live, record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
         rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"%s.in-addr.arpa. %s IN PTR %s" % (
+        rev_entry_expected = u"{}.in-addr.arpa. {} IN PTR {}".format(
             ".".join(reversed(record.address.address.split("."))),
             record.time_to_live, record.name)
 
@@ -102,14 +102,14 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0020_aaaa_record_without_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live == None).first()
         entry = record.gen_entry
-        entry_expected = u"%s IN AAAA %s" % (
+        entry_expected = u"{} IN AAAA {}".format(
             record.name, record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
         rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"%s.ip6.arpa. IN PTR %s" % (
-            ".".join(["%x" % ord(b) for b in reversed(
+        rev_entry_expected = u"{}.ip6.arpa. IN PTR {}".format(
+            ".".join(["{:x}".format(ord(b)) for b in reversed(
                 (ipaddr.IPv6Address(record.address.address)).packed)]),
             record.name)
 
@@ -118,15 +118,15 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0025_aaaa_record_with_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"%s %s IN AAAA %s" % (record.name,\
+        entry_expected = u"{} {} IN AAAA {}".format(record.name,\
                                                 record.time_to_live,
                                                 record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
         rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"%s.ip6.arpa. %s IN PTR %s" % (
-            ".".join(["%x" % ord(b) for b in reversed(
+        rev_entry_expected = u"{}.ip6.arpa. {} IN PTR {}".format(
+            ".".join(["{:x}".format(ord(b)) for b in reversed(
                 (ipaddr.IPv6Address(record.address.address)).packed)]),
             record.time_to_live, record.name)
 
@@ -135,7 +135,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0030_mx_record(self):
         record = MXRecord.q.first()
         entry = record.gen_entry
-        entry_expected = u"%s IN MX %s %s" % (
+        entry_expected = u"{} IN MX {} {}".format(
             record.domain, record.priority, record.server)
 
         self.assertEqual(entry, entry_expected)
@@ -143,7 +143,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0040_cname_record(self):
         record = CNAMERecord.q.first()
         entry = record.gen_entry
-        entry_expected = u"%s IN CNAME %s" % (
+        entry_expected = u"{} IN CNAME {}".format(
             record.name, record.record_for.name)
 
         self.assertEqual(entry, entry_expected)
@@ -151,14 +151,14 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0050_ns_record_without_ttl(self):
         record = NSRecord.q.filter(NSRecord.time_to_live == None).first()
         entry = record.gen_entry
-        entry_expected = u"%s IN NS %s" % (record.domain, record.server)
+        entry_expected = u"{} IN NS {}".format(record.domain, record.server)
 
         self.assertEqual(entry, entry_expected)
 
     def test_0055_ns_record_with_ttl(self):
         record = NSRecord.q.filter(NSRecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"%s %s IN NS %s" % (
+        entry_expected = u"{} {} IN NS {}".format(
             record.domain, record.time_to_live, record.server)
 
         self.assertEqual(entry, entry_expected)
@@ -166,7 +166,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0060_srv_record_without_ttl(self):
         record = SRVRecord.q.filter(SRVRecord.time_to_live == None).first()
         entry = record.gen_entry
-        entry_expected = u"%s IN SRV %s %s %s %s" % (
+        entry_expected = u"{} IN SRV {} {} {} {}".format(
             record.service, record.priority,
             record.weight, record.port, record.target)
 
@@ -175,7 +175,7 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0065_srv_record_with_ttl(self):
         record = SRVRecord.q.filter(SRVRecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"%s %s IN SRV %s %s %s %s" % (
+        entry_expected = u"{} {} IN SRV {} {} {} {}".format(
             record.service, record.time_to_live,
             record.priority, record.weight, record.port, record.target)
 

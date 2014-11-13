@@ -61,7 +61,7 @@ class Dormitory(ModelBase):
         ).all()
 
     def __repr__(self):
-        return u"%s %s" % (self.street, self.number)
+        return u"{} {}".format(self.street, self.number)
 
 
 class Room(ModelBase):
@@ -74,7 +74,7 @@ class Room(ModelBase):
     dormitory = relationship("Dormitory", backref=backref("rooms"))
 
     def __repr__(self):
-        return u"%s %d%s" % (self.dormitory, self.level, self.number)
+        return u"{} {:d}{}".format(self.dormitory, self.level, self.number)
 
 
 class Subnet(ModelBase):

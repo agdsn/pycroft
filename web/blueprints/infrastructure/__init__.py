@@ -65,7 +65,7 @@ def record_delete(user_id, record_id):
 def record_edit(user_id, record_id):
     record = Record.q.get(record_id)
 
-    edit_function = ".%s_edit" % (record.discriminator,)
+    edit_function = ".{}_edit".format(record.discriminator,)
 
     return redirect(
         url_for(edit_function, user_id=user_id, record_id=record_id))
@@ -131,7 +131,7 @@ def record_create(user_id, host_id):
         form.type.data = 'CNAMERecord'
 
     if form.validate_on_submit():
-        create_function = ".%s_create" % (form.type.data,)
+        create_function = ".{}_create".format(form.type.data,)
 
         return redirect(url_for(create_function, user_id=user_id,
             host_id=host_id))
@@ -196,7 +196,7 @@ def srv_record_create(user_id, host_id):
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
-        flash(u"Switch mit ID %s nicht gefunden!" % switch_id, "error")
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
     switch_port_list = switch.ports
     switch_port_list = host.sort_ports(switch_port_list)

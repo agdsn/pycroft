@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from flask import request, url_for
@@ -177,11 +177,11 @@ class BlueprintNavigation(object):
         """
 
         if self.blueprint.name not in app.blueprints:
-            raise Exception("Blueprint %s is not registred in Flask app" %
-                            self.blueprint.name)
+            raise Exception("Blueprint {} is not registred in Flask app".format(
+                            self.blueprint.name))
         else:
             assert app.blueprints[self.blueprint.name] is self.blueprint, \
-            "Blueprint resistred as %s in Flask app is not the one you " \
+            "Blueprint resistred as {} in Flask app is not the one you " \
             "register navigation for!"
 
             if "blueprint_navigation" not in app.config:

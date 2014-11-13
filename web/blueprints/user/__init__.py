@@ -63,7 +63,7 @@ def user_show(user_id):
 
     user = User.q.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
     room = Room.q.get(user.room_id)
@@ -113,7 +113,7 @@ def add_membership(user_id):
 
     user = User.q.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
     form = UserAddGroupMembership()
@@ -133,8 +133,8 @@ def add_membership(user_id):
             start_date=start_date,
             end_date=end_date)
         lib.logging.create_user_log_entry(author=current_user,
-                message=u"hat Nutzer zur Gruppe '%s' hinzugefügt." %
-                form.group_id.data.name,
+                message=u"hat Nutzer zur Gruppe '{}' hinzugefügt."
+                    .format(form.group_id.data.name),
                 timestamp=now,
                 user=user)
 
@@ -143,7 +143,7 @@ def add_membership(user_id):
         return redirect(url_for(".user_show", user_id=user_id))
 
     return render_template('user/add_membership.html',
-        page_title=u"Neue Gruppenmitgliedschaft für Nutzer %s" % user_id,
+        page_title=u"Neue Gruppenmitgliedschaft für Nutzer {}".format(user_id),
         user_id=user_id, form=form)
 
 
@@ -156,8 +156,8 @@ def end_membership(membership_id):
     # ToDo: Make the log messages not Frontend specific (a helper?)
     lib.logging.create_user_log_entry(author=current_user,
             message=u"hat die Mitgliedschaft des Nutzers"
-                u" in der Gruppe '%s' beendet." %
-                membership.group.name,
+                u" in der Gruppe '{}' beendet.".format(
+                membership.group.name),
             timestamp=datetime.utcnow(),
             user=membership.user)
 
@@ -271,7 +271,7 @@ def create():
 def move(user_id):
     user = User.q.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
     form = UserMoveForm()
@@ -320,7 +320,7 @@ def edit_membership(membership_id):
     membership = Membership.q.get(membership_id)
 
     if membership is None:
-        flash(u"Gruppenmitgliedschaft mit ID %s existiert nicht!" % (
+        flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
         membership_id), 'error')
         abort(404)
 
@@ -345,14 +345,14 @@ def edit_membership(membership_id):
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
         lib.logging.create_user_log_entry(author=current_user,
             message=u"hat die Mitgliedschaft des Nutzers"
-                u" in der Gruppe '%s' bearbeitet." %
-                membership.group.name,
+                u" in der Gruppe '{}' bearbeitet.".format(
+                membership.group.name),
             timestamp=now,
             user=membership.user)
         return redirect(url_for('.user_show', user_id=membership.user_id))
 
     return render_template('user/user_edit_membership.html',
-                           page_title=u"Mitgliedschaft %s für %s bearbeiten" % (membership.group.name, membership.user.name),
+                           page_title=u"Mitgliedschaft {} für {} bearbeiten".format(membership.group.name, membership.user.name),
                            membership_id=membership_id,
                            user = membership.user,
                            form = form)
@@ -363,7 +363,7 @@ def edit_membership(membership_id):
 def edit_name(user_id):
     user = User.q.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
     form = UserEditNameForm()
@@ -386,7 +386,7 @@ def edit_name(user_id):
 def edit_email(user_id):
     user = User.q.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
     form = UserEditEMailForm()
@@ -515,7 +515,7 @@ def move_out(user_id):
     form = UserMoveOutForm()
     myUser = User.q.get(user_id)
     if myUser is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
         lib.user.move_out(
@@ -551,7 +551,7 @@ def move_out_tmp(user_id):
     form = UserMoveOutForm()
     my_user = User.q.get(user_id)
     if my_user is None:
-        flash(u"Nutzer mit ID %s existiert nicht!" % (user_id,), 'error')
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
         changed_user = lib.user.move_out_tmp(
@@ -560,7 +560,7 @@ def move_out_tmp(user_id):
             comment=form.comment.data,
             processor=current_user
         )
-        flash(u'Nutzer zieht am %s vorübegehend aus' % form.date.data,
+        flash(u'Nutzer zieht am {} vorübegehend aus'.format(form.date.data),
             'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)

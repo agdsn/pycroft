@@ -22,7 +22,7 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
         ports = []
         for letter in ["A", "B", "C", "D", "E", "F", "G"]:
             for number in range(1, 24):
-                ports.append("%s%d" % (letter, number))
+                ports.append("{}{:d}".format(letter, number))
 
         class fake_port(object):
             def __init__(self, name):
@@ -41,8 +41,8 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
         networks = ["141.30.228", "10.10.10", "141.30.126"]
         for hostpart in range(1, 255):
             for net in networks:
-                expected = "whdd%d" % hostpart
-                generated = generate_hostname("%s.%d" % (net, hostpart))
+                expected = "whdd{:d}".format(hostpart)
+                generated = generate_hostname("{}.{:d}".format(net, hostpart))
                 self.assertEqual(generated, expected)
 
 

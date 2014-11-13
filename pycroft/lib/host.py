@@ -26,7 +26,7 @@ def change_mac(net_device, mac, processor):
     net_device.mac = mac
 
     change_mac_log_entry = UserLogEntry(author_id=processor.id,
-        message=u"Die Mac-Adresse in %s geändert." % mac,
+        message=u"Die Mac-Adresse in {} geändert.".format(mac),
         timestamp=datetime.datetime.utcnow(), user_id=net_device.host.user.id)
 
     session.session.add(change_mac_log_entry)

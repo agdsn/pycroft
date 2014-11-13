@@ -23,8 +23,8 @@ class Test_010_Dormitory(FrontendDataTestBase):
 
     def test_0020_show_dormitory(self):
         self.assert_template_get_request(
-            "/dormitories/show/%s" % DormitoryData.dummy_house1.id,
-            "dormitories/dormitory_show.html")
+            "/dormitories/show/{}".format(DormitoryData.dummy_house1.id,
+            "dormitories/dormitory_show.html"))
 
     def test_0030_create_dormitory(self):
         self.assert_template_get_request("/dormitories/create",
@@ -32,8 +32,8 @@ class Test_010_Dormitory(FrontendDataTestBase):
 
     def test_0040_show_room(self):
         self.assert_template_get_request(
-            "/dormitories/room/show/%s" % RoomData.dummy_room1.id,
-            "dormitories/room_show.html")
+            "/dormitories/room/show/{}".format(RoomData.dummy_room1.id,
+            "dormitories/room_show.html"))
 
     def test_0050_create_room(self):
         self.assert_template_get_request(
@@ -41,16 +41,16 @@ class Test_010_Dormitory(FrontendDataTestBase):
 
     def test_0060_delete_room(self):
         self.assertRedirects(self.client.get(
-            "/dormitories/room/delete/%s" % RoomData.dummy_room2.id),
-            url_for("dormitories.overview"))
+            "/dormitories/room/delete/{}".format(RoomData.dummy_room2.id),
+            url_for("dormitories.overview")))
 
     def test_0070_dormitory_levels(self):
         self.assert_template_get_request(
-            "/dormitories/levels/%s" % DormitoryData.dummy_house1.id,
-            "dormitories/levels.html")
+            "/dormitories/levels/{}".format(DormitoryData.dummy_house1.id,
+            "dormitories/levels.html"))
 
     def test_0080_dormitory_level_rooms(self):
         self.assert_template_get_request(
-            "/dormitories/levels/%s/rooms/%s" % (
+            "/dormitories/levels/{}/rooms/{}".format(
             DormitoryData.dummy_house1.id, RoomData.dummy_room1.level),
             "dormitories/rooms.html")

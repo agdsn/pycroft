@@ -243,12 +243,12 @@ class CheckBoxWidget(wtforms.widgets.Select):
         field_id = kwargs.pop('id', field.id)
         html = []
         for value, label, checked in field.iter_choices():
-            choice_id = u'%s-%s' % (field_id, value)
+            choice_id = u'{}-{}'.format(field_id, value)
             options = dict(kwargs, name=field.name, value=value, id=choice_id)
-            html.append(u'<label class="checkbox" %s>' % html_params(id=field_id))
+            html.append(u'<label class="checkbox" {}>'.format(html_params(id=field_id)))
             if checked:
                 options['checked'] = 'checked'
-            html.append(u'<input %s>' % html_params(**options))
+            html.append(u'<input {}>'.format(html_params(**options)))
             html.append(label)
             html.append(u'</label>')
         return u''.join(html)

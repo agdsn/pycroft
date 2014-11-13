@@ -63,14 +63,14 @@ class Test_020_PasswdHashes(unittest.TestCase):
     def test_0010_verify(self):
         for pw in self.hashes:
             for method in self.methods:
-                self.assertTrue(verify_password(pw["plain"],  pw[method]), "%s: '%s' should verify with '%s'" % (method, pw[method], pw["plain"]))
+                self.assertTrue(verify_password(pw["plain"],  pw[method]), "{}: '{}' should verify with '{}'".format(method, pw[method], pw["plain"]))
                 self.assertFalse(verify_password(pw["plain"], pw[method][len(method)+2:]))
 
     def test_0020_generate_hash(self):
         cur_type = "SSHA"
         for pw in self.hashes:
             self.assertNotEqual(hash_password(pw["plain"]), pw[cur_type], "Salt should be different!")
-            self.assertTrue(hash_password(pw["plain"]).startswith("{%s}" % cur_type))
+            self.assertTrue(hash_password(pw["plain"]).startswith("{{}}".format(cur_type)))
 
     def test_0030_generate_plain(self):
         pw_list = []

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import MetaData, create_engine, Table, Column
@@ -20,12 +20,12 @@ def get_passwd(filename):
 
 class ReprMixin(object):
     def __repr__(self):
-        args = ", ".join("%s='%s'" % (key, getattr(self, key)) for key in self.__table__.columns.keys())
-        return u"%s(%s)" % (self.__class__.__name__, args)
+        args = ", ".join("{}='{}'".format(key, getattr(self, key)) for key in self.__table__.columns.keys())
+        return u"{}({})".format(self.__class__.__name__, args)
 
 
 Base = declarative_base(cls=ReprMixin)
-engine = create_engine('mysql://%s@127.0.0.1/netusers' % get_passwd("mysql_pw"))
+engine = create_engine('mysql://{}@127.0.0.1/netusers'.format(get_passwd("mysql_pw")))
 meta = MetaData(bind=engine)
 session = None
 

@@ -105,32 +105,32 @@ def create_mac_regex():
     expr.append(r'^')
     # Most significant byte (Sixth byte)
     # The leftmost byte has highest order due to Big Endian
-    expr.append(r'(?P<byte6>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte6>{})'.format(BYTE_PATTERN))
     # Try to match sep1 after the 6th byte
-    expr.append(r'(?P<sep1>%s)?' % SEP1_PATTERN)
+    expr.append(r'(?P<sep1>{})?'.format(SEP1_PATTERN))
     # Fifth byte
-    expr.append(r'(?P<byte5>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte5>{})'.format(BYTE_PATTERN))
     # If sep1 hasn't matched, try to match the sep2 pattern after the second
     # byte else the same sep1 match must match here too.
-    expr.append(r'(?(sep1)(?P=sep1)|(?P<sep2>%s)?)' % SEP2_PATTERN)
+    expr.append(r'(?(sep1)(?P=sep1)|(?P<sep2>{})?)'.format(SEP2_PATTERN))
     # Fourth byte
-    expr.append(r'(?P<byte4>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte4>{})'.format(BYTE_PATTERN))
     # If neither sep1 nor sep2 have matched, try sep3 pattern after third byte.
     # If sep1 has matched before, the same sep1 match must match here too.
-    expr.append(r'(?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>%s)?))' % SEP3_PATTERN)
+    expr.append(r'(?(sep1)(?P=sep1)|(?(sep2)|(?P<sep3>{})?))'.format(SEP3_PATTERN))
     # Third byte
-    expr.append(r'(?P<byte3>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte3>{})'.format(BYTE_PATTERN))
     # If sep1 has matched before, the same sep1 match must match after the
     # fourth byte.
     # The same applies to sep2.
     expr.append(r'(?(sep1)(?P=sep1))(?(sep2)(?P=sep2))')
     # Second byte
-    expr.append(r'(?P<byte2>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte2>{})'.format(BYTE_PATTERN))
     # If sep1 has matched before, the same sep1 match must match after the
     # fifth byte.
     expr.append(r'(?(sep1)(?P=sep1))')
     # Least significant byte (First byte)
-    expr.append(r'(?P<byte1>%s)' % BYTE_PATTERN)
+    expr.append(r'(?P<byte1>{})'.format(BYTE_PATTERN))
     # End of string
     expr.append(r'$')
     return re.compile(''.join(expr))

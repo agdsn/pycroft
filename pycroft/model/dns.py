@@ -39,26 +39,26 @@ class ARecord(Record):
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
-            return u"%s points to %s with TTL %s" % (
+            return u"{} points to {} with TTL {}".format(
                 self.name, self.address.address, self.time_to_live)
         else:
-            return u"%s points to %s" % (self.name, self.address.address)
+            return u"{} points to {}".format(self.name, self.address.address)
 
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN A %s" % (self.name, self.address.address)
+            return u"{} IN A {}".format(self.name, self.address.address)
         else:
-            return u"%s %s IN A %s" % (
+            return u"{} {} IN A {}".format(
                 self.name, self.time_to_live, self.address.address)
 
     @property
     def gen_reverse_entry(self):
         reversed_address = ".".join(reversed(self.address.address.split(".")))
         if not self.time_to_live:
-            return u"%s.in-addr.arpa. IN PTR %s" % (reversed_address, self.name)
+            return u"{}.in-addr.arpa. IN PTR {}".format(reversed_address, self.name)
         else:
-            return u"%s.in-addr.arpa. %s IN PTR %s" % (
+            return u"{}.in-addr.arpa. {} IN PTR {}".format(
                 reversed_address, self.time_to_live,
                 self.name)
 
@@ -85,27 +85,27 @@ class AAAARecord(Record):
     def information_human(self):
         "returns all information readable for a human"
         if self.time_to_live is not None:
-            return u"%s points to %s with TTL %s" % (
+            return u"{} points to {} with TTL {}".format(
                 self.name, self.address.address, self.time_to_live)
         else:
-            return u"%s points to %s" % (self.name, self.address.address)
+            return u"{} points to {}".format(self.name, self.address.address)
 
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN AAAA %s" % (self.name, self.address.address)
+            return u"{} IN AAAA {}".format(self.name, self.address.address)
         else:
-            return u"%s %s IN AAAA %s" % (
+            return u"{} {} IN AAAA {}".format(
                 self.name, self.time_to_live, self.address.address)
 
     @property
     def gen_reverse_entry(self):
-        reversed_address = ".".join(["%x" % ord(b) for b in reversed(
+        reversed_address = ".".join(["{:x}".format(ord(b)) for b in reversed(
             (ipaddr.IPv6Address(self.address.address)).packed)])
         if not self.time_to_live:
-            return u"%s.ip6.arpa. IN PTR %s" % (reversed_address, self.name)
+            return u"{}.ip6.arpa. IN PTR {}".format(reversed_address, self.name)
         else:
-            return u"%s.ip6.arpa. %s IN PTR %s" % (
+            return u"{}.ip6.arpa. {} IN PTR {}".format(
                 reversed_address, self.time_to_live, self.name)
 
 
@@ -119,12 +119,12 @@ class MXRecord(Record):
     @property
     def information_human(self):
         "returns all information readable for a human"
-        return u"%s is mail-server for %s with priority %s" % (
+        return u"{} is mail-server for {} with priority {}".format(
             self.server, self.domain, self.priority)
 
     @property
     def gen_entry(self):
-        return u"%s IN MX %s %s" % (self.domain, self.priority, self.server)
+        return u"{} IN MX {} {}".format(self.domain, self.priority, self.server)
 
 
 class CNAMERecord(Record):
@@ -156,11 +156,11 @@ class CNAMERecord(Record):
     @property
     def information_human(self):
         "returns all information readable for a human"
-        return u"%s is alias for %s" % (self.name, self.record_for.name)
+        return u"{} is alias for {}".format(self.name, self.record_for.name)
 
     @property
     def gen_entry(self):
-        return u"%s IN CNAME %s" % (self.name, self.record_for.name)
+        return u"{} IN CNAME {}".format(self.name, self.record_for.name)
 
 
 class NSRecord(Record):
@@ -178,9 +178,9 @@ class NSRecord(Record):
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN NS %s" % (self.domain, self.server)
+            return u"{} IN NS {}".format(self.domain, self.server)
         else:
-            return u"%s %s IN NS %s" % (
+            return u"{} {} IN NS {}".format(
                 self.domain, self.time_to_live, self.server)
 
 
@@ -202,10 +202,10 @@ class SRVRecord(Record):
     @property
     def gen_entry(self):
         if not self.time_to_live:
-            return u"%s IN SRV %s %s %s %s" % (
+            return u"{} IN SRV {} {} {} {}".format(
                 self.service, self.priority, self.weight,
                 self.port, self.target)
         else:
-            return u"%s %s IN SRV %s %s %s %s" % (
+            return u"{} {} IN SRV {} {} {} {}".format(
                 self.service, self.time_to_live, self.priority,
                 self.weight, self.port, self.target)

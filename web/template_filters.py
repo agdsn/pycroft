@@ -96,7 +96,7 @@ def timesince_filter(dt, default="just now"):
     for period, singular, plural in periods:
 
         if period:
-            return "vor %d %s" % (period, singular if period == 1 else plural)
+            return "vor {:d} {}".format(period, singular if period == 1 else plural)
 
     return default
 
@@ -121,7 +121,7 @@ def money_filter(amount):
     """Format a money string from Cents to Euro
     """
     euro = amount/100.0
-    return (u"%.2f €" % euro).replace('.', ',')
+    return (u"{:.2f} €".format(euro)).replace('.', ',')
 
 
 @template_filter("host_traffic")
@@ -144,7 +144,7 @@ def host_traffic_filter(host):
     for traffic in traffic_volumes:
         traffic_sum += ( traffic.size / 1024 / 1024 )
 
-    return u"%s MB" % (traffic_sum, )
+    return u"{} MB".format(traffic_sum)
 
 
 @template_filter("host_name")
@@ -233,7 +233,7 @@ def ip_get_switch_port(host,ip):
 @template_filter("level_number")
 def level_number_filter(level):
         if level<10:
-            return u"0%s" % (level, )
+            return u"0{}".format(level, )
         else:
             return level
 

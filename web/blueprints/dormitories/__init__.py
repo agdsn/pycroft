@@ -119,7 +119,7 @@ def dormitory_levels(dormitory_id):
 
     return render_template('dormitories/levels.html',
         levels=levels_list, dormitory_id=dormitory_id, dormitory=dormitory,
-        page_title=u"Etagen Wohnheim %s" % dormitory.short_name)
+        page_title=u"Etagen Wohnheim {}".format(dormitory.short_name))
 
 
 # ToDo: Review this!
@@ -130,11 +130,11 @@ def dormitory_level_rooms(dormitory_id, level):
     rooms_list = Room.q.filter_by(
         dormitory_id=dormitory_id, level=level).order_by(Room.number)
 
-    level_l0 = "%02d" % level
+    level_l0 = "{:%02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
     # a link to the user. If there is more then one user, the room is
     # duplicated
     return render_template('dormitories/rooms.html', rooms=rooms_list, level=level_l0,
-                           dormitory=dormitory, page_title=u"Zimmer der Etage %d des Wohnheims %s" % (level,
+                           dormitory=dormitory, page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(level,
                                                               dormitory.short_name))

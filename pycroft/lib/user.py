@@ -258,7 +258,7 @@ def edit_name(user, name, processor):
         user.name = name
 
         create_user_log_entry(author=processor,
-            message=u"Nutzer %s umbenannt in %s" % (oldName, name),
+            message=u"Nutzer {} umbenannt in {}".format(oldName, name),
             timestamp=datetime.utcnow(), user=user)
 
     return user
@@ -278,7 +278,7 @@ def edit_email(user, email, processor):
         user.email = email
 
         create_user_log_entry(author=processor,
-            message=u"E-Mail-Adresse von %s auf %s geändert." % (oldEmail, email),
+            message=u"E-Mail-Adresse von {} auf {} geändert.".format(oldEmail, email),
             timestamp=datetime.utcnow(), user=user)
 
     return user
