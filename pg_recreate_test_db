@@ -34,7 +34,7 @@ print "Save SQL dump of schema? [y/N]"
 if raw_input().lower() == "y":
     print "Writing SQL dump to",schemadumpfname
     with open(schemadumpfname,"w") as f:
-        call(["pg_dump", dbname], stdout=f, stderr=f)
+        call(["pg_dumpall -s", dbname], stdout=f, stderr=f)
 
 print "Filling DB with "+datadumpfname
 call(split("psql pycroft.db -f "+datadumpfname), stdout=nulldevice)
