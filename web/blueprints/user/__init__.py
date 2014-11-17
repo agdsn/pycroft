@@ -14,6 +14,7 @@ from itertools import chain
 from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 import operator
+from sqlalchemy import Text
 from pycroft import lib
 from pycroft.helpers import host
 from pycroft.model.dormitory import Room
@@ -22,7 +23,7 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
 from pycroft.model.accounting import TrafficVolume
-from sqlalchemy.sql.expression import or_, func
+from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
@@ -50,7 +51,7 @@ def json_search():
     results = session.query(User.id, User.login, User.name).filter(or_(
         func.lower(User.name).like(func.lower(u"%{0}%".format(query))),
         func.lower(User.login).like(func.lower(u"%{0}%".format(query))),
-        User.id.like(u"{0}%".format(query))
+        cast(User.id, Text).like(u"{0}%".format(query))
     )).all()
     users = [{"id": user_id, "login": login, "name": name}
              for user_id, login, name in results]
