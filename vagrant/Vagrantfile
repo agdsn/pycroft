@@ -13,18 +13,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # argument is a set of non-required options.
   config.vm.synced_folder "..", "/pycroft"
 
-  #pycroft web and database server, pre-built, default
-  config.vm.define "webdb-prebuilt", primary: true do |webdb|
-    webdb.vm.box = "http://helios.wh2.tu-dresden.de/~mueslo/host/pycroft-web-db.box"
-    webdb.vm.provider "virtualbox" do |vb|
-      vb.name = "pycroft-web-db"
-    end
-    webdb.vm.network :forwarded_port, host:5001, guest: 5000
-    webdb.vm.provision :shell, path: "prebuilt-provision.sh"
-  end
-  
   #pycroft web and database server, built automatically
-  config.vm.define "webdb-build", autostart: false do |webdb|
+  config.vm.define "webdb", primary: true do |webdb|
     webdb.vm.box = "chef/debian-7.6"
     webdb.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-web-db"
@@ -41,10 +31,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #  Bridged networks make the machine appear as another physical device on
   #  your network.
   #  config.vm.network "public_network"  
-  
-  #pycroft web server, pre-built
-   config.vm.define "web-prebuilt", autostart: false do |web|
-    web.vm.box = "helios-mueslo-pycroft-web-box"
+
+  #pycroft web server, build automatically
+  config.vm.define "web", autostart: false do |web|
+    web.vm.box = "chef/debian-7.6"
     web.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-web"
     end
@@ -52,34 +42,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     web.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
   end
 
-  #pycroft web server, build automatically
-  config.vm.define "web-build", autostart: false do |web|
-    web.vm.box = "chef/debian-7.6"
-    web.vm.provider "virtualbox" do |vb|
-      vb.name = "pycroft-web"
-    end
-    web.vm.network :forwarded_port, host:5001, guest: 5000
-    web.vm.provision :shell, inline: "echo Not implemented yet...; exit1"
-  end
-  
-  #pycroft database server, pre-built
-  config.vm.define "db-prebuilt", autostart: false do |db|
-    db.vm.box = "helios-mueslo-pycroft-db-box"
-    db.vm.provider "virtualbox" do |vb|
-      vb.name = "pycroft-db"
-    end
-    db.vm.network :forwarded_port, host:5432, guest: 5432
-    db.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
-  end
-
   #pycroft database server, build automatically
-  config.vm.define "db-build", autostart: false do |db|
+  config.vm.define "db", autostart: false do |db|
     db.vm.box = "chef/debian-7.6"
     db.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-db"
     end
     db.vm.network :forwarded_port, host:5432, guest: 5432
-    db.vm.provision :shell, inline: "echo Not implemented yet...; exit1"
+    db.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
   end
 
   #config.vm.box = "chef/debian-7.6"
