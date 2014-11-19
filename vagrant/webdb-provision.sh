@@ -45,6 +45,7 @@ pip install -r $PROJDIR/requirements.txt || exit 1
 echo "Configuring postgres..."
 recreate_db_as() {
     if [[ $(sudo -u postgres psql -l | grep $1 | wc -l) == 0 ]]; then
+        echo "Database $1 does not exist, creating it."
         sudo -u $2 createdb $1
     fi
 }

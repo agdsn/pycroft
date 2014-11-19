@@ -20,7 +20,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       vb.name = "pycroft-web-db"
     end
     webdb.vm.network :forwarded_port, host:5001, guest: 5000
-    webdb.vm.provision :shell, path: "build-provision.sh"
+    webdb.vm.provision :shell, path: "webdb-provision.sh"
   end
 
   #Required once DB and web server are separate:
