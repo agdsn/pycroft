@@ -8,6 +8,7 @@ PROJDIR="/pycroft"
 VAGRANTDIR="/vagrant"
 USER="vagrant" #user that runs pycroft
 DBNAME="pycroft.db"
+TESTS_DBNAME="tests.db"
 
 #install necessary system packages
 apt-get update
@@ -40,22 +41,19 @@ sudo -u $USER bower update -F
 #install dependencies
 echo "Installing required python modules..."
 pip install -r $PROJDIR/requirements.txt || exit 1
-pip install psycopg2
-
-#install pre-commit pep8 check hook
-#if [ -d $PROJDIR/.git/hooks ] && [ ! -f $PROJDIR/.git/hooks/pre-commit ]; then
-#  #is a git repo, but no pre-commit hook currently set
-#  echo "Installing PEP8 check pre-commit hook"
-#  cp $PROJDIR/utils/pre-commit $PROJDIR/.git/hooks/pre-commit
-#fi
 
 echo "Configuring postgres..."
+recreate_db_as() {
+    if [[ $(sudo -u postgres psql -l | grep $1 | wc -l) == 0 ]]; then
+        sudo -u $2 createdb $1
+    fi
+}
+
 if [[ $(sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$USER'") != 1 ]]; then
     sudo -u postgres createuser $USER -ds > /dev/null
 fi
-if [[ $(sudo -u postgres psql -l | grep $DBNAME | wc -l) == 0 ]]; then
-    sudo -u $USER createdb $DBNAME
-fi
+recreate_db_as $DBNAME $USER
+recreate_db_as $TESTS_DBNAME $USER
 
 echo "Filling postgres DB with sample data..."
 sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql
