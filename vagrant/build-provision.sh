@@ -33,12 +33,15 @@ pip install psycopg2
 #fi
 
 echo "Configuring postgres..."
-sudo -u postgres createuser $USER -ds
-sudo -u $USER createdb $DBNAME
+if [[ $(sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$USER'") != 1 ]]; then
+    sudo -u postgres createuser $USER -ds > /dev/null
+fi
+if [[ $(sudo -u postgres psql -l | grep $DBNAME | wc -l) == 0 ]]; then
+    sudo -u $USER createdb $DBNAME
+fi
 
 echo "Filling postgres DB with sample data..."
-sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_schema.sql > /dev/null
-sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_data.sql > /dev/null
+sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
 
 echo "All done! Starting Pycroft... (remember, :5000 => :5001)"
 sudo -u $USER python2 $PROJDIR/server_run.py --debug --exposed &
