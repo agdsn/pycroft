@@ -224,10 +224,10 @@ class BootstrapDatepickerWidget(object):
             attribute = 'data-date-{0}'.format(option.replace('_', '-'))
             kwargs[attribute] = value
         page_resources.link_script(url_for(
-            "static", filename="datepicker/js/bootstrap-datepicker.js"
+            "static", filename="libs/bootstrap-datepicker/js/bootstrap-datepicker.js"
         ))
         page_resources.link_script(url_for(
-            "static", filename="datepicker/js/locales/bootstrap-datepicker.de.js"
+            "static", filename="libs/bootstrap-datepicker/js/locales/bootstrap-datepicker.de.js"
         ))
         options = dict(kwargs, name=field.name)
         return HTMLString(u"<input {0}>".format(html_params(**options)))

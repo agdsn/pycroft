@@ -10,3 +10,4 @@
 doc/_build
 vagrant/.vagrant
 pycroft/config.json
+web/static/libs/**

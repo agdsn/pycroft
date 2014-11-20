@@ -11,7 +11,15 @@ DBNAME="pycroft.db"
 
 #install necessary system packages
 apt-get update
-apt-get install -y git postgresql postgresql-client libpq-dev libsqlite3-dev python-dev python-pip
+apt-get install -y git postgresql postgresql-client libpq-dev libsqlite3-dev python-dev python-pip python-software-properties
+apt-add-repository 'deb http://ftp.us.debian.org/debian wheezy-backports main'
+apt-get update
+apt-get install -y nodejs
+if [ ! -f /usr/bin/node ]; then
+    ln -s /usr/bin/nodejs /usr/bin/node
+fi
+curl -L https://npmjs.org/install.sh | sh
+npm install -g bower
 
 if cd $PROJDIR && [[ $(git config --get remote.origin.url) == *Pycroft* ]]; then
     echo "Pycroft git repo found."
@@ -19,6 +27,8 @@ else
   echo "Error: Please make sure we are in <pycroft-git-repo>/vagrant"
   exit 1
 fi
+
+sudo -u $USER bower install -F
 
 #install dependencies
 echo "Installing required python modules..."
