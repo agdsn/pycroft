@@ -1,6 +1,8 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from datetime import datetime
+from itertools import chain
 import re
 
 import wtforms.fields
@@ -134,6 +136,10 @@ class DateField(wtforms.fields.DateField):
         ))
         for option in self.datepicker_options.iterkeys():
             kwargs.pop(option)
+        defaults = {'default': datetime.utcnow(), 'language': 'de',
+                    'today_highlight': 'true', 'today_btn': 'linked'}
+        self.datepicker_options = dict(chain(defaults.items(),
+                                             self.datepicker_options.items()))
         # The format option is used by both DateField and Bootstrap datepicker,
         # albeit with a different format string syntax.
         self.datepicker_options['format'] = self.convert_format_string(format)
