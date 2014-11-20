@@ -18,8 +18,12 @@ apt-get install -y nodejs
 if [ ! -f /usr/bin/node ]; then
     ln -s /usr/bin/nodejs /usr/bin/node
 fi
-curl -L https://npmjs.org/install.sh | sh
-npm install -g bower
+if [ ! -f $(which npm) ]; then
+    curl -L https://npmjs.org/install.sh | sh
+fi
+if [ ! -f $(which bower) ]; then
+    npm install -g bower
+fi
 
 if cd $PROJDIR && [[ $(git config --get remote.origin.url) == *Pycroft* ]]; then
     echo "Pycroft git repo found."
@@ -29,6 +33,7 @@ else
 fi
 
 sudo -u $USER bower install -F
+sudo -u $USER bower update -F
 
 #install dependencies
 echo "Installing required python modules..."
