@@ -5,6 +5,7 @@
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
+{% import "macros/pagination.html" as pagination %}
 
 {% block content %}
     <div class="row">
@@ -13,7 +14,7 @@
     {% if results -%}
     <section>
         <h2>Ergebnisse</h2>
-        <div class="row">
+        <div id="tbl_users" class="row">
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -37,4 +38,8 @@
         </div>
     </section>
     {%- endif %}
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('tbl_users', 4, true) }}
 {% endblock %}

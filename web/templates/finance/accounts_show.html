@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/pagination.html" as pagination %}
 {% set page_title = "Konto: " + account.name %}
 {% set inverted = false %}
 
@@ -63,8 +64,8 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th colspan="4" class="col-xs-6 text-center">Soll</th>
-                        <th colspan="4" class="col-xs-6 text-center">Haben</th>
+                        <th colspan="4" class="col-xs-6 text-center nosort">Soll</th>
+                        <th colspan="4" class="col-xs-6 text-center nosort">Haben</th>
                     </tr>
                     <tr>
                         {% for ignore in range(2) -%}
@@ -89,4 +90,9 @@
             </table>
         </div>
     </div>
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('report-form', 4) }}
+{{ pagination.init_sorting('account-form', 4, false, false) }}
 {% endblock %}

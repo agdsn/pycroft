@@ -6,6 +6,7 @@
 {% extends "layout.html" %}
 {% set page_title = "Nutzer anzeigen" %}
 {% import "macros/forms.html" as forms %}
+{% import "macros/pagination.html" as pagination %}
 
 {% block page_css %}
 <style type="text/css">
@@ -51,7 +52,7 @@
     {# Nutzergeräte #}
     <section id="devices">
         <div class="page-header"><h2>Geräte</h2></div>
-        <div>
+        <div id="tbl_devices">
             {% include "user/_user_show_devices.html" with context %}
         </div>
     </section>
@@ -67,7 +68,7 @@
     {# Logs zum Nutzers #}
     <section id="logs">
         <div class="page-header"><h2>Logs</h2></div>
-        <div class="body">
+        <div id="tbl_logs" class="body">
             {% include "user/_user_show_logs.html" with context %}
         </div>
     </section>
@@ -85,7 +86,7 @@
     {# Gruppen des Nutzers #}
     <section id="groups">
         <div class="page-header"><h2>Gruppen</h2></div>
-        <div class="body">
+        <div id="tbl_groups" class="body">
             {% include "user/_user_show_groups.html" with context %}
         </div>
     </section>
@@ -94,7 +95,7 @@
     {% if current_user is privileged_for('infrastructure_show') %}
         <section id="hosts">
             <div class="page-header"><h2>Hosts</h2></div>
-            <div class="body">
+            <div id="tbl_hosts" class="body">
                 {% include "user/_user_show_hosts.html" with context %}
             </div>
         </section>
@@ -133,4 +134,8 @@
             load_trafficchart(days);
         });
     </script>
+    {{ pagination.init_sorting('tbl_devices', 4) }}
+    {{ pagination.init_sorting('tbl_logs', 3, false, false) }}
+    {{ pagination.init_sorting('tbl_groups', 4, false, false) }}
+    {{ pagination.init_sorting('tbl_hosts', 4, false, false) }}
 {% endblock %}

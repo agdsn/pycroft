@@ -4,12 +4,13 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import 'macros/pagination.html' as p %}
+{% import 'macros/pagination.html' as pagination %}
 
 {% block content %}
-    <section>
+    <section id="tbl_journals">
         <h2>Übersicht</h2>
         <table class="table table-striped">
+        <thead>
             <tr>
                 <th>Name</th>
                 <th>Bank</th>
@@ -21,6 +22,7 @@
                 <th>HBCI-URL</th>
                 <th>Zuletzt aktualisiert</th>
             </tr>
+        </thead><tbody>
             {% for journal in journals -%}
             <tr>
                 <td>{{ journal.name }}</td>
@@ -34,6 +36,7 @@
                 <td>{{ journal.last_update|datetime }}</td>
             </tr>
             {%- endfor %}
+        </tbody>
         </table>
         {% if current_user is privileged_for('finance_change') -%}
         <a class="btn btn-primary" href="{{ url_for('.journals_create') }}">Neues Journal anlegen</a>
@@ -41,20 +44,21 @@
     </section>
 
     <section>
-        <span class="pull-right">{{ p.pagination(request.endpoint, page, page_count, limit) }}</span>
         <h2>Nicht zugeordnete Journaleinträge</h2>
-        <table class="table table-striped">
+        <div id="tbl_journalentries"><table class="table table-striped">
+        <thead>
             <tr>
-                <th>Journal {{ p.sortbuttons("journal_id", page, limit) }}</th>
-                <th>Datum {{ p.sortbuttons("valid_date", page, limit) }}</th>
-                <th>Betrag {{ p.sortbuttons("amount", page, limit) }}</th>
-                <th>Verwendung {{ p.sortbuttons("description", page, limit) }}</th>
-                <th>Ursprüngliche Verwendung {{ p.sortbuttons("original_description", page, limit) }}</th>
-                <th>Kontonummer {{ p.sortbuttons("other_account_number", page, limit) }}</th>
-                <th>Bankleitzahl {{ p.sortbuttons("other_account_routing", page, limit) }}</th>
-                <th>Name {{ p.sortbuttons("other_name", page, limit) }}</th>
+                <th>Journal</th>
+                <th>Datum</th>
+                <th>Betrag</th>
+                <th>Verwendung</th>
+                <th>Ursprüngliche Verwendung</th>
+                <th>Kontonummer</th>
+                <th>Bankleitzahl</th>
+                <th>Name</th>
                 <th>Aktionen</th>
             </tr>
+        </thead><tbody>
             {% for entry in journal_entries -%}
             <tr>
                 <td>{{ entry.journal.name }}</td>
@@ -74,6 +78,12 @@
                 </td>
             </tr>
             {%- endfor %}
+        </tbody>
         </table>
-    </section>
+    </div></section>
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('tbl_journals', 9) }}
+{{ pagination.init_sorting('tbl_journalentries', 9, true, false) }}
 {% endblock %}

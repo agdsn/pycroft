@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/pagination.html" as pagination %}
 
 {% macro user_btn_class(user) %}
     {% if user is not user_with_positive_balance -%}
@@ -23,7 +24,7 @@
         <li><a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
-    <div class="row">
+    <div id="tbl_rooms" class="row">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -45,4 +46,8 @@
             </tbody>
         </table>
     </div>
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('tbl_rooms', 2) }}
 {% endblock %}

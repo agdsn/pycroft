@@ -159,3 +159,11 @@ td.grow {
 .table-fat > tbody > tr > td > a:hover {
     text-decoration: none;
 }
+
+.sort {
+    cursor: pointer;
+}
+
+.sort:active {
+    color: lightblue;
+}

@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/pagination.html" as pagination %}
 {% set page_title = "Buchung anzeigen" %}
 {% set inverted = false %}
 
@@ -18,7 +19,7 @@
             <dd>{{ transaction.valid_date|date }}</dd>
         </dl>
     </section>
-    <section>
+    <section id="tbl_transactions">
         <table class="table table-hover table-striped">
             <thead>
                 <tr>
@@ -36,4 +37,8 @@
             </tbody>
         </table>
     </section>
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('tbl_transactions', 2, true) }}
 {% endblock %}

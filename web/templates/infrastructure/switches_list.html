@@ -4,9 +4,10 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/pagination.html" as pagination %}
 
 {% block content %}
-    <table class="table table-striped table-hover">
+    <div id="tbl_switches"><table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>#</th>
@@ -23,5 +24,9 @@
             </tr>
             {%- endfor %}
         </tbody>
-    </table>
+    </table></div>
+{% endblock %}
+
+{% block page_script %}
+{{ pagination.init_sorting('tbl_switches', 3) }}
 {% endblock %}

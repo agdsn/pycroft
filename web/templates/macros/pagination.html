@@ -21,3 +21,40 @@
    <a href={{ url_for(request.endpoint, order=columnname, page=page, limit=limit, **kwargs) }}><span class="glyphicon glyphicon-chevron-down"></span></a><a href="{{ url_for(request.endpoint, order=columnname, page=page, limit=limit, **kwargs) }} desc"><span class="glyphicon glyphicon-chevron-up"></span></a>
 {% endmacro %}
 
+{% macro generate_cols(id, count) %}{% for i in range(count) %}'{{ id }}_col{{ i }}'{% if i < count - 1 %},{% endif %}{% endfor %}{% endmacro %}
+
+{% macro init_sorting(id, colcount, pagination=false, first=true) -%}
+    {% if first %}
+    <script type="text/javascript" src="{{ url_for("static", filename="libs/list.js/dist/list.js") }}"></script>
+    {% endif %}
+    {% if pagination %}
+    <script type="text/javascript" src="{{ url_for("static", filename="libs/list.pagination.js/dist/list.pagination.js") }}"></script>
+    {% endif %}
+    <script type="text/javascript">
+        // init <th>s and <tr>s
+        $("#{{ id }} tr").each(function(){
+            $(this).children("th:not(.nosort)").each(function(index){
+                $(this).addClass("sort");
+                $(this).attr("data-sort", "{{ id }}_col" + index);
+                $(this).append('<span class="glyphicon glyphicon-resize-vertical" aria-hidden="true"></span>');
+            })
+        });
+        $("#{{ id }} tr").each(function(){
+            $(this).children("td:not(.nosort)").each(function(index){
+                $(this).addClass("{{ id }}_col" + index);
+            })
+        });
+        $("#{{ id }} tbody").first().addClass("list");
+        {% if pagination %}
+        $("#{{ id }}").prepend('<ul class="pagination"></ul>');
+        {% endif %}
+        var options = {
+            valueNames: [{{ generate_cols(id, colcount) }}]{% if pagination %},
+            page: 50,
+            outerWindow: 2,
+            innerWindow: 2,
+            plugins: [ListPagination({})]{% endif %}
+        };
+        var userList = new List('{{ id }}', options);
+    </script>
+{%- endmacro %}
