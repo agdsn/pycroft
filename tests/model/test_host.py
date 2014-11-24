@@ -4,7 +4,7 @@
 import re
 import unittest
 
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, test_config
 from pycroft import model
 from pycroft.model import session, host, dormitory, user, accounting
 
@@ -18,9 +18,7 @@ from tests import REGEX_NOT_NULL_CONSTRAINT
 class Test_010_NetDeviceValidators(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        session.reinit_session()
-        if session.session.get_engine() is None:
-            session.session.init_engine("sqlite:///:memory:")
+        session.reinit_session(test_config.database_uri)
         model.drop_db_model()
         model.create_db_model()
         cls.host = host.UserHost(user_id = 1)

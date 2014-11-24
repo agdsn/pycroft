@@ -56,10 +56,7 @@ class SessionWrapper(object):
 
     #hack for postgres/sqlite "multiplexing"
     def now_sql(self):
-        if not self._engine or "psycopg2" not in self._engine.driver:
-            # 1 Minute modifier to fix strange unit test race
-            return datetime.utcnow()+timedelta(minutes=1)
-        return datetime.utcnow()
+        return func.now()
 
 
 def with_transaction(f):
@@ -99,12 +96,13 @@ def init_session():
         session = SessionWrapper()
 
 
-def reinit_session():
+def reinit_session(connection_string):
     #required for tests
     global session
     if not isinstance(session, DummySessionWrapper):
         session.disable_instance()
     session = SessionWrapper(pooling=False)
+    session.init_engine(connection_string)
 
 
 session = DummySessionWrapper()

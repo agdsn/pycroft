@@ -5,8 +5,16 @@
 import unittest
 from fixture.style import TrimmedNameStyle
 from fixture import DataSet, SQLAlchemyFixture, DataTestCase
-#from pycroft import model
-from pycroft.model import _all, session, drop_db_model, create_db_model
+from pycroft.model import session
+from config import test_config
+
+if "sqlite" in test_config.database_uri:
+    from sqlalchemy import func
+    func_now = lambda: func.datetime("now", "+1 minutes")
+    session.session.now_sql = func_now
+
+from pycroft.model import _all, drop_db_model, create_db_model
+
 from flask import url_for
 from flask.ext import testing
 
@@ -16,7 +24,6 @@ __author__ = 'jan'
 
 REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) (NOT NULL constraint failed:|([a-z_]*\.?[a-z_]*) may not be NULL)"
 
-
 def make_fixture():
     """A helper to create a database fixture.
     """
@@ -25,7 +32,6 @@ def make_fixture():
             style=TrimmedNameStyle(suffix="Data"),
             engine=session.session.get_engine())
     return fixture
-
 
 class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """A TestCase baseclass that handles database fixtures.
@@ -41,11 +47,7 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        session.reinit_session()
-        if session.session.get_engine() is None:
-            print "session.session.get_engine() is None"
-            session.session.init_engine("sqlite:///:memory:")
-        print repr(session.session.get_engine())
+        session.reinit_session(test_config.database_uri)
         drop_db_model()
         create_db_model()
         cls.fixture = make_fixture()

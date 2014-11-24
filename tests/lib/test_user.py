@@ -115,9 +115,10 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(user_cname_record.record_for, user_a_record)
 
         #checks the initial group memberships
-        user_groups = new_user.active_property_groups + new_user.active_traffic_groups
+        active_user_groups = (new_user.active_property_groups +
+                              new_user.active_traffic_groups)
         for group in get_initial_groups():
-            self.assertIn(group, user_groups)
+            self.assertIn(group, active_user_groups)
 
         self.assertEqual(UserHelper.has_internet(new_user), True)
         self.assertIsNotNone(new_user.finance_account)
