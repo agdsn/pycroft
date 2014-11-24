@@ -7,11 +7,11 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
-    <section>
+    <section class="row">
         {{ forms.simple_form(form, url_for(".login", next=next), url_for('dormitories.overview'), submit_text="Login"  ) }}
     </section>
 
-    <section>
+    <section class="row">
         <h2>Testbenutzer</h2>
         <ul>
             <li>ag_dsn</li>
@@ -19,6 +19,6 @@
             <li>admin</li>
             <li>finanzer</li>
         </ul>
-        <p>Das Passwort ist jeweils test.</p>
+        <p>Das Passwort ist jeweils <strong>test</strong>.</p>
     </section>
 {% endblock %}
