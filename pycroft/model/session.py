@@ -28,12 +28,14 @@ class SessionWrapper(object):
     active = True
     _engine = None
 
-    def __init__(self, autocommit=False, autoflush=True, pooling=True):
+    def __init__(self, autocommit=False, autoflush=True, pooling=True,
+                 expire_on_commit=True):
 
         self._scoped_session = scoped_session(
             lambda: create_session(bind=self._engine,
                                    autocommit=autocommit,
-                                   autoflush=autoflush))
+                                   autoflush=autoflush,
+                                   expire_on_commit=expire_on_commit))
 
         self.transaction_log = []
 
