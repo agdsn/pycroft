@@ -17,7 +17,7 @@ class Config(object):
     def __init__(self, fname=None):
         self._config_data = None
         self._package = "pycroft"
-        self._resource = fname or "config.json"
+        self._resource = "config.json"
 
     def load(self):
         try:

@@ -12,7 +12,7 @@ def server_run(args):
 
     app = make_app()
 
-    app.config["DATABASE_URI"] = "sqlite:////tmp/test.db"
+    app.config["DATABASE_URI"] = config["db_connection_string"]
     session.session.init_engine(app.config["DATABASE_URI"])
 
     app.debug = args.debug
