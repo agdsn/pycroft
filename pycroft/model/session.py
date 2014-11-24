@@ -56,7 +56,7 @@ class SessionWrapper(object):
 
     #hack for postgres/sqlite "multiplexing"
     def now_sql(self):
-        if not self._engine or self._engine.driver == "sqlite":
+        if not self._engine or "psycopg2" not in self._engine.driver:
             # 1 Minute modifier to fix strange unit test race
             return datetime.utcnow()+timedelta(minutes=1)
         return datetime.utcnow()
