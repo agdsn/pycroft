@@ -11,6 +11,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
+from datetime import datetime, timedelta
 from functools import wraps
 from sqlalchemy.orm import create_session, scoped_session
 from sqlalchemy import create_engine, func
@@ -54,13 +55,11 @@ class SessionWrapper(object):
         self.active = False
 
     #hack for postgres/sqlite "multiplexing"
-    #bad hack, since it breaks proper testing
     def now_sql(self):
-        if self._engine and self._engine.driver == "psycopg2":
-            return func.now()
-        else:
+        if not self._engine or self._engine.driver == "sqlite":
             # 1 Minute modifier to fix strange unit test race
-            return func.datetime("now", "+1 minutes")
+            return datetime.utcnow()+timedelta(minutes=1)
+        return datetime.utcnow()
 
 
 def with_transaction(f):
