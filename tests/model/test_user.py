@@ -70,7 +70,7 @@ class Test_020_PasswdHashes(unittest.TestCase):
         cur_type = "SSHA"
         for pw in self.hashes:
             self.assertNotEqual(hash_password(pw["plain"]), pw[cur_type], "Salt should be different!")
-            self.assertTrue(hash_password(pw["plain"]).startswith("{{}}".format(cur_type)))
+            self.assertTrue(hash_password(pw["plain"]).startswith("{{{}}}".format(cur_type)))
 
     def test_0030_generate_plain(self):
         pw_list = []
