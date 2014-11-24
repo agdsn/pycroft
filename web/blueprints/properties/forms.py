@@ -5,16 +5,27 @@
 
 
 from flask.ext.wtf import Form
-from wtforms.validators import DataRequired, Regexp
+from wtforms.validators import DataRequired, Regexp, NumberRange
 from web.form.fields.core import TextField
 
+
 class TrafficGroupForm(Form):
-    name = TextField(u"Gruppenname",[DataRequired(message=u"Name?")])
-    traffic_limit = TextField(u"Traffic Limit (GB)",
-                        [DataRequired(message=u"Wie viel GB?"),
-                        Regexp(regex=u"[0-9]+",
-                        message=u"Muss eine natürliche Zahl sein!")])
+    name = TextField(u"Gruppenname", [
+        DataRequired(u"Name?"),
+        Regexp(u"^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
+               message=u"Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
+                       u" eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
+    ])
+    traffic_limit = TextField(u"Traffic Limit (GB)", [
+        DataRequired(u"Wie viel GB?"),
+        NumberRange(0, None, u"Muss eine natürliche Zahl sein!")
+    ])
 
 
 class PropertyGroupForm(Form):
-    name = TextField(u"Gruppenname",[DataRequired(message=u"Name?")])
+    name = TextField(u"Gruppenname", [
+        DataRequired(u"Name?"),
+        Regexp(u"^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
+               message=u"Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
+                       u" eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
+    ])

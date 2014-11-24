@@ -5,7 +5,7 @@
 from datetime import datetime
 from flask.ext.wtf import Form
 from wtforms.validators import Regexp, NumberRange, ValidationError, \
-    DataRequired
+    DataRequired, Optional, Email
 from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
@@ -43,14 +43,13 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
-
 class UserEditNameForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
 
 
 class UserEditEMailForm(Form):
-    email = TextField(u"E-Mail", [Regexp(regex=User.email_regex,
-                                  message=u"E-Mail-Adresse ist ungültig!")])
+    email = TextField(u"E-Mail", [Email(u"E-Mail-Adresse ist ungültig!")])
+
 
 class UserMoveForm(Form):
     dormitory = QuerySelectField(u"Wohnheim",
@@ -72,23 +71,22 @@ class UserMoveForm(Form):
 
 
 class UserCreateForm(UserEditNameForm, UserMoveForm):
-    login = TextField(u"Login", [DataRequired(message=u"Login?"),
-                                 Regexp(regex=User.login_regex,
-                                     message=u"Login ist ungültig!"),
-                                 validate_unique_login])
-    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
-        message=u"MAC ist ungültig!")])
+    login = TextField(u"Login", [
+        DataRequired(message=u"Login?"),
+        Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
+        validate_unique_login])
+    mac = TextField(u"MAC", [
+        Regexp(regex=NetDevice.mac_regex, message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
-    email = TextField(u"E-Mail", [Regexp(regex=User.email_regex,
-                                         message=u"E-Mail ist ungueltig!")])
+    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!")])
     moved_from_division = BooleanField(u"Umzug aus anderer Sektion")
 
     already_paid_semester_fee = BooleanField\
         (u"Hat dort bereits für das aktuelle Semester Beitrag bezahlt")
 
 
-class hostCreateForm(Form):
-    name = TextField(u"Name")
+class HostCreateForm(Form):
+    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
 
 
 class UserLogEntry(Form):
@@ -98,12 +96,12 @@ class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
     begin_date = DateField(u"Beginn", [DataRequired()])
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
-    end_date = DateField(u"Ende")
+    end_date = DateField(u"Ende", [Optional()])
 
 class UserEditGroupMembership(Form):
     begin_date = DateField(u"Beginn", [DataRequired()])
     unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
-    end_date = DateField(u"Ende")
+    end_date = DateField(u"Ende", [Optional()])
 
 class UserBlockForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
@@ -115,8 +113,8 @@ class UserMoveOutForm(Form):
     comment = TextAreaField(u"Kommentar")
 
 class NetDeviceChangeMacForm(Form):
-    mac = TextField(u"MAC", [Regexp(regex=NetDevice.mac_regex,
-        message=u"MAC ist ungültig!")])
+    mac = TextField(u"MAC", [
+        Regexp(regex=NetDevice.mac_regex, message=u"MAC ist ungültig!")])
 
 class UserSelectGroupForm(Form):
     group_type = SelectField(u"Typ",

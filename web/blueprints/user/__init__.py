@@ -26,7 +26,7 @@ from pycroft.model.accounting import TrafficVolume
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    hostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
+    HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
     NetDeviceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
