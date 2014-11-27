@@ -59,5 +59,11 @@ recreate_db_as $TESTS_DBNAME $USER
 echo "Filling postgres DB with sample data..."
 sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql
 
+#set config.json to postgres
+if [[ -f $PROJDIR/pycroft/config.json ]]; then
+    rm $PROJDIR/pycroft/config.json
+fi
+ln -s $PROJDIR/pycroft/config.json $PROJDIR/pycroft/config.json.postgres
+
 echo "All done! Starting Pycroft... (remember, :5000 => :5001)"
 sudo -u $USER python2 $PROJDIR/server_run.py --debug --exposed &
