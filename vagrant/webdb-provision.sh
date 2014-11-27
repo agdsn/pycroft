@@ -42,22 +42,25 @@ sudo -u $USER bower update -F
 echo "Installing required python modules..."
 pip install -r $PROJDIR/requirements.txt || exit 1
 
-echo "Configuring postgres..."
-recreate_db_as() {
-    if [[ $(sudo -u postgres psql -l | grep $1 | wc -l) == 0 ]]; then
-        echo "Database $1 does not exist, creating it."
-        sudo -u $2 createdb $1
-    fi
-}
-
 if [[ $(sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$USER'") != 1 ]]; then
     sudo -u postgres createuser $USER -ds > /dev/null
 fi
-recreate_db_as $DBNAME $USER
-recreate_db_as $TESTS_DBNAME $USER
 
+recreate_db() {
+    if [[ $(sudo -u postgres bash -c "psql -l | grep $1 | wc -l") != 0 ]]; then
+        echo "Dropped database $1"
+        sudo -u $USER dropdb $1
+    fi
+    echo "Created database $1"
+    sudo -u $USER createdb $1
+}
+
+recreate_db $DBNAME
+recreate_db $TESTS_DBNAME
+
+# import example-db created by "pg_dump -f /example/pg_example/data.sql $DBNAME"
 echo "Filling postgres DB with sample data..."
-sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql
+sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
 
 #set config.json to postgres
 if [[ -f $PROJDIR/pycroft/config.json ]]; then
