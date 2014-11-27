@@ -15,21 +15,23 @@ apt-get install -y git postgresql postgresql-client libpq-dev libsqlite3-dev pyt
 apt-add-repository 'deb http://ftp.us.debian.org/debian wheezy-backports main'
 apt-get update
 apt-get install -y nodejs
-if [ ! -f /usr/bin/node ]; then
+if [[ ! -f /usr/bin/node ]]; then
     ln -s /usr/bin/nodejs /usr/bin/node
 fi
-if [ ! -f $(which npm) ]; then
+if [[ ! -f $(which npm) ]]; then
+    echo "Installing npm..."
     curl -L https://npmjs.org/install.sh | sh
 fi
-if [ ! -f $(which bower) ]; then
+if [[ ! -f $(which bower) ]]; then
+    echo "Installing bower..."
     npm install -g bower
 fi
 
 if cd $PROJDIR && [[ $(git config --get remote.origin.url) == *Pycroft* ]]; then
     echo "Pycroft git repo found."
 else
-  echo "Error: Please make sure we are in <pycroft-git-repo>/vagrant"
-  exit 1
+    echo "Error: Please make sure we are in <pycroft-git-repo>/vagrant"
+    exit 1
 fi
 
 sudo -u $USER bower install -F
@@ -56,7 +58,7 @@ if [[ $(sudo -u postgres psql -l | grep $DBNAME | wc -l) == 0 ]]; then
 fi
 
 echo "Filling postgres DB with sample data..."
-sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
+sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql
 
 echo "All done! Starting Pycroft... (remember, :5000 => :5001)"
 sudo -u $USER python2 $PROJDIR/server_run.py --debug --exposed &
