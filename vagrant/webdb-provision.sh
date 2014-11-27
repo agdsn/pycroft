@@ -41,6 +41,7 @@ sudo -u $USER bower update -F
 #install dependencies
 echo "Installing required python modules..."
 pip install -r $PROJDIR/requirements.txt || exit 1
+pip install psycopg2 || exit 1
 
 if [[ $(sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$USER'") != 1 ]]; then
     sudo -u postgres createuser $USER -ds > /dev/null
@@ -66,7 +67,7 @@ sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
 if [[ -f $PROJDIR/pycroft/config.json ]]; then
     rm $PROJDIR/pycroft/config.json
 fi
-ln -s $PROJDIR/pycroft/config.json $PROJDIR/pycroft/config.json.postgres
+ln -s $PROJDIR/pycroft/config.json.postgres $PROJDIR/pycroft/config.json
 
 echo "All done! Starting Pycroft... (remember, :5000 => :5001)"
 sudo -u $USER python2 $PROJDIR/server_run.py --debug --exposed &
