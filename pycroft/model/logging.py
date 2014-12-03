@@ -34,11 +34,11 @@ class LogEntry(ModelBase):
 
 class UserLogEntry(LogEntry):
     __mapper_args__ = {'polymorphic_identity': 'user_log_entry'}
-    id = Column(Integer, ForeignKey('log_entry.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('log_entry.id', ondelete="CASCADE"), primary_key=True)
 
     # many to one from UserLogEntry to User
     user = relationship("User", backref=backref("user_log_entries"))
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
 class RoomLogEntry(LogEntry):
