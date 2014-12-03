@@ -3,6 +3,7 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+{% if user.finance_account.splits %}
 <table class="table table-condensed">
     <thead>
         <tr>
@@ -19,3 +20,6 @@
         {%- endfor %}
     </tbody>
 </table>
+{% else %}
+<div class="alert alert-info">Keine Buchungen in diesem Konto.</div>
+{% endif %}
