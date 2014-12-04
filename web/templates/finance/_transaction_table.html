@@ -1,0 +1,92 @@
+{#
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% macro render_column_headings() -%}
+    <th>Erstellt am</th>
+    <th>Gültig ab</th>
+    <th>Beschreibung</th>
+    <th>Wert</th>
+{%- endmacro %}
+
+{% macro render_split(split, cell_class=None, absolute=false) %}
+    {% if split -%}
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.transaction_date|datetime }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_date|date }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for("finance.transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
+    {%- else -%}
+    <td colspan="4"></td>
+    {%- endif %}
+{% endmacro %}
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#report-form" data-toggle="tab">Kontenform</a></li>
+    <li><a href="#account-form" data-toggle="tab">Staffelform</a></li>
+</ul>
+<div class="tab-content">
+    <div id="report-form"  class="tab-pane active">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    {{ render_column_headings() }}
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Saldo</td>
+                    <td>{{ balance|money }}</td>
+                </tr>
+            </tfoot>
+            <tbody>
+                {% for split in splits -%}
+                <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
+                    {{ render_split(split) }}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="info text-center">
+                        Keine Buchungen vorhanden.
+                    </td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="account-form" class="tab-pane">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th colspan="4" class="col-xs-6 text-center nosort">Soll</th>
+                    <th colspan="4" class="col-xs-6 text-center nosort">Haben</th>
+                </tr>
+                <tr>
+                    {% for ignore in range(2) -%}
+                    {{ render_column_headings() }}
+                    {%- endfor %}
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <td colspan="7" class="text-right">Saldo</td>
+                    <td colspan="1">{{ balance|money }}</td>
+                </tr>
+            </tfoot>
+            <tbody>
+                {% for debit_split, credit_split in typed_splits %}
+                <tr>
+                    {{ render_split(debit_split, "danger" if inverted else "success", true) }}
+                    {{ render_split(credit_split, "success" if inverted else "danger", true) }}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="info text-center">
+                        Keine Buchungen vorhanden.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

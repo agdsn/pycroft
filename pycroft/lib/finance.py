@@ -2,7 +2,7 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import imap, chain
+from itertools import imap, chain, izip_longest, ifilter
 from collections import namedtuple
 import re
 
@@ -347,3 +347,10 @@ def process_record(index, record, import_time):
 def user_has_paid(user):
     # TODO check if user has paid
     return True
+
+
+def get_typed_splits(splits):
+    return izip_longest(
+        ifilter(lambda s: s.amount > 0, splits),
+        ifilter(lambda s: s.amount <= 0, splits)
+    )

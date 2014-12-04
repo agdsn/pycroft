@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from datetime import timedelta
-from itertools import (imap, groupby, izip_longest, ifilter)
+from itertools import (imap, groupby)
 import math
 
 from flask import (
@@ -21,6 +21,7 @@ from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
 
 from pycroft.lib import finance
+from pycroft.lib.finance import get_typed_splits
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
 from pycroft.model.session import session
 from pycroft.model.user import User
@@ -30,6 +31,7 @@ from web.blueprints.finance.forms import (
     SemesterCreateForm, JournalEntryEditForm, JournalImportForm,
     JournalCreateForm, FinanceAccountCreateForm, TransactionCreateForm)
 from web.blueprints.navigation import BlueprintNavigation
+
 
 bp = Blueprint('finance', __name__, )
 access = BlueprintAccess(bp, ['finance_show'])
@@ -156,20 +158,17 @@ def accounts_list():
 @access.require('finance_show')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
+    user = User.q.filter_by(finance_account_id=account.id).one()
     splits = (
         Split.q
         .join(Transaction)
         .filter(Split.account_id == account_id)
         .order_by(Transaction.valid_date)
     )
-    typed_splits = izip_longest(
-        ifilter(lambda s: s.amount > 0, splits),
-        ifilter(lambda s: s.amount <= 0, splits)
-    )
-    balance = sum(imap(lambda s: s.amount, splits))
+    typed_splits = get_typed_splits(splits)
     return render_template(
         'finance/accounts_show.html',
-        account=account, balance=balance,
+        account=account, user=user, balance=account.balance,
         splits=splits, typed_splits=typed_splits
     )
 

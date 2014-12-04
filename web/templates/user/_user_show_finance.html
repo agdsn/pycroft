@@ -3,23 +3,10 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if user.finance_account.splits %}
-<table class="table table-condensed">
-    <thead>
-        <tr>
-            <th>Beschreibung</th>
-            <th>Betrag</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for split in user.finance_account.splits -%}
-        <tr class="{{ 'success' if split.amount < 0 else 'error' }}">
-            <td>{{ split.transaction.description}}</td>
-            <td>{{ split.amount|money }}</td>
-        </tr>
-        {%- endfor %}
-    </tbody>
-</table>
-{% else %}
-<div class="alert alert-info">Keine Buchungen in diesem Konto.</div>
-{% endif %}
+{% set inverted = true %}
+
+{% include "finance/_transaction_table.html" with context %}
+
+<p>
+    <a class="btn btn-primary" href="{{ url_for("finance.accounts_show", account_id=user.finance_account_id) }}">Detaillierte Ansicht</a>
+</p>

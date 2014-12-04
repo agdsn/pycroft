@@ -17,6 +17,7 @@ import operator
 from sqlalchemy import Text
 from pycroft import lib
 from pycroft.helpers import host
+from pycroft.lib.finance import get_typed_splits
 from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, UserNetDevice, Ip
 from pycroft.model.session import session
@@ -95,9 +96,13 @@ def user_show(user_id):
         or_(Membership.end_date == None,
             Membership.end_date > now)
     )
+    typed_splits = get_typed_splits(user.finance_account.splits)
 
     return render_template('user/user_show.html',
         user=user,
+        balance=user.finance_account.balance,
+        splits=user.finance_account.splits,
+        typed_splits=typed_splits,
         all_log=log_list,
         user_log=user_log_list,
         room_log=room_log_list,
