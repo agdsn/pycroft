@@ -18,7 +18,7 @@ from flask import (
     Blueprint, render_template, redirect, url_for, jsonify,
     request, flash, abort)
 from flask.ext.login import current_user
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, Text, cast
 
 from pycroft.lib import finance
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
@@ -126,7 +126,7 @@ def journals_entries_edit(journal_id, entry_id):
         session.add(entry)
         session.commit()
 
-        return redirect(url_for('.journals'))
+        return redirect(url_for('.journals_list'))
 
     return render_template(
         'finance/journals_entries_edit.html',
@@ -302,7 +302,7 @@ def json_accounts_user_search():
     ).select_from(User).join(FinanceAccount).filter(
         or_(func.lower(User.name).like(func.lower("%{0}%".format(query))),
             func.lower(User.login).like(func.lower("%{0}%".format(query))),
-            User.id.like("{0}%".format(query)))
+            cast(User.id, Text).like(u"{0}%".format(query)))
     ).all()
     accounts = [
         {"account_id": account_id,

@@ -4,7 +4,7 @@
 from web.form.widgets import LazyLoadSelectWidget,\
     BootstrapFormControlDecorator, BootstrapStandardDecorator, \
     BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
-    decorators
+    decorators, decorate_field
 from wtforms import TextField, StringField
 from wtforms import fields
 
@@ -73,6 +73,14 @@ class LazyLoadSelectField(fields.SelectField):
 
 class TypeaheadField(StringField):
     """A Twitter typeahead.js field."""
+
+    widget = decorate_field(
+        StringField,
+        BootstrapFormControlDecorator,
+        BootstrapStandardDecorator,
+        BootstrapFormGroupDecorator
+    )
+
     def __call__(self, **kwargs):
         return super(TypeaheadField, self).__call__(
             class_='typeahead', **kwargs
