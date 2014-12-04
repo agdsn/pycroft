@@ -9,18 +9,23 @@
 {% set inverted = false %}
 
 {% block content %}
-    <dl>
+    <dl class="dl-horizontal">
         <dt>Name</dt>
         <dd>{{ account.name }}</dd>
         <dt>Typ</dt>
         <dd>{{ account.type }}</dd>
-    {% if user %}
         <dt>Nutzer</dt>
-        <dd><a href="{{ url_for("user.user_show", user_id=user.id) }}#finance"
-                class="btn btn-info">
-            {{ user.name }}
-        </a></dd>
-    {% endif %}
+        <dd>
+        {% if user %}
+            <a href="{{ url_for("user.user_show", user_id=user.id) }}#finance">
+                <span class="glyphicon glyphicon-user"
+                      aria-hidden="true"></span>
+                {{ user.name }}
+            </a>
+        {% else %}
+            <span class="text-muted">Kein Nutzerkonto</span>
+        {% endif %}
+        </dd>
     </dl>
     {% include "finance/_transaction_table.html" with context %}
 {% endblock %}

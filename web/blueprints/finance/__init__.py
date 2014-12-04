@@ -19,6 +19,7 @@ from flask import (
     request, flash, abort)
 from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
@@ -158,7 +159,15 @@ def accounts_list():
 @access.require('finance_show')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
-    user = User.q.filter_by(finance_account_id=account.id).one()
+    try:
+        user = User.q.filter_by(finance_account_id=account.id).one()
+    except NoResultFound:
+        user = None
+    except MultipleResultsFound:
+        user = User.q.filter_by(finance_account_id=account.id).first()
+        flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
+              u" verbunden sind!", "warning")
+
     splits = (
         Split.q
         .join(Transaction)
