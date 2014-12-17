@@ -7,7 +7,6 @@ from tests import DataSet
 
 class DormitoryData(DataSet):
     class dummy_dormitory1:
-        id = 1
         number = "100"
         short_name = "wu100"
         street = "wundstrasse"
@@ -15,7 +14,6 @@ class DormitoryData(DataSet):
 
 class RoomData(DataSet):
     class dummy_room1:
-        id = 1
         number = "101"
         level = 0
         inhabitable = True
@@ -24,7 +22,6 @@ class RoomData(DataSet):
 
 class SubnetData(DataSet):
     class dummy_subnet1:
-        id = 1
         address = "192.168.1.1"
         gateway = "192.168.1.1"
         dns_domain = "dummy_domain"
@@ -34,6 +31,5 @@ class SubnetData(DataSet):
 
 class VLANData(DataSet):
     class dummy_vlan1:
-        id = 1
         name = "dummy_vlan1"
         tag = 42

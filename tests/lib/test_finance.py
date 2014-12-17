@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from pycroft.model import session
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import FinanceAccountData, \
@@ -11,7 +12,7 @@ from pycroft.lib.finance import import_journal_csv, get_current_semester, \
 from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
     Transaction
 from datetime import date, timedelta
-
+import pkgutil
 
 class Test_010_Journal(FixtureDataTestBase):
 
@@ -42,7 +43,7 @@ class Test_010_Journal(FixtureDataTestBase):
         """
         This test should verify that the csv import works as expected.
         """
-        f = open("example/example.csv")
+        f = pkgutil.get_data(__package__, "example.csv")
         import_journal_csv(f, date(2013, 1, 5))
 
         journal = (Journal.q
@@ -97,6 +98,7 @@ class Test_010_Journal(FixtureDataTestBase):
         except Exception:
             self.fail()
         Transaction.q.delete()
+        session.session.commit()
 
     def test_0030_transferred_value(self):
         amount = 9000
@@ -138,6 +140,7 @@ class Test_010_Journal(FixtureDataTestBase):
             3*amount
         )
         Transaction.q.delete()
+        session.session.commit()
 
     def test_0050_cleanup_non_sepa_description(self):
         non_sepa_description = u"1234-0 Dummy, User, with " \

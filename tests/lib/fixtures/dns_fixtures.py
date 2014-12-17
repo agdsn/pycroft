@@ -80,6 +80,7 @@ class ARecordData(DataSet):
 
     class dummy_record2(dummy_record1):
         time_to_live = 1000
+        name = "www.dummy2.de"
 
 
 class AAAARecordData(DataSet):
@@ -102,13 +103,11 @@ class MXRecordData(DataSet):
 
 class CNAMERecordData(DataSet):
     class dummy_record:
-        id = 100
         name = "dummy.net."
         record_for = ARecordData.dummy_record1
         host = UserHostData.dummy_host1
 
     class dummy_record2:
-        id = 101
         name = "dummy2.net."
         record_for = AAAARecordData.dummy_record1
         host = UserHostData.dummy_host1

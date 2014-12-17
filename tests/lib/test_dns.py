@@ -301,7 +301,7 @@ class Test_030_RecordCreation(FixtureDataTestBase):
 
         delete_record(record.id)
 
-    def test_0065_srv_record_without_ttl(self):
+    def test_0065_srv_record_with_ttl(self):
         host = UserHost.q.first()
         service = "service"
         priority = 10

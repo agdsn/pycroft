@@ -31,17 +31,17 @@ class DormitoryData(DataSet):
 
 class RoomData(DataSet):
     class dummy_room1:
-        number = 1
+        number = "1"
         level = 1
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
     class dummy_room2:
-        number = 2
+        number = "2"
         level = 2
         inhabitable = True
         dormitory = DormitoryData.dummy_house2
     class dummy_room3:
-        number = 2
+        number = "2"
         level = 2
         inhabitable = True
         dormitory = DormitoryData.dummy_house1
@@ -49,14 +49,12 @@ class RoomData(DataSet):
 
 class UserData(DataSet):
     class dummy_user1:
-        id = 1
         login = "test"
         name = "John Doe"
         registration_date = datetime.utcnow()
         room = RoomData.dummy_room1
 
     class dummy_user2:
-        id = 2
         login = "admin"
         name = "Sebsatian fucking Schrader"
         registration_date = datetime.utcnow()

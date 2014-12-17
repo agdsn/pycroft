@@ -16,6 +16,11 @@ from pycroft.model import session
 class Test_010_Dormitory(FixtureDataTestBase):
     datasets = [DormitoryData]
 
+    def setUp(self):
+        super(Test_010_Dormitory, self).setUp()
+        self.dormitory = Dormitory.q.filter_by(
+            short_name=DormitoryData.dummy_dormitory1.short_name).one()
+
     def test_0010_create_dormitory(self):
         new_dormitory = create_dormitory(number="101", short_name="wu101",
             street="wundstrasse")
@@ -32,21 +37,28 @@ class Test_010_Dormitory(FixtureDataTestBase):
         session.session.commit()
 
     def test_0020_delete_dormitory(self):
-        del_dormitory = delete_dormitory(DormitoryData.dummy_dormitory1.id)
+        del_dormitory = delete_dormitory(self.dormitory.id)
 
         self.assertIsNone(Dormitory.q.get(del_dormitory.id))
 
     def test_0025_delete_wrong_dormitory(self):
         # Try to delete a non existing dormitory
         self.assertRaises(ValueError, delete_dormitory,
-            DormitoryData.dummy_dormitory1.id + 100)
+            self.dormitory.id + 100)
 
 
 class Test_020_Room(FixtureDataTestBase):
     datasets = [RoomData]
 
+    def setUp(self):
+        super(Test_020_Room, self).setUp()
+        self.dormitory = Dormitory.q.filter_by(
+            short_name=DormitoryData.dummy_dormitory1.short_name).one()
+        self.room = Room.q.filter_by(
+            dormitory=self.dormitory).one()
+
     def test_0010_create_room(self):
-        dormitory = Dormitory.q.get(DormitoryData.dummy_dormitory1.id)
+        dormitory = Dormitory.q.get(self.dormitory.id)
         new_room = create_room(number="102", level=0, inhabitable=True,
             dormitory=dormitory)
 
@@ -58,20 +70,19 @@ class Test_020_Room(FixtureDataTestBase):
         self.assertEqual(db_room.level, 0)
         self.assertEqual(db_room.inhabitable, True)
         self.assertEqual(db_room.dormitory_id,
-            DormitoryData.dummy_dormitory1.id)
+            self.dormitory.id)
 
         session.session.delete(db_room)
         session.session.commit()
 
     def test_0020_delete_room(self):
-        del_room = delete_room(RoomData.dummy_room1.id)
+        del_room = delete_room(self.room.id)
 
         self.assertIsNone(Room.q.get(del_room.id))
 
     def test_0025_delete_wrong_room(self):
         # Try to delete a non existing room
-        self.assertRaises(ValueError, delete_room,
-            RoomData.dummy_room1.id + 100)
+        self.assertRaises(ValueError, delete_room, self.room.id + 100)
 
 
 class Test_030_Subnet(FixtureDataTestBase):
