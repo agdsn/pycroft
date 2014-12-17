@@ -20,7 +20,7 @@ class DormitoryData(DataSet):
 class VLANData(DataSet):
     class vlan1:
         name = "vlan1"
-        tag = "1"
+        tag = 1
 
     class vlan2:
         name = "vlan2"
@@ -33,14 +33,14 @@ class SubnetData(DataSet):
         gateway = "141.30.216.1"
         dns_domain = "wh12.tu-dresden.de"
         reserved_addresses = 10
-        ip_type = 4
+        ip_type = "4"
 
     class subnet2:
         address = "141.30.227.0/24"
         gateway = "141.30.227.1"
         dns_domain = "wh13.tu-dresden.de"
         reserved_addresses = 10
-        ip_type = 4
+        ip_type = "4"
 
 
 class RoomData(DataSet):

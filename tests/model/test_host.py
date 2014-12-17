@@ -4,6 +4,7 @@
 import re
 import unittest
 
+from sqlalchemy.exc import IntegrityError
 from tests import FixtureDataTestBase, test_config
 from pycroft import model
 from pycroft.model import session, host, dormitory, user, accounting
@@ -15,19 +16,13 @@ from pycroft.helpers.host import get_free_ip, MacExistsException
 from tests import REGEX_NOT_NULL_CONSTRAINT
 
 
-class Test_010_NetDeviceValidators(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        session.reinit_session(test_config.database_uri)
-        model.drop_db_model()
-        model.create_db_model()
-        cls.host = host.UserHost(user_id = 1)
-        session.session.commit()
+class Test_010_NetDeviceValidators(FixtureDataTestBase):
+    datasets = [UserData, UserNetDeviceData, UserHostData]
 
     def test_0010_mac_validate(self):
         mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
-        nd = host.UserNetDevice(host=self.host)
+        nd = host.UserNetDevice(host=host.UserHost.q.first())
         def set_mac(mac):
             nd.mac = mac
 
@@ -53,7 +48,7 @@ class Test_010_NetDeviceValidators(unittest.TestCase):
 
         # Assert that we have no mac assigned
         session.session.add(nd)
-        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
+        self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
 
         # Assert a correct mac
