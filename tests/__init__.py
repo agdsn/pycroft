@@ -52,8 +52,16 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
         create_db_model()
         cls.fixture = make_fixture()
 
+    @classmethod
+    def tearDownClass(cls):
+        drop_db_model()
+
+    def setUp(self):
+        super(FixtureDataTestBase, self).setUp()
+
     def tearDown(self):
         super(FixtureDataTestBase, self).tearDown()
+
         session.session.remove()
 
 
