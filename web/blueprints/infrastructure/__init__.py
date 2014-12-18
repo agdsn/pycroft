@@ -25,7 +25,6 @@ from web.blueprints.infrastructure.forms import a_records_query
 from web.blueprints.access import BlueprintAccess
 
 from pycroft.lib.dns import delete_record, change_record, create_cname_record
-from pycroft.lib.infrastructure import create_switch_port
 
 bp = Blueprint('infrastructure', __name__, )
 access = BlueprintAccess(bp, ['infrastructure_show'])
@@ -203,21 +202,6 @@ def switch_show(switch_id):
     return render_template('infrastructure/switch_show.html',
         page_title=u"Switch: " + switch.name,
         switch=switch, switch_ports=switch_port_list)
-
-
-@bp.route('/switch/<int:switch_id>/switch_port/create', methods=['GET', 'POST'])
-@access.require('infrastructure_change')
-def switch_port_create(switch_id):
-    form = SwitchPortForm()
-    switch = Switch.q.get(switch_id)
-    if form.validate_on_submit():
-        create_switch_port(name=form.name.data, switch_id=switch_id)
-        flash(u'Neuer Switch Port angelegt', 'success')
-        return redirect(url_for('.switch_show', switch_id=switch_id))
-    return render_template('infrastructure/switch_port_create.html',
-        form=form, switch_id=switch_id,
-        page_title=u"Neuer Switch Port für " + switch.name)
-
 
 @bp.route('/vlans')
 @nav.navigate(u"VLANs")

@@ -152,7 +152,6 @@ class Test_040_Permissions_User(FrontendDataTestBase):
             url_for('infrastructure.ns_record_create', user_id=1, host_id=1),
             url_for('infrastructure.srv_record_create', user_id=1, host_id=1),
             url_for('infrastructure.switch_show', switch_id=1),
-            url_for('infrastructure.switch_port_create', switch_id=1)
         ):
             self.assert_access_forbidden(url)
 
