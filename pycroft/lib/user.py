@@ -19,14 +19,13 @@ from pycroft import config
 from pycroft.helpers import user, host
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.model.accounting import TrafficVolume
+from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.dormitory import Room
-from pycroft.model.host import Host, Ip
+from pycroft.model.host import Host, Ip, UserHost, UserNetDevice
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
-from pycroft.lib.dns import create_a_record, create_cname_record
-from pycroft.lib.host import create_user_net_device, create_user_host, create_ip
 from pycroft.lib.property import create_membership
 from pycroft.lib.logging import create_user_log_entry
 from pycroft.lib.finance import get_current_semester, user_has_paid
@@ -125,17 +124,18 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    new_host = create_user_host(user=new_user, room=room)
-    new_net_device = create_user_net_device(mac=mac, host=new_host)
-    new_ip = create_ip(net_device=new_net_device, address=ip_address,
-                       subnet=subnet)
-
-    new_a_record = create_a_record(host=new_host, time_to_live=None,
-                                 name=host.generate_hostname(ip_address),
-                                 address=new_ip)
+    new_host = UserHost(user=new_user, room=room)
+    session.session.add(new_host)
+    new_net_device = UserNetDevice(mac=mac, host=new_host)
+    new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
+    session.session.add(new_ip)
+    new_a_record = ARecord(host=new_host, time_to_live=None,
+                           name=host.generate_hostname(ip_address),
+                           address=new_ip)
+    session.session.add(new_a_record)
     if host_name:
-        create_cname_record(host=new_host, name=host_name,
-                           record_for=new_a_record)
+        session.session.add(CNAMERecord(host=new_host, name=host_name,
+                                        record_for=new_a_record))
 
     conf = config["move_in"]
 
@@ -485,11 +485,11 @@ def is_back(user, processor):
     subnet = host.select_subnet_for_ip(ip_address, subnets)
 
     for user_host in user.user_hosts:
-        create_ip(
+        session.session.ad(Ip(
             address=ip_address,
             subnet=subnet,
             net_device=user_host.user_net_device
-        )
+        ))
 
     create_user_log_entry(
         message=config["move_out_tmp"]["log_message_back"],
