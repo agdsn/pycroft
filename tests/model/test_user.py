@@ -88,7 +88,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_password_hash_validator(self):
-        u = user.User.q.get(1)
+        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
         password = generate_password(4)
         pw_hash = hash_password(password)
 
@@ -106,14 +106,14 @@ class Test_030_User_Passwords(FixtureDataTestBase):
 
 
     def test_0020_set_and_verify_password(self):
-        u = user.User.q.get(1)
+        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
         password = generate_password(4)
         pw_hash = hash_password(password)
 
         u.set_password(password)
         session.session.commit()
 
-        u = user.User.q.get(1)
+        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
         self.assertTrue(u.check_password(password))
         self.assertIsNotNone(user.User.verify_and_get(u.login, password))
         self.assertEqual(user.User.verify_and_get(u.login, password), u)
@@ -132,7 +132,9 @@ class Test_040_User_Login(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
-        u = user.User(name="John Doe", registration_date=datetime.utcnow(), room=dormitory.Room.q.get(1))
+        u = user.User(name="John Doe",
+                      registration_date=datetime.utcnow(),
+                      room=dormitory.Room.q.first())
 
         def set_login(login):
             u.login = login
@@ -141,21 +143,30 @@ class Test_040_User_Login(FixtureDataTestBase):
             if 2 < length < 23:
                 set_login("a" * length)
             else:
-                self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, "a" * length)
+                self.assertRaisesRegexp(Exception, "invalid unix-login!",
+                                        set_login, "a" * length)
 
         valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a__4"]
         invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
-        blocked = ["root", "daemon", "bin", "sys", "sync", "games", "man", "lp", "mail",
-                   "news", "uucp", "proxy", "majordom", "postgres", "wwwadmin", "backup",
-                   "msql", "operator", "ftp", "ftpadmin", "guest", "bb", "nobody"]
+        blocked = ["root", "daemon", "bin", "sys", "sync", "games", "man",
+                   "lp", "mail", "news", "uucp", "proxy", "majordom",
+                   "postgres", "wwwadmin", "backup", "msql", "operator",
+                   "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
         for login in valid:
             set_login(login)
         for login in invalid:
-            self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, login)
+            self.assertRaisesRegexp(Exception, "invalid unix-login!",
+                                    set_login, login)
         for login in blocked:
-            self.assertRaisesRegexp(Exception, "invalid unix-login!", set_login, login)
+            self.assertRaisesRegexp(Exception, "invalid unix-login!",
+                                    set_login, login)
 
-        u = user.User.q.get(1)
-        self.assertRaisesRegexp(AssertionError, "user already in the database - cannot change login anymore!", set_login, "abc")
+        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        self.assertRaisesRegexp(
+            AssertionError,
+            "user already in the database - cannot change login anymore!",
+            set_login, "abc")
+
+        session.session.commit()
 

@@ -26,6 +26,7 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
     def tearDown(self):
         Split.q.delete()
         Transaction.q.delete()
+        session.session.commit()
         super(Test_010_TransactionSplits, self).tearDown()
 
     def create_transaction(self):

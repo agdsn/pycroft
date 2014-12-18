@@ -76,7 +76,7 @@ class PatchPortData(DataSet):
 
 class UserData(DataSet):
     class dummy_user:
-        login = "test"
+        login = "test1"
         name = "John Doe"
         registration_date = datetime.utcnow()
         room = RoomData.dummy_room
@@ -90,7 +90,6 @@ class UserData(DataSet):
 
 class UserHostData(DataSet):
     class dummy_host1:
-        id = 1
         user = UserData.dummy_user
         room = RoomData.dummy_room
 

@@ -29,19 +29,19 @@ class Host(ModelBase):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    #TODO make user_id nullable after last import of mysql data
     # many to one from Host to User
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
 
     # many to one from Host to Room
-    room = relationship(dormitory.Room, backref=backref("hosts", cascade="all"))
+    room = relationship(dormitory.Room, backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
                      nullable=True)
 
 
 class UserHost(Host):
-    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+                primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     # one to one from Host to User
@@ -50,7 +50,8 @@ class UserHost(Host):
 
 
 class ServerHost(Host):
-    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+                primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'server_host'}
 
     name = Column(String(255))
@@ -61,7 +62,8 @@ class ServerHost(Host):
 
 class Switch(Host):
     __mapper_args__ = {'polymorphic_identity': 'switch'}
-    id = Column(Integer, ForeignKey('host.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+                primary_key=True)
 
     name = Column(String(127), nullable=False)
 

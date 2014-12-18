@@ -12,7 +12,7 @@ from pycroft.lib.finance import import_journal_csv, get_current_semester, \
 from pycroft.model.finance import FinanceAccount, Journal, JournalEntry, \
     Transaction
 from datetime import date, timedelta
-import pkgutil
+import pkgutil, StringIO
 
 class Test_010_Journal(FixtureDataTestBase):
 
@@ -43,7 +43,9 @@ class Test_010_Journal(FixtureDataTestBase):
         """
         This test should verify that the csv import works as expected.
         """
-        f = pkgutil.get_data(__package__, "example.csv")
+        data = pkgutil.get_data(__package__, "data_test_finance.csv")
+        f = StringIO.StringIO(data)
+
         import_journal_csv(f, date(2013, 1, 5))
 
         journal = (Journal.q
@@ -80,6 +82,7 @@ class Test_010_Journal(FixtureDataTestBase):
         self.assertEquals(entry.valid_date, date(2013, 1, 10))
 
         JournalEntry.q.delete()
+        session.session.commit()
 
     def test_0020_get_current_semester(self):
         try:

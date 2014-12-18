@@ -45,14 +45,17 @@ class Test_010_UserLogEntry(FixtureDataTestBase):
         session.session.commit()
 
     def test_0020_delete_user_log_entry(self):
-        del_user_log_entry = delete_log_entry(
-            UserLogEntryData.dummy_log_entry1.id)
+        test_user_log_entry = UserLogEntry.q.filter_by(
+            message=UserLogEntryData.dummy_log_entry1.message).one()
+        del_user_log_entry = delete_log_entry(test_user_log_entry.id)
 
         self.assertIsNone(UserLogEntry.q.get(del_user_log_entry.id))
 
     def test_0025_delete_wrong_user_log_entry(self):
+        test_user_log_entry = UserLogEntry.q.filter_by(
+            message=UserLogEntryData.dummy_log_entry1.message).one()
         self.assertRaises(ValueError, delete_log_entry,
-                          UserLogEntryData.dummy_log_entry1.id + 100)
+                          test_user_log_entry.id + 100)
 
 
 class Test_020_MalformedTypes(FixtureDataTestBase):
@@ -110,11 +113,15 @@ class Test_030_RoomLogEntry(FixtureDataTestBase):
         session.session.commit()
 
     def test_0020_delete_room_log_entry(self):
+        test_room_log_entry = RoomLogEntry.q.filter_by(
+            message=RoomLogEntryData.dummy_log_entry1.message).one()
         del_room_log_entry = delete_log_entry(
-            RoomLogEntryData.dummy_log_entry1.id)
+            test_room_log_entry.id)
 
         self.assertIsNone(RoomLogEntry.q.get(del_room_log_entry.id))
 
     def test_0025_delete_wrong_room_log_entry(self):
+        test_room_log_entry = RoomLogEntry.q.filter_by(
+            message=RoomLogEntryData.dummy_log_entry1.message).one()
         self.assertRaises(ValueError, delete_log_entry,
-                          RoomLogEntryData.dummy_log_entry1.id + 100)
+                          test_room_log_entry.id + 100)

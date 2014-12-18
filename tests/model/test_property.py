@@ -15,7 +15,7 @@ class PropertyDataTestBase(FixtureDataTestBase):
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
-        self.user = user.User.q.get(1)
+        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
         self.property_group1 = property.PropertyGroup.q.filter_by(
             name=PropertyGroupData.group1.name).one()
         self.property_group2 = property.PropertyGroup.q.filter_by(

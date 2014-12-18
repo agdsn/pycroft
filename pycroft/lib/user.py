@@ -485,7 +485,7 @@ def is_back(user, processor):
     subnet = host.select_subnet_for_ip(ip_address, subnets)
 
     for user_host in user.user_hosts:
-        session.session.ad(Ip(
+        session.session.add(Ip(
             address=ip_address,
             subnet=subnet,
             net_device=user_host.user_net_device

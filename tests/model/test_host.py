@@ -117,7 +117,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.address = None
         self.assertIsNone(ip_addr.address)
 
-        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
+        self.assertRaises(IntegrityError, session.session.commit)
 
     def test_0040_delete_subnet(self):
         subnet = dormitory.Subnet.q.first()
@@ -131,7 +131,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.subnet = None
         self.assertIsNone(ip_addr.subnet)
 
-        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, session.session.commit)
+        self.assertRaises(IntegrityError, session.session.commit)
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
@@ -170,7 +170,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def commit():
             session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, commit)
+        self.assertRaises(IntegrityError, commit)
 
     def test_0030_missing_ip(self):
         subnet = dormitory.Subnet.q.first()
@@ -182,7 +182,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def commit():
             session.session.add(ip_addr)
             session.session.commit()
-        self.assertRaisesRegexp(Exception, REGEX_NOT_NULL_CONSTRAINT, commit)
+        self.assertRaises(IntegrityError, commit)
 
     def test_0040_wrong_subnet(self):
         subnets = dormitory.Subnet.q.all()
@@ -213,25 +213,30 @@ class Test_060_Cascades(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData]
 
     def test_0010_cascade_on_delete_ip(self):
-        session.session.delete(host.Ip.q.get(1))
+        test_ip = host.Ip.q.filter_by(address=IpData.dummy_ip.address).one()
+        session.session.delete(test_ip)
         session.session.commit()
         self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_netdevice(self):
-        session.session.delete(host.NetDevice.q.get(1))
+        test_net_device = host.NetDevice.q.filter_by(
+            mac=UserNetDeviceData.dummy_device.mac).one()
+        session.session.delete(test_net_device)
         session.session.commit()
         self.assertIsNone(host.Ip.q.first())
         self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_host(self):
-        session.session.delete(host.Host.q.get(1))
+        test_host = host.UserHost.q.first()
+        session.session.delete(test_host)
         session.session.commit()
         self.assertIsNone(host.NetDevice.q.first())
         self.assertIsNone(host.Ip.q.first())
         self.assertIsNone(accounting.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_user(self):
-        session.session.delete(user.User.q.get(1))
+        test_user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        session.session.delete(test_user)
         session.session.commit()
         self.assertIsNone(host.Host.q.first())
         self.assertIsNone(host.NetDevice.q.first())

@@ -23,7 +23,6 @@ class RoomData(DataSet):
 
 class UserData(DataSet):
     class dummy_user1:
-        id = 1
         login = "test"
         name = "John Doe"
         registration_date = datetime.utcnow()
@@ -32,7 +31,6 @@ class UserData(DataSet):
 
 class UserLogEntryData(DataSet):
     class dummy_log_entry1:
-        id = 1
         message = "dummy_user_log_entry"
         timestamp = datetime.utcnow()
         author = UserData.dummy_user1
@@ -41,7 +39,6 @@ class UserLogEntryData(DataSet):
 
 class RoomLogEntryData(DataSet):
     class dummy_log_entry1:
-        id = 1
         message = "dummy_room_log_entry"
         timestamp = datetime.utcnow()
         author = UserData.dummy_user1
