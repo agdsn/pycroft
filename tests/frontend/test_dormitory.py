@@ -26,23 +26,10 @@ class Test_010_Dormitory(FrontendDataTestBase):
             "/dormitories/show/{}".format(DormitoryData.dummy_house1.id),
             "dormitories/dormitory_show.html")
 
-    def test_0030_create_dormitory(self):
-        self.assert_template_get_request("/dormitories/create",
-                                         "dormitories/dormitory_create.html")
-
     def test_0040_show_room(self):
         self.assert_template_get_request(
             "/dormitories/room/show/{}".format(RoomData.dummy_room1.id),
             "dormitories/room_show.html")
-
-    def test_0050_create_room(self):
-        self.assert_template_get_request(
-            "/dormitories/room/create", "dormitories/dormitory_create.html")
-
-    def test_0060_delete_room(self):
-        self.assertRedirects(self.client.get(
-            "/dormitories/room/delete/{}".format(RoomData.dummy_room2.id)),
-            url_for("dormitories.overview"))
 
     def test_0070_dormitory_levels(self):
         self.assert_template_get_request(

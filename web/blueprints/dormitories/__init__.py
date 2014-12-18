@@ -15,7 +15,6 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import dormitory
-from pycroft.lib.dormitory import create_dormitory, create_room, delete_room
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
@@ -47,27 +46,6 @@ def dormitory_show(dormitory_id):
         page_title=u"Wohnheim " + dormitory.short_name, rooms=rooms_list)
 
 
-@bp.route('/create', methods=['GET', 'POST'])
-@nav.navigate(u"Neues Wohnheim")
-@access.require('dormitories_change')
-def dormitory_create():
-    form = DormitoryForm()
-    if form.validate_on_submit():
-        create_dormitory(short_name=form.short_name.data,
-            street=form.street.data, number=form.number.data)
-        flash(u'Wohnheim angelegt', 'success')
-        return redirect(url_for('.dormitories'))
-    return render_template('dormitories/dormitory_create.html', form=form)
-
-
-@bp.route('/room/delete/<room_id>')
-@access.require('dormitories_change')
-def room_delete(room_id):
-    delete_room(room_id)
-    flash(u'Raum gelöscht', 'success')
-    return redirect(url_for('.overview'))
-
-
 @bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
 @access.require('dormitories_show')
 def room_show(room_id):
@@ -89,22 +67,6 @@ def room_show(room_id):
         room=room,
         room_log=room_log_list,
         form=form)
-
-
-@bp.route('/room/create', methods=['GET', 'POST'])
-@nav.navigate(u"Neuer Raum")
-@access.require('dormitories_change')
-def room_create():
-    form = RoomForm()
-    if form.validate_on_submit():
-        room = create_room(
-            number=form.number.data,
-            level=form.level.data,
-            inhabitable=form.inhabitable.data,
-            dormitory=form.dormitory_id.data)
-        flash(u'Raum angelegt', 'success')
-        return redirect(url_for('.room_show', room_id=room.id))
-    return render_template('dormitories/dormitory_create.html', form=form)
 
 
 # ToDo: Review this!

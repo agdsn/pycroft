@@ -122,10 +122,7 @@ class Test_040_Permissions_User(FrontendDataTestBase):
 
         for url in (
             url_for('dormitories.dormitory_show', dormitory_id=1),
-            url_for('dormitories.dormitory_create'),
-            url_for('dormitories.room_delete', room_id=1),
             url_for('dormitories.room_show', room_id=1),
-            url_for('dormitories.room_create'),
             url_for('dormitories.dormitory_levels', dormitory_id=1),
             url_for('dormitories.dormitory_level_rooms', dormitory_id=1, level=1)
         ):
