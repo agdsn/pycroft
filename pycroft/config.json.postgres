@@ -1,5 +1,5 @@
 {
-    "db_connection_string" : "postgresql+psycopg2:///pycroft.db?host=/var/run/postgresql",
+    "db_connection_string" : "postgresql+psycopg2:///pycroft?host=/var/run/postgresql",
     "file_upload": {
         "max_file_size": "67108864",
         "temp_dir": "/tmp"

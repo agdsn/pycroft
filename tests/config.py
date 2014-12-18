@@ -15,7 +15,7 @@ class AttrDict(dict):
 
 def get_database_uri():
     user = getpass.getuser()
-    postgres_test_uri = ("postgresql+psycopg2:///tests.db"
+    postgres_test_uri = ("postgresql+psycopg2:///pycroft_tests"
                          "?host=/var/run/postgresql")
     sqlite_test_uri = "sqlite:///:memory:"
     if user not in ['vagrant']:
