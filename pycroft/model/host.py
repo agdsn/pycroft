@@ -35,8 +35,9 @@ class Host(ModelBase):
         nullable=True)
 
     # many to one from Host to Room
-    room = relationship(dormitory.Room, backref=backref("hosts"))
-    room_id = Column(Integer, ForeignKey("room.id"), nullable=True)
+    room = relationship(dormitory.Room, backref=backref("hosts", cascade="all"))
+    room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
+                     nullable=True)
 
 
 class UserHost(Host):
@@ -215,8 +216,11 @@ class Ip(ModelBase):
         backref=backref("ips"),
         viewonly=True)
 
-    subnet_id = Column(Integer, ForeignKey("subnet.id"), nullable=False)
-    subnet = relationship("Subnet", backref=backref("ips"), lazy='joined')
+    subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
+                       nullable=False)
+    subnet = relationship("Subnet",
+                          backref=backref("ips", cascade="all, delete-orphan"),
+                          lazy='joined')
 
     def change_ip(self, ip, subnet):
         self.subnet = None

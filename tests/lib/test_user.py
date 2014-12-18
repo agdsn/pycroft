@@ -23,12 +23,24 @@ class Test_010_User_Move(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
-        self.user = user.User.q.get(1)
-        self.processing_user = user.User.q.get(2)
-        self.old_room = dormitory.Room.q.get(1)
-        self.new_room_other_dormitory = dormitory.Room.q.get(2)
-        self.new_room_same_dormitory = dormitory.Room.q.get(3)
-        self.new_patch_port = port.PatchPort.q.get(2)
+        self.user = user.User.q.filter_by(
+            login=UserData.dummy_user1.login).one()
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.dummy_user2.login).one()
+        self.old_room = self.user.room #dormitory.Room.q.get(1)
+        self.same_dormitory = dormitory.Dormitory.q.filter_by(
+            short_name=DormitoryData.dummy_house1.short_name).one()
+        assert self.same_dormitory == self.old_room.dormitory
+        self.other_dormitory = dormitory.Dormitory.q.filter_by(
+            short_name=DormitoryData.dummy_house2.short_name).one()
+
+        self.new_room_other_dormitory = dormitory.Room.q.filter_by(
+            dormitory=self.other_dormitory).one()
+        self.new_room_same_dormitory = dormitory.Room.q.filter_by(
+            dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
+            level=RoomData.dummy_room3.level, inhabitable=True).one()
+        self.new_patch_port = port.PatchPort.q.filter_by(
+            name=PatchPortData.dummy_patch_port2.name).one()
 
     def tearDown(self):
         #TODO don't delete all log entries but the user log entries
@@ -58,13 +70,21 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
-        self.processing_user = user.User.q.get(1)
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.dummy_user1.login).one()
 
 
     def tearDown(self):
         #TODO don't delete all log entries but the user log entries
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
+
+        #host.UserHost.q.delete()
+        #user.User.q.delete()
+        #port.PatchPort.q.delete()
+        #dormitory.Room.q.delete()
+        #host.Ip.q.delete()
+
         session.session.commit()
         super(Test_020_User_Move_In, self).tearDown()
 
@@ -131,7 +151,8 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
-        self.processing_user = user.User.q.get(1)
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.dummy_user2.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -178,7 +199,8 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
-        self.user = user.User.q.get(2)
+        self.user = user.User.q.filter_by(
+            login=UserData.dummy_user2.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -206,7 +228,8 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
-        self.user = user.User.q.get(2)
+        self.user = user.User.q.filter_by(
+            login=UserData.dummy_user2.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -232,7 +255,8 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_070_User_Move_Out_Tmp, self).setUp()
-        self.processing_user = user.User.q.get(1)
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.dummy_user1.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -288,6 +312,7 @@ class Test_080_User_Block(FixtureDataTestBase):
     def tearDown(self):
         logging.LogEntry.q.delete()
         property.Membership.q.delete()
+        session.session.commit()
         super(Test_080_User_Block, self).tearDown()
 
     def test_0010_user_has_no_internet(self):
@@ -344,7 +369,8 @@ class Test_100_User_has_property(FixtureDataTestBase):
     datasets = [PropertyData, PropertyGroupData, UserData, MembershipData]
 
     def test_0010_positive_test(self):
-        test_user = user.User.q.get(UserData.dummy_user2.id)
+        test_user = user.User.q.filter_by(
+            login=UserData.dummy_user2.login).one()
 
         self.assertTrue(test_user.has_property("dummy"))
         self.assertIsNotNone(
@@ -354,7 +380,8 @@ class Test_100_User_has_property(FixtureDataTestBase):
             ).first())
 
     def test_0020_negative_test(self):
-        test_user = user.User.q.get(UserData.dummy_user1.id)
+        test_user = user.User.q.filter_by(
+            login=UserData.dummy_user1.login).one()
 
         self.assertFalse(test_user.has_property("dummy"))
         self.assertIsNone(

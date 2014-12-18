@@ -40,10 +40,11 @@ class User(ModelBase, UserMixin):
     )
 
     # many to one from User to Room
-    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
+                     nullable=True)
     room = relationship(
         "Room",
-        backref=backref("users", order_by='User.id')
+        backref=backref("users", order_by='User.id', cascade="all")
     )
 
     traffic_groups = relationship("TrafficGroup",
