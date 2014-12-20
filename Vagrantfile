@@ -11,7 +11,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  config.vm.synced_folder "..", "/pycroft"
+  config.vm.synced_folder ".", "/pycroft"
+
+  # Don't create /vagrant
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   #pycroft web and database server, built automatically
   config.vm.define "webdb", primary: true do |webdb|
@@ -20,7 +23,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       vb.name = "pycroft-web-db"
     end
     webdb.vm.network :forwarded_port, host:5001, guest: 5000
-    webdb.vm.provision :shell, path: "webdb-provision.sh"
+    webdb.vm.provision :shell, path: "vagrant/webdb-provision.sh"
   end
 
   #Required once DB and web server are separate:

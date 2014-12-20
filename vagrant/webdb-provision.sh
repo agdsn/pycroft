@@ -5,7 +5,6 @@
 
 #TODO: think of smart way to source provision.cfg, so that it can be shared across scripts
 PROJDIR="/pycroft"
-VAGRANTDIR="/vagrant"
 USER="vagrant" #user that runs pycroft
 DBNAME="pycroft"
 TESTS_DBNAME="pycroft_tests"
@@ -33,7 +32,7 @@ fi
 if cd $PROJDIR && [[ $(git config --get remote.origin.url) == *Pycroft* ]]; then
     echo "Pycroft git repo found."
 else
-    echo "Error: Please make sure we are in <pycroft-git-repo>/vagrant"
+    echo "Error: Please make sure we are in <pycroft-git-repo>"
     exit 1
 fi
 
