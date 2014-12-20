@@ -22,7 +22,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     webdb.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-web-db"
     end
-    webdb.vm.network :forwarded_port, host:5001, guest: 5000
+    webdb.vm.network :forwarded_port, host:5000, guest: 5000,
+                     host_ip: "127.0.0.1", auto_correct: true
     webdb.vm.provision :shell, path: "vagrant/webdb-provision.sh"
   end
 
@@ -41,7 +42,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     web.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-web"
     end
-    web.vm.network :forwarded_port, host:5001, guest: 5000
+    web.vm.network :forwarded_port, host:5000, guest: 5000,
+                   host_ip: "127.0.0.1", auto_correct: true
     web.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
   end
 
@@ -51,13 +53,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     db.vm.provider "virtualbox" do |vb|
       vb.name = "pycroft-db"
     end
-    db.vm.network :forwarded_port, host:5432, guest: 5432
+    db.vm.network :forwarded_port, host:5432, guest: 5432,
+                  host_ip: "127.0.0.1"
     db.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
   end
-
-  #config.vm.box = "chef/debian-7.6"
-  #config.vm.provision :shell, path: "provision.sh"
-  #config.vm.network :forwarded_port, host:5001, guest: 5000
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
