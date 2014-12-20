@@ -36,6 +36,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #  your network.
   #  config.vm.network "public_network"  
 
+=begin
   #pycroft web server, build automatically
   config.vm.define "web", autostart: false do |web|
     web.vm.box = "chef/debian-7.6"
@@ -57,6 +58,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                   host_ip: "127.0.0.1"
     db.vm.provision :shell, inline: "echo Not implemented yet...; exit 1"
   end
+=end
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
