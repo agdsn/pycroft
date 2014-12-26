@@ -27,7 +27,7 @@ from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
 from pycroft.lib.property import create_membership
-from pycroft.lib.logging import create_user_log_entry
+from pycroft.lib.logging import log_user_event
 from pycroft.lib.finance import get_current_semester, user_has_paid
 
 
@@ -175,10 +175,9 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     setup_user_finance_account(new_user, processor)
 
-    move_in_user_log_entry = create_user_log_entry(
+    move_in_user_log_entry = log_user_event(
         author=processor,
         message=conf["log_message"],
-        timestamp=now,
         user=new_user
     )
 
@@ -211,7 +210,7 @@ def move(user, dormitory, level, room_number, processor):
     user.room = new_room
 
     now = datetime.utcnow()
-    create_user_log_entry(
+    log_user_event(
         author=processor,
         message=config["move"]["log_message"].format(
             from_room=old_room, to_room=new_room),
@@ -232,10 +231,11 @@ def move(user, dormitory, level, room_number, processor):
 
             ip_addr.change_ip(new_ip, new_subnet)
 
-            create_user_log_entry(author=processor,
+            log_user_event(
+                author=processor,
                 message=config["move"]["ip_change_log_message"].format(
                     old_ip=old_ip, new_ip=new_ip),
-                timestamp=now, user=user)
+                user=user)
 
     #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
     #moves the host in the new room and assign the belonging net_device to the new patch_port
@@ -257,9 +257,10 @@ def edit_name(user, name, processor):
     if len(name):
         user.name = name
 
-        create_user_log_entry(author=processor,
+        log_user_event(
+            author=processor,
             message=u"Nutzer {} umbenannt in {}".format(oldName, name),
-            timestamp=datetime.utcnow(), user=user)
+            user=user)
 
     return user
 
@@ -277,9 +278,10 @@ def edit_email(user, email, processor):
     if len(email):
         user.email = email
 
-        create_user_log_entry(author=processor,
+        log_user_event(
+            author=processor,
             message=u"E-Mail-Adresse von {} auf {} geändert.".format(oldEmail, email),
-            timestamp=datetime.utcnow(), user=user)
+            user=user)
 
     return user
 
@@ -361,7 +363,7 @@ def block(user, reason, processor, date=None):
         log_message = config["block"]["log_message_without_enddate"].format(
             reason=reason)
 
-    create_user_log_entry(message=log_message, timestamp=now,
+    log_user_event(message=log_message, timestamp=now,
                           author=processor, user=user)
 
     return user
@@ -397,9 +399,8 @@ def move_out(user, date, comment, processor):
             comment=comment
         )
 
-    create_user_log_entry(
+    log_user_event(
         message=log_message,
-        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )
@@ -451,9 +452,8 @@ def move_out_tmp(user, date, comment, processor):
             comment=comment
         )
 
-    create_user_log_entry(
+    log_user_event(
         message=log_message,
-        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )
@@ -491,9 +491,8 @@ def is_back(user, processor):
             net_device=user_host.user_net_device
         ))
 
-    create_user_log_entry(
+    log_user_event(
         message=config["move_out_tmp"]["log_message_back"],
-        timestamp=datetime.utcnow(),
         author=processor,
         user=user
     )

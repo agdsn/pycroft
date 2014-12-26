@@ -14,7 +14,6 @@ class DormitoryData(DataSet):
 
 class RoomData(DataSet):
     class dummy_room1:
-        id = 1
         number = "1"
         level = 1
         inhabitable = True

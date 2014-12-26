@@ -1,127 +1,69 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime
-from sqlalchemy import Column, ForeignKey
-from sqlalchemy.types import Integer
+from datetime import datetime, timedelta
 
 from tests import FixtureDataTestBase
 from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData, \
     RoomData, RoomLogEntryData
 
-from pycroft.model.logging import UserLogEntry, LogEntry, RoomLogEntry
+from pycroft.model.logging import RoomLogEntry
 from pycroft.model.user import User
 from pycroft.model.dormitory import Room
 from pycroft.model import session
 
-from pycroft.lib.logging import create_user_log_entry, delete_log_entry, \
-    _create_log_entry, create_room_log_entry
+from pycroft.lib.logging import log_user_event, log_room_event
 
 
-class Test_010_UserLogEntry(FixtureDataTestBase):
+class LogTestBase(FixtureDataTestBase):
+    message = "test_message"
+
+    def setUp(self):
+        super(LogTestBase, self).setUp()
+        self.user = User.q.filter_by(login=UserData.dummy_user1.login).one()
+
+
+class Test_010_UserLogEntry(LogTestBase):
     datasets = [UserData, UserLogEntryData]
 
     def test_0010_create_user_log_entry(self):
-        message = "test_message"
-        timestamp = datetime.utcnow()
-        author = User.q.first()
-        user = User.q.first()
+        now = datetime.utcnow()
 
-        user_log_entry = create_user_log_entry(message=message,
-                                               timestamp=timestamp,
-                                               author=author,
-                                               user=user)
+        user_log_entry = log_user_event(message=self.message,
+                                        author=self.user,
+                                        user=self.user)
 
-        self.assertIsNotNone(UserLogEntry.q.get(user_log_entry.id))
+        self.assertEqual(user_log_entry.message, self.message)
+        self.assertAlmostEqual(user_log_entry.timestamp, now,
+                               delta=timedelta(seconds=1))
+        self.assertEqual(user_log_entry.author, self.user)
+        self.assertEqual(user_log_entry.user, self.user)
 
-        db_user_log_entry = UserLogEntry.q.get(user_log_entry.id)
-
-        self.assertEqual(db_user_log_entry.message, message)
-        self.assertEqual(db_user_log_entry.timestamp, timestamp)
-        self.assertEqual(db_user_log_entry.author, author)
-        self.assertEqual(db_user_log_entry.user, user)
-
-        session.session.delete(db_user_log_entry)
-        session.session.commit()
-
-    def test_0020_delete_user_log_entry(self):
-        test_user_log_entry = UserLogEntry.q.filter_by(
-            message=UserLogEntryData.dummy_log_entry1.message).one()
-        del_user_log_entry = delete_log_entry(test_user_log_entry.id)
-
-        self.assertIsNone(UserLogEntry.q.get(del_user_log_entry.id))
-
-    def test_0025_delete_wrong_user_log_entry(self):
-        test_user_log_entry = UserLogEntry.q.filter_by(
-            message=UserLogEntryData.dummy_log_entry1.message).one()
-        self.assertRaises(ValueError, delete_log_entry,
-                          test_user_log_entry.id + 100)
-
-
-class Test_020_MalformedTypes(FixtureDataTestBase):
-    datasets = [UserData]
-
-    class MalformedLogEntry(LogEntry):
-        id = Column(Integer, ForeignKey("log_entry.id"), primary_key=True)
-        __mapper_args__ = {'polymorphic_identity': 'malformed_log_entry'}
-
-    def test_0010_create_malformed_log_entry(self):
-        self.assertRaises(ValueError, _create_log_entry, 'malformed_log_entry',
-                          id=100)
-
-    def test_0020_delete_malformed_log_entry(self):
-        message = "malformed_type"
-        timestamp = datetime.utcnow()
-        author = User.q.first()
-
-        malformed_log_entry = Test_020_MalformedTypes.MalformedLogEntry(
-            message=message, timestamp=timestamp, author=author, id=10000)
-
-        session.session.add(malformed_log_entry)
-        session.session.commit()
-
-        self.assertRaises(ValueError, delete_log_entry, malformed_log_entry.id)
-
-        session.session.delete(malformed_log_entry)
+        session.session.delete(user_log_entry)
         session.session.commit()
 
 
-class Test_030_RoomLogEntry(FixtureDataTestBase):
+class Test_020_RoomLogEntry(LogTestBase):
     datasets = [RoomData, RoomLogEntryData]
 
     def test_0010_create_room_log_entry(self):
-        message = "test_message"
-        timestamp = datetime.utcnow()
-        author = User.q.first()
-        room = Room.q.first()
+        now = datetime.utcnow()
+        room = Room.q.filter_by(number=RoomData.dummy_room1.number,
+                                level=RoomData.dummy_room1.level).one()
 
-        room_log_entry = create_room_log_entry(message=message,
-                                               timestamp=timestamp,
-                                               author=author,
-                                               room=room)
+        room_log_entry = log_room_event(message=self.message,
+                                        author=self.user,
+                                        room=room)
 
         self.assertIsNotNone(RoomLogEntry.q.get(room_log_entry.id))
 
         db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
 
-        self.assertEqual(db_room_log_entry.message, message)
-        self.assertEqual(db_room_log_entry.timestamp, timestamp)
-        self.assertEqual(db_room_log_entry.author, author)
+        self.assertEqual(db_room_log_entry.message, self.message)
+        self.assertAlmostEqual(room_log_entry.timestamp, now,
+                               delta=timedelta(seconds=1))
+        self.assertEqual(db_room_log_entry.author, self.user)
         self.assertEqual(db_room_log_entry.room, room)
 
         session.session.delete(db_room_log_entry)
         session.session.commit()
-
-    def test_0020_delete_room_log_entry(self):
-        test_room_log_entry = RoomLogEntry.q.filter_by(
-            message=RoomLogEntryData.dummy_log_entry1.message).one()
-        del_room_log_entry = delete_log_entry(
-            test_room_log_entry.id)
-
-        self.assertIsNone(RoomLogEntry.q.get(del_room_log_entry.id))
-
-    def test_0025_delete_wrong_room_log_entry(self):
-        test_room_log_entry = RoomLogEntry.q.filter_by(
-            message=RoomLogEntryData.dummy_log_entry1.message).one()
-        self.assertRaises(ValueError, delete_log_entry,
-                          test_room_log_entry.id + 100)
