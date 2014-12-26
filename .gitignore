@@ -8,6 +8,6 @@
 .idea/inspectionProfiles/Project_Default.xml
 .idea/inspectionProfiles/profiles_settings.xml
 doc/_build
-vagrant/.vagrant
+.vagrant
 pycroft/config.json
 web/static/libs/**
