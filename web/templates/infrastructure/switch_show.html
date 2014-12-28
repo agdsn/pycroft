@@ -34,11 +34,6 @@
                 {%- endfor %}
             </tbody>
         </table></div>
-        {% if current_user is privileged_for('infrastructure_change') %}
-        <p>
-            <a class="btn btn-primary" href="{{url_for(".switch_port_create", switch_id = switch.id)}}">Neuer Switchport</a>
-        </p>
-        {% endif %}
     </section>
 {% endblock %}
 
