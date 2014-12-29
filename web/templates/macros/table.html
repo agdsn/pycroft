@@ -1,0 +1,42 @@
+{#
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% macro item_cols(attribute, title, width=0) %}
+    <th data-field="{{ attribute }}" data-sortable="true"
+            {% if width in range(1, 12) %} class="col-sm-{{ width }}"{% endif %}>
+        {{ title }}
+    </th>
+{% endmacro %}
+
+{% macro item_table(table_id, data_url, display_columns, actions=False) %}
+    <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
+        {% if caller %}
+            {{ caller() }}
+        {% endif %}
+    </div>
+    <table id="{{ table_id }}" class="table table-striped"
+           data-toggle="table"
+           data-cache="false"
+           data-url="{{ data_url }}"
+           data-response-handler="responseHandler"
+           data-search="true"
+           data-pagination="true"
+           data-toolbar="#{{ table_id }}-toolbar">
+        <thead>
+        <tr>
+            {% for col in display_columns %}
+                {% if col|length == 2 %}
+                    {{ item_cols(col[0], col[1]) }}
+                {% elif col|length == 3 %}
+                    {{ item_cols(col[0], col[1], col[2]) }}
+                {% endif %}
+            {% endfor %}
+            {% if actions %}
+                <th data-field="actions" data-formatter="actionFormatter" data-align="right">Aktionen</th>
+            {% endif %}
+        </tr>
+        </thead>
+    </table>
+{% endmacro %}
