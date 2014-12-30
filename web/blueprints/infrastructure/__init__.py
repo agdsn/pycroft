@@ -11,7 +11,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for, jsonify
+from flask.json import dumps
 from pycroft.helpers import host
 from pycroft.model import session
 from pycroft.model.host import Switch, Host
@@ -204,6 +205,28 @@ def switch_show(switch_id):
     return render_template('infrastructure/switch_show.html',
         page_title=u"Switch: " + switch.name,
         switch=switch, switch_ports=switch_port_list)
+
+
+@bp.route('/switch/show/<int:switch_id>/json')
+def switch_show_json(switch_id):
+    switch = Switch.q.get(switch_id)
+    if not switch:
+        return "{}"
+    switch_port_list = switch.ports
+    switch_port_list = host.sort_ports(switch_port_list)
+    return jsonify(items=map(
+        lambda port: {
+            "portname": port.name,
+            "room": '<a href="{}">{}-{}</a>'.format(
+                url_for("dormitories.room_show",
+                        room_id=port.patch_port.room.id),
+                port.patch_port.room.level,
+                port.patch_port.room.number
+            )
+        },
+        switch_port_list
+    ))
+
 
 @bp.route('/vlans')
 @nav.navigate(u"VLANs")

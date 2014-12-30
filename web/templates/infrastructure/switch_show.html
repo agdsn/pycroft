@@ -5,6 +5,7 @@
 #}
 {% extends "layout.html" %}
 {% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
 
 {% block content %}
     <section>
@@ -17,26 +18,10 @@
         </dl>
     </section>
     <section>
-        <h2>Switchports</h2>
-        <div id="tbl_switchports"><table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Raum</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for switch_port in switch_ports -%}
-                <tr>
-                    <td>{{ switch_port.name }}</td>
-                    <td><a href="{{ url_for("dormitories.room_show", room_id=switch_port.patch_port.room.id) }}">{{ switch_port.patch_port.room.level }}-{{ switch_port.patch_port.room.number }}</a></td>
-                </tr>
-                {%- endfor %}
-            </tbody>
-        </table></div>
-    </section>
-{% endblock %}
-
-{% block page_script %}
-{{ pagination.init_sorting('tbl_switchports', 2, true) }}
+        <h2>Ports</h2>
+        {% call tbl.item_table(
+            'switches',
+             url_for('infrastructure.switch_show_json', switch_id=switch.id),
+            [("portname", "Name", 2), ("room", "Raum", 10)]
+        ) %}{% endcall %}
 {% endblock %}
