@@ -11,7 +11,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, redirect, render_template, url_for, jsonify
+from flask import Blueprint, flash, redirect, render_template, url_for, jsonify, \
+    abort
 from flask.json import dumps
 from pycroft.helpers import host
 from pycroft.model import session
@@ -200,18 +201,16 @@ def switch_show(switch_id):
     if not switch:
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
-    switch_port_list = switch.ports
-    switch_port_list = host.sort_ports(switch_port_list)
     return render_template('infrastructure/switch_show.html',
-        page_title=u"Switch: " + switch.name,
-        switch=switch, switch_ports=switch_port_list)
+                           page_title=u"Switch: " + switch.name,
+                           switch=switch)
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
 def switch_show_json(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
-        return "{}"
+        abort(404)
     switch_port_list = switch.ports
     switch_port_list = host.sort_ports(switch_port_list)
     return jsonify(items=map(
