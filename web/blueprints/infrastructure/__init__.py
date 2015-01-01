@@ -217,12 +217,16 @@ def switch_show_json(switch_id):
     return jsonify(items=map(
         lambda port: {
             "portname": port.name,
-            "room": '<a href="{}">{}-{}</a>'.format(
-                url_for("dormitories.room_show",
-                        room_id=port.patch_port.room.id),
-                port.patch_port.room.level,
-                port.patch_port.room.number
-            )
+            "room": {
+                "href": url_for(
+                    "dormitories.room_show",
+                    room_id=port.patch_port.room.id
+                ),
+                "title": "{}-{}".format(
+                    port.patch_port.room.level,
+                    port.patch_port.room.number
+                )
+            }
         },
         switch_port_list
     ))

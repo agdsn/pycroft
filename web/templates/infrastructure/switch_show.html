@@ -1,11 +1,24 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 {% import "macros/pagination.html" as pagination %}
 {% import "macros/table.html" as tbl %}
+
+{% set cols = [
+    {
+        'name': 'portname',
+        'title': "Name",
+        'width': 2
+    }, {
+        'name': 'room',
+        'title': "Raum",
+        'formatter': "linkFormatter",
+        'width': 10
+    }
+] %}
 
 {% block content %}
     <section>
@@ -22,6 +35,6 @@
         {% call tbl.item_table(
             'switches',
              url_for('infrastructure.switch_show_json', switch_id=switch.id),
-            [("portname", "Name", 2), ("room", "Raum", 10)]
+             cols
         ) %}{% endcall %}
 {% endblock %}
