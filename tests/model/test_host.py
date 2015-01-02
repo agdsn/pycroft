@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
@@ -117,7 +117,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.address = None
         self.assertIsNone(ip_addr.address)
 
-        self.assertRaises(IntegrityError, session.session.commit)
+        self.assertRaisesInTransaction(IntegrityError, session.session.commit)
 
     def test_0040_delete_subnet(self):
         subnet = dormitory.Subnet.q.first()
@@ -131,7 +131,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         ip_addr.subnet = None
         self.assertIsNone(ip_addr.subnet)
 
-        self.assertRaises(IntegrityError, session.session.commit)
+        self.assertRaisesInTransaction(IntegrityError, session.session.commit)
 
 
 class Test_040_IpEvents(FixtureDataTestBase):

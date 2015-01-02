@@ -87,8 +87,7 @@ class Test_040_Property(FixtureDataTestBase):
         empty_group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.dummy_property_group2_empty.name).one()
 
-        self.assertRaises(ValueError, remove_property,
-                          self.group, self.property_name + "_fail")
-        self.assertRaises(ValueError, remove_property,
-                          empty_group,
-                          self.property_name)
+        self.assertRaisesInTransaction(ValueError, remove_property, self.group,
+                                       self.property_name + "_fail")
+        self.assertRaisesInTransaction(ValueError, remove_property, empty_group,
+                                       self.property_name)

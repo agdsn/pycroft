@@ -47,9 +47,9 @@ class Test_010_User_Move(FixtureDataTestBase):
         super(Test_010_User_Move, self).tearDown()
 
     def test_0010_moves_into_same_room(self):
-        self.assertRaises(AssertionError, UserHelper.move,
-            self.user, self.old_room.dormitory, self.old_room.level,
-            self.old_room.number, self.processing_user)
+        self.assertRaisesInTransaction(
+            AssertionError, UserHelper.move, self.user, self.old_room.dormitory,
+            self.old_room.level, self.old_room.number, self.processing_user)
 
     def test_0020_moves_into_other_dormitory(self):
         UserHelper.move(self.user, self.new_room_other_dormitory.dormitory,
