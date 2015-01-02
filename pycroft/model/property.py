@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -9,10 +9,9 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from datetime import datetime
-from itertools import chain
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm.collections import attribute_mapped_collection
-from pycroft.model.session import session
+from pycroft.model import session, functions
 from base import ModelBase
 from sqlalchemy import ForeignKey, and_, or_
 from sqlalchemy import Column, null
@@ -43,7 +42,7 @@ class Group(ModelBase):
 
 
 class Membership(ModelBase):
-    start_date = Column(DateTime, nullable=False)
+    start_date = Column(DateTime, nullable=False, default=functions.utcnow())
     end_date = Column(DateTime, nullable=True)
 
     # many to one from Membership to Group
@@ -60,14 +59,9 @@ class Membership(ModelBase):
         cascade="all, delete-orphan",
         order_by='Membership.id'))
 
-    def __init__(self, *args, **kwargs):
-        if self.start_date is None:
-            self.start_date = datetime.utcnow()
-        super(Membership, self).__init__(*args, **kwargs)
-
     @hybrid_property
     def active(self):
-        now = datetime.utcnow()
+        now = session.utcnow()
 
         if self.start_date > now:
             return False
@@ -77,7 +71,7 @@ class Membership(ModelBase):
 
     @active.expression
     def active(self):
-        now = session.now_sql()
+        now = functions.utcnow()
 
         return and_(self.start_date <= now,
                     or_(self.end_date == null(), self.end_date > now))
@@ -86,8 +80,9 @@ class Membership(ModelBase):
     def validate_end_date(self, _, value):
         if value is None:
             return value
-        assert value >= self.start_date, "you set end date before start date!"
         assert isinstance(value, datetime), "end_date should be a datetime"
+        if self.start_date is not None:
+            assert value >= self.start_date, "you set end date before start date!"
         return value
 
     @validates('start_date')
@@ -99,7 +94,7 @@ class Membership(ModelBase):
         return value
 
     def disable(self):
-        now = datetime.utcnow()
+        now = session.utcnow()
         if self.start_date > now:
             self.end_date = self.start_date
         else:
