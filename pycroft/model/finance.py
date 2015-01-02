@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -10,16 +10,17 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from datetime import datetime
 from itertools import imap
 from sqlalchemy.ext.hybrid import hybrid_property
 from base import ModelBase
 from sqlalchemy import ForeignKey, func, select
-from sqlalchemy import Table, Column
+from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Enum, Integer, Text, DateTime, String, Date
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy import event
+
+from .functions import utcnow
 
 
 class Semester(ModelBase):
@@ -128,8 +129,9 @@ class Transaction(ModelBase):
         nullable=True
     )
     author = relationship("User")
-    transaction_date = Column(DateTime, nullable=False, default=datetime.utcnow)
-    valid_date = Column(Date, nullable=False, default=datetime.utcnow)
+    transaction_date = Column(DateTime, nullable=False,
+                              default=utcnow(), onupdate=utcnow())
+    valid_date = Column(Date, nullable=False, default=utcnow())
 
     @property
     def is_balanced(self):

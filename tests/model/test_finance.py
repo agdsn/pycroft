@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model.finance import FinanceAccount, IllegalTransactionError, \
@@ -32,8 +32,7 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
     def create_transaction(self):
         return finance.Transaction(
             description=u"Transaction",
-            author=self.author,
-            transaction_date=datetime.utcnow()
+            author=self.author
         )
 
     def create_split(self, transaction, account, amount):
