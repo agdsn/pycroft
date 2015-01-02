@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -12,15 +12,16 @@
 """
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+
+from pycroft.model import session
+from pycroft.model.property import (
+    PropertyGroup, TrafficGroup, property_categories)
+from pycroft.lib.property import (
+    grant_property, deny_property, remove_property)
+from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
-from pycroft.model.property import PropertyGroup, TrafficGroup, \
-    property_categories
-from pycroft.lib.property import create_property_group, delete_property_group,\
-    create_traffic_group, delete_traffic_group, grant_property, deny_property,\
-    remove_property
 
-from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('properties', __name__, )
 access = BlueprintAccess(bp, ['groups_traffic_show', 'groups_show'])
@@ -42,8 +43,10 @@ def traffic_group_create():
     form = TrafficGroupForm()
     if form.validate_on_submit():
         # traffic limit in byte per seven days
-        group = create_traffic_group(name=form.name.data,
+        group = TrafficGroup(
+            name=form.name.data,
             traffic_limit=int(form.traffic_limit.data)*1024*1024*1024)
+        session.session.commit()
         message = u'Traffic Gruppe {0} angelegt'
         flash(message.format(group.name), 'success')
         return redirect(url_for('.traffic_groups'))
@@ -54,7 +57,9 @@ def traffic_group_create():
 @bp.route('/traffic_group/<group_id>/delete')
 @access.require('groups_traffic_change')
 def traffic_group_delete(group_id):
-    group = delete_traffic_group(group_id)
+    group = TrafficGroup.q.get(group_id)
+    session.session.delete(group)
+    session.session.commit()
     message = u'Traffic Gruppe {0} gelöscht'
     flash(message.format(group.name), 'success')
     return redirect(url_for('.traffic_groups'))
@@ -77,7 +82,8 @@ def property_groups():
 def property_group_create():
     form = PropertyGroupForm()
     if form.validate_on_submit():
-        group = create_property_group(name=form.name.data)
+        group = PropertyGroup(name=form.name.data)
+        session.session.commit()
         message = u'Eigenschaften Gruppe {0} angelegt.'
         flash(message.format(group.name), 'success')
         return redirect(url_for('.property_groups'))
@@ -90,6 +96,7 @@ def property_group_create():
 def property_group_grant_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
     grant_property(property_group, property_name)
+    session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} gewährt.'
     flash(message.format(property_name, property_group.name), 'success')
     return redirect(url_for('.property_groups'))
@@ -100,6 +107,7 @@ def property_group_grant_property(group_id, property_name):
 def property_group_deny_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
     deny_property(property_group, property_name)
+    session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} verboten.'
     flash(message.format(property_name, property_group.name), 'success')
     return redirect(url_for('.property_groups'))
@@ -110,6 +118,7 @@ def property_group_deny_property(group_id, property_name):
 def property_group_remove_property(group_id, property_name):
     group = PropertyGroup.q.get(group_id)
     remove_property(group, property_name)
+    session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} entfernt.'
     flash(message.format(property_name, group.name), 'success')
     return redirect(url_for('.property_groups'))
@@ -118,7 +127,9 @@ def property_group_remove_property(group_id, property_name):
 @bp.route('/property_group/<group_id>/delete')
 @access.require('groups_change')
 def property_group_delete(group_id):
-    group = delete_property_group(group_id)
+    group = PropertyGroup.q.get(group_id)
+    session.session.delete(group)
+    session.session.commit()
     message = u'Eigenschaften Gruppe {0} gelöscht'
     flash(message.format(group.name), 'success')
     return redirect(url_for('.property_groups'))
