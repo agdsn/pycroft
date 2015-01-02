@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -16,6 +16,7 @@ from functools import wraps
 from sqlalchemy.orm import create_session, scoped_session
 from sqlalchemy import create_engine, func
 
+from .functions import utcnow as utcnow_sql
 
 class DummySessionWrapper(object):
     def __getattr__(self, item):
@@ -106,3 +107,6 @@ def reinit_session(connection_string):
 
 
 session = DummySessionWrapper()
+
+def utcnow():
+    return session.query(utcnow_sql()).scalar()

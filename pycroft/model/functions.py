@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -10,7 +10,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import expression
 from sqlalchemy.sql.functions import max as sa_max
 from sqlalchemy.sql.functions import min as sa_min
-from sqlalchemy.types import Numeric, Integer
+from sqlalchemy.types import DateTime, Numeric, Integer
 
 
 class greatest(expression.FunctionElement):
@@ -26,6 +26,20 @@ class least(expression.FunctionElement):
 class sign(expression.FunctionElement):
     type = Integer()
     name = 'sign'
+
+
+class utcnow(expression.FunctionElement):
+    type = DateTime
+
+
+@compiles(utcnow, 'postgresql')
+def pg_utcnow(element, compiler, **kw):
+    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
+
+
+@compiles(utcnow, 'sqlite')
+def sqlite_utcnow(element, compiler, **kw):
+    return "STRFTIME('%Y-%m-%d %H:%M:%f', 'now')"
 
 
 @compiles(greatest)
