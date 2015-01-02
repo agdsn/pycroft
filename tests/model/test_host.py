@@ -74,7 +74,6 @@ class Test_030_IpModel(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def tearDown(self):
-        session.session.remove()
         host.Ip.q.delete()
         session.session.commit()
         super(Test_030_IpModel, self).tearDown()

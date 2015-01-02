@@ -177,6 +177,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             moved_from_division=False,
             already_paid_semester_fee=False
         )
+        session.session.commit()
 
         out_time = session.utcnow()
 
@@ -281,11 +282,13 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             moved_from_division=False,
             already_paid_semester_fee=False
         )
+        session.session.commit()
 
         out_time = session.utcnow()
         self.assertFalse(new_user.has_property("away"))
 
         UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
+        session.session.commit()
 
         # check for tmpAusgezogen group membership
         away_group = property.PropertyGroup.q.filter(
@@ -322,6 +325,7 @@ class Test_080_User_Block(FixtureDataTestBase):
         self.assertNotIn(verstoss, u.active_property_groups)
 
         blocked_user = UserHelper.block(u, u"test", u)
+        session.session.commit()
 
         self.assertFalse(blocked_user.has_property("internet"))
         self.assertIn(verstoss, blocked_user.active_property_groups)
@@ -340,6 +344,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
                                 date=datetime.utcnow(),
                                 comment='',
                                 processor=self.processing_user)
+        session.session.commit()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
