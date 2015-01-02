@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
@@ -18,10 +18,9 @@ def _create_log_entry(class_, message, author, timestamp=None, **kwargs):
     :param kwargs: the keyword arguments which will be passed to the constructor.
     :return: the newly created LogEntry.
     """
-    if timestamp is None:
-        timestamp = datetime.utcnow()
+    if timestamp is not None:
+        kwargs['timestamp'] = timestamp
     kwargs['message'] = message
-    kwargs['timestamp'] = timestamp
     kwargs['author'] = author
     entry = class_(**kwargs)
     session.session.add(entry)

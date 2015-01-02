@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -15,6 +15,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer, DateTime, Text, String
+from pycroft.model.functions import utcnow
 
 
 class LogEntry(ModelBase):
@@ -24,7 +25,7 @@ class LogEntry(ModelBase):
     # variably sized string
     message = Column(Text, nullable=False)
     # created
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=utcnow())
 
     # many to one from LogEntry to User
     author = relationship("User",
