@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -10,10 +10,10 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-
 from flask import Flask, redirect, url_for, request, flash
 from flask.ext.babel import Babel
-from blueprints import finance, infrastructure, properties, user, dormitories, login
+from blueprints import (finance, infrastructure, properties, user, dormitories,
+                        login)
 from web.form import widgets
 import template_filters
 import template_tests
@@ -36,7 +36,6 @@ def make_app():
         r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
 
     login_manager.init_app(app)
-
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
@@ -88,7 +87,7 @@ def make_app():
 
     @app.teardown_request
     def shutdown_session(exception=None):
-        session.session.remove()
+        session.Session.remove()
 
     @app.before_request
     def require_login():

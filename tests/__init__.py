@@ -2,17 +2,13 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import os
 import unittest
 from fixture.style import TrimmedNameStyle
-from fixture import DataSet, SQLAlchemyFixture, DataTestCase
+from fixture import SQLAlchemyFixture, DataTestCase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 from pycroft.model import session
-from config import test_config
-
-if "sqlite" in test_config.database_uri:
-    from sqlalchemy import func
-    func_now = lambda: func.datetime("now", "+1 minutes")
-    session.session.now_sql = func_now
-
 from pycroft.model import _all, drop_db_model, create_db_model
 
 from flask import url_for
@@ -28,10 +24,11 @@ def make_fixture():
     """A helper to create a database fixture.
     """
     fixture = SQLAlchemyFixture(
-            env=_all,
-            style=TrimmedNameStyle(suffix="Data"),
-            engine=session.session.get_engine())
+        env=_all,
+        style=TrimmedNameStyle(suffix="Data"),
+        engine=session.session.get_bind())
     return fixture
+
 
 class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """A TestCase baseclass that handles database fixtures.
@@ -47,7 +44,13 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        session.reinit_session(test_config.database_uri)
+        try:
+            uri = os.environ['PYCROFT_DB_URI']
+        except KeyError:
+            raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
+                               "set to an SQLalchemy connection string.")
+        engine = create_engine(uri, echo=False)
+        session.set_scoped_session(scoped_session(sessionmaker(bind=engine)))
         drop_db_model()
         create_db_model()
         cls.fixture = make_fixture()
@@ -60,9 +63,11 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
         super(FixtureDataTestBase, self).setUp()
 
     def tearDown(self):
+        # Rollback any not cleaned up transactions
+        while not session.session.autocommit and not session.session.is_active:
+            session.session.rollback()
+        session.Session.remove()
         super(FixtureDataTestBase, self).tearDown()
-
-        session.session.remove()
 
     def assertRaisesInTransaction(self, excClass, callableObj, *args, **kwargs):
         self.assertRaises(excClass,callableObj, *args, **kwargs)

@@ -2,18 +2,15 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
-import unittest
 
 from sqlalchemy.exc import IntegrityError
-from tests import FixtureDataTestBase, test_config
-from pycroft import model
-from pycroft.model import session, host, dormitory, user, accounting
 
-from tests.model.fixtures.host_fixtures import DormitoryData, VLANData, \
-    SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, \
-    TrafficVolumeData
 from pycroft.helpers.host import get_free_ip, MacExistsException
-from tests import REGEX_NOT_NULL_CONSTRAINT
+from pycroft.model import session, host, dormitory, user, accounting
+from tests import FixtureDataTestBase
+from tests.model.fixtures.host_fixtures import (
+    DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData,
+    UserNetDeviceData, IpData, TrafficVolumeData)
 
 
 class Test_010_NetDeviceValidators(FixtureDataTestBase):

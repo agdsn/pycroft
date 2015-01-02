@@ -11,102 +11,47 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-from datetime import datetime, timedelta
 from functools import wraps
-from sqlalchemy.orm import create_session, scoped_session
-from sqlalchemy import create_engine, func
+from werkzeug.local import LocalProxy
 
 from .functions import utcnow as utcnow_sql
 
-class DummySessionWrapper(object):
+
+class NullScopedSession(object):
     def __getattr__(self, item):
-        # raise Exception("Session not initialized")
-        # Workaround for the forking debug server
-        init_session()
-        return getattr(session, item)
+        raise AttributeError("Session has not been initialized.")
+
+    def __call__(self, *args, **kwargs):
+        raise AttributeError("Session has not been initialized.")
+
+    def remove(self):
+        pass
 
 
-class SessionWrapper(object):
-    active = True
-    _engine = None
+Session = LocalProxy(lambda: NullScopedSession())
+session = LocalProxy(lambda: Session())
 
-    def __init__(self, autocommit=False, autoflush=True, pooling=True,
-                 expire_on_commit=True):
 
-        self._scoped_session = scoped_session(
-            lambda: create_session(bind=self._engine,
-                                   autocommit=autocommit,
-                                   autoflush=autoflush,
-                                   expire_on_commit=expire_on_commit))
-
-        self.transaction_log = []
-
-    def __getattr__(self, item):
-        if not self.active:
-            raise AttributeError, item
-        return getattr(self._scoped_session, item)
-
-    def get_engine(self):
-        return self._engine
-
-    def init_engine(self, connection_string):
-        self._engine = create_engine(connection_string, echo=False)
-
-    def disable_instance(self):
-        self.active = False
-
-    #hack for postgres/sqlite "multiplexing"
-    def now_sql(self):
-        return func.now()
+def set_scoped_session(scoped_session):
+    Session.remove()
+    # noinspection PyCallByClass
+    object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)
 
 
 def with_transaction(f):
-    # Need to define session global here so that it is also available
-    # in the wrapper function defined below.
-    global session
-
     @wraps(f)
     def helper(*args, **kwargs):
-        global session
-
-        # We need to check whether there is already a transaction in the log
-        # because if there is no one, no new transaction should be started.
-        if not session.transaction_log:
-            transaction = session
-        else:
-            transaction = session.begin(subtransactions=True)
-
-        session.transaction_log.append(transaction)
-
+        transaction = session.begin(subtransactions=True)
         try:
-            ret = f(*args, **kwargs)
+            rv = f(*args, **kwargs)
             transaction.commit()
+            return rv
         except:
             transaction.rollback()
             raise
-        finally:
-            session.transaction_log.pop()
-
-        return ret
 
     return helper
 
-def init_session():
-    global session
-    if isinstance(session, DummySessionWrapper):
-        session = SessionWrapper()
-
-
-def reinit_session(connection_string):
-    #required for tests
-    global session
-    if not isinstance(session, DummySessionWrapper):
-        session.disable_instance()
-    session = SessionWrapper(pooling=False)
-    session.init_engine(connection_string)
-
-
-session = DummySessionWrapper()
 
 def utcnow():
     return session.query(utcnow_sql()).scalar()

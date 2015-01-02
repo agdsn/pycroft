@@ -1,9 +1,16 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 import argparse
+import os
+
+from flask import _request_ctx_stack
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from pycroft.model.session import set_scoped_session
+
 
 def server_run(args):
     from web import make_app
@@ -11,8 +18,14 @@ def server_run(args):
     from pycroft.model import session
 
     app = make_app()
-
-    app.config["DATABASE_URI"] = config["db_connection_string"]
+    try:
+        connection_string = os.environ['PYCROFT_DB_URI']
+    except KeyError:
+        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
+                           "set to an SQLalchemy connection string.")
+    engine = create_engine(connection_string, echo=False)
+    set_scoped_session(scoped_session(sessionmaker(bind=engine),
+                               scopefunc=lambda: _request_ctx_stack.top))
     session.session.init_engine(app.config["DATABASE_URI"])
 
     app.debug = args.debug
@@ -20,7 +33,6 @@ def server_run(args):
     app.config['MAX_CONTENT_LENGTH'] = int(config["file_upload"]
                                             ["max_file_size"])
     app.config['UPLOAD_FOLDER'] = config["file_upload"]["temp_dir"]
-
 
     app.run(debug=args.debug, port=args.port,
             host="0.0.0.0" if args.exposed else None)
