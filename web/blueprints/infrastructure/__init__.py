@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -13,6 +13,7 @@
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from pycroft.helpers import host
+from pycroft.model import session
 from pycroft.model.host import Switch, Host
 from pycroft.model.dormitory import Subnet, VLAN
 from pycroft.model.dns import Record, CNAMERecord
@@ -23,8 +24,6 @@ from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.infrastructure.forms import a_records_query
 from web.blueprints.access import BlueprintAccess
-
-from pycroft.lib.dns import delete_record, change_record, create_cname_record
 
 bp = Blueprint('infrastructure', __name__, )
 access = BlueprintAccess(bp, ['infrastructure_show'])
@@ -52,7 +51,9 @@ def switches():
 @bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
 @access.require('infrastructure_change')
 def record_delete(user_id, record_id):
-    delete_record(record_id)
+    record = Record.q.get(record_id)
+    session.session.delete(record)
+    session.session.commit()
     flash(u"Record gelöscht", 'success')
 
     return redirect(url_for("user.user_show", user_id=user_id))
@@ -92,8 +93,8 @@ def cname_record_edit(user_id, record_id):
     form.record_for.data = record.record_for.name
 
     if form.validate_on_submit():
-        change_record(record, name=form.name.data)
-
+        record.name = form.name.data
+        session.session.commit()
         flash(u"Alias geändert", "success")
         return redirect(url_for("user.user_show", user_id=user_id))
 
@@ -161,9 +162,10 @@ def cname_record_create(user_id, host_id):
     host = Host.q.get(host_id)
 
     if form.validate_on_submit():
-        create_cname_record(host=host, name=form.name.data,
+        record = CNAMERecord(host=host, name=form.name.data,
             record_for=form.record_for.data)
-
+        session.session.add(record)
+        session.session.commit()
         flash(u"Neuer CNAMERecord angelegt", 'success')
 
         return redirect(url_for("user.user_show", user_id=user_id))
