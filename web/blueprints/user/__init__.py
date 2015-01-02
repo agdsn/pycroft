@@ -250,6 +250,7 @@ def create():
                 moved_from_division=form.moved_from_division.data,
                 already_paid_semester_fee=form.already_paid_semester_fee.data
             )
+            session.session.commit()
 
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
@@ -285,6 +286,7 @@ def move(user_id):
         else:
             edited_user = lib.user.move(user, form.dormitory.data,
                 form.level.data, form.room_number.data, current_user)
+            session.session.commit()
 
             flash(u'Benutzer umgezogen', 'success')
             return redirect(url_for('.user_show', user_id=edited_user.id))
@@ -367,6 +369,7 @@ def edit_name(user_id):
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
+        session.session.commit()
 
         flash(u'Benutzername geändert', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
@@ -390,6 +393,7 @@ def edit_email(user_id):
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_email(user, form.email.data, current_user)
+        session.session.commit()
 
         flash(u'E-Mail-Adresse geändert', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
@@ -495,6 +499,7 @@ def block(user_id):
                 date=end_date,
                 reason=form.reason.data,
                 processor=current_user)
+            session.session.commit()
         except ValueError as e:
             flash(e.message, 'error')
         else:
@@ -518,6 +523,7 @@ def move_out(user_id):
             processor=current_user,
             comment=form.comment.data
         )
+        session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
@@ -535,6 +541,7 @@ def change_mac(user_net_device_id):
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
+        session.session.commit()
         return redirect(url_for('.user_show', user_id=changed_net_device.host.user.id))
     return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)
 
@@ -554,6 +561,7 @@ def move_out_tmp(user_id):
             comment=form.comment.data,
             processor=current_user
         )
+        session.session.commit()
         flash(u'Nutzer zieht am {} vorübegehend aus'.format(form.date.data),
             'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))
@@ -565,5 +573,6 @@ def move_out_tmp(user_id):
 def is_back(user_id):
     my_user = User.q.get(user_id)
     changed_user = lib.user.is_back(user=my_user, processor=current_user)
+    session.session.commit()
     flash(u'Nutzer ist zurück', 'success')
     return redirect(url_for('.user_show', user_id=changed_user.id))
