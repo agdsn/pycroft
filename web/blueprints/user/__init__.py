@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -18,9 +18,9 @@ from sqlalchemy import Text
 from pycroft import lib
 from pycroft.helpers import host
 from pycroft.lib.finance import get_typed_splits
+from pycroft.model import functions, session
 from pycroft.model.dormitory import Room
 from pycroft.model.host import Host, UserNetDevice, Ip
-from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
 from pycroft.model.accounting import TrafficVolume
@@ -73,10 +73,7 @@ def user_show(user_id):
 
     now = datetime.utcnow()
     if form.validate_on_submit():
-        lib.logging.create_user_log_entry(message=form.message.data,
-            timestamp=now,
-            author=current_user,
-            user=user)
+        lib.logging.log_user_event(form.message.data, current_user, user)
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = sorted(
@@ -138,12 +135,9 @@ def add_membership(user_id):
             group=form.group_id.data,
             start_date=start_date,
             end_date=end_date)
-        lib.logging.create_user_log_entry(author=current_user,
-                message=u"hat Nutzer zur Gruppe '{}' hinzugefügt."
-                    .format(form.group_id.data.name),
-                timestamp=now,
-                user=user)
-
+        message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group_id.data.name)
+        lib.logging.log_user_event(message, current_user, user)
+        session.session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
         return redirect(url_for(".user_show", user_id=user_id))
@@ -160,13 +154,10 @@ def end_membership(membership_id):
     membership.disable()
 
     # ToDo: Make the log messages not Frontend specific (a helper?)
-    lib.logging.create_user_log_entry(author=current_user,
-            message=u"hat die Mitgliedschaft des Nutzers"
-                u" in der Gruppe '{}' beendet.".format(
-                membership.group.name),
-            timestamp=datetime.utcnow(),
-            user=membership.user)
-
+    message = u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' " \
+              u"beendet.".format(membership.group.name)
+    lib.logging.log_user_event(message, current_user, membership.user)
+    session.session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show", user_id=membership.user_id))
 
@@ -347,14 +338,11 @@ def edit_membership(membership_id):
         else:
             membership.end_date = datetime.combine(form.end_date.data, datetime.min.time())
 
-        session.commit()
+        message = u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' " \
+                  u"bearbeitet.".format(membership.group.name)
+        lib.logging.log_user_event(message, current_user, membership.user)
+        session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
-        lib.logging.create_user_log_entry(author=current_user,
-            message=u"hat die Mitgliedschaft des Nutzers"
-                u" in der Gruppe '{}' bearbeitet.".format(
-                membership.group.name),
-            timestamp=now,
-            user=membership.user)
         return redirect(url_for('.user_show', user_id=membership.user_id))
 
     return render_template('user/user_edit_membership.html',

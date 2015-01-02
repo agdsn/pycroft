@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
+from pycroft.lib.logging import log_user_event
 from pycroft.model.logging import UserLogEntry
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -19,11 +20,8 @@ def change_mac(net_device, mac, processor):
     :param processor: the user who initiated the mac address change.
     :return: the changed net device with the new mac address.
     """
+    old_mac = net_device.mac
     net_device.mac = mac
-
-    change_mac_log_entry = UserLogEntry(author_id=processor.id,
-        message=u"Die Mac-Adresse in {} geändert.".format(mac),
-        timestamp=datetime.datetime.utcnow(), user_id=net_device.host.user.id)
-
-    session.session.add(change_mac_log_entry)
+    message = u"Die Mac-Adresse von {} zu {} geändert.".format(old_mac, mac)
+    log_user_event(message, processor, net_device.host.user)
     return net_device

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -53,10 +53,7 @@ def room_show(room_id):
     form = RoomLogEntry()
 
     if form.validate_on_submit():
-        lib.logging.create_room_log_entry(message=form.message.data,
-                                          timestamp=datetime.utcnow(),
-                                          author=current_user,
-                                          room=room)
+        lib.logging.log_room_event(form.message.data, current_user, room)
         flash(u'Kommentar hinzugefügt', 'success')
 
     room_log_list = room.room_log_entries[::-1]
