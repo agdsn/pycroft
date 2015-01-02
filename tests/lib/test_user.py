@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-__author__ = 'florian'
-
-from datetime import datetime
+from datetime import datetime, timedelta
 from pycroft import config
 from tests import FixtureDataTestBase
 from pycroft.lib import user as UserHelper
@@ -180,7 +178,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             already_paid_semester_fee=False
         )
 
-        out_time = datetime.utcnow()
+        out_time = session.utcnow()
 
         UserHelper.move_out(user=new_user, date=out_time, comment="",
             processor=self.processing_user)
@@ -284,7 +282,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
             already_paid_semester_fee=False
         )
 
-        out_time = datetime.utcnow()
+        out_time = session.utcnow()
         self.assertFalse(new_user.has_property("away"))
 
         UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
@@ -352,13 +350,15 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
     def test_0010_user_is_back(self):
         self.assertTrue(self.user.has_property("away"))
         UserHelper.is_back(self.user, self.processing_user)
+        session.session.commit()
 
         # check whether user has at least one ip
         self.assertNotEqual(self.user.user_hosts[0].user_net_device.ips, [])
 
         # check log message
         log_entry = self.user.user_log_entries[-1]
-        self.assertTrue(log_entry.timestamp <= datetime.utcnow())
+        self.assertAlmostEqual(log_entry.timestamp, session.utcnow(),
+                               delta=timedelta(seconds=5))
         self.assertEqual(log_entry.author, self.processing_user)
 
         self.assertFalse(self.user.has_property("away"))

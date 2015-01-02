@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -98,7 +98,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         level=level, dormitory=dormitory).one()
 
     # create a new user
-    now = datetime.utcnow()
+    now = session.utcnow()
     new_user = User(
         login=login,
         name=name,
@@ -204,12 +204,12 @@ def move(user, dormitory, level, room_number, processor):
         dormitory_id=dormitory.id
     ).one()
 
-    assert old_room is not new_room,\
+    assert old_room != new_room,\
         "A User is only allowed to move in a different room!"
 
     user.room = new_room
 
-    now = datetime.utcnow()
+    now = session.utcnow()
     log_user_event(
         author=processor,
         message=config["move"]["log_message"].format(
@@ -344,7 +344,7 @@ def block(user, reason, processor, date=None):
     if date is not None and not isinstance(date, datetime):
         raise ValueError("Date should be a datetime object")
 
-    now = datetime.utcnow()
+    now = session.utcnow()
     if date is not None and date < now:
         raise ValueError("Date should be in the future")
 

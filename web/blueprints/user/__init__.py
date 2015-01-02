@@ -71,7 +71,6 @@ def user_show(user_id):
     room = Room.q.get(user.room_id)
     form = UserLogEntry()
 
-    now = datetime.utcnow()
     if form.validate_on_submit():
         lib.logging.log_user_event(form.message.data, current_user, user)
         flash(u'Kommentar hinzugefügt', 'success')
@@ -87,11 +86,11 @@ def user_show(user_id):
     memberships_active = memberships.filter(
         # it is important to use == here, "is" does NOT work
         or_(Membership.start_date == None,
-            Membership.start_date <= now)
+            Membership.start_date <= functions.utcnow())
     ).filter(
         # it is important to use == here, "is" does NOT work
         or_(Membership.end_date == None,
-            Membership.end_date > now)
+            Membership.end_date > functions.utcnow())
     )
     typed_splits = get_typed_splits(user.finance_account.splits)
 
@@ -121,11 +120,10 @@ def add_membership(user_id):
 
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        now = datetime.utcnow()
         if form.begin_date.data is not None:
             start_date = datetime.combine(form.begin_date.data, time(0))
         else:
-            start_date = now
+            start_date = session.utcnow()
         if not form.unlimited.data:
             end_date = datetime.combine(form.end_date.data, time(0))
         else:
@@ -195,7 +193,7 @@ def json_trafficdata(user_id, days=7):
     :param days: optional amount of days to be included
     :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
     """
-    traffic_timespan = datetime.utcnow() - timedelta(days=days)
+    traffic_timespan = session.utcnow() - timedelta(days=days)
 
     # get all traffic volumes for the user in the timespan
     traffic_volumes = session.query(
@@ -324,10 +322,9 @@ def edit_membership(membership_id):
         abort(404)
 
     form = UserEditGroupMembership()
-    now = datetime.utcnow()
     if request.method == 'GET':
         form.begin_date.data = membership.start_date
-        if membership.start_date < now:
+        if membership.start_date < session.utcnow():
             form.begin_date.disabled = True
 
         if membership.end_date is not None:

@@ -1,18 +1,15 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime, timedelta
-
-from tests import FixtureDataTestBase
-from tests.lib.fixtures.logging_fixtures import UserData, UserLogEntryData, \
-    RoomData, RoomLogEntryData
-
+from datetime import timedelta
+from pycroft.lib.logging import log_user_event, log_room_event
+from pycroft.model import session
+from pycroft.model.dormitory import Room
 from pycroft.model.logging import RoomLogEntry
 from pycroft.model.user import User
-from pycroft.model.dormitory import Room
-from pycroft.model import session
-
-from pycroft.lib.logging import log_user_event, log_room_event
+from tests import FixtureDataTestBase
+from tests.lib.fixtures.logging_fixtures import (
+    UserData, UserLogEntryData, RoomData, RoomLogEntryData)
 
 
 class LogTestBase(FixtureDataTestBase):
@@ -27,15 +24,13 @@ class Test_010_UserLogEntry(LogTestBase):
     datasets = [UserData, UserLogEntryData]
 
     def test_0010_create_user_log_entry(self):
-        now = datetime.utcnow()
-
         user_log_entry = log_user_event(message=self.message,
                                         author=self.user,
                                         user=self.user)
 
         self.assertEqual(user_log_entry.message, self.message)
-        self.assertAlmostEqual(user_log_entry.timestamp, now,
-                               delta=timedelta(seconds=1))
+        self.assertAlmostEqual(user_log_entry.timestamp, session.utcnow(),
+                               delta=timedelta(seconds=5))
         self.assertEqual(user_log_entry.author, self.user)
         self.assertEqual(user_log_entry.user, self.user)
 
@@ -47,7 +42,6 @@ class Test_020_RoomLogEntry(LogTestBase):
     datasets = [RoomData, RoomLogEntryData]
 
     def test_0010_create_room_log_entry(self):
-        now = datetime.utcnow()
         room = Room.q.filter_by(number=RoomData.dummy_room1.number,
                                 level=RoomData.dummy_room1.level).one()
 
@@ -60,8 +54,8 @@ class Test_020_RoomLogEntry(LogTestBase):
         db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
 
         self.assertEqual(db_room_log_entry.message, self.message)
-        self.assertAlmostEqual(room_log_entry.timestamp, now,
-                               delta=timedelta(seconds=1))
+        self.assertAlmostEqual(db_room_log_entry.timestamp, session.utcnow(),
+                               delta=timedelta(seconds=5))
         self.assertEqual(db_room_log_entry.author, self.user)
         self.assertEqual(db_room_log_entry.room, room)
 

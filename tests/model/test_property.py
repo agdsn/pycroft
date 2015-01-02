@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
@@ -175,19 +175,12 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
     def test_0030_start_date_after_end(self):
         # add membership to group1
-        p1 = property.Membership(user=self.user, group=self.property_group1)
-        p1.end_date = p1.start_date
-        self.assertEqual(p1.end_date, p1.start_date)
-
-        def set_new_start():
-            """ Set start_date after end_date
-            """
-            p1.start_date = datetime.utcnow() + timedelta(hours=2)
-
+        now = session.utcnow()
         self.assertRaisesRegexp(
             AssertionError,
             "you set start date behind end date!",
-            set_new_start
+            property.Membership, user=self.user, group=self.property_group1,
+            start_date=now + timedelta(days=1), end_date=now
         )
 
     def test_0040_set_correct_dates(self):
