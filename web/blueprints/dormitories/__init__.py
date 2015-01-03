@@ -13,14 +13,17 @@
 from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask.ext.login import current_user
+from flask.json import jsonify
 from pycroft import lib
 from pycroft.helpers import dormitory
+from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
 from pycroft.model.session import session
 from pycroft.model.dormitory import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.dormitories.forms import RoomForm, DormitoryForm, \
     RoomLogEntry
 from web.blueprints.access import BlueprintAccess
+from web.template_filters import datetime_filter
 
 bp = Blueprint('dormitories', __name__, )
 access = BlueprintAccess(bp, ['dormitories_show'])
@@ -66,6 +69,22 @@ def room_show(room_id):
         form=form)
 
 
+@bp.route('/room/logs/<room_id>')
+@access.require('dormitories_show')
+def room_logs_json(room_id):
+    return jsonify(items=map(
+        lambda entry: {
+            'time': datetime_filter(entry.timestamp),
+            'user': {
+                'title': entry.author.name,
+                'href': url_for("user.user_show", user_id=entry.author.id)
+            },
+            'message': entry.message
+        },
+        Room.q.get(room_id).room_log_entries[::-1]
+    ))
+
+
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>')
 @access.require('dormitories_show')
@@ -86,14 +105,52 @@ def dormitory_levels(dormitory_id):
 @access.require('dormitories_show')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = Room.q.filter_by(
-        dormitory_id=dormitory_id, level=level).order_by(Room.number)
-
     level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
     # a link to the user. If there is more then one user, the room is
     # duplicated
-    return render_template('dormitories/rooms.html', rooms=rooms_list, level=level_l0,
-                           dormitory=dormitory, page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(level,
-                                                              dormitory.short_name))
+    return render_template(
+        'dormitories/rooms.html',
+        level=level_l0,
+        dormitory=dormitory,
+        page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(
+            level, dormitory.short_name
+        )
+    )
+
+
+#todo think about a better place for this function
+# it surely will be used elsewhere…
+def user_btn_class(user):
+    if not has_positive_balance(user):
+        return "btn-warning"
+    elif not user.has_property("internet"):
+        return "btn-danger"
+    elif has_exceeded_traffic(user):
+        return "btn-info"
+    else:
+        return "btn-success"
+
+
+@bp.route('/levels/<int:dormitory_id>/rooms/<int:level>/json')
+@access.require('dormitories_show')
+def dormitory_level_rooms_json(dormitory_id, level):
+    return jsonify(items=map(
+        lambda room: {
+            'room': {
+                'href': url_for(".room_show", room_id=room.id),
+                'title': "{:02d} - {}".format(level, room.number)
+            },
+            'inmates': map(
+                lambda user: {
+                    'href': url_for("user.user_show", user_id=user.id),
+                    'title': user.name,
+                    'btn_class': user_btn_class(user)
+                },
+                room.users
+            )
+        },
+        Room.q.filter_by(
+            dormitory_id=dormitory_id, level=level).order_by(Room.number)
+    ))

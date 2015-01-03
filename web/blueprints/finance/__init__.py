@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -12,8 +12,6 @@
 """
 from datetime import timedelta
 from itertools import (imap, groupby)
-import math
-
 from flask import (
     Blueprint, render_template, redirect, url_for, jsonify,
     request, flash, abort)
@@ -32,11 +30,14 @@ from web.blueprints.finance.forms import (
     SemesterCreateForm, JournalEntryEditForm, JournalImportForm,
     JournalCreateForm, FinanceAccountCreateForm, TransactionCreateForm)
 from web.blueprints.navigation import BlueprintNavigation
+from web.template_filters import date_filter, money_filter, datetime_filter
+from web.template_tests import privilege_check
 
 
 bp = Blueprint('finance', __name__, )
 access = BlueprintAccess(bp, ['finance_show'])
 nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
+
 
 @bp.route('/')
 @bp.route('/journals')
@@ -44,32 +45,60 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 @access.require('finance_show')
 @nav.navigate(u"Journals")
 def journals_list():
-    journals = Journal.q.all()
-
-    page = request.args.get("page", 1, type=int)
-    limit = request.args.get("limit", 25, type=int)
-    order = request.args.get("order", "transaction_date", type=str)
+    return render_template('finance/journals_list.html')
 
 
-    count = JournalEntry.q.filter(
-        JournalEntry.transaction_id == None
-    ).count()
+@bp.route('/journals/list/json')
+@access.require('finance_show')
+def journals_list_json():
+    return jsonify(items=map(
+        lambda journal: {
+            'name': journal.name,
+            'bank': journal.bank,
+            'ktonr': journal.account_number,
+            'blz': journal.routing_number,
+            'iban': journal.iban,
+            'bic': journal.bic,
+            'kto': {
+                'href': url_for('.accounts_show',
+                                account_id=journal.finance_account_id),
+                'title': 'Konto anzeigen',
+                'btn_class': 'btn-primary'
+            },
+            'hbci': journal.hbci_url,
+            'change_date': ''.format(journal.last_update)
+        },
+        Journal.q.all()
+    ))
 
-    page_count = int(math.ceil(count/float(limit)))
 
-    offset = (page-1)*limit
-
-    journal_entries_list = JournalEntry.q.filter(
-        JournalEntry.transaction_id == None
-    ).order_by(order).offset(offset).limit(limit)
-
-
-    return render_template('finance/journals_list.html',
-                           journals=journals,
-                           journal_entries=journal_entries_list,
-                           page=page,
-                           page_count=page_count,
-                           limit = limit)
+@bp.route('/journals/entries/json')
+@access.require('finance_show')
+def journals_entries_json():
+    return jsonify(items=map(
+        lambda entry: {
+            'journal': entry.journal.name,
+            'date': date_filter(entry.valid_date),
+            'amount': money_filter(entry.amount),
+            'description': entry.description,
+            'original_description': entry.original_description,
+            'ktonr': entry.other_account_number,
+            # 'blz': entry.other_bank,   # todo revisit. wuzdat? dunno…
+            'name': entry.other_name,
+            'actions': ([{
+                             'href': url_for('.journals_entries_edit',
+                                             journal_id=entry.journal_id,
+                                             entry_id=entry.id),
+                             'title': '',
+                             'btn_class': 'btn-primary',
+                             'icon': 'glyphicon-pencil'
+                         }] if privilege_check(current_user,
+                                               'finance_change') else []),
+        },
+        JournalEntry.q.filter(
+            JournalEntry.transaction_id == None
+        ).order_by(JournalEntry.valid_date).all()
+    ))
 
 
 @bp.route('/journals/import', methods=['GET', 'POST'])
@@ -110,7 +139,8 @@ def journals_create():
                            form=form, page_title=u"Journal erstellen")
 
 
-@bp.route('/journals/<int:journal_id>/entries/<int:entry_id>', methods=["GET", "POST"])
+@bp.route('/journals/<int:journal_id>/entries/<int:entry_id>',
+          methods=["GET", "POST"])
 @access.require('finance_change')
 def journals_entries_edit(journal_id, entry_id):
     entry = JournalEntry.q.get(entry_id)
@@ -145,7 +175,7 @@ def accounts_list():
     accounts_by_type = dict(imap(
         lambda t: (t[0], list(t[1])),
         groupby(
-            FinanceAccount.q .outerjoin(User).filter(User.id == None)
+            FinanceAccount.q.outerjoin(User).filter(User.id == None)
             .order_by(FinanceAccount.type).all(),
             lambda a: a.type
         )
@@ -178,8 +208,34 @@ def accounts_show(account_id):
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
-        splits=splits, typed_splits=typed_splits
+        splits=splits, typed_splits=typed_splits,
+        json_url=url_for('.accounts_show_json', account_id=account_id),
+        footer=[{'title': 'Saldo', 'colspan': 3},
+                {'title': money_filter(account.balance)}]
     )
+
+
+@bp.route('/accounts/<int:account_id>/json')
+@access.require('finance_show')
+def accounts_show_json(account_id):
+    inverted = False
+    return jsonify(items=map(
+        lambda splt: {
+            'creation_date': datetime_filter(splt.transaction.transaction_date),
+            'transfer_date': date_filter(splt.transaction.valid_date),
+            'description': {
+                'href': url_for(
+                    "finance.transactions_show",
+                    transaction_id=splt.transaction_id
+                ),
+                'title': splt.transaction.description
+            },
+            'amount': money_filter(splt.amount),
+            'row_positive': (splt.amount > 0) is not inverted
+        },
+        Split.q.join(Transaction).filter(Split.account_id == account_id)
+        .order_by(Transaction.valid_date)
+    ))
 
 
 @bp.route('/transactions/<int:transaction_id>')
@@ -192,6 +248,23 @@ def transactions_show(transaction_id):
         'finance/transactions_show.html',
         transaction=transaction
     )
+
+
+@bp.route('/transactions/<int:transaction_id>/json')
+@access.require('finance_show')
+def transactions_show_json(transaction_id):
+    inverted = False
+    return jsonify(items=map(
+        lambda split: {
+            'account': {
+                'href': url_for(".accounts_show", account_id=split.account_id),
+                'title': split.account.name
+            },
+            'amount': money_filter(split.amount),
+            'row_positive': (split.amount > 0) is not inverted
+        },
+        Transaction.q.get(transaction_id).splits
+    ))
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
@@ -219,7 +292,6 @@ def transactions_create():
     )
 
 
-
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
 def accounts_create():
@@ -239,8 +311,30 @@ def accounts_create():
 @access.require('finance_show')
 @nav.navigate(u"Semesterliste")
 def semesters_list():
-    semesters = Semester.q.order_by(Semester.begin_date.desc()).all()
-    return render_template('finance/semesters_list.html', semesters=semesters)
+    return render_template('finance/semesters_list.html')
+
+
+@bp.route("/semesters/json")
+@access.require('finance_show')
+def semesters_list_json():
+    return jsonify(items=map(
+        lambda semestr: {  # left the “e” to fit PEP8-width, pls dont change…
+                           'name': semestr.name,
+                           'registration_fee': money_filter(
+                               semestr.registration_fee),
+                           'standard_fee': money_filter(
+                               semestr.regular_semester_contribution),
+                           'discount_fee': money_filter(
+                               semestr.reduced_semester_contribution),
+                           'late_fee': money_filter(semestr.overdue_fine),
+                           'early_start': date_filter(
+                               semestr.premature_begin_date),
+                           'start': date_filter(semestr.begin_date),
+                           'end': date_filter(semestr.end_date),
+                           'late_end': date_filter(semestr.belated_end_date)
+        },
+        Semester.q.order_by(Semester.begin_date.desc()).all()
+    ))
 
 
 @bp.route('/semesters/create', methods=("GET", "POST"))

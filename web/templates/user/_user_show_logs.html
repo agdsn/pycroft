@@ -1,10 +1,15 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% import "macros/forms.html" as forms %}
-{% import "macros/logs.html" as logs %}
+{% import "macros/table.html" as tbl %}
+{% set log_cols = [
+    {'name': 'time', 'title': 'Zeit'},
+    {'name': 'user', 'title': 'Nutzer', 'formatter': 'linkFormatter'},
+    {'name': 'message', 'title': 'Nachricht'},
+] %}
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#log-entries-all" data-toggle="tab">Alle</a></li>
@@ -14,13 +19,13 @@
 
 <div class="tab-content">
     <div class="tab-pane fade in active" id="log-entries-all">
-        {{ logs.render_log(all_log) }}
+        {{ tbl.item_table("merged_log", url_for(".user_show_logs_json", user_id=user.id), log_cols) }}
     </div>
     <div class="tab-pane fade" id="log-entries-user">
-        {{ logs.render_log(user_log) }}
+        {{ tbl.item_table("user_log", url_for(".user_show_logs_json", user_id=user.id, logtype="user"), log_cols) }}
     </div>
     <div class="tab-pane fade" id="log-entries-room">
-        {{ logs.render_log(room_log) }}
+        {{ tbl.item_table("room_log", url_for(".user_show_logs_json", user_id=user.id, logtype="room"), log_cols) }}
     </div>
 </div>
 

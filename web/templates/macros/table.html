@@ -10,8 +10,7 @@
     </th>
 {% endmacro %}
 
-{% macro item_table(table_id, data_url, display_columns, actions=False) %}
-{#    TODO: make display_columns data_structure#}
+{% macro item_table(table_id, data_url="", display_columns, footer=[], row_style="", data="") %}
     <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
         {% if caller %}
             {{ caller() }}
@@ -20,10 +19,12 @@
     <table id="{{ table_id }}" class="table table-striped"
            data-toggle="table"
            data-cache="false"
-           data-url="{{ data_url }}"
+           {% if data_url %}data-url="{{ data_url }}"{% endif %}
+           {% if data %}data-data="{{ data }}"{% endif %}
            data-response-handler="responseHandler"
            data-search="true"
            data-pagination="true"
+           {% if row_style %}data-row-style="{{ row_style }}"{% endif %}
            data-toolbar="#{{ table_id }}-toolbar">
         <thead>
         <tr>
@@ -33,10 +34,10 @@
                     {% if col.width in range(1, 12) %}class="col-sm-{{ col. width }}"{% endif %}
                 >{{ col.title }}</th>
             {% endfor %}
-            {% if actions %}
-                <th data-field="actions" data-formatter="actionFormatter" data-align="right">Aktionen</th>
-            {% endif %}
         </tr>
         </thead>
+        {% if footer|count > 0 %}<tfoot><tr>{% for footcol in footer %}
+            <td{% if footcol.colspan and footcol.colspan > 0 %} colspan="{{ footcol.colspan }}"{% endif %}>{{ footcol.title }}</td>
+        {% endfor %}</tr></tfoot>{% endif %}
     </table>
 {% endmacro %}

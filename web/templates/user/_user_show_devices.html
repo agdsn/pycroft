@@ -1,33 +1,13 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if user.user_hosts -%}
-<table class="table">
-    <thead>
-        <tr>
-            <th>IP-Adresse</th>
-            <th>Mac-Adresse</th>
-            <th>Switch</th>
-            <th>Switchport</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for host in user.user_hosts -%}
-        {% for ip in host.ips -%}
-        <tr>
-            <td>{{ ip.address }}</td>
-            <td>{{ ip.net_device.mac }}</td>
-            <td>{{ host | get_switch(ip)}}</td>
-            <td>{{ host | get_switch_port(ip)}}</td>
-        </tr>
-        {%- endfor %}
-        {%- endfor %}
-    </tbody>
-</table>
-{% else -%}
-<div class="alert alert-info">
-    Der Nutzer hat keine registrierten Geräte.
-</div>
-{%- endif %}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'ip', 'title': 'IP-Adresse'},
+    {'name': 'mac', 'title': 'Mac-Adresse'},
+    {'name': 'switch', 'title': 'Switch'},
+    {'name': 'port', 'title': 'Switchport'},
+] %}
+{{ tbl.item_table("user_hosts", url_for(".user_show_devices_json", user_id=user.id), cols) }}

@@ -1,37 +1,21 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
+
+{% set cols = [
+    {'name': 'id', 'title': '#'},
+    {'name': 'domain', 'title': 'Domain'},
+    {'name': 'ip', 'title': 'IP'},
+    {'name': 'gateway', 'title': 'Gateway'},
+    {'name': 'ip_version', 'title': 'IP-Version'}
+] %}
 
 {% block content %}
-    <div id="tbl_subnets"><table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Domain</th>
-                <th>IP</th>
-                <th>Gateway</th>
-                <th>IP-Version</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for subnet in subnets -%}
-            <tr>
-                <td>{{ subnet.id}}</td>
-                <td>{{ subnet.dns_domain}}</td>
-                <td>{{ subnet.address }}</td>
-                <td>{{ subnet.gateway }}</td>
-                <td>IPv{{ subnet.ip_type }}</td>
-            </tr>
-            {%- endfor %}
-        </tbody>
-    </table></div>
-{% endblock %}
-
-
-{% block page_script %}
-{{ pagination.init_sorting('tbl_subnets', 5) }}
+    {{ tbl.item_table(
+        'subnets', url_for('infrastructure.subnets_json'), cols
+    ) }}
 {% endblock %}

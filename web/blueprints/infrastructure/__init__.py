@@ -13,7 +13,6 @@
 
 from flask import Blueprint, flash, redirect, render_template, url_for, jsonify, \
     abort
-from flask.json import dumps
 from pycroft.helpers import host
 from pycroft.model import session
 from pycroft.model.host import Switch, Host
@@ -36,18 +35,46 @@ nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 @nav.navigate(u"Subnetze")
 @access.require('infrastructure_show')
 def subnets():
+    return render_template('infrastructure/subnets_list.html')
+
+
+@bp.route('/subnets/json')
+@access.require('infrastructure_show')
+def subnets_json():
     subnets_list = Subnet.q.all()
-    return render_template('infrastructure/subnets_list.html',
-        subnets = subnets_list)
+    return jsonify(items=map(
+        lambda subnet: {
+            'id': subnet.id,
+            'domain': subnet.dns_domain,
+            'ip': subnet.address,
+            'gateway': subnet.gateway,
+            'ip_version': "IPv{}".format(subnet.ip_type)
+        },
+        subnets_list
+    ))
 
 
 @bp.route('/switches')
 @nav.navigate(u"Switche")
 @access.require('infrastructure_show')
 def switches():
-    switches_list = Switch.q.all()
-    return render_template('infrastructure/switches_list.html',
-        switches=switches_list)
+    return render_template('infrastructure/switches_list.html')
+
+
+@bp.route('/switches/json')
+@access.require('infrastructure_show')
+def switches_json():
+    return jsonify(items=map(
+        lambda switch: {
+            'id': switch.id,
+            'name': {
+                'title': switch.name,
+                'href': url_for(".switch_show", switch_id=switch.id)
+            },
+            'ip': switch.management_ip
+        },
+        Switch.q.all()
+    ))
 
 
 @bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
@@ -235,6 +262,17 @@ def switch_show_json(switch_id):
 @nav.navigate(u"VLANs")
 @access.require('infrastructure_show')
 def vlans():
-    vlans_list = VLAN.q.all()
-    return render_template('infrastructure/vlan_list.html',
-                           vlans=vlans_list)
+    return render_template('infrastructure/vlan_list.html')
+
+
+@bp.route('/vlans/json')
+@access.require('infrastructure_show')
+def vlans_json():
+    return jsonify(items=map(
+        lambda vlan: {
+            'id': vlan.id,
+            'name': vlan.name,
+            'tag': vlan.tag
+        },
+        VLAN.q.all()
+    ))

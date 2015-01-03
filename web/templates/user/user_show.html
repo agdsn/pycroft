@@ -1,12 +1,11 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 {% set page_title = "Nutzer anzeigen" %}
 {% import "macros/forms.html" as forms %}
-{% import "macros/pagination.html" as pagination %}
 
 {% block page_css %}
 <style type="text/css">
@@ -68,7 +67,7 @@
     {# Logs zum Nutzers #}
     <section id="logs">
         <div class="page-header"><h2>Logs</h2></div>
-        <div id="tbl_logs" class="body">
+        <div class="body">
             {% include "user/_user_show_logs.html" with context %}
         </div>
     </section>
@@ -134,10 +133,4 @@
             load_trafficchart(days);
         });
     </script>
-    {{ pagination.init_sorting('tbl_devices', 4) }}
-    {{ pagination.init_sorting('tbl_logs', 3, false, false) }}
-    {{ pagination.init_sorting('tbl_groups', 4, false, false) }}
-    {{ pagination.init_sorting('tbl_hosts', 4, false, false) }}
-    {{ pagination.init_sorting('report-form', 4) }}
-    {{ pagination.init_sorting('account-form', 4, false, false) }}
 {% endblock %}

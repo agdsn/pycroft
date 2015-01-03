@@ -1,38 +1,15 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% macro render_memberships(memberships, no_memberships_message) %}
-{% if memberships -%}
-    <table class="table table-condensed">
-        <thead>
-        <tr>
-            <th>Gruppe</th>
-            <th>Begin</th>
-            <th>Ende</th>
-            <th>Aktion</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for membership in memberships -%}
-        <tr>
-            <td>{{ membership.group.name }}</td>
-            <td>{{ membership.start_date|datetime if membership.start_date is not none }}</td>
-            <td>{{ membership.end_date|datetime if membership.end_date is not none }}</td>
-            <td>
-                <a href="{{ url_for(".edit_membership", membership_id=membership.id) }}" title="Bearbeiten">
-                    <span class="glyphicon glyphicon-edit"></span>
-                </a>
-            </td>
-        </tr>
-        {%- endfor %}
-        </tbody>
-    </table>
-{% else -%}
-    <div class="alert alert-info">{{ no_memberships_message }}</div>
-{%- endif %}
-{%- endmacro %}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'group_name', 'title': 'Gruppe'},
+    {'name': 'begin', 'title': 'Beginn'},
+    {'name': 'end', 'title': 'Ende'},
+    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'btnFormatter'}
+] %}
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#memberships-active" data-toggle="tab">Aktiv</a></li>
@@ -40,10 +17,10 @@
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade in active" id="memberships-active">
-        {{ render_memberships(memberships_active, "Keine aktiven Gruppenmitgliedschaften.") }}
+        {{ tbl.item_table("active-memberships", url_for(".user_show_groups_json", user_id=user.id, group_filter="active"), cols) }}
     </div>
     <div class="tab-pane fade" id="memberships-all">
-        {{ render_memberships(memberships, "Keine Gruppenmitgliedschaften.") }}
+        {{ tbl.item_table("memberships", url_for(".user_show_groups_json", user_id=user.id), cols) }}
     </div>
 </div>
 {% if current_user is privileged_for('groups_change_user') -%}

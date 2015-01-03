@@ -1,22 +1,15 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
 
-{% macro user_btn_class(user) %}
-    {% if user is not user_with_positive_balance -%}
-    btn-warning
-    {% elif user is user_with_no_internet -%}
-    btn-danger
-    {% elif user is user_with_traffic_exceeded -%}
-    btn-info
-    {% else -%}
-    btn-success
-    {%- endif %}
-{% endmacro %}
+{% set cols = [
+    {'name': 'room', 'title': 'Raum', 'formatter': 'linkFormatter'},
+    {'name': 'inmates', 'title': 'Bewohner', 'formatter': 'multiBtnFormatter'}
+] %}
 
 {% block content %}
     <ul class="breadcrumb">
@@ -24,30 +17,9 @@
         <li><a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
-    <div id="tbl_rooms" class="row">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th class="col-sm-2">Raum</th>
-                    <th class="col-sm-10">Bewohner</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for room in rooms -%}
-                <tr>
-                    <td><a href="{{ url_for(".room_show", room_id=room.id) }}">{{ level }}-{{ room.number }}</a></td>
-                    <td>
-                        {% for user in room.users -%}
-                        <a class="btn {{ user_btn_class(user) }}" href="{{ url_for("user.user_show", user_id=user.id) }}">{{ user.name }}</a>
-                        {%- endfor %}
-                    </td>
-                </tr>
-                {%- endfor %}
-            </tbody>
-        </table>
-    </div>
-{% endblock %}
-
-{% block page_script %}
-{{ pagination.init_sorting('tbl_rooms', 2) }}
+    {{ tbl.item_table(
+        'rooms',
+        url_for('dormitories.dormitory_level_rooms_json', dormitory_id=dormitory.id, level=level),
+        cols
+    ) }}
 {% endblock %}

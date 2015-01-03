@@ -4,7 +4,6 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/pagination.html" as pagination %}
 {% import "macros/table.html" as tbl %}
 
 {% set cols = [
@@ -32,9 +31,9 @@
     </section>
     <section>
         <h2>Ports</h2>
-        {% call tbl.item_table(
+        {{ tbl.item_table(
             'switches',
              url_for('infrastructure.switch_show_json', switch_id=switch.id),
              cols
-        ) %}{% endcall %}
+        ) }}
 {% endblock %}
