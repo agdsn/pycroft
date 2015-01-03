@@ -108,9 +108,6 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     )
     plain_password = user.generate_password(12)
 
-    #TODO: print plain password on paper instead
-    print u"new password: " + plain_password
-
     # set random initial password
     new_user.set_password(plain_password)
     session.session.add(new_user)
@@ -180,6 +177,9 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         message=conf["log_message"],
         user=new_user
     )
+
+    #TODO: print plain password on paper instead
+    print u"new password: " + plain_password
 
     return new_user
 

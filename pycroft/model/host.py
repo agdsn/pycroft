@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -155,13 +155,13 @@ class NetDevice(ModelBase):
     def validate_mac(self, _, value):
         match = NetDevice.mac_regex.match(value)
         if not match:
-            raise Exception("Invalid MAC address!")
+            raise ValueError("Invalid MAC address!")
         groupdict = match.groupdict()
         bytes =  [groupdict['byte6'], groupdict['byte5'], groupdict['byte4'],
                   groupdict['byte3'], groupdict['byte2'], groupdict['byte1']]
         if int(bytes[0], base=16) & 1:
-            raise Exception("Multicast-Flag (least significant bit im "
-                            "ersten Byte gesetzt)!")
+            raise ValueError("Multicast-Flag (least significant bit im "
+                             "ersten Byte gesetzt)!")
         return ':'.join(bytes).lower()
 
 

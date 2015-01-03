@@ -49,7 +49,7 @@ def overview():
 @access.require('user_show')
 def json_search():
     query = request.args['query']
-    results = session.query(User.id, User.login, User.name).filter(or_(
+    results = session.session.query(User.id, User.login, User.name).filter(or_(
         func.lower(User.name).like(func.lower(u"%{0}%".format(query))),
         func.lower(User.login).like(func.lower(u"%{0}%".format(query))),
         cast(User.id, Text).like(u"{0}%".format(query))
@@ -165,7 +165,7 @@ def json_levels():
     if not request.is_xhr:
         abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
-    levels = session.query(Room.level.label('level')).filter_by(
+    levels = session.session.query(Room.level.label('level')).filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
     return jsonify(dict(items=[entry.level for entry in levels]))
 
@@ -176,7 +176,7 @@ def json_rooms():
         abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
     level = request.args.get('level', 0, type=int)
-    rooms = session.query(
+    rooms = session.session.query(
         Room.number.label("room_num")).filter_by(
         dormitory_id=dormitory_id, level=level).order_by(
         Room.number).distinct()
@@ -196,7 +196,7 @@ def json_trafficdata(user_id, days=7):
     traffic_timespan = session.utcnow() - timedelta(days=days)
 
     # get all traffic volumes for the user in the timespan
-    traffic_volumes = session.query(
+    traffic_volumes = session.session.query(
         TrafficVolume
     ).join(
         TrafficVolume.ip
@@ -253,11 +253,11 @@ def create():
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
-        except host.MacExistsException, error:
-            flash(u'Duplicate MAC address (already present on one of the connected subnets)', 'error')
-
-        except host.SubnetFullException, error:
-            flash(u'Subnetz voll', 'error')
+        except (host.MacExistsException,
+                host.SubnetFullException,
+                ValueError), error:
+            flash(error.message, 'error')
+            session.session.rollback()
 
     return render_template('user/user_create.html', form = form)
 
@@ -277,8 +277,7 @@ def move(user_id):
         if user.room == Room.q.filter_by(
                 number=form.room_number.data,
                 level=form.level.data,
-                dormitory_id=form.dormitory.data.id
-            ).one():
+                dormitory_id=form.dormitory.data.id).one():
             flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
             refill_form_data = True
         else:
@@ -292,14 +291,14 @@ def move(user_id):
     if not form.is_submitted() or refill_form_data:
         form.dormitory.data = user.room.dormitory
 
-        levels = session.query(Room.level.label('level')).filter_by(
+        levels = session.session.query(Room.level.label('level')).filter_by(
             dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
 
         form.level.choices = [(entry.level, str(entry.level)) for entry in
                                                               levels]
         form.level.data = user.room.level
 
-        rooms = session.query(Room).filter_by(
+        rooms = session.session.query(Room).filter_by(
             dormitory_id=user.room.dormitory.id,
             level=user.room.level
         ).order_by(Room.number).distinct()
