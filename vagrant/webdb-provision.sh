@@ -93,7 +93,11 @@ recreate_db $TESTS_DBNAME --tablespace=$TMPFS_TABLESPACE_NAME
 echo "Filling postgres DB with sample data..."
 sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
 
-echo "export PYCROFT_DB_URI=postgresql+psycopg2:///pycroft?host=/var/run/postgresql" >> /home/$USER/.profile
+# set persistent environment variable
+if ! grep -Fq "PYCROFT_DB_URI" /home/vagrant/.profile;
+then
+    echo "export PYCROFT_DB_URI=postgresql+psycopg2:///$DBNAME?host=/var/run/postgresql" >> /home/$USER/.profile
+fi
 
 echo "All done! You can start Pycroft by running"
 echo "    vagrant ssh -c \"python2 $PROJDIR/server_run.py --debug --exposed\""
