@@ -22,11 +22,10 @@ def server_run(args):
         connection_string = os.environ['PYCROFT_DB_URI']
     except KeyError:
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
-                           "set to an SQLalchemy connection string.")
+                           "set to an SQLAlchemy connection string.")
     engine = create_engine(connection_string, echo=False)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                scopefunc=lambda: _request_ctx_stack.top))
-    session.session.init_engine(app.config["DATABASE_URI"])
 
     app.debug = args.debug
 

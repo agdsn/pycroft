@@ -2,7 +2,9 @@
   <configuration default="false" name="Nosetest vagrant/postgres" type="tests" factoryName="Nosetests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs />
+    <envs>
+      <env name="PYCROFT_DB_URI" value="postgresql+psycopg2:///pycroft_tests?host=/var/run/postgresql" />
+    </envs>
     <option name="SDK_HOME" value="vagrant://$PROJECT_DIR$/usr/bin/python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />

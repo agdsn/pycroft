@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -93,12 +93,7 @@ recreate_db $TESTS_DBNAME --tablespace=$TMPFS_TABLESPACE_NAME
 echo "Filling postgres DB with sample data..."
 sudo -u $USER psql $DBNAME -f $PROJDIR/example/pg_example_data.sql > /dev/null
 
-#set config.json to postgres
-# (but using an absolute link so it is only changed within vagrant)
-if [[ -f $PROJDIR/pycroft/config.json ]]; then
-    rm $PROJDIR/pycroft/config.json
-fi
-ln -s $PROJDIR/pycroft/config.json.postgres $PROJDIR/pycroft/config.json
+echo "export PYCROFT_DB_URI=postgresql+psycopg2:///pycroft?host=/var/run/postgresql" >> /home/$USER/.profile
 
 echo "All done! You can start Pycroft by running"
 echo "    vagrant ssh -c \"python2 $PROJDIR/server_run.py --debug --exposed\""
