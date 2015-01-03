@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -19,6 +19,8 @@ from sqlalchemy import ForeignKey, Column, and_, DateTime, Integer, \
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.orm.util import has_identity
 from base import ModelBase
+from pycroft import config
+from pycroft.model.finance import FinanceAccount
 from pycroft.model.property import Membership, Property, PropertyGroup, \
     TrafficGroup
 from pycroft.helpers.user import hash_password, verify_password
@@ -85,6 +87,15 @@ class User(ModelBase, UserMixin):
                       "lp", "mail", "news", "uucp", "proxy", "majordom",
                       "postgres", "wwwadmin", "backup", "msql", "operator",
                       "ftp", "ftpadmin", "guest", "bb", "nobody"]
+
+    def __init__(self, *args, **kwargs):
+        # executed after relationship is read in
+        # automatically creates finance account for user
+        conf = config["finance"]
+        self.finance_account = FinanceAccount(
+            name=conf["user_finance_account_name"].format(login=self.login),
+            type="ASSET")
+        super(User, self).__init__(*args, **kwargs)
 
     @validates('login')
     def validate_login(self, _, value):

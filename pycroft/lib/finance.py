@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from itertools import imap, chain, izip_longest, ifilter
@@ -102,6 +102,13 @@ def simple_transaction(description, debit_account, credit_account, amount,
 
 
 def setup_user_finance_account(new_user, processor):
+    """Adds initial charges to a new user's finance account.
+    :param new_user: the User object of the user moving in
+    :param processor: the User object of the user who initiated the action
+                      of moving the user in
+    :return: None
+    """
+
     conf = config["finance"]
     current_semester = get_current_semester()
     format_args = {
@@ -109,22 +116,16 @@ def setup_user_finance_account(new_user, processor):
         "user_name": new_user.name,
         "semester": current_semester.name
     }
-    new_finance_account = FinanceAccount(
-        name=conf["user_finance_account_name"].format(**format_args),
-        type="ASSET"
-    )
-    new_user.finance_account = new_finance_account
-    session.session.add(new_finance_account)
 
     # Initial bookings
     simple_transaction(
         conf["registration_fee_description"].format(**format_args),
-        get_registration_fee_account(), new_finance_account,
+        get_registration_fee_account(), new_user.finance_account,
         current_semester.registration_fee, processor
     )
     simple_transaction(
         conf["semester_contribution_description"].format(**format_args),
-        get_semester_contribution_account(), new_finance_account,
+        get_semester_contribution_account(), new_user.finance_account,
         current_semester.regular_semester_contribution, processor
     )
 

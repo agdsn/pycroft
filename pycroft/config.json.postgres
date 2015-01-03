@@ -9,7 +9,7 @@
         "semester_contribution_account_id": 2,
         "additional_fee_account_id": 3,
         "overdue_fine_account_id": 4,
-        "user_finance_account_name": "Konto von {user_id}",
+        "user_finance_account_name": "Konto von {login}",
         "registration_fee_description": "Anmeldegebühr",
         "semester_contribution_description": "Semesterbeitrag {semester}"
     },

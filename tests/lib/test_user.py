@@ -77,12 +77,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
 
-        #host.UserHost.q.delete()
-        #user.User.q.delete()
-        #port.PatchPort.q.delete()
-        #dormitory.Room.q.delete()
-        #host.Ip.q.delete()
-
         session.session.commit()
         super(Test_020_User_Move_In, self).tearDown()
 
