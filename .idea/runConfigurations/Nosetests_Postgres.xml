@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Nosetest vagrant/postgres" type="tests" factoryName="Nosetests">
+  <configuration default="false" name="Nosetests Postgres" type="tests" factoryName="Nosetests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYCROFT_DB_URI" value="postgresql+psycopg2:///pycroft_tests?host=/var/run/postgresql" />
     </envs>
-    <option name="SDK_HOME" value="vagrant://$PROJECT_DIR$/usr/bin/python" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="Pycroft" />

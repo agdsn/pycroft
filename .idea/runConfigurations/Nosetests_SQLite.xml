@@ -1,8 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UnitTests" type="tests" factoryName="Nosetests">
+  <configuration default="false" name="Nosetests SQLite" type="tests" factoryName="Nosetests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs />
+    <envs>
+      <env name="PYCROFT_DB_URI" value="sqlite:///" />
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="true" />
@@ -10,6 +13,13 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="Pycroft" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+    <PathMappingSettings>
+      <option name="pathMappings">
+        <list>
+          <mapping local-root="$PROJECT_DIR$" remote-root="/pycroft" />
+        </list>
+      </option>
+    </PathMappingSettings>
     <option name="SCRIPT_NAME" value="" />
     <option name="CLASS_NAME" value="" />
     <option name="METHOD_NAME" value="" />
@@ -18,12 +28,8 @@
     <option name="PATTERN" value="" />
     <option name="USE_PATTERN" value="false" />
     <option name="PARAMS" value="" />
-    <option name="USE_PARAM" value="true" />
-    <RunnerSettings RunnerId="PyDebugRunner" />
-    <RunnerSettings RunnerId="PythonCover" />
+    <option name="USE_PARAM" value="false" />
     <RunnerSettings RunnerId="PythonRunner" />
-    <ConfigurationWrapper RunnerId="PyDebugRunner" />
-    <ConfigurationWrapper RunnerId="PythonCover" />
     <ConfigurationWrapper RunnerId="PythonRunner" />
     <method />
   </configuration>
