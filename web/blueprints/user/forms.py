@@ -96,12 +96,12 @@ class UserAddGroupMembership(Form):
     group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
     begin_date = DateField(u"Beginn", [DataRequired()])
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
-    end_date = DateField(u"Ende", [Optional()])
+    end_date = DateField(u"Ende", [OptionalIf("unlimited")])
 
 class UserEditGroupMembership(Form):
     begin_date = DateField(u"Beginn", [DataRequired()])
     unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
-    end_date = DateField(u"Ende", [Optional()])
+    end_date = DateField(u"Ende", [OptionalIf("unlimited")])
 
 class UserBlockForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
