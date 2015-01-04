@@ -485,9 +485,10 @@ def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        end_date = datetime.combine(form.date.data, time(0))
         if form.unlimited.data:
             end_date = None
+        else:
+            end_date = datetime.combine(form.date.data, time(0))
 
         try:
             blocked_user = lib.user.block(
