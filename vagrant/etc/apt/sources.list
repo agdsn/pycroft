@@ -1,0 +1,11 @@
+deb http://ftp.wh2.tu-dresden.de/debian wheezy main
+deb-src http://ftp.wh2.tu-dresden.de/debian wheezy main
+
+deb http://ftp.wh2.tu-dresden.de/debian wheezy-backports main
+deb-src http://ftp.wh2.tu-dresden.de/debian wheezy-backports main
+
+deb http://ftp.wh2.tu-dresden.de/debian wheezy-updates main
+deb-src http://ftp.wh2.tu-dresden.de/debian wheezy-updates main
+
+deb http://ftp.wh2.tu-dresden.de/pub/mirrors/debian-security wheezy/updates main
+deb-src http://ftp.wh2.tu-dresden.de/pub/mirrors/debian-security wheezy/updates main
