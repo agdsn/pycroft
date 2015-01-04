@@ -4,6 +4,7 @@
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="PYCROFT_DB_URI" value="postgresql+psycopg2:///pycroft?host=/var/run/postgresql" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -12,8 +13,15 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="Pycroft" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+    <PathMappingSettings>
+      <option name="pathMappings">
+        <list>
+          <mapping local-root="$PROJECT_DIR$" remote-root="/pycroft" />
+        </list>
+      </option>
+    </PathMappingSettings>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/server_run.py" />
-    <option name="PARAMETERS" value="" />
+    <option name="PARAMETERS" value="--exposed --debug" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="PythonRunner" />
