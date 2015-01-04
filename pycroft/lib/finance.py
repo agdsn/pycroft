@@ -229,6 +229,7 @@ class CSVImportError(Exception):
         self.cause = cause
 
 
+@with_transaction
 def import_journal_csv(csv_file, import_time=None):
     if import_time is None:
         import_time = datetime.utcnow()
@@ -246,7 +247,6 @@ def import_journal_csv(csv_file, import_time=None):
         lambda r: process_record(r[0], r[1], import_time),
         reversed(list(records))
     ))
-    session.session.commit()
 
 
 def remove_space_characters(field):
