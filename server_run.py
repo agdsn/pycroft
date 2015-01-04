@@ -14,8 +14,6 @@ from pycroft.model.session import set_scoped_session
 
 def server_run(args):
     from web import make_app
-    from pycroft import config
-    from pycroft.model import session
 
     app = make_app()
     try:
@@ -26,12 +24,8 @@ def server_run(args):
     engine = create_engine(connection_string, echo=False)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                scopefunc=lambda: _request_ctx_stack.top))
-
+    app.config.from_pyfile('flask.cfg')
     app.debug = args.debug
-
-    app.config['MAX_CONTENT_LENGTH'] = int(config["file_upload"]
-                                            ["max_file_size"])
-    app.config['UPLOAD_FOLDER'] = config["file_upload"]["temp_dir"]
 
     app.run(debug=args.debug, port=args.port,
             host="0.0.0.0" if args.exposed else None)
