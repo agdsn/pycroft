@@ -10,7 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from flask import Flask, redirect, url_for, request, flash
+from flask import Flask, redirect, url_for, request, flash, render_template
 from flask.ext.babel import Babel
 from .blueprints import (finance, infrastructure, properties, user, facilities,
                         login)
@@ -62,18 +62,16 @@ def make_app():
 
         :param e: The error from the errorhandler
         """
-        if e.code in (401, 403):
+        if not hasattr(e, 'code') or e.code in (500,):
+            flash(e, "error")
+        elif e.code in (401, 403):
             flash(u"Nicht genügend Rechte um die Seite zu sehen!", "error")
         elif e.code in (404,):
             flash(u"Seite wurde nicht gefunden!", "error")
-        elif e.code in (500,):
-            flash(e, "error")
         else:
             flash(u"Fehler!", "error")
 
-        if request.referrer:
-            return redirect(request.referrer)
-        return redirect("/")
+        return render_template('error.html', error=e)
 
     @app.route('/')
     def redirect_to_index():
