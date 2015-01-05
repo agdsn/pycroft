@@ -34,12 +34,12 @@ class utcnow(expression.FunctionElement):
 
 @compiles(utcnow, 'postgresql')
 def pg_utcnow(element, compiler, **kw):
-    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
+    return "TIMEZONE('utc', CURRENT_TIMESTAMP(6))"
 
 
 @compiles(utcnow, 'sqlite')
 def sqlite_utcnow(element, compiler, **kw):
-    return "STRFTIME('%Y-%m-%d %H:%M:%f', 'now')"
+    return "STRFTIME('%Y-%m-%d %H:%M:%f000', 'now')"
 
 
 @compiles(greatest)
