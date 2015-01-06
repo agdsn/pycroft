@@ -93,7 +93,7 @@ class User(ModelBase, UserMixin):
         # automatically creates finance account for user
         conf = config["finance"]
         self.finance_account = FinanceAccount(
-            name=conf["user_finance_account_name"].format(login=self.login),
+            name=conf["user_finance_account_name"].format(login=kwargs.get("login")),
             type="ASSET")
         super(User, self).__init__(*args, **kwargs)
 
