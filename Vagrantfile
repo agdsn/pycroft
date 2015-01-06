@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 # -*- mode: ruby -*-
@@ -20,6 +20,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
     webdb.vm.network :forwarded_port, host:5000, guest: 5000,
                      host_ip: "127.0.0.1", auto_correct: true
-    webdb.vm.provision :shell, path: "vagrant/webdb-provision.sh"
+    webdb.vm.network :forwarded_port, host:5432, guest:5432,
+                     host_ip: "127.0.0.1", auto_correct: true
+    webdb.vm.provision "sw", type: "shell",
+                     path: "vagrant/provision-sw.sh"
+    webdb.vm.provision "db", type: "shell",
+                     path: "vagrant/provision-db.sh"
   end
 end
