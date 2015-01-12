@@ -32,9 +32,6 @@ def make_app():
     app = Flask(__name__)
 
     #initialization code
-    app.secret_key = \
-        r"eiNohfaefaig5Iek6oshai0eijuph4ohla6Eo1vi5bahnaeh3Bah7ohy1einuaxu"
-
     login_manager.init_app(app)
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
@@ -46,8 +43,6 @@ def make_app():
     template_filters.register_filters(app)
     template_tests.register_checks(app)
 
-    app.config["BABEL_DEFAULT_LOCALE"] = "de"
-    app.config["BABEL_DEFAULT_TIMEZONE"] = "Europe/Berlin"
     babel = Babel(app)
 
     page_resources.init_app(app)
@@ -57,7 +52,6 @@ def make_app():
     dormitories.nav.register_on(app)
     infrastructure.nav.register_on(app)
     properties.nav.register_on(app)
-
 
     @app.errorhandler(401)
     @app.errorhandler(403)

@@ -3,6 +3,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import os
+import random
+import string
 import unittest
 from fixture.style import TrimmedNameStyle
 from fixture import SQLAlchemyFixture, DataTestCase
@@ -119,6 +121,8 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
         # Disable the CSRF in testing mode
         app.config["WTF_CSRF_ENABLED"] = False
+        app.config["SECRET_KEY"] = ''.join(random.choice(string.ascii_letters)
+                                           for _ in range(20))
 
         return app
 
