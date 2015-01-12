@@ -4,15 +4,16 @@
 import random
 import unittest
 from crypt import crypt as python_crypt
-from datetime import datetime
+from datetime import timedelta
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
-from pycroft.model import user, dormitory, session
-from pycroft.helpers.user import generate_password, hash_password, verify_password, generate_crypt_salt
+from pycroft.helpers.interval import single
+from pycroft.model import dormitory, session, property, user
+from pycroft.helpers.user import (
+    generate_password, hash_password, verify_password, generate_crypt_salt)
 from tests import FixtureDataTestBase
-
-
-from tests.model.fixtures.user_fixtures import DormitoryData, UserData, RoomData
+from tests.model.fixtures.user_fixtures import (
+    DormitoryData, PropertyGroupData, RoomData, TrafficGroupData, UserData)
 
 
 class Test_010_PasswordGenerator(unittest.TestCase):
@@ -170,3 +171,105 @@ class Test_040_User_Login(FixtureDataTestBase):
 
         session.session.commit()
 
+
+class TestActiveHybridMethods(FixtureDataTestBase):
+    datasets = [UserData, PropertyGroupData, TrafficGroupData]
+
+    def setUp(self):
+        super(TestActiveHybridMethods, self).setUp()
+        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        self.property_group = property.PropertyGroup.q.filter_by(
+            name=PropertyGroupData.dummy_group.name).one()
+        self.traffic_group = property.TrafficGroup.q.filter_by(
+            name=TrafficGroupData.dummy_group.name).one()
+
+    def add_membership(self, group):
+        m = property.Membership(user=self.user, group=group)
+        session.session.add(m)
+        session.session.commit()
+        return m
+
+    def test_active_memberships(self):
+        self.assertEqual(self.user.active_memberships(), [])
+        m = self.add_membership(self.property_group)
+        self.assertEqual(self.user.active_memberships(), [m])
+        when = single(session.utcnow() - timedelta(hours=1))
+        self.assertEqual(self.user.active_memberships(when), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        self.assertEqual(self.user.active_memberships(when), [m])
+
+    def create_active_memberships_query(self, when=None):
+        return session.session.query(property.Membership).from_statement(
+            user.User.active_memberships(when).where(
+                user.User.id == self.user.id))
+
+    def test_active_memberships_expression(self):
+        query = self.create_active_memberships_query()
+        self.assertEqual(query.all(), [])
+        m = self.add_membership(self.property_group)
+        query = self.create_active_memberships_query()
+        self.assertEqual(query.all(), [m])
+        when = single(session.utcnow() - timedelta(hours=1))
+        query = self.create_active_memberships_query(when)
+        self.assertEqual(query.all(), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        query = self.create_active_memberships_query(when)
+        self.assertEqual(query.all(), [m])
+
+    def test_active_property_groups(self):
+        self.assertEqual(self.user.active_property_groups(), [])
+        self.add_membership(self.property_group)
+        self.assertEqual(self.user.active_property_groups(),
+                         [self.property_group])
+        when = single(session.utcnow() - timedelta(hours=1))
+        self.assertEqual(self.user.active_property_groups(when), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        self.assertEqual(self.user.active_property_groups(when),
+                         [self.property_group])
+
+    def create_active_property_groups_query(self, when=None):
+        return session.session.query(property.PropertyGroup).from_statement(
+            user.User.active_property_groups(when).where(
+                user.User.id == self.user.id))
+
+    def test_active_property_groups_expression(self):
+        query = self.create_active_property_groups_query()
+        self.assertEqual(query.all(), [])
+        self.add_membership(self.property_group)
+        query = self.create_active_property_groups_query()
+        self.assertEqual(query.all(), [self.property_group])
+        when = single(session.utcnow() - timedelta(hours=1))
+        query = self.create_active_property_groups_query(when)
+        self.assertEqual(query.all(), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        query = self.create_active_property_groups_query(when)
+        self.assertEqual(query.all(), [self.property_group])
+
+    def test_active_traffic_groups(self):
+        self.assertEqual(self.user.active_traffic_groups(), [])
+        self.add_membership(self.traffic_group)
+        self.assertEqual(self.user.active_traffic_groups(),
+                         [self.traffic_group])
+        when = single(session.utcnow() - timedelta(hours=1))
+        self.assertEqual(self.user.active_traffic_groups(when), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        self.assertEqual(self.user.active_traffic_groups(when),
+                         [self.traffic_group])
+
+    def create_active_traffic_groups_query(self, when=None):
+        return session.session.query(property.TrafficGroup).from_statement(
+            user.User.active_traffic_groups(when).where(
+                user.User.id == self.user.id))
+
+    def test_active_traffic_groups_expression(self):
+        query = self.create_active_traffic_groups_query()
+        self.assertEqual(query.all(), [])
+        self.add_membership(self.traffic_group)
+        query = self.create_active_traffic_groups_query()
+        self.assertEqual(query.all(), [self.traffic_group])
+        when = single(session.utcnow() - timedelta(hours=1))
+        query = self.create_active_traffic_groups_query(when)
+        self.assertEqual(query.all(), [])
+        when = single(session.utcnow() + timedelta(hours=1))
+        query = self.create_active_traffic_groups_query(when)
+        self.assertEqual(query.all(), [self.traffic_group])

@@ -26,3 +26,14 @@ class UserData(DataSet):
         name = "John Doe"
         registration_date = datetime.utcnow()
         room = RoomData.dummy_room
+
+
+class PropertyGroupData(DataSet):
+    class dummy_group:
+        name = "dummy"
+
+
+class TrafficGroupData(DataSet):
+    class dummy_group:
+        name = "dummy"
+        traffic_limit = 0

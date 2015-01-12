@@ -456,3 +456,27 @@ class Test_050_Membership(PropertyDataTestBase):
             user=self.user, group=self.property_group1
         ).one()
         self.assertTrue(p1.active())
+
+
+class TestGroup(PropertyDataTestBase):
+    def add_membership(self):
+        session.session.add(property.Membership(user=self.user,
+                                                group=self.property_group1))
+        session.session.commit()
+
+    def test_active_users(self):
+        self.assertEqual(self.property_group1.active_users(), [])
+        self.add_membership()
+        self.assertEqual(self.property_group1.active_users(), [self.user])
+
+    def create_active_users_query(self):
+        active_users = property.Group.active_users().where(
+            property.Group.id == self.property_group1.id)
+        return session.session.query(user.User).from_statement(active_users)
+
+    def test_active_users_expression(self):
+        query = self.create_active_users_query()
+        self.assertEqual(query.all(), [])
+        self.add_membership()
+        query = self.create_active_users_query()
+        self.assertEqual(query.all(), [self.user])

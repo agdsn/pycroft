@@ -12,7 +12,7 @@ from datetime import datetime
 from collections import OrderedDict
 
 from sqlalchemy import (
-    CheckConstraint, Column, ForeignKey, and_, or_, select, literal, null)
+    CheckConstraint, Column, ForeignKey, and_, or_, select, join, literal, null)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import backref, relationship, validates
@@ -46,17 +46,15 @@ class Group(ModelBase):
         return object_session(self).query(pycroft.model.user.User).join(
             (Membership, Membership.user_id == pycroft.model.user.User.id),
         ).filter(
-            Membership.active(when),
-            Membership.group_id == self.id
+            Membership.active(when), Membership.group_id == self.id
         ).all()
 
     @active_users.expression
-    def active_users(self, when=None):
-        return select([pycroft.model.user.User]).join(
-            (Membership, Membership.user_id == pycroft.model.user.User.id),
+    def active_users(cls, when=None):
+        return select([pycroft.model.user.User]).select_from(
+            join(pycroft.model.user.User, Membership).join(cls)
         ).where(
-            Membership.active(when),
-            Membership.group_id == self.id
+            Membership.active(when)
         )
 
 
@@ -93,16 +91,16 @@ class Membership(ModelBase):
         return when.overlaps(closed(self.start_date, self.end_date))
 
     @active.expression
-    def active(self, when=None):
+    def active(cls, when=None):
         if when is None:
             now = session.utcnow()
             when = closed(now, now)
 
         return and_(
-            or_(self.start_date == null(), literal(when.end) == null(),
-                self.start_date <= literal(when.end)),
-            or_(literal(when.begin) == null(), self.end_date == null(),
-                literal(when.begin) <= self.end_date)
+            or_(cls.start_date == null(), literal(when.end) == null(),
+                cls.start_date <= literal(when.end)),
+            or_(literal(when.begin) == null(), cls.end_date == null(),
+                literal(when.begin) <= cls.end_date)
         ).label("active")
 
     @validates('end_date')

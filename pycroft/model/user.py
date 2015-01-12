@@ -16,7 +16,7 @@ from flask.ext.login import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy import (
     ForeignKey, Column, and_, DateTime, Integer,
-    String, select, exists, null, not_)
+    String, select, join, exists, null, not_)
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.util import has_identity
@@ -132,8 +132,13 @@ class User(ModelBase, UserMixin):
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
-        return cls.memberships.where(pycroft.model.property.Membership.active(when))
+        return select([pycroft.model.property.Membership]).select_from(
+            join(cls, pycroft.model.property.Membership)
+        ).where(
+            pycroft.model.property.Membership.active(when)
+        )
 
+    @hybrid_method
     def active_property_groups(self, when=None):
         return object_session(self).query(
             pycroft.model.property.PropertyGroup
@@ -144,6 +149,16 @@ class User(ModelBase, UserMixin):
             pycroft.model.property.Membership.user_id == self.id
         ).all()
 
+    @active_property_groups.expression
+    def active_property_groups(cls, when=None):
+        return select([pycroft.model.property.PropertyGroup]).select_from(
+            join(pycroft.model.property.PropertyGroup,
+                 pycroft.model.property.Membership).join(cls)
+        ).where(
+            pycroft.model.property.Membership.active(when)
+        )
+
+    @hybrid_method
     def active_traffic_groups(self, when=None):
         return object_session(self).query(
             pycroft.model.property.TrafficGroup
@@ -153,6 +168,15 @@ class User(ModelBase, UserMixin):
             pycroft.model.property.Membership.active(when),
             pycroft.model.property.Membership.user_id == self.id
         ).all()
+
+    @active_traffic_groups.expression
+    def active_traffic_groups(cls, when=None):
+        return select([pycroft.model.property.TrafficGroup]).select_from(
+            join(pycroft.model.property.TrafficGroup,
+                 pycroft.model.property.Membership).join(cls)
+        ).where(
+            pycroft.model.property.Membership.active(when)
+        )
 
     @hybrid_method
     def has_property(self, property_name, when=None):
