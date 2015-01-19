@@ -14,6 +14,7 @@ service postgresql stop
 update-rc.d postgresql remove
 
 cp -a /pycroft/vagrant/etc/supervisor/conf.d/postgresql.conf /etc/supervisor/conf.d/
+cp -a /pycroft/vagrant/usr/local/bin/postgresql.sh /usr/local/bin/postgresql.sh
 service supervisor restart
 
 cp -a /pycroft/vagrant/etc/profile.d/. /etc/profile.d/
