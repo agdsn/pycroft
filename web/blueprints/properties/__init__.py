@@ -46,6 +46,7 @@ def traffic_group_create():
         group = TrafficGroup(
             name=form.name.data,
             traffic_limit=int(form.traffic_limit.data)*1024*1024*1024)
+        session.session.add(group)
         session.session.commit()
         message = u'Traffic Gruppe {0} angelegt'
         flash(message.format(group.name), 'success')
