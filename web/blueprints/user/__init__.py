@@ -536,7 +536,7 @@ def search():
 @bp.route('/search/json', methods=['GET'])
 @access.require('user_show')
 def search_results():
-    user_id = request.args.get('id')
+    user_id = request.args.get('userid')
     name = request.args.get('name')
     login = request.args.get('login')
     result = User.q
