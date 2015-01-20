@@ -531,9 +531,6 @@ def search():
     return render_template('user/user_search.html', form=form)
 
 
-# todo: no route, give data _inline_!
-# todo: mv to lib/? mv _all_ rest-/non-frontend-stuff to lib/?
-@bp.route('/search/json', methods=['GET'])
 @access.require('user_show')
 def search_results():
     user_id = request.args.get('userid')
