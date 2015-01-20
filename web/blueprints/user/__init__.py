@@ -15,6 +15,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 import operator
 from sqlalchemy import Text
+from sqlalchemy.sql.functions import user
 from pycroft import lib
 from pycroft.helpers import host
 from pycroft.lib.finance import get_typed_splits
@@ -33,6 +34,9 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
+from web.template_filters import datetime_filter, host_cname_filter, \
+    host_name_filter, record_readable_name_filter, ip_get_switch, \
+    ip_get_switch_port
 
 bp = Blueprint('user', __name__, )
 access = BlueprintAccess(bp, ['user_show'])
@@ -107,6 +111,116 @@ def user_show(user_id):
         memberships=memberships.all(),
         memberships_active=memberships_active.all(),
         status=lib.user.determine_status(user))
+
+
+@bp.route("/show/<user_id>/logs")
+@bp.route("/show/<user_id>/logs/<logtype>")
+@access.require('user_show')
+def user_show_logs_json(user_id, logtype="all"):
+    user = User.q.get(user_id)
+    if user is None:
+        abort(404)
+    user_log_list = user.user_log_entries[::-1]\
+        if logtype in ["user", "all"] else []
+    room_log_list = Room.q.get(user.room_id).room_log_entries[::-1]\
+        if logtype in ["room", "all"] else []
+
+    return jsonify(items=map(
+        lambda entry: {
+            'time': datetime_filter(entry.timestamp),
+            'user': {
+                'title': entry.author.name,
+                'href': url_for("user.user_show", user_id=entry.author.id)
+            },
+            'message': entry.message,
+            'type': 'user'
+        },
+        user_log_list
+    ) + map(
+        lambda entry: {
+            'time': datetime_filter(entry.timestamp),
+            'user': {
+                'title': entry.author.name,
+                'href': url_for("user.user_show", user_id=entry.author.id)
+            },
+            'message': entry.message,
+            'type': 'room'
+        },
+        room_log_list
+    ))
+
+
+@bp.route("/show/<user_id>/hosts")
+@access.require('user_show')
+def user_show_hosts_json(user_id):
+    return jsonify(items=map(
+        lambda user_host: {
+            'host': "{} ({})".format(host_cname_filter(user_host),
+                                     host_name_filter(user_host)),
+            'room': "{} / {}-{}".format(user_host.room.dormitory.short_name,
+                                        user_host.room.level,
+                                        user_host.room.number)
+            if user_host.room else "Kein Raum",
+            'dns_entries': [
+                [record_readable_name_filter(record), record.information_human]
+                for record in user_host.records
+            ],
+            'actions': [
+                # TODO insert links to the pages for editing / deleting
+                #   (if implemented, of course…)
+                {'title': 'Bearbeiten', 'href': '', 'icon': 'glyphicon-edit'},
+                {'title': 'Löschen', 'href': '', 'icon': 'glyphicon-trash'}
+            ]
+        },
+        User.q.get(user_id).user_hosts
+    ))
+
+
+@bp.route("/show/<user_id>/devices")
+@access.require('user_show')
+def user_show_devices_json(user_id):
+    list_items = []
+    for user_host in User.q.get(user_id).user_hosts:
+        for ip in user_host.ips:
+            list_items.append({
+                'ip': ip.address,
+                'mac': ip.net_device.mac,
+                'switch': ip_get_switch(user_host, ip),
+                'port': ip_get_switch_port(user_host, ip)
+            })
+    return jsonify(items=list_items)
+
+
+@bp.route("/show/<user_id>/groups")
+@bp.route("/show/<user_id>/groups/<group_filter>")
+@access.require('user_show')
+def user_show_groups_json(user_id, group_filter="all"):
+    memberships = Membership.q.filter(Membership.user_id == user_id)
+    if group_filter is "active":
+        memberships = memberships.filter(
+            # it is important to use == here, "is" does NOT work
+            or_(Membership.start_date == None,
+                Membership.start_date <= functions.utcnow())
+        ).filter(
+            # it is important to use == here, "is" does NOT work
+            or_(Membership.end_date == None,
+                Membership.end_date > functions.utcnow())
+        )
+
+    return jsonify(items=map(
+        lambda membership: {
+            'group_name': membership.group.name,
+            'begin': (datetime_filter(membership.start_date)
+                      if membership.start_date is not None else ''),
+            'end': (datetime_filter(membership.end_date)
+                    if membership.end_date is not None else ''),
+            'actions': {'href': url_for(".edit_membership",
+                                        membership_id=membership.id),
+                        'title': 'Bearbeiten',
+                        'icon': 'glyphicon-edit'},
+        },
+        memberships.all()
+    ))
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
@@ -404,20 +518,48 @@ def edit_email(user_id):
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
-        userResult = User.q
-        if len(form.userid.data):
-            userResult = userResult.filter(User.id == form.userid.data)
-        if len(form.name.data):
-            userResult = userResult.filter(User.name.like('%' + form.name\
-            .data + '%'))
-        if len(form.login.data):
-            userResult = userResult.filter(User.login == form.login.data)
-        if not len(userResult.all()):
-            flash(u'Benutzer nicht gefunden', 'error')
         return render_template('user/user_search.html',
-            page_title=u"Suchergebnis",
-            results=userResult.all(), form=form)
+                               page_title=u"Suchergebnis",
+                               form=form)
+    # apply args given in direct GET-link
+    if request.args.get('id'):
+        form.userid.data = request.args.get('id')
+    if request.args.get('name'):
+        form.name.data = request.args.get('name')
+    if request.args.get('login'):
+        form.login.data = request.args.get('login')
     return render_template('user/user_search.html', form=form)
+
+
+# todo: no route, give data _inline_!
+# todo: mv to lib/? mv _all_ rest-/non-frontend-stuff to lib/?
+@bp.route('/search/json', methods=['GET'])
+@access.require('user_show')
+def search_results():
+    user_id = request.args.get('id')
+    name = request.args.get('name')
+    login = request.args.get('login')
+    result = User.q
+    if user_id:
+        result = result.filter(User.id == user_id)
+    if name:
+        result = result.filter(User.name.ilike("%{}%".format(name)))
+    if login:
+        result = result.filter(User.login.ilike("%{}%".format(login)))
+    return jsonify(items=map(
+        lambda found_user: {
+            'id': found_user.id,
+            'name': {'title': found_user.name,
+                     'href': url_for(".user_show", user_id=found_user.id)},
+            'login': found_user.login,
+            # todo: revisit User.hosts property!
+            # could be sth like this:
+            # 'hosts': Host.q.filter(Host.user_id == found_user.id).first().id
+            'hosts': 'Not implemented!'
+        },
+        result.all()
+    ) if user_id or name or login else [])
+
 
 @bp.route('/json/groups')
 def json_groups():

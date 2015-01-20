@@ -12,6 +12,7 @@
 """
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+from flask.json import jsonify
 
 from pycroft.model import session
 from pycroft.model.property import (
@@ -21,6 +22,7 @@ from pycroft.lib.property import (
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
+from web.template_filters import byte_size_filter
 
 
 bp = Blueprint('properties', __name__, )
@@ -35,6 +37,24 @@ def traffic_groups():
     traffic_groups_list = TrafficGroup.q.all()
     return render_template('properties/traffic_groups_list.html',
         traffic_groups=traffic_groups_list)
+
+
+@bp.route('/traffic_groups/json')
+@access.require('groups_traffic_show')
+def traffic_groups_json():
+    return jsonify(items=map(
+        lambda group: {
+            'name': group.name,
+            'limit': byte_size_filter(group.traffic_limit),
+            'delete': {
+                'href': url_for(".traffic_group_delete", group_id=group.id),
+                'title': 'Löschen',
+                'btn_class': '',
+                'glyphicon': 'glyphicon-delete'
+            }
+        },
+        TrafficGroup.q.all()
+    ))
 
 
 @bp.route('/traffic_group/create', methods=['GET', 'POST'])

@@ -11,7 +11,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for, jsonify, \
+    abort
 from pycroft.helpers import host
 from pycroft.model import session
 from pycroft.model.host import Switch, Host
@@ -34,18 +35,46 @@ nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 @nav.navigate(u"Subnetze")
 @access.require('infrastructure_show')
 def subnets():
+    return render_template('infrastructure/subnets_list.html')
+
+
+@bp.route('/subnets/json')
+@access.require('infrastructure_show')
+def subnets_json():
     subnets_list = Subnet.q.all()
-    return render_template('infrastructure/subnets_list.html',
-        subnets = subnets_list)
+    return jsonify(items=map(
+        lambda subnet: {
+            'id': subnet.id,
+            'domain': subnet.dns_domain,
+            'ip': subnet.address,
+            'gateway': subnet.gateway,
+            'ip_version': "IPv{}".format(subnet.ip_type)
+        },
+        subnets_list
+    ))
 
 
 @bp.route('/switches')
 @nav.navigate(u"Switche")
 @access.require('infrastructure_show')
 def switches():
-    switches_list = Switch.q.all()
-    return render_template('infrastructure/switches_list.html',
-        switches=switches_list)
+    return render_template('infrastructure/switches_list.html')
+
+
+@bp.route('/switches/json')
+@access.require('infrastructure_show')
+def switches_json():
+    return jsonify(items=map(
+        lambda switch: {
+            'id': switch.id,
+            'name': {
+                'title': switch.name,
+                'href': url_for(".switch_show", switch_id=switch.id)
+            },
+            'ip': switch.management_ip
+        },
+        Switch.q.all()
+    ))
 
 
 @bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
@@ -199,16 +228,51 @@ def switch_show(switch_id):
     if not switch:
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
+    return render_template('infrastructure/switch_show.html',
+                           page_title=u"Switch: " + switch.name,
+                           switch=switch)
+
+
+@bp.route('/switch/show/<int:switch_id>/json')
+def switch_show_json(switch_id):
+    switch = Switch.q.get(switch_id)
+    if not switch:
+        abort(404)
     switch_port_list = switch.ports
     switch_port_list = host.sort_ports(switch_port_list)
-    return render_template('infrastructure/switch_show.html',
-        page_title=u"Switch: " + switch.name,
-        switch=switch, switch_ports=switch_port_list)
+    return jsonify(items=map(
+        lambda port: {
+            "portname": port.name,
+            "room": {
+                "href": url_for(
+                    "dormitories.room_show",
+                    room_id=port.patch_port.room.id
+                ),
+                "title": "{}-{}".format(
+                    port.patch_port.room.level,
+                    port.patch_port.room.number
+                )
+            }
+        },
+        switch_port_list
+    ))
+
 
 @bp.route('/vlans')
 @nav.navigate(u"VLANs")
 @access.require('infrastructure_show')
 def vlans():
-    vlans_list = VLAN.q.all()
-    return render_template('infrastructure/vlan_list.html',
-                           vlans=vlans_list)
+    return render_template('infrastructure/vlan_list.html')
+
+
+@bp.route('/vlans/json')
+@access.require('infrastructure_show')
+def vlans_json():
+    return jsonify(items=map(
+        lambda vlan: {
+            'id': vlan.id,
+            'name': vlan.name,
+            'tag': vlan.tag
+        },
+        VLAN.q.all()
+    ))

@@ -1,43 +1,13 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% if user.user_hosts %}
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Host</th>
-            <th>Raum</th>
-            <th>DNS-Einträge</th>
-            <th>Aktionen</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for host in user.user_hosts -%}
-        <tr>
-            <td>{{ host|host_cname }} ({{ host|host_name }})</td>
-            <td>{% if host.room %}{{ host.room.dormitory.short_name }} / {{ host.room.level }}-{{ host.room.number }}{% else %}Kein Raum{% endif %}</td>
-            <td>
-                {% if host.records -%}
-                <ul>
-                    {% for record in host.records -%}
-                    <li>
-                        <span>{{ record|record_readable_name }}</span>
-                        <span>{{ record.information_human }}</span>
-                    </li>
-                    {%- endfor %}
-                </ul>
-                {%- endif %}
-            </td>
-            <td>
-                <a title="Bearbeiten" href="#"><span class="glyphicon glyphicon-edit"></span></a>
-                <a title="Löschen" href="#"><span class="glyphicon glyphicon-trash"></span></a>
-            </td>
-        </tr>
-        {%- endfor %}
-    </tbody>
-</table>
-{% else %}
-<div class="alert alert-info">Nutzer hat keine Hosts.</div>
-{% endif %}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'host', 'title': 'Host'},
+    {'name': 'room', 'title': 'Raum'},
+    {'name': 'dns_entries', 'DNS-Einträge': 'Switch', 'formatter': 'listFormatter'},
+    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'multiBtnFormatter'},
+] %}
+{{ tbl.item_table("hosts", url_for(".user_show_hosts_json", user_id=user.id), cols) }}

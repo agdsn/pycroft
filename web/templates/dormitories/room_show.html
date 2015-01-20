@@ -1,13 +1,18 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
-{% import "macros/logs.html" as logs %}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'time', 'title': ''},
+    {'name': 'user', 'title': 'Nutzer', 'formatter': 'linkFormatter'},
+    {'name': 'message', 'title': 'Nachricht'}
+] %}
 
-{% block content %}
+{% block content %}gco
     <ul class="breadcrumb">
         <li><a href="{{ url_for('.overview') }}">Wohnheime</a></li>
         <li><a href="{{ url_for('.dormitory_levels', dormitory_id=room.dormitory.id) }}">{{ room.dormitory.short_name }}</a></li>
@@ -46,7 +51,7 @@
 
     <h2>Log</h2>
     <div class="row">
-        {{ logs.render_log(room_log) }}
+    {{ tbl.item_table("logs", url_for(".room_logs_json", room_id=room.id), cols) }}
     </div>
 
     <div class="row">

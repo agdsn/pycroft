@@ -1,48 +1,30 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
+
+{% set cols = [
+    {'name': 'name', 'title': 'Name'},
+    {'name': 'registration_fee', 'title': 'Anmeldegebühr'},
+    {'name': 'standard_fee', 'title': 'Regulärer Beitrag'},
+    {'name': 'discount_fee', 'title': 'Ermäßigter Beitrag'},
+    {'name': 'late_fee', 'title': 'Versäumnisebühr'},
+    {'name': 'early_start', 'title': 'Vorzeitiger Beginn'},
+    {'name': 'start', 'title': 'Beginn'},
+    {'name': 'end', 'title': 'Ende'},
+    {'name': 'late_end', 'title': 'Verspätetes Ende'},
+] %}
 
 {% block content %}
-<div id="tbl_semesters">
-    <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Anmeldegebühr</th>
-            <th>Regulärer Beitrag</th>
-            <th>Ermäßigter Beitrag</th>
-            <th>Versäumnisgebühr</th>
-            <th>Vorzeitiger Beginn</th>
-            <th>Beginn</th>
-            <th>Ende</th>
-            <th>Verspätetes Ende</th>
-        </tr>
-    </thead><tbody>
-        {% for semester in semesters -%}
-        <tr>
-            <td>{{ semester.name }}</td>
-            <td>{{ semester.registration_fee|money }}</td>
-            <td>{{ semester.regular_semester_contribution|money }}</td>
-            <td>{{ semester.reduced_semester_contribution|money }}</td>
-            <td>{{ semester.overdue_fine|money }}</td>
-            <td>{{ semester.premature_begin_date|date }}</td>
-            <td>{{ semester.begin_date|date }}</td>
-            <td>{{ semester.end_date|date }}</td>
-            <td>{{ semester.belated_end_date|date }}</td>
-        </tr>
-        {%- endfor %}
-    </tbody>
-    </table>
-</div>
+{{ tbl.item_table(
+    'semesters',
+    url_for('.semesters_list_json'),
+    cols
+) }}
 {% if current_user is privileged_for('finance_change') -%}
 <a class="btn btn-primary" href="{{ url_for('.semesters_create') }}">Semester erstellen</a>
 {%- endif %}
-{% endblock %}
-
-{% block page_script %}
-{{ pagination.init_sorting('tbl_semesters', 8, true) }}
 {% endblock %}

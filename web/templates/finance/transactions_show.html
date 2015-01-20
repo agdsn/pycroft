@@ -1,12 +1,15 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
 {% set page_title = "Buchung anzeigen" %}
-{% set inverted = false %}
+{% set cols = [
+    {'name': 'account', 'title': 'Konto', 'formatter': 'linkFormatter'},
+    {'name': 'amount', 'title': 'Wert'}
+] %}
 
 {% block content %}
     <section>
@@ -20,25 +23,12 @@
         </dl>
     </section>
     <section id="tbl_transactions">
-        <table class="table table-hover table-striped">
-            <thead>
-                <tr>
-                    <th>Konto</th>
-                    <th>Wert</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for split in transaction.splits -%}
-                <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
-                    <td><a href="{{ url_for(".accounts_show", account_id=split.account_id) }}">{{ split.account.name }}</a></td>
-                    <td>{{ split.amount|money }}</td>
-                </tr>
-                {%- endfor %}
-            </tbody>
-        </table>
+        {{ tbl.item_table(
+            'transactions',
+            url_for(".transactions_show_json", transaction_id=transaction.id),
+            cols,
+            [],
+            'financeRowFormatter'
+        ) }}
     </section>
-{% endblock %}
-
-{% block page_script %}
-{{ pagination.init_sorting('tbl_transactions', 2, true) }}
 {% endblock %}

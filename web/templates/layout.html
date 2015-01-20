@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -11,6 +11,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     {{ resources.link_css("libs/bootstrap/dist/css/bootstrap.min.css") }}
+    {{ resources.link_css("libs/bootstrap-table/dist/bootstrap-table.min.css") }}
     {{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}
     {{ resources.link_css("libs/typeahead.js-bootstrap3.less/typeahead.css") }}
     {{ resources.link_css("style.css") }}
@@ -97,8 +98,12 @@
 </script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/jquery/dist/jquery.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap/dist/js/bootstrap.min.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap-table/dist/bootstrap-table.min.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap-table/dist/locale/bootstrap-table-de-DE.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/typeahead.js/dist/typeahead.bundle.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="libs/underscore/underscore-min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="custom/js/table.js") }}"></script>
 {{ resources.linked_script_files() }}
 <script type="text/javascript">
     $(function() {

@@ -1,45 +1,46 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
-{% import "macros/pagination.html" as pagination %}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'id', 'title': 'ID'},
+    {'name': 'name', 'title': 'Name', 'formatter': 'linkFormatter'},
+    {'name': 'login', 'title': 'Login'},
+    {'name': 'hosts', 'title': 'Hosts'},
+] %}
 
 {% block content %}
     <div class="row">
-        {{ forms.simple_form(form, '', url_for('.search')) }}
+        {{ forms.simple_form(form, '', url_for(".overview"), method="GET") }}
     </div>
-    {% if results -%}
     <section>
         <h2>Ergebnisse</h2>
-        <div id="tbl_users" class="row">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Login</th>
-                        <th>Hosts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in results -%}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td><a href="{{ url_for('.user_show', user_id=user.id) }}">{{ user.name }}</a></td>
-                        <td>{{ user.login }}</td>
-                        <td>{{ user.hosts|join(' ', 'hostname') }}</td>
-                    </tr>
-                    {%- endfor %}
-                </tbody>
-            </table>
-        </div>
+        {{ tbl.item_table("results", url_for(".search_results"), cols) }}
     </section>
-    {%- endif %}
 {% endblock %}
 
 {% block page_script %}
-{{ pagination.init_sorting('tbl_users', 4, true) }}
+<script type="application/javascript" language="javascript">
+    $('input').keyup(function(){updateTable();});
+    $(document).ready(function(){updateTable();});
+
+    function updateTable() {
+        var url = createJsonUrl();
+        $('#results').bootstrapTable('refresh', {url: url});
+    }
+
+    function createJsonUrl() {
+        var params = "";
+        var inputs = $('input.form-control');
+        for(var i = 0; i < inputs.length; i++) {
+            if(i>0) params += "&";
+            params += inputs.eq(i).attr("name") + "=" + inputs.eq(i).val();
+        }
+        return "{{ url_for(".search_results") }}?" + params
+    }
+</script>
 {% endblock %}

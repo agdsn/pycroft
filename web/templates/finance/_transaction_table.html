@@ -1,8 +1,16 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+{% import "macros/table.html" as tbl %}
+{% set cols = [
+    {'name': 'creation_date', 'title': 'Erstellt am'},
+    {'name': 'transfer_date', 'title': 'Gültig ab'},
+    {'name': 'description', 'title': 'Beschreibung',
+    'formatter': 'linkFormatter'},
+    {'name': 'amount', 'title': 'Wert'}
+] %}
 {% macro render_column_headings() -%}
     <th>Erstellt am</th>
     <th>Gültig ab</th>
@@ -27,32 +35,13 @@
 </ul>
 <div class="tab-content">
     <div id="report-form"  class="tab-pane active">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    {{ render_column_headings() }}
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <td colspan="3">Saldo</td>
-                    <td>{{ balance|money }}</td>
-                </tr>
-            </tfoot>
-            <tbody>
-                {% for split in splits -%}
-                <tr class="{{ "success" if (split.amount > 0 and not inverted) or (split.amount <= 0 and inverted) else "danger" }}">
-                    {{ render_split(split) }}
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="info text-center">
-                        Keine Buchungen vorhanden.
-                    </td>
-                </tr>
-                {%- endfor %}
-            </tbody>
-        </table>
+        {{ tbl.item_table(
+            'report',
+            json_url,
+            cols,
+            footer,
+            'financeRowFormatter'
+        ) }}
     </div>
     <div id="account-form" class="tab-pane">
         <table class="table table-striped">
