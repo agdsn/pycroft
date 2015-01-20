@@ -7,6 +7,7 @@ export PGDATA=/postgresql
 export PGHOST=$PGDATA
 export PGDATABASE=pycroft
 PGVERSION=9.1
+PYCROFT_EXAMPLE_DATA=/pycroft/example/pg_example_data.sql
 
 if [ ! -f $PGDATA/postgresql.conf ]; then
     echo Initialising postgres data directory $PGDATA
@@ -23,6 +24,7 @@ if [ ! -f $PGDATA/postgresql.conf ]; then
     /usr/lib/postgresql/$PGVERSION/bin/pg_ctl start -w
     createdb pycroft
     createdb pycroft_tests
+    [ -f $PYCROFT_EXAMPLE_DATA ] && psql < $PYCROFT_EXAMPLE_DATA
     /usr/lib/postgresql/$PGVERSION/bin/pg_ctl stop -w
 fi
 
