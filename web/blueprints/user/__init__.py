@@ -552,10 +552,10 @@ def search_results():
             'name': {'title': found_user.name,
                      'href': url_for(".user_show", user_id=found_user.id)},
             'login': found_user.login,
-            # todo: revisit User.hosts property!
-            # could be sth like this:
-            # 'hosts': Host.q.filter(Host.user_id == found_user.id).first().id
-            'hosts': 'Not implemented!'
+            'hosts': ", ".join("{} ({})".format(
+                host_cname_filter(user_host),
+                host_name_filter(user_host)
+            ) for user_host in found_user.user_hosts)
         },
         result.all()
     ) if user_id or name or login else [])
