@@ -50,7 +50,12 @@ RUN pip install -r /requirements.txt
 COPY home/vagrant/ /home/vagrant/
 COPY etc/profile.d/ /etc/profile.d/
 COPY etc/sudoers.d/ /etc/sudoers.d/
-RUN useradd -m -U -G sudo -s /bin/bash vagrant && chown -R vagrant:vagrant /home/vagrant
+COPY defaults /etc/defaults/vagrant
+RUN . /etc/defaults/vagrant && \
+    groupadd --force --gid $VAGRANT_GID vagrant
+RUN . /etc/defaults/vagrant && \
+    useradd --no-create-home --uid $VAGRANT_UID --gid $VAGRANT_GID --shell /bin/bash vagrant && \
+    chown -R $VAGRANT_UID:$VAGRANT_GID /home/vagrant
 
 COPY usr/local/bin/ /usr/local/bin/
 COPY etc/supervisor/ /etc/supervisor
