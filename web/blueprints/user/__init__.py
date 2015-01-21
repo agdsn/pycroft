@@ -537,6 +537,7 @@ def search():
     return render_template('user/user_search.html', form=form)
 
 
+@bp.route('/search/results')
 @access.require('user_show')
 def search_results():
     user_id = request.args.get('userid')
