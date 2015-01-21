@@ -34,6 +34,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     webdb.vm.provider "docker" do |d|
       d.name = "pycroft-web-db"
+      File.open('vagrant/defaults', 'w') do |file|
+        file.puts("VAGRANT_UID=#{Process.uid}")
+        file.puts("VAGRANT_GID=#{Process.gid}")
+      end
     end
 
     webdb.vm.network :forwarded_port, host:5000, guest: 5000,
