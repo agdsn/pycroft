@@ -11,8 +11,8 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-from functools import wraps
 from werkzeug.local import LocalProxy
+import wrapt
 
 from .functions import utcnow as utcnow_sql
 
@@ -38,19 +38,16 @@ def set_scoped_session(scoped_session):
     object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)
 
 
-def with_transaction(f):
-    @wraps(f)
-    def helper(*args, **kwargs):
-        transaction = session.begin(subtransactions=True)
-        try:
-            rv = f(*args, **kwargs)
-            transaction.commit()
-            return rv
-        except:
-            transaction.rollback()
-            raise
-
-    return helper
+@wrapt.decorator
+def with_transaction(wrapped, instance, args, kwargs):
+    transaction = session.begin(subtransactions=True)
+    try:
+        rv = wrapped(*args, **kwargs)
+        transaction.commit()
+        return rv
+    except:
+        transaction.rollback()
+        raise
 
 
 def utcnow():

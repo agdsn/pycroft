@@ -1,10 +1,11 @@
-# Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from functools import wraps
 from flask.globals import current_app
 from flask import abort
 from flask.ext.login import current_user, login_required
+import wrapt
 from web.blueprints import bake_endpoint
 
 
@@ -74,18 +75,18 @@ class BlueprintAccess(object):
         arguments to the decorator generator.
 
         """
-        def decorator(fn):
-            if len(needed_permissions):
-                endpoint = bake_endpoint(self.blueprint, fn)
-                self._restrictions[endpoint] = tuple(needed_permissions)
-            @wraps(fn)
-            def nufun(*args, **kwargs):
-                if not current_user.is_authenticated():
-                    return current_app.login_manager.unauthorized()
-                if self._current_has_access(needed_permissions):
-                    return fn(*args, **kwargs)
-                abort(401)
-            return nufun
+        @wrapt.decorator
+        def decorator(wrapped, instance, args, kwargs):
+            if needed_permissions:
+                endpoint = bake_endpoint(self.blueprint, wrapped)
+                self._restrictions[endpoint] = needed_permissions
+
+            if not current_user.is_authenticated():
+                return current_app.login_manager.unauthorized()
+            if self._current_has_access(needed_permissions):
+                return wrapped(*args, **kwargs)
+            abort(401)
+
         return decorator
 
     @property
