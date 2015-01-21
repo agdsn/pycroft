@@ -4,7 +4,7 @@
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="PYCROFT_DB_URI" value="postgresql+psycopg2:///pycroft?host=/var/run/postgresql" />
+      <env name="PYCROFT_DB_URI" value="postgresql+psycopg2:///pycroft?host=/postgresql" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
