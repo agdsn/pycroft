@@ -24,6 +24,9 @@ if [ ! -f $PGDATA/postgresql.conf ]; then
     sed -i -e 's|#\?bgwriter_lru_maxpages = [0-9]\+|bgwriter_lru_maxpages = 0|' $PGDATA/postgresql.conf
     sed -i -e 's|#\?checkpoint_segments = [0-9]\+|checkpoint_segments = 1|' $PGDATA/postgresql.conf
     sed -i -e 's|#\?wal_keep_segments = [0-9]\+|wal_keep_segments = 0|' $PGDATA/postgresql.conf
+    sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $PGDATA/postgresql.conf
+    echo "host all all samenet trust" >> $PGDATA/pg_hba.conf
+
     echo Setting up databases
     $PGPATH/bin/pg_ctl start -w
     createdb pycroft
