@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from itertools import chain, imap
@@ -166,7 +166,9 @@ class BootstrapFieldListWidget(object):
 
 class BootstrapFormFieldWidget(object):
     def __call__(self, field, **kwargs):
-        return HTMLString(u''.join(imap(lambda f: f(**kwargs), field)))
+        return HTMLString("<div class=\"form-field\">"+
+                          u''.join(imap(lambda f: f(**kwargs), field))+
+                          "</div>")
 
 
 class BootstrapStaticFieldWidget(object):
@@ -230,6 +232,8 @@ class BootstrapDatepickerWidget(object):
             "static", filename="libs/bootstrap-datepicker/js/locales/bootstrap-datepicker.de.js"
         ))
         options = dict(kwargs, name=field.name)
+        if field.data:
+            options["value"] = field.data
         return HTMLString(u"<input {0}>".format(html_params(**options)))
 
 

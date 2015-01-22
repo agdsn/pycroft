@@ -12,7 +12,7 @@ from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.dormitories.forms import dormitory_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
-    QuerySelectField, DateField, SelectField
+    QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
 from web.form.fields.validators import OptionalIf
 
@@ -92,20 +92,22 @@ class HostCreateForm(Form):
 class UserLogEntry(Form):
     message = TextAreaField(u"", [DataRequired()])
 
-class UserAddGroupMembership(Form):
-    group_id = QuerySelectField(u"Gruppe",get_label='name',query_factory=group_query)
-    begin_date = DateField(u"Beginn", [DataRequired()])
+class OptionallyUnlimitedEndDateForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
-    end_date = DateField(u"Ende", [OptionalIf("unlimited")])
+    date = DateField(u"Ende", [OptionalIf("unlimited")])
+
+class UserAddGroupMembership(Form):
+    group_id = QuerySelectField(u"Gruppe",get_label='name',
+                                query_factory=group_query)
+    start_date = DateField(u"Beginn", [DataRequired()])
+    end = FormField(OptionallyUnlimitedEndDateForm)
 
 class UserEditGroupMembership(Form):
-    begin_date = DateField(u"Beginn", [DataRequired()])
-    unlimited = BooleanField(u"Unbegrenzte Mitgliedschaft", default=False)
-    end_date = DateField(u"Ende", [OptionalIf("unlimited")])
+    start_date = DateField(u"Beginn", [DataRequired()])
+    end = FormField(OptionallyUnlimitedEndDateForm)
 
 class UserBlockForm(Form):
-    unlimited = BooleanField(u"Unbegrenzte Sperrung", default=False)
-    date = DateField(u"Gesperrt bis", [OptionalIf("unlimited")])
+    end = FormField(OptionallyUnlimitedEndDateForm)
     reason = TextAreaField(u"Grund", [DataRequired()])
 
 class UserMoveOutForm(Form):

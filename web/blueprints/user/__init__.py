@@ -234,12 +234,12 @@ def add_membership(user_id):
 
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        if form.begin_date.data is not None:
-            start_date = datetime.combine(form.begin_date.data, time(0))
+        if form.start_date.data is not None:
+            start_date = datetime.combine(form.start_date.data, time(0))
         else:
             start_date = session.utcnow()
-        if not form.unlimited.data:
-            end_date = datetime.combine(form.end_date.data, time(0))
+        if not form.end.unlimited.data:
+            end_date = datetime.combine(form.end.date.data, time(0))
         else:
             end_date=None
         lib.property.create_membership(
@@ -417,8 +417,8 @@ def move(user_id):
             level=user.room.level
         ).order_by(Room.number).distinct()
 
-        form.room_number.choices = [(entry.number, str(entry.number)) for entry
-                                                                      in rooms]
+        form.room_number.choices = [(entry.number, str(entry.number))
+                                    for entry in rooms]
         form.room_number.data = user.room
 
     return render_template('user/user_move.html', user_id=user_id, form=form)
@@ -434,34 +434,40 @@ def edit_membership(membership_id):
         membership_id), 'error')
         abort(404)
 
-    form = UserEditGroupMembership()
+    membership_data = {}
     if request.method == 'GET':
-        form.begin_date.data = membership.start_date
-        if membership.start_date < session.utcnow():
-            form.begin_date.disabled = True
+        membership_data = {
+            "start_date": membership.start_date.date(),
+            "end": {"unlimited": membership.end_date is None,
+                    "date": membership.end_date and membership.end_date.date()}
+        }
 
-        if membership.end_date is not None:
-            form.end_date.data = membership.end_date
+    form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.start_date = datetime.combine(form.begin_date.data, datetime.min.time())
-        if form.unlimited.data:
+        membership.start_date = datetime.combine(form.start_date.data,
+                                                 datetime.min.time())
+        if form.end.unlimited.data:
             membership.end_date = None
         else:
-            membership.end_date = datetime.combine(form.end_date.data, datetime.min.time())
+            membership.end_date = datetime.combine(form.end.date.data,
+                                                   datetime.min.time())
 
-        message = u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' " \
-                  u"bearbeitet.".format(membership.group.name)
+        message = (u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' "
+                  u"bearbeitet.".format(membership.group.name))
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
         return redirect(url_for('.user_show', user_id=membership.user_id))
 
     return render_template('user/user_edit_membership.html',
-                           page_title=u"Mitgliedschaft {} für {} bearbeiten".format(membership.group.name, membership.user.name),
+                           page_title=(u"Mitgliedschaft {} für "
+                                       u"{} bearbeiten".format(
+                                            membership.group.name,
+                                            membership.user.name)),
                            membership_id=membership_id,
-                           user = membership.user,
-                           form = form)
+                           user=membership.user,
+                           form=form)
 
 
 @bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
@@ -624,10 +630,10 @@ def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        if form.unlimited.data:
+        if form.end.unlimited.data:
             end_date = None
         else:
-            end_date = datetime.combine(form.date.data, time(0))
+            end_date = datetime.combine(form.end.date.data, time(0))
 
         try:
             blocked_user = lib.user.block(
