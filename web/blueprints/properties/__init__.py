@@ -18,7 +18,7 @@ from flask.json import jsonify
 
 from pycroft.model import session
 from pycroft.model.property import (
-    PropertyGroup, TrafficGroup, property_categories)
+    Property, PropertyGroup, TrafficGroup, property_categories)
 from pycroft.lib.property import (
     grant_property, deny_property, remove_property)
 from web.blueprints.access import BlueprintAccess
