@@ -347,9 +347,11 @@ def process_record(index, record, import_time):
         valid_date=valid_date
     )
 
+
 def user_has_paid(user):
-    # TODO check if user has paid
-    return True
+    return sum(split.amount for split in (Split.q.filter_by(
+        account_id=user.finance_account.id
+    ))) >= 0
 
 
 def get_typed_splits(splits):
