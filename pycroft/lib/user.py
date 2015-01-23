@@ -500,16 +500,16 @@ def is_back(user, processor):
     return user
 
 
-def determine_status(user):
-    """Returns The Status
+def infoflags(user):
+    """Returns informational flags regarding the user
     :param User user: User object
-    :return: Status dict
-    :rtype: dict[str, bool]
+    :return: A list of infoflags with a title and a value
+    :rtype: list[dict[str, bool]]
     """
-    ret = {
-        'internet': user.has_property("internet"),
-        'traffic_exceeded': has_exceeded_traffic(user),
-        'paid': user_has_paid(user),
-        'no_violation': not user.has_property("violation"),
-        'mail': user.has_property("mail")}
-    return ret
+    return [
+        {'title': u"Internetzugang", 'val': user.has_property("internet")},
+        {'title': u"Traffic übrig", 'val': has_exceeded_traffic(user)},
+        {'title': u"Bezahlt", 'val': user_has_paid(user)},
+        {'title': u"Verstoßfrei", 'val': not user.has_property("violation")},
+        {'title': u"Mailkonto", 'val': user.has_property("mail")},
+    ]

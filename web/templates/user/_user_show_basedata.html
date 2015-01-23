@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -7,14 +7,6 @@
     <dt>{{ name }}</dt>
     <dd>{{ caller() }}</dd>
 {%- endmacro %}
-
-{% macro show_status(key) %}
-    {% if status[key] %}
-        <strong class="text-success">Ja</strong>
-    {% else %}
-        <strong class="text-danger">Nein</strong>
-    {% endif %}
-{% endmacro %}
 
 <div class="row">
     <div class="col-sm-6 col-md-5 col-lg-4">
@@ -51,21 +43,13 @@
                 {% endif %}
             {% endcall %}
 
-            {% call info_row("Internetzugang") %}
-                {{ show_status("internet") }}
-            {% endcall %}
-
-            {% call info_row("Mailkonto") %}
-                {{ show_status("mail") }}
-            {% endcall %}
-
-            {% call info_row("Bezahlt") %}
-                {{ show_status("paid") }}
-            {% endcall %}
-
-            {% call info_row("Verstoßfrei") %}
-                {{ show_status("no_violation") }}
-            {% endcall %}
+            {% for flag in flags %}{% call info_row(flag['title']) %}
+                {% if flag['val'] %}
+                    <strong class="text-success">Ja</strong>
+                {% else %}
+                    <strong class="text-danger">Nein</strong>
+                {% endif %}
+            {% endcall %}{% endfor %}
         </dl>
     </div>
     {% if current_user is privileged_for('user_change') %}

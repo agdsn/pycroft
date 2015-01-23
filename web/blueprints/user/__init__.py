@@ -111,7 +111,7 @@ def user_show(user_id):
         form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all(),
-        status=lib.user.determine_status(user),
+        flags=lib.user.infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.finance_account_id)
     )
