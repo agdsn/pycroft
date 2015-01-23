@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -196,6 +196,9 @@ def record_readable_name_filter(record):
     return record.__class__.__name__
 
 
+#TODO: usecases — should that srsly return >1 switch?
+# Because if yes, there should be a more elegant solution for providing a link
+# in the table this is actually used (`user_show_devices_json()`)!
 @template_filter("get_switch")
 def ip_get_switch(host,ip):
     patch_ports = host.room.patch_ports
@@ -213,6 +216,7 @@ def ip_get_switch(host,ip):
         return "No Switch"
 
 
+#TODO: usecases — should that srsly return >1 port? (see todo above)
 @template_filter("get_switch_port")
 def ip_get_switch_port(host,ip):
     patch_ports = host.room.patch_ports
