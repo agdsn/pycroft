@@ -98,7 +98,8 @@ def user_show(user_id):
     )
     typed_splits = get_typed_splits(user.finance_account.splits)
 
-    return render_template('user/user_show.html',
+    return render_template(
+        'user/user_show.html',
         user=user,
         balance=user.finance_account.balance,
         splits=user.finance_account.splits,
@@ -110,7 +111,10 @@ def user_show(user_id):
         form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all(),
-        status=lib.user.determine_status(user))
+        status=lib.user.determine_status(user),
+        json_url=url_for("finance.accounts_show_json",
+                         account_id=user.finance_account_id)
+    )
 
 
 @bp.route("/show/<user_id>/logs")

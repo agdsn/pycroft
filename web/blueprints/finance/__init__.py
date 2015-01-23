@@ -220,18 +220,20 @@ def accounts_show(account_id):
 def accounts_show_json(account_id):
     inverted = False
     return jsonify(items=map(
-        lambda splt: {
-            'creation_date': datetime_filter(splt.transaction.transaction_date),
-            'transfer_date': date_filter(splt.transaction.valid_date),
+        lambda split: {
+            'transaction_date': datetime_filter(
+                split.transaction.transaction_date
+            ),
+            'valid_date': date_filter(split.transaction.valid_date),
             'description': {
                 'href': url_for(
                     "finance.transactions_show",
-                    transaction_id=splt.transaction_id
+                    transaction_id=split.transaction_id
                 ),
-                'title': splt.transaction.description
+                'title': split.transaction.description
             },
-            'amount': money_filter(splt.amount),
-            'row_positive': (splt.amount > 0) is not inverted
+            'amount': money_filter(split.amount),
+            'row_positive': (split.amount > 0) is not inverted
         },
         Split.q.join(Transaction).filter(Split.account_id == account_id)
         .order_by(Transaction.valid_date)
