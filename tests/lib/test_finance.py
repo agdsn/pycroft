@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import cStringIO as StringIO
@@ -56,16 +56,17 @@ class Test_010_Journal(FixtureDataTestBase):
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
         f = StringIO.StringIO(data)
 
-        import_journal_csv(f, date(2013, 1, 5))
+        import_journal_csv(f, 4342, date(2015, 1, 1))
 
         journal = (Journal.q
                    .filter(Journal.iban == JournalData.Journal1.iban)
                    .one())
 
         # test for correct dataimport
-        entry = JournalEntry.q.filter(
-            JournalEntry.journal == journal,
-            JournalEntry.original_description == u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13").first()
+        entry = JournalEntry.q.filter_by(
+            journal=journal,
+            original_description=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
+        ).first()
         self.assertEquals(entry.other_account_number, "12345678")
         self.assertEquals(entry.other_routing_number, "80040400")
         self.assertEquals(entry.other_name, u"SCH, AAA")
@@ -74,9 +75,10 @@ class Test_010_Journal(FixtureDataTestBase):
         self.assertEquals(entry.valid_date, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
-        entry = JournalEntry.q.filter(
-            JournalEntry.journal == journal,
-            JournalEntry.original_description == u"Pauschalen").first()
+        entry = JournalEntry.q.filter_by(
+            journal=journal,
+            original_description=u"Pauschalen"
+        ).first()
         self.assertEquals(entry.transaction_date, date(2012, 12, 24))
         self.assertEquals(entry.valid_date, date(2012, 12, 24))
 
@@ -85,10 +87,11 @@ class Test_010_Journal(FixtureDataTestBase):
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
-        entry = JournalEntry.q.filter(
-            JournalEntry.journal == journal,
-            JournalEntry.original_description == u"BESTELLUNG SUPERMEGATOLLER SERVER").first()
-        self.assertEquals(entry.transaction_date, date(2012, 12, 29))
+        entry = JournalEntry.q.filter_by(
+            journal=journal,
+            original_description=u"BESTELLUNG SUPERMEGATOLLER SERVER"
+        ).first()
+        self.assertEquals(entry.transaction_date, date(2013, 12, 29))
         self.assertEquals(entry.valid_date, date(2013, 1, 10))
 
         JournalEntry.q.delete()

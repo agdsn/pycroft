@@ -108,11 +108,14 @@ def journals_import():
     form = JournalImportForm()
     if form.validate_on_submit():
         try:
-            finance.import_journal_csv(form.csv_file.data)
+            finance.import_journal_csv(
+                form.csv_file.data, form.expected_balance.data)
+            session.commit()
             flash(u"Der CSV-Import war erfolgreich!", "success")
-        except Exception as error:
+        except finance.CSVImportError as e:
+            session.rollback()
             message = u"Der CSV-Import ist fehlgeschlagen: {0}"
-            flash(message.format(error.message), "error")
+            flash(message.format(e.message), "error")
 
     return render_template('finance/journals_import.html', form=form)
 

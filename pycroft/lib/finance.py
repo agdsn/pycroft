@@ -477,29 +477,78 @@ class CSVImportError(Exception):
 
     def __init__(self, message, cause=None):
         if cause is not None:
-            message = message + u" caused by " + repr(cause)
-        super(CSVImportError, self).__init__(message, cause)
+            message = u"{0}\nUrsprünglicher Fehler:\n{1}".format(
+                message, cause
+            )
         self.cause = cause
+        super(CSVImportError, self).__init__(message)
+
+
+def descending_transaction_dates(entries):
+    a, b = tee(imap(operator.itemgetter(8), entries))
+    next(b)
+    return all(imap(lambda p: p[0] >= p[1], izip(a, b)))
 
 
 @with_transaction
-def import_journal_csv(csv_file, import_time=None):
+def import_journal_csv(csv_file, expected_balance, import_time=None):
     if import_time is None:
-        import_time = datetime.utcnow()
+        import_time = session.utcnow()
 
     # Convert to MT940Record and enumerate
-    reader = csv.DictReader(csv_file, MT940_FIELDNAMES, dialect=MT940Dialect)
-    records = enumerate(imap(lambda r: MT940Record(**r), reader), 1)
-    # Skip first record (header)
+    reader = csv.reader(csv_file, dialect=MT940Dialect)
+    records = enumerate(imap(MT940Record._make, reader), 1)
     try:
-        records.next()
+        # Skip first record (header)
+        next(records)
+        entries = tuple(imap(lambda r: process_record(r[0], r[1], import_time),
+                             records))
     except StopIteration:
         raise CSVImportError(u"Leerer Datensatz.")
-
-    session.session.add_all(imap(
-        lambda r: process_record(r[0], r[1], import_time),
-        reversed(list(records))
-    ))
+    except csv.Error as e:
+        raise CSVImportError(u"Fehler beim Lesen der CSV-Daten.", e)
+    if not entries:
+        raise CSVImportError(u"Leerer Datensatz.")
+    if not descending_transaction_dates(entries):
+        raise CSVImportError(u"Buchungen nicht absteigend nach Buchungsdatum geordnet.")
+    first_transaction_date = entries[-1][8]
+    balance = session.session.query(
+        func.coalesce(func.sum(JournalEntry.amount), 0)
+    ).filter(
+        JournalEntry.transaction_date < first_transaction_date).scalar()
+    a = tuple(session.session.query(
+        JournalEntry.amount, JournalEntry.journal_id, JournalEntry.description,
+        JournalEntry.original_description, JournalEntry.other_account_number,
+        JournalEntry.other_routing_number, JournalEntry.other_name,
+        JournalEntry.import_time, JournalEntry.transaction_date,
+        JournalEntry.valid_date
+    ).filter(
+        JournalEntry.transaction_date >= first_transaction_date))
+    b = tuple(reversed(entries))
+    matcher = difflib.SequenceMatcher(None, a, b)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if 'equal' == tag:
+            continue
+        elif 'insert' == tag:
+            balance += sum(imap(operator.itemgetter(0),
+                                islice(entries, j1, j2)))
+            session.session.add_all(imap(
+                lambda e: JournalEntry(
+                    amount=e[0], journal_id=e[1], description=e[2],
+                    original_description=e[3], other_account_number=e[4],
+                    other_routing_number=e[5], other_name=e[6],
+                    import_time=e[7], transaction_date=e[8], valid_date=e[9]),
+                islice(entries, j1, j2)))
+        elif 'delete' == tag:
+            continue
+        elif 'replace':
+            raise CSVImportError(u"Konflikt beim Import.")
+        else:
+            raise AssertionError()
+    if balance != expected_balance:
+        message = u"Summe nach Import entspricht nicht der erwarteten Summe: " \
+                  u"{0} != {1}."
+        raise CSVImportError(message.format(balance, expected_balance))
 
 
 def remove_space_characters(field):
@@ -507,7 +556,7 @@ def remove_space_characters(field):
     if field is None:
         return None
     characters = filter(
-        lambda c: (c[0] + 1) % 28 != 0 or c[1] != u' ',
+        lambda c: c[0] % 28 != 27 or c[1] != u' ',
         enumerate(field)
     )
     return u"".join(map(lambda c: c[1], characters))
@@ -552,51 +601,48 @@ def restore_record(record):
     return restored_record
 
 
-def process_record(index, record, import_time):
+def process_record(index, record, imported_at):
     if record.currency != u"EUR":
         message = u"Nicht unterstützte Währung {0} in Datensatz {1}: {2}"
         raw_record = restore_record(record)
-        raise CSVImportError(
-            message.format(record.currency, index, raw_record)
-        )
+        raise CSVImportError(message.format(record.currency, index, raw_record))
     try:
         journal = Journal.q.filter_by(
             account_number=record.our_account_number
         ).one()
     except NoResultFound as e:
-        message = u"Kein Journal mit der Kontonummer {0} gefunden."
-        raise CSVImportError(message.format(record.our_account_number), e)
+        message = u"Kein Journal mit der Kontonummer {0} in Datensatz {1} " \
+                  u"gefunden: {2}"
+        raw_record = restore_record(record)
+        raise CSVImportError(
+            message.format(record.our_account_number, index, raw_record), e)
 
     try:
-        valid_date = datetime.strptime(record.valid_date, u"%d.%m.%y").date()
-        transaction_date = (datetime
-                            .strptime(record.transaction_date, u"%d.%m")
-                            .date())
+        valid_date = datetime.strptime(
+            record.valid_date, u"%d.%m.%y").date()
+        transaction_date = datetime.strptime(
+            record.transaction_date, u"%d.%m.%y").date()
     except ValueError as e:
-        message = u"Unbekanntes Datumsformat in Datensatz {0}: {1}"
+        message = u"Falsches Datumsformat in Datensatz {0}: {1}"
         raw_record = restore_record(record)
         raise CSVImportError(message.format(index, raw_record), e)
 
-    # Assume that transaction_date's year is the same
-    transaction_date = transaction_date.replace(year=valid_date.year)
-    # The transaction_date may not be after valid_date, if it is, our
-    # assumption was wrong
-    if transaction_date > valid_date:
-        transaction_date = transaction_date.replace(
-            year=transaction_date.year - 1
-        )
-    return JournalEntry(
-        amount=int(record.amount.replace(u",", u"")),
-        journal=journal,
-        description=cleanup_description(record.description),
-        original_description=record.description,
-        other_account_number=record.other_account_number,
-        other_routing_number=record.other_routing_number,
-        other_name=record.other_name,
-        import_time=import_time,
-        transaction_date=transaction_date,
-        valid_date=valid_date
-    )
+    try:
+        amount = int(record.amount.replace(u",", u""))
+    except ValueError as e:
+        message = u"Falsches Betragsformat {0} in Datensatz {1}: {2}"
+        raw_record = restore_record(record)
+        raise CSVImportError(
+            message.format(record.amount, index, raw_record), e)
+    try:
+        description = record.description.decode('utf8')
+        other_name = record.other_name.decode('utf8')
+    except UnicodeDecodeError as e:
+        raise CSVImportError(u"Fehler beim Dekodieren aus UTF-8", e)
+    return (amount, journal.id, cleanup_description(description),
+            description, record.other_account_number,
+            record.other_routing_number, other_name, imported_at,
+            transaction_date, valid_date)
 
 
 def user_has_paid(user):
