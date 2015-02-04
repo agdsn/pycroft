@@ -15,17 +15,17 @@ from web.form.fields.custom import TypeaheadField, static
 class SemesterCreateForm(Form):
     name = TextField(u"Semestername", validators=[DataRequired()])
     registration_fee = IntegerField(
-        u"Anmeldegebühr", validators=[DataRequired(), NumberRange(min=1)])
+        u"Anmeldegebühr", validators=[DataRequired(), NumberRange(min=0)])
     regular_semester_fee = IntegerField(
         u"Regulärer Semesterbeitrag",
-        validators=[DataRequired(), NumberRange(min=1)]
+        validators=[DataRequired(), NumberRange(min=0)]
     )
     reduced_semester_fee = IntegerField(
         u"Ermäßigter Semesterbeitrag",
-        validators=[DataRequired(), NumberRange(min=1)]
+        validators=[DataRequired(), NumberRange(min=0)]
     )
     late_fee = IntegerField(
-        u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=1)]
+        u"Versäumnisgebühr", validators=[DataRequired(), NumberRange(min=0)]
     )
     # TODO Add form fields to specify these values
     grace_period = IntegerField(
