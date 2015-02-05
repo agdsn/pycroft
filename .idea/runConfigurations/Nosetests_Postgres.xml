@@ -15,7 +15,7 @@
     <PathMappingSettings>
       <option name="pathMappings">
         <list>
-          <mapping local-root="$PROJECT_DIR$" remote-root="/pycroft" />
+          <mapping local-root="$PROJECT_DIR$/" remote-root="/pycroft/" />
         </list>
       </option>
     </PathMappingSettings>
