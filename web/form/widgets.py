@@ -35,16 +35,10 @@ class BootstrapFormGroupDecorator(WidgetDecorator):
         classes = [u'form-group']
         if field.errors:
             classes.append(u'has-error')
-        html = [
+        return HTMLString(u''.join([
             Markup(u'<div class="{0}">').format(u' '.join(classes)),
             self.widget(field, **kwargs),
-        ]
-        html.extend(imap(
-            lambda e: Markup(u'<p class="help-block">{0}</p>').format(e),
-            field.errors
-        ))
-        html.append(u'</div>')
-        return HTMLString(u''.join(html))
+            u'</div>']))
 
 
 class BootstrapFormControlDecorator(WidgetDecorator):
@@ -65,14 +59,19 @@ class BootstrapStandardDecorator(WidgetDecorator):
     left column and the field is placed right next to it.
     """
     def render_horizontal(self, field, **kwargs):
-        return HTMLString(u''.join([
-            u'<div class="col-sm-5">',
-            field.label(class_=u'control-label'),
-            u'</div>',
-            u'<div class="col-sm-7">',
-            self.widget(field, **kwargs),
-            u'</div>',
-        ]))
+        html = [u'<div class="col-sm-5">',
+                field.label(class_=u'control-label'),
+                u'</div>',
+                u'<div class="col-sm-7">',
+                self.widget(field, **kwargs),
+                u'</div>']
+        help_block = Markup(u'<div class="col-sm-12">'
+                            u'<span class="help-block">{0}</span>'
+                            u'</div>')
+        if field.description:
+            html.append(help_block.format(field.description))
+        html.extend(imap(lambda e: help_block.format(e), field.errors))
+        return HTMLString(u''.join(html))
 
     def render_inline(self, field, **kwargs):
         return HTMLString(u''.join([
@@ -81,10 +80,13 @@ class BootstrapStandardDecorator(WidgetDecorator):
         ]))
 
     def render_basic(self, field, **kwargs):
-        return HTMLString(u''.join([
-            field.label(),
-            self.widget(field, **kwargs),
-        ]))
+        html = [field.label(),
+                self.widget(field, **kwargs)]
+        help_block = Markup(u'<span class="help-block">{0}</span>')
+        if field.description:
+            html.append(help_block.format(field.description))
+        html.extend(imap(lambda e: help_block.format(e), field.errors))
+        return HTMLString(u''.join(html))
 
     def __call__(self, field, **kwargs):
         render_mode = kwargs.pop("render_mode", "basic")
