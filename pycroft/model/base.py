@@ -47,11 +47,9 @@ class _Base(object):
 
     def __repr__(self):
         return "{0}.{1}({2})".format(
-            self.__module__,
-            self.__class__.__name__,
-            ", ".join(key + "=" + repr(getattr(self, key, "<unknown>"))
-                      for key in self.__mapper__.columns.keys())
-        )
+            self.__module__, self.__class__.__name__,
+            ", ".join("{0}={1!r}".format(key, getattr(self, key, "<unknown>"))
+                      for key in self.__mapper__.columns.keys()))
 
 
 ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)
