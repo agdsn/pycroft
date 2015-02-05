@@ -11,6 +11,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from itertools import imap
+import operator
 from sqlalchemy.ext.hybrid import hybrid_property
 from base import ModelBase
 from sqlalchemy import ForeignKey, event, func, select
@@ -67,7 +68,7 @@ class FinanceAccount(ModelBase):
 
     @hybrid_property
     def balance(self):
-        return sum(map(lambda s: s.amount, self.splits))
+        return sum(imap(operator.attrgetter("amount"), self.splits))
 
     @balance.expression
     def balance(self):
