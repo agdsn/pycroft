@@ -11,7 +11,7 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import re
 
 from sqlalchemy.sql.expression import func, literal
