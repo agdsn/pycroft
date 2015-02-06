@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, time, timedelta
@@ -22,8 +22,8 @@ class SemesterData(DataSet):
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
         allowed_overdraft = 500
-        begin_date = today - timedelta(days=271)
-        end_date = today - timedelta(days=91)
+        begins_on = today - timedelta(days=271)
+        ends_on = today - timedelta(days=91)
 
     class without_registration_fee:
         name = "current semester"
@@ -35,8 +35,8 @@ class SemesterData(DataSet):
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
         allowed_overdraft = 500
-        begin_date = today - timedelta(days=90)
-        end_date = today + timedelta(days=90)
+        begins_on = today - timedelta(days=90)
+        ends_on = today + timedelta(days=90)
 
 
 class DormitoryData(DataSet):
@@ -122,7 +122,7 @@ class UserData(DataSet):
     class dummy:
         login = u"dummy"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(SemesterData.with_registration_fee.begin_date + timedelta(days=31), time.min)
+        registered_at = datetime.combine(SemesterData.with_registration_fee.begins_on + timedelta(days=31), time.min)
         room = RoomData.Dummy
         finance_account = FinanceAccountData.user_account
 
@@ -138,19 +138,19 @@ class MembershipData(DataSet):
 class TransactionData(DataSet):
     class claim1:
         description = "Claim 1"
-        valid_date = SemesterData.with_registration_fee.begin_date + timedelta(days=31)
+        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=31)
 
     class late_fee_for_claim1:
         description = "Late fee for Claim 1"
-        valid_date = SemesterData.with_registration_fee.begin_date + timedelta(days=63)
+        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=63)
 
     class claim2:
         description = "Claim 2"
-        valid_date = SemesterData.with_registration_fee.begin_date + timedelta(days=81)
+        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=81)
 
     class payment:
         description = "Payment of Claim 1"
-        valid_date = SemesterData.with_registration_fee.begin_date + timedelta(days=64)
+        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=64)
 
 
 class SplitData(DataSet):

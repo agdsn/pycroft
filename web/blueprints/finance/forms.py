@@ -54,11 +54,11 @@ class SemesterCreateForm(Form):
                     u"Versäumnisgebühren müssen angemessen sein, ansonsten",
         validators=[DataRequired(), NumberRange(min=0)]
     )
-    begin_date = DateField(
+    begins_on = DateField(
         u"Anfang", validators=[DataRequired()], today_btn=True,
         today_highlight=True
     )
-    end_date = DateField(
+    ends_on = DateField(
         u"Ende", validators=[DataRequired()], today_btn=True,
         today_highlight=True
     )

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 __author__ = 'florian'
@@ -61,8 +61,8 @@ class SemesterData(DataSet):
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
         allowed_overdraft = 500
-        begin_date = today
-        end_date = today + timedelta(days=180)
+        begins_on = today
+        ends_on = today + timedelta(days=180)
 
 
 class FinanceAccountData(DataSet):

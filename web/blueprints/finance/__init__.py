@@ -331,27 +331,27 @@ def semesters_list_json():
             'reduced_semester_fee': money_filter(
                 semester.reduced_semester_fee),
             'late_fee': money_filter(semester.late_fee),
-            'begin_date': date_filter(semester.begin_date),
-            'end_date': date_filter(semester.end_date),
+            'begins_on': date_filter(semester.begins_on),
+            'ends_on': date_filter(semester.ends_on),
         },
-        Semester.q.order_by(Semester.begin_date.desc()).all()
+        Semester.q.order_by(Semester.begins_on.desc()).all()
     ))
 
 
 @bp.route('/semesters/create', methods=("GET", "POST"))
 @access.require('finance_change')
 def semesters_create():
-    previous_semester = Semester.q.order_by(Semester.begin_date.desc()).first()
+    previous_semester = Semester.q.order_by(Semester.begins_on.desc()).first()
     if previous_semester:
-        begin_date_default = previous_semester.end_date + timedelta(1)
-        end_date_default = previous_semester.begin_date.replace(
-            year=previous_semester.begin_date.year + 1
+        begins_on_default = previous_semester.ends_on + timedelta(1)
+        ends_on_default = previous_semester.begins_on.replace(
+            year=previous_semester.begins_on.year + 1
         ) - timedelta(1)
-        if begin_date_default.year == end_date_default.year:
-            name_default = u'Sommersemester ' + str(begin_date_default.year)
+        if begins_on_default.year == ends_on_default.year:
+            name_default = u'Sommersemester ' + str(begins_on_default.year)
         else:
-            name_default = (u'Wintersemester ' + str(begin_date_default.year) +
-                            u'/' + str(end_date_default.year))
+            name_default = (u'Wintersemester ' + str(begins_on_default.year) +
+                            u'/' + str(ends_on_default.year))
         reduced_semester_fee_threshold = previous_semester.reduced_semester_fee_threshold.days
         form = SemesterCreateForm(
             name=name_default,
@@ -363,8 +363,8 @@ def semesters_create():
             reduced_semester_fee_threshold=reduced_semester_fee_threshold,
             payment_deadline=previous_semester.payment_deadline.days,
             allowed_overdraft=previous_semester.allowed_overdraft,
-            begin_date=begin_date_default,
-            end_date=end_date_default,
+            begins_on=begins_on_default,
+            ends_on=ends_on_default,
         )
     else:
         form = SemesterCreateForm()
@@ -379,8 +379,8 @@ def semesters_create():
             reduced_semester_fee_threshold=timedelta(days=form.reduced_semester_fee_threshold.data),
             payment_deadline=timedelta(days=form.payment_deadline.data),
             allowed_overdraft=form.allowed_overdraft.data,
-            begin_date=form.begin_date.data,
-            end_date=form.end_date.data,
+            begins_on=form.begins_on.data,
+            ends_on=form.ends_on.data,
         )
         return redirect(url_for(".semesters_list"))
     return render_template('finance/semesters_create.html', form=form)

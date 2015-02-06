@@ -38,15 +38,15 @@ def get_semesters(when=UnboundedInterval):
     criteria = []
     if when.begin is not None:
         criteria.append(or_(
-            when.begin <= Semester.begin_date,
-            between(when.begin, Semester.begin_date, Semester.end_date)
+            when.begin <= Semester.begins_on,
+            between(when.begin, Semester.begins_on, Semester.ends_on)
         ))
     if when.end is not None:
         criteria.append(or_(
-            when.end >= Semester.end_date,
-            between(when.end, Semester.begin_date, Semester.end_date)
+            when.end >= Semester.ends_on,
+            between(when.end, Semester.begins_on, Semester.ends_on)
         ))
-    return Semester.q.filter(*criteria).order_by(Semester.begin_date)
+    return Semester.q.filter(*criteria).order_by(Semester.begins_on)
 
 
 def get_semester_for_date(target_date):
@@ -60,7 +60,7 @@ def get_semester_for_date(target_date):
     found.
     """
     return Semester.q.filter(
-        between(target_date, Semester.begin_date, Semester.end_date)
+        between(target_date, Semester.begins_on, Semester.ends_on)
     ).one()
 
 
@@ -359,7 +359,7 @@ class SemesterFee(Fee):
         debts = []
         # Compute semester fee for each semester the user is liable to pay it
         for semester in semesters:
-            semester_interval = closed(semester.begin_date, semester.end_date)
+            semester_interval = closed(semester.begins_on, semester.ends_on)
             liable_in_semester = liability_intervals & semester_interval
             if not liable_in_semester:
                 continue

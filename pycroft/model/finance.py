@@ -46,10 +46,10 @@ class Semester(ModelBase):
     # fee
     allowed_overdraft = Column(
         Integer, CheckConstraint('allowed_overdraft >= 0'), nullable=False)
-    begin_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
+    begins_on = Column(Date, nullable=False)
+    ends_on = Column(Date, nullable=False)
     __table_args__ = (
-        CheckConstraint('begin_date < end_date'),
+        CheckConstraint('begins_on < ends_on'),
     )
 
 

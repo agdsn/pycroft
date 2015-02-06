@@ -270,7 +270,7 @@ class TestRegistrationFee(FeeTestBase):
 
     def test_fee_zero(self):
         self.user.registered_at = datetime.combine(
-            SemesterData.without_registration_fee.begin_date,
+            SemesterData.without_registration_fee.begins_on,
             time.min
         )
         self.assertEqual(self.fee.compute(self.user), [])
@@ -297,10 +297,10 @@ class TestSemesterFee(FeeTestBase):
     def expected_debt(self, semester, regular=True):
         description = config["finance"]["semester_fee_description"]
         registered_at_date = self.user.registered_at.date()
-        if semester.begin_date <= registered_at_date <= semester.end_date:
+        if semester.begins_on <= registered_at_date <= semester.ends_on:
             valid_date = registered_at_date
         else:
-            valid_date = semester.begin_date
+            valid_date = semester.begins_on
         amount = (semester.regular_semester_fee
                   if regular else
                   semester.reduced_semester_fee)
@@ -325,17 +325,17 @@ class TestSemesterFee(FeeTestBase):
     def test_grace_period(self):
         semester = SemesterData.with_registration_fee
         self.set_registered_at(
-            semester.end_date - semester.grace_period)
+            semester.ends_on - semester.grace_period)
         self.assertEqual(self.fee.compute(self.user), [self.expected_debt(
             SemesterData.without_registration_fee)])
 
     def test_away(self):
         semester = SemesterData.without_registration_fee
         begin = datetime.combine(
-            semester.begin_date, time.min
+            semester.begins_on, time.min
         )
         end = datetime.combine(
-            semester.end_date, time.min
+            semester.ends_on, time.min
         )
         self.garbage.append(create_membership(
             begin, end - semester.reduced_semester_fee_threshold,
@@ -353,7 +353,7 @@ class TestLateFee(FeeTestBase):
 
     allowed_overdraft = 500
     payment_deadline = timedelta(31)
-    valid_date = SemesterData.with_registration_fee.begin_date
+    valid_date = SemesterData.with_registration_fee.begins_on
     description = u"Fee description"
     amount = 1000
 

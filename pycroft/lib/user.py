@@ -172,7 +172,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
             group = Group.q.filter(Group.name == membership["name"]).one()
             create_membership(
                 start_date=now,
-                end_date=datetime.combine(get_current_semester().end_date, time.min),
+                end_date=datetime.combine(get_current_semester().ends_on, time.min),
                 group=group,
                 user=new_user
         )
