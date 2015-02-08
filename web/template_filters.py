@@ -15,9 +15,9 @@ from datetime import datetime, timedelta
 from itertools import chain, imap
 import flask.ext.babel
 
-from pycroft.model.dns import ARecord, CNAMERecord
-from pycroft.model.session import session
+from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume
+from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.host import Host, Ip
 
 _filter_registry = {}
@@ -80,7 +80,7 @@ def timesince_filter(dt, default="just now"):
     if dt is None:
         return "k/A"
 
-    now = datetime.utcnow()
+    now = session.utcnow()
     diff = now - dt
 
     periods = (
@@ -128,7 +128,7 @@ def money_filter(amount):
 def host_traffic_filter(host):
     traffic_timespan = datetime.utcnow() - timedelta(days=7)
 
-    traffic_volumes = session.query(
+    traffic_volumes = session.session.query(
         TrafficVolume
     ).join(
         TrafficVolume.ip
@@ -149,7 +149,7 @@ def host_traffic_filter(host):
 
 @template_filter("host_name")
 def host_name_filter(host):
-    a_record = session.query(
+    a_record = session.session.query(
         ARecord
     ).filter(
         ARecord.host_id == host.id
@@ -163,7 +163,7 @@ def host_name_filter(host):
 
 @template_filter("host_cname")
 def host_cname_filter(host):
-    cname_record = session.query(
+    cname_record = session.session.query(
         CNAMERecord
     ).filter(
         CNAMERecord.host_id == host.id

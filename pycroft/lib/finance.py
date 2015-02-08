@@ -69,7 +69,7 @@ def get_current_semester():
     Get the current semester.
     :rtype: Semester
     """
-    return get_semester_for_date(datetime.utcnow().date())
+    return get_semester_for_date(session.utcnow().date())
 
 
 @with_transaction

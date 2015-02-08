@@ -119,7 +119,7 @@ class Test_010_Journal(FixtureDataTestBase):
 
     def test_0030_transferred_value(self):
         amount = 9000
-        today = datetime.utcnow().date()
+        today = session.utcnow().date()
         simple_transaction(
             u"transaction", self.asset_account, self.liability_account,
             amount, self.author, today - timedelta(1)

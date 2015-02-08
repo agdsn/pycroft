@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
@@ -7,6 +7,7 @@ import re
 
 import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
+from pycroft.model import session
 
 from ..widgets import decorate_field, BootstrapFormControlDecorator, \
     BootstrapStandardDecorator, BootstrapFormGroupDecorator, \
@@ -136,7 +137,7 @@ class DateField(wtforms.fields.DateField):
         ))
         for option in self.datepicker_options.iterkeys():
             kwargs.pop(option)
-        defaults = {'default': datetime.utcnow(), 'language': 'de',
+        defaults = {'default': session.utcnow(), 'language': 'de',
                     'today_highlight': 'true', 'today_btn': 'linked'}
         self.datepicker_options = dict(chain(defaults.items(),
                                              self.datepicker_options.items()))
