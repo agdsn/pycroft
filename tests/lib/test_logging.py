@@ -29,7 +29,7 @@ class Test_010_UserLogEntry(LogTestBase):
                                         user=self.user)
 
         self.assertEqual(user_log_entry.message, self.message)
-        self.assertAlmostEqual(user_log_entry.timestamp, session.utcnow(),
+        self.assertAlmostEqual(user_log_entry.created_at, session.utcnow(),
                                delta=timedelta(seconds=5))
         self.assertEqual(user_log_entry.author, self.user)
         self.assertEqual(user_log_entry.user, self.user)
@@ -54,7 +54,7 @@ class Test_020_RoomLogEntry(LogTestBase):
         db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
 
         self.assertEqual(db_room_log_entry.message, self.message)
-        self.assertAlmostEqual(db_room_log_entry.timestamp, session.utcnow(),
+        self.assertAlmostEqual(db_room_log_entry.created_at, session.utcnow(),
                                delta=timedelta(seconds=5))
         self.assertEqual(db_room_log_entry.author, self.user)
         self.assertEqual(db_room_log_entry.room, room)

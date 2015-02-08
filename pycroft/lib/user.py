@@ -225,12 +225,11 @@ def move(user, dormitory, level, room_number, processor):
 
     user.room = new_room
 
-    now = session.utcnow()
     log_user_event(
         author=processor,
         message=config["move"]["log_message"].format(
             from_room=old_room, to_room=new_room),
-        timestamp=now, user=user
+        user=user
     )
 
     # assign a new IP to each net_device
@@ -378,8 +377,7 @@ def block(user, reason, processor, when=None):
         log_message = config["block"]["log_message_without_enddate"].format(
             reason=reason)
 
-    log_user_event(message=log_message, timestamp=now,
-                          author=processor, user=user)
+    log_user_event(message=log_message, author=processor, user=user)
 
     return user
 

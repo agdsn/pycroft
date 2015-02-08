@@ -81,7 +81,7 @@ def user_show(user_id):
 
     log_list = sorted(
         chain(user.user_log_entries, room.room_log_entries),
-        key=operator.attrgetter("timestamp"), reverse=True
+        key=operator.attrgetter("created_at"), reverse=True
     )
     user_log_list = user.user_log_entries[::-1]
     room_log_list = room.room_log_entries[::-1]
@@ -131,7 +131,7 @@ def user_show_logs_json(user_id, logtype="all"):
 
     return jsonify(items=map(
         lambda entry: {
-            'time': datetime_filter(entry.timestamp),
+            'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)
@@ -142,7 +142,7 @@ def user_show_logs_json(user_id, logtype="all"):
         user_log_list
     ) + map(
         lambda entry: {
-            'time': datetime_filter(entry.timestamp),
+            'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)

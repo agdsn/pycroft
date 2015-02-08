@@ -25,7 +25,7 @@ class LogEntry(ModelBase):
     # variably sized string
     message = Column(Text, nullable=False)
     # created
-    timestamp = Column(DateTime, nullable=False, default=utcnow())
+    created_at = Column(DateTime, nullable=False, default=utcnow())
 
     # many to one from LogEntry to User
     author = relationship("User",

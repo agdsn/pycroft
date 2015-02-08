@@ -298,7 +298,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
-        self.assertGreaterEqual(log_entry.timestamp, when)
+        self.assertGreaterEqual(log_entry.created_at, when)
         self.assertEqual(log_entry.author, self.processing_user)
 
 
@@ -358,7 +358,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
 
         # check log message
         log_entry = self.user.user_log_entries[-1]
-        self.assertAlmostEqual(log_entry.timestamp, session.utcnow(),
+        self.assertAlmostEqual(log_entry.created_at, session.utcnow(),
                                delta=timedelta(seconds=5))
         self.assertEqual(log_entry.author, self.processing_user)
 

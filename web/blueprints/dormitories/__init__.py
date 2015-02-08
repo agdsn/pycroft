@@ -74,7 +74,7 @@ def room_show(room_id):
 def room_logs_json(room_id):
     return jsonify(items=map(
         lambda entry: {
-            'time': datetime_filter(entry.timestamp),
+            'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)
