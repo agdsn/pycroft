@@ -202,36 +202,18 @@ def record_readable_name_filter(record):
 @template_filter("get_switch")
 def ip_get_switch(host,ip):
     patch_ports = host.room.patch_ports
-    switchs = None
-
-    for port in patch_ports:
-        if switchs is None:
-            switchs = port.destination_port.switch.name
-        else:
-            switchs += ", " + port.destination_port.switch.name
-
-    if switchs is not None:
-        return switchs
-    else:
+    if not patch_ports:
         return "No Switch"
+    return u', '.join(imap(lambda p: p.destination_port.switch.name, patch_ports))
 
 
 #TODO: usecases — should that srsly return >1 port? (see todo above)
 @template_filter("get_switch_port")
 def ip_get_switch_port(host,ip):
     patch_ports = host.room.patch_ports
-    switch_ports = None
-
-    for port in patch_ports:
-        if switch_ports is None :
-            switch_ports = port.destination_port.name
-        else:
-            switch_ports += ", " + port.destination_port.name
-
-    if switch_ports is not None:
-        return switch_ports
-    else:
+    if not patch_ports:
         return "No Port"
+    return u', '.join(imap(lambda p: p.destination_port.name, patch_ports))
 
 
 def register_filters(app):
