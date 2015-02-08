@@ -158,7 +158,7 @@ def complex_transaction(description, author, splits, valid_on=None):
     session.session.add_all(objects)
 
 
-def transferred_amount(from_account, to_account, begin_date=None, end_date=None):
+def transferred_amount(from_account, to_account, when=UnboundedInterval):
     """
     Determine how much has been transferred from one account to another in a
     given interval.
@@ -170,8 +170,7 @@ def transferred_amount(from_account, to_account, begin_date=None, end_date=None)
     bound respectively.
     :param FinanceAccount from_account:
     :param FinanceAccount to_account:
-    :param date|None begin_date: since when (inclusive)
-    :param date|None end_date: till when (inclusive)
+    :param Interval[date] when: Interval in which transactions became valid
     :rtype: int
     """
     split1 = aliased(Split)
@@ -192,14 +191,14 @@ def transferred_amount(from_account, to_account, begin_date=None, end_date=None)
         split2.account == to_account,
         sign(split1.amount) != sign(split2.amount)
     )
-    if begin_date is not None and end_date is not None:
+    if not when.unbounded:
         query = query.filter(
-            between(Transaction.valid_date, begin_date, end_date)
+            between(Transaction.valid_on, when.begin, when.end)
         )
-    elif begin_date is not None:
-        query = query.filter(Transaction.valid_date >= begin_date)
-    elif end_date is not None:
-        query = query.filter(Transaction.valid_date <= end_date)
+    elif when.begin is not None:
+        query = query.filter(Transaction.valid_on >= when.begin)
+    elif when.end is not None:
+        query = query.filter(Transaction.valid_on <= when.end)
     return query.scalar()
 
 

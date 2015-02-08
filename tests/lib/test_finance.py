@@ -8,6 +8,7 @@ import pkgutil
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import config
+from pycroft.helpers.interval import closedopen, openclosed, single
 from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
     simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
@@ -133,25 +134,25 @@ class Test_010_Journal(FixtureDataTestBase):
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, today, today
+                self.asset_account, self.liability_account, single(today)
             ),
             amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, today, None
+                self.asset_account, self.liability_account, closedopen(today, None)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, None, today
+                self.asset_account, self.liability_account, openclosed(None, today)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, None, None
+                self.asset_account, self.liability_account
             ),
             3*amount
         )
