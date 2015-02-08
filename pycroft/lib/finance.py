@@ -74,7 +74,7 @@ def get_current_semester():
 
 @with_transaction
 def simple_transaction(description, debit_account, credit_account, amount,
-                       author, valid_date=None):
+                       author, valid_on=None):
     """
     Posts a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits,
@@ -87,17 +87,17 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :param FinanceAccount credit_account: Credit (germ. Haben) account
     :param int amount: Amount in Eurocents
     :param User author: User who created the transaction
-    :param valid_date: Date, when the transaction should be valid. Current
-    system date, if omitted.
-    :type valid_date: date or None
+    :param date valid_on: Date, when the transaction should be valid. Current
+    database date, if omitted.
+    :type valid_on: date or None
     :rtype: Transaction
     """
-    if valid_date is None:
-        valid_date = datetime.utcnow().date()
+    if valid_on is None:
+        valid_on = session.utcnow().date()
     new_transaction = Transaction(
         description=description,
         author=author,
-        valid_date=valid_date)
+        valid_on=valid_on)
     new_debit_split = Split(
         amount=-amount,
         account=debit_account,
@@ -141,14 +141,14 @@ def setup_user_finance_account(new_user, processor):
 
 
 @with_transaction
-def complex_transaction(description, author, splits, valid_date=None):
-    if valid_date is None:
-        valid_date = datetime.utcnow().date()
+def complex_transaction(description, author, splits, valid_on=None):
+    if valid_on is None:
+        valid_on = session.utcnow().date()
     objects = []
     new_transaction = Transaction(
         description=description,
         author=author,
-        valid_date=valid_date
+        valid_on=valid_on
     )
     objects.append(new_transaction)
     objects.extend(
@@ -223,19 +223,19 @@ def post_fees(users, fees, processor):
             computed_adjustments = tuple(
                 ((adjustment_description.format(
                     original_description=description,
-                    original_valid_date=valid_date)),
-                 valid_date, -amount)
-                for description, valid_date, amount in erroneous_debts)
+                    original_valid_on=valid_on)),
+                 valid_on, -amount)
+                for description, valid_on, amount in erroneous_debts)
             missing_adjustments, erroneous_adjustments = diff(
                 posted_corrections, computed_adjustments
             )
             missing_postings = chain(missing_debts, missing_adjustments)
-            today = datetime.utcnow().date()
-            for description, valid_date, amount in missing_postings:
-                if valid_date <= today:
+            today = session.utcnow().date()
+            for description, valid_on, amount in missing_postings:
+                if valid_on <= today:
                     simple_transaction(
                         description, fee.account, user.finance_account,
-                        amount, processor, valid_date)
+                        amount, processor, valid_on)
 
 
 def diff(posted, computed):
@@ -306,21 +306,21 @@ class Fee(object):
         split1 = aliased(Split)
         split2 = aliased(Split)
         transactions = self.session.query(
-            Transaction.description, Transaction.valid_date, split1.amount
+            Transaction.description, Transaction.valid_on, split1.amount
         ).select_from(Transaction).join(
             (split1, split1.transaction_id == Transaction.id),
             (split2, split2.transaction_id == Transaction.id)
         ).filter(
             split1.account_id == user.finance_account_id,
             split2.account_id == self.account.id
-        ).order_by(Transaction.valid_date)
+        ).order_by(Transaction.valid_on)
         return transactions
 
     @abstractmethod
     def compute(self, user):
         """
         Compute all debts the user owes us for this particular fee. Debts must
-        be in ascending order of valid_date.
+        be in ascending order of valid_on.
 
         :param User user:
         :rtype: list[(unicode, date, int)]
@@ -367,7 +367,7 @@ class SemesterFee(Fee):
                 continue
             away_in_semester = away_intervals & semester_interval
             present_in_semester = liable_in_semester - away_in_semester
-            valid_date = liable_in_semester[0].begin
+            valid_on = liable_in_semester[0].begin
             if present_in_semester.length <= semester.reduced_semester_fee_threshold:
                 amount = semester.reduced_semester_fee
             else:
@@ -375,7 +375,7 @@ class SemesterFee(Fee):
             if amount > 0:
                 debts.append((
                     description.format(semester=semester.name),
-                    valid_date, amount))
+                    valid_on, amount))
         return debts
 
 
@@ -395,7 +395,7 @@ class LateFee(Fee):
         split1 = aliased(Split)
         split2 = aliased(Split)
         return self.session.query(
-            Transaction.valid_date, (-func.sum(split2.amount)).label("debt")
+            Transaction.valid_on, (-func.sum(split2.amount)).label("debt")
         ).select_from(Transaction).join(
             (split1, split1.transaction_id == Transaction.id),
             (split2, split2.transaction_id == Transaction.id)
@@ -404,18 +404,18 @@ class LateFee(Fee):
             split2.account_id != user.finance_account_id,
             split2.account_id != self.account.id
         ).group_by(
-            Transaction.id, Transaction.valid_date
-        ).order_by(Transaction.valid_date)
+            Transaction.id, Transaction.valid_on
+        ).order_by(Transaction.valid_on)
 
     @staticmethod
     def running_totals(transactions):
         balance = 0
         last_credit = transactions[0][0]
-        for valid_date, amount in transactions:
+        for valid_on, amount in transactions:
             if amount > 0:
-                last_credit = valid_date
+                last_credit = valid_on
             else:
-                delta = valid_date - last_credit
+                delta = valid_on - last_credit
                 yield last_credit, balance, delta
             balance += amount
 
@@ -436,20 +436,20 @@ class LateFee(Fee):
             if (balance <= semester.allowed_overdraft or
                     delta <= semester.payment_deadline):
                 continue
-            valid_date = last_credit + semester.payment_deadline + timedelta(days=1)
+            valid_on = last_credit + semester.payment_deadline + timedelta(days=1)
             amount = semester.late_fee
-            if liability_intervals & single(valid_date) and amount > 0:
+            if liability_intervals & single(valid_on) and amount > 0:
                 debts.append((
-                    description.format(original_valid_date=last_credit),
-                    amount, valid_date
+                    description.format(original_valid_on=last_credit),
+                    amount, valid_on
                 ))
         return debts
 
 
 MT940_FIELDNAMES = [
     'our_account_number',
-    'transaction_date',
-    'valid_date',
+    'posted_at',
+    'valid_on',
     'type',
     'description',
     'other_name',
@@ -511,19 +511,19 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
         raise CSVImportError(u"Leerer Datensatz.")
     if not descending_transaction_dates(entries):
         raise CSVImportError(u"Buchungen nicht absteigend nach Buchungsdatum geordnet.")
-    first_transaction_date = entries[-1][8]
+    first_posted_at = entries[-1][8]
     balance = session.session.query(
         func.coalesce(func.sum(JournalEntry.amount), 0)
     ).filter(
-        JournalEntry.transaction_date < first_transaction_date).scalar()
+        JournalEntry.posted_at < first_posted_at).scalar()
     a = tuple(session.session.query(
         JournalEntry.amount, JournalEntry.journal_id, JournalEntry.description,
         JournalEntry.original_description, JournalEntry.other_account_number,
         JournalEntry.other_routing_number, JournalEntry.other_name,
-        JournalEntry.import_time, JournalEntry.transaction_date,
-        JournalEntry.valid_date
+        JournalEntry.import_time, JournalEntry.posted_at,
+        JournalEntry.valid_on
     ).filter(
-        JournalEntry.transaction_date >= first_transaction_date))
+        JournalEntry.posted_at >= first_posted_at))
     b = tuple(reversed(entries))
     matcher = difflib.SequenceMatcher(None, a, b)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
@@ -537,7 +537,7 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
                     amount=e[0], journal_id=e[1], description=e[2],
                     original_description=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
-                    import_time=e[7], transaction_date=e[8], valid_date=e[9]),
+                    import_time=e[7], posted_at=e[8], valid_on=e[9]),
                 islice(entries, j1, j2)))
         elif 'delete' == tag:
             continue
@@ -618,10 +618,8 @@ def process_record(index, record, imported_at):
             message.format(record.our_account_number, index, raw_record), e)
 
     try:
-        valid_date = datetime.strptime(
-            record.valid_date, u"%d.%m.%y").date()
-        transaction_date = datetime.strptime(
-            record.transaction_date, u"%d.%m.%y").date()
+        valid_on = datetime.strptime(record.valid_on, u"%d.%m.%y").date()
+        posted_at = datetime.strptime(record.posted_at, u"%d.%m.%y").date()
     except ValueError as e:
         message = u"Falsches Datumsformat in Datensatz {0}: {1}"
         raw_record = restore_record(record)
@@ -642,7 +640,7 @@ def process_record(index, record, imported_at):
     return (amount, journal.id, cleanup_description(description),
             description, record.other_account_number,
             record.other_routing_number, other_name, imported_at,
-            transaction_date, valid_date)
+            posted_at, valid_on)
 
 
 def user_has_paid(user):

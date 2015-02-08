@@ -118,8 +118,8 @@ class JournalEntry(ModelBase):
     other_routing_number = Column(String(255), nullable=False)
     other_name = Column(String(255), nullable=False)
     import_time = Column(DateTime, nullable=False)
-    transaction_date = Column(Date, nullable=False)
-    valid_date = Column(Date, nullable=False)
+    posted_at = Column(Date, nullable=False)
+    valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey("transaction.id"))
     transaction = relationship("Transaction")
 
@@ -137,9 +137,9 @@ class Transaction(ModelBase):
         nullable=True
     )
     author = relationship("User")
-    transaction_date = Column(DateTime, nullable=False,
-                              default=utcnow(), onupdate=utcnow())
-    valid_date = Column(Date, nullable=False, default=utcnow())
+    posted_at = Column(DateTime, nullable=False,
+                       default=utcnow(), onupdate=utcnow())
+    valid_on = Column(Date, nullable=False, default=utcnow())
 
     @property
     def is_balanced(self):

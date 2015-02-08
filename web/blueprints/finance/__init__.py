@@ -78,7 +78,7 @@ def journals_entries_json():
     return jsonify(items=map(
         lambda entry: {
             'journal': entry.journal.name,
-            'date': date_filter(entry.valid_date),
+            'valid_on': date_filter(entry.valid_on),
             'amount': money_filter(entry.amount),
             'description': entry.description,
             'original_description': entry.original_description,
@@ -97,7 +97,7 @@ def journals_entries_json():
         },
         JournalEntry.q.filter(
             JournalEntry.transaction_id == None
-        ).order_by(JournalEntry.valid_date).all()
+        ).order_by(JournalEntry.valid_on).all()
     ))
 
 
@@ -157,7 +157,7 @@ def journals_entries_edit(journal_id, entry_id):
         entry.transaction = finance.simple_transaction(
             description=entry.description, debit_account=debit_account,
             credit_account=credit_account, amount=entry.amount,
-            author=current_user, valid_date=entry.valid_date)
+            author=current_user, valid_on=entry.valid_on)
         entry.description = form.description.data
         session.add(entry)
         session.commit()
@@ -205,7 +205,7 @@ def accounts_show(account_id):
         Split.q
         .join(Transaction)
         .filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_date)
+        .order_by(Transaction.valid_on)
     )
     typed_splits = get_typed_splits(splits)
     return render_template(
@@ -224,10 +224,8 @@ def accounts_show_json(account_id):
     inverted = False
     return jsonify(items=map(
         lambda split: {
-            'transaction_date': datetime_filter(
-                split.transaction.transaction_date
-            ),
-            'valid_date': date_filter(split.transaction.valid_date),
+            'posted_at': datetime_filter(split.transaction.posted_at),
+            'valid_on': date_filter(split.transaction.valid_on),
             'description': {
                 'href': url_for(
                     "finance.transactions_show",
@@ -239,7 +237,7 @@ def accounts_show_json(account_id):
             'row_positive': (split.amount > 0) is not inverted
         },
         Split.q.join(Transaction).filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_date)
+        .order_by(Transaction.valid_on)
     ))
 
 
@@ -288,7 +286,7 @@ def transactions_create():
             description=form.description.data,
             author=current_user,
             splits=splits,
-            valid_date=form.valid_date.data,
+            valid_on=form.valid_on.data,
         )
         return redirect(url_for('.accounts_list'))
     return render_template(

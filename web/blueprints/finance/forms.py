@@ -84,8 +84,8 @@ class JournalEntryEditForm(Form):
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
-    valid_date = static(DateField(u"Valutadatum"))
-    transaction_date = static(DateField(u"Buchungsdatum"))
+    valid_on = static(DateField(u"Valutadatum"))
+    posted_at = static(DateField(u"Buchungsdatum"))
 
 
 class JournalImportForm(Form):
@@ -113,7 +113,7 @@ class SplitCreateForm(WTForm):
 
 class TransactionCreateForm(Form):
     description = TextField(u"Beschreibung", validators=[DataRequired()])
-    valid_date = DateField(
+    valid_on = DateField(
         u"Gültig ab", validators=[Optional()], today_btn=True,
         today_highlight=True)
     splits = FieldList(

@@ -71,16 +71,16 @@ class Test_010_Journal(FixtureDataTestBase):
         self.assertEquals(entry.other_routing_number, "80040400")
         self.assertEquals(entry.other_name, u"SCH, AAA")
         self.assertEquals(entry.amount, 900000)
-        self.assertEquals(entry.transaction_date, date(2013, 1, 2))
-        self.assertEquals(entry.valid_date, date(2013, 1, 2))
+        self.assertEquals(entry.posted_at, date(2013, 1, 2))
+        self.assertEquals(entry.valid_on, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter_by(
             journal=journal,
             original_description=u"Pauschalen"
         ).first()
-        self.assertEquals(entry.transaction_date, date(2012, 12, 24))
-        self.assertEquals(entry.valid_date, date(2012, 12, 24))
+        self.assertEquals(entry.posted_at, date(2012, 12, 24))
+        self.assertEquals(entry.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
         self.assertEquals(entry.amount, -600)
@@ -91,8 +91,8 @@ class Test_010_Journal(FixtureDataTestBase):
             journal=journal,
             original_description=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEquals(entry.transaction_date, date(2013, 12, 29))
-        self.assertEquals(entry.valid_date, date(2013, 1, 10))
+        self.assertEquals(entry.posted_at, date(2013, 12, 29))
+        self.assertEquals(entry.valid_on, date(2013, 1, 10))
 
         JournalEntry.q.delete()
         session.session.commit()
@@ -186,7 +186,7 @@ class FeeTestBase(FixtureDataTestBase):
         actual_transactions = map(
             lambda t: (
                 t.description,
-                t.valid_date,
+                t.valid_on,
                 t.splits[0].amount
                 if t.splits[0].account == user.finance_account else
                 t.splits[1].amount),
@@ -198,9 +198,9 @@ class FeeTestBase(FixtureDataTestBase):
 class Test_Fees(FeeTestBase):
     datasets = (FinanceAccountData, SemesterData, UserData)
     description = u"Fee"
-    valid_date = datetime.utcnow().date()
+    valid_on = datetime.utcnow().date()
     amount = 9000
-    params = (description, valid_date, amount)
+    params = (description, valid_on, amount)
 
     class FeeMock(Fee):
         def __init__(self, account, params):
@@ -231,9 +231,9 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [single_fee], self.processor)
         description = config['finance']['adjustment_description'].format(
             original_description=self.description,
-            original_valid_date=self.valid_date
+            original_valid_on=self.valid_on
         )
-        correction = [(description, self.valid_date, -self.amount)]
+        correction = [(description, self.valid_on, -self.amount)]
         self.assertFeesPosted(self.user, [self.params] * 2 + correction)
 
     def test_automatic_adjustment_idempotency(self):
@@ -243,9 +243,9 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [single_fee], self.processor)
         description = config['finance']['adjustment_description'].format(
             original_description=self.description,
-            original_valid_date=self.valid_date
+            original_valid_on=self.valid_on
         )
-        correction = [(description, self.valid_date, -self.amount)]
+        correction = [(description, self.valid_on, -self.amount)]
         post_fees([self.user], [single_fee], self.processor)
         self.assertFeesPosted(self.user, [self.params] * 2 + correction)
 
@@ -261,8 +261,8 @@ class TestRegistrationFee(FeeTestBase):
     def test_registration_fee(self):
         description = config["finance"]["registration_fee_description"]
         amount = SemesterData.with_registration_fee.registration_fee
-        valid_date = self.user.registered_at.date()
-        self.assertEqual(self.fee.compute(self.user), [(description, valid_date, amount)])
+        valid_on = self.user.registered_at.date()
+        self.assertEqual(self.fee.compute(self.user), [(description, valid_on, amount)])
 
     def test_property_absent(self):
         self.user.memberships = []
@@ -296,15 +296,15 @@ class TestSemesterFee(FeeTestBase):
 
     def expected_debt(self, semester, regular=True):
         description = config["finance"]["semester_fee_description"]
-        registered_at_date = self.user.registered_at.date()
-        if semester.begins_on <= registered_at_date <= semester.ends_on:
-            valid_date = registered_at_date
+        registered_at = self.user.registered_at.date()
+        if semester.begins_on <= registered_at <= semester.ends_on:
+            valid_on = registered_at
         else:
-            valid_date = semester.begins_on
+            valid_on = semester.begins_on
         amount = (semester.regular_semester_fee
                   if regular else
                   semester.reduced_semester_fee)
-        return description.format(semester=semester.name), valid_date, amount
+        return description.format(semester=semester.name), valid_on, amount
 
     def set_registered_at(self, when):
         registered_at = datetime.combine(when, time.min)
@@ -353,7 +353,7 @@ class TestLateFee(FeeTestBase):
 
     allowed_overdraft = 500
     payment_deadline = timedelta(31)
-    valid_date = SemesterData.with_registration_fee.begins_on
+    valid_on = SemesterData.with_registration_fee.begins_on
     description = u"Fee description"
     amount = 1000
 
@@ -372,21 +372,21 @@ class TestLateFee(FeeTestBase):
 
     def late_fee_for(self, transaction):
         description = config['finance']['late_fee_description'].format(
-            original_valid_date=transaction.valid_date)
-        valid_date = (transaction.valid_date + self.payment_deadline +
-                      timedelta(days=1))
-        amount = get_semester_for_date(valid_date).late_fee
-        return description, amount, valid_date
+            original_valid_on=transaction.valid_on)
+        valid_on = (transaction.valid_on + self.payment_deadline +
+                    timedelta(days=1))
+        amount = get_semester_for_date(valid_on).late_fee
+        return description, amount, valid_on
 
     def book_a_fee(self):
         return simple_transaction(
             self.description, self.other_fee_account, self.user.finance_account,
-            self.amount, self.user, self.valid_date)
+            self.amount, self.user, self.valid_on)
 
     def pay_fee(self, delta):
         return simple_transaction(
             self.description, self.user.finance_account, self.bank_account,
-            self.amount, self.user, self.valid_date + delta)
+            self.amount, self.user, self.valid_on + delta)
 
     def test_no_fees_bocked(self):
         self.assertEqual(self.fee.compute(self.user), [])

@@ -16,10 +16,10 @@
         <dl class="dl-horizontal">
             <dt>Beschreibung</dt>
             <dd>{{ transaction.description }}</dd>
-            <dt>Erstellt am</dt>
-            <dd>{{ transaction.transaction_date|datetime }}</dd>
-            <dt>Gültig ab</dt>
-            <dd>{{ transaction.valid_date|date }}</dd>
+            <dt>Erstellt um</dt>
+            <dd>{{ transaction.posted_at|datetime }}</dd>
+            <dt>Gültig am</dt>
+            <dd>{{ transaction.valid_on|date }}</dd>
         </dl>
     </section>
     <section id="tbl_transactions">

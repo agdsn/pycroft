@@ -5,23 +5,23 @@
 #}
 {% import "macros/table.html" as tbl %}
 {% set cols = [
-    {'name': 'transaction_date', 'title': 'Erstellt am'},
-    {'name': 'valid_date', 'title': 'Gültig ab'},
+    {'name': 'posted_at', 'title': 'Erstellt um'},
+    {'name': 'valid_on', 'title': 'Gültig am'},
     {'name': 'description', 'title': 'Beschreibung',
     'formatter': 'linkFormatter'},
     {'name': 'amount', 'title': 'Wert'}
 ] %}
 {% macro render_column_headings() -%}
-    <th>Erstellt am</th>
-    <th>Gültig ab</th>
+    <th>Erstellt um</th>
+    <th>Gültig am</th>
     <th>Beschreibung</th>
     <th>Wert</th>
 {%- endmacro %}
 
 {% macro render_split(split, cell_class=None, absolute=false) %}
     {% if split -%}
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.transaction_date|datetime }}</td>
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_date|date }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.posted_at|datetime }}</td>
+    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_on|date }}</td>
     <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for("finance.transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
     <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
     {%- else -%}

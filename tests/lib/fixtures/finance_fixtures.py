@@ -138,19 +138,19 @@ class MembershipData(DataSet):
 class TransactionData(DataSet):
     class claim1:
         description = "Claim 1"
-        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=31)
+        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=31)
 
     class late_fee_for_claim1:
         description = "Late fee for Claim 1"
-        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=63)
+        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=63)
 
     class claim2:
         description = "Claim 2"
-        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=81)
+        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=81)
 
     class payment:
         description = "Payment of Claim 1"
-        valid_date = SemesterData.with_registration_fee.begins_on + timedelta(days=64)
+        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=64)
 
 
 class SplitData(DataSet):
