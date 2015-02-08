@@ -234,13 +234,6 @@ def ip_get_switch_port(host,ip):
         return "No Port"
 
 
-@template_filter("level_number")
-def level_number_filter(level):
-        if level<10:
-            return u"0{}".format(level, )
-        else:
-            return level
-
 def register_filters(app):
     for name in _filter_registry:
         app.jinja_env.filters[name] = _filter_registry[name]
