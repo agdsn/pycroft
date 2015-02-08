@@ -74,7 +74,7 @@ def decode_type2_user_id(string):
 
 
 # Move down here to solve cyclic import
-from pycroft.lib.finance import setup_user_finance_account
+from pycroft.lib.finance import RegistrationFee, SemesterFee, post_fees
 
 
 @with_transaction
@@ -177,7 +177,16 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
                 user=new_user
         )
 
-    setup_user_finance_account(new_user, processor)
+    fees = [
+        RegistrationFee(FinanceAccount.q.get(
+            config["finance"]["registration_fee_account_id"]
+        )),
+        SemesterFee(FinanceAccount.q.get(
+            config["finance"]["semester_fee_account_id"]
+        )),
+    ]
+    # Post initial fees
+    post_fees([new_user], fees, processor)
 
     move_in_user_log_entry = log_user_event(
         author=processor,

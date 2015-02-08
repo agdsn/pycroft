@@ -112,34 +112,6 @@ def simple_transaction(description, debit_account, credit_account, amount,
     return new_transaction
 
 
-def setup_user_finance_account(new_user, processor):
-    """Adds initial charges to a new user's finance account.
-    :param new_user: the User object of the user moving in
-    :param processor: the User object of the user who initiated the action
-                      of moving the user in
-    :return: None
-    """
-
-    conf = config["finance"]
-    current_semester = get_current_semester()
-    format_args = {
-        "user_id": new_user.id,
-        "user_name": new_user.name,
-        "semester": current_semester.name
-    }
-
-    fees = [
-        RegistrationFee(FinanceAccount.q.get(
-            config["finance"]["registration_fee_account_id"]
-        )),
-        SemesterFee(FinanceAccount.q.get(
-            config["finance"]["semester_fee_account_id"]
-        )),
-    ]
-    # Initial bookings
-    post_fees([new_user], fees, processor)
-
-
 @with_transaction
 def complex_transaction(description, author, splits, valid_on=None):
     if valid_on is None:
