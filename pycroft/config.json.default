@@ -1,8 +1,4 @@
 {
-    "file_upload": {
-        "max_file_size": "67108864",
-        "temp_dir": "/tmp"
-    },
     "finance": {
         "registration_fee_account_id": 1,
         "semester_fee_account_id": 2,
