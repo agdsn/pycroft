@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -12,8 +12,8 @@ from fixtures_user import UserData
 
 class BaseMembership():
     """Base class with data every membership model needs"""
-    start_date = datetime.datetime.utcnow()
-    end_date = None
+    begins_at = datetime.datetime.utcnow()
+    ends_at = None
 
 
 class BaseProperty():

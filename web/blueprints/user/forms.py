@@ -92,31 +92,38 @@ class HostCreateForm(Form):
 class UserLogEntry(Form):
     message = TextAreaField(u"", [DataRequired()])
 
+
 class OptionallyUnlimitedEndDateForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
     date = DateField(u"Ende", [OptionalIf("unlimited")])
 
+
 class UserAddGroupMembership(Form):
-    group_id = QuerySelectField(u"Gruppe",get_label='name',
+    group_id = QuerySelectField(u"Gruppe", get_label='name',
                                 query_factory=group_query)
-    start_date = DateField(u"Beginn", [DataRequired()])
-    end = FormField(OptionallyUnlimitedEndDateForm)
+    begins_at = DateField(u"Beginn", [DataRequired()])
+    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+
 
 class UserEditGroupMembership(Form):
-    start_date = DateField(u"Beginn", [DataRequired()])
-    end = FormField(OptionallyUnlimitedEndDateForm)
+    begins_at = DateField(u"Beginn", [DataRequired()])
+    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+
 
 class UserBlockForm(Form):
-    end = FormField(OptionallyUnlimitedEndDateForm)
+    ends_at = FormField(OptionallyUnlimitedEndDateForm)
     reason = TextAreaField(u"Grund", [DataRequired()])
+
 
 class UserMoveOutForm(Form):
     date = DateField(u"Auszug am", [DataRequired()])
     comment = TextAreaField(u"Kommentar")
 
+
 class NetDeviceChangeMacForm(Form):
     mac = TextField(u"MAC", [
         Regexp(regex=NetDevice.mac_regex, message=u"MAC ist ungültig!")])
+
 
 class UserSelectGroupForm(Form):
     group_type = SelectField(u"Typ",

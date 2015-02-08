@@ -170,8 +170,8 @@ class PropertyData(DataSet):
 
 class MembershipData(DataSet):
     class dummy_membership1:
-        start_date = datetime.utcnow() - timedelta(hours=1)
-        end_date = datetime.utcnow() + timedelta(hours=1)
+        begins_at = datetime.utcnow() - timedelta(hours=1)
+        ends_at = datetime.utcnow() + timedelta(hours=1)
         group = PropertyGroupData.dummy_group
         user = UserData.dummy_user2
 

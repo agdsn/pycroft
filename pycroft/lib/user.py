@@ -145,14 +145,14 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     for membership in conf["default_group_memberships"]:
         group = Group.q.filter(Group.name == membership["name"]).one()
-        start_date = now + timedelta(membership.get("offset", 0))
-        end_date = None
+        begins_at = now + timedelta(membership.get("offset", 0))
+        ends_at = None
         if membership.get("duration"):
             assert membership["duration"] > 0
-            end_date = start_date + timedelta(membership["duration"])
+            ends_at = begins_at + timedelta(membership["duration"])
         new_membership = create_membership(
-            start_date=start_date,
-            end_date=end_date,
+            begins_at=begins_at,
+            ends_at=ends_at,
             group=group,
             user=new_user
         )
@@ -161,8 +161,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         for membership in conf["moved_from_division"]:
             group = Group.q.filter(Group.name == membership["name"]).one()
             create_membership(
-                start_date=now,
-                end_date=None,
+                begins_at=now,
+                ends_at=None,
                 group=group,
                 user=new_user
             )
@@ -171,8 +171,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         for membership in conf["already_paid_semester_fee"]:
             group = Group.q.filter(Group.name == membership["name"]).one()
             create_membership(
-                start_date=now,
-                end_date=datetime.combine(get_current_semester().ends_on, time.min),
+                begins_at=now,
+                ends_at=datetime.combine(get_current_semester().ends_on, time.min),
                 group=group,
                 user=new_user
         )
@@ -337,34 +337,34 @@ def has_network_access(user):
 
 
 @with_transaction
-def block(user, reason, processor, date=None):
+def block(user, reason, processor, when=None):
     """
     This function blocks a user for a certain time.
     A logmessage with a reason is created.
     :param user: The user to be blocked.
-    :param date: The date the user is not blocked anymore.
+    :param when: The when the user is not blocked anymore.
     :param reason: The reason of blocking.
     :param processor: The admin who blocked the user.
     :return: The blocked user.
     """
-    if date is not None and not isinstance(date, datetime):
+    if when is not None and not isinstance(when, datetime):
         raise ValueError("Date should be a datetime object")
 
     now = session.utcnow()
-    if date is not None and date < now:
+    if when is not None and when < now:
         raise ValueError("Date should be in the future")
 
     block_group = PropertyGroup.q.filter(
         PropertyGroup.name == config["block"]["group"]
     ).one()
 
-    if date is not None:
-        create_membership(start_date=now, end_date=date,
+    if when is not None:
+        create_membership(begins_at=now, ends_at=when,
                           group=block_group, user=user)
         log_message = config["block"]["log_message_with_enddate"].format(
-            date=date.strftime("%d.%m.%Y"), reason=reason)
+            date=when.strftime("%d.%m.%Y"), reason=reason)
     else:
-        create_membership(start_date=now, end_date=None,
+        create_membership(begins_at=now, ends_at=None,
                           group=block_group, user=user)
         log_message = config["block"]["log_message_without_enddate"].format(
             reason=reason)
@@ -394,7 +394,7 @@ def move_out(user, date, comment, processor):
         if membership.active():
             for move_in_group in move_in_groups:
                 if move_in_group["name"] == membership.group.name:
-                    membership.end_date = date
+                    membership.ends_at = when
 
 
     log_message = config["move_out"]["log_message"].format(
@@ -438,12 +438,12 @@ def move_out_tmp(user, date, comment, processor):
     if len(tmp_memberships) > 0:
         # change the existing memberships for tmp_move_out
         for membership in tmp_memberships:
-            membership.end_date = None
-            membership.start_date = date
+            membership.ends_at = None
+            membership.begins_at = when
     else:
         # if there is no move out membership for the user jet, create one
-        create_membership(group=away_group, user=user, start_date=date,
-                          end_date=None)
+        create_membership(group=away_group, user=user, begins_at=when,
+                          ends_at=None)
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:

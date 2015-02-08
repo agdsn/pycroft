@@ -59,8 +59,8 @@ class Group(ModelBase):
 
 
 class Membership(ModelBase):
-    start_date = Column(DateTime, nullable=True, default=functions.utcnow())
-    end_date = Column(DateTime, nullable=True)
+    begins_at = Column(DateTime, nullable=True, default=functions.utcnow())
+    ends_at = Column(DateTime, nullable=True)
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE"),
@@ -77,9 +77,9 @@ class Membership(ModelBase):
         order_by='Membership.id'))
 
     __table_args = (
-        CheckConstraint("start_date IS NULL OR "
-                        "end_date OR IS NULL OR "
-                        "start_date <= end_date")
+        CheckConstraint("begins_at IS NULL OR "
+                        "ends_at IS NULL OR "
+                        "begins_at <= ends_at")
     )
 
     @hybrid_method
@@ -88,7 +88,7 @@ class Membership(ModelBase):
             now = object_session(self).query(functions.utcnow()).scalar()
             when = single(now)
 
-        return when.overlaps(closed(self.start_date, self.end_date))
+        return when.overlaps(closed(self.begins_at, self.ends_at))
 
     @active.expression
     def active(cls, when=None):
@@ -97,39 +97,39 @@ class Membership(ModelBase):
             when = single(now)
 
         return and_(
-            or_(cls.start_date == null(), literal(when.end) == null(),
-                cls.start_date <= literal(when.end)),
-            or_(literal(when.begin) == null(), cls.end_date == null(),
-                literal(when.begin) <= cls.end_date)
+            or_(cls.begins_at == null(), literal(when.end) == null(),
+                cls.begins_at <= literal(when.end)),
+            or_(literal(when.begin) == null(), cls.ends_at == null(),
+                literal(when.begin) <= cls.ends_at)
         ).label("active")
 
-    @validates('end_date')
-    def validate_end_date(self, _, value):
+    @validates('ends_at')
+    def validate_ends_at(self, _, value):
         if value is None:
             return value
         assert isinstance(value, datetime), \
-            "end_date must be an instanceof  datetime"
-        if self.start_date is not None:
-            assert value >= self.start_date,\
-                "start date must be before end date"
+            "ends_at must be an instanceof  datetime"
+        if self.begins_at is not None:
+            assert value >= self.begins_at,\
+                "begins_at must be before ends_at"
         return value
 
-    @validates('start_date')
-    def validate_start_date(self, _, value):
+    @validates('begins_at')
+    def validate_begins_at(self, _, value):
         if value is None:
             return value
-        assert isinstance(value, datetime), "start_date should be a datetime"
-        if self.end_date is not None:
-            assert value <= self.end_date,\
-                "start date must be before end date"
+        assert isinstance(value, datetime), "begins_at should be a datetime"
+        if self.ends_at is not None:
+            assert value <= self.ends_at,\
+                "begins_at must be before ends_at"
         return value
 
     def disable(self):
         now = session.utcnow()
-        if self.start_date > now:
-            self.end_date = self.start_date
+        if self.begins_at > now:
+            self.ends_at = self.begins_at
         else:
-            self.end_date = now
+            self.ends_at = now
 
 
 class Property(ModelBase):

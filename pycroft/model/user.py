@@ -119,7 +119,7 @@ class User(ModelBase, UserMixin):
             now = session.utcnow()
             when = single(now)
         return [m for m in self.memberships
-                if when.overlaps(closed(m.start_date, m.end_date))]
+                if when.overlaps(closed(m.begins_at, m.ends_at))]
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
@@ -229,8 +229,8 @@ class User(ModelBase, UserMixin):
         """
         property_assignments = object_session(self).query(
             pycroft.model.property.Property.granted,
-            pycroft.model.property.Membership.start_date,
-            pycroft.model.property.Membership.end_date
+            pycroft.model.property.Membership.begins_at,
+            pycroft.model.property.Membership.ends_at
         ).filter(
             pycroft.model.property.Property.name == name,
             pycroft.model.property.Property.property_group_id == pycroft.model.property.PropertyGroup.id,
@@ -238,13 +238,13 @@ class User(ModelBase, UserMixin):
             pycroft.model.property.Membership.user_id == self.id
         ).all()
         granted_intervals = IntervalSet(
-            closed(start_date, end_date)
-            for granted, start_date, end_date in property_assignments
+            closed(begins_at, ends_at)
+            for granted, begins_at, ends_at in property_assignments
             if granted
         )
         denied_intervals = IntervalSet(
-            closed(start_date, end_date)
-            for granted, start_date, end_date in property_assignments
+            closed(begins_at, ends_at)
+            for granted, begins_at, ends_at in property_assignments
             if not granted
         )
         return (granted_intervals - denied_intervals).intersect(when)

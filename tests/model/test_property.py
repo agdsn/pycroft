@@ -49,7 +49,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
     def test_0020_add_membership(self):
         # add membership to group1
         membership = property.Membership(
-            start_date=session.utcnow(),
+            begins_at=session.utcnow(),
             user=self.user,
             group=self.property_group1
         )
@@ -61,7 +61,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # add membership to group2
         membership = property.Membership(
-            start_date=session.utcnow(),
+            begins_at=session.utcnow(),
             user=self.user,
             group=self.property_group2
         )
@@ -75,11 +75,11 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         # add membership to group1
         now = session.utcnow()
         membership = property.Membership(
-            start_date=now,
+            begins_at=now,
             user=self.user,
             group=self.property_group1
         )
-        membership.end_date = membership.start_date + timedelta(days=3)
+        membership.ends_at = membership.begins_at + timedelta(days=3)
         session.session.add(membership)
         session.session.commit()
 
@@ -88,11 +88,11 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # add expired membership to group2
         membership = property.Membership(
-            start_date=now - timedelta(hours=2),
+            begins_at=now - timedelta(hours=2),
             user=self.user,
             group=self.property_group2
         )
-        membership.end_date = now - timedelta(hours=1)
+        membership.ends_at = now - timedelta(hours=1)
         session.session.add(membership)
         session.session.commit()
 
@@ -102,7 +102,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
     def test_0040_disable_membership(self):
         # add membership to group1
         membership = property.Membership(
-            start_date=session.utcnow(),
+            begins_at=session.utcnow(),
             user=self.user,
             group=self.property_group1
         )
@@ -120,7 +120,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # add membership to group1
         membership = property.Membership(
-            start_date=session.utcnow(),
+            begins_at=session.utcnow(),
             user=self.user,
             group=self.property_group1
         )
@@ -131,7 +131,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
 
         # add membership to group2
         membership = property.Membership(
-            start_date=session.utcnow(),
+            begins_at=session.utcnow(),
             user=self.user,
             group=self.property_group2
         )
@@ -157,22 +157,22 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         p = property.Membership.q.first()
         self.assertIsNotNone(p)
-        self.assertIsNotNone(p.start_date)
-        self.assertIsNone(p.end_date)
+        self.assertIsNotNone(p.begins_at)
+        self.assertIsNone(p.ends_at)
 
     def test_0020_end_date_before_start(self):
         # add membership to group1
         p1 = property.Membership(user=self.user, group=self.property_group1)
-        p1.start_date = session.utcnow()
+        p1.begins_at = session.utcnow()
 
         def set_old_date():
-            """ Set end_date before start_date
+            """ Set ends_at before begins_at
             """
-            p1.end_date = session.utcnow() - timedelta(hours=2)
+            p1.ends_at = session.utcnow() - timedelta(hours=2)
 
         self.assertRaisesRegexp(
             AssertionError,
-            "start date must be before end date",
+            "begins_at must be before ends_at",
             set_old_date
         )
 
@@ -181,30 +181,30 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         now = session.utcnow()
         self.assertRaisesRegexp(
             AssertionError,
-            "start date must be before end date",
+            "begins_at must be before ends_at",
             property.Membership, user=self.user, group=self.property_group1,
-            start_date=now + timedelta(days=1), end_date=now
+            begins_at=now + timedelta(days=1), ends_at=now
         )
 
     def test_0040_set_correct_dates(self):
         # add membership to group1
         p1 = property.Membership(user=self.user, group=self.property_group1)
-        p1.start_date = session.utcnow()
-        p1.end_date = session.utcnow()
+        p1.begins_at = session.utcnow()
+        p1.ends_at = session.utcnow()
 
         session.session.add(p1)
         session.session.commit()
 
-        p1.start_date = session.utcnow() - timedelta(days=3)
-        p1.end_date = session.utcnow() + timedelta(days=3)
+        p1.begins_at = session.utcnow() - timedelta(days=3)
+        p1.ends_at = session.utcnow() + timedelta(days=3)
 
         session.session.commit()
 
     def test_0050_clear_end_date(self):
         # add membership to group1
         p1 = property.Membership(user=self.user, group=self.property_group1)
-        p1.start_date = session.utcnow()
-        p1.end_date = session.utcnow()
+        p1.begins_at = session.utcnow()
+        p1.ends_at = session.utcnow()
         session.session.add(p1)
         session.session.commit()
 
@@ -212,16 +212,16 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertIsNotNone(p1.end_date)
+        self.assertIsNotNone(p1.ends_at)
 
-        # clear end_date
-        p1.end_date = None
+        # clear ends_at
+        p1.ends_at = None
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(
             user=self.user, group=self.property_group1
         ).one()
-        self.assertIsNone(p1.end_date)
+        self.assertIsNone(p1.ends_at)
 
 
 class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
@@ -286,7 +286,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
         # reenable it - but with a deadline - both counts should be 2
-        p2.end_date = session.utcnow() + timedelta(days=1)
+        p2.ends_at = session.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.traffic_groups), 2)
         self.assertEqual(len(self.user.active_traffic_groups()), 2)
@@ -357,7 +357,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
         # reenable it - but with a deadline - both counts should be 2
-        p1.end_date = session.utcnow() + timedelta(days=1)
+        p1.ends_at = session.utcnow() + timedelta(days=1)
         session.session.commit()
         self.assertEqual(len(self.user.property_groups), 2)
         self.assertEqual(len(self.user.active_property_groups()), 2)
@@ -405,7 +405,7 @@ class Test_050_Membership(PropertyDataTestBase):
         ).one()
         self.assertFalse(p1.active())
 
-        p1.end_date = None
+        p1.ends_at = None
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(
@@ -425,7 +425,7 @@ class Test_050_Membership(PropertyDataTestBase):
         ).one()
         self.assertTrue(p1.active())
 
-        p1.start_date = session.utcnow() + timedelta(days=2)
+        p1.begins_at = session.utcnow() + timedelta(days=2)
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(
@@ -441,7 +441,7 @@ class Test_050_Membership(PropertyDataTestBase):
         ).one()
         self.assertFalse(p1.active())
 
-        p1.end_date = p1.start_date + timedelta(days=1)
+        p1.ends_at = p1.begins_at + timedelta(days=1)
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(
@@ -449,7 +449,7 @@ class Test_050_Membership(PropertyDataTestBase):
         ).one()
         self.assertFalse(p1.active())
 
-        p1.start_date = session.utcnow() - timedelta(days=1)
+        p1.begins_at = session.utcnow() - timedelta(days=1)
         session.session.commit()
 
         p1 = property.Membership.q.filter_by(

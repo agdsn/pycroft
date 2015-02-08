@@ -310,7 +310,7 @@ class TestSemesterFee(FeeTestBase):
         registered_at = datetime.combine(when, time.min)
         self.user.registered_at = registered_at
         for membership in self.user.memberships:
-            membership.start_date = registered_at
+            membership.begins_at = registered_at
 
     def test_semester_fee(self):
         self.assertEqual(self.fee.compute(self.user), [

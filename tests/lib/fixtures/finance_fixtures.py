@@ -129,8 +129,8 @@ class UserData(DataSet):
 
 class MembershipData(DataSet):
     class dummy:
-        start_date = UserData.dummy.registered_at
-        end_date = None
+        begins_at = UserData.dummy.registered_at
+        ends_at = None
         user = UserData.dummy
         group = PropertyGroupData.member
 

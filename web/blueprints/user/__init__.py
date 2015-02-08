@@ -89,12 +89,12 @@ def user_show(user_id):
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
         # it is important to use == here, "is" does NOT work
-        or_(Membership.start_date == None,
-            Membership.start_date <= functions.utcnow())
+        or_(Membership.begins_at == None,
+            Membership.begins_at <= functions.utcnow())
     ).filter(
         # it is important to use == here, "is" does NOT work
-        or_(Membership.end_date == None,
-            Membership.end_date > functions.utcnow())
+        or_(Membership.ends_at == None,
+            Membership.ends_at > functions.utcnow())
     )
     typed_splits = get_typed_splits(user.finance_account.splits)
 
@@ -203,21 +203,21 @@ def user_show_groups_json(user_id, group_filter="all"):
     if group_filter is "active":
         memberships = memberships.filter(
             # it is important to use == here, "is" does NOT work
-            or_(Membership.start_date == None,
-                Membership.start_date <= functions.utcnow())
+            or_(Membership.begins_at == None,
+                Membership.begins_at <= functions.utcnow())
         ).filter(
             # it is important to use == here, "is" does NOT work
-            or_(Membership.end_date == None,
-                Membership.end_date > functions.utcnow())
+            or_(Membership.ends_at == None,
+                Membership.ends_at > functions.utcnow())
         )
 
     return jsonify(items=map(
         lambda membership: {
             'group_name': membership.group.name,
-            'begin': (datetime_filter(membership.start_date)
-                      if membership.start_date is not None else ''),
-            'end': (datetime_filter(membership.end_date)
-                    if membership.end_date is not None else ''),
+            'begins_at': (datetime_filter(membership.begins_at)
+                          if membership.begins_at is not None else ''),
+            'ends_at': (datetime_filter(membership.ends_at)
+                        if membership.ends_at is not None else ''),
             'actions': {'href': url_for(".edit_membership",
                                         membership_id=membership.id),
                         'title': 'Bearbeiten',
@@ -238,19 +238,19 @@ def add_membership(user_id):
 
     form = UserAddGroupMembership()
     if form.validate_on_submit():
-        if form.start_date.data is not None:
-            start_date = datetime.combine(form.start_date.data, time(0))
+        if form.begins_at.data is not None:
+            begins_at = datetime.combine(form.begins_at.data, time(0))
         else:
-            start_date = session.utcnow()
-        if not form.end.unlimited.data:
-            end_date = datetime.combine(form.end.date.data, time(0))
+            begins_at = session.utcnow()
+        if not form.ends_at.unlimited.data:
+            ends_at = datetime.combine(form.ends_at.date.data, time(0))
         else:
-            end_date=None
+            ends_at = None
         lib.property.create_membership(
             user=user,
             group=form.group_id.data,
-            start_date=start_date,
-            end_date=end_date)
+            begins_at=begins_at,
+            ends_at=ends_at)
         message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group_id.data.name)
         lib.logging.log_user_event(message, current_user, user)
         session.session.commit()
@@ -441,24 +441,24 @@ def edit_membership(membership_id):
     membership_data = {}
     if request.method == 'GET':
         membership_data = {
-            "start_date": membership.start_date.date(),
-            "end": {"unlimited": membership.end_date is None,
-                    "date": membership.end_date and membership.end_date.date()}
+            "begins_at": membership.begins_at.date(),
+            "ends_at": {"unlimited": membership.ends_at is None,
+                        "date": membership.ends_at and membership.ends_at.date()}
         }
 
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.start_date = datetime.combine(form.start_date.data,
-                                                 datetime.min.time())
-        if form.end.unlimited.data:
-            membership.end_date = None
+        membership.begins_at = datetime.combine(form.begins_at.data,
+                                                datetime.min.time())
+        if form.ends_at.unlimited.data:
+            membership.ends_at = None
         else:
-            membership.end_date = datetime.combine(form.end.date.data,
-                                                   datetime.min.time())
+            membership.ends_at = datetime.combine(form.ends_at.date.data,
+                                                  datetime.min.time())
 
         message = (u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' "
-                  u"bearbeitet.".format(membership.group.name))
+                   u"bearbeitet.".format(membership.group.name))
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
@@ -635,15 +635,15 @@ def block(user_id):
     form = UserBlockForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        if form.end.unlimited.data:
-            end_date = None
+        if form.ends_at.unlimited.data:
+            ends_at = None
         else:
-            end_date = datetime.combine(form.end.date.data, time(0))
+            ends_at = datetime.combine(form.ends_at.date.data, time(0))
 
         try:
             blocked_user = lib.user.block(
                 user=myUser,
-                date=end_date,
+                when=ends_at,
                 reason=form.reason.data,
                 processor=current_user)
             session.session.commit()

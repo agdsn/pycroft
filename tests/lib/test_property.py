@@ -17,20 +17,20 @@ class Test_030_Membership(FixtureDataTestBase):
     datasets = [MembershipData, PropertyGroupData, UserData]
 
     def test_0010_create_membership(self):
-        start_date = session.utcnow()
-        end_date = start_date + timedelta(hours=1)
+        begins_at = session.utcnow()
+        ends_at = begins_at + timedelta(hours=1)
         group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.dummy_property_group1.name).one()
         user = User.q.filter_by(login=UserData.dummy_user1.login).one()
 
         membership = create_membership(
-            start_date=start_date, end_date=end_date,
+            begins_at=begins_at, ends_at=ends_at,
             group=group, user=user)
 
         self.assertIsNotNone(Membership.q.get(membership.id))
 
-        self.assertEqual(membership.start_date, start_date)
-        self.assertEqual(membership.end_date, end_date)
+        self.assertEqual(membership.begins_at, begins_at)
+        self.assertEqual(membership.ends_at, ends_at)
         self.assertEqual(membership.group, group)
         self.assertEqual(membership.user, user)
 

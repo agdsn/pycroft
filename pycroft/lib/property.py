@@ -49,17 +49,17 @@ def remove_property(group, name):
 
 
 @with_transaction
-def create_membership(start_date, end_date, user, group):
+def create_membership(begins_at, ends_at, user, group):
     """
     This method will create a new Membership.
 
-    :param start_date: the start date of the membership
-    :param end_date: the end date of the membership
+    :param begins_at: the start date of the membership
+    :param ends_at: the end date of the membership
     :param user: the user
     :param group: the group
     :return: the newly created Membership
     """
-    membership = Membership(start_date=start_date, end_date=end_date,
+    membership = Membership(begins_at=begins_at, ends_at=ends_at,
                             user=user, group=group)
     session.session.add(membership)
     return membership

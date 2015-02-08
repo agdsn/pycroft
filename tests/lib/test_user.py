@@ -179,10 +179,10 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         UserHelper.move_out(user=new_user, date=out_time, comment="",
             processor=self.processing_user)
 
-        # check end_date of moved out user
+        # check ends_at of moved out user
         for membership in new_user.memberships:
-            self.assertIsNotNone(membership.end_date)
-            self.assertLessEqual(membership.end_date, out_time)
+            self.assertIsNotNone(membership.ends_at)
+            self.assertLessEqual(membership.ends_at, out_time)
 
         # check if users finance account still exists
         finance_account = new_user.finance_account
@@ -280,10 +280,10 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         )
         session.session.commit()
 
-        out_time = session.utcnow()
+        when = session.utcnow()
         self.assertFalse(new_user.has_property("away"))
 
-        UserHelper.move_out_tmp(new_user, out_time, "", self.processing_user)
+        UserHelper.move_out_tmp(new_user, "", self.processing_user, when)
         session.session.commit()
 
         # check for tmpAusgezogen group membership
@@ -298,7 +298,7 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
-        self.assertGreaterEqual(log_entry.timestamp, out_time)
+        self.assertGreaterEqual(log_entry.timestamp, when)
         self.assertEqual(log_entry.author, self.processing_user)
 
 
@@ -391,8 +391,8 @@ class Test_100_User_has_property(FixtureDataTestBase):
             ).first())
 
     def test_0030_positive_test_interval(self):
-        interval = closed(MembershipData.dummy_membership1.start_date,
-                          MembershipData.dummy_membership1.end_date)
+        interval = closed(MembershipData.dummy_membership1.begins_at,
+                          MembershipData.dummy_membership1.ends_at)
         self.assertTrue(
             self.test_user.has_property(PropertyData.dummy.name, interval)
         )
@@ -404,8 +404,8 @@ class Test_100_User_has_property(FixtureDataTestBase):
 
     def test_0030_negative_test_interval(self):
         interval = closed(
-            MembershipData.dummy_membership1.end_date + timedelta(1),
-            MembershipData.dummy_membership1.end_date + timedelta(2)
+            MembershipData.dummy_membership1.ends_at + timedelta(1),
+            MembershipData.dummy_membership1.ends_at + timedelta(2)
         )
         self.assertFalse(
             self.test_user.has_property(PropertyData.dummy.name, interval)
