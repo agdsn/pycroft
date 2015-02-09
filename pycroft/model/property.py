@@ -20,7 +20,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer, String
 
-from pycroft.helpers.interval import closed, single
+from pycroft.helpers.interval import Interval, closed, single
 from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
 import pycroft.model.user
@@ -84,6 +84,12 @@ class Membership(ModelBase):
 
     @hybrid_method
     def active(self, when=None):
+        """
+        Tests if the membership overlaps with a given interval. If no interval
+        is given, it tests if the membership is active right now.
+        :param Interval when: interval in which the membership
+        :rtype: bool
+        """
         if when is None:
             now = object_session(self).query(functions.utcnow()).scalar()
             when = single(now)
@@ -92,6 +98,12 @@ class Membership(ModelBase):
 
     @active.expression
     def active(cls, when=None):
+        """
+        Tests if memberships overlap with a given interval. If no interval is
+        given, it tests if the memberships are active right now.
+        :param Interval when:
+        :return:
+        """
         if when is None:
             now = session.utcnow()
             when = single(now)
