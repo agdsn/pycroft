@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import collections
@@ -536,7 +536,7 @@ UnboundedInterval = open(None, None)
 
 
 class IntervalSet(collections.Sequence):
-    def __init__(self, intervals):
+    def __init__(self, intervals=None):
         self._intervals = _mangle_argument(intervals)
 
     def __len__(self):
@@ -612,14 +612,17 @@ class IntervalSet(collections.Sequence):
 
 
 def _mangle_argument(arg):
+    if arg is None:
+        return ()
     if isinstance(arg, IntervalSet):
         return arg._intervals
     if isinstance(arg, Interval):
         return (arg,)
     if isinstance(arg, collections.Iterable):
         return tuple(_join(sorted(arg)))
-    raise TypeError("Argument may be an IntervalSet, an Interval or an iterable"
-                    "of Intervals. Was {0}.".format(type(arg).__name__))
+    raise TypeError("Argument may be None, an IntervalSet, an Interval or an "
+                    "iterable of Intervals. "
+                    "Was {0}.".format(type(arg).__name__))
 
 
 def _create(intervals):
