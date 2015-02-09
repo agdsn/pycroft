@@ -99,8 +99,8 @@ class OptionallyUnlimitedEndDateForm(Form):
 
 
 class UserAddGroupMembership(Form):
-    group_id = QuerySelectField(u"Gruppe", get_label='name',
-                                query_factory=group_query)
+    group = QuerySelectField(u"Gruppe", get_label='name',
+                             query_factory=group_query)
     begins_at = DateField(u"Beginn", [DataRequired()])
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
@@ -116,7 +116,7 @@ class UserBlockForm(Form):
 
 
 class UserMoveOutForm(Form):
-    date = DateField(u"Auszug am", [DataRequired()])
+    when = DateField(u"Auszug am", [DataRequired()])
     comment = TextAreaField(u"Kommentar")
 
 

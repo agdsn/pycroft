@@ -1,6 +1,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from pycroft.helpers.interval import (
+    Interval, IntervalSet, UnboundedInterval, closed)
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.property import PropertyGroup, Property, Membership
@@ -49,17 +51,49 @@ def remove_property(group, name):
 
 
 @with_transaction
-def create_membership(begins_at, ends_at, user, group):
+def make_member_of(user, group, during=UnboundedInterval):
     """
-    This method will create a new Membership.
+    Makes a user member of a group in a given interval. If the given interval
+    overlaps with an existing membership, this method will join the overlapping
+    intervals together, so that there will be at most one membership for
+    particular user in particular group at any given point in time.
 
-    :param begins_at: the start date of the membership
-    :param ends_at: the end date of the membership
-    :param user: the user
-    :param group: the group
-    :return: the newly created Membership
+    :param User user: the user
+    :param Group group: the group
+    :param Interval during:
     """
-    membership = Membership(begins_at=begins_at, ends_at=ends_at,
-                            user=user, group=group)
-    session.session.add(membership)
-    return membership
+    memberships = session.session.query(Membership).filter(
+        Membership.user == user, Membership.group == group,
+        Membership.active(during)).all()
+    intervals = IntervalSet(
+        closed(m.begins_at, m.ends_at) for m in memberships
+    ).union(during)
+    for m in memberships:
+        session.session.delete(m)
+    session.session.add_all(
+        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
+        for i in intervals)
+
+
+@with_transaction
+def remove_member_of(user, group, during=UnboundedInterval):
+    """
+    Removes a user from a group in a given interval. The interval defaults to
+    the unbounded interval, so that the user will be removed from the group at
+    any point in time.
+
+    :param User user: the user
+    :param Group group: the group
+    :param Interval during:
+    """
+    memberships = session.session.query(Membership).filter(
+        Membership.user == user, Membership.group == group,
+        Membership.active(during)).all()
+    intervals = IntervalSet(
+        closed(m.begins_at, m.ends_at) for m in memberships
+    ).difference(during)
+    for m in memberships:
+        session.session.delete(m)
+    session.session.add_all(
+        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
+        for i in intervals)

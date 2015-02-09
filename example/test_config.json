@@ -48,14 +48,13 @@
         "log_message_comment": "\nKommentar: {comment}"
     },
     "move_out_tmp":{
-        "log_message": "Temporärer Auszug am {date}.",
+        "log_message": "Vorübergehend ausgezogen von {begin} bis {end}.",
         "log_message_comment": "\nKommentar: {comment}",
         "log_message_back": "Nutzer ist zurück.",
         "group": "Vorübergehend ausgezogen"
     },
     "block":{
-        "log_message_with_enddate": "Sperrung bis {date}.\nGrund: {reason}",
-        "log_message_without_enddate": "Sperrung für immer.\nGrund: {reason}",
+        "log_message": "Sperrung von {begin} bis {end}.\nGrund: {reason}",
         "group": "Verstoß"
     }
 }

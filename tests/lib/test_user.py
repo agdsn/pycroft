@@ -6,14 +6,14 @@ from datetime import timedelta
 
 from tests import FixtureDataTestBase
 from pycroft import config
-from pycroft.helpers.interval import closed
+from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib import user as UserHelper
-from tests.lib.fixtures.user_fixtures import DormitoryData, FinanceAccountData, \
-    RoomData, UserData, UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData, \
-    PatchPortData, SemesterData, TrafficGroupData, PropertyGroupData, \
-    PropertyData, MembershipData
-from pycroft.model import user, dormitory, port, session, logging, finance, \
-    property, dns, host
+from tests.lib.fixtures.user_fixtures import (
+    DormitoryData, FinanceAccountData, RoomData, UserData, UserNetDeviceData,
+    UserHostData, IpData, VLANData, SubnetData, PatchPortData, SemesterData,
+    TrafficGroupData, PropertyGroupData, PropertyData, MembershipData)
+from pycroft.model import (
+    user, dormitory, port, session, logging, finance,  property, dns, host)
 
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -176,8 +176,8 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
         out_time = session.utcnow()
 
-        UserHelper.move_out(user=new_user, date=out_time, comment="",
-            processor=self.processing_user)
+        UserHelper.move_out(user=new_user, comment="",
+                            processor=self.processing_user, when=out_time)
 
         # check ends_at of moved out user
         for membership in new_user.memberships:
@@ -244,12 +244,12 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         self.assertEqual(self.user.email, old_email)
 
 
-class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
+class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
     datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
                 PropertyGroupData, PropertyData, FinanceAccountData]
 
     def setUp(self):
-        super(Test_070_User_Move_Out_Tmp, self).setUp()
+        super(Test_070_User_Move_Out_Temporarily, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy_user1.login).one()
 
@@ -257,9 +257,9 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         logging.LogEntry.q.delete()
         finance.Transaction.q.delete()
         session.session.commit()
-        super(Test_070_User_Move_Out_Tmp, self).tearDown()
+        super(Test_070_User_Move_Out_Temporarily, self).tearDown()
 
-    def test_0010_move_out_tmp(self):
+    def test_0010_move_out_temporarily(self):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
@@ -280,10 +280,11 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
         )
         session.session.commit()
 
-        when = session.utcnow()
+        during = closedopen(session.utcnow(), None)
         self.assertFalse(new_user.has_property("away"))
 
-        UserHelper.move_out_tmp(new_user, "", self.processing_user, when)
+        UserHelper.move_out_temporarily(new_user, "", self.processing_user,
+                                        during)
         session.session.commit()
 
         # check for tmpAusgezogen group membership
@@ -298,7 +299,8 @@ class Test_070_User_Move_Out_Tmp(FixtureDataTestBase):
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
-        self.assertGreaterEqual(log_entry.created_at, when)
+        self.assertAlmostEqual(log_entry.created_at, during.begin,
+                               delta=timedelta(seconds=1))
         self.assertEqual(log_entry.author, self.processing_user)
 
 
@@ -336,10 +338,8 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         super(Test_090_User_Is_Back, self).setUp()
         self.processing_user = user.User.q.filter_by(login='admin').one()
         self.user = user.User.q.filter_by(login='test').one()
-        UserHelper.move_out_tmp(user=self.user,
-                                date=session.utcnow(),
-                                comment='',
-                                processor=self.processing_user)
+        UserHelper.move_out_temporarily(user=self.user, comment='',
+                                        processor=self.processing_user)
         session.session.commit()
 
     def tearDown(self):

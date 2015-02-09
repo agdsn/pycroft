@@ -15,9 +15,9 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
     request, jsonify, abort
 import operator
 from sqlalchemy import Text
-from sqlalchemy.sql.functions import user
 from pycroft import lib
 from pycroft.helpers import host
+from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model import functions, session
 from pycroft.model.dormitory import Room
@@ -246,12 +246,9 @@ def add_membership(user_id):
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
         else:
             ends_at = None
-        lib.property.create_membership(
-            user=user,
-            group=form.group_id.data,
-            begins_at=begins_at,
-            ends_at=ends_at)
-        message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group_id.data.name)
+        lib.property.make_member_of(user, form.group.data,
+                                    closed(begins_at, ends_at))
+        message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group.data.name)
         lib.logging.log_user_event(message, current_user, user)
         session.session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
@@ -639,13 +636,14 @@ def block(user_id):
             ends_at = None
         else:
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
+        during = closedopen(session.utcnow(), ends_at)
 
         try:
             blocked_user = lib.user.block(
                 user=myUser,
-                when=ends_at,
                 reason=form.reason.data,
-                processor=current_user)
+                processor=current_user,
+                during=during)
             session.session.commit()
         except ValueError as e:
             flash(e.message, 'error')
@@ -664,12 +662,9 @@ def move_out(user_id):
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
     if form.validate_on_submit():
-        lib.user.move_out(
-            user=myUser,
-            date=datetime.combine(form.date.data, time(0)),
-            processor=current_user,
-            comment=form.comment.data
-        )
+        lib.user.move_out(user=myUser, comment=form.comment.data,
+                          processor=current_user,
+                          when=datetime.combine(form.when.data, time(0)))
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
@@ -693,24 +688,21 @@ def change_mac(user_net_device_id):
     return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)
 
 
-@bp.route('/move_out_tmp/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/move_out_temporarily/<int:user_id>', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_out_tmp(user_id):
+def move_out_temporarily(user_id):
     form = UserMoveOutForm()
     my_user = User.q.get(user_id)
     if my_user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
+        flash(u"Nutzer mit ID {0} existiert nicht!".format(user_id), 'error')
         abort(404)
     if form.validate_on_submit():
-        changed_user = lib.user.move_out_tmp(
-            user=my_user,
-            date=datetime.combine(form.date.data,time(0)),
-            comment=form.comment.data,
-            processor=current_user
-        )
+        changed_user = lib.user.move_out_temporarily(
+            my_user, form.comment.data, current_user,
+            closedopen(datetime.combine(form.when.data, time(0)), None))
         session.session.commit()
-        flash(u'Nutzer zieht am {} vorübegehend aus'.format(form.date.data),
-            'success')
+        flash(u'Nutzer zieht am {0} vorübergehend aus'.format(form.when.data),
+              'success')
         return redirect(url_for('.user_show', user_id=changed_user.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 

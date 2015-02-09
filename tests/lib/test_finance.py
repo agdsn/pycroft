@@ -8,12 +8,12 @@ import pkgutil
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import config
-from pycroft.helpers.interval import closedopen, openclosed, single
+from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
     simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
     SemesterFee, get_semester_for_date)
-from pycroft.lib.property import create_membership
+from pycroft.lib.property import make_member_of
 from pycroft.model.finance import (
     FinanceAccount, Journal, JournalEntry, Transaction)
 from pycroft.model.property import PropertyGroup
@@ -287,13 +287,6 @@ class TestSemesterFee(FeeTestBase):
         self.away_group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.away.name
         ).one()
-        self.garbage = []
-
-    def tearDown(self):
-        for obj in self.garbage:
-            session.session.delete(obj)
-        self.garbage = []
-        super(TestSemesterFee, self).tearDown()
 
     def expected_debt(self, semester, regular=True):
         description = config["finance"]["semester_fee_description"]
@@ -338,10 +331,8 @@ class TestSemesterFee(FeeTestBase):
         end = datetime.combine(
             semester.ends_on, time.min
         )
-        self.garbage.append(create_membership(
-            begin, end - semester.reduced_semester_fee_threshold,
-            self.user, self.away_group
-        ))
+        make_member_of(self.user, self.away_group, closed(
+            begin, end - semester.reduced_semester_fee_threshold))
         self.assertEqual(self.fee.compute(self.user), [
             self.expected_debt(SemesterData.with_registration_fee),
             self.expected_debt(semester, False)

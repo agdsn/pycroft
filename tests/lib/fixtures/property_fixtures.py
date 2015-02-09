@@ -48,14 +48,6 @@ class TrafficGroupData(DataSet):
         traffic_limit = 100000000
 
 
-class MembershipData(DataSet):
-    class dummy_membership1:
-        start_data = datetime.utcnow()
-        end_data = datetime.utcnow()
-        group = PropertyGroupData.dummy_property_group1
-        user = UserData.dummy_user1
-
-
 class PropertyData(DataSet):
     class dummy_property1:
         granted = True
