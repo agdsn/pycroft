@@ -179,17 +179,9 @@ class TrafficGroup(Group):
 
 
 property_categories = OrderedDict((
-    (u"Mitgliedstatus", OrderedDict((
-        (u"member", u"Mitglied"),
-        (u"active_member", u"aktives Mitglied"),
-        (u"former_active_member", u"ehemals aktives Mitglied"),
-        (u"advisory_member", u"beratendes Mitglied"),
-        (u"honorary_member", u"Ehrenmitglied"),
-        (u"away", u"vorübergehend ausgezogen"),
-    ))),
     (u"Mitglieder", OrderedDict((
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
-        (u"negative_balance",  u"darf negative Kontobilanz haben"),
+        (u"away", u"vorübergehend ausgezogen"),
         (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
         (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
