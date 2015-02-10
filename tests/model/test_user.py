@@ -7,14 +7,14 @@ from crypt import crypt as python_crypt
 from datetime import timedelta
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
-from pycroft.helpers.interval import single
 from pycroft.model import dormitory, session, property, user
+from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
 from pycroft.model.finance import FinanceAccount
 from tests import FixtureDataTestBase
 from tests.model.fixtures.user_fixtures import (
-    DormitoryData, FinanceAccountData, PropertyGroupData, RoomData,
+    DormitoryData, MembershipData, PropertyData, PropertyGroupData, RoomData,
     TrafficGroupData, UserData)
 
 
@@ -278,3 +278,62 @@ class TestActiveHybridMethods(FixtureDataTestBase):
         when = single(session.utcnow() + timedelta(hours=1))
         query = self.create_active_traffic_groups_query(when)
         self.assertEqual(query.all(), [self.traffic_group])
+
+
+class Test_has_property(FixtureDataTestBase):
+
+    datasets = [MembershipData, PropertyData, PropertyGroupData, UserData]
+
+    def setUp(self):
+        super(Test_has_property, self).setUp()
+        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+
+    def test_positive_test(self):
+        self.assertTrue(self.user.has_property(PropertyData.granted.name))
+        self.assertIsNotNone(
+            user.User.q.filter(
+                user.User.login == self.user.login,
+                user.User.has_property(PropertyData.granted.name)
+            ).first())
+
+    def test_negative_test(self):
+        self.assertFalse(self.user.has_property(PropertyData.denied.name))
+        self.assertIsNone(
+            user.User.q.filter(
+                user.User.login == self.user.login,
+                user.User.has_property(PropertyData.denied.name)
+            ).first())
+
+    def test_non_existent_test(self):
+        self.assertFalse(self.user.has_property("unused"))
+        self.assertIsNone(
+            user.User.q.filter(
+                user.User.login == self.user.login,
+                user.User.has_property("unused")
+            ).first())
+
+    def test_positive_test_interval(self):
+        interval = closed(MembershipData.dummy_membership.begins_at,
+                          MembershipData.dummy_membership.ends_at)
+        self.assertTrue(
+            self.user.has_property(PropertyData.granted.name, interval)
+        )
+        self.assertIsNotNone(
+            user.User.q.filter(
+                user.User.login == self.user.login,
+                user.User.has_property(PropertyData.granted.name, interval)
+            ).first())
+
+    def test_negative_test_interval(self):
+        interval = closed(
+            MembershipData.dummy_membership.ends_at + timedelta(1),
+            MembershipData.dummy_membership.ends_at + timedelta(2)
+        )
+        self.assertFalse(
+            self.user.has_property(PropertyData.granted.name, interval)
+        )
+        self.assertIsNone(
+            user.User.q.filter(
+                user.User.login == self.user.login,
+                user.User.has_property(PropertyData.granted.name, interval)
+            ).first())

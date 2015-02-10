@@ -22,7 +22,6 @@ from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
-from pycroft import config
 from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password

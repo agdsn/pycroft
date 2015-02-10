@@ -6,19 +6,20 @@ from datetime import timedelta
 
 from tests import FixtureDataTestBase
 from pycroft import config
-from pycroft.helpers.interval import closed, closedopen
+from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
+from tests.fixtures.config import ConfigData, PropertyData
 from tests.lib.fixtures.user_fixtures import (
     DormitoryData, FinanceAccountData, RoomData, UserData, UserNetDeviceData,
     UserHostData, IpData, VLANData, SubnetData, PatchPortData, SemesterData,
-    TrafficGroupData, PropertyGroupData, PropertyData, MembershipData)
+    TrafficGroupData)
 from pycroft.model import (
     user, dormitory, port, session, logging, finance,  property, dns, host)
 
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, UserNetDeviceData, UserHostData,
-                IpData, VLANData, SubnetData, PatchPortData]
+    datasets = [ConfigData, DormitoryData, IpData, PatchPortData, RoomData,
+                SubnetData, UserData, UserNetDeviceData, UserHostData, VLANData]
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -62,10 +63,10 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = [DormitoryData, FinanceAccountData, RoomData, UserData,
-                UserNetDeviceData, UserHostData, IpData, VLANData, SubnetData,
-                PatchPortData, SemesterData, TrafficGroupData,
-                PropertyGroupData, PropertyData]
+    datasets = [ConfigData, DormitoryData, FinanceAccountData, IpData,
+                PatchPortData, PropertyData, RoomData, SemesterData, SubnetData,
+                TrafficGroupData, UserData, UserHostData, UserNetDeviceData,
+                VLANData]
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
@@ -81,14 +82,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         super(Test_020_User_Move_In, self).tearDown()
 
     def test_0010_move_in(self):
-        def get_initial_groups():
-            initial_groups = []
-            for memberships in config["move_in"]["default_group_memberships"]:
-                initial_groups.append(property.Group.q.filter(
-                    property.Group.name == memberships["name"]
-                ).one())
-            return initial_groups
-
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
@@ -129,18 +122,18 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         # checks the initial group memberships
         active_user_groups = (new_user.active_property_groups() +
                               new_user.active_traffic_groups())
-        for group in get_initial_groups():
+        for group in (config.member_group, config.network_access_group):
             self.assertIn(group, active_user_groups)
 
-        self.assertEqual(UserHelper.has_network_access(new_user), True)
+        self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.finance_account)
         self.assertEqual(new_user.finance_account.balance, 4000)
         self.assertFalse(new_user.has_property("away"))
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
-                PropertyGroupData, FinanceAccountData]
+    datasets = [ConfigData, FinanceAccountData, IpData, PatchPortData,
+                SemesterData, TrafficGroupData]
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
@@ -190,7 +183,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
-    datasets = [RoomData, DormitoryData, UserData]
+    datasets = [ConfigData, DormitoryData, RoomData, UserData]
 
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
@@ -219,7 +212,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
 
 
 class Test_050_User_Edit_Email(FixtureDataTestBase):
-    datasets = [RoomData, DormitoryData, UserData]
+    datasets = [ConfigData, DormitoryData, RoomData, UserData]
 
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
@@ -245,8 +238,8 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
 
 class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
-    datasets = [IpData, PatchPortData, SemesterData, TrafficGroupData,
-                PropertyGroupData, PropertyData, FinanceAccountData]
+    datasets = [ConfigData, FinanceAccountData, IpData, PatchPortData,
+                PropertyData, SemesterData, TrafficGroupData]
 
     def setUp(self):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
@@ -288,10 +281,8 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         session.session.commit()
 
         # check for tmpAusgezogen group membership
-        away_group = property.PropertyGroup.q.filter(
-            property.PropertyGroup.name == config["move_out_tmp"]["group"]).one()
-        self.assertIn(new_user, away_group.active_users())
-        self.assertIn(away_group, new_user.active_property_groups())
+        self.assertIn(new_user, config.away_group.active_users())
+        self.assertIn(config.away_group, new_user.active_property_groups())
         self.assertTrue(new_user.has_property("away"))
 
         # check if user has no ips left
@@ -305,8 +296,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
 
 
 class Test_080_User_Block(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData,
-                PropertyData]
+    datasets = [ConfigData, DormitoryData, PropertyData, RoomData, UserData]
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -332,7 +322,7 @@ class Test_080_User_Block(FixtureDataTestBase):
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = [IpData, PropertyData, PropertyGroupData, UserData]
+    datasets = [ConfigData, IpData, PropertyData, UserData]
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()
@@ -363,55 +353,3 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.assertEqual(log_entry.author, self.processing_user)
 
         self.assertFalse(self.user.has_property("away"))
-
-
-class Test_100_User_has_property(FixtureDataTestBase):
-
-    datasets = [PropertyData, PropertyGroupData, UserData, MembershipData]
-
-    def setUp(self):
-        super(Test_100_User_has_property, self).setUp()
-        self.test_user = user.User.q.filter_by(
-            login=UserData.dummy_user2.login).one()
-
-    def test_0010_positive_test(self):
-        self.assertTrue(self.test_user.has_property(PropertyData.dummy.name))
-        self.assertIsNotNone(
-            user.User.q.filter(
-                user.User.login == self.test_user.login,
-                user.User.has_property(PropertyData.dummy.name)
-            ).first())
-
-    def test_0020_negative_test(self):
-        self.assertFalse(self.test_user.has_property(PropertyData.away.name))
-        self.assertIsNone(
-            user.User.q.filter(
-                user.User.login == self.test_user.login,
-                user.User.has_property(PropertyData.away.name)
-            ).first())
-
-    def test_0030_positive_test_interval(self):
-        interval = closed(MembershipData.dummy_membership1.begins_at,
-                          MembershipData.dummy_membership1.ends_at)
-        self.assertTrue(
-            self.test_user.has_property(PropertyData.dummy.name, interval)
-        )
-        self.assertIsNotNone(
-            user.User.q.filter(
-                user.User.login == self.test_user.login,
-                user.User.has_property(PropertyData.dummy.name, interval)
-            ).first())
-
-    def test_0030_negative_test_interval(self):
-        interval = closed(
-            MembershipData.dummy_membership1.ends_at + timedelta(1),
-            MembershipData.dummy_membership1.ends_at + timedelta(2)
-        )
-        self.assertFalse(
-            self.test_user.has_property(PropertyData.dummy.name, interval)
-        )
-        self.assertIsNone(
-            user.User.q.filter(
-                user.User.login == self.test_user.login,
-                user.User.has_property(PropertyData.dummy.name, interval)
-            ).first())

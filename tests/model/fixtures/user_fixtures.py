@@ -1,7 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime
+from datetime import datetime, timedelta
 from fixture import DataSet
 
 
@@ -44,3 +44,23 @@ class TrafficGroupData(DataSet):
     class dummy_group:
         name = "dummy"
         traffic_limit = 0
+
+
+class MembershipData(DataSet):
+    class dummy_membership:
+        begins_at = datetime.utcnow() - timedelta(hours=1)
+        ends_at = datetime.utcnow() + timedelta(hours=1)
+        group = PropertyGroupData.dummy_group
+        user = UserData.dummy_user
+
+
+class PropertyData(DataSet):
+    class granted:
+        property_group = PropertyGroupData.dummy_group
+        name = "granted_property"
+        granted = True
+
+    class denied:
+        property_group = PropertyGroupData.dummy_group
+        name = "denied_property"
+        granted = False

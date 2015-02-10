@@ -7,7 +7,7 @@ import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from pycroft import config
+from pycroft import messages
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
@@ -22,7 +22,7 @@ from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from tests.lib.fixtures.finance_fixtures import (
     FinanceAccountData, JournalData, MembershipData, PropertyData,
-    PropertyGroupData, SemesterData, SplitData, TransactionData, UserData)
+    PropertyGroupData, SemesterData, UserData)
 
 
 class Test_010_Journal(FixtureDataTestBase):
@@ -230,7 +230,7 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [double_fee], self.processor)
         single_fee = self.FeeMock(self.fee_account, [self.params])
         post_fees([self.user], [single_fee], self.processor)
-        description = config['finance']['adjustment_description'].format(
+        description = messages['finance']['adjustment_description'].format(
             original_description=self.description,
             original_valid_on=self.valid_on
         )
@@ -242,7 +242,7 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [double_fee], self.processor)
         single_fee = self.FeeMock(self.fee_account, [self.params])
         post_fees([self.user], [single_fee], self.processor)
-        description = config['finance']['adjustment_description'].format(
+        description = messages['finance']['adjustment_description'].format(
             original_description=self.description,
             original_valid_on=self.valid_on
         )
@@ -260,7 +260,7 @@ class TestRegistrationFee(FeeTestBase):
         self.fee = RegistrationFee(self.fee_account)
 
     def test_registration_fee(self):
-        description = config["finance"]["registration_fee_description"]
+        description = messages["finance"]["registration_fee_description"]
         amount = SemesterData.with_registration_fee.registration_fee
         valid_on = self.user.registered_at.date()
         self.assertEqual(self.fee.compute(self.user), [(description, valid_on, amount)])
@@ -289,7 +289,7 @@ class TestSemesterFee(FeeTestBase):
         ).one()
 
     def expected_debt(self, semester, regular=True):
-        description = config["finance"]["semester_fee_description"]
+        description = messages["finance"]["semester_fee_description"]
         registered_at = self.user.registered_at.date()
         if semester.begins_on <= registered_at <= semester.ends_on:
             valid_on = registered_at
@@ -363,7 +363,7 @@ class TestLateFee(FeeTestBase):
         ).one()
 
     def late_fee_for(self, transaction):
-        description = config['finance']['late_fee_description'].format(
+        description = messages['finance']['late_fee_description'].format(
             original_valid_on=transaction.valid_on)
         valid_on = (transaction.valid_on + self.payment_deadline +
                     timedelta(days=1))

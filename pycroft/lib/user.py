@@ -16,7 +16,7 @@ import re
 
 from sqlalchemy.sql.expression import func, literal
 
-from pycroft import config
+from pycroft import messages, config
 from pycroft.helpers import user, host
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.interval import Interval, closed, closedopen
@@ -116,7 +116,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # set random initial password
     new_user.set_password(plain_password)
     session.session.add(new_user)
-    account_name = config['finance']['user_finance_account_name'].format(
+    account_name = messages['finance']['user_finance_account_name'].format(
         user_id=new_user.id)
     new_user.finance_account.name = account_name
 
@@ -142,43 +142,29 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         session.session.add(CNAMERecord(host=new_host, name=host_name,
                                         record_for=new_a_record))
 
-    conf = config["move_in"]
-
-    for membership in conf["default_group_memberships"]:
-        group = Group.q.filter(Group.name == membership["name"]).one()
-        begins_at = now + timedelta(membership.get("offset", 0))
-        ends_at = None
-        if membership.get("duration"):
-            assert membership["duration"] > 0
-            ends_at = begins_at + timedelta(membership["duration"])
-        make_member_of(new_user, group, closed(begins_at, ends_at))
+    for group in (config.member_group, config.network_access_group):
+        make_member_of(new_user, group, closed(now, None))
 
     if moved_from_division:
-        for membership in conf["moved_from_division"]:
-            group = Group.q.filter(Group.name == membership["name"]).one()
-            make_member_of(new_user, group, closedopen(now, None))
+        group = config.moved_from_division_group
+        make_member_of(new_user, group, closedopen(now, None))
 
     if already_paid_semester_fee:
-        for membership in conf["already_paid_semester_fee"]:
-            group = Group.q.filter(Group.name == membership["name"]).one()
-            during = closed(now, datetime.combine(
-                get_current_semester().ends_on, time.max))
-            make_member_of(new_user, group, during)
+        group = config.already_paid_semester_fee_group
+        during = closed(now, datetime.combine(
+            get_current_semester().ends_on, time.max))
+        make_member_of(new_user, group, during)
 
     fees = [
-        RegistrationFee(FinanceAccount.q.get(
-            config["finance"]["registration_fee_account_id"]
-        )),
-        SemesterFee(FinanceAccount.q.get(
-            config["finance"]["semester_fee_account_id"]
-        )),
+        RegistrationFee(config.registration_fee_account),
+        SemesterFee(config.semester_fee_account),
     ]
     # Post initial fees
     post_fees([new_user], fees, processor)
 
     move_in_user_log_entry = log_user_event(
         author=processor,
-        message=conf["log_message"],
+        message=messages["move_in"]["log_message"],
         user=new_user
     )
 
@@ -215,7 +201,7 @@ def move(user, dormitory, level, room_number, processor):
 
     log_user_event(
         author=processor,
-        message=config["move"]["log_message"].format(
+        message=messages["move"]["log_message"].format(
             from_room=old_room, to_room=new_room),
         user=user
     )
@@ -236,7 +222,7 @@ def move(user, dormitory, level, room_number, processor):
 
             log_user_event(
                 author=processor,
-                message=config["move"]["ip_change_log_message"].format(
+                message=messages["move"]["ip_change_log_message"].format(
                     old_ip=old_ip, new_ip=new_ip),
                 user=user)
 
@@ -347,12 +333,9 @@ def block(user, reason, processor, during=None):
     if during is None:
         during = closedopen(session.utcnow(), None)
 
-    block_group = PropertyGroup.q.filter(
-        PropertyGroup.name == config["block"]["group"]
-    ).one()
-    make_member_of(user, block_group, during)
+    make_member_of(user, config.violation_group, during)
 
-    log_message = config["block"]["log_message"].format(
+    log_message = messages["block"]["log_message"].format(
         begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
         end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert',
         reason=reason)
@@ -374,17 +357,14 @@ def move_out(user, comment, processor, when):
     :param datetime when: The time the user is going to move out.
     :return: The user that moved out.
     """
-    move_in_groups = config["move_in"]["default_group_memberships"]
-    for group_spec in move_in_groups:
-        group = PropertyGroup.q.filter_by(name=group_spec["name"]).one()
-        during = closedopen(when, None)
-        remove_member_of(user, group, during)
+    for group in (config.member_group, config.network_access_group):
+        remove_member_of(user, group, closedopen(when, None))
 
-    log_message = config["move_out"]["log_message"].format(
+    log_message = messages["move_out"]["log_message"].format(
         date=when.strftime("%d.%m.%Y")
     )
     if comment:
-        log_message += config["move_out"]["log_message_comment"].format(
+        log_message += messages["move_out"]["log_message_comment"].format(
             comment=comment
         )
 
@@ -408,26 +388,21 @@ def move_out_temporarily(user, comment, processor, during=None):
     If None, interval is set from now without an upper bound.
     :return: The user to move out.
     """
-    away_group = PropertyGroup.q.filter(
-        PropertyGroup.name == config["move_out_tmp"]["group"]
-    ).one()
-
     if during is None:
         during = closedopen(session.utcnow(), None)
-
-    make_member_of(user, away_group, during)
+    make_member_of(user, config.away_group, during)
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
         if user_host is not None:
             session.session.delete(user_host.user_net_device.ips[0])
 
-    log_message = config["move_out_tmp"]["log_message"].format(
+    log_message = messages["move_out_tmp"]["log_message"].format(
         begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
         end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert'
     )
     if comment:
-        log_message += config["move_out_tmp"]["log_message_comment"].format(
+        log_message += messages["move_out_tmp"]["log_message_comment"].format(
             comment=comment
         )
 
@@ -449,9 +424,7 @@ def is_back(user, processor):
     :param processor: The admin recognizing the users return.
     :return: The user who returned.
     """
-    away_group = PropertyGroup.q.filter_by(
-        name=config["move_out_tmp"]["group"]
-    ).one()
+    away_group = config.away_group
     remove_member_of(user, away_group, closedopen(session.utcnow(), None))
 
     subnets = user.room.dormitory.subnets
@@ -466,7 +439,7 @@ def is_back(user, processor):
         ))
 
     log_user_event(
-        message=config["move_out_tmp"]["log_message_back"],
+        message=messages["move_out_tmp"]["log_message_back"],
         author=processor,
         user=user
     )

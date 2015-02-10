@@ -74,18 +74,6 @@ class FinanceAccountData(DataSet):
         name = "finance account 2"
         type = "EXPENSE"
 
-    class semester_fee:
-        name = u"Semestergebühren first semester"
-        semester = SemesterData.dummy_semester1
-        type = "REVENUE"
-        tag = "regular_fee"
-
-    class registration_fee:
-        name = u"Anmeldegebühren first semester"
-        semester = SemesterData.dummy_semester1
-        type = "REVENUE"
-        tag = "registration_fee"
-
     class user_account:
         name = ''
         type = 'ASSET'
@@ -111,69 +99,6 @@ class TrafficGroupData(DataSet):
     class standard_traffic:
         name = "standard_traffic"
         traffic_limit = 7000
-
-
-class PropertyGroupData(DataSet):
-    class one_month_negative_balance:
-        name = u"one_month_negative_balance"
-
-    class verstoss:
-        name = u"Verstoß"
-
-    class negativ_konto:
-        name = u"NegativKonto"
-
-    class tmpAusgezogen:
-        name = u"Vorübergehend ausgezogen"
-
-    class benutzer:
-        name = u"Bewohner"
-
-    class kuerzlich_eingezogen:
-        name = u"Kürzlich eingezogen"
-
-    class dummy_group:
-        name = u"dummy"
-
-
-class PropertyData(DataSet):
-    class network:
-        name = "network_access"
-        granted = True
-        property_group = PropertyGroupData.benutzer
-
-    class registration_fee:
-        name = "registration_fee"
-        granted = True
-        property_group = PropertyGroupData.benutzer
-
-    class semester_fee:
-        name = "semester_fee"
-        granted = True
-        property_group = PropertyGroupData.benutzer
-
-    class no_network:
-        name = "network_access"
-        granted = False
-        property_group = PropertyGroupData.verstoss
-
-    class away:
-        name = "away"
-        granted = True
-        property_group = PropertyGroupData.tmpAusgezogen
-
-    class dummy:
-        name = "dummy"
-        granted = True
-        property_group = PropertyGroupData.dummy_group
-
-
-class MembershipData(DataSet):
-    class dummy_membership1:
-        begins_at = datetime.utcnow() - timedelta(hours=1)
-        ends_at = datetime.utcnow() + timedelta(hours=1)
-        group = PropertyGroupData.dummy_group
-        user = UserData.dummy_user2
 
 
 class UserHostData(DataSet):

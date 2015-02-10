@@ -17,7 +17,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
-from pycroft import config
+from pycroft import messages
 from pycroft.model import session
 from pycroft.model.finance import (
     Semester, FinanceAccount, Transaction, Split,
@@ -183,7 +183,7 @@ def post_fees(users, fees, processor):
     :param iterable[Fee] fees:
     :param User processor:
     """
-    adjustment_description = config["finance"]["adjustment_description"]
+    adjustment_description = messages["finance"]["adjustment_description"]
     for user in users:
         for fee in fees:
             computed_debts = fee.compute(user)
@@ -301,7 +301,7 @@ class Fee(object):
 
 class RegistrationFee(Fee):
     def compute(self, user):
-        description = config['finance']['registration_fee_description']
+        description = messages['finance']['registration_fee_description']
         when = single(user.registered_at)
         if user.has_property("registration_fee", when):
             try:
@@ -326,7 +326,7 @@ class SemesterFee(Fee):
             liability_intervals[-1].end
         ))
         away_intervals = _to_date_intervals(user.property_intervals("away"))
-        description = config["finance"]["semester_fee_description"]
+        description = messages["finance"]["semester_fee_description"]
         debts = []
         # Compute semester fee for each semester the user is liable to pay it
         for semester in semesters:
@@ -400,7 +400,7 @@ class LateFee(Fee):
         liability_intervals = _to_date_intervals(
             user.property_intervals("late_fee")
         )
-        description = config["finance"]["late_fee_description"]
+        description = messages["finance"]["late_fee_description"]
         debts = []
         for last_credit, balance, delta in self.running_totals(transactions):
             semester = get_semester_for_date(last_credit)
