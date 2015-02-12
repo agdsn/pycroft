@@ -8,7 +8,7 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.helpers.host import get_free_ip, MacExistsException
-from pycroft.model import session, host, dormitory, user, accounting
+from pycroft.model import session, host, facilities, user, accounting
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.accounting import TrafficVolumeData
 from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
@@ -84,7 +84,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         self.assertFalse(ip_addr.is_ip_valid)
 
     def test_0020_change_ip(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
         ip = get_free_ip((subnet, ))
         ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
@@ -106,7 +106,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         session.session.commit()
 
     def test_0030_delete_address(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
         ip = get_free_ip((subnet, ))
         ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
@@ -120,7 +120,7 @@ class Test_030_IpModel(FixtureDataTestBase):
         self.assertRaisesInTransaction(IntegrityError, session.session.commit)
 
     def test_0040_delete_subnet(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
         ip = get_free_ip((subnet, ))
         ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
@@ -138,7 +138,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
     def test_0010_correct_subnet_and_ip(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
         ip = get_free_ip((subnet, ))
@@ -160,7 +160,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 
     def test_0020_missing_subnet(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
         ip = get_free_ip((subnet, ))
@@ -173,7 +173,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         self.assertRaises(IntegrityError, commit)
 
     def test_0030_missing_ip(self):
-        subnet = dormitory.Subnet.q.first()
+        subnet = facilities.Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
         ip_addr = host.Ip(net_device=netdev)
@@ -185,7 +185,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         self.assertRaises(IntegrityError, commit)
 
     def test_0040_wrong_subnet(self):
-        subnets = dormitory.Subnet.q.all()
+        subnets = facilities.Subnet.q.all()
         netdev = host.NetDevice.q.first()
         ip = get_free_ip((subnets[0], ))
 

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from pycroft.lib.logging import log_user_event, log_room_event
 from pycroft.model import session
-from pycroft.model.dormitory import Room
+from pycroft.model.facilities import Room
 from pycroft.model.logging import RoomLogEntry
 from pycroft.model.user import User
 from tests import FixtureDataTestBase

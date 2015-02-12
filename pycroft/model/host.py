@@ -14,7 +14,7 @@ from base import ModelBase
 from sqlalchemy import ForeignKey, event
 from sqlalchemy import Column
 #from sqlalchemy.dialects import postgresql
-from pycroft.model import dormitory
+from pycroft.model import facilities
 from pycroft.helpers.host import MacExistsException
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer
@@ -33,7 +33,7 @@ class Host(ModelBase):
         nullable=True)
 
     # many to one from Host to Room
-    room = relationship(dormitory.Room, backref=backref("hosts"))
+    room = relationship(facilities.Room, backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
                      nullable=True)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -36,8 +36,8 @@ class Test_010_SchemaMapping(unittest.TestCase):
         self.assertIsNone(msg, msg)
 
     def test_0020_mapping_dormitory(self):
-        from pycroft.model import dormitory
-        msg = try_mapper(dormitory)
+        from pycroft.model import facilities
+        msg = try_mapper(facilities)
         self.assertIsNone(msg, msg)
 
     def test_0030_mapping_hosts(self):

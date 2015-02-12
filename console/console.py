@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -17,9 +17,9 @@
 
 import code
 from pycroft import model
-from pycroft.model import accounting, base, dormitory, finance, host, logging
+from pycroft.model import accounting, base, facilities, finance, host, logging
 from pycroft.model import port, property, user
-from pycroft.model.dormitory import Dormitory
+from pycroft.model.facilities import Dormitory
 from pycroft.model.session import session
 
 

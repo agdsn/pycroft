@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
-from pycroft.model import dormitory, session, property, user
+from pycroft.model import facilities, session, property, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
@@ -139,7 +139,7 @@ class Test_040_User_Login(FixtureDataTestBase):
         finance_account = FinanceAccount(name='', type='ASSET')
         u = user.User(name="John Doe",
                       registered_at=session.utcnow(),
-                      room=dormitory.Room.q.first(),
+                      room=facilities.Room.q.first(),
                       finance_account=finance_account
         )
 

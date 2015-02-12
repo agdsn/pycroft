@@ -11,7 +11,7 @@ from tests import FixtureDataTestBase
 from pycroft.lib.host import change_mac
 from pycroft.helpers.host import sort_ports, generate_hostname, \
     get_free_ip, select_subnet_for_ip, SubnetFullException
-from pycroft.model import dormitory, session, user, logging
+from pycroft.model import facilities, session, user, logging
 from pycroft.model.host import UserNetDevice, Ip, UserHost
 from tests.fixtures.dummy.dormitory import DormitoryData, RoomData, VLANData
 from tests.fixtures.dummy.host import (
@@ -58,13 +58,13 @@ class Test_020_IpHelper(FixtureDataTestBase):
         self.assertIn(ipaddr.IPAddress(ip), ipaddr.IPNetwork(subnet.address))
 
     def test_0010_get_free_ip_simple(self):
-        subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
+        subnets = facilities.Subnet.q.order_by(facilities.Subnet.gateway).all()
         for subnet in subnets:
             ip = get_free_ip((subnet,))
             self.assertIPInSubnet(ip, subnet)
 
     def test_0020_select_subnet_for_ip(self):
-        subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
+        subnets = facilities.Subnet.q.order_by(facilities.Subnet.gateway).all()
         for subnet in subnets:
             for ip in islice(ipaddr.IPNetwork(subnet.address).iterhosts(), 100):
                 selected = select_subnet_for_ip(ip.compressed, subnets)
@@ -77,7 +77,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
         session.session.commit()
 
     def test_0030_get_free_ip_next_to_full(self):
-        subnets = dormitory.Subnet.q.filter_by(ip_type="4").limit(2).all()
+        subnets = facilities.Subnet.q.filter_by(ip_type="4").limit(2).all()
         host = UserHost.q.one()
 
         self.assertEqual(len(subnets), 2)

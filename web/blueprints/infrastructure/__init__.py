@@ -16,7 +16,7 @@ from flask import Blueprint, flash, redirect, render_template, url_for, jsonify,
 from pycroft.helpers import host
 from pycroft.model import session
 from pycroft.model.host import Switch, Host
-from pycroft.model.dormitory import Subnet, VLAN
+from pycroft.model.facilities import Subnet, VLAN
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm

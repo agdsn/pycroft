@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 from flask import url_for
-from pycroft.model.dormitory import Dormitory, Room
+from pycroft.model.facilities import Dormitory, Room
 
 from tests import FrontendDataTestBase
 from tests.fixtures.dummy.dormitory import DormitoryData, RoomData

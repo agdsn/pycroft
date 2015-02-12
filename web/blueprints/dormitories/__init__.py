@@ -18,7 +18,7 @@ from pycroft import lib
 from pycroft.helpers import dormitory
 from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
 from pycroft.model.session import session
-from pycroft.model.dormitory import Room, Dormitory
+from pycroft.model.facilities import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.dormitories.forms import RoomForm, DormitoryForm, \
     RoomLogEntry

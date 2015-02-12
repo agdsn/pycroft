@@ -22,7 +22,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.interval import Interval, closed, closedopen
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import ARecord, CNAMERecord
-from pycroft.model.dormitory import Room
+from pycroft.model.facilities import Room
 from pycroft.model.finance import FinanceAccount
 from pycroft.model.host import Host, Ip, UserHost, UserNetDevice
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup

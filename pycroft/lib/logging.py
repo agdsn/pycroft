@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
 from pycroft.model import session
-from pycroft.model.dormitory import Room
+from pycroft.model.facilities import Room
 from pycroft.model.logging import UserLogEntry, RoomLogEntry
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User

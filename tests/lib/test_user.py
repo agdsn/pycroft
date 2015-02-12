@@ -9,7 +9,7 @@ from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, dormitory, port, session, logging, finance,  property, dns, host)
+    user, facilities, port, session, logging, finance,  property, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.dormitory import VLANData, DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
@@ -30,15 +30,15 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
         self.old_room = self.user.room #dormitory.Room.q.get(1)
-        self.same_dormitory = dormitory.Dormitory.q.filter_by(
+        self.same_dormitory = facilities.Dormitory.q.filter_by(
             short_name=DormitoryData.dummy_house1.short_name).one()
         assert self.same_dormitory == self.old_room.dormitory
-        self.other_dormitory = dormitory.Dormitory.q.filter_by(
+        self.other_dormitory = facilities.Dormitory.q.filter_by(
             short_name=DormitoryData.dummy_house2.short_name).one()
 
-        self.new_room_other_dormitory = dormitory.Room.q.filter_by(
+        self.new_room_other_dormitory = facilities.Room.q.filter_by(
             dormitory=self.other_dormitory).one()
-        self.new_room_same_dormitory = dormitory.Room.q.filter_by(
+        self.new_room_same_dormitory = facilities.Room.q.filter_by(
             dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
         self.new_patch_port = port.PatchPort.q.filter_by(
@@ -87,7 +87,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = dormitory.Dormitory.q.first()
+        test_dormitory = facilities.Dormitory.q.first()
         test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
@@ -152,7 +152,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = dormitory.Dormitory.q.first()
+        test_dormitory = facilities.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
@@ -258,7 +258,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = dormitory.Dormitory.q.first()
+        test_dormitory = facilities.Dormitory.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(

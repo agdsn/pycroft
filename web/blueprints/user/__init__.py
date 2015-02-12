@@ -20,7 +20,7 @@ from pycroft.helpers import host
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model import functions, session
-from pycroft.model.dormitory import Room
+from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserNetDevice, Ip
 from pycroft.model.user import User
 from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
