@@ -11,28 +11,25 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-#from sqlalchemy.dialects import postgresql
-from base import ModelBase
+import ipaddr
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy import Table, Column
 from sqlalchemy.orm import backref, object_session, relationship
 from sqlalchemy.types import Boolean, Integer, String, Enum
-import ipaddr
+from pycroft.model.base import ModelBase
 
 
-association_table_dormitory_vlan = Table('association_dormitory_vlan',
+association_table_dormitory_vlan = Table(
+    'association_dormitory_vlan',
     ModelBase.metadata,
-    Column('dormitory_id', Integer,
-        ForeignKey('dormitory.id')),
-    Column('vlan_id', Integer,
-        ForeignKey('vlan.id')))
+    Column('dormitory_id', Integer, ForeignKey('dormitory.id')),
+    Column('vlan_id', Integer, ForeignKey('vlan.id')))
 
-association_table_subnet_vlan = Table("association_subnet_vlan",
+association_table_subnet_vlan = Table(
+    "association_subnet_vlan",
     ModelBase.metadata,
-    Column("subnet_id", Integer,
-        ForeignKey("subnet.id")),
-    Column("vlan_id", Integer,
-        ForeignKey("vlan.id")))
+    Column("subnet_id", Integer, ForeignKey("subnet.id")),
+    Column("vlan_id", Integer, ForeignKey("vlan.id")))
 
 
 class Dormitory(ModelBase):
@@ -42,13 +39,9 @@ class Dormitory(ModelBase):
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
 
-
     # many to many from Dormitory to VLAN
-    vlans = relationship("VLAN",
-        backref=backref("dormitories"),
-        secondary=association_table_dormitory_vlan)
-
-    # methods
+    vlans = relationship("VLAN", backref=backref("dormitories"),
+                         secondary=association_table_dormitory_vlan)
 
     @property
     def subnets(self):
@@ -72,11 +65,16 @@ class Room(ModelBase):
     inhabitable = Column(Boolean, nullable=False)
 
     # many to one from Room to Dormitory
-    dormitory_id = Column(Integer, ForeignKey("dormitory.id"), nullable=False)
-    dormitory = relationship("Dormitory", backref=backref("rooms"))
+    dormitory_id = Column(Integer, ForeignKey(Dormitory.id), nullable=False)
+    dormitory = relationship(Dormitory, backref=backref("rooms"))
 
     def __repr__(self):
         return u"{} {:d}{}".format(self.dormitory, self.level, self.number)
+
+
+class VLAN(ModelBase):
+    name = Column(String(127), nullable=False)
+    tag = Column(Integer, nullable=False)
 
 
 class Subnet(ModelBase):
@@ -88,10 +86,9 @@ class Subnet(ModelBase):
     reserved_addresses = Column(Integer, default=0, nullable=False)
     ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
 
-    #many to many from Subnet to VLAN
-    vlans = relationship("VLAN",
-        backref=backref("subnets"),
-        secondary=association_table_subnet_vlan)
+    # many to many from Subnet to VLAN
+    vlans = relationship(VLAN, backref=backref("subnets"),
+                         secondary=association_table_subnet_vlan)
 
     @property
     def netmask(self):
@@ -101,8 +98,3 @@ class Subnet(ModelBase):
     @property
     def ip_version(self):
         return ipaddr.IPNetwork(self.address).version
-
-
-class VLAN(ModelBase):
-    name = Column(String(127), nullable=False)
-    tag = Column(Integer, nullable=False)

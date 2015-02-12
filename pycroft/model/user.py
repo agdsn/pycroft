@@ -10,7 +10,6 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from datetime import datetime
 import re
 
 from flask.ext.login import UserMixin
@@ -25,7 +24,7 @@ from sqlalchemy.sql import true, false
 from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password
-from pycroft.model import functions, session
+from pycroft.model import session
 from pycroft.model.base import ModelBase
 import pycroft.model.property
 from pycroft.model.finance import FinanceAccount
@@ -39,32 +38,24 @@ class User(ModelBase, UserMixin):
     email = Column(String(255), nullable=True)
 
     # one to one from User to FinanceAccount
-    finance_account = relationship(
-        "FinanceAccount", backref=backref("user", uselist=False)
-    )
-    finance_account_id = Column(
-        Integer, ForeignKey("finance_account.id"), nullable=False
-    )
+    finance_account = relationship("FinanceAccount",
+                                   backref=backref("user", uselist=False))
+    finance_account_id = Column(Integer, ForeignKey("finance_account.id"),
+                                nullable=False)
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
                      nullable=True)
-    room = relationship(
-        "Room",
-        backref=backref("users", order_by='User.id', cascade="all")
-    )
+    room = relationship("Room",
+                        backref=backref("users", cascade="all"))
 
-    traffic_groups = relationship(
-        "TrafficGroup",
-        secondary=lambda: pycroft.model.property.Membership.__table__,
-        viewonly=True
-    )
+    traffic_groups = relationship("TrafficGroup",
+                                  secondary=lambda: pycroft.model.property.Membership.__table__,
+                                  viewonly=True)
 
-    property_groups = relationship(
-        "PropertyGroup",
-        secondary=lambda: pycroft.model.property.Membership.__table__,
-        viewonly=True
-    )
+    property_groups = relationship("PropertyGroup",
+                                   secondary=lambda: pycroft.model.property.Membership.__table__,
+                                   viewonly=True)
 
     login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"

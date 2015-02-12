@@ -17,7 +17,6 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
-from sqlalchemy.orm.session import object_session
 from sqlalchemy.types import BigInteger, Boolean, DateTime, Integer, String
 
 from pycroft.helpers.interval import Interval, closed, single
@@ -31,11 +30,9 @@ class Group(ModelBase):
     discriminator = Column('type', String(17), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    users = relationship(
-        "User",
-        secondary=lambda: Membership.__table__,
-        viewonly=True
-    )
+    users = relationship("User",
+                         secondary=lambda: Membership.__table__,
+                         viewonly=True)
 
     @hybrid_method
     def active_users(self, when=None):
@@ -64,17 +61,16 @@ class Membership(ModelBase):
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey('group.id', ondelete="CASCADE"),
-        nullable=False)
-    group = relationship("Group", backref=backref("memberships",
-        cascade="all, delete-orphan",
-        order_by='Membership.id'))
+                      nullable=False)
+    group = relationship(Group, backref=backref("memberships",
+                                                cascade="all, delete-orphan",
+                                                order_by='Membership.id'))
 
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"),
-        nullable=False)
+                     nullable=False)
     user = relationship("User", backref=backref("memberships",
-        cascade="all, delete-orphan",
-        order_by='Membership.id'))
+                                                cascade="all, delete-orphan"))
 
     __table_args = (
         CheckConstraint("begins_at IS NULL OR "
@@ -151,7 +147,7 @@ class Property(ModelBase):
     # many to one from Property to PropertyGroup
     # nullable=True
     property_group_id = Column(Integer, ForeignKey("property_group.id"),
-        nullable=False)
+                               nullable=False)
     #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group = relationship(
         "PropertyGroup",
@@ -163,7 +159,7 @@ class Property(ModelBase):
 class PropertyGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'property_group'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
-        nullable=False)
+                nullable=False)
     property_grants = association_proxy(
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
@@ -173,7 +169,7 @@ class PropertyGroup(Group):
 class TrafficGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
     id = Column(Integer, ForeignKey('group.id'), primary_key=True,
-        nullable=False)
+                nullable=False)
     # in byte per seven days, zero is no limit
     traffic_limit = Column(BigInteger, nullable=False)
 

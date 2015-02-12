@@ -10,18 +10,15 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from base import ModelBase
-from sqlalchemy import ForeignKey, event
-from sqlalchemy import Column
-#from sqlalchemy.dialects import postgresql
-from pycroft.model import facilities
-from pycroft.helpers.host import MacExistsException
+import re
+import ipaddr
+from sqlalchemy import Column, ForeignKey, event
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer
 from sqlalchemy.types import String
-import ipaddr
-import re
-from pycroft.model.dns import ARecord, AAAARecord
+from pycroft.model import facilities
+from pycroft.model.base import ModelBase
+from pycroft.helpers.host import MacExistsException
 
 
 class Host(ModelBase):
@@ -30,7 +27,7 @@ class Host(ModelBase):
 
     # many to one from Host to User
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
-        nullable=True)
+                     nullable=True)
 
     # many to one from Host to Room
     room = relationship(facilities.Room, backref=backref("hosts"))
@@ -39,24 +36,24 @@ class Host(ModelBase):
 
 
 class UserHost(Host):
-    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
                 primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     # one to one from Host to User
-    user = relationship("User",
-        backref=backref("user_hosts", cascade="all, delete-orphan"))
+    user = relationship("User", backref=backref(
+        "user_hosts", cascade="all, delete-orphan"))
 
 
 class ServerHost(Host):
-    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
                 primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'server_host'}
 
     name = Column(String(255))
 
-    user = relationship("User",
-        backref=backref("server_hosts", cascade="all, delete-orphan"))
+    user = relationship("User", backref=backref(
+        "server_hosts", cascade="all, delete-orphan"))
 
 
 class Switch(Host):
@@ -68,8 +65,8 @@ class Switch(Host):
 
     management_ip = Column(String(127), nullable=False)
 
-    user = relationship("User",
-        backref=backref("switches", cascade="all, delete-orphan"))
+    user = relationship("User", backref=backref(
+        "switches", cascade="all, delete-orphan"))
 
 
 def create_mac_regex():
@@ -156,8 +153,8 @@ class NetDevice(ModelBase):
 
     mac_regex = create_mac_regex()
 
-    host_id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
-        nullable=False)
+    host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
+                     nullable=False)
 
     @validates('mac')
     def validate_mac(self, _, value):
@@ -179,9 +176,9 @@ class UserNetDevice(NetDevice):
 
     __mapper_args__ = {'polymorphic_identity': "user_net_device"}
 
-    host = relationship("UserHost",
-        backref=backref("user_net_device", uselist=False,
-            cascade="all, delete-orphan"))
+    host = relationship(UserHost,
+                        backref=backref("user_net_device", uselist=False,
+                                        cascade="all, delete-orphan"))
 
 
 class ServerNetDevice(NetDevice):
@@ -190,12 +187,13 @@ class ServerNetDevice(NetDevice):
 
     __mapper_args__ = {'polymorphic_identity': "server_net_device"}
 
-    host = relationship("ServerHost",
-        backref=backref("server_net_devices", cascade="all, delete-orphan"))
+    host = relationship(ServerHost,
+                        backref=backref("server_net_devices",
+                                        cascade="all, delete-orphan"))
 
     #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
     switch_port_id = Column(Integer, ForeignKey('switch_port.id'),
-        nullable=True)
+                            nullable=True)
     switch_port = relationship("SwitchPort")
 
 
@@ -206,7 +204,8 @@ class SwitchNetDevice(NetDevice):
     __mapper_args__ = {'polymorphic_identity': "switch_net_device"}
 
     host = relationship("Switch",
-        backref=backref("switch_net_devices", cascade="all, delete-orphan"))
+                        backref=backref("switch_net_devices",
+                                        cascade="all, delete-orphan"))
 
 
 class Ip(ModelBase):
@@ -220,14 +219,14 @@ class Ip(ModelBase):
     #address = Column(postgresql.INET, nullable=True)
 
     net_device_id = Column(Integer,
-        ForeignKey('net_device.id', ondelete="CASCADE"), nullable=False)
+                           ForeignKey(NetDevice.id, ondelete="CASCADE"),
+                           nullable=False)
     net_device = relationship(NetDevice,
-        backref=backref("ips", cascade="all, delete-orphan"))
+                              backref=backref("ips",
+                                              cascade="all, delete-orphan"))
 
-    host = relationship("Host",
-        secondary="net_device",
-        backref=backref("ips"),
-        viewonly=True)
+    host = relationship(Host, secondary="net_device", backref=backref("ips"),
+                        viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
                        nullable=False)
@@ -255,7 +254,7 @@ class Ip(ModelBase):
             return value
         if self.address is not None:
             assert self._ip_subnet_valid(self.address, value),\
-            "Given subnet does not contain the ip"
+                "Given subnet does not contain the ip"
         return value
 
     @validates("address")
@@ -264,7 +263,7 @@ class Ip(ModelBase):
             return value
         if self.subnet is not None:
             assert self._ip_subnet_valid(value, self.subnet),\
-            "Subnet does not contain the given ip"
+                "Subnet does not contain the given ip"
         return value
 
 

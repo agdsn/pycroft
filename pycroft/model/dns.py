@@ -1,10 +1,11 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import ForeignKey, Column, String, Integer
-from base import ModelBase
-from sqlalchemy.orm import backref, relationship, validates
 import ipaddr
+from sqlalchemy import ForeignKey, Column, String, Integer
+from sqlalchemy.orm import backref, relationship, validates
+from pycroft.model.base import ModelBase
+
 
 class Record(ModelBase):
     discriminator = Column('type', String(50))
@@ -12,9 +13,10 @@ class Record(ModelBase):
 
     # many to one from Record to Host
     host = relationship("Host",
-        backref=backref("records", cascade="all, delete-orphan"))
+                        backref=backref("records",
+                                        cascade="all, delete-orphan"))
     host_id = Column(Integer, ForeignKey("host.id", ondelete="CASCADE"),
-        nullable=False)
+                     nullable=False)
 
 
 class ARecord(Record):
@@ -23,10 +25,10 @@ class ARecord(Record):
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    address = relationship("Ip",
-        backref=backref("a_records", cascade="all, delete-orphan"))
+    address = relationship("Ip", backref=backref("a_records",
+                                                 cascade="all, delete-orphan"))
     address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
-        nullable=False)
+                        nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'a_record'}
 
@@ -37,7 +39,7 @@ class ARecord(Record):
 
     @property
     def information_human(self):
-        "returns all information readable for a human"
+        """returns all information readable for a human"""
         if self.time_to_live is not None:
             return u"{} points to {} with TTL {}".format(
                 self.name, self.address.address, self.time_to_live)
@@ -69,10 +71,10 @@ class AAAARecord(Record):
     time_to_live = Column(Integer)  # optional time to live attribute
 
     # many to one from ARecord to Ip
-    address = relationship("Ip",
-        backref=backref("aaaa_records", cascade="all, delete-orphan"))
+    address = relationship("Ip", backref=backref("aaaa_records",
+                                                 cascade="all, delete-orphan"))
     address_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
-        nullable=False)
+                        nullable=False)
 
     __mapper_args__ = {'polymorphic_identity': 'aaaa_record'}
 
@@ -132,11 +134,11 @@ class CNAMERecord(Record):
     name = Column(String(255), nullable=False)
 
     record_for_id = Column(Integer,
-        ForeignKey("record.id", ondelete="CASCADE"), nullable=False)
-    record_for = relationship("Record",
-        primaryjoin=record_for_id == Record.id,
-        backref = backref('cnames', cascade='all, delete-orphan')
-    )
+                           ForeignKey("record.id", ondelete="CASCADE"),
+                           nullable=False)
+    record_for = relationship(Record,  primaryjoin=record_for_id == Record.id,
+                              backref=backref('cnames',
+                                              cascade='all, delete-orphan'))
 
     __mapper_args__ = {
         'polymorphic_identity': 'cname_record',
@@ -147,8 +149,8 @@ class CNAMERecord(Record):
     def validate_record_for(self, _, value):
         # check if the record is of the correct type! just A record and
         # AAAA record are allowed
-        assert value.discriminator == "a_record" or\
-               value.discriminator == "aaaa_record"
+        assert (value.discriminator == "a_record" or
+                value.discriminator == "aaaa_record")
         assert value.name != self.name
 
         return value
@@ -172,7 +174,7 @@ class NSRecord(Record):
 
     @property
     def information_human(self):
-        "returns all information readable for a human"
+        """returns all information readable for a human"""
         return u"TODO"
 
     @property
@@ -196,7 +198,7 @@ class SRVRecord(Record):
 
     @property
     def information_human(self):
-        "returns all information readable for a human"
+        """returns all information readable for a human"""
         return u"TODO"
 
     @property

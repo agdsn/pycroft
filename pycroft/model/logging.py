@@ -10,11 +10,10 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from base import ModelBase
-from sqlalchemy import ForeignKey
-from sqlalchemy import Column
+from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer, DateTime, Text, String
+from pycroft.model.base import ModelBase
 from pycroft.model.functions import utcnow
 
 
@@ -35,11 +34,13 @@ class LogEntry(ModelBase):
 
 class UserLogEntry(LogEntry):
     __mapper_args__ = {'polymorphic_identity': 'user_log_entry'}
-    id = Column(Integer, ForeignKey('log_entry.id', ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey(LogEntry.id, ondelete="CASCADE"),
+                primary_key=True)
 
     # many to one from UserLogEntry to User
     user = relationship("User", backref=backref("user_log_entries"))
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
+                     nullable=False)
 
 
 class RoomLogEntry(LogEntry):

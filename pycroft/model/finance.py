@@ -26,12 +26,14 @@ from .functions import utcnow
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    registration_fee = Column(
-        Integer, CheckConstraint('registration_fee >= 0'), nullable=False)
-    regular_semester_fee = Column(
-        Integer, CheckConstraint('regular_semester_fee >= 0'), nullable=False)
-    reduced_semester_fee = Column(
-        Integer, CheckConstraint('reduced_semester_fee >= 0'), nullable=False)
+    registration_fee = Column(Integer, CheckConstraint('registration_fee >= 0'),
+                              nullable=False)
+    regular_semester_fee = Column(Integer,
+                                  CheckConstraint('regular_semester_fee >= 0'),
+                                  nullable=False)
+    reduced_semester_fee = Column(Integer,
+                                  CheckConstraint('reduced_semester_fee >= 0'),
+                                  nullable=False)
     late_fee = Column(Integer, CheckConstraint('late_fee >= 0'), nullable=False)
     # Timedelta a person has to be member in a semester to be charged any
     # semester fee at all(grace period)
@@ -44,10 +46,12 @@ class Semester(ModelBase):
     payment_deadline = Column(Interval, nullable=False)
     # Amount of outstanding debt a member can have without being charged a late
     # fee
-    allowed_overdraft = Column(
-        Integer, CheckConstraint('allowed_overdraft >= 0'), nullable=False)
+    allowed_overdraft = Column(Integer,
+                               CheckConstraint('allowed_overdraft >= 0'),
+                               nullable=False)
     begins_on = Column(Date, nullable=False)
     ends_on = Column(Date, nullable=False)
+
     __table_args__ = (
         CheckConstraint('begins_on < ends_on'),
     )
@@ -55,15 +59,13 @@ class Semester(ModelBase):
 
 class FinanceAccount(ModelBase):
     name = Column(String(127), nullable=False)
-    type = Column(
-        Enum(
-            "ASSET",      # Aktivkonto
-            "LIABILITY",  # Passivkonto
-            "EXPENSE",    # Aufwandskonto
-            "REVENUE",    # Ertragskonto
-            name="finance_account_type"),
-        nullable=False
-    )
+    type = Column(Enum("ASSET",      # Aktivkonto
+                       "LIABILITY",  # Passivkonto
+                       "EXPENSE",    # Aufwandskonto
+                       "REVENUE",    # Ertragskonto
+                       name="finance_account_type"),
+                  nullable=False)
+
     transactions = relationship("Transaction", secondary="split")
 
     @hybrid_property
@@ -87,13 +89,14 @@ class Journal(ModelBase):
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    finance_account_id = Column(
-        Integer, ForeignKey("finance_account.id"), nullable=False)
-    finance_account = relationship("FinanceAccount")
-    __tableargs__ = [
+    finance_account_id = Column(Integer, ForeignKey(FinanceAccount.id),
+                                nullable=False)
+    finance_account = relationship(FinanceAccount)
+
+    __table_args__ = (
         UniqueConstraint(account_number, routing_number),
         UniqueConstraint(iban),
-    ]
+    )
 
     @hybrid_property
     def last_update(self):
@@ -131,12 +134,11 @@ class IllegalTransactionError(Exception):
 
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
-    author_id = Column(
-        Integer,
-        ForeignKey("user.id", ondelete='SET NULL', onupdate='CASCADE'),
-        nullable=True
-    )
+    author_id = Column(Integer, ForeignKey("user.id", ondelete='SET NULL',
+                                           onupdate='CASCADE'),
+                       nullable=True)
     author = relationship("User")
+
     posted_at = Column(DateTime, nullable=False,
                        default=utcnow(), onupdate=utcnow())
     valid_on = Column(Date, nullable=False, default=utcnow())
@@ -180,24 +182,20 @@ event.listen(Transaction, "before_update", check_transaction_on_save)
 class Split(ModelBase):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
     amount = Column(Integer, nullable=False)
-    account_id = Column(
-        Integer,
-        ForeignKey("finance_account.id", ondelete='CASCADE', onupdate='CASCADE'),
-        nullable=False
-    )
-    account = relationship(
-        "FinanceAccount",
-        backref=backref("splits", cascade="all, delete-orphan")
-    )
-    transaction_id = Column(
-        Integer,
-        ForeignKey("transaction.id", ondelete='CASCADE', onupdate='CASCADE'),
-        nullable=False
-    )
-    transaction = relationship(
-        "Transaction",
-        backref=backref("splits", cascade="all, delete-orphan")
-    )
+    account_id = Column(Integer,
+                        ForeignKey(FinanceAccount.id, ondelete='CASCADE'),
+                        nullable=False)
+    account = relationship(FinanceAccount,
+                           backref=backref("splits",
+                                           cascade="all, delete-orphan"))
+
+    transaction_id = Column(Integer,
+                            ForeignKey("transaction.id", ondelete='CASCADE'),
+                            nullable=False)
+    transaction = relationship(Transaction,
+                               backref=backref("splits",
+                                               cascade="all, delete-orphan"))
+
     __table_args__ = (
         CheckConstraint("amount <> 0"),
     )
