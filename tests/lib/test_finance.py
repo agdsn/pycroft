@@ -13,12 +13,11 @@ from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
     simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
     SemesterFee, get_semester_for_date)
-from pycroft.lib.property import make_member_of
+from pycroft.lib.user import make_member_of
 from pycroft.model.finance import (
     FinanceAccount, Journal, JournalEntry, Transaction)
-from pycroft.model.property import PropertyGroup
 from pycroft.model import session
-from pycroft.model.user import User
+from pycroft.model.user import PropertyGroup, User
 from tests import FixtureDataTestBase
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (

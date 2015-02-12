@@ -10,8 +10,9 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import re
 import ipaddr
-from sqlalchemy import Column, Enum, ForeignKey, Table, event, String, Integer
+from sqlalchemy import Column, Enum, ForeignKey, Table, event
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer, String
 from pycroft.model.base import ModelBase

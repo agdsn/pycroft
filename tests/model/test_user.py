@@ -8,11 +8,12 @@ from datetime import timedelta
 
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
-from pycroft.model import facilities, session, property, user
+from pycroft.model import facilities, session, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
 from pycroft.model.finance import FinanceAccount
+from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.dummy.property import (
@@ -184,13 +185,13 @@ class TestActiveHybridMethods(FixtureDataTestBase):
     def setUp(self):
         super(TestActiveHybridMethods, self).setUp()
         self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.property_group = property.PropertyGroup.q.filter_by(
+        self.property_group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.dummy.name).one()
-        self.traffic_group = property.TrafficGroup.q.filter_by(
+        self.traffic_group = TrafficGroup.q.filter_by(
             name=TrafficGroupData.dummy.name).one()
 
     def add_membership(self, group):
-        m = property.Membership(user=self.user, group=group)
+        m = Membership(user=self.user, group=group)
         session.session.add(m)
         session.session.commit()
         return m
@@ -205,7 +206,7 @@ class TestActiveHybridMethods(FixtureDataTestBase):
         self.assertEqual(self.user.active_memberships(when), [m])
 
     def create_active_memberships_query(self, when=None):
-        return session.session.query(property.Membership).from_statement(
+        return session.session.query(Membership).from_statement(
             user.User.active_memberships(when).where(
                 user.User.id == self.user.id))
 
@@ -234,7 +235,7 @@ class TestActiveHybridMethods(FixtureDataTestBase):
                          [self.property_group])
 
     def create_active_property_groups_query(self, when=None):
-        return session.session.query(property.PropertyGroup).from_statement(
+        return session.session.query(PropertyGroup).from_statement(
             user.User.active_property_groups(when).where(
                 user.User.id == self.user.id))
 
@@ -263,7 +264,7 @@ class TestActiveHybridMethods(FixtureDataTestBase):
                          [self.traffic_group])
 
     def create_active_traffic_groups_query(self, when=None):
-        return session.session.query(property.TrafficGroup).from_statement(
+        return session.session.query(TrafficGroup).from_statement(
             user.User.active_traffic_groups(when).where(
                 user.User.id == self.user.id))
 

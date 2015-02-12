@@ -3,14 +3,15 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
-from pycroft.model.net import PatchPort
 
+from pycroft.model.net import PatchPort
+from pycroft.model.user import Membership, PropertyGroup
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, facilities, session, logging, finance,  property, dns, net)
+    user, facilities, session, logging, finance, dns, net)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import VLANData, DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
@@ -303,14 +304,14 @@ class Test_080_User_Block(FixtureDataTestBase):
 
     def tearDown(self):
         logging.LogEntry.q.delete()
-        property.Membership.q.delete()
+        Membership.q.delete()
         session.session.commit()
         super(Test_080_User_Block, self).tearDown()
 
     def test_0010_user_has_no_network_access(self):
         u = user.User.q.get(1)
-        verstoss = property.PropertyGroup.q.filter(
-            property.PropertyGroup.name == u"Verstoß").first()
+        verstoss = PropertyGroup.q.filter(
+            PropertyGroup.name == u"Verstoß").first()
 #       Ich weiß nicht, ob dieser Test noch gebraucht wird!
 #       self.assertTrue(u.has_property("network_access"))
         self.assertNotIn(verstoss, u.active_property_groups())

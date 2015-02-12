@@ -19,12 +19,12 @@ from pycroft import lib
 from pycroft.helpers import net
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
+from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
+from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
 from pycroft.model.net import Host, UserNetDevice, Ip
-from pycroft.model.user import User
-from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
-from pycroft.model.accounting import TrafficVolume
+from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -246,7 +246,7 @@ def add_membership(user_id):
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
         else:
             ends_at = None
-        lib.property.make_member_of(user, form.group.data,
+        make_member_of(user, form.group.data,
                                     closed(begins_at, ends_at))
         message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group.data.name)
         lib.logging.log_user_event(message, current_user, user)

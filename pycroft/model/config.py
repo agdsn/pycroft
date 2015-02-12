@@ -1,12 +1,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, Interval
-from datetime import timedelta
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from .base import ModelBase
-from .property import Group, PropertyGroup
-from .finance import FinanceAccount
+from pycroft.model.base import ModelBase
+from pycroft.model.finance import FinanceAccount
+from pycroft.model.user import PropertyGroup
 
 
 class Config(ModelBase):

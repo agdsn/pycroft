@@ -6,10 +6,9 @@ from flask.ext.wtf import Form
 from wtforms.validators import (
     Regexp, NumberRange, ValidationError, DataRequired, Email)
 from pycroft.helpers.net import mac_regex
-from pycroft.model.user import User
-from pycroft.model.net import Host
-from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
+from pycroft.model.net import Host
+from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import dormitory_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
     QuerySelectField, DateField, SelectField, FormField

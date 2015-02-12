@@ -3,15 +3,15 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, time
+
 import ipaddr
 
-from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
-
-from pycroft import model
-from pycroft.model import facilities, session, user, net, property, logging
+from mysql import session as my_session, Wheim, Nutzer, Computer
+from pycroft.model import facilities, session, user, net, logging
 from pycroft.helpers.user import hash_password
 from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.net import VLAN, Subnet, PatchPort, SwitchPort
+from pycroft.model.user import Property, PropertyGroup
 
 
 def do_convert():
@@ -114,30 +114,30 @@ def do_convert():
         ip.subnet = subnets[computer.c_subnet_id]
 
 
-    property_groups = {"verstoß": property.PropertyGroup(name=u"Verstoß"),
-                       "bewohner": property.PropertyGroup(name=u"Bewohner"),
-                       "admin": property.PropertyGroup(name=u"Admin"),
-                       "nutzerverwalter": property.PropertyGroup(
+    property_groups = {"verstoß": PropertyGroup(name=u"Verstoß"),
+                       "bewohner": PropertyGroup(name=u"Bewohner"),
+                       "admin": PropertyGroup(name=u"Admin"),
+                       "nutzerverwalter": PropertyGroup(
                            name=u"Nutzerverwalter"),
-                       "finanzen": property.PropertyGroup(name=u"Finanzen"),
-                       "root": property.PropertyGroup(name=u"Root"),
-                       "hausmeister": property.PropertyGroup(
+                       "finanzen": PropertyGroup(name=u"Finanzen"),
+                       "root": PropertyGroup(name=u"Root"),
+                       "hausmeister": PropertyGroup(
                            name=u"Hausmeister"),
-                       "exaktiv": property.PropertyGroup(name=u"Exaktiv"),
-                       "tmpausgezogen": property.PropertyGroup(
+                       "exaktiv": PropertyGroup(name=u"Exaktiv"),
+                       "tmpausgezogen": PropertyGroup(
                            name=u"tmpAusgezogen")}
 
-    properties_all = [property.Property(name="network_access", granted=False,
+    properties_all = [Property(name="network_access", granted=False,
                           property_group=property_groups["verstoß"]),
-                      property.Property(name="network_access",
+                      Property(name="network_access",
                           property_group=property_groups["bewohner"]),
-                      property.Property(name="mail",
+                      Property(name="mail",
                           property_group=property_groups["bewohner"]),
-                      property.Property(name="ssh_helios",
+                      Property(name="ssh_helios",
                           property_group=property_groups["bewohner"]),
-                      property.Property(name="homepage_helios",
+                      Property(name="homepage_helios",
                           property_group=property_groups["bewohner"]),
-                      property.Property(name="away",
+                      Property(name="away",
                           property_group=property_groups["tmpausgezogen"])]
 
 
