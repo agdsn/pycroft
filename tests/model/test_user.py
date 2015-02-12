@@ -14,7 +14,7 @@ from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
 from pycroft.model.finance import FinanceAccount
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.dummy.property import (
     MembershipData, PropertyData, PropertyGroupData, TrafficGroupData)
 from tests.fixtures.dummy.user import UserData

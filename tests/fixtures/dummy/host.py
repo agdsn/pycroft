@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
 
-from tests.fixtures.dummy.dormitory import VLANData, RoomData
+from tests.fixtures.dummy.facilities import VLANData, RoomData
 from tests.fixtures.dummy.user import UserData
 
 

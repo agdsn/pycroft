@@ -3,10 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    web.blueprints.dormitories
+    web.blueprints.facilities
     ~~~~~~~~~~~~~~
 
-    This module defines view functions for /dormitories
+    This module defines view functions for /facilities
     :copyright: (c) 2012 by AG DSN.
 """
 
@@ -15,18 +15,18 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from flask.ext.login import current_user
 from flask.json import jsonify
 from pycroft import lib
-from pycroft.helpers import dormitory
+from pycroft.helpers import facilities
 from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
 from pycroft.model.session import session
 from pycroft.model.facilities import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.dormitories.forms import RoomForm, DormitoryForm, \
+from web.blueprints.facilities.forms import RoomForm, DormitoryForm, \
     RoomLogEntry
 from web.blueprints.access import BlueprintAccess
 from web.template_filters import datetime_filter
 
-bp = Blueprint('dormitories', __name__, )
-access = BlueprintAccess(bp, ['dormitories_show'])
+bp = Blueprint('facilities', __name__, )
+access = BlueprintAccess(bp, ['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
 
@@ -35,22 +35,22 @@ nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 # careful with permissions here, redirects!
 def overview():
     dormitories_list = Dormitory.q.all()
-    dormitories_list = dormitory.sort_dormitories(dormitories_list)
-    return render_template('dormitories/overview.html',
+    dormitories_list = facilities.sort_dormitories(dormitories_list)
+    return render_template('facilities/overview.html',
         dormitories=dormitories_list)
 
 
 @bp.route('/show/<dormitory_id>')
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def dormitory_show(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = dormitory.rooms
-    return render_template('dormitories/dormitory_show.html',
+    return render_template('facilities/dormitory_show.html',
         page_title=u"Wohnheim " + dormitory.short_name, rooms=rooms_list)
 
 
 @bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def room_show(room_id):
     room = Room.q.get(room_id)
     form = RoomLogEntry()
@@ -61,7 +61,7 @@ def room_show(room_id):
 
     room_log_list = room.room_log_entries[::-1]
 
-    return render_template('dormitories/room_show.html',
+    return render_template('facilities/room_show.html',
         page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number),
         room=room,
@@ -70,7 +70,7 @@ def room_show(room_id):
 
 
 @bp.route('/room/logs/<room_id>')
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def room_logs_json(room_id):
     return jsonify(items=map(
         lambda entry: {
@@ -87,7 +87,7 @@ def room_logs_json(room_id):
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>')
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = Room.q.filter_by(
@@ -95,14 +95,14 @@ def dormitory_levels(dormitory_id):
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
 
-    return render_template('dormitories/levels.html',
+    return render_template('facilities/levels.html',
         levels=levels_list, dormitory_id=dormitory_id, dormitory=dormitory,
         page_title=u"Etagen Wohnheim {}".format(dormitory.short_name))
 
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
     level_l0 = "{:02d}".format(level)
@@ -111,7 +111,7 @@ def dormitory_level_rooms(dormitory_id, level):
     # a link to the user. If there is more then one user, the room is
     # duplicated
     return render_template(
-        'dormitories/rooms.html',
+        'facilities/rooms.html',
         level=level_l0,
         dormitory=dormitory,
         page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(
@@ -134,7 +134,7 @@ def user_btn_class(user):
 
 
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>/json')
-@access.require('dormitories_show')
+@access.require('facilities_show')
 def dormitory_level_rooms_json(dormitory_id, level):
     return jsonify(items=map(
         lambda room: {

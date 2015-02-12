@@ -11,7 +11,7 @@ from pycroft.helpers.host import get_free_ip, MacExistsException
 from pycroft.model import session, host, facilities, user, accounting
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.accounting import TrafficVolumeData
-from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.dummy.host import (
     IpData, SubnetData, UserHostData, UserNetDeviceData, VLANData)
 from tests.fixtures.dummy.user import UserData

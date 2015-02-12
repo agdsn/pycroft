@@ -37,9 +37,9 @@
 
             {% call info_row("Wohnort") %}
                 {% if user.is_away %}
-                <a style="text-decoration: line-through;" href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
+                <a style="text-decoration: line-through;" href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
                 {% else %}
-                <a href="{{ url_for("dormitories.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
+                <a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
                 {% endif %}
             {% endcall %}
 

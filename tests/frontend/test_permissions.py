@@ -40,8 +40,8 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_dormitories(self):
-        # Admin has access to view the dormitories overview
-        self.assert_response_code(url_for('dormitories.overview'), 200)
+        # Admin has access to view the facilities overview
+        self.assert_response_code(url_for('facilities.overview'), 200)
 
     def test_0020_access_finance(self):
         # Admin has no access to finance
@@ -59,7 +59,7 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_dormitories(self):
-        self.assert_response_code(url_for('dormitories.overview'), 200)
+        self.assert_response_code(url_for('facilities.overview'), 200)
 
     def test_0020_access_finance(self):
         self.assert_response_code(url_for('finance.journals_list'), 200)
@@ -116,15 +116,15 @@ class Test_040_Permissions_User(FrontendDataTestBase):
 
     def test_0030_access_dormitories(self):
         for url in (
-            url_for('dormitories.overview'),
+            url_for('facilities.overview'),
         ):
             self.assert_access_allowed(url)
 
         for url in (
-            url_for('dormitories.dormitory_show', dormitory_id=1),
-            url_for('dormitories.room_show', room_id=1),
-            url_for('dormitories.dormitory_levels', dormitory_id=1),
-            url_for('dormitories.dormitory_level_rooms', dormitory_id=1, level=1)
+            url_for('facilities.dormitory_show', dormitory_id=1),
+            url_for('facilities.room_show', room_id=1),
+            url_for('facilities.dormitory_levels', dormitory_id=1),
+            url_for('facilities.dormitory_level_rooms', dormitory_id=1, level=1)
         ):
             self.assert_access_forbidden(url)
 

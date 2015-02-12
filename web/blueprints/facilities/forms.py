@@ -10,7 +10,7 @@ from pycroft.model.facilities import Dormitory
 from web.form.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField
 
-from pycroft.helpers.dormitory import sort_dormitories
+from pycroft.helpers.facilities import sort_dormitories
 
 
 def dormitory_query():

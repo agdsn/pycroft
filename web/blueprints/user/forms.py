@@ -10,7 +10,7 @@ from pycroft.model.user import User
 from pycroft.model.host import Host, NetDevice
 from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
-from web.blueprints.dormitories.forms import dormitory_query
+from web.blueprints.facilities.forms import dormitory_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField

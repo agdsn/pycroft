@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from tests import FixtureDataTestBase
 from pycroft.model import session, user, property
-from tests.fixtures.dummy.dormitory import (DormitoryData, RoomData)
+from tests.fixtures.dummy.facilities import (DormitoryData, RoomData)
 from tests.fixtures.dummy.user import UserData
 from tests.model.property_fixtures import (
     PropertyData, PropertyGroupData, TrafficGroupData)

@@ -7,7 +7,7 @@ from flask import url_for
 from pycroft.model.facilities import Dormitory, Room
 
 from tests import FrontendDataTestBase
-from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.permissions import UserData, PropertyData, MembershipData
 
 
@@ -26,26 +26,26 @@ class Test_010_Dormitory(FrontendDataTestBase):
                                      level=RoomData.dummy_room1.level).one()
 
     def test_0010_list_dormitories(self):
-        self.assert_template_get_request("/dormitories/",
-                                         "dormitories/overview.html")
+        self.assert_template_get_request("/facilities/",
+                                         "facilities/overview.html")
 
     def test_0020_show_dormitory(self):
         self.assert_template_get_request(
-            "/dormitories/show/{}".format(self.dormitory.id),
-            "dormitories/dormitory_show.html")
+            "/facilities/show/{}".format(self.dormitory.id),
+            "facilities/dormitory_show.html")
 
     def test_0040_show_room(self):
         self.assert_template_get_request(
-            "/dormitories/room/show/{}".format(self.room.id),
-            "dormitories/room_show.html")
+            "/facilities/room/show/{}".format(self.room.id),
+            "facilities/room_show.html")
 
     def test_0070_dormitory_levels(self):
         self.assert_template_get_request(
-            "/dormitories/levels/{}".format(self.dormitory.id),
-            "dormitories/levels.html")
+            "/facilities/levels/{}".format(self.dormitory.id),
+            "facilities/levels.html")
 
     def test_0080_dormitory_level_rooms(self):
         self.assert_template_get_request(
-            "/dormitories/levels/{}/rooms/{}".format(
+            "/facilities/levels/{}/rooms/{}".format(
                 self.dormitory.id, self.room.level),
-            "dormitories/rooms.html")
+            "facilities/rooms.html")

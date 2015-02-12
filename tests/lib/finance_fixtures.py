@@ -7,7 +7,7 @@ from datetime import datetime, time, timedelta
 from fixture import DataSet
 
 from tests.fixtures.config import PropertyGroupData
-from tests.fixtures.dummy.dormitory import RoomData
+from tests.fixtures.dummy.facilities import RoomData
 
 
 today = datetime.utcnow().date()

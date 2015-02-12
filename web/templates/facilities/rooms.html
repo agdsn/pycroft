@@ -13,13 +13,13 @@
 
 {% block content %}
     <ul class="breadcrumb">
-        <li><a href="{{ url_for('dormitories.overview') }}">Wohnheime</a></li>
-        <li><a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
+        <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
+        <li><a href="{{ url_for('facilities.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
     {{ tbl.item_table(
         'rooms',
-        url_for('dormitories.dormitory_level_rooms_json', dormitory_id=dormitory.id, level=level),
+        url_for('facilities.dormitory_level_rooms_json', dormitory_id=dormitory.id, level=level),
         cols
     ) }}
 {% endblock %}

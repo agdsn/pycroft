@@ -9,7 +9,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.logging import RoomLogEntry
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.dormitory import RoomData
+from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.logging import UserLogEntryData, RoomLogEntryData
 from tests.fixtures.dummy.user import UserData
 

@@ -11,7 +11,7 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, port, session, logging, finance,  property, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
-from tests.fixtures.dummy.dormitory import VLANData, DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import VLANData, DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
 from tests.fixtures.dummy.host import (
     IpData, SubnetData, PatchPortData,UserNetDeviceData, UserHostData)

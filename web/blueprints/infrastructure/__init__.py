@@ -245,7 +245,7 @@ def switch_show_json(switch_id):
             "portname": port.name,
             "room": {
                 "href": url_for(
-                    "dormitories.room_show",
+                    "facilities.room_show",
                     room_id=port.patch_port.room.id
                 ),
                 "title": "{}-{}".format(

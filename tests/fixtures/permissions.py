@@ -4,7 +4,7 @@
 from datetime import datetime
 from fixture import DataSet
 from pycroft.helpers.user import hash_password
-from tests.fixtures.dummy.dormitory import RoomData
+from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.finance import FinanceAccountData
 
 
@@ -52,12 +52,12 @@ class PropertyGroupData(DataSet):
 
 
 class PropertyData(DataSet):
-    class property1_dormitories_show(BaseProperty):
-        name = "dormitories_show"
+    class property1_facilities_show(BaseProperty):
+        name = "facilities_show"
         property_group = PropertyGroupData.property_group1_admin
 
-    class property2_dormitories_change(BaseProperty):
-        name = "dormitories_change"
+    class property2_facilities_change(BaseProperty):
+        name = "facilities_change"
         property_group = PropertyGroupData.property_group1_admin
 
     class property3_finance_show(BaseProperty):

@@ -194,8 +194,8 @@ property_categories = OrderedDict((
     (u"Infrastruktur", OrderedDict((
         (u"infrastructure_show",  u"darf Infrastruktur ansehen"),
         (u"infrastructure_change",  u"darf Infrastruktur anlegen, bearbeiten, löschen"),
-        (u"dormitories_show",  u"darf Wohnheime einsehen"),
-        (u"dormitories_change",  u"darf Wohnheime anlegen, bearbeiten, löschen"),
+        (u"facilities_show",  u"darf Gebäude einsehen"),
+        (u"facilities_change",  u"darf Gebäude anlegen, bearbeiten, löschen"),
     ))),
     (u"Gruppenverwaltung", OrderedDict((
         (u"groups_show",  u"darf Gruppen einsehen"),

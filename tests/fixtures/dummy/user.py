@@ -6,7 +6,7 @@ from datetime import datetime
 
 from fixture import DataSet
 
-from tests.fixtures.dummy.dormitory import RoomData
+from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.finance import FinanceAccountData
 
 

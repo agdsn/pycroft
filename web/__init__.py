@@ -12,7 +12,7 @@
 """
 from flask import Flask, redirect, url_for, request, flash
 from flask.ext.babel import Babel
-from blueprints import (finance, infrastructure, properties, user, dormitories,
+from blueprints import (finance, infrastructure, properties, user, facilities,
                         login)
 from web.form import widgets
 import template_filters
@@ -34,7 +34,7 @@ def make_app():
     #initialization code
     login_manager.init_app(app)
     app.register_blueprint(user.bp, url_prefix="/user")
-    app.register_blueprint(dormitories.bp, url_prefix="/dormitories")
+    app.register_blueprint(facilities.bp, url_prefix="/facilities")
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(properties.bp, url_prefix="/properties")
     app.register_blueprint(finance.bp, url_prefix="/finance")
@@ -49,7 +49,7 @@ def make_app():
 
     user.nav.register_on(app)
     finance.nav.register_on(app)
-    dormitories.nav.register_on(app)
+    facilities.nav.register_on(app)
     infrastructure.nav.register_on(app)
     properties.nav.register_on(app)
 

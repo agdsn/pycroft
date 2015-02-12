@@ -46,7 +46,7 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    return redirect(url_for("dormitories.overview"))
+    return redirect(url_for("facilities.overview"))
 
 
 @bp.route('/json/search')

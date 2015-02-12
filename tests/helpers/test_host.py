@@ -13,7 +13,7 @@ from pycroft.helpers.host import sort_ports, generate_hostname, \
     get_free_ip, select_subnet_for_ip, SubnetFullException
 from pycroft.model import facilities, session, user, logging
 from pycroft.model.host import UserNetDevice, Ip, UserHost
-from tests.fixtures.dummy.dormitory import DormitoryData, RoomData, VLANData
+from tests.fixtures.dummy.facilities import DormitoryData, RoomData, VLANData
 from tests.fixtures.dummy.host import (
     SubnetData, UserHostData, UserNetDeviceData)
 from tests.fixtures.dummy.user import UserData
