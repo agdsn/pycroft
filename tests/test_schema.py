@@ -70,9 +70,9 @@ class Test_010_SchemaMapping(unittest.TestCase):
         msg = try_mapper(accounting)
         self.assertIsNone(msg, msg)
 
-    def test_0090_mapping_ports(self):
-        from pycroft.model import port
-        msg = try_mapper(port)
+    def test_0090_mapping_config(self):
+        from pycroft.model import config
+        msg = try_mapper(config)
         self.assertIsNone(msg, msg)
 
     def test_0100_mapping_finance(self):

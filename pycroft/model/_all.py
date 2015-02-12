@@ -21,7 +21,6 @@ from pycroft.model.finance import *
 from pycroft.model.user import *
 from pycroft.model.property import *
 from pycroft.model.accounting import *
-from pycroft.model.port import *
 from pycroft.model.dns import *
 from pycroft.model.config import *
 

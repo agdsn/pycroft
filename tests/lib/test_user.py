@@ -3,13 +3,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
+from pycroft.model.host import PatchPort
 
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, facilities, port, session, logging, finance,  property, dns, host)
+    user, facilities, session, logging, finance,  property, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import VLANData, DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
@@ -41,7 +42,7 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.new_room_same_dormitory = facilities.Room.q.filter_by(
             dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
-        self.new_patch_port = port.PatchPort.q.filter_by(
+        self.new_patch_port = PatchPort.q.filter_by(
             name=PatchPortData.dummy_patch_port2.name).one()
 
     def tearDown(self):

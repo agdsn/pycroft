@@ -12,7 +12,7 @@
 """
 import re
 import ipaddr
-from sqlalchemy import Column, Enum, ForeignKey, Table, event
+from sqlalchemy import Column, Enum, ForeignKey, Table, event, String, Integer
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer, String
 from pycroft.model.base import ModelBase
@@ -56,7 +56,7 @@ class ServerHost(Host):
 
 class Switch(Host):
     __mapper_args__ = {'polymorphic_identity': 'switch'}
-    id = Column(Integer, ForeignKey('host.id', ondelete="CASCADE"),
+    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
                 primary_key=True)
 
     name = Column(String(127), nullable=False)
@@ -272,3 +272,90 @@ def _check_correct_ip_subnet(mapper, connection, target):
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
 event.listen(Ip, "before_update", _check_correct_ip_subnet)
+
+
+class VLAN(ModelBase):
+    name = Column(String(127), nullable=False)
+    tag = Column(Integer, nullable=False)
+
+
+class Subnet(ModelBase):
+    #address = Column(postgresql.INET, nullable=False)
+    address = Column(String(51), nullable=False)
+    #gateway = Column(postgresql.INET, nullable=False)
+    gateway = Column(String(51), nullable=False)
+    dns_domain = Column(String)
+    reserved_addresses = Column(Integer, default=0, nullable=False)
+    ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
+
+    # many to many from Subnet to VLAN
+    vlans = relationship(VLAN, backref=backref("subnets"),
+                         secondary=lambda: association_table_subnet_vlan)
+
+    @property
+    def netmask(self):
+        net = ipaddr.IPNetwork(self.address)
+        return str(net.netmask)
+
+    @property
+    def ip_version(self):
+        return ipaddr.IPNetwork(self.address).version
+
+
+association_table_subnet_vlan = Table(
+    "association_subnet_vlan",
+    ModelBase.metadata,
+    Column("subnet_id", Integer, ForeignKey(Subnet.id)),
+    Column("vlan_id", Integer, ForeignKey(VLAN.id)))
+
+
+class Port(ModelBase):
+    # Joined table inheritance
+    discriminator = Column('type', String(15), nullable=False)
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
+    name = Column(String(8), nullable=False)
+
+    name_regex = re.compile("[A-Z][1-9][0-9]?")
+
+
+class DestinationPort(Port):
+    id = Column(Integer, ForeignKey(Port.id), primary_key=True,
+                nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'destination_port'}
+
+
+class PatchPort(Port):
+    id = Column(Integer, ForeignKey(Port.id), primary_key=True,
+                nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'patch_port'}
+
+    # one to one from PatchPort to DestinationPort
+    destination_port_id = Column(Integer, ForeignKey(DestinationPort.id),
+                                 nullable=True)
+    destination_port = relationship(DestinationPort,
+                                    foreign_keys=[destination_port_id],
+                                    backref=backref("patch_port",
+                                                    uselist=False))
+
+    # many to one from PatchPort to Room
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room = relationship("Room", backref=backref("patch_ports"))
+
+
+class PhonePort(DestinationPort):
+    # Joined table inheritance
+    id = Column(Integer, ForeignKey(DestinationPort.id), primary_key=True,
+                nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'phone_port'}
+
+
+class SwitchPort(DestinationPort):
+    # Joined table inheritance
+    id = Column(Integer, ForeignKey(DestinationPort.id), primary_key=True,
+                nullable=False)
+    __mapper_args__ = {'polymorphic_identity': 'switch_port'}
+
+    # many to one from SwitchPort to Switch
+    switch_id = Column(Integer, ForeignKey("switch.id"), nullable=False)
+    switch = relationship("Switch", backref=backref("ports"))

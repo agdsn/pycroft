@@ -8,10 +8,10 @@ import ipaddr
 from mysql import session as my_session, Wheim, Nutzer, Subnet, Computer
 
 from pycroft import model
-from pycroft.model import facilities, session, port as port_model, user, host, property, logging
+from pycroft.model import facilities, session, user, host, property, logging
 from pycroft.helpers.user import hash_password
 from pycroft.model.dns import ARecord, CNAMERecord
-from pycroft.model.host import VLAN, Subnet
+from pycroft.model.host import VLAN, Subnet, PatchPort, SwitchPort
 
 
 def do_convert():
@@ -37,7 +37,7 @@ def do_convert():
             if new_room is None:
                 new_room = facilities.Room(number=port.zimmernr, level=port.etage, inhabitable=True, dormitory=new_house)
                 rooms.append(new_room)
-            new_port = port_model.PatchPort(name="{0.etage}/{0.zimmernr}".format(port), room=new_room)
+            new_port = PatchPort(name="{0.etage}/{0.zimmernr}".format(port), room=new_room)
             patch_ports.append(new_port)
 
             if port.ip not in switches:
@@ -52,7 +52,7 @@ def do_convert():
                 net_devices.append(new_switch_net_device)
                 ips.append(mgmt_ip)
                 switches[port.ip] = new_switch
-            new_swport = port_model.SwitchPort(name=port.port, switch=switches[port.ip])
+            new_swport = SwitchPort(name=port.port, switch=switches[port.ip])
             switch_ports.append(new_swport)
             new_port.destination_port = new_swport
 

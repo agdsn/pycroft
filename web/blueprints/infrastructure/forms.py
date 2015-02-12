@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
@@ -7,7 +7,7 @@
 from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, Regexp
 from pycroft.model.dns import ARecord
-from pycroft.model.port import Port
+from pycroft.model.host import Port
 from web.form.fields.core import TextField, SelectField, QuerySelectField
 from web.form.fields.custom import ReadonlyTextField
 
