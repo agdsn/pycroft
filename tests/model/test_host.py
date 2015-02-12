@@ -1,16 +1,20 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from itertools import chain
 import re
 
+from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.helpers.host import get_free_ip, MacExistsException
 from pycroft.model import session, host, dormitory, user, accounting
 from tests import FixtureDataTestBase
-from tests.model.fixtures.host_fixtures import (
-    DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData,
-    UserNetDeviceData, IpData, TrafficVolumeData)
+from tests.fixtures.dummy.accounting import TrafficVolumeData
+from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
+from tests.fixtures.dummy.host import (
+    IpData, SubnetData, UserHostData, UserNetDeviceData, VLANData)
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_NetDeviceValidators(FixtureDataTestBase):
@@ -206,10 +210,12 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 
 class Test_060_Cascades(FixtureDataTestBase):
-    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData, IpData, TrafficVolumeData]
+    datasets = (SubnetData, UserData, UserHostData, UserNetDeviceData, IpData,
+                TrafficVolumeData)
 
     def test_0010_cascade_on_delete_ip(self):
-        test_ip = host.Ip.q.filter_by(address=IpData.dummy_ip.address).one()
+        test_ip = host.Ip.q.filter_by(
+            address=IpData.dummy_user_ipv4.address).one()
         session.session.delete(test_ip)
         session.session.commit()
         self.assertIsNone(accounting.TrafficVolume.q.first())
@@ -217,24 +223,31 @@ class Test_060_Cascades(FixtureDataTestBase):
     def test_0010_cascade_on_delete_netdevice(self):
         test_net_device = host.NetDevice.q.filter_by(
             mac=UserNetDeviceData.dummy_device.mac).one()
+        ips = test_net_device.ips
+        traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_net_device)
         session.session.commit()
-        self.assertIsNone(host.Ip.q.first())
-        self.assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertTrue(all(inspect(o).deleted
+                            for o in chain(ips, traffic_volumes)))
 
     def test_0010_cascade_on_delete_host(self):
         test_host = host.UserHost.q.first()
+        net_device = test_host.user_net_device
+        ips = net_device.ips
+        traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_host)
         session.session.commit()
-        self.assertIsNone(host.NetDevice.q.first())
-        self.assertIsNone(host.Ip.q.first())
-        self.assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertTrue(all(inspect(o).deleted)
+                        for o in chain((net_device,), ips, traffic_volumes))
 
     def test_0010_cascade_on_delete_user(self):
-        test_user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
+        hosts = test_user.user_hosts
+        net_devices = tuple(h.user_net_device for h in hosts)
+        ips = tuple(chain(*(d.ips for d in net_devices)))
+        traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_user)
         session.session.commit()
-        self.assertIsNone(host.Host.q.first())
-        self.assertIsNone(host.NetDevice.q.first())
-        self.assertIsNone(host.Ip.q.first())
-        self.assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertTrue(all(inspect(o).deleted)
+                        for o in chain(hosts, net_devices, ips, traffic_volumes
+        ))

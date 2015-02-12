@@ -8,13 +8,15 @@ from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
-from tests.fixtures.config import ConfigData, PropertyData
-from tests.lib.fixtures.user_fixtures import (
-    DormitoryData, FinanceAccountData, RoomData, UserData, UserNetDeviceData,
-    UserHostData, IpData, VLANData, SubnetData, PatchPortData, SemesterData,
-    TrafficGroupData)
 from pycroft.model import (
     user, dormitory, port, session, logging, finance,  property, dns, host)
+from tests.fixtures.config import ConfigData, PropertyData
+from tests.fixtures.dummy.dormitory import VLANData, DormitoryData, RoomData
+from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
+from tests.fixtures.dummy.host import (
+    IpData, SubnetData, PatchPortData,UserNetDeviceData, UserHostData)
+from tests.fixtures.dummy.property import TrafficGroupData
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -24,9 +26,9 @@ class Test_010_User_Move(FixtureDataTestBase):
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
         self.user = user.User.q.filter_by(
-            login=UserData.dummy_user1.login).one()
+            login=UserData.dummy.login).one()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy_user2.login).one()
+            login=UserData.privileged.login).one()
         self.old_room = self.user.room #dormitory.Room.q.get(1)
         self.same_dormitory = dormitory.Dormitory.q.filter_by(
             short_name=DormitoryData.dummy_house1.short_name).one()
@@ -71,7 +73,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy_user1.login).one()
+            login=UserData.dummy.login).one()
 
 
     def tearDown(self):
@@ -138,7 +140,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy_user2.login).one()
+            login=UserData.privileged.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -188,7 +190,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
         self.user = user.User.q.filter_by(
-            login=UserData.dummy_user2.login).one()
+            login=UserData.privileged.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -217,7 +219,7 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
         self.user = user.User.q.filter_by(
-            login=UserData.dummy_user2.login).one()
+            login=UserData.privileged.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()
@@ -244,7 +246,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
     def setUp(self):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy_user1.login).one()
+            login=UserData.dummy.login).one()
 
     def tearDown(self):
         logging.LogEntry.q.delete()

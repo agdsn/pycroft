@@ -20,9 +20,9 @@ from pycroft.model.property import PropertyGroup
 from pycroft.model import session
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.finance_fixtures import (
-    FinanceAccountData, JournalData, MembershipData, PropertyData,
-    PropertyGroupData, SemesterData, UserData)
+from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
+from tests.lib.finance_fixtures import (
+    FinanceAccountData, JournalData, MembershipData, SemesterData, UserData)
 
 
 class Test_010_Journal(FixtureDataTestBase):
@@ -31,17 +31,11 @@ class Test_010_Journal(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_010_Journal, self).setUp()
-        self.asset_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.Asset.name
+        self.bank_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.bank_account.name
         ).one()
-        self.liability_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.Liability.name
-        ).one()
-        self.expense_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.Expense.name
-        ).one()
-        self.revenue_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.Revenue.name
+        self.user_account = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.user_account.name
         ).one()
         self.journal = Journal.q.filter_by(
             account_number=JournalData.Journal1.account_number
@@ -109,7 +103,7 @@ class Test_010_Journal(FixtureDataTestBase):
     def test_0030_simple_transaction(self):
         try:
             simple_transaction(
-                u"transaction", self.asset_account, self.liability_account,
+                u"transaction", self.bank_account, self.user_account,
                 9000, self.author
             )
         except Exception:
@@ -121,38 +115,38 @@ class Test_010_Journal(FixtureDataTestBase):
         amount = 9000
         today = session.utcnow().date()
         simple_transaction(
-            u"transaction", self.asset_account, self.liability_account,
+            u"transaction", self.bank_account, self.user_account,
             amount, self.author, today - timedelta(1)
         )
         simple_transaction(
-            u"transaction", self.asset_account, self.liability_account,
+            u"transaction", self.bank_account, self.user_account,
             amount, self.author, today
         )
         simple_transaction(
-            u"transaction", self.asset_account, self.liability_account,
+            u"transaction", self.bank_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, single(today)
+                self.bank_account, self.user_account, single(today)
             ),
             amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, closedopen(today, None)
+                self.bank_account, self.user_account, closedopen(today, None)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account, openclosed(None, today)
+                self.bank_account, self.user_account, openclosed(None, today)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.asset_account, self.liability_account
+                self.bank_account, self.user_account
             ),
             3*amount
         )
@@ -175,12 +169,14 @@ class Test_010_Journal(FixtureDataTestBase):
 
 
 class FeeTestBase(FixtureDataTestBase):
+    fee_account_name = None
+
     def setUp(self):
         super(FeeTestBase, self).setUp()
         self.user = User.q.first()
         self.processor = self.user
         self.fee_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.fee_account.name
+            name=self.fee_account_name
         ).one()
 
     def assertFeesPosted(self, user, expected_transactions):
@@ -197,7 +193,9 @@ class FeeTestBase(FixtureDataTestBase):
 
 
 class Test_Fees(FeeTestBase):
-    datasets = (FinanceAccountData, SemesterData, UserData)
+    datasets = (ConfigData, FinanceAccountData, PropertyData, SemesterData,
+                UserData)
+    fee_account_name = ConfigData.config.semester_fee_account.name
     description = u"Fee"
     valid_on = datetime.utcnow().date()
     amount = 9000
@@ -252,8 +250,9 @@ class Test_Fees(FeeTestBase):
 
 
 class TestRegistrationFee(FeeTestBase):
-    datasets = [FinanceAccountData, MembershipData, PropertyData, SemesterData,
-                UserData]
+    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+                SemesterData, UserData)
+    fee_account_name = ConfigData.config.registration_fee_account.name
 
     def setUp(self):
         super(TestRegistrationFee, self).setUp()
@@ -278,8 +277,9 @@ class TestRegistrationFee(FeeTestBase):
 
 
 class TestSemesterFee(FeeTestBase):
-    datasets = [FinanceAccountData, MembershipData, PropertyData,
-                PropertyGroupData, SemesterData, UserData]
+    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+                PropertyGroupData, SemesterData, UserData)
+    fee_account_name = ConfigData.config.semester_fee_account.name
 
     def setUp(self):
         super(TestSemesterFee, self).setUp()
@@ -340,8 +340,9 @@ class TestSemesterFee(FeeTestBase):
 
 
 class TestLateFee(FeeTestBase):
-    datasets = [FinanceAccountData, MembershipData, PropertyData,
-                PropertyGroupData, SemesterData, UserData]
+    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+                PropertyGroupData, SemesterData, UserData)
+    fee_account_name = ConfigData.config.late_fee_account.name
 
     allowed_overdraft = 500
     payment_deadline = timedelta(31)
@@ -351,12 +352,9 @@ class TestLateFee(FeeTestBase):
 
     def setUp(self):
         super(TestLateFee, self).setUp()
-        self.fee_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.late_fee_account.name
-        ).one()
         self.fee = LateFee(self.fee_account, date.today())
         self.other_fee_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.fee_account.name
+            name=ConfigData.config.semester_fee_account.name
         ).one()
         self.bank_account = FinanceAccount.q.filter_by(
             name=FinanceAccountData.bank_account.name

@@ -6,8 +6,8 @@ from pycroft.model.finance import FinanceAccount, IllegalTransactionError, \
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from pycroft.model import finance, session
-from datetime import datetime
-from tests.model.fixtures.finance_fixtures import FinanceAccountData, UserData
+from tests.fixtures.dummy.finance import FinanceAccountData
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_TransactionSplits(FixtureDataTestBase):
@@ -15,12 +15,12 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_010_TransactionSplits, self).setUp()
-        self.author = User.q.one()
-        self.account1 = FinanceAccount.q.filter(
-            FinanceAccount.name == FinanceAccountData.Dummy1.name
+        self.author = User.q.filter_by(login=UserData.privileged.login).one()
+        self.account1 = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.dummy_asset.name
         ).one()
-        self.account2 = FinanceAccount.q.filter(
-            FinanceAccount.name == FinanceAccountData.Dummy2.name
+        self.account2 = FinanceAccount.q.filter_by(
+            name=FinanceAccountData.dummy_revenue.name
         ).one()
 
     def tearDown(self):

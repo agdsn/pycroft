@@ -3,9 +3,11 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, time, timedelta
+
 from fixture import DataSet
 
-__author__ = 'shreyder'
+from tests.fixtures.config import PropertyGroupData
+from tests.fixtures.dummy.dormitory import RoomData
 
 
 today = datetime.utcnow().date()
@@ -39,43 +41,16 @@ class SemesterData(DataSet):
         ends_on = today + timedelta(days=90)
 
 
-class DormitoryData(DataSet):
-    class Dummy:
-        number = "01"
-        short_name = "abc"
-        street = "dummy"
-
-
-class RoomData(DataSet):
-    class Dummy:
-        number = 1
-        level = 1
-        inhabitable = True
-        dormitory = DormitoryData.Dummy
-
-
 class FinanceAccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
         type = "ASSET"
 
-    class Asset:
-        name = u"Asset"
-        type = "ASSET"
-
-    class Liability:
-        name = u"Liability"
-        type = "LIABILITY"
-
-    class Expense:
-        name = u"Expense"
-        type = "EXPENSE"
-
-    class Revenue:
-        name = u"Revenue"
+    class registration_fee_account:
+        name = u"Fees"
         type = "REVENUE"
 
-    class fee_account:
+    class semester_fee_account:
         name = u"Fees"
         type = "REVENUE"
 
@@ -88,51 +63,27 @@ class FinanceAccountData(DataSet):
         type = "ASSET"
 
 
-class PropertyGroupData(DataSet):
-    class member:
-        name = "Members"
-
-    class away:
-        name = "Away Members"
-
-
-class PropertyData(DataSet):
-    class registration_fee:
-        granted = True
-        name = "registration_fee"
-        property_group = PropertyGroupData.member
-
-    class semester_fee:
-        granted = True
-        name = "semester_fee"
-        property_group = PropertyGroupData.member
-
-    class late_fee:
-        granted = True
-        name = "late_fee"
-        property_group = PropertyGroupData.member
-
-    class away:
-        granted = True
-        name = "away"
-        property_group = PropertyGroupData.away
-
-
 class UserData(DataSet):
     class dummy:
         login = u"dummy"
         name = u"Dummy Dummy"
         registered_at = datetime.combine(SemesterData.with_registration_fee.begins_on + timedelta(days=31), time.min)
-        room = RoomData.Dummy
+        room = RoomData.dummy_room1
         finance_account = FinanceAccountData.user_account
 
 
 class MembershipData(DataSet):
-    class dummy:
+    class member:
         begins_at = UserData.dummy.registered_at
         ends_at = None
         user = UserData.dummy
         group = PropertyGroupData.member
+
+    class network_access:
+        begins_at = UserData.dummy.registered_at
+        ends_at = None
+        user = UserData.dummy
+        group = PropertyGroupData.network_access
 
 
 class TransactionData(DataSet):
@@ -161,7 +112,7 @@ class SplitData(DataSet):
 
     class claim1_debit:
         transaction = TransactionData.claim1
-        account = FinanceAccountData.fee_account
+        account = FinanceAccountData.semester_fee_account
         amount = -5000
 
     class late_fee1_credit:
@@ -181,7 +132,7 @@ class SplitData(DataSet):
 
     class claim2_debit:
         transaction = TransactionData.claim2
-        account = FinanceAccountData.fee_account
+        account = FinanceAccountData.semester_fee_account
         amount = -5000
 
     class payment_credit:

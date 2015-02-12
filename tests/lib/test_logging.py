@@ -2,14 +2,16 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
+
 from pycroft.lib.logging import log_user_event, log_room_event
 from pycroft.model import session
 from pycroft.model.dormitory import Room
 from pycroft.model.logging import RoomLogEntry
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.logging_fixtures import (
-    UserData, UserLogEntryData, RoomData, RoomLogEntryData)
+from tests.fixtures.dummy.dormitory import RoomData
+from tests.fixtures.dummy.logging import UserLogEntryData, RoomLogEntryData
+from tests.fixtures.dummy.user import UserData
 
 
 class LogTestBase(FixtureDataTestBase):
@@ -17,7 +19,7 @@ class LogTestBase(FixtureDataTestBase):
 
     def setUp(self):
         super(LogTestBase, self).setUp()
-        self.user = User.q.filter_by(login=UserData.dummy_user1.login).one()
+        self.user = User.q.filter_by(login=UserData.dummy.login).one()
 
 
 class Test_010_UserLogEntry(LogTestBase):

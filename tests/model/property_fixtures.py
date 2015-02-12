@@ -5,36 +5,6 @@ from datetime import datetime
 from fixture import DataSet
 
 
-class DormitoryData(DataSet):
-    class dummy_house:
-        number = "01"
-        short_name = "abc"
-        street = "dummy"
-
-
-class RoomData(DataSet):
-    class dummy_room:
-        number = 1
-        level = 1
-        inhabitable = True
-        dormitory = DormitoryData.dummy_house
-
-
-class FinanceAccountData(DataSet):
-    class finance_account:
-        name = ''
-        type = 'ASSET'
-
-
-class UserData(DataSet):
-    class dummy_user:
-        login = "test"
-        name = "John Doe"
-        registered_at = datetime.utcnow()
-        room = RoomData.dummy_room
-        finance_account = FinanceAccountData.finance_account
-
-
 class PropertyGroupData(DataSet):
     class group1:
         name = "group1"

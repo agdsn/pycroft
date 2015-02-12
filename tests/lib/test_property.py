@@ -11,8 +11,8 @@ from pycroft.model.property import PropertyGroup, Property, Membership
 from pycroft.model.user import User
 from pycroft.model import session
 from tests import FixtureDataTestBase
-from tests.lib.fixtures.property_fixtures import (
-    UserData, PropertyGroupData, PropertyData)
+from tests.fixtures.dummy.property import PropertyGroupData, PropertyData
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_030_Membership(FixtureDataTestBase):
@@ -21,8 +21,8 @@ class Test_030_Membership(FixtureDataTestBase):
     def setUp(self):
         super(Test_030_Membership, self).setUp()
         self.group = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.dummy_property_group1.name).one()
-        self.user = User.q.filter_by(login=UserData.dummy_user1.login).one()
+            name=PropertyGroupData.dummy.name).one()
+        self.user = User.q.filter_by(login=UserData.dummy.login).one()
 
     def assertMembershipIntervalsEqual(self, expected):
         memberships = session.session.query(Membership).filter_by(
@@ -93,7 +93,7 @@ class Test_040_Property(FixtureDataTestBase):
     def setUp(self):
         super(Test_040_Property, self).setUp()
         self.test_property = Property.q.filter_by(
-            name=PropertyData.dummy_property1.name).one()
+            name=PropertyData.granted.name).one()
         self.property_name = self.test_property.name
         self.group = self.test_property.property_group
 
@@ -133,10 +133,5 @@ class Test_040_Property(FixtureDataTestBase):
             self.fail(e.message)
 
     def test_0035_remove_wrong_property(self):
-        empty_group = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.dummy_property_group2_empty.name).one()
-
         self.assertRaisesInTransaction(ValueError, remove_property, self.group,
-                                       self.property_name + "_fail")
-        self.assertRaisesInTransaction(ValueError, remove_property, empty_group,
-                                       self.property_name)
+                                       "non_existent_property")

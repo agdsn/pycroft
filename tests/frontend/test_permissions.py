@@ -7,7 +7,7 @@
 from flask import url_for
 
 from tests import FrontendDataTestBase
-from tests.frontend.fixtures import *
+from tests.fixtures.permissions import UserData, MembershipData, PropertyData
 
 
 class Test_010_Anonymous(FrontendDataTestBase):

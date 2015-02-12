@@ -5,6 +5,7 @@ import random
 import unittest
 from crypt import crypt as python_crypt
 from datetime import timedelta
+
 from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
 
 from pycroft.model import dormitory, session, property, user
@@ -13,9 +14,10 @@ from pycroft.helpers.user import (
     generate_password, hash_password, verify_password, generate_crypt_salt)
 from pycroft.model.finance import FinanceAccount
 from tests import FixtureDataTestBase
-from tests.model.fixtures.user_fixtures import (
-    DormitoryData, MembershipData, PropertyData, PropertyGroupData, RoomData,
-    TrafficGroupData, UserData)
+from tests.fixtures.dummy.dormitory import DormitoryData, RoomData
+from tests.fixtures.dummy.property import (
+    MembershipData, PropertyData, PropertyGroupData, TrafficGroupData)
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_PasswordGenerator(unittest.TestCase):
@@ -91,7 +93,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
     def test_0010_password_hash_validator(self):
-        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         password = generate_password(4)
         pw_hash = hash_password(password)
 
@@ -107,16 +109,15 @@ class Test_030_User_Passwords(FixtureDataTestBase):
         self.assertRaisesRegexp(AssertionError, "Cannot clear the password hash!", set_hash, None)
         session.session.commit()
 
-
     def test_0020_set_and_verify_password(self):
-        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         password = generate_password(4)
         pw_hash = hash_password(password)
 
         u.set_password(password)
         session.session.commit()
 
-        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         self.assertTrue(u.check_password(password))
         self.assertIsNotNone(user.User.verify_and_get(u.login, password))
         self.assertEqual(user.User.verify_and_get(u.login, password), u)
@@ -168,7 +169,7 @@ class Test_040_User_Login(FixtureDataTestBase):
             self.assertRaisesRegexp(Exception, "invalid unix-login!",
                                     set_login, login)
 
-        u = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         self.assertRaisesRegexp(
             AssertionError,
             "user already in the database - cannot change login anymore!",
@@ -182,11 +183,11 @@ class TestActiveHybridMethods(FixtureDataTestBase):
 
     def setUp(self):
         super(TestActiveHybridMethods, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
         self.property_group = property.PropertyGroup.q.filter_by(
-            name=PropertyGroupData.dummy_group.name).one()
+            name=PropertyGroupData.dummy.name).one()
         self.traffic_group = property.TrafficGroup.q.filter_by(
-            name=TrafficGroupData.dummy_group.name).one()
+            name=TrafficGroupData.dummy.name).one()
 
     def add_membership(self, group):
         m = property.Membership(user=self.user, group=group)
@@ -286,7 +287,7 @@ class Test_has_property(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_has_property, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
 
     def test_positive_test(self):
         self.assertTrue(self.user.has_property(PropertyData.granted.name))

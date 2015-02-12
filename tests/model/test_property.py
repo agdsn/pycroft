@@ -1,12 +1,14 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime, timedelta
-import unittest
+from datetime import timedelta
+
 from tests import FixtureDataTestBase
-from pycroft.model import session, user, property, _all
-from tests.model.fixtures.property_fixtures import DormitoryData, RoomData, \
-    UserData, PropertyData, PropertyGroupData, TrafficGroupData
+from pycroft.model import session, user, property
+from tests.fixtures.dummy.dormitory import (DormitoryData, RoomData)
+from tests.fixtures.dummy.user import UserData
+from tests.model.property_fixtures import (
+    PropertyData, PropertyGroupData, TrafficGroupData)
 
 
 class PropertyDataTestBase(FixtureDataTestBase):
@@ -15,7 +17,7 @@ class PropertyDataTestBase(FixtureDataTestBase):
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy_user.login).one()
+        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
         self.property_group1 = property.PropertyGroup.q.filter_by(
             name=PropertyGroupData.group1.name).one()
         self.property_group2 = property.PropertyGroup.q.filter_by(

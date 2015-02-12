@@ -1,16 +1,20 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-__author__ = 'l3nkz'
+from sqlalchemy import inspect
 
-from tests.model.fixtures.dns_fixtures import ARecordData, AAAARecordData,\
-    MXRecordData, CNAMERecordData, NSRecordData, SRVRecordData, IpData, UserHostData
+import ipaddr
+
 from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
     CNAMERecord, NSRecord, SRVRecord
-from tests import FixtureDataTestBase
-from pycroft.model.host import      Ip, UserHost
+from pycroft.model.host import Ip, UserHost
 from pycroft.model import session
-import ipaddr
+from tests import FixtureDataTestBase
+from tests.fixtures.dummy.dns import (
+    ARecordData, AAAARecordData, MXRecordData, CNAMERecordData, NSRecordData,
+    SRVRecordData)
+from tests.fixtures.dummy.host import IpData, UserHostData
+
 
 class Test_010_ARecordValidator(FixtureDataTestBase):
     datasets = [ARecordData, IpData]
@@ -118,9 +122,9 @@ class Test_030_GenEntryMethods(FixtureDataTestBase):
     def test_0025_aaaa_record_with_ttl(self):
         record = AAAARecord.q.filter(AAAARecord.time_to_live != None).first()
         entry = record.gen_entry
-        entry_expected = u"{} {} IN AAAA {}".format(record.name,\
-                                                record.time_to_live,
-                                                record.address.address)
+        entry_expected = u"{} {} IN AAAA {}".format(record.name,
+                                                    record.time_to_live,
+                                                    record.address.address)
 
         self.assertEqual(entry, entry_expected)
 
@@ -200,41 +204,32 @@ class Test_040_Cascades(FixtureDataTestBase):
         self.assertIsNone(SRVRecord.q.first())
         self.assertIsNone(NSRecord.q.first())
 
-
     def test_0020_cname_on_a_record_delete(self):
-        for record in ARecord.q.all():
-            session.session.delete(record)
-
+        a_record = ARecord.q.filter_by(
+            name=ARecordData.without_ttl.name, time_to_live=None).one()
+        c_names = a_record.cnames
+        session.session.delete(a_record)
         session.session.commit()
-
-        self.assertIsNone(CNAMERecord.q.filter(
-            CNAMERecord.id == CNAMERecordData.dummy_record.id).first())
-
+        self.assertTrue(all(inspect(r).deleted for r in c_names))
 
     def test_0030_cname_on_aaaa_record_delete(self):
-        for record in AAAARecord.q.all():
-            session.session.delete(record)
-
+        aaaa_record = AAAARecord.q.filter_by(
+            name=AAAARecordData.without_ttl.name, time_to_live=None).one()
+        c_names = aaaa_record.cnames
+        session.session.delete(aaaa_record)
         session.session.commit()
-
-        self.assertIsNone(CNAMERecord.q.filter(
-            CNAMERecord.id == CNAMERecordData.dummy_record2.id).first())
-
+        self.assertTrue(all(inspect(r).deleted for r in c_names))
 
     def test_0040_a_record_on_ip_delete(self):
-        ip = Ip.q.filter(Ip.id == IpData.ip_v4.id).first()
-        a_record_id = ARecord.q.filter(ARecord.address == ip).first().id
+        ip = Ip.q.filter_by(address=IpData.dummy_user_ipv4.address).one()
+        a_records = ip.a_records
         session.session.delete(ip)
-
         session.session.commit()
-
-        self.assertIsNone(ARecord.q.get(a_record_id))
+        self.assertTrue(all(inspect(r).deleted for r in a_records))
 
     def test_0045_aaaa_record_on_ip_delete(self):
-        ip = Ip.q.filter(Ip.id == IpData.ip_v6.id).first()
-        aaaa_record_id = AAAARecord.q.filter(AAAARecord.address == ip).first().id
+        ip = Ip.q.filter_by(address=IpData.dummy_user_ipv6.address).one()
+        aaaa_records = ip.aaaa_records
         session.session.delete(ip)
-
         session.session.commit()
-
-        self.assertIsNone(AAAARecord.q.get(aaaa_record_id))
+        self.assertTrue(all(inspect(r).deleted for r in aaaa_records))

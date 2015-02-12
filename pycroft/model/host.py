@@ -174,7 +174,8 @@ class NetDevice(ModelBase):
 
 
 class UserNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
+    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+                primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "user_net_device"}
 
@@ -184,7 +185,8 @@ class UserNetDevice(NetDevice):
 
 
 class ServerNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
+    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+                primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "server_net_device"}
 
@@ -198,7 +200,8 @@ class ServerNetDevice(NetDevice):
 
 
 class SwitchNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey('net_device.id'), primary_key=True)
+    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+                primary_key=True)
 
     __mapper_args__ = {'polymorphic_identity': "switch_net_device"}
 

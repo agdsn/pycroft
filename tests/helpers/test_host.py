@@ -1,28 +1,29 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import unittest
-from tests import FixtureDataTestBase
+from itertools import islice
 from random import randint
+
 import ipaddr
 
+from tests import FixtureDataTestBase
 from pycroft.lib.host import change_mac
-
 from pycroft.helpers.host import sort_ports, generate_hostname, \
     get_free_ip, select_subnet_for_ip, SubnetFullException
 from pycroft.model import dormitory, session, user, logging
-from pycroft.model.host import Host, UserNetDevice, Ip
-
-from tests.helpers.fixtures.host_fixtures import DormitoryData, VLANData, \
-    SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData
+from pycroft.model.host import UserNetDevice, Ip, UserHost
+from tests.fixtures.dummy.dormitory import DormitoryData, RoomData, VLANData
+from tests.fixtures.dummy.host import (
+    SubnetData, UserHostData, UserNetDeviceData)
+from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_SimpleHostsHelper(unittest.TestCase):
     def test_0010_sort_ports(self):
-        ports = []
-        for letter in ["A", "B", "C", "D", "E", "F", "G"]:
-            for number in range(1, 24):
-                ports.append("{}{:d}".format(letter, number))
+        ports = ["{0}{1:d}".format(letter, number)
+                 for letter in ["A", "B", "C", "D", "E", "F", "G"]
+                 for number in range(1, 24)]
 
         class fake_port(object):
             def __init__(self, name):
@@ -49,50 +50,51 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
 class Test_020_IpHelper(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
-    def ip_s1(self, num):
-        net_parts = SubnetData.subnet1.gateway.split(".")
-        net_parts[3] = str(1 + SubnetData.subnet1.reserved_addresses + num)
-        return '.'.join(net_parts)
+    def calculate_usable_ips(self, net):
+        ips = ipaddr.IPNetwork(net.address).numhosts
+        return ips - net.reserved_addresses - 2
 
-    def ip_s2(self, num):
-        net_parts = SubnetData.subnet2.gateway.split(".")
-        net_parts[3] = str(1 + SubnetData.subnet2.reserved_addresses + num)
-        return '.'.join(net_parts)
+    def assertIPInSubnet(self, ip, subnet):
+        self.assertIn(ipaddr.IPAddress(ip), ipaddr.IPNetwork(subnet.address))
 
     def test_0010_get_free_ip_simple(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
-        ip = get_free_ip(subnets)
-        self.assertEqual(ip, self.ip_s1(0))
+        for subnet in subnets:
+            ip = get_free_ip((subnet,))
+            self.assertIPInSubnet(ip, subnet)
 
     def test_0020_select_subnet_for_ip(self):
         subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
         for subnet in subnets:
-            for ip in ipaddr.IPNetwork(subnet.address).iterhosts():
+            for ip in islice(ipaddr.IPNetwork(subnet.address).iterhosts(), 100):
                 selected = select_subnet_for_ip(ip.compressed, subnets)
                 self.assertEqual(subnet, selected)
 
+    def fill_net(self, net, net_device):
+        for num in range(0, self.calculate_usable_ips(net)):
+            ip = get_free_ip((net,))
+            session.session.add(Ip(address=ip, subnet=net, net_device=net_device))
+        session.session.commit()
+
     def test_0030_get_free_ip_next_to_full(self):
-        subnets = dormitory.Subnet.q.order_by(dormitory.Subnet.gateway).all()
-        host = Host.q.filter(Host.id == UserHostData.dummy_host1.id).one()
+        subnets = dormitory.Subnet.q.filter_by(ip_type="4").limit(2).all()
+        host = UserHost.q.one()
 
-        nd = UserNetDevice(mac="00:00:00:00:00:00", host = host)
-        for num in range(0, 490):
-            if num >= 488:
-                self.assertRaises(SubnetFullException, get_free_ip, subnets)
-                continue
-            ip = get_free_ip(subnets)
-            net = select_subnet_for_ip(ip, subnets)
-            if num < 244:
-                self.assertEqual(ip, self.ip_s1(num))
-            else:
-                self.assertEqual(ip, self.ip_s2(num % 244))
+        self.assertEqual(len(subnets), 2)
+        total_ips = sum(self.calculate_usable_ips(net) for net in subnets)
 
-            ip_addr = Ip(address=ip, subnet=net, net_device=nd)
-            session.session.add(ip_addr)
-            session.session.commit()
+        first_net = subnets[0]
+        self.fill_net(first_net, host.user_net_device)
+        session.session.refresh(first_net)
+        self.assertRaises(SubnetFullException, get_free_ip, (first_net,))
+        try:
+            get_free_ip(subnets)
+        except SubnetFullException:
+            self.fail("Subnets should have free IPs.")
+        self.fill_net(subnets[1], host.user_net_device)
+        self.assertRaises(SubnetFullException, get_free_ip, subnets)
 
-        Ip.q.filter(Ip.net_device == nd).delete()
-        session.session.delete(nd)
+        session.session.delete(host)
         session.session.commit()
 
 
@@ -113,6 +115,3 @@ class Test_030_change_mac_net_device(FixtureDataTestBase):
         new_mac = "20:00:00:00:00:00"
         change_mac(self.dummy_device, new_mac, self.processing_user)
         self.assertEqual(self.dummy_device.mac, new_mac)
-
-
-

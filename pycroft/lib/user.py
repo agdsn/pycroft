@@ -121,7 +121,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     new_user.finance_account.name = account_name
 
     # create one new host (including net_device) for the new user
-    subnets = dormitory.subnets
+    subnets = filter(lambda s: s.ip_type == '4', dormitory.subnets)
     ip_address = host.get_free_ip(subnets)
     subnet = host.select_subnet_for_ip(ip_address, subnets)
     #ToDo: Which port to choose if room has more than one?
@@ -206,30 +206,25 @@ def move(user, dormitory, level, room_number, processor):
         user=user
     )
 
-    # assign a new IP to each net_device
-    for user_host in user.user_hosts:
-        net_dev = user_host.user_net_device
-
-        if old_room.dormitory_id != new_room.dormitory_id:
-            assert len(net_dev.ips) == 1, "A user should only have one ip!"
-            ip_addr = net_dev.ips[0]
-            old_ip = ip_addr.address
-            new_ip = host.get_free_ip(dormitory.subnets)
-            new_subnet = host.select_subnet_for_ip(new_ip,
-                                                   dormitory.subnets)
-
-            ip_addr.change_ip(new_ip, new_subnet)
-
-            log_user_event(
-                author=processor,
-                message=messages["move"]["ip_change_log_message"].format(
-                    old_ip=old_ip, new_ip=new_ip),
-                user=user)
-
-    #TODO set new PatchPort for each NetDevice in each Host that moves to the new room
-    #moves the host in the new room and assign the belonging net_device to the new patch_port
     for user_host in user.user_hosts:
         user_host.room = new_room
+        net_dev = user_host.user_net_device
+
+        # assign a new IP to each net_device
+        if old_room.dormitory_id != new_room.dormitory_id:
+            for ip in net_dev.ips:
+                old_ip = ip.address
+                new_ip = host.get_free_ip(dormitory.subnets)
+                new_subnet = host.select_subnet_for_ip(new_ip,
+                                                       dormitory.subnets)
+
+                ip.change_ip(new_ip, new_subnet)
+
+                log_user_event(
+                    author=processor,
+                    message=messages["move"]["ip_change_log_message"].format(
+                        old_ip=old_ip, new_ip=new_ip),
+                    user=user)
 
     return user
 
