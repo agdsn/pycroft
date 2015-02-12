@@ -11,12 +11,14 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-import ipaddr
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy import Table, Column
+
 from sqlalchemy.orm import backref, object_session, relationship
-from sqlalchemy.types import Boolean, Integer, String, Enum
+from sqlalchemy.types import Boolean, Integer, String
+
 from pycroft.model.base import ModelBase
+from pycroft.model.host import VLAN, Subnet
 
 
 association_table_dormitory_vlan = Table(
@@ -24,12 +26,6 @@ association_table_dormitory_vlan = Table(
     ModelBase.metadata,
     Column('dormitory_id', Integer, ForeignKey('dormitory.id')),
     Column('vlan_id', Integer, ForeignKey('vlan.id')))
-
-association_table_subnet_vlan = Table(
-    "association_subnet_vlan",
-    ModelBase.metadata,
-    Column("subnet_id", Integer, ForeignKey("subnet.id")),
-    Column("vlan_id", Integer, ForeignKey("vlan.id")))
 
 
 class Dormitory(ModelBase):
@@ -70,31 +66,3 @@ class Room(ModelBase):
 
     def __repr__(self):
         return u"{} {:d}{}".format(self.dormitory, self.level, self.number)
-
-
-class VLAN(ModelBase):
-    name = Column(String(127), nullable=False)
-    tag = Column(Integer, nullable=False)
-
-
-class Subnet(ModelBase):
-    #address = Column(postgresql.INET, nullable=False)
-    address = Column(String(51), nullable=False)
-    #gateway = Column(postgresql.INET, nullable=False)
-    gateway = Column(String(51), nullable=False)
-    dns_domain = Column(String)
-    reserved_addresses = Column(Integer, default=0, nullable=False)
-    ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
-
-    # many to many from Subnet to VLAN
-    vlans = relationship(VLAN, backref=backref("subnets"),
-                         secondary=association_table_subnet_vlan)
-
-    @property
-    def netmask(self):
-        net = ipaddr.IPNetwork(self.address)
-        return str(net.netmask)
-
-    @property
-    def ip_version(self):
-        return ipaddr.IPNetwork(self.address).version

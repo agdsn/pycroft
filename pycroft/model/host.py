@@ -12,11 +12,9 @@
 """
 import re
 import ipaddr
-from sqlalchemy import Column, ForeignKey, event
+from sqlalchemy import Column, Enum, ForeignKey, Table, event
 from sqlalchemy.orm import backref, object_session, relationship, validates
-from sqlalchemy.types import Integer
-from sqlalchemy.types import String
-from pycroft.model import facilities
+from sqlalchemy.types import Integer, String
 from pycroft.model.base import ModelBase
 from pycroft.helpers.host import MacExistsException
 
@@ -30,7 +28,7 @@ class Host(ModelBase):
                      nullable=True)
 
     # many to one from Host to Room
-    room = relationship(facilities.Room, backref=backref("hosts"))
+    room = relationship("Room", backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
                      nullable=True)
 
