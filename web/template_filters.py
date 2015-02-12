@@ -18,7 +18,7 @@ import flask.ext.babel
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import ARecord, CNAMERecord
-from pycroft.model.host import Host, Ip
+from pycroft.model.net import Host, Ip
 
 _filter_registry = {}
 

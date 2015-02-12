@@ -16,12 +16,12 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
 import operator
 from sqlalchemy import Text
 from pycroft import lib
-from pycroft.helpers import host
+from pycroft.helpers import net
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model import functions, session
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserNetDevice, Ip
+from pycroft.model.net import Host, UserNetDevice, Ip
 from pycroft.model.user import User
 from pycroft.model.property import Membership, PropertyGroup, TrafficGroup
 from pycroft.model.accounting import TrafficVolume
@@ -368,8 +368,8 @@ def create():
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
-        except (host.MacExistsException,
-                host.SubnetFullException,
+        except (net.MacExistsException,
+                net.SubnetFullException,
                 ValueError), error:
             flash(error.message, 'error')
             session.session.rollback()
@@ -679,7 +679,7 @@ def change_mac(user_net_device_id):
     if not form.is_submitted():
         form.mac.data = my_net_device.mac
     if form.validate_on_submit():
-        changed_net_device = lib.host.change_mac(net_device=my_net_device,
+        changed_net_device = lib.net.change_mac(net_device=my_net_device,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')

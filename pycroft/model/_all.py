@@ -14,7 +14,7 @@ This is necessary for things like sqlalchemy-schemadisplay.
 
 from pycroft.model.base import *
 from pycroft.model.facilities import *
-from pycroft.model.host import *
+from pycroft.model.net import *
 from pycroft.model.logging import *
 from pycroft.model.session import *
 from pycroft.model.finance import *

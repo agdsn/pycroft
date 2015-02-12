@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
 
-from tests.fixtures.dummy.host import IpData, UserHostData
+from tests.fixtures.dummy.net import IpData, UserHostData
 
 
 class ARecordData(DataSet):

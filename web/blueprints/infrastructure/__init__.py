@@ -13,9 +13,9 @@
 
 from flask import Blueprint, flash, redirect, render_template, url_for, jsonify, \
     abort
-from pycroft.helpers import host
+from pycroft.helpers import net
 from pycroft.model import session
-from pycroft.model.host import Switch, Host, VLAN, Subnet
+from pycroft.model.net import Switch, Host, VLAN, Subnet
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import SwitchPortForm
@@ -238,7 +238,7 @@ def switch_show_json(switch_id):
     if not switch:
         abort(404)
     switch_port_list = switch.ports
-    switch_port_list = host.sort_ports(switch_port_list)
+    switch_port_list = net.sort_ports(switch_port_list)
     return jsonify(items=map(
         lambda port: {
             "portname": port.name,

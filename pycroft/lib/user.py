@@ -17,14 +17,14 @@ import re
 from sqlalchemy.sql.expression import func, literal
 
 from pycroft import messages, config
-from pycroft.helpers import user, host
+from pycroft.helpers import user, net
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.interval import Interval, closed, closedopen
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import ARecord, CNAMERecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import FinanceAccount
-from pycroft.model.host import Host, Ip, UserHost, UserNetDevice
+from pycroft.model.net import Host, Ip, UserHost, UserNetDevice
 from pycroft.model.property import TrafficGroup, Membership, Group, PropertyGroup
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -122,8 +122,8 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     # create one new host (including net_device) for the new user
     subnets = filter(lambda s: s.ip_type == '4', dormitory.subnets)
-    ip_address = host.get_free_ip(subnets)
-    subnet = host.select_subnet_for_ip(ip_address, subnets)
+    ip_address = net.get_free_ip(subnets)
+    subnet = net.select_subnet_for_ip(ip_address, subnets)
     #ToDo: Which port to choose if room has more than one?
     # --> The one that is connected to a switch!
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
@@ -135,7 +135,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
     session.session.add(new_ip)
     new_a_record = ARecord(host=new_host, time_to_live=None,
-                           name=host.generate_hostname(ip_address),
+                           name=net.generate_hostname(ip_address),
                            address=new_ip)
     session.session.add(new_a_record)
     if host_name:
@@ -214,8 +214,8 @@ def move(user, dormitory, level, room_number, processor):
         if old_room.dormitory_id != new_room.dormitory_id:
             for ip in net_dev.ips:
                 old_ip = ip.address
-                new_ip = host.get_free_ip(dormitory.subnets)
-                new_subnet = host.select_subnet_for_ip(new_ip,
+                new_ip = net.get_free_ip(dormitory.subnets)
+                new_subnet = net.select_subnet_for_ip(new_ip,
                                                        dormitory.subnets)
 
                 ip.change_ip(new_ip, new_subnet)
@@ -423,8 +423,8 @@ def is_back(user, processor):
     remove_member_of(user, away_group, closedopen(session.utcnow(), None))
 
     subnets = user.room.dormitory.subnets
-    ip_address = host.get_free_ip(subnets)
-    subnet = host.select_subnet_for_ip(ip_address, subnets)
+    ip_address = net.get_free_ip(subnets)
+    subnet = net.select_subnet_for_ip(ip_address, subnets)
 
     for user_host in user.user_hosts:
         session.session.add(Ip(

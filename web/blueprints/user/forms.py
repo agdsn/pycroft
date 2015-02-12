@@ -2,12 +2,12 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime
 from flask.ext.wtf import Form
-from wtforms.validators import Regexp, NumberRange, ValidationError, \
-    DataRequired, Optional, Email
+from wtforms.validators import (
+    Regexp, NumberRange, ValidationError, DataRequired, Email)
+from pycroft.helpers.net import mac_regex
 from pycroft.model.user import User
-from pycroft.model.host import Host, NetDevice
+from pycroft.model.net import Host
 from pycroft.model.property import PropertyGroup
 from pycroft.model.finance import Semester
 from web.blueprints.facilities.forms import dormitory_query
@@ -15,6 +15,7 @@ from web.form.fields.core import TextField, TextAreaField, BooleanField,\
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
 from web.form.fields.validators import OptionalIf
+
 
 def user_query():
     return User.q.order_by(User.id)
@@ -76,7 +77,7 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
     mac = TextField(u"MAC", [
-        Regexp(regex=NetDevice.mac_regex, message=u"MAC ist ungültig!")])
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!")])
     moved_from_division = BooleanField(u"Umzug aus anderer Sektion")
@@ -122,7 +123,7 @@ class UserMoveOutForm(Form):
 
 class NetDeviceChangeMacForm(Form):
     mac = TextField(u"MAC", [
-        Regexp(regex=NetDevice.mac_regex, message=u"MAC ist ungültig!")])
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
 
 
 class UserSelectGroupForm(Form):

@@ -41,8 +41,8 @@ class Test_010_SchemaMapping(unittest.TestCase):
         self.assertIsNone(msg, msg)
 
     def test_0030_mapping_hosts(self):
-        from pycroft.model import host
-        msg = try_mapper(host)
+        from pycroft.model import net
+        msg = try_mapper(net)
         self.assertIsNone(msg, msg)
 
     def test_0040_mapping_logging(self):

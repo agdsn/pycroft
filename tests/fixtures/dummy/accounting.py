@@ -5,7 +5,7 @@ from datetime import datetime
 
 from fixture import DataSet
 
-from tests.fixtures.dummy.host import IpData
+from tests.fixtures.dummy.net import IpData
 
 
 class TrafficVolumeData(DataSet):
