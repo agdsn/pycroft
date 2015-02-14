@@ -19,11 +19,12 @@ from pycroft import lib
 from pycroft.helpers import net
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
+from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
-from pycroft.model.net import Host, UserNetDevice, Ip
+from pycroft.model.host import Host, UserNetDevice, Ip
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
@@ -368,8 +369,8 @@ def create():
             flash(u'Benutzer angelegt', 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
-        except (net.MacExistsException,
-                net.SubnetFullException,
+        except (MacExistsException,
+                SubnetFullException,
                 ValueError), error:
             flash(error.message, 'error')
             session.session.rollback()

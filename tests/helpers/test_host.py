@@ -8,14 +8,17 @@ from random import randint
 import ipaddr
 
 from tests import FixtureDataTestBase
-from pycroft.lib.net import change_mac
-from pycroft.helpers.net import sort_ports, generate_hostname, \
-    get_free_ip, select_subnet_for_ip, SubnetFullException
-from pycroft.model import facilities, session, user, logging
-from pycroft.model.net import UserNetDevice, Ip, UserHost, Subnet
+from pycroft.lib.host import change_mac, generate_hostname
+from pycroft.helpers.net import sort_ports
+from pycroft.lib.net import (
+    SubnetFullException, get_free_ip,  select_subnet_for_ip)
+from pycroft.model import session, user, logging
+from pycroft.model.host import UserNetDevice, Ip, UserHost
+from pycroft.model.net import Subnet
 from tests.fixtures.dummy.facilities import DormitoryData, RoomData, VLANData
-from tests.fixtures.dummy.net import (
-    SubnetData, UserHostData, UserNetDeviceData)
+from tests.fixtures.dummy.host import (
+    UserHostData, UserNetDeviceData)
+from tests.fixtures.dummy.net import SubnetData
 from tests.fixtures.dummy.user import UserData
 
 

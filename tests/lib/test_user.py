@@ -4,19 +4,20 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from pycroft.model.net import PatchPort
+from pycroft.model.port import PatchPort
 from pycroft.model.user import Membership, PropertyGroup
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, facilities, session, logging, finance, dns, net)
+    user, facilities, session, logging, finance, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import VLANData, DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
-from tests.fixtures.dummy.net import (
-    IpData, SubnetData, PatchPortData,UserNetDeviceData, UserHostData)
+from tests.fixtures.dummy.host import (
+    IpData, PatchPortData,UserNetDeviceData, UserHostData)
+from tests.fixtures.dummy.net import SubnetData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
 
@@ -115,8 +116,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.user_hosts[0].user_net_device.mac, test_mac)
 
-        user_host = net.UserHost.q.filter_by(user=new_user).one()
-        user_net_device = net.UserNetDevice.q.filter_by(host=user_host).one()
+        user_host = host.UserHost.q.filter_by(user=new_user).one()
+        user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
         self.assertEqual(user_net_device.mac, test_mac)
         user_cname_record = dns.CNAMERecord.q.filter_by(host=user_host).one()
         self.assertEqual(user_cname_record.name, test_hostname)

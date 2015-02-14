@@ -18,6 +18,7 @@ from sqlalchemy.orm import backref, object_session, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
 from pycroft.model.base import ModelBase
+from pycroft.model.host import Subnet
 from pycroft.model.net import VLAN, Subnet
 
 

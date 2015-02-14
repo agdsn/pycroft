@@ -1,27 +1,34 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import datetime
-from pycroft.lib.logging import log_user_event
-from pycroft.model.logging import UserLogEntry
-from pycroft.model import session
-from pycroft.model.session import with_transaction
+from itertools import islice, ifilter
+import ipaddr
 
 
-@with_transaction
-def change_mac(net_device, mac, processor):
-    """
-    This method will change the mac address of the given net device to the new
-    mac address.
+class SubnetFullException(Exception):
+    pass
 
-    :param net_device: the net device which should become a new mac address.
-    :param mac: the new mac address.
-    :param processor: the user who initiated the mac address change.
-    :return: the changed net device with the new mac address.
-    """
-    old_mac = net_device.mac
-    net_device.mac = mac
-    message = u"Die Mac-Adresse von {} zu {} geändert.".format(old_mac, mac)
-    log_user_event(message, processor, net_device.host.user)
-    return net_device
+
+class MacExistsException(Exception):
+    pass
+
+
+def get_free_ip(subnets):
+    for subnet in subnets:
+        reserved = subnet.reserved_addresses or 0
+        net = ipaddr.IPNetwork(subnet.address)
+        used_ips = frozenset(ipaddr.IPAddress(ip.address) for ip in subnet.ips)
+        unreserved = islice(net.iterhosts(), reserved, None)
+        unused = ifilter(lambda ip: ip not in used_ips, unreserved)
+        try:
+            return next(unused).compressed
+        except StopIteration:
+            continue
+
+    raise SubnetFullException()
+
+
+def select_subnet_for_ip(ip, subnets):
+    for subnet in subnets:
+        if ipaddr.IPAddress(ip) in ipaddr.IPNetwork(subnet.address):
+            return subnet

@@ -18,5 +18,7 @@ from .dns import *
 from .facilities import *
 from .finance import *
 from .logging import *
+from .host import *
+from .port import *
 from .net import *
 from .user import *

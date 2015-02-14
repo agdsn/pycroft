@@ -7,7 +7,7 @@
 from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, Regexp
 from pycroft.model.dns import ARecord
-from pycroft.model.net import Port
+from pycroft.model.port import Port
 from web.form.fields.core import TextField, SelectField, QuerySelectField
 from web.form.fields.custom import ReadonlyTextField
 

@@ -7,13 +7,13 @@ import ipaddr
 
 from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
     CNAMERecord, NSRecord, SRVRecord
-from pycroft.model.net import Ip, UserHost
+from pycroft.model.host import Ip, UserHost
 from pycroft.model import session
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.dns import (
     ARecordData, AAAARecordData, MXRecordData, CNAMERecordData, NSRecordData,
     SRVRecordData)
-from tests.fixtures.dummy.net import IpData, UserHostData
+from tests.fixtures.dummy.host import IpData, UserHostData
 
 
 class Test_010_ARecordValidator(FixtureDataTestBase):
