@@ -238,15 +238,12 @@ def edit_name(user, name, processor):
     :param name: The new full name.
     :return: The changed user object.
     """
-    oldName = user.name
-    if len(name):
-        user.name = name
-
-        log_user_event(
-            author=processor,
-            message=u"Nutzer {} umbenannt in {}".format(oldName, name),
-            user=user)
-
+    if not name:
+        raise ValueError()
+    old_name = user.name
+    user.name = name
+    log_user_event(author=processor, user=user,
+                   message=u"Nutzer {} umbenannt in {}".format(old_name, name))
     return user
 
 
@@ -259,15 +256,13 @@ def edit_email(user, email, processor):
     :param processor:User object of the processor, which issues the change
     :return:Changed user object
     """
-    oldEmail = user.email
-    if len(email):
-        user.email = email
-
-        log_user_event(
-            author=processor,
-            message=u"E-Mail-Adresse von {} auf {} geändert.".format(oldEmail, email),
-            user=user)
-
+    if not email:
+        raise ValueError()
+    old_email = user.email
+    user.email = email
+    log_user_event(author=processor, user=user,
+                   message=u"E-Mail-Adresse von {} auf {} "
+                           u"geändert.".format(old_email, email))
     return user
 
 

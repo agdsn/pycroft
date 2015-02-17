@@ -201,19 +201,10 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
         super(Test_040_User_Edit_Name, self).tearDown()
 
     def test_0010_correct_new_name(self):
-        print self.user.name
-        print self.user.id
-
-        UserHelper.edit_name(self.user, "toller neuer Name", self.user)
-
-        self.assertEqual(self.user.name, "toller neuer Name")
-
-    def test_0020_name_zero_length(self):
-        old_name = self.user.name
-
-        UserHelper.edit_name(self.user, "", self.user)
-
-        self.assertEqual(self.user.name, old_name)
+        new_name = "A new name"
+        self.assertNotEqual(new_name, self.user.name)
+        UserHelper.edit_name(self.user, new_name, self.user)
+        self.assertEqual(self.user.name, new_name)
 
 
 class Test_050_User_Edit_Email(FixtureDataTestBase):
@@ -230,16 +221,10 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         super(Test_050_User_Edit_Email, self).tearDown()
 
     def test_0010_correct_new_email(self):
-        UserHelper.edit_email(self.user, "sebastian@schrader.de", self.user)
-
-        self.assertEqual(self.user.email, "sebastian@schrader.de")
-
-    def test_0020_email_zero_length(self):
-        old_email = self.user.email
-
-        UserHelper.edit_email(self.user, "", self.user)
-
-        self.assertEqual(self.user.email, old_email)
+        new_mail = "user@example.net"
+        self.assertNotEqual(new_mail, self.user.email)
+        UserHelper.edit_email(self.user, new_mail, self.user)
+        self.assertEqual(self.user.email, new_mail)
 
 
 class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
