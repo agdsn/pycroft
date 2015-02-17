@@ -1,0 +1,15 @@
+#!/usr/bin/env python2
+
+conn_opts = {
+  "netusers-user": "hovercraft",
+  "netusers-password": "eels",
+  "netusers-port": 3306,
+
+  "userman-user": "hovercraft",
+  "userman-port": 5400,
+
+  "pycroft-user": "vagrant",
+  "pycroft-port": 5432,
+  "pycroft-dbname": "pycroft",
+  "pycroft-legacycache-dbname": "migrate"
+}
