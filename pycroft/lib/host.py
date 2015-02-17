@@ -27,4 +27,14 @@ def change_mac(net_device, mac, processor):
 
 
 def generate_hostname(ip_address):
-    return "whdd" + ip_address.split(u".")[-1]
+    """
+
+    :param IPv4Address ip_address:
+    :rtype: unicode
+    :return:
+    """
+    numeric_ip = int(ip_address)
+    return u"x{0:02x}{1:02x}{2:02x}{3:02x}".format((numeric_ip >> 0x18) & 0xFF,
+                                                   (numeric_ip >> 0x10) & 0xFF,
+                                                   (numeric_ip >> 0x08) & 0xFF,
+                                                   (numeric_ip >> 0x00) & 0xFF)

@@ -18,8 +18,8 @@ import flask.ext.babel
 from pycroft._compat import imap
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.dns import ARecord, CNAMERecord
-from pycroft.model.host import Host, Ip
+from pycroft.model.dns import AddressRecord, CNAMERecord
+from pycroft.model.host import Host, IP
 
 _filter_registry = {}
 
@@ -134,7 +134,7 @@ def host_traffic_filter(host):
     ).join(
         TrafficVolume.ip
     ).join(
-        Ip.host
+        IP.host
     ).filter(
         Host.id == host.id
     ).filter(
@@ -150,30 +150,12 @@ def host_traffic_filter(host):
 
 @template_filter("host_name")
 def host_name_filter(host):
-    a_record = session.session.query(
-        ARecord
-    ).filter(
-        ARecord.host_id == host.id
-    ).first()
-
-    if a_record is not None:
-        return a_record.name
-    else:
-        return "NoName"
+    return "Not Implemented"
 
 
 @template_filter("host_cname")
 def host_cname_filter(host):
-    cname_record = session.session.query(
-        CNAMERecord
-    ).filter(
-        CNAMERecord.host_id == host.id
-    ).first()
-
-    if cname_record is not None:
-        return cname_record.name
-    else:
-        return "NoCName"
+    return "Not Implemented"
 
 
 @template_filter("record_editable")

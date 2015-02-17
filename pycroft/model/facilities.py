@@ -18,15 +18,7 @@ from sqlalchemy.orm import backref, object_session, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
 from pycroft.model.base import ModelBase
-from pycroft.model.host import Subnet
 from pycroft.model.net import VLAN, Subnet
-
-
-association_table_dormitory_vlan = Table(
-    'association_dormitory_vlan',
-    ModelBase.metadata,
-    Column('dormitory_id', Integer, ForeignKey('dormitory.id')),
-    Column('vlan_id', Integer, ForeignKey('vlan.id')))
 
 
 class Dormitory(ModelBase):
@@ -35,10 +27,6 @@ class Dormitory(ModelBase):
     street = Column(String(20), nullable=False)
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
-
-    # many to many from Dormitory to VLAN
-    vlans = relationship("VLAN", backref=backref("dormitories"),
-                         secondary=association_table_dormitory_vlan)
 
     @property
     def subnets(self):

@@ -25,7 +25,7 @@ from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserNetDevice, Ip
+from pycroft.model.host import Host, UserNetDevice, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
@@ -306,7 +306,7 @@ def json_trafficdata(user_id, days=7):
     ).join(
         TrafficVolume.ip
     ).join(
-        Ip.host
+        IP.host
     ).filter(
         Host.user_id == user_id
     ).filter(

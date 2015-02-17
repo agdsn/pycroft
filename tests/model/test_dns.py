@@ -1,235 +1,114 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from itertools import imap, chain
+import operator
 from sqlalchemy import inspect
 
-import ipaddr
-
-from pycroft.model.dns import Record, ARecord, AAAARecord, MXRecord, \
-    CNAMERecord, NSRecord, SRVRecord
-from pycroft.model.host import Ip, UserHost
+from pycroft.model.dns import (
+    AddressRecord, DNSZone, CNAMERecord, MXRecord, NSRecord, SOARecord,
+    SRVRecord, TXTRecord)
+from pycroft.model.host import IP, UserHost
 from pycroft.model import session
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.dns import (
-    ARecordData, AAAARecordData, MXRecordData, CNAMERecordData, NSRecordData,
-    SRVRecordData)
-from tests.fixtures.dummy.host import IpData, UserHostData
+from tests.fixtures.dummy.dns_records import (
+    AddressRecordData, MXRecordData, CNAMERecordData, NSRecordData,
+    SOARecordData, SRVRecordData, TXTRecordData)
+from tests.fixtures.dummy.dns_zones import DNSZoneData
+from tests.fixtures.dummy.host import IPData, UserHostData
+from tests.fixtures.dummy.net import SubnetData
 
 
-class Test_010_ARecordValidator(FixtureDataTestBase):
-    datasets = [ARecordData, IpData]
+class TestZoneGeneration(FixtureDataTestBase):
+    datasets = (AddressRecordData, MXRecordData, CNAMERecordData, NSRecordData,
+                SOARecordData, SRVRecordData, TXTRecordData, SubnetData)
 
-    def test_0010_ip_validate(self):
-        record = ARecord.q.first()
+    record_types = (AddressRecord, CNAMERecord, MXRecord, NSRecord, SOARecord,
+                    SRVRecord, TXTRecord)
 
-        def set_ip(ip):
-            record.address = ip
+    def assertRecordExportCorrect(self, record):
+        record.ttl = None
+        expected = u"{} IN {} {}".format(
+            record.name.name, record.record_type, record.record_data)
+        self.assertEqual(expected, record.export())
+        record.ttl = 1000
+        expected = u"{} {} IN {} {}".format(
+            record.name.name, record.ttl, record.record_type,
+            record.record_data)
+        self.assertEqual(expected, record.export())
 
-        ips = Ip.q.all()
+    def test_address_record(self):
+        for record in AddressRecord.q:
+            self.assertEqual(record.record_data, record.address.address)
+            self.assertRecordExportCorrect(record)
 
-        for ip in ips:
-            if ip.subnet.ip_type == "6":
-                self.assertRaises(AssertionError, set_ip, ip)
-                break
-
-
-class Test_020_AAAARecordValidator(FixtureDataTestBase):
-    datasets = [AAAARecordData, IpData]
-
-    def test_0010_ip_validate(self):
-        record = AAAARecord.q.first()
-
-        def set_ip(ip):
-            record.address = ip
-
-        ips = Ip.q.all()
-
-        for ip in ips:
-            if ip.subnet.ip_type == "4":
-                self.assertRaises(AssertionError, set_ip, ip)
-                break
-
-
-class Test_025_CNAMERecordValidator(FixtureDataTestBase):
-    datasets = [ARecordData, MXRecordData, UserHostData]
-
-    def test_0010_record_for_name_validator(self):
-        a_record = ARecord.q.first()
-        host = UserHost.q.first()
-
-        self.assertRaises(AssertionError, CNAMERecord, name=a_record.name,
-            record_for=a_record, host_id=host.id)
-
-        new_record = CNAMERecord(name=a_record.name + "_test",
-            record_for=a_record, host_id=host.id)
-
-    def test_0020_record_for_type_validator(self):
-        mx_record = MXRecord.q.first()
-        host = UserHost.q.first()
-
-        self.assertRaises(AssertionError, CNAMERecord, name="test",
-            record_for=mx_record, host_id=host.id)
-
-
-class Test_030_GenEntryMethods(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNAMERecordData,
-                NSRecordData, SRVRecordData]
-
-    def test_0010_a_record_without_ttl(self):
-        record = ARecord.q.filter(ARecord.time_to_live == None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN A {}".format(record.name, record.address.address)
-
-        self.assertEqual(entry, entry_expected)
-
-        rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"{}.in-addr.arpa. IN PTR {}".format(
-            ".".join(reversed(record.address.address.split("."))), record.name)
-
-        self.assertEqual(rev_entry, rev_entry_expected)
-
-    def test_0015_a_record_with_ttl(self):
-        record = ARecord.q.filter(ARecord.time_to_live != None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} {} IN A {}".format(
-            record.name, record.time_to_live, record.address.address)
-
-        self.assertEqual(entry, entry_expected)
-
-        rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"{}.in-addr.arpa. {} IN PTR {}".format(
-            ".".join(reversed(record.address.address.split("."))),
-            record.time_to_live, record.name)
-
-        self.assertEqual(rev_entry, rev_entry_expected)
-
-    def test_0020_aaaa_record_without_ttl(self):
-        record = AAAARecord.q.filter(AAAARecord.time_to_live == None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN AAAA {}".format(
-            record.name, record.address.address)
-
-        self.assertEqual(entry, entry_expected)
-
-        rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"{}.ip6.arpa. IN PTR {}".format(
-            ".".join(["{:x}".format(ord(b)) for b in reversed(
-                (ipaddr.IPv6Address(record.address.address)).packed)]),
-            record.name)
-
-        self.assertEqual(rev_entry, rev_entry_expected)
-
-    def test_0025_aaaa_record_with_ttl(self):
-        record = AAAARecord.q.filter(AAAARecord.time_to_live != None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} {} IN AAAA {}".format(record.name,
-                                                    record.time_to_live,
-                                                    record.address.address)
-
-        self.assertEqual(entry, entry_expected)
-
-        rev_entry = record.gen_reverse_entry
-        rev_entry_expected = u"{}.ip6.arpa. {} IN PTR {}".format(
-            ".".join(["{:x}".format(ord(b)) for b in reversed(
-                (ipaddr.IPv6Address(record.address.address)).packed)]),
-            record.time_to_live, record.name)
-
-        self.assertEqual(rev_entry, rev_entry_expected)
-
-    def test_0030_mx_record(self):
+    def test_mx_record(self):
         record = MXRecord.q.first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN MX {} {}".format(
-            record.domain, record.priority, record.server)
+        expected = u"{} {}".format(record.preference, record.exchange.fqdn)
+        self.assertEqual(record.record_data, expected)
+        self.assertRecordExportCorrect(record)
 
-        self.assertEqual(entry, entry_expected)
-
-    def test_0040_cname_record(self):
+    def test_cname_record(self):
         record = CNAMERecord.q.first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN CNAME {}".format(
-            record.name, record.record_for.name)
+        self.assertEqual(record.record_data, record.cname.fqdn)
+        self.assertRecordExportCorrect(record)
 
-        self.assertEqual(entry, entry_expected)
+    def test_ns_record(self):
+        record = NSRecord.q.filter_by().first()
+        self.assertEqual(record.record_data, record.nsdname.fqdn)
+        self.assertRecordExportCorrect(record)
 
-    def test_0050_ns_record_without_ttl(self):
-        record = NSRecord.q.filter(NSRecord.time_to_live == None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN NS {}".format(record.domain, record.server)
+    def test_soa_record(self):
+        record = SOARecord.q.filter_by().first()
+        expected = u"{0} {1} ({2:d} {3:d} {4:d} {5:d} {6:d})".format(
+            record.mname.fqdn, record.rname, record.serial, record.refresh,
+            record.retry, record.expire, record.minimum)
+        self.assertEqual(record.record_data, expected)
+        self.assertRecordExportCorrect(record)
 
-        self.assertEqual(entry, entry_expected)
+    def test_srv_record(self):
+        record = SRVRecord.q.filter_by().first()
+        expected = u"{0:d} {1:d} {2:d} {3}".format(
+            record.priority, record.weight, record.port, record.target.fqdn)
+        self.assertEqual(record.record_data, expected)
+        self.assertRecordExportCorrect(record)
 
-    def test_0055_ns_record_with_ttl(self):
-        record = NSRecord.q.filter(NSRecord.time_to_live != None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} {} IN NS {}".format(
-            record.domain, record.time_to_live, record.server)
+    def test_txt_record(self):
+        record = TXTRecord.q.filter_by().first()
+        self.assertEqual(record.record_data, record.txt_data)
+        self.assertRecordExportCorrect(record)
 
-        self.assertEqual(entry, entry_expected)
-
-    def test_0060_srv_record_without_ttl(self):
-        record = SRVRecord.q.filter(SRVRecord.time_to_live == None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} IN SRV {} {} {} {}".format(
-            record.service, record.priority,
-            record.weight, record.port, record.target)
-
-        self.assertEqual(entry, entry_expected)
-
-    def test_0065_srv_record_with_ttl(self):
-        record = SRVRecord.q.filter(SRVRecord.time_to_live != None).first()
-        entry = record.gen_entry
-        entry_expected = u"{} {} IN SRV {} {} {} {}".format(
-            record.service, record.time_to_live,
-            record.priority, record.weight, record.port, record.target)
-
-        self.assertEqual(entry, entry_expected)
+    def test_zone_export(self):
+        zone = DNSZone.q.filter_by(name=DNSZoneData.example_com.name).one()
+        expected = u"\n".join(chain((u"$ORIGIN {0}".format(zone.name),),
+                                    imap(operator.methodcaller("export"),
+                                         zone.records)))
+        self.assertEqual(zone.export(), expected)
 
 
-class Test_040_Cascades(FixtureDataTestBase):
-    datasets = [ARecordData, AAAARecordData, MXRecordData, CNAMERecordData,
-                NSRecordData, SRVRecordData, UserHostData, IpData]
+class TestCascades(FixtureDataTestBase):
+    datasets = (AddressRecordData, MXRecordData, CNAMERecordData, NSRecordData,
+                SRVRecordData, UserHostData, IPData)
 
-    def test_0010_record_on_host_delete(self):
+    def test_record_on_host_delete(self):
+        address_records = []
         for host in UserHost.q.all():
+            for ip in host.ips:
+                address_records.extend(ip.address_records)
             session.session.delete(host)
-
         session.session.commit()
-        # assert that all records to the host are gone
-        self.assertIsNone(Record.q.first())
-        self.assertIsNone(ARecord.q.first())
-        self.assertIsNone(AAAARecord.q.first())
-        self.assertIsNone(CNAMERecord.q.first())
-        self.assertIsNone(MXRecord.q.first())
-        self.assertIsNone(SRVRecord.q.first())
-        self.assertIsNone(NSRecord.q.first())
+        self.assertTrue(all(inspect(o).deleted for o in address_records))
 
-    def test_0020_cname_on_a_record_delete(self):
-        a_record = ARecord.q.filter_by(
-            name=ARecordData.without_ttl.name, time_to_live=None).one()
-        c_names = a_record.cnames
-        session.session.delete(a_record)
-        session.session.commit()
-        self.assertTrue(all(inspect(r).deleted for r in c_names))
-
-    def test_0030_cname_on_aaaa_record_delete(self):
-        aaaa_record = AAAARecord.q.filter_by(
-            name=AAAARecordData.without_ttl.name, time_to_live=None).one()
-        c_names = aaaa_record.cnames
-        session.session.delete(aaaa_record)
-        session.session.commit()
-        self.assertTrue(all(inspect(r).deleted for r in c_names))
-
-    def test_0040_a_record_on_ip_delete(self):
-        ip = Ip.q.filter_by(address=IpData.dummy_user_ipv4.address).one()
-        a_records = ip.a_records
+    def test_0040_address_record_on_ipv4_delete(self):
+        ip = IP.q.filter_by(address=IPData.dummy_user_ipv4.address).one()
+        records = ip.address_records
         session.session.delete(ip)
         session.session.commit()
-        self.assertTrue(all(inspect(r).deleted for r in a_records))
+        self.assertTrue(all(inspect(r).deleted for r in records))
 
-    def test_0045_aaaa_record_on_ip_delete(self):
-        ip = Ip.q.filter_by(address=IpData.dummy_user_ipv6.address).one()
-        aaaa_records = ip.aaaa_records
+    def test_0045_address_record_on_ipv6_delete(self):
+        ip = IP.q.filter_by(address=IPData.dummy_user_ipv6.address).one()
+        address_records = ip.address_records
         session.session.delete(ip)
         session.session.commit()
-        self.assertTrue(all(inspect(r).deleted for r in aaaa_records))
+        self.assertTrue(all(inspect(r).deleted for r in address_records))

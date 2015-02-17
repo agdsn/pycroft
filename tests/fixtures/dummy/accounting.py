@@ -5,7 +5,7 @@ from datetime import datetime
 
 from fixture import DataSet
 
-from tests.fixtures.dummy.host import IpData
+from tests.fixtures.dummy.host import IPData
 
 
 class TrafficVolumeData(DataSet):
@@ -13,4 +13,4 @@ class TrafficVolumeData(DataSet):
         size = 1000
         timestamp = datetime.utcnow()
         type = "IN"
-        ip = IpData.dummy_user_ipv4
+        ip = IPData.dummy_user_ipv4

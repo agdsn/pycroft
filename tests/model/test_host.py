@@ -5,15 +5,17 @@ from itertools import chain
 import re
 
 from sqlalchemy import inspect
+from ipaddr import IPv4Address
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import MacExistsException, get_free_ip
 from pycroft.model import session, host, user, accounting
 from pycroft.model.net import Subnet
+from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.accounting import TrafficVolumeData
 from tests.fixtures.dummy.facilities import DormitoryData, RoomData
-from tests.fixtures.dummy.host import IpData, UserHostData, UserNetDeviceData
+from tests.fixtures.dummy.host import IPData, UserHostData, UserNetDeviceData
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
@@ -31,10 +33,10 @@ class Test_010_NetDeviceValidators(FixtureDataTestBase):
         def test_mac(mac):
             parts = mac.split(":")
             if len(mac) != 17 or len(parts) != 6:
-                self.assertRaises(host.InvalidMACAddressException, set_mac, mac)
+                self.assertRaises(InvalidMACAddressException, set_mac, mac)
                 return
             if mac_regex.match(mac) is None:
-                self.assertRaises(host.InvalidMACAddressException, set_mac, mac)
+                self.assertRaises(InvalidMACAddressException, set_mac, mac)
                 return
             if int(parts[0], base=16) & 1:
                 self.assertRaises(host.MulticastFlagException, set_mac, mac)
@@ -66,39 +68,14 @@ class Test_010_NetDeviceValidators(FixtureDataTestBase):
 
 
 class Test_030_IpModel(FixtureDataTestBase):
-    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
-
-    def test_0010_is_ip_valid(self):
-        ip_addr = host.Ip()
-        self.assertFalse(ip_addr.is_ip_valid)
-
-    def test_0020_change_ip(self):
-        subnet = Subnet.q.first()
-        netdev = host.NetDevice.q.first()
-        ip = get_free_ip((subnet, ))
-        ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
-
-        session.session.add(ip_addr)
-        session.session.commit()
-
-        ip_addr = host.Ip.q.first()
-        self.assertEqual(ip_addr.address, ip)
-
-        ip = get_free_ip((subnet,))
-        ip_addr.change_ip(ip, subnet)
-        session.session.commit()
-
-        ip_addr = host.Ip.q.first()
-        self.assertEqual(ip_addr.address, ip)
-
-        host.Ip.q.delete()
-        session.session.commit()
+    datasets = (DormitoryData, RoomData, SubnetData, UserData, UserHostData,
+                UserNetDeviceData, VLANData)
 
     def test_0030_delete_address(self):
         subnet = Subnet.q.first()
         netdev = host.NetDevice.q.first()
-        ip = get_free_ip((subnet, ))
-        ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
+        ip, _ = get_free_ip((subnet, ))
+        ip_addr = host.IP(net_device=netdev, address=ip, subnet=subnet)
 
         session.session.add(ip_addr)
         session.session.commit()
@@ -111,8 +88,8 @@ class Test_030_IpModel(FixtureDataTestBase):
     def test_0040_delete_subnet(self):
         subnet = Subnet.q.first()
         netdev = host.NetDevice.q.first()
-        ip = get_free_ip((subnet, ))
-        ip_addr = host.Ip(net_device=netdev, address=ip, subnet=subnet)
+        ip, _ = get_free_ip((subnet, ))
+        ip_addr = host.IP(net_device=netdev, address=ip, subnet=subnet)
 
         session.session.add(ip_addr)
         session.session.commit()
@@ -130,21 +107,21 @@ class Test_040_IpEvents(FixtureDataTestBase):
         subnet = Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
-        ip = get_free_ip((subnet, ))
+        ip, _ = get_free_ip((subnet, ))
 
-        ip_addr = host.Ip(net_device=netdev)
+        ip_addr = host.IP(net_device=netdev)
         ip_addr.address = ip
         ip_addr.subnet = subnet
         session.session.add(ip_addr)
         session.session.commit()
 
         netdev = host.NetDevice.q.first()
-        ip = get_free_ip((subnet, ))
-        ip_addr = host.Ip(address=ip, subnet=subnet, net_device=netdev)
+        ip, _ = get_free_ip((subnet, ))
+        ip_addr = host.IP(address=ip, subnet=subnet, net_device=netdev)
         session.session.add(ip_addr)
         session.session.commit()
 
-        host.Ip.q.filter(host.Ip.net_device == netdev).delete()
+        host.IP.q.filter(host.IP.net_device == netdev).delete()
         session.session.commit()
 
 
@@ -152,8 +129,8 @@ class Test_040_IpEvents(FixtureDataTestBase):
         subnet = Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
-        ip = get_free_ip((subnet, ))
-        ip_addr = host.Ip(net_device=netdev)
+        ip, _ = get_free_ip((subnet, ))
+        ip_addr = host.IP(net_device=netdev)
         ip_addr.address = ip
 
         def commit():
@@ -165,7 +142,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         subnet = Subnet.q.first()
         netdev = host.NetDevice.q.first()
 
-        ip_addr = host.Ip(net_device=netdev)
+        ip_addr = host.IP(net_device=netdev)
         ip_addr.subnet = subnet
 
         def commit():
@@ -176,40 +153,34 @@ class Test_040_IpEvents(FixtureDataTestBase):
     def test_0040_wrong_subnet(self):
         subnets = Subnet.q.all()
         netdev = host.NetDevice.q.first()
-        ip = get_free_ip((subnets[0], ))
+        ip, _ = get_free_ip((subnets[0], ))
 
-        ip_addr = host.Ip(net_device=netdev, address=ip)
+        ip_addr = host.IP(net_device=netdev, address=ip)
 
-        def assign_subnet():
+        with self.assertRaises(ValueError):
             ip_addr.subnet = subnets[1]
 
-        self.assertRaisesRegexp(AssertionError, "Given subnet does not contain the ip", assign_subnet)
+        ip_addr = host.IP(net_device=netdev, subnet=subnets[1])
 
-        ip_addr = host.Ip(net_device=netdev, subnet=subnets[1])
-
-        def assign_ip():
+        with self.assertRaises(ValueError):
             ip_addr.address = ip
 
-        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", assign_ip)
-
-        def new_instance():
-            host.Ip(net_device=netdev, subnet=subnets[1], address=ip)
-
-        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", new_instance)
+        with self.assertRaises(ValueError):
+            host.IP(net_device=netdev, subnet=subnets[1], address=ip)
 
 
 class Test_060_Cascades(FixtureDataTestBase):
-    datasets = (SubnetData, UserData, UserHostData, UserNetDeviceData, IpData,
+    datasets = (SubnetData, UserData, UserHostData, UserNetDeviceData, IPData,
                 TrafficVolumeData)
 
     def test_0010_cascade_on_delete_ip(self):
-        test_ip = host.Ip.q.filter_by(
-            address=IpData.dummy_user_ipv4.address).one()
+        test_ip = host.IP.q.filter_by(
+            address=IPData.dummy_user_ipv4.address).one()
         session.session.delete(test_ip)
         session.session.commit()
         self.assertIsNone(accounting.TrafficVolume.q.first())
 
-    def test_0010_cascade_on_delete_net_device(self):
+    def test_0020_cascade_on_delete_net_device(self):
         test_net_device = host.NetDevice.q.filter_by(
             mac=UserNetDeviceData.dummy_device.mac).one()
         ips = test_net_device.ips
@@ -219,24 +190,24 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).deleted
                             for o in chain(ips, traffic_volumes)))
 
-    def test_0010_cascade_on_delete_host(self):
+    def test_0030_cascade_on_delete_host(self):
         test_host = host.UserHost.q.first()
-        net_device = test_host.user_net_device
-        ips = net_device.ips
+        net_devices = test_host.user_net_devices
+        ips = tuple(chain(*(d.ips for d in net_devices)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_host)
         session.session.commit()
         self.assertTrue(all(inspect(o).deleted)
-                        for o in chain((net_device,), ips, traffic_volumes))
+                        for o in chain(net_devices, ips, traffic_volumes))
 
-    def test_0010_cascade_on_delete_user(self):
+    def test_0040_cascade_on_delete_user(self):
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
         hosts = test_user.user_hosts
-        net_devices = tuple(h.user_net_device for h in hosts)
-        ips = tuple(chain(*(d.ips for d in net_devices)))
+        devices = tuple(chain(*(h.user_net_devices for h in hosts)))
+        ips = tuple(chain(*(d.ips for d in devices)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_user)
         session.session.commit()
         self.assertTrue(all(inspect(o).deleted)
-                        for o in chain(hosts, net_devices, ips, traffic_volumes
-        ))
+                        for o in chain(hosts, devices, ips, traffic_volumes))
+
