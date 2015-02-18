@@ -37,7 +37,7 @@ class Anschluss(Base):
 
     subnetz = relationship(u'Subnetz')
 
-"""
+
 t_anschluss_alle = Table(
     u'anschluss_alle', metadata,
     Column(u'anschluss_id', Integer),
@@ -64,7 +64,7 @@ class AnschlussAlt(Base):
     ip = Column(INET)
     hostname = Column(String(16))
     bes = Column(Text)
-"""
+
 
 class BankKonto(Base):
     __tablename__ = u'bank_konto'
@@ -75,8 +75,6 @@ class BankKonto(Base):
     bes = Column(Text)
 
 
-#why did it generate inheritance?
-#a: because foreign primary key (bank_konto.bkid) is primary key
 class BkBuchung(BankKonto):
     __tablename__ = u'bk_buchung'
 
@@ -145,16 +143,18 @@ class FinanzGruppe(Base):
 class FinanzKonten(Base):
     __tablename__ = u'finanz_konten'
 
-    konto_id = Column(Integer, primary_key=True, server_default=text("nextval(('konto_id_seq'::text)::regclass)"))
+    id = Column(u"konto_id", Integer, primary_key=True, server_default=text("nextval(('konto_id_seq'::text)::regclass)"))
     name = Column(String(40), nullable=False)
-    bes = Column(Text)
-    konto_typ = Column(ForeignKey(u'finanz_konto_typ.konto_typ_id'), nullable=False)
-    vater_konto = Column(ForeignKey(u'finanz_konten.konto_id'))
+    description = Column(u"bes", Text)
+    type = Column(u"konto_typ", ForeignKey(u'finanz_konto_typ.konto_typ_id'), nullable=False)
     nutzer_bezogen = Column(Boolean, nullable=False, server_default=text("false"))
     abgeschlossen = Column(Boolean, nullable=False, server_default=text("false"))
 
     finanz_konto_typ = relationship(u'FinanzKontoTyp')
-    parent = relationship(u'FinanzKonten', remote_side=[konto_id])
+
+    # Adjacency list: see http://docs.sqlalchemy.org/en/rel_0_8/orm/relationships.html?highlight=adjacency%20list#configuring-self-referential-eager-loading
+    parent_konto_id = Column(u"vater_konto", ForeignKey(u'finanz_konten.konto_id'))
+    children = relationship(u'FinanzKonten', remote_side=[id], backref=u"vater_konto", lazy="joined", join_depth=2)
 
 
 class FinanzKontoTyp(Base):
@@ -164,7 +164,7 @@ class FinanzKontoTyp(Base):
     name = Column(String(40), nullable=False)
     bes = Column(Text)
 
-"""
+
 class Gruppe(Base):
     __tablename__ = u'gruppe'
 
@@ -381,7 +381,7 @@ class Statu(Base):
     name = Column(String(40), nullable=False)
     internet = Column(Boolean, nullable=False, server_default=text("true"))
     login = Column(Boolean, nullable=False, server_default=text("true"))
-"""
+
 
 class Subnetz(Base):
     __tablename__ = u'subnetz'
@@ -397,7 +397,7 @@ class Subnetz(Base):
     vlan = Column(String(16))
     bes = Column(Text)
 
-"""
+
 t_temp = Table(
     u'temp', metadata,
     Column(u'log_typ_id', String(8)),
@@ -503,5 +503,4 @@ class Zimmer(Base):
     name = Column(String(10))
     bedient_durch = Column(String(20))
     port = Column(String(10))
-"""
-relevant_tables = [BankKonto, BkBuchung, FinanzBuchungen, FinanzKonten]
+

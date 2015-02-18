@@ -14,6 +14,15 @@ name = "netusers"
 engine = create_engine('mysql://{netusers-user}:{netusers-password}@127.0.0.1'
                        ':{netusers-port}/netusers'.format(**conn_opts))
 session = scoped_session(sessionmaker(bind=engine))
+
+relevant_tables = [model.Wheim,
+                  model.Hp4108Port,
+                  model.Nutzer,
+                  model.Computer,
+                  model.Subnet,
+                  model.Status,
+                  model.Credit,
+                  model.ZihIncident]
 """
 +--------------------+
 | Tables_in_netusers |

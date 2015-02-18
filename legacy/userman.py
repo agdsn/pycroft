@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import create_engine
 
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, with_polymorphic
 
 from conn import conn_opts
 import userman_model as model
@@ -11,8 +11,15 @@ import userman_model as model
 name = "userman"
 
 engine = create_engine('postgresql://{userman-user}@127.0.0.1:{userman-port}'
-                       '/userman'.format(**conn_opts))
+                       '/userman'.format(**conn_opts), client_encoding='latin1')
 session = scoped_session(sessionmaker(bind=engine))
+
+relevant_tables = [model.FinanzKonten,
+                   model.FinanzBuchungen,
+                   #model.FinanzKonten,
+                   model.FinanzKontoTyp,
+                   with_polymorphic(model.BankKonto, [model.BkBuchung])
+                   ]
 
 '''
  Relevant tables:

@@ -33,8 +33,8 @@ class Credit(Base):
     __tablename__ = u'credit'
 
     user_id = Column(Integer, primary_key=True, nullable=False)
-    amount = Column(Integer, nullable=False)
-    timetag = Column(Integer, nullable=False)
+    amount = Column(Integer, primary_key=True, nullable=False)
+    timetag = Column(Integer, primary_key=True, nullable=False)
 
 
 class Hp4108Port(Base):
@@ -62,7 +62,7 @@ class Kabel(Base):
     zimmernr = Column(String(10), primary_key=True, nullable=False, server_default=text("''"))
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
 
-"""
+
 class NewAccount(Base):
     __tablename__ = u'new_accounts'
 
@@ -70,7 +70,7 @@ class NewAccount(Base):
     Password = Column(String(8), nullable=False, server_default=text("''"))
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
     email = Column(String(50), nullable=False, server_default=text("''"))
-"""
+
 
 class Nutzer(Base):
     __tablename__ = u'nutzer'
@@ -118,7 +118,7 @@ class Subnet(Base):
     default_gateway = Column(String(15), nullable=False, server_default=text("''"))
     vlan_name = Column(String(15))
 
-"""
+
 t_versionen = Table(
     u'versionen', metadata,
     Column(u'program', String(10), nullable=False, server_default=text("''")),
@@ -126,7 +126,7 @@ t_versionen = Table(
     Column(u'major', Integer),
     Column(u'minor', Integer)
 )
-"""
+
 
 class Wheim(Base):
     __tablename__ = u'wheim'
@@ -146,12 +146,3 @@ class ZihIncident(Base):
     type = Column(String(255), nullable=False)
     ip = Column(String(15), nullable=False)
     time = Column(DateTime, nullable=False)
-
-relevant_tables = [Wheim,
-                  Hp4108Port,
-                  Nutzer,
-                  Computer,
-                  Subnet,
-                  Status,
-                  Credit,
-                  ZihIncident]
