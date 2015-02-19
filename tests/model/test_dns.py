@@ -7,7 +7,7 @@ from sqlalchemy import inspect
 
 from pycroft.model.dns import (
     AddressRecord, DNSZone, CNAMERecord, MXRecord, NSRecord, SOARecord,
-    SRVRecord, TXTRecord)
+    SRVRecord, TXTRecord, record_types)
 from pycroft.model.host import IP, UserHost
 from pycroft.model import session
 from tests import FixtureDataTestBase
@@ -22,9 +22,6 @@ from tests.fixtures.dummy.net import SubnetData
 class TestZoneGeneration(FixtureDataTestBase):
     datasets = (AddressRecordData, MXRecordData, CNAMERecordData, NSRecordData,
                 SOARecordData, SRVRecordData, TXTRecordData, SubnetData)
-
-    record_types = (AddressRecord, CNAMERecord, MXRecord, NSRecord, SOARecord,
-                    SRVRecord, TXTRecord)
 
     def assertRecordExportCorrect(self, record):
         record.ttl = None
@@ -80,9 +77,14 @@ class TestZoneGeneration(FixtureDataTestBase):
 
     def test_zone_export(self):
         zone = DNSZone.q.filter_by(name=DNSZoneData.example_com.name).one()
+        records = chain(*(
+            session.session.query(record_type)
+            .join(record_type.zone).filter(DNSZone.id == zone.id)
+            for record_type in record_types))
+        records = sorted(records, key=operator.attrgetter("name"))
         expected = u"\n".join(chain((u"$ORIGIN {0}".format(zone.name),),
                                     imap(operator.methodcaller("export"),
-                                         zone.records)))
+                                         records)))
         self.assertEqual(zone.export(), expected)
 
 
