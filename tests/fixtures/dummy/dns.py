@@ -36,13 +36,11 @@ class MXRecordData(DataSet):
 
 class CNAMERecordData(DataSet):
     class for_a:
-        id = 100
         name = "dummy.net."
         record_for = ARecordData.without_ttl
         host = UserHostData.dummy_host1
 
     class for_aaaa:
-        id = 101
         name = "dummy2.net."
         record_for = AAAARecordData.without_ttl
         host = UserHostData.dummy_host1
