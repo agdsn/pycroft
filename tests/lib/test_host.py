@@ -18,11 +18,6 @@ class Test_005_change_mac_net_device(FixtureDataTestBase):
         super(Test_005_change_mac_net_device, self).setUp()
         self.user = User.q.filter_by(login=UserData.dummy.login).one()
 
-    def tearDown(self):
-        LogEntry.q.delete()
-        session.session.commit()
-        super(Test_005_change_mac_net_device, self).tearDown()
-
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         netdev = UserNetDevice.q.filter_by(

@@ -28,11 +28,6 @@ class PropertyDataTestBase(FixtureDataTestBase):
         self.traffic_group2 = TrafficGroup.q.filter_by(
             name=TrafficGroupData.group2.name).one()
 
-    def tearDown(self):
-        Membership.q.delete()
-        session.session.commit()
-        super(PropertyDataTestBase, self).tearDown()
-
 
 class Test_010_PropertyResolving(PropertyDataTestBase):
     def test_0010_assert_correct_fixture(self):

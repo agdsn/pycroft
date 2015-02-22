@@ -68,11 +68,6 @@ class Test_010_NetDeviceValidators(FixtureDataTestBase):
 class Test_030_IpModel(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
-    def tearDown(self):
-        host.Ip.q.delete()
-        session.session.commit()
-        super(Test_030_IpModel, self).tearDown()
-
     def test_0010_is_ip_valid(self):
         ip_addr = host.Ip()
         self.assertFalse(ip_addr.is_ip_valid)

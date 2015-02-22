@@ -47,12 +47,6 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.new_patch_port = PatchPort.q.filter_by(
             name=PatchPortData.dummy_patch_port2.name).one()
 
-    def tearDown(self):
-        #TODO don't delete all log entries but the user log entries
-        logging.LogEntry.q.delete()
-        session.session.commit()
-        super(Test_010_User_Move, self).tearDown()
-
     def test_0010_moves_into_same_room(self):
         self.assertRaisesInTransaction(
             AssertionError, UserHelper.move, self.user, self.old_room.dormitory,
@@ -77,14 +71,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy.login).one()
-
-
-    def tearDown(self):
-        #TODO don't delete all log entries but the user log entries
-        logging.LogEntry.q.delete()
-        finance.Transaction.q.delete()
-        session.session.commit()
-        super(Test_020_User_Move_In, self).tearDown()
 
     def test_0010_move_in(self):
         test_name = u"Hans"
@@ -145,12 +131,6 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
 
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        finance.Transaction.q.delete()
-        session.session.commit()
-        super(Test_030_User_Move_Out, self).tearDown()
-
     def test_0030_move_out(self):
         test_name = u"Hans"
         test_login = u"hans66"
@@ -195,11 +175,6 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
         self.user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
 
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        session.session.commit()
-        super(Test_040_User_Edit_Name, self).tearDown()
-
     def test_0010_correct_new_name(self):
         new_name = "A new name"
         self.assertNotEqual(new_name, self.user.name)
@@ -214,11 +189,6 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         super(Test_050_User_Edit_Email, self).setUp()
         self.user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
-
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        session.session.commit()
-        super(Test_050_User_Edit_Email, self).tearDown()
 
     def test_0010_correct_new_email(self):
         new_mail = "user@example.net"
@@ -235,12 +205,6 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy.login).one()
-
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        finance.Transaction.q.delete()
-        session.session.commit()
-        super(Test_070_User_Move_Out_Temporarily, self).tearDown()
 
     def test_0010_move_out_temporarily(self):
         test_name = u"Hans"
@@ -288,12 +252,6 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
 class Test_080_User_Block(FixtureDataTestBase):
     datasets = [ConfigData, DormitoryData, PropertyData, RoomData, UserData]
 
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        Membership.q.delete()
-        session.session.commit()
-        super(Test_080_User_Block, self).tearDown()
-
     def test_0010_user_has_no_network_access(self):
         u = user.User.q.get(1)
         verstoss = PropertyGroup.q.filter(
@@ -321,12 +279,6 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         UserHelper.move_out_temporarily(user=self.user, comment='',
                                         processor=self.processing_user)
         session.session.commit()
-
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        finance.Transaction.q.delete()
-        session.session.commit()
-        super(Test_090_User_Is_Back, self).tearDown()
 
     def test_0010_user_is_back(self):
         self.assertTrue(self.user.has_property("away"))

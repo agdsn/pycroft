@@ -109,11 +109,6 @@ class Test_030_change_mac_net_device(FixtureDataTestBase):
         self.processing_user = user.User.q.get(1)
         self.dummy_device = UserNetDevice.q.get(1)
 
-    def tearDown(self):
-        logging.LogEntry.q.delete()
-        session.session.commit()
-        super(Test_030_change_mac_net_device, self).tearDown()
-
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         change_mac(self.dummy_device, new_mac, self.processing_user)
