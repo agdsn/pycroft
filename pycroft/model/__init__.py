@@ -16,13 +16,13 @@ from . import base
 from . import session
 
 
-def create_db_model():
+def create_db_model(bind):
     """Create all models in the database.
     """
-    base.ModelBase.metadata.create_all(session.session.get_bind())
+    base.ModelBase.metadata.create_all(bind)
 
 
-def drop_db_model():
+def drop_db_model(bind):
     """Drop all models from the database.
     """
-    base.ModelBase.metadata.drop_all(session.session.get_bind())
+    base.ModelBase.metadata.drop_all(bind)

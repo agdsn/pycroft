@@ -7,30 +7,47 @@ import os
 import random
 import string
 import unittest
-from fixture.style import TrimmedNameStyle
+from flask import url_for
+from flask.ext import testing
+from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.pool import SingletonThreadPool
 from pycroft.model import session
 from pycroft.model import _all, drop_db_model, create_db_model
 
-from flask import url_for
-from flask.ext import testing
+
+engine = None
+connection = None
+_setup_stack = 0
 
 
-__author__ = 'jan'
+def setup():
+    global engine, connection, _setup_stack
+    _setup_stack += 1
+    if _setup_stack > 1:
+        return
+    try:
+        uri = os.environ['PYCROFT_DB_URI']
+    except KeyError:
+        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
+                           "set to an SQLalchemy connection string.")
+    engine = create_engine(uri, poolclass=SingletonThreadPool)
+    connection = engine.connect()
+    drop_db_model(connection)
+    create_db_model(connection)
 
 
-REGEX_NOT_NULL_CONSTRAINT = r"^\(IntegrityError\) (NOT NULL constraint failed:|([a-z_]*\.?[a-z_]*) may not be NULL)"
-
-def make_fixture():
-    """A helper to create a database fixture.
-    """
-    fixture = SQLAlchemyFixture(
-        env=_all,
-        style=TrimmedNameStyle(suffix="Data"),
-        engine=session.session.get_bind())
-    return fixture
+def teardown():
+    global engine, connection, _setup_stack
+    _setup_stack -= 1
+    if _setup_stack > 0:
+        return
+    drop_db_model(connection)
+    connection.close()
+    engine = None
+    connection = None
 
 
 class FixtureDataTestBase(DataTestCase, unittest.TestCase):
@@ -47,29 +64,28 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        try:
-            uri = os.environ['PYCROFT_DB_URI']
-        except KeyError:
-            raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
-                               "set to an SQLalchemy connection string.")
-        engine = create_engine(uri, echo=False)
-        session.set_scoped_session(scoped_session(sessionmaker(bind=engine)))
-        drop_db_model()
-        create_db_model()
-        cls.fixture = make_fixture()
+        setup()
+        cls.fixture = SQLAlchemyFixture(
+            env=_all, style=NamedDataStyle(),
+            engine=connection
+        )
 
     @classmethod
     def tearDownClass(cls):
-        drop_db_model()
+        teardown()
 
     def setUp(self):
         super(FixtureDataTestBase, self).setUp()
+        self.transaction = connection.begin_nested()
+        s = scoped_session(sessionmaker(bind=connection))
+        session.set_scoped_session(s)
 
     def tearDown(self):
-        # Rollback any not cleaned up transactions
-        while not session.session.autocommit and not session.session.is_active:
-            session.session.rollback()
+        # Rollback the session
+        session.session.rollback()
         session.Session.remove()
+        # Rollback the outer transaction to the savepoint
+        self.transaction.rollback()
         super(FixtureDataTestBase, self).tearDown()
 
     @contextmanager
