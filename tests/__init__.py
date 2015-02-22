@@ -86,11 +86,12 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     You have to provide an user in the fixtures with the needed properties.
     """
+    login = None
+    password = None
+
     def _login(self, login, password):
-        self.client.post(url_for("login.login"), data=dict(
-            login=login,
-            password=password),
-            follow_redirects=True)
+        self.client.post(url_for("login.login"), follow_redirects=True,
+                         data={'login': login, 'password': password})
 
     def tearDown(self):
         self.client.get("/logout")
@@ -98,14 +99,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def setUp(self):
         super(FrontendDataTestBase, self).setUp()
-
-        try:
-            if getattr(self, "login") is not None and \
-                            getattr(self, "password") is not None:
-                self._login(login=self.login, password=self.password)
-        except AttributeError:
-            self.__setattr__("login", None)
-            self.__setattr__("Password", None)
+        self._login(login=self.login, password=self.password)
 
     def create_app(self):
         """
