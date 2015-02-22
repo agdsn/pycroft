@@ -106,8 +106,10 @@ class Test_030_change_mac_net_device(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_030_change_mac_net_device, self).setUp()
-        self.processing_user = user.User.q.get(1)
-        self.dummy_device = UserNetDevice.q.get(1)
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.dummy.login).one()
+        self.dummy_device = UserNetDevice.q.filter_by(
+            mac=UserNetDeviceData.dummy_device.mac).one()
 
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"

@@ -70,7 +70,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
+            login=UserData.privileged.login).one()
 
     def test_0010_move_in(self):
         test_name = u"Hans"
@@ -173,7 +173,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
         self.user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
+            login=UserData.dummy.login).one()
 
     def test_0010_correct_new_name(self):
         new_name = "A new name"
@@ -188,7 +188,7 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
         self.user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
+            login=UserData.dummy.login).one()
 
     def test_0010_correct_new_email(self):
         new_mail = "user@example.net"
@@ -204,7 +204,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
     def setUp(self):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
         self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
+            login=UserData.privileged.login).one()
 
     def test_0010_move_out_temporarily(self):
         test_name = u"Hans"
@@ -253,7 +253,7 @@ class Test_080_User_Block(FixtureDataTestBase):
     datasets = [ConfigData, DormitoryData, PropertyData, RoomData, UserData]
 
     def test_0010_user_has_no_network_access(self):
-        u = user.User.q.get(1)
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         verstoss = PropertyGroup.q.filter(
             PropertyGroup.name == u"Verstoß").first()
 #       Ich weiß nicht, ob dieser Test noch gebraucht wird!
@@ -274,8 +274,9 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()
-        self.processing_user = user.User.q.filter_by(login='admin').one()
-        self.user = user.User.q.filter_by(login='test').one()
+        self.processing_user = user.User.q.filter_by(
+            login=UserData.privileged.login).one()
+        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
         UserHelper.move_out_temporarily(user=self.user, comment='',
                                         processor=self.processing_user)
         session.session.commit()
