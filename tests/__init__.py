@@ -2,6 +2,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from contextlib import contextmanager
 import os
 import random
 import string
@@ -71,9 +72,32 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
         session.Session.remove()
         super(FixtureDataTestBase, self).tearDown()
 
-    def assertRaisesInTransaction(self, excClass, callableObj, *args, **kwargs):
-        self.assertRaises(excClass,callableObj, *args, **kwargs)
-        session.session.rollback()
+    @contextmanager
+    def _rollback_with_context(self, context):
+        with context:
+            try:
+                yield
+            except:
+                session.session.rollback()
+                raise
+
+    def assertRaisesInTransaction(self, excClass, callableObj=None,
+                                  *args, **kwargs):
+        context = super(FixtureDataTestBase, self).assertRaises(excClass)
+        if callableObj is None:
+            return self._rollback_with_context(context)
+        with self._rollback_with_context(context):
+            callableObj(*args, **kwargs)
+
+    def assertRaisesRegexpInTransaction(self, expected_exception,
+                                        expected_regexp, callable_obj=None,
+                                        *args, **kwargs):
+        context = super(FixtureDataTestBase, self).assertRaisesRegexp(
+            expected_exception, expected_regexp)
+        if callable_obj is None:
+            return self._rollback_with_context(context)
+        with self._rollback_with_context(context):
+            callable_obj(*args, **kwargs)
 
 
 class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):

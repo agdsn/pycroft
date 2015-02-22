@@ -108,10 +108,10 @@ class Test_030_IpModel(FixtureDataTestBase):
         session.session.add(ip_addr)
         session.session.commit()
 
-        ip_addr.address = None
-        self.assertIsNone(ip_addr.address)
-
-        self.assertRaisesInTransaction(IntegrityError, session.session.commit)
+        with self.assertRaisesInTransaction(IntegrityError):
+            ip_addr.address = None
+            self.assertIsNone(ip_addr.address)
+            session.session.commit()
 
     def test_0040_delete_subnet(self):
         subnet = Subnet.q.first()
@@ -122,10 +122,10 @@ class Test_030_IpModel(FixtureDataTestBase):
         session.session.add(ip_addr)
         session.session.commit()
 
-        ip_addr.subnet = None
-        self.assertIsNone(ip_addr.subnet)
-
-        self.assertRaisesInTransaction(IntegrityError, session.session.commit)
+        with self.assertRaisesInTransaction(IntegrityError):
+            ip_addr.subnet = None
+            self.assertIsNone(ip_addr.subnet)
+            session.session.commit()
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
