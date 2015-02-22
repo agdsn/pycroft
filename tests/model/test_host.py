@@ -65,13 +65,6 @@ class Test_010_NetDeviceValidators(FixtureDataTestBase):
         session.session.commit()
 
 
-class Test_020_NetworkDeviceMethods(FixtureDataTestBase):
-    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
-
-    # placeholder because the set_v4 method is gone
-    pass
-
-
 class Test_030_IpModel(FixtureDataTestBase):
     datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData, UserHostData, UserNetDeviceData]
 
