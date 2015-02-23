@@ -58,7 +58,6 @@ def make_app(connection_string=None):
     infrastructure.nav.register_on(app)
     properties.nav.register_on(app)
 
-
     @app.errorhandler(401)
     @app.errorhandler(403)
     @app.errorhandler(404)

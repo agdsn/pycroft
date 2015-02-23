@@ -5,7 +5,9 @@ from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, Regexp
 from pycroft.model.dns import ARecord
 from pycroft.model.port import Port
-from web.form.fields.core import TextField, SelectField, QuerySelectField
+from web.form.fields.core import TextField, SelectField, QuerySelectField, \
+    TextAreaField
+from wtforms.fields.core import DateTimeField
 from web.form.fields.custom import ReadonlyTextField
 
 
@@ -37,3 +39,9 @@ class RecordCreateForm(Form):
 class CNAMERecordCreateForm(Form):
     name = TextField(u"Alias Name", [DataRequired(message=u"Alias?")])
     record_for = QuerySelectField(u"für", get_label='name')
+
+
+class TestTaskForm(Form):
+    text = TextAreaField(u"Text", [DataRequired(message=u"Text?")])
+    execution_date = DateTimeField(u"Ausführungsdatum",
+                                   [DataRequired(message=u"Datum?")])

@@ -7,14 +7,16 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import datetime
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+from pycroft import celery
 from pycroft.helpers import host
 from pycroft.model.host import Switch, Host
 from pycroft.model.dormitory import Subnet, VLAN
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.infrastructure.forms import SwitchPortForm
+from web.blueprints.infrastructure.forms import SwitchPortForm, TestTaskForm
 from web.blueprints.infrastructure.forms import CNAMERecordEditForm
 from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
@@ -27,6 +29,23 @@ from pycroft.lib.infrastructure import create_switch_port
 bp = Blueprint('infrastructure', __name__, )
 access = BlueprintAccess(bp, ['infrastructure_show'])
 nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
+
+
+@bp.route('/test_task', methods=['GET', 'POST'])
+@nav.navigate(u"Erstelle Test-Task")
+@access.require('infrastructure_show')
+def test_task():
+    form = TestTaskForm()
+    if not form.is_submitted():
+        form.execution_date.data = datetime.datetime.now()
+
+    if form.validate_on_submit():
+        celery.test_task(form.text.data, form.execution_date.data)
+        return redirect(url_for(".test_task"))
+
+    return render_template("infrastructure/test_task.html", form=form,
+                           page_title=u"Test-Task erstellen")
+
 
 
 @bp.route('/subnets')

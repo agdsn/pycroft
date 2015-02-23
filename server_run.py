@@ -2,6 +2,7 @@
 
 import argparse
 
+
 def server_run(args):
     from web import make_app
     from pycroft import config
@@ -15,6 +16,7 @@ def server_run(args):
 
     app.run(debug=args.debug, port=args.port,
             host="0.0.0.0" if args.exposed else None)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pycroft launcher")
