@@ -10,8 +10,7 @@ import userman_model as model
 
 name = "userman"
 
-engine = create_engine('postgresql://{userman-user}@127.0.0.1:{userman-port}'
-                       '/userman'.format(**conn_opts), client_encoding='latin1')
+engine = create_engine(conn_opts['userman'], client_encoding='latin1')
 session = scoped_session(sessionmaker(bind=engine))
 
 relevant_tables = [model.FinanzKonten,

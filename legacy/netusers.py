@@ -11,8 +11,7 @@ import netusers_model as model
 
 name = "netusers"
 
-engine = create_engine('mysql://{netusers-user}:{netusers-password}@127.0.0.1'
-                       ':{netusers-port}/netusers'.format(**conn_opts))
+engine = create_engine(conn_opts['netusers'])
 session = scoped_session(sessionmaker(bind=engine))
 
 relevant_tables = [model.Wheim,

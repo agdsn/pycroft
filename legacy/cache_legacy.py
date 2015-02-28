@@ -4,11 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 import sys
-import os
-from subprocess import call
-from shlex import split
 from sqlalchemy import create_engine, MetaData
-
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from conn import conn_opts
@@ -16,39 +12,25 @@ import netusers
 import userman
 
 
-def drop_cache_db():
-    print "Dropping DB", conn_opts["pycroft-legacycache-dbname"]
-    call(split("psql -d postgresql://{pycroft-user}@"
-               "127.0.0.1:{pycroft-port}/postgres -c "
-               "\"DROP DATABASE IF EXISTS "
-               "{pycroft-legacycache-dbname}\""
-               .format(**conn_opts))) and sys.exit(1)
+def drop_cache_db(connection):
+    connection.execute("DROP DATABASE IF EXISTS legacy")
+    connection.execute("COMMIT")
 
 
-def exists_cache_db():
-    devnull = open(os.devnull, 'w')
-    return not call(split("psql -d postgresql://{pycroft-user}@"
-                          "127.0.0.1:{pycroft-port}/"
-                          "{pycroft-legacycache-dbname} -c ''"
-                          .format(**conn_opts)),
-                    stdout=devnull,
-                    stderr=devnull)
+def exists_cache_db(connection):
+    exists = connection.execute("SELECT 1 FROM pg_database "
+                                "WHERE datname = 'legacy'").first()
+    connection.execute("COMMIT")
+    return exists is not None
 
 
-def create_cache_db():
-    print "Creating DB", conn_opts["pycroft-legacycache-dbname"]
-    call(split("psql -d postgresql://{pycroft-user}@"
-               "127.0.0.1:{pycroft-port}/postgres -c "
-               "\"CREATE DATABASE "
-               "{pycroft-legacycache-dbname}\""
-               .format(**conn_opts))) and sys.exit(1)
+def create_cache_db(connection):
+    connection.execute("CREATE DATABASE legacy")
+    connection.execute("COMMIT")
 
 
 def make_session():
-    engine = create_engine('postgresql://{pycroft-user}@'
-                           '127.0.0.1:{pycroft-port}'
-                           '/{pycroft-legacycache-dbname}'
-                           .format(**conn_opts))
+    engine = create_engine(conn_opts['legacy'])
     meta = MetaData(bind=engine)
     session = scoped_session(sessionmaker(bind=engine))
 
@@ -115,10 +97,14 @@ def cache_relevant_tables(old_db, _, engine):
 
 
 def main(clean_cache=True):
-    if clean_cache and exists_cache_db():
-        drop_cache_db()
-    if not exists_cache_db():
-        create_cache_db()
+    master_engine = create_engine(conn_opts['master'])
+    master_connection = master_engine.connect()
+    master_connection.execute("COMMIT")
+    if clean_cache:
+        drop_cache_db(master_connection)
+    if not exists_cache_db(master_connection):
+        create_cache_db(master_connection)
+    master_connection.close()
     session, meta, engine = make_session()
 
     cache_relevant_tables(netusers, session, engine)
