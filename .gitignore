@@ -9,6 +9,6 @@
 .idea/inspectionProfiles/profiles_settings.xml
 doc/_build
 .vagrant
-.pycharm_helpers
 pycroft/config.json
 web/static/libs/**
+
