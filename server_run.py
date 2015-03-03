@@ -23,19 +23,17 @@ def server_run(args):
                            "set to an SQLAlchemy connection string.")
     engine = create_engine(connection_string, echo=False)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
-                               scopefunc=lambda: _request_ctx_stack.top))
+                                      scopefunc=lambda: _request_ctx_stack.top))
     app.config.from_pyfile('flask.cfg')
-    app.debug = args.debug
 
-    app.run(debug=args.debug, port=args.port,
-            host="0.0.0.0" if args.exposed else None)
+    app.run(debug=args.debug, port=args.port, host=args.host)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
                         help="run in debug mode")
-    parser.add_argument("--exposed", action="store_true",
-                        help="expose server on network")
+    parser.add_argument("--exposed", action="store_const", const='0.0.0.0',
+                        dest='host', help="expose server on network")
     parser.add_argument("-p","--port", action="store",
                         help="port to run Pycroft on", type=int, default=5000)
 
