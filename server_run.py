@@ -6,10 +6,15 @@
 import argparse
 import os
 
+from babel.support import Translations
 from flask import _request_ctx_stack
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+import pycroft
+from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model.session import set_scoped_session
+import web
 
 
 def server_run(args):
@@ -24,6 +29,22 @@ def server_run(args):
     engine = create_engine(connection_string, echo=False)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
+
+    def lookup_translation():
+        ctx = _request_ctx_stack.top
+        if ctx is None:
+            return None
+        translations = getattr(ctx, 'pycroft_translations', None)
+        if translations is None:
+            translations = Translations()
+            for module in (pycroft, web):
+                os.path.dirname(module.__file__)
+                dirname = os.path.join(ctx.app.root_path, 'translations')
+                translations.add(Translations.load(dirname, [get_locale()]))
+            ctx.pycroft_translations = translations
+        return translations
+
+    set_translation_lookup(lookup_translation)
     app.config.from_pyfile('flask.cfg')
 
     app.run(debug=args.debug, port=args.port, host=args.host)
