@@ -144,17 +144,17 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
                                         record_for=new_a_record))
 
     for group in (config.member_group, config.network_access_group):
-        make_member_of(new_user, group, closed(now, None))
+        make_member_of(new_user, group, processor, closed(now, None))
 
     if moved_from_division:
         group = config.moved_from_division_group
-        make_member_of(new_user, group, closedopen(now, None))
+        make_member_of(new_user, group, processor, closedopen(now, None))
 
     if already_paid_semester_fee:
         group = config.already_paid_semester_fee_group
         during = closed(now, datetime.combine(
             get_current_semester().ends_on, time.max))
-        make_member_of(new_user, group, during)
+        make_member_of(new_user, group, processor, during)
 
     fees = [
         RegistrationFee(config.registration_fee_account),
@@ -323,9 +323,7 @@ def block(user, reason, processor, during=None):
     """
     if during is None:
         during = closedopen(session.utcnow(), None)
-
-    make_member_of(user, config.violation_group, during)
-
+    make_member_of(user, config.violation_group, processor, during)
     log_message = messages["block"]["log_message"].format(
         begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
         end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert',
@@ -349,7 +347,7 @@ def move_out(user, comment, processor, when):
     :return: The user that moved out.
     """
     for group in (config.member_group, config.network_access_group):
-        remove_member_of(user, group, closedopen(when, None))
+        remove_member_of(user, group, processor, closedopen(when, None))
 
     log_message = messages["move_out"]["log_message"].format(
         date=when.strftime("%d.%m.%Y")
@@ -381,7 +379,7 @@ def move_out_temporarily(user, comment, processor, during=None):
     """
     if during is None:
         during = closedopen(session.utcnow(), None)
-    make_member_of(user, config.away_group, during)
+    make_member_of(user, config.away_group, processor, during)
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
@@ -416,7 +414,8 @@ def is_back(user, processor):
     :return: The user who returned.
     """
     away_group = config.away_group
-    remove_member_of(user, away_group, closedopen(session.utcnow(), None))
+    remove_member_of(user, away_group, processor,
+                     closedopen(session.utcnow(), None))
 
     subnets = user.room.dormitory.subnets
     ip_address = get_free_ip(subnets)
@@ -496,7 +495,7 @@ def remove_property(group, name):
 
 
 @with_transaction
-def make_member_of(user, group, during=UnboundedInterval):
+def make_member_of(user, group, processor, during=UnboundedInterval):
     """
     Makes a user member of a group in a given interval. If the given interval
     overlaps with an existing membership, this method will join the overlapping
@@ -505,6 +504,7 @@ def make_member_of(user, group, during=UnboundedInterval):
 
     :param User user: the user
     :param Group group: the group
+    :param User processor: User issuing the addition
     :param Interval during:
     """
     memberships = session.session.query(Membership).filter(
@@ -521,7 +521,7 @@ def make_member_of(user, group, during=UnboundedInterval):
 
 
 @with_transaction
-def remove_member_of(user, group, during=UnboundedInterval):
+def remove_member_of(user, group, processor, during=UnboundedInterval):
     """
     Removes a user from a group in a given interval. The interval defaults to
     the unbounded interval, so that the user will be removed from the group at
@@ -529,6 +529,7 @@ def remove_member_of(user, group, during=UnboundedInterval):
 
     :param User user: the user
     :param Group group: the group
+    :param User processor: User issuing the removal
     :param Interval during:
     """
     memberships = session.session.query(Membership).filter(

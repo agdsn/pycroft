@@ -247,8 +247,8 @@ def add_membership(user_id):
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
         else:
             ends_at = None
-        make_member_of(user, form.group.data,
-                                    closed(begins_at, ends_at))
+        make_member_of(user, form.group.data, current_user,
+                       closed(begins_at, ends_at))
         message = u"Nutzer zur Gruppe '{}' hinzugefügt.".format(form.group.data.name)
         lib.logging.log_user_event(message, current_user, user)
         session.session.commit()

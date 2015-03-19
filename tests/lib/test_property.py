@@ -22,6 +22,7 @@ class Test_030_Membership(FixtureDataTestBase):
         self.group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.dummy.name).one()
         self.user = User.q.filter_by(login=UserData.dummy.login).one()
+        self.processor = User.q.filter_by(login=UserData.privileged.login).one()
 
     def assertMembershipIntervalsEqual(self, expected):
         memberships = session.session.query(Membership).filter_by(
@@ -32,11 +33,11 @@ class Test_030_Membership(FixtureDataTestBase):
                                 "got      {1!r}".format(expected, got)
 
     def add_membership(self, during):
-        make_member_of(self.user, self.group, during)
+        make_member_of(self.user, self.group, self.processor, during)
         session.session.commit()
 
     def remove_membership(self, during=UnboundedInterval):
-        remove_member_of(self.user, self.group, during)
+        remove_member_of(self.user, self.group, self.processor, during)
         session.session.commit()
 
     def test_adding_single_membership(self):

@@ -330,7 +330,7 @@ class TestSemesterFee(FeeTestBase):
         end = datetime.combine(
             semester.ends_on, time.min
         )
-        make_member_of(self.user, self.away_group, closed(
+        make_member_of(self.user, self.away_group, self.processor, closed(
             begin, end - semester.reduced_semester_fee_threshold))
         self.assertEqual(self.fee.compute(self.user), [
             self.expected_debt(SemesterData.with_registration_fee),
