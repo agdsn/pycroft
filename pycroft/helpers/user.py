@@ -1,26 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-    pycroft.helpers.user_helper
-    ~~~~~~~~~~~~~~
-
-    :copyright: (c) 2011 by AG DSN.
-"""
-
-import random
 from crypt import crypt
 from passlib.apps import ldap_context
+import passlib.utils
 
 # ToDo: evaluate if we need "ldap_sha1_crypt" here for cpmpatibility
 ldap_context = ldap_context.replace(default="ldap_salted_sha1")
 
 
 def generate_password(length):
-    allowed_letters = "abcdefghijklmnopqrstuvwxyz!$%&()=.,"\
-                     ":;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return "".join(random.sample(allowed_letters, length))
+    charset = "abcdefghijklmnopqrstuvwxyz!$%&()=.," \
+              ":;-_#+1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return passlib.utils.generate_password(length, charset)
 
 
 def generate_crypt_salt(salt_length):
