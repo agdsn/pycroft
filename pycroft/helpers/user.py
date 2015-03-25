@@ -5,8 +5,7 @@
 from passlib.apps import ldap_context
 import passlib.utils
 
-# ToDo: evaluate if we need "ldap_sha1_crypt" here for cpmpatibility
-ldap_context = ldap_context.replace(default="ldap_salted_sha1")
+ldap_context = ldap_context.copy(default="ldap_sha512_crypt")
 
 
 def generate_password(length):
@@ -18,8 +17,8 @@ def generate_password(length):
 def hash_password(plaintext_passwd):
     """Use a ldap_context to generate a RFC 2307 from given plaintext.
 
-    The ldap_context is preconfigured to generate ldap_salted_sha1
-    hashes (prefixed with {SSHA}).
+    The ldap_context is configured to generate the very secure ldap_sha512_crypt
+    hashes (a crypt extension available since glibc 2.7).
     """
     return ldap_context.encrypt(plaintext_passwd)
 

@@ -71,10 +71,10 @@ class Test_020_PasswdHashes(unittest.TestCase):
                 self.assertFalse(verify_password(pw["plain"], pw[method][len(method)+2:]))
 
     def test_0020_generate_hash(self):
-        cur_type = "SSHA"
+        cur_type = "CRYPT"
         for pw in self.hashes:
             self.assertNotEqual(hash_password(pw["plain"]), pw[cur_type], "Salt should be different!")
-            self.assertTrue(hash_password(pw["plain"]).startswith("{{{}}}".format(cur_type)))
+            self.assertTrue(ldap_sha512_crypt.identify(hash_password(pw["plain"])))
 
     def test_0030_generate_plain(self):
         pw_list = []
