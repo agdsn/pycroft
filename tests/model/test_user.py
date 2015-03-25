@@ -6,12 +6,13 @@ import unittest
 from crypt import crypt as python_crypt
 from datetime import timedelta
 
-from passlib.hash import ldap_salted_sha1, ldap_md5_crypt, ldap_sha1_crypt
+from passlib.hash import (
+    ldap_des_crypt, ldap_salted_sha1, ldap_md5, ldap_sha512_crypt)
 
 from pycroft.model import facilities, session, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
-    generate_password, hash_password, verify_password, generate_crypt_salt)
+    generate_password, hash_password, verify_password)
 from pycroft.model.finance import FinanceAccount
 from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
@@ -50,12 +51,9 @@ class Test_020_PasswdHashes(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         self.hashes = []
 
-        def crypt_pw(pw):
-            return "{crypt}" + python_crypt(pw, generate_crypt_salt(2))
-
-        self.methods = {"crypt": crypt_pw,
-                        "CRYPT": ldap_sha1_crypt.encrypt,
-                        "MD5": ldap_md5_crypt.encrypt,
+        self.methods = {"crypt": ldap_des_crypt.encrypt,
+                        "CRYPT": ldap_sha512_crypt.encrypt,
+                        "MD5": ldap_md5.encrypt,
                         "SSHA": ldap_salted_sha1.encrypt}
 
         for length in range(4,20):
