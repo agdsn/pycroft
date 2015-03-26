@@ -5,7 +5,10 @@
 from passlib.apps import ldap_context
 import passlib.utils
 
-ldap_context = ldap_context.copy(default="ldap_sha512_crypt")
+crypt_context = ldap_context.copy(
+    default="ldap_sha512_crypt",
+    deprecated=["ldap_plaintext", "ldap_md5", "ldap_sha1", "ldap_salted_md5",
+                "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
 
 
 def generate_password(length):
@@ -15,20 +18,20 @@ def generate_password(length):
 
 
 def hash_password(plaintext_passwd):
-    """Use a ldap_context to generate a RFC 2307 from given plaintext.
+    """Generate a RFC 2307 complaint hash from given plaintext.
 
-    The ldap_context is configured to generate the very secure ldap_sha512_crypt
-    hashes (a crypt extension available since glibc 2.7).
+    The passlib CryptContext is configured to generate the very secure
+    ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return ldap_context.encrypt(plaintext_passwd)
+    return crypt_context.encrypt(plaintext_passwd)
 
 
 def verify_password(plaintext_password, hash):
     """Verifies a plain password string against a given password hash.
 
-    It uses a ldap_context to verify RFC 2307 hashes.
+    It uses a crypt_context to verify RFC 2307 hashes.
     """
     try:
-        return ldap_context.verify(plaintext_password, hash)
+        return crypt_context.verify(plaintext_password, hash)
     except ValueError:
         return False
