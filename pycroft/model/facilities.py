@@ -52,9 +52,6 @@ class Dormitory(ModelBase):
             Dormitory.id == self.id
         ).all()
 
-    def __repr__(self):
-        return u"{} {}".format(self.street, self.number)
-
 
 class Room(ModelBase):
     number = Column(String(36), nullable=False)
@@ -65,5 +62,10 @@ class Room(ModelBase):
     dormitory_id = Column(Integer, ForeignKey(Dormitory.id), nullable=False)
     dormitory = relationship(Dormitory, backref=backref("rooms"))
 
-    def __repr__(self):
-        return u"{} {:d}{}".format(self.dormitory, self.level, self.number)
+    def __str__(self):
+        return "{} {} {}".format(self.dormitory.short_name, self.level,
+                                 self.number)
+
+    def __unicode__(self):
+        return u"{} {} {}".format(self.dormitory.short_name, self.level,
+                                  self.number)
