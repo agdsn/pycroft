@@ -19,44 +19,48 @@ from tests.fixtures.dummy.user import UserData
 class Test_030_User_Passwords(FixtureDataTestBase):
     datasets = [DormitoryData, RoomData, UserData]
 
+    def setUp(self):
+        super(Test_030_User_Passwords, self).setUp()
+        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
+
     def test_0010_password_hash_validator(self):
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         password = generate_password(4)
         pw_hash = hash_password(password)
 
-        def set_hash(h):
-            u.passwd_hash = h
-
-        set_hash(pw_hash)
+        self.user.passwd_hash = pw_hash
         session.session.commit()
 
-        self.assertRaisesRegexp(AssertionError, "A password-hash with les than 9 chars is not correct!", set_hash, password)
+        with self.assertRaisesRegexp(AssertionError,
+                                     "A password-hash with les than 9 chars "
+                                     "is not correct!"):
+            self.user.passwd_hash = password
         session.session.commit()
 
-        self.assertRaisesRegexp(AssertionError, "Cannot clear the password hash!", set_hash, None)
+        with self.assertRaisesRegexp(AssertionError, "Cannot clear the "
+                                                     "password hash!"):
+            self.user.passwd_hash = None
         session.session.commit()
 
     def test_0020_set_and_verify_password(self):
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
         password = generate_password(4)
-        pw_hash = hash_password(password)
 
-        u.set_password(password)
+        self.user.set_password(password)
         session.session.commit()
 
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.assertTrue(u.check_password(password))
-        self.assertIsNotNone(user.User.verify_and_get(u.login, password))
-        self.assertEqual(user.User.verify_and_get(u.login, password), u)
+        self.assertTrue(self.user.check_password(password))
+        self.assertEqual(user.User.verify_and_get(self.user.login, password),
+                         self.user)
 
-        self.assertIsNone(user.User.verify_and_get(password, u.login))
+        self.assertIsNone(user.User.verify_and_get(self.user.login,
+                                                   password + "_wrong"))
 
-        for length in range(0, 10):
+        for length in range(4, 10):
             for cnt in range(1, 3):
                 pw = generate_password(length)
-                if pw != password:
-                    self.assertFalse(u.check_password(pw))
-                    self.assertIsNone(user.User.verify_and_get(u.login, pw))
+                if pw == password:
+                    continue
+                self.assertFalse(self.user.check_password(pw))
+                self.assertIsNone(user.User.verify_and_get(self.user.login, pw))
 
 
 class Test_040_User_Login(FixtureDataTestBase):
