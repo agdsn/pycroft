@@ -38,7 +38,8 @@ class UserLogEntry(LogEntry):
                 primary_key=True)
 
     # many to one from UserLogEntry to User
-    user = relationship("User", backref=backref("user_log_entries"))
+    user = relationship("User", backref=backref("user_log_entries",
+                                                cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=False)
 
