@@ -29,7 +29,7 @@ class LogEntry(ModelBase):
     # many to one from LogEntry to User
     author = relationship("User",
                           backref=backref("log_entries"))
-    author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    author_id = Column(Integer, ForeignKey("user.id"))
 
 
 class UserLogEntry(LogEntry):
