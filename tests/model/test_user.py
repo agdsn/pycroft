@@ -31,7 +31,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
         session.session.commit()
 
         with self.assertRaisesRegexp(AssertionError,
-                                     "A password-hash with les than 9 chars "
+                                     "A password-hash with less than 9 chars "
                                      "is not correct!"):
             self.user.passwd_hash = password
         session.session.commit()
