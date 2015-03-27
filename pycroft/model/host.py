@@ -15,6 +15,7 @@ from sqlalchemy import Column, ForeignKey, event
 import ipaddr
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.types import Integer, String
+from pycroft.helpers.i18n import gettext
 
 from pycroft.model.base import ModelBase
 from pycroft.helpers.net import mac_regex
@@ -145,7 +146,7 @@ class Ip(ModelBase):
         super(Ip, self).__init__(*args, **kwargs)
 
         if self.address is not None and self.subnet is not None:
-            assert self.is_ip_valid, "Subnet does not contain the ip"
+            assert self.is_ip_valid, gettext(u"Subnet does not contain the ip")
 
     address = Column(String(51), unique=True, nullable=False)
     #address = Column(postgresql.INET, nullable=True)
@@ -186,7 +187,7 @@ class Ip(ModelBase):
             return value
         if self.address is not None:
             assert self._ip_subnet_valid(self.address, value),\
-                "Given subnet does not contain the ip"
+                gettext(u"Given subnet does not contain the ip")
         return value
 
     @validates("address")
@@ -195,13 +196,13 @@ class Ip(ModelBase):
             return value
         if self.subnet is not None:
             assert self._ip_subnet_valid(value, self.subnet),\
-                "Subnet does not contain the given ip"
+                gettext(u"Subnet does not contain the given ip")
         return value
 
 
 def _check_correct_ip_subnet(mapper, connection, target):
     if target.address is not None and target.subnet is not None:
-        assert target.is_ip_valid, "Subnet does not contain the ip"
+        assert target.is_ip_valid, gettext(u"Subnet does not contain the ip")
 
 
 event.listen(Ip, "before_insert", _check_correct_ip_subnet)
