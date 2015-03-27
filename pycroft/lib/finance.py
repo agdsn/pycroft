@@ -18,6 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
 from pycroft import messages
+from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.model import session
 from pycroft.model.finance import (
     Semester, FinanceAccount, Transaction, Split,
@@ -174,6 +175,10 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
     return query.scalar()
 
 
+adjustment_description = deferred_gettext(
+    u"Correction of „{original_description}“ from {original_valid_on}")
+
+
 @with_transaction
 def post_fees(users, fees, processor):
     """
@@ -183,7 +188,6 @@ def post_fees(users, fees, processor):
     :param iterable[Fee] fees:
     :param User processor:
     """
-    adjustment_description = messages["finance"]["adjustment_description"]
     for user in users:
         for fee in fees:
             computed_debts = fee.compute(user)
@@ -194,7 +198,7 @@ def post_fees(users, fees, processor):
             computed_adjustments = tuple(
                 ((adjustment_description.format(
                     original_description=description,
-                    original_valid_on=valid_on)),
+                    original_valid_on=valid_on)).to_json(),
                  valid_on, -amount)
                 for description, valid_on, amount in erroneous_debts)
             missing_adjustments, erroneous_adjustments = diff(
@@ -300,8 +304,9 @@ class Fee(object):
 
 
 class RegistrationFee(Fee):
+    description = deferred_gettext(u"Registration fee").to_json()
+
     def compute(self, user):
-        description = messages['finance']['registration_fee_description']
         when = single(user.registered_at)
         if user.has_property("registration_fee", when):
             try:
@@ -310,11 +315,13 @@ class RegistrationFee(Fee):
                 return []
             fee = semester.registration_fee
             if fee > 0:
-                return [(description, user.registered_at.date(), fee)]
+                return [(self.description, user.registered_at.date(), fee)]
         return []
 
 
 class SemesterFee(Fee):
+    description = deferred_gettext(u"Semester fee {semester}")
+
     def compute(self, user):
         liability_intervals = _to_date_intervals(
             user.property_intervals("semester_fee")
@@ -326,7 +333,6 @@ class SemesterFee(Fee):
             liability_intervals[-1].end
         ))
         away_intervals = _to_date_intervals(user.property_intervals("away"))
-        description = messages["finance"]["semester_fee_description"]
         debts = []
         # Compute semester fee for each semester the user is liable to pay it
         for semester in semesters:
@@ -345,12 +351,15 @@ class SemesterFee(Fee):
                 amount = semester.regular_semester_fee
             if amount > 0:
                 debts.append((
-                    description.format(semester=semester.name),
+                    self.description.format(semester=semester.name).to_json(),
                     valid_on, amount))
         return debts
 
 
 class LateFee(Fee):
+    description = deferred_gettext(
+        u"Late fee for overdue payment from {original_valid_on}")
+
     def __init__(self, account, calculate_until):
         """
         :param date calculate_until: Date up until late fees are calculated;
@@ -400,7 +409,6 @@ class LateFee(Fee):
         liability_intervals = _to_date_intervals(
             user.property_intervals("late_fee")
         )
-        description = messages["finance"]["late_fee_description"]
         debts = []
         for last_credit, balance, delta in self.running_totals(transactions):
             semester = get_semester_for_date(last_credit)
@@ -411,7 +419,7 @@ class LateFee(Fee):
             amount = semester.late_fee
             if liability_intervals & single(valid_on) and amount > 0:
                 debts.append((
-                    description.format(original_valid_on=last_credit),
+                    self.description.format(original_valid_on=last_credit).to_json(),
                     amount, valid_on
                 ))
         return debts
@@ -448,7 +456,7 @@ class CSVImportError(Exception):
 
     def __init__(self, message, cause=None):
         if cause is not None:
-            message = u"{0}\nUrsprünglicher Fehler:\n{1}".format(
+            message = gettext(u"{0}\nCaused by:\n{1}").format(
                 message, cause
             )
         self.cause = cause
@@ -475,13 +483,15 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
         entries = tuple(imap(lambda r: process_record(r[0], r[1], import_time),
                              records))
     except StopIteration:
-        raise CSVImportError(u"Leerer Datensatz.")
+        raise CSVImportError(gettext(u"No data present."))
     except csv.Error as e:
-        raise CSVImportError(u"Fehler beim Lesen der CSV-Daten.", e)
+        raise CSVImportError(gettext(u"Could not read CSV."), e)
     if not entries:
-        raise CSVImportError(u"Leerer Datensatz.")
+        raise CSVImportError(gettext(u"No data present."))
     if not descending_transaction_dates(entries):
-        raise CSVImportError(u"Buchungen nicht absteigend nach Buchungsdatum geordnet.")
+        raise CSVImportError(gettext(
+            u"Transaction are not sorted according to transaction date in "
+            u"descending order."))
     first_posted_at = entries[-1][8]
     balance = session.session.query(
         func.coalesce(func.sum(JournalEntry.amount), 0)
@@ -513,12 +523,17 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
         elif 'delete' == tag:
             continue
         elif 'replace':
-            raise CSVImportError(u"Konflikt beim Import.")
+            raise CSVImportError(
+                gettext(u"Import conflict:\n"
+                        u"Database entries:\n{0}\n"
+                        u"File entries:\n{1}").format(
+                    u'\n'.join(islice(entries, i1, i2)),
+                    u'\n'.join(islice(entries, j1, j2))))
         else:
             raise AssertionError()
     if balance != expected_balance:
-        message = u"Summe nach Import entspricht nicht der erwarteten Summe: " \
-                  u"{0} != {1}."
+        message = gettext(u"Balance after does not equal expected balance: "
+                          u"{0} != {1}.")
         raise CSVImportError(message.format(balance, expected_balance))
 
 
@@ -574,7 +589,7 @@ def restore_record(record):
 
 def process_record(index, record, imported_at):
     if record.currency != u"EUR":
-        message = u"Nicht unterstützte Währung {0} in Datensatz {1}: {2}"
+        message = gettext(u"Unsupported currency {0}. Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(message.format(record.currency, index, raw_record))
     try:
@@ -582,8 +597,8 @@ def process_record(index, record, imported_at):
             account_number=record.our_account_number
         ).one()
     except NoResultFound as e:
-        message = u"Kein Journal mit der Kontonummer {0} in Datensatz {1} " \
-                  u"gefunden: {2}"
+        message = gettext(u"No journal with account number {0}. "
+                          u"Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(
             message.format(record.our_account_number, index, raw_record), e)
@@ -592,14 +607,14 @@ def process_record(index, record, imported_at):
         valid_on = datetime.strptime(record.valid_on, u"%d.%m.%y").date()
         posted_at = datetime.strptime(record.posted_at, u"%d.%m.%y").date()
     except ValueError as e:
-        message = u"Falsches Datumsformat in Datensatz {0}: {1}"
+        message = gettext(u"Illegal date format. Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(message.format(index, raw_record), e)
 
     try:
         amount = int(record.amount.replace(u",", u""))
     except ValueError as e:
-        message = u"Falsches Betragsformat {0} in Datensatz {1}: {2}"
+        message = gettext(u"Illegal value format {0}. Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(
             message.format(record.amount, index, raw_record), e)
@@ -607,7 +622,9 @@ def process_record(index, record, imported_at):
         description = record.description.decode('utf8')
         other_name = record.other_name.decode('utf8')
     except UnicodeDecodeError as e:
-        raise CSVImportError(u"Fehler beim Dekodieren aus UTF-8", e)
+        message = gettext(u"Unicode decoding error. Record {0}: {1}")
+        raw_record = restore_record(record)
+        raise CSVImportError(message.format(index, raw_record), e)
     return (amount, journal.id, cleanup_description(description),
             description, record.other_account_number,
             record.other_routing_number, other_name, imported_at,

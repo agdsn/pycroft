@@ -2,6 +2,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.lib.logging import log_user_event
 from pycroft.model.session import with_transaction
 
@@ -19,8 +20,9 @@ def change_mac(net_device, mac, processor):
     """
     old_mac = net_device.mac
     net_device.mac = mac
-    message = u"Die Mac-Adresse von {} zu {} geändert.".format(old_mac, mac)
-    log_user_event(message, processor, net_device.host.user)
+    message = deferred_gettext(u"Changed MAC address from {} to {}.").format(
+        old_mac, mac)
+    log_user_event(message.to_json(), processor, net_device.host.user)
     return net_device
 
 

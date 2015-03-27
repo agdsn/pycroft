@@ -16,9 +16,10 @@ import re
 
 from sqlalchemy.sql.expression import func, literal
 
-from pycroft import messages, config
+from pycroft import config
 from pycroft.helpers import user, net
 from pycroft.helpers.errorcode import Type1Code, Type2Code
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen)
 from pycroft.lib.host import generate_hostname
@@ -116,10 +117,10 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     # set random initial password
     new_user.set_password(plain_password)
-    session.session.add(new_user)
-    account_name = messages['finance']['user_finance_account_name'].format(
-        user_id=new_user.id)
-    new_user.finance_account.name = account_name
+    with session.session.begin(subtransactions=True):
+        session.session.add(new_user)
+    new_user.finance_account.name = deferred_gettext(u"User {id}").format(
+        id=new_user.id).to_json()
 
     # create one new host (including net_device) for the new user
     subnets = filter(lambda s: s.ip_type == '4', dormitory.subnets)
@@ -165,7 +166,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     move_in_user_log_entry = log_user_event(
         author=processor,
-        message=messages["move_in"]["log_message"],
+        message=deferred_gettext(u"Moved in.").to_json(),
         user=new_user
     )
 
@@ -200,10 +201,10 @@ def move(user, dormitory, level, room_number, processor):
 
     user.room = new_room
 
+    message = deferred_gettext(u"Moved from {} to {}.")
     log_user_event(
         author=processor,
-        message=messages["move"]["log_message"].format(
-            from_room=old_room, to_room=new_room),
+        message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
 
@@ -221,10 +222,10 @@ def move(user, dormitory, level, room_number, processor):
 
                 ip.change_ip(new_ip, new_subnet)
 
+                message = deferred_gettext(u"Changed IP from {} to {}.")
                 log_user_event(
                     author=processor,
-                    message=messages["move"]["ip_change_log_message"].format(
-                        old_ip=old_ip, new_ip=new_ip),
+                    message=message.format(old_ip, new_ip).to_json(),
                     user=user)
 
     return user
@@ -242,8 +243,9 @@ def edit_name(user, name, processor):
         raise ValueError()
     old_name = user.name
     user.name = name
+    message = deferred_gettext(u"Changed name from {} to {}.")
     log_user_event(author=processor, user=user,
-                   message=u"Nutzer {} umbenannt in {}".format(old_name, name))
+                   message=message.format(old_name, name).to_json())
     return user
 
 
@@ -260,9 +262,9 @@ def edit_email(user, email, processor):
         raise ValueError()
     old_email = user.email
     user.email = email
+    message = deferred_gettext(u"Changed e-mail from {} to {}.")
     log_user_event(author=processor, user=user,
-                   message=u"E-Mail-Adresse von {} auf {} "
-                           u"geändert.".format(old_email, email))
+                   message=message.format(old_email, email).to_json())
     return user
 
 
@@ -324,13 +326,9 @@ def block(user, reason, processor, during=None):
     if during is None:
         during = closedopen(session.utcnow(), None)
     make_member_of(user, config.violation_group, processor, during)
-    log_message = messages["block"]["log_message"].format(
-        begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
-        end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert',
-        reason=reason)
-
-    log_user_event(message=log_message, author=processor, user=user)
-
+    message = deferred_gettext(u"Blocked during {during}. Reason: {reason}.")
+    log_user_event(message=message.format(during=during, reason=reason)
+                   .to_json(), author=processor, user=user)
     return user
 
 
@@ -349,16 +347,14 @@ def move_out(user, comment, processor, when):
     for group in (config.member_group, config.network_access_group):
         remove_member_of(user, group, processor, closedopen(when, None))
 
-    log_message = messages["move_out"]["log_message"].format(
-        date=when.strftime("%d.%m.%Y")
-    )
     if comment:
-        log_message += messages["move_out"]["log_message_comment"].format(
-            comment=comment
-        )
+        message = deferred_gettext(u"Moved out on {}. Comment: {}").format(
+            when, comment)
+    else:
+        message = deferred_gettext(u"Moved out on {}.").format(when)
 
     log_user_event(
-        message=log_message,
+        message=message.to_json(),
         author=processor,
         user=user
     )
@@ -386,21 +382,15 @@ def move_out_temporarily(user, comment, processor, during=None):
         if user_host is not None:
             session.session.delete(user_host.user_net_device.ips[0])
 
-    log_message = messages["move_out_tmp"]["log_message"].format(
-        begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
-        end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert'
-    )
     if comment:
-        log_message += messages["move_out_tmp"]["log_message_comment"].format(
-            comment=comment
-        )
+        message = deferred_gettext(u"Moved out temporarily during {during}. "
+                                   u"Comment: {comment}").format(
+            during=during, comment=comment)
+    else:
+        message = deferred_gettext(u"Moved out temporarily {during}.").format(
+            during=during)
 
-    log_user_event(
-        message=log_message,
-        author=processor,
-        user=user
-    )
-
+    log_user_event(message=message.to_json(), author=processor, user=user)
     return user
 
 
@@ -428,12 +418,8 @@ def is_back(user, processor):
             net_device=user_host.user_net_device
         ))
 
-    log_user_event(
-        message=messages["move_out_tmp"]["log_message_back"],
-        author=processor,
-        user=user
-    )
-
+    log_user_event(message=deferred_gettext(u"Moved back in.").to_json(),
+                   author=processor, user=user)
     return user
 
 
@@ -518,6 +504,10 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
     session.session.add_all(
         Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
         for i in intervals)
+    message = deferred_gettext(u"Added to group {group} during {during}.")
+    log_user_event(message=message.format(group=group.name,
+                                          during=during).to_json(),
+                   user=user, author=processor)
 
 
 @with_transaction
@@ -543,3 +533,7 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     session.session.add_all(
         Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
         for i in intervals)
+    message = deferred_gettext(u"Removed from group {group} during {during}.")
+    log_user_event(message=message.format(group=group.name,
+                                          during=during).to_json(),
+                   user=user, author=processor)
