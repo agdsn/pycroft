@@ -54,35 +54,53 @@ def dngettext(domain, singular, plural, n):
     return get_translations().udngettext(domain, singular, plural, n)
 
 
-def format_number(n, **options):
+def type_specific_options(formatter):
+    formatter.__option_policy__ = 'type-specific'
+    return formatter
+
+
+def ignore_options(formatter):
+    formatter.__option_policy__ = 'ignore'
+    return formatter
+
+
+@type_specific_options
+def format_number(n):
     return numbers.format_number(n, locale=get_locale())
 
 
-def format_date(d, **options):
-    options = options.get(date, {})
-    return dates.format_date(d, locale=get_locale(), **options)
+@type_specific_options
+def format_date(d, format='medium'):
+    return dates.format_date(d, format=format, locale=get_locale())
 
 
-def format_datetime(d, **options):
-    options = options.get(datetime, {})
-    return dates.format_datetime(d, locale=get_locale(), **options)
+@type_specific_options
+def format_datetime(d, format='medium', tzinfo=None):
+    return dates.format_datetime(d, format=format, tzinfo=tzinfo,
+                                 locale=get_locale())
 
 
-def format_time(t, **options):
-    options = options.get(time, {})
-    return dates.format_time(t, locale=get_locale(), **options)
+@type_specific_options
+def format_time(t, format='medium', tzinfo=None):
+    return dates.format_time(t, format=format, tzinfo=tzinfo,
+                             locale=get_locale())
 
 
-def format_timedelta(delta, **options):
-    options = options.get(timedelta, {})
-    return dates.format_timedelta(delta, locale=get_locale(), **options)
+@type_specific_options
+def format_timedelta(delta, granularity='second', threshold=.85,
+                     add_direction=False, format='medium'):
+    return dates.format_timedelta(
+        delta, granularity=granularity, threshold=threshold,
+        add_direction=add_direction, format=format, locale=get_locale())
 
 
-def format_bool(v, **options):
+@ignore_options
+def format_bool(v):
     return gettext(u"True") if v else gettext(u"False")
 
 
-def format_none(n, **options):
+@ignore_options
+def format_none(n):
     return gettext(u"None")
 
 
@@ -101,14 +119,15 @@ def format_interval(interval, **options):
     )
 
 
-identity = lambda x: x
+identity = ignore_options(lambda x: x)
+
 
 formatter_map = {
-    type(None): format_none,
+    type(None): identity,
     str: identity,
     unicode: identity,
-    bool: format_bool,
-    float: format_number,
+    bool: identity,
+    float: format_decimal,
     int: format_number,
     date: format_date,
     datetime: format_datetime,
@@ -120,13 +139,18 @@ formatter_map = {
 
 def format_param(p, options):
     concrete_type = type(p)
-    formatters = (formatter_map[type_] for type_ in concrete_type.__mro__
-                  if type_ in formatter_map)
+    formatters = ((type_, formatter_map[type_])
+                  for type_ in concrete_type.__mro__ if type_ in formatter_map)
     try:
-        formatter = next(formatters)
+        type_, formatter = next(formatters)
     except StopIteration:
         raise TypeError("No formatter available for type {} or any supertype."
                         .format(qualified_typename(concrete_type)))
+    option_policy = getattr(formatter, '__option_policy__', None)
+    if option_policy == 'ignore':
+        options = {}
+    elif option_policy == 'type-specific':
+        options = options.get(type_, {})
     return formatter(p, **options)
 
 
