@@ -10,6 +10,8 @@ import operator
 import traceback
 from babel import Locale, dates, numbers
 from babel.support import Translations
+from decimal import Decimal
+import collections
 import jsonschema
 from pycroft.helpers.interval import Interval, Bound, NegativeInfinity, \
     PositiveInfinity
@@ -67,6 +69,19 @@ def ignore_options(formatter):
 @type_specific_options
 def format_number(n):
     return numbers.format_number(n, locale=get_locale())
+
+
+@type_specific_options
+def format_decimal(d, format=None):
+    return numbers.format_decimal(d, format=format, locale=get_locale())
+
+
+Money = collections.namedtuple("Money", ["value", "currency"])
+
+
+@type_specific_options
+def format_currency(money, format=None):
+    return numbers.format_currency(*money, format=format, locale=get_locale())
 
 
 @type_specific_options
@@ -129,6 +144,8 @@ formatter_map = {
     bool: identity,
     float: format_decimal,
     int: format_number,
+    Decimal: format_decimal,
+    Money: format_currency,
     date: format_date,
     datetime: format_datetime,
     time: format_time,
@@ -153,6 +170,12 @@ def format_param(p, options):
         options = options.get(type_, {})
     return formatter(p, **options)
 
+
+def deserialize_money(v):
+    try:
+        return Money(Decimal(v[0]), v[1])
+    except IndexError:
+        raise ValueError()
 
 def serialize_interval(interval):
     """
@@ -197,6 +220,8 @@ serialize_map = {
     bool: identity,
     float: identity,
     int: identity,
+    Decimal: str,
+    Money: lambda m: (str(m.value), m.currency),
     date: operator.methodcaller("isoformat"),
     datetime: operator.methodcaller("isoformat"),
     time: operator.methodcaller("isoformat"),
@@ -213,6 +238,8 @@ deserialize_map = {qualified_typename(t): f for t, f in {
     bool: identity,
     float: identity,
     int: identity,
+    Decimal: Decimal,
+    Money: deserialize_money,
     date: lambda v: datetime.strptime(v, "%Y-%m-%d").date(),
     datetime: lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f"),
     time: lambda v: datetime.strptime(v, "%H:%M:%S.%f").time(),

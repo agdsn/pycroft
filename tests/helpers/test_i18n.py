@@ -6,11 +6,13 @@ import json
 import traceback
 import unittest
 from unittest import TestCase
+from decimal import Decimal
 import jsonschema
 from pycroft.helpers.i18n import (
     ErroneousMessage, Message, NumericalMessage, SimpleMessage,
     deserialize_param, serialize_param, schema, deferred_dgettext,
-    deferred_dngettext, deferred_gettext, deferred_ngettext, format_datetime)
+    deferred_dngettext, deferred_gettext, deferred_ngettext, format_datetime,
+    Money)
 from pycroft.helpers.interval import (
     UnboundedInterval, closed, closedopen, openclosed, open)
 
@@ -38,6 +40,12 @@ class TestParameterSerialization(unittest.TestCase):
 
     def test_serialize_float(self):
         self.assertValidSerialization(0.5)
+
+    def test_serialize_decimal(self):
+        self.assertValidSerialization(Decimal('3.8e2'))
+
+    def test_serialize_money(self):
+        self.assertValidSerialization(Money(Decimal(20.0), "EUR"))
 
     def test_serialize_datetime(self):
         self.assertValidSerialization(datetime.datetime.utcnow())
