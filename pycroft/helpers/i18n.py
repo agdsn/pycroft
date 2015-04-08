@@ -6,7 +6,6 @@ from datetime import date, datetime, time, timedelta
 from functools import partial
 from itertools import imap
 import json
-import gettext as gt
 import operator
 import traceback
 from babel import Locale, dates, numbers
@@ -372,9 +371,9 @@ class SimpleMessage(Message):
 
     def _gettext(self):
         if self.domain:
-            return gt.dgettext(self.domain, self.message)
+            return dgettext(self.domain, self.message)
         else:
-            return gt.gettext(self.message)
+            return gettext(self.message)
 
 
 class NumericalMessage(Message):
