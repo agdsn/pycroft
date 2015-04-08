@@ -227,11 +227,11 @@ schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Message format for deferred localization.",
     "oneOf": [
-        {"$ref": "#/definitions/singular"},
-        {"$ref": "#/definitions/plural"},
+        {"$ref": "#/definitions/simple"},
+        {"$ref": "#/definitions/numerical"},
     ],
     "definitions": {
-        "singular": {
+        "simple": {
             "type": "object",
             "properties": {
                 "domain": {"type": "string"},
@@ -242,7 +242,7 @@ schema = {
             "required": ["message"],
             "additionalProperties": False,
         },
-        "plural": {
+        "numerical": {
             "type": "object",
             "properties": {
                 "domain": {"type": "string"},
