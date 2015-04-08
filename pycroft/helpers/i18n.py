@@ -8,6 +8,7 @@ from itertools import imap
 import json
 import gettext as gt
 import operator
+import traceback
 from babel import Locale, dates, numbers
 from babel.support import Translations
 import jsonschema
@@ -311,7 +312,7 @@ class Message(object):
     def _base_dict(self):
         raise NotImplementedError()
 
-    def _message(self):
+    def _gettext(self):
         raise NotImplementedError()
 
     def to_json(self):
@@ -332,11 +333,20 @@ class Message(object):
         return self
 
     def localize(self, **options):
-        msg = self._message()
+        msg = self._gettext()
+        if not self.args and not self.kwargs:
+            return msg
         f = partial(format_param, options=options)
-        args = imap(f, self.args)
-        kwargs = {k: f(v) for k, v in self.kwargs.iteritems()}
-        return msg.format(*args, **kwargs)
+        try:
+            args = tuple(imap(f, self.args))
+            kwargs = {k: f(v) for k, v in self.kwargs.iteritems()}
+            return msg.format(*args, **kwargs)
+        except (TypeError, ValueError, IndexError, KeyError) as e:
+            error = u''.join(traceback.format_exception_only(type(e), e))
+            return gettext(u'Could not format message "{message}" '
+                           u'(args={args}, kwargs={kwargs}): {error}'
+                           .format(message=msg, args=self.args,
+                                   kwargs=self.kwargs, error=error))
 
 
 class ErroneousMessage(Message):
@@ -347,7 +357,7 @@ class ErroneousMessage(Message):
     def _base_dict(self):
         raise AssertionError()
 
-    def _message(self):
+    def _gettext(self):
         return self.text
 
 
@@ -361,7 +371,7 @@ class SimpleMessage(Message):
     def _base_dict(self):
         return {"message": self.message}
 
-    def _message(self):
+    def _gettext(self):
         if self.domain:
             return gt.dgettext(self.domain, self.message)
         else:
@@ -380,7 +390,7 @@ class NumericalMessage(Message):
     def _base_dict(self):
         return {"singular": self.singular, "plural": self.plural, "n": self.n}
 
-    def _message(self):
+    def _gettext(self):
         if self.domain:
             return dngettext(self.domain, self.singular, self.plural, self.n)
         else:

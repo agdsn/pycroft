@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
 import json
+import traceback
 import unittest
 from unittest import TestCase
 import jsonschema
@@ -170,3 +171,31 @@ class TestJSONExport(DeferredMessageTestCase):
         m = deferred_dngettext(domain, singular, plural, n)
         self.assertNumericMessageCorrect(m, singular, plural, n, domain, (), {},
                                          plural)
+
+    def get_format_error_message(self, message, args, kwargs):
+        try:
+            message.format(*args, **kwargs)
+        except (TypeError, ValueError, IndexError, KeyError) as e:
+            return u''.join(traceback.format_exception_only(type(e), e))
+        else:
+            raise AssertionError()
+
+    def test_missing_positional_argument(self):
+        message = u"{0} {1}"
+        args = (1,)
+        kwargs = {}
+        error = self.get_format_error_message(message, args, kwargs)
+        m = deferred_gettext(message).format(*args)
+        text = (u'Could not format message "{}" (args={}, kwargs={}): {}'
+                .format(message, args, kwargs, error))
+        self.assertSimpleMessageCorrect(m, message, None, args, kwargs, text)
+
+    def test_missing_keyword_argument(self):
+        message = u"{foo}"
+        args = (1,)
+        kwargs = {}
+        error = self.get_format_error_message(message, args, kwargs)
+        m = deferred_gettext(message).format(*args)
+        text = (u'Could not format message "{}" (args={}, kwargs={}): {}'
+                .format(message, args, kwargs, error))
+        self.assertSimpleMessageCorrect(m, message, None, args, kwargs, text)
