@@ -127,7 +127,7 @@ def format_param(p, options):
         formatter = next(formatters)
     except StopIteration:
         raise TypeError("No formatter available for type {} or any supertype."
-                        .format(concrete_type.__name__))
+                        .format(qualified_typename(concrete_type)))
     return formatter(p, **options)
 
 
@@ -207,9 +207,8 @@ def serialize_param(param):
         type_, serializer = next(serializers)
     except StopIteration:
         raise TypeError("No serialization available for type {} or any"
-                        "supertype".format(concrete_type.__name__))
-    type_name = qualified_typename(type_)
-    return {"type": type_name, "value": serializer(param)}
+                        "supertype".format(qualified_typename(concrete_type)))
+    return {"type": qualified_typename(type_), "value": serializer(param)}
 
 
 def deserialize_param(param):
