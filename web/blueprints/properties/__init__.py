@@ -10,11 +10,12 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from itertools import chain, imap
+from itertools import chain
 import operator
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask.json import jsonify
+from pycroft._compat import itervalues, iterkeys, imap
 
 from pycroft.model import session
 from pycroft.property import property_categories
@@ -43,8 +44,7 @@ def traffic_groups():
 @bp.route('/traffic_groups/json')
 @access.require('groups_traffic_show')
 def traffic_groups_json():
-    return jsonify(items=map(
-        lambda group: {
+    return jsonify(items=[{
             'name': group.name,
             'limit': byte_size_filter(group.traffic_limit),
             'delete': {
@@ -53,9 +53,7 @@ def traffic_groups_json():
                 'btn_class': '',
                 'glyphicon': 'glyphicon-delete'
             }
-        },
-        TrafficGroup.q.all()
-    ))
+        } for group in TrafficGroup.q.all()])
 
 
 @bp.route('/traffic_group/create', methods=['GET', 'POST'])
@@ -94,7 +92,7 @@ def property_groups():
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
     properties_with_description = set(chain(*(
-        category.iterkeys() for category in categories.itervalues()
+        iterkeys(category) for category in itervalues(categories)
     )))
     properties = set(imap(
         operator.itemgetter(0),

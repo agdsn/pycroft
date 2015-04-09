@@ -6,7 +6,8 @@ from datetime import datetime, time
 
 import ipaddr
 
-from mysql import session as my_session, Wheim, Nutzer, Computer
+from .mysql import session as my_session, Wheim, Nutzer, Computer
+from pycroft._compat import itervalues
 from pycroft.model import facilities, session, user, host, logging
 from pycroft.helpers.user import hash_password
 from pycroft.model.dns import ARecord, CNAMERecord
@@ -69,7 +70,7 @@ def do_convert():
 
     root = user.User(login="ag_dsn", name="System User", registered_at=datetime.today(), passwd_hash=hash_password("test"))
     root.room = root_room
-    for switch in switches.values():
+    for switch in itervalues(switches):
         switch.user_id = root.id
 
 
@@ -143,18 +144,18 @@ def do_convert():
                           property_group=property_groups["tmpausgezogen"])]
 
 
-    session.session.add_all(houses.values())
+    session.session.add_all(itervalues(houses)())
     session.session.add_all(patch_ports)
     session.session.add_all(rooms)
-    session.session.add_all(switches.values())
+    session.session.add_all(itervalues(switches)())
     session.session.add_all(ips)
     session.session.add_all(net_devices)
     session.session.add_all(switch_ports)
-    session.session.add_all(property_groups.values())
+    session.session.add_all(itervalues(property_groups)())
     session.session.add_all(properties_all)
     session.session.add(root)
-    session.session.add_all(subnets.values())
-    session.session.add_all(vlans.values())
+    session.session.add_all(itervalues(subnets)())
+    session.session.add_all(itervalues(vlans)())
 
     logs = []
     user_hosts = []

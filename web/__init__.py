@@ -12,11 +12,11 @@
 """
 from flask import Flask, redirect, url_for, request, flash
 from flask.ext.babel import Babel
-from blueprints import (finance, infrastructure, properties, user, facilities,
+from .blueprints import (finance, infrastructure, properties, user, facilities,
                         login)
 from web.form import widgets
-import template_filters
-import template_tests
+from . import template_filters
+from . import template_tests
 
 from pycroft.model import session
 from web.blueprints.login import login_manager

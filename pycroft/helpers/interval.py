@@ -2,8 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import collections
-from itertools import imap, izip, tee, chain, ifilterfalse
+from itertools import tee, chain
 import operator
+from pycroft._compat import text_type, imap, reduce, izip, ifilterfalse
 
 
 __all__ = (
@@ -19,7 +20,7 @@ def _infinity(name):
     return type(name + "Type", (object, ), {
         '__repr__': lambda self: "{0}.{1}".format(self.__module__, name),
         '__str__': lambda self: name,
-        '__unicode__': lambda self: unicode(name),
+        '__unicode__': lambda self: text_type(name),
     })()
 
 
@@ -93,7 +94,7 @@ class Bound(tuple):
         return str(self.value)
 
     def __unicode__(self):
-        return unicode(self.value)
+        return str(self.value)
 
     def __invert__(self):
         return Bound(self.value, not self.closed)
@@ -578,7 +579,7 @@ class IntervalSet(collections.Sequence):
         return "{{{0}}}".format(", ".join(imap(str, self._intervals)))
 
     def __unicode__(self):
-        return u"{{{0}}}".format(u", ".join(imap(unicode, self._intervals)))
+        return u"{{{0}}}".format(u", ".join(imap(text_type, self._intervals)))
 
     def complement(self):
         return _create(_complement(self._intervals))

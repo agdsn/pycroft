@@ -1,7 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import chain, imap
+from itertools import chain
 
 from flask import url_for
 from markupsafe import escape, Markup
@@ -9,6 +9,7 @@ import wtforms.ext.sqlalchemy.fields
 import wtforms.fields
 from wtforms.widgets.core import html_params, HTMLString
 
+from pycroft._compat import imap, reduce, iteritems
 from web.templates import page_resources
 
 
@@ -70,7 +71,7 @@ class BootstrapStandardDecorator(WidgetDecorator):
                             u'</div>')
         if field.description:
             html.append(help_block.format(field.description))
-        html.extend(imap(lambda e: help_block.format(e), field.errors))
+        html.extend(imap(help_block.format, field.errors))
         return HTMLString(u''.join(html))
 
     def render_inline(self, field, **kwargs):
@@ -85,7 +86,7 @@ class BootstrapStandardDecorator(WidgetDecorator):
         help_block = Markup(u'<span class="help-block">{0}</span>')
         if field.description:
             html.append(help_block.format(field.description))
-        html.extend(imap(lambda e: help_block.format(e), field.errors))
+        html.extend(imap(help_block.format, field.errors))
         return HTMLString(u''.join(html))
 
     def __call__(self, field, **kwargs):
@@ -161,16 +162,16 @@ class BootstrapCheckboxDecorator(BootstrapRadioCheckboxDecorator):
 class BootstrapFieldListWidget(object):
     def __call__(self, field, **kwargs):
         return HTMLString(u''.join(chain(
-            imap(lambda e: Markup(u'<p class="help-block">{0}</p>').format(e), field.errors),
+            imap(Markup(u'<p class="help-block">{0}</p>').format, field.errors),
             imap(lambda f: f(**kwargs), field)
         )))
 
 
 class BootstrapFormFieldWidget(object):
     def __call__(self, field, **kwargs):
-        return HTMLString("<div class=\"form-field\">"+
-                          u''.join(imap(lambda f: f(**kwargs), field))+
-                          "</div>")
+        return HTMLString(u"<div class=\"form-field\">" +
+                          u''.join(imap(lambda f: f(**kwargs), field)) +
+                          u"</div>")
 
 
 class BootstrapStaticFieldWidget(object):
@@ -224,7 +225,7 @@ class BootstrapDatepickerWidget(object):
     """Renders datetime fields using bootstrap-datepicker."""
     def __call__(self, field, **kwargs):
         kwargs["data-provide"] = u"datepicker"
-        for (option, value) in field.datepicker_options.iteritems():
+        for (option, value) in iteritems(field.datepicker_options):
             attribute = 'data-date-{0}'.format(option.replace('_', '-'))
             kwargs[attribute] = value
         page_resources.link_script(url_for(

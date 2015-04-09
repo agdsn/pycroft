@@ -4,11 +4,11 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
-import cStringIO
 import csv
 from datetime import datetime, date, timedelta
 import difflib
-from itertools import chain, ifilter, imap, izip_longest, tee, izip, islice
+from functools import partial
+from itertools import chain, tee, islice
 import operator
 import re
 
@@ -18,6 +18,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
 from pycroft import messages
+from pycroft._compat import (
+    imap, with_metaclass, ifilter, StringIO, izip_longest)
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.model import session
 from pycroft.model.finance import (
@@ -254,7 +256,7 @@ def _to_date_intervals(intervals):
     return IntervalSet(imap(_to_date_interval, intervals))
 
 
-class Fee(object):
+class Fee(with_metaclass(ABCMeta)):
     """
     Fees must be idempotent, that means if a fee has been applied to a user,
     another application must not result in any change. This property allows
@@ -262,7 +264,6 @@ class Fee(object):
     semester or the current day and makes the calculation independent of system
     time it was running.
     """
-    __metaclass__ = ABCMeta
 
     validity_period = UnboundedInterval
 
@@ -466,7 +467,7 @@ class CSVImportError(Exception):
 def descending_transaction_dates(entries):
     a, b = tee(imap(operator.itemgetter(8), entries))
     next(b)
-    return all(imap(lambda p: p[0] >= p[1], izip(a, b)))
+    return all(imap(operator.ge, a, b))
 
 
 @with_transaction
@@ -541,11 +542,7 @@ def remove_space_characters(field):
     """Remove every 28th character if it is a space character."""
     if field is None:
         return None
-    characters = filter(
-        lambda c: c[0] % 28 != 27 or c[1] != u' ',
-        enumerate(field)
-    )
-    return u"".join(map(lambda c: c[1], characters))
+    return u"".join(c for i, c in enumerate(field) if i % 28 != 27 or c != u' ')
 
 
 # Banks are using the original description field to store several subfields with
@@ -554,12 +551,10 @@ def remove_space_characters(field):
 sepa_description_field_tags = (
     u'EREF', u'KREF', u'MREF', u'CRED', u'DEBT', u'SVWZ', u'ABWA', u'ABWE'
 )
-sepa_description_pattern = re.compile(r''.join(chain(
+sepa_description_pattern = re.compile(ur''.join(chain(
     ur'^',
-    map(
-        lambda tag: ur'(?:({0}\+.*?)(?: (?!$)|$))?'.format(tag),
-        sepa_description_field_tags
-    ),
+    [ur'(?:({0}\+.*?)(?: (?!$)|$))?'.format(tag)
+     for tag in sepa_description_field_tags],
     ur'$'
 )), re.UNICODE)
 
@@ -568,17 +563,12 @@ def cleanup_description(description):
     match = sepa_description_pattern.match(description)
     if match is None:
         return description
-    return u' '.join(map(
-        remove_space_characters,
-        filter(
-            lambda g: g is not None,
-            match.groups()
-        )
-    ))
+    fields = ifilter(partial(operator.is_not, None), match.groups())
+    return u' '.join(imap(remove_space_characters, fields))
 
 
 def restore_record(record):
-    string_buffer = cStringIO.StringIO()
+    string_buffer = StringIO()
     csv.DictWriter(
         string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect
     ).writerow(record._asdict())

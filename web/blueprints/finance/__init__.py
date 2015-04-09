@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from datetime import timedelta
-from itertools import (imap, groupby)
+from itertools import groupby
 from flask import (
     Blueprint, render_template, redirect, url_for, jsonify,
     request, flash, abort)
@@ -19,6 +19,7 @@ from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
+from pycroft._compat import imap
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
@@ -51,8 +52,8 @@ def journals_list():
 @bp.route('/journals/list/json')
 @access.require('finance_show')
 def journals_list_json():
-    return jsonify(items=map(
-        lambda journal: {
+    return jsonify(items=[
+        {
             'name': journal.name,
             'bank': journal.bank,
             'ktonr': journal.account_number,
@@ -67,16 +68,14 @@ def journals_list_json():
             },
             'hbci': journal.hbci_url,
             'change_date': ''.format(journal.last_update)
-        },
-        Journal.q.all()
-    ))
+        } for journal in Journal.q.all()])
 
 
 @bp.route('/journals/entries/json')
 @access.require('finance_show')
 def journals_entries_json():
-    return jsonify(items=map(
-        lambda entry: {
+    return jsonify(items=[
+        {
             'journal': entry.journal.name,
             'valid_on': date_filter(entry.valid_on),
             'amount': money_filter(entry.amount),
@@ -94,11 +93,9 @@ def journals_entries_json():
                              'icon': 'glyphicon-pencil'
                          }] if privilege_check(current_user,
                                                'finance_change') else []),
-        },
-        JournalEntry.q.filter(
+        } for entry in JournalEntry.q.filter(
             JournalEntry.transaction_id == None
-        ).order_by(JournalEntry.valid_on).all()
-    ))
+        ).order_by(JournalEntry.valid_on).all()])
 
 
 @bp.route('/journals/import', methods=['GET', 'POST'])
@@ -222,8 +219,8 @@ def accounts_show(account_id):
 @access.require('finance_show')
 def accounts_show_json(account_id):
     inverted = False
-    return jsonify(items=map(
-        lambda split: {
+    return jsonify(items=[
+        {
             'posted_at': datetime_filter(split.transaction.posted_at),
             'valid_on': date_filter(split.transaction.valid_on),
             'description': {
@@ -235,10 +232,8 @@ def accounts_show_json(account_id):
             },
             'amount': money_filter(split.amount),
             'row_positive': (split.amount > 0) is not inverted
-        },
-        Split.q.join(Transaction).filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_on)
-    ))
+        } for split in Split.q.join(Transaction).filter(Split.account_id == account_id)
+        .order_by(Transaction.valid_on)])
 
 
 @bp.route('/transactions/<int:transaction_id>')
@@ -257,17 +252,15 @@ def transactions_show(transaction_id):
 @access.require('finance_show')
 def transactions_show_json(transaction_id):
     inverted = False
-    return jsonify(items=map(
-        lambda split: {
+    return jsonify(items=[
+        {
             'account': {
                 'href': url_for(".accounts_show", account_id=split.account_id),
                 'title': split.account.name
             },
             'amount': money_filter(split.amount),
             'row_positive': (split.amount > 0) is not inverted
-        },
-        Transaction.q.get(transaction_id).splits
-    ))
+        } for split in Transaction.q.get(transaction_id).splits])
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
@@ -320,8 +313,7 @@ def semesters_list():
 @bp.route("/semesters/json")
 @access.require('finance_show')
 def semesters_list_json():
-    return jsonify(items=map(
-        lambda semester: {
+    return jsonify(items=[{
             'name': semester.name,
             'registration_fee': money_filter(semester.registration_fee),
             'regular_semester_fee': money_filter(
@@ -331,9 +323,7 @@ def semesters_list_json():
             'late_fee': money_filter(semester.late_fee),
             'begins_on': date_filter(semester.begins_on),
             'ends_on': date_filter(semester.ends_on),
-        },
-        Semester.q.order_by(Semester.begins_on.desc()).all()
-    ))
+        } for semester in Semester.q.order_by(Semester.begins_on.desc()).all()])
 
 
 @bp.route('/semesters/create', methods=("GET", "POST"))
@@ -387,15 +377,12 @@ def semesters_create():
 @bp.route('/json/accounts/system')
 @access.require('finance_show')
 def json_accounts_system():
-    return jsonify(accounts=map(
-        lambda account: {
+    return jsonify(accounts=[{
             "account_id": account.id,
             "account_name": account.name
-        },
-        session.query(FinanceAccount).outerjoin(User).filter(
+        } for account in session.query(FinanceAccount).outerjoin(User).filter(
             User.finance_account == None
-        ).all()
-    ))
+        ).all()])
 
 
 @bp.route('/json/accounts/user-search')

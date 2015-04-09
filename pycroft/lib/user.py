@@ -123,7 +123,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
         id=new_user.id).to_json()
 
     # create one new host (including net_device) for the new user
-    subnets = filter(lambda s: s.ip_type == '4', dormitory.subnets)
+    subnets = [s for s in dormitory.subnets if s.ip_type == '4']
     ip_address = get_free_ip(subnets)
     subnet = select_subnet_for_ip(ip_address, subnets)
     #ToDo: Which port to choose if room has more than one?
@@ -171,7 +171,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     )
 
     #TODO: print plain password on paper instead
-    print u"new password: " + plain_password
+    print(u"new password: " + plain_password)
 
     return new_user
 

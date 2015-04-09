@@ -10,10 +10,9 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from itertools import imap
 import operator
 from sqlalchemy.ext.hybrid import hybrid_property
-from base import ModelBase
+from .base import ModelBase
 from sqlalchemy import ForeignKey, event, func, select
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
@@ -22,6 +21,7 @@ from sqlalchemy.types import (
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
 from .functions import utcnow
+from pycroft._compat import imap
 from pycroft.helpers.i18n import gettext
 
 

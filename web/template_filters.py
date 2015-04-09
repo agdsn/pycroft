@@ -12,9 +12,10 @@
 """
 from cmath import log
 from datetime import datetime, timedelta
-from itertools import chain, imap
+from itertools import chain
 import flask.ext.babel
 
+from pycroft._compat import imap
 from pycroft.model import session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import ARecord, CNAMERecord

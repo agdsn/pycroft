@@ -130,8 +130,7 @@ def user_show_logs_json(user_id, logtype="all"):
     room_log_list = Room.q.get(user.room_id).room_log_entries[::-1]\
         if logtype in ["room", "all"] else []
 
-    return jsonify(items=map(
-        lambda entry: {
+    return jsonify(items=[{
             'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
@@ -139,10 +138,7 @@ def user_show_logs_json(user_id, logtype="all"):
             },
             'message': entry.message,
             'type': 'user'
-        },
-        user_log_list
-    ) + map(
-        lambda entry: {
+        } for entry in user_log_list] + [{
             'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
@@ -150,16 +146,13 @@ def user_show_logs_json(user_id, logtype="all"):
             },
             'message': entry.message,
             'type': 'room'
-        },
-        room_log_list
-    ))
+        } for entry in room_log_list])
 
 
 @bp.route("/show/<user_id>/hosts")
 @access.require('user_show')
 def user_show_hosts_json(user_id):
-    return jsonify(items=map(
-        lambda user_host: {
+    return jsonify(items=[{
             'host': "{} ({})".format(host_cname_filter(user_host),
                                      host_name_filter(user_host)),
             'room': "{} / {}-{}".format(user_host.room.dormitory.short_name,
@@ -176,9 +169,7 @@ def user_show_hosts_json(user_id):
                 {'title': 'Bearbeiten', 'href': '', 'icon': 'glyphicon-edit'},
                 {'title': 'Löschen', 'href': '', 'icon': 'glyphicon-trash'}
             ]
-        },
-        User.q.get(user_id).user_hosts
-    ))
+        } for user_host in User.q.get(user_id).user_hosts])
 
 
 @bp.route("/show/<user_id>/devices")
@@ -212,8 +203,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                 Membership.ends_at > functions.utcnow())
         )
 
-    return jsonify(items=map(
-        lambda membership: {
+    return jsonify(items=[{
             'group_name': membership.group.name,
             'begins_at': (datetime_filter(membership.begins_at)
                           if membership.begins_at is not None else ''),
@@ -223,9 +213,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                                         membership_id=membership.id),
                         'title': 'Bearbeiten',
                         'icon': 'glyphicon-edit'},
-        },
-        memberships.all()
-    ))
+        } for membership in memberships.all()])
 
 
 @bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
@@ -371,7 +359,7 @@ def create():
 
         except (MacExistsException,
                 SubnetFullException,
-                ValueError), error:
+                ValueError) as error:
             flash(error.message, 'error')
             session.session.rollback()
 
@@ -552,8 +540,7 @@ def search_results():
         result = result.filter(User.name.ilike("%{}%".format(name)))
     if login:
         result = result.filter(User.login.ilike("%{}%".format(login)))
-    return jsonify(items=map(
-        lambda found_user: {
+    return jsonify(items=[{
             'id': found_user.id,
             'name': {'title': found_user.name,
                      'href': url_for(".user_show", user_id=found_user.id)},
@@ -562,9 +549,7 @@ def search_results():
                 host_cname_filter(user_host),
                 host_name_filter(user_host)
             ) for user_host in found_user.user_hosts)
-        },
-        result.all()
-    ) if user_id or name or login else [])
+        } for found_user in result.all()] if user_id or name or login else [])
 
 
 @bp.route('/json/groups')

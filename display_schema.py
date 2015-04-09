@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -28,7 +28,7 @@ def fetch_mappers():
             if isinstance(ex, sqlalchemy.exc.InvalidRequestError):
                 if ex.message.startswith("One or more mappers failed to initialize"):
                     raise
-            print "ignoring {}".format(attr)
+            print("ignoring {}".format(attr))
 
     return mappers
 

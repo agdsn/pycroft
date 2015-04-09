@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import date, datetime, time, timedelta
 from functools import partial
-from itertools import imap
+
 import json
 import operator
 import traceback
@@ -13,6 +13,8 @@ from babel.support import Translations
 from decimal import Decimal
 import collections
 import jsonschema
+from pycroft._compat import (
+    string_types, integer_types, iteritems, text_type, imap)
 from pycroft.helpers.interval import (
     Interval, Bound, NegativeInfinity, PositiveInfinity)
 
@@ -139,11 +141,8 @@ identity = ignore_options(lambda x: x)
 
 formatter_map = {
     type(None): identity,
-    str: identity,
-    unicode: identity,
     bool: identity,
     float: format_decimal,
-    int: format_number,
     Decimal: format_decimal,
     Money: format_currency,
     date: format_date,
@@ -152,6 +151,10 @@ formatter_map = {
     timedelta: format_timedelta,
     Interval: format_interval,
 }
+for type_ in string_types:
+    formatter_map[type_] = identity
+for type_ in integer_types:
+    formatter_map[type_] = format_number
 
 
 def format_param(p, options):
@@ -230,11 +233,8 @@ def qualified_typename(type_):
 
 serialize_map = {
     type(None): identity,
-    str: identity,
-    unicode: identity,
     bool: identity,
     float: identity,
-    int: identity,
     Decimal: str,
     Money: lambda m: (str(m.value), m.currency),
     date: operator.methodcaller("isoformat"),
@@ -244,15 +244,16 @@ serialize_map = {
                           "microseconds": v.microseconds},
     Interval: serialize_interval,
 }
+for type_ in string_types:
+    serialize_map[type_] = identity
+for type_ in integer_types:
+    serialize_map[type_] = identity
 
 
-deserialize_map = {qualified_typename(t): f for t, f in {
+_deserialize_type_map = {
     type(None): identity,
-    str: identity,
-    unicode: identity,
     bool: identity,
     float: identity,
-    int: identity,
     Decimal: Decimal,
     Money: deserialize_money,
     date: lambda v: datetime.strptime(v, "%Y-%m-%d").date(),
@@ -260,7 +261,13 @@ deserialize_map = {qualified_typename(t): f for t, f in {
     time: deserialize_time,
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
-}.iteritems()}
+}
+for type_ in string_types:
+    _deserialize_type_map[type_] = identity
+for type_ in integer_types:
+    _deserialize_type_map[type_] = identity
+deserialize_map = dict((qualified_typename(t), f)
+                       for t, f in iteritems(_deserialize_type_map))
 
 
 def serialize_param(param):
@@ -395,7 +402,7 @@ class Message(object):
         if self.kwargs:
             obj["kwargs"] = {k: serialize_param(v)
                              for k, v in self.kwargs.iteritems()}
-        return unicode(
+        return text_type(
             json.dumps(obj, ensure_ascii=False, encoding='utf-8'))
 
     def format(self, *args, **kwargs):
@@ -410,7 +417,7 @@ class Message(object):
         f = partial(format_param, options=options)
         try:
             args = tuple(imap(f, self.args))
-            kwargs = {k: f(v) for k, v in self.kwargs.iteritems()}
+            kwargs = {k: f(v) for k, v in iteritems(self.kwargs)}
             return msg.format(*args, **kwargs)
         except (TypeError, ValueError, IndexError, KeyError) as e:
             error = u''.join(traceback.format_exception_only(type(e), e))

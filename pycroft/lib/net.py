@@ -1,8 +1,10 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import islice, ifilter
+from itertools import islice
 import ipaddr
+
+from pycroft._compat import ifilter
 
 
 class SubnetFullException(Exception):

@@ -1,13 +1,13 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import cStringIO as StringIO
 from datetime import date, datetime, time, timedelta
 import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import messages
+from pycroft._compat import StringIO
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
@@ -48,7 +48,7 @@ class Test_010_Journal(FixtureDataTestBase):
         This test should verify that the csv import works as expected.
         """
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
-        f = StringIO.StringIO(data)
+        f = StringIO(data)
 
         import_journal_csv(f, 4342, date(2015, 1, 1))
 
@@ -61,23 +61,23 @@ class Test_010_Journal(FixtureDataTestBase):
             journal=journal,
             original_description=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
-        self.assertEquals(entry.other_account_number, "12345678")
-        self.assertEquals(entry.other_routing_number, "80040400")
-        self.assertEquals(entry.other_name, u"SCH, AAA")
-        self.assertEquals(entry.amount, 900000)
-        self.assertEquals(entry.posted_at, date(2013, 1, 2))
-        self.assertEquals(entry.valid_on, date(2013, 1, 2))
+        self.assertEqual(entry.other_account_number, "12345678")
+        self.assertEqual(entry.other_routing_number, "80040400")
+        self.assertEqual(entry.other_name, u"SCH, AAA")
+        self.assertEqual(entry.amount, 900000)
+        self.assertEqual(entry.posted_at, date(2013, 1, 2))
+        self.assertEqual(entry.valid_on, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter_by(
             journal=journal,
             original_description=u"Pauschalen"
         ).first()
-        self.assertEquals(entry.posted_at, date(2012, 12, 24))
-        self.assertEquals(entry.valid_on, date(2012, 12, 24))
+        self.assertEqual(entry.posted_at, date(2012, 12, 24))
+        self.assertEqual(entry.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
-        self.assertEquals(entry.amount, -600)
+        self.assertEqual(entry.amount, -600)
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
@@ -85,8 +85,8 @@ class Test_010_Journal(FixtureDataTestBase):
             journal=journal,
             original_description=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEquals(entry.posted_at, date(2013, 12, 29))
-        self.assertEquals(entry.valid_on, date(2013, 1, 10))
+        self.assertEqual(entry.posted_at, date(2013, 12, 29))
+        self.assertEqual(entry.valid_on, date(2013, 1, 10))
 
         JournalEntry.q.delete()
         session.session.commit()
@@ -179,15 +179,12 @@ class FeeTestBase(FixtureDataTestBase):
         ).one()
 
     def assertFeesPosted(self, user, expected_transactions):
-        actual_transactions = map(
-            lambda t: (
-                t.description,
-                t.valid_on,
-                t.splits[0].amount
-                if t.splits[0].account == user.finance_account else
-                t.splits[1].amount),
-            user.finance_account.transactions
-        )
+        actual_transactions = [
+            (t.description,
+             t.valid_on,
+             t.splits[0].amount if t.splits[0].account == user.finance_account
+             else t.splits[1].amount)
+            for t in user.finance_account.transactions]
         self.assertEqual(expected_transactions, actual_transactions)
 
 
