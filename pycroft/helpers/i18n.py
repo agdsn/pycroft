@@ -13,8 +13,8 @@ from babel.support import Translations
 from decimal import Decimal
 import collections
 import jsonschema
-from pycroft.helpers.interval import Interval, Bound, NegativeInfinity, \
-    PositiveInfinity
+from pycroft.helpers.interval import (
+    Interval, Bound, NegativeInfinity, PositiveInfinity)
 
 _unspecified_locale = Locale('en', 'US')
 _null_translations = Translations()
