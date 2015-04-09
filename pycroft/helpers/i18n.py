@@ -177,6 +177,21 @@ def deserialize_money(v):
     except IndexError:
         raise ValueError()
 
+
+def deserialize_datetime(v):
+    try:
+        return datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f")
+    except ValueError:
+        return datetime.strptime(v, "%Y-%m-%dT%H:%M:%S")
+
+
+def deserialize_time(v):
+    try:
+        return datetime.strptime(v, "%H:%M:%S.%f").time()
+    except ValueError:
+        return datetime.strptime(v, "%H:%M:%S").time()
+
+
 def serialize_interval(interval):
     """
     :param Interval interval:
@@ -241,8 +256,8 @@ deserialize_map = {qualified_typename(t): f for t, f in {
     Decimal: Decimal,
     Money: deserialize_money,
     date: lambda v: datetime.strptime(v, "%Y-%m-%d").date(),
-    datetime: lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f"),
-    time: lambda v: datetime.strptime(v, "%H:%M:%S.%f").time(),
+    datetime: deserialize_datetime,
+    time: deserialize_time,
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
 }.iteritems()}
