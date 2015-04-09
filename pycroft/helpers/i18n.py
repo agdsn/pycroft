@@ -210,7 +210,7 @@ def deserialize_interval(value):
 
 
 def qualified_typename(type_):
-    return type.__module__ + type_.__name__
+    return type_.__module__ + '.' + type_.__name__
 
 
 serialize_map = {
