@@ -468,6 +468,10 @@ class NumericalMessage(Message):
             return ngettext(self.singular, self.plural, self.n)
 
 
+def localized(json_string):
+    return Message.from_json(json_string).localize()
+
+
 def deferred_gettext(message):
     return SimpleMessage(message)
 
