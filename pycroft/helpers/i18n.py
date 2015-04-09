@@ -354,18 +354,25 @@ class Message(object):
             return ErroneousMessage(json_string)
         try:
             jsonschema.validate(obj, schema)
-        except jsonschema.ValidationError:
-            return ErroneousMessage("Invalid message: {}".format(json_string))
+        except jsonschema.ValidationError as e:
+            return ErroneousMessage("Message validation failed: {} for "
+                                    "message {}".format(e.message, json_string))
+        args = obj.get(u"args", ())
+        kwargs = obj.get(u"kwargs", {})
+        try:
+            args = tuple(deserialize_param(a) for a in args)
+            kwargs = {k: deserialize_param(v) for k, v in kwargs.iteritems()}
+        except (TypeError, ValueError) as e:
+            error = u''.join(traceback.format_exception_only(type(e), e))
+            return ErroneousMessage("Parameter deserialization error: {} in "
+                                    "message: {}".format(error, json_string))
         if u'plural' in obj:
             m = NumericalMessage(obj[u"singular"], obj[u"plural"], obj[u"n"],
                                  obj.get(u"domain"))
         else:
             m = SimpleMessage(obj[u"message"], obj.get(u"domain"))
-        if u'args' in obj:
-            m.args = tuple(deserialize_param(a) for a in obj[u"args"])
-        if u'kwargs' in obj:
-            m.kwargs = {k: deserialize_param(v)
-                        for k, v in obj[u"kwargs"].iteritems()}
+        m.args = args
+        m.kwargs = kwargs
         return m
 
     def __init__(self, domain=None):
