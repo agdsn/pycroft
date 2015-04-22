@@ -31,7 +31,7 @@ association_table_dormitory_vlan = Table(
 
 class Dormitory(ModelBase):
     number = Column(String(3), nullable=False)
-    short_name = Column(String(5), unique=True, nullable=False)
+    short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(20), nullable=False)
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
