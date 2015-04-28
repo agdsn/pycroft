@@ -58,7 +58,14 @@ class User(ModelBase, UserMixin):
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)
 
-    login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
+    login_regex = re.compile(r"""
+^
+# Must begin with a lowercase character
+[a-z]
+# Can continue with lowercase characters, numbers and some punctuation
+# but between punctuation characters must be characters or numbers
+(?:[._-]?[a-z0-9])+$
+""", re.VERBOSE)
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
@@ -70,8 +77,8 @@ class User(ModelBase, UserMixin):
     @validates('login')
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
-        if not User.login_regex.match(value) or value in self.blocked_logins:
-            raise Exception("invalid unix-login!")
+        if not User.login_regex.match(value) or value in self.blocked_logins or len(value)>22:
+            raise Exception("invalid unix-login: '"+value+"'")
         return value
 
     @validates('email')
