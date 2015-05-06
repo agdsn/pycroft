@@ -10,7 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from sqlalchemy import Column, ForeignKey, event, CheckConstraint
+from sqlalchemy import Column, ForeignKey, event
 
 import ipaddr
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -23,7 +23,6 @@ from pycroft.model.net import Subnet
 
 
 class Host(ModelBase):
-    """Physical or logical/virtual machines"""
     discriminator = Column('type', String(50), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -69,6 +68,14 @@ class Switch(Host):
 
     owner = relationship("User", backref=backref(
         "switches", cascade="all, delete-orphan"))
+
+
+def _check_user_host_in_user_room(mapper, connection, userhost):
+    if userhost.room is not userhost.owner.room:
+        raise Exception("UserHost can only be in user's room")
+
+event.listen(UserHost, "before_insert", _check_user_host_in_user_room)
+event.listen(UserHost, "before_update", _check_user_host_in_user_room)
 
 
 class InvalidMACAddressException(Exception):
@@ -149,6 +156,10 @@ class SwitchNetDevice(NetDevice):
                                         cascade="all, delete-orphan"))
 
 
+class IPSubnetMismatchError(ValueError):
+    pass
+
+
 class Ip(ModelBase):
     # TODO: move to 'net'
     def __init__(self, *args, **kwargs):
@@ -194,18 +205,16 @@ class Ip(ModelBase):
     def validate_subnet(self, _, value):
         if value is None:
             return value
-        if self.address is not None:
-            assert self._ip_subnet_valid(self.address, value),\
-                "Given subnet does not contain the ip"
+        if self.address and not self._ip_subnet_valid(self.address, value):
+            raise IPSubnetMismatchError("Given subnet "+str(value)+" does not contain the ip "+str(self.address))
         return value
 
     @validates("address")
     def validate_address(self, _, value):
         if value is None:
             return value
-        if self.subnet is not None:
-            assert self._ip_subnet_valid(value, self.subnet),\
-                "Subnet "+self.subnet.address+" does not contain the given ip "+value
+        if self.subnet is not None and not self._ip_subnet_valid(value, self.subnet):
+            raise IPSubnetMismatchError("Subnet "+str(self.subnet.address)+" does not contain the given ip "+str(value))
         return value
 
 

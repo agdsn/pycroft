@@ -13,6 +13,7 @@ class PatchPort(ModelBase):
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
     room = relationship("Room", backref=backref("patch_ports"))
     type = Column(String(20))
+    name = Column(String(8), nullable=False)
 
     __mapper_args__ = {
         'polymorphic_identity': 'unwired_patch_port',
@@ -25,6 +26,8 @@ class SwitchPort(ModelBase):
 
     switch_id = Column(Integer, ForeignKey(Switch.id), nullable=False)
     switch = relationship(Switch, backref=backref("ports"))
+    name = Column(String(8), nullable=False)
+
     name_regex = re.compile("[A-Z][1-9][0-9]?")
 
 

@@ -183,19 +183,19 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def assign_subnet():
             ip_addr.subnet = subnets[1]
 
-        self.assertRaisesRegexp(AssertionError, "Given subnet does not contain the ip", assign_subnet)
+        self.assertRaises(host.IPSubnetMismatchError, assign_subnet)
 
         ip_addr = host.Ip(net_device=netdev, subnet=subnets[1])
 
         def assign_ip():
             ip_addr.address = ip
 
-        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", assign_ip)
+        self.assertRaises(host.IPSubnetMismatchError, assign_ip)
 
         def new_instance():
             host.Ip(net_device=netdev, subnet=subnets[1], address=ip)
 
-        self.assertRaisesRegexp(AssertionError, "Subnet does not contain the given ip", new_instance)
+        self.assertRaisesRegexp(host.IPSubnetMismatchError, new_instance)
 
 
 class Test_060_Cascades(FixtureDataTestBase):

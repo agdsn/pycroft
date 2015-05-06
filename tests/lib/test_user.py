@@ -102,7 +102,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.user_hosts[0].user_net_device.mac, test_mac)
 
-        user_host = host.UserHost.q.filter_by(user=new_user).one()
+        user_host = host.UserHost.q.filter_by(owner=new_user).one()
         user_net_device = host.UserNetDevice.q.filter_by(host=user_host).one()
         self.assertEqual(user_net_device.mac, test_mac)
         user_cname_record = dns.CNAMERecord.q.filter_by(host=user_host).one()

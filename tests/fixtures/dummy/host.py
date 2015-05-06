@@ -10,7 +10,7 @@ from tests.fixtures.dummy.user import UserData
 
 class UserHostData(DataSet):
     class dummy_host1:
-        user = UserData.dummy
+        owner = UserData.dummy
         room = RoomData.dummy_room1
 
 

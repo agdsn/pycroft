@@ -20,7 +20,7 @@ def change_mac(net_device, mac, processor):
     old_mac = net_device.mac
     net_device.mac = mac
     message = u"Die Mac-Adresse von {} zu {} geändert.".format(old_mac, mac)
-    log_user_event(message, processor, net_device.host.user)
+    log_user_event(message, processor, net_device.host.owner)
     return net_device
 
 

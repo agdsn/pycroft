@@ -26,7 +26,8 @@ os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pycroft import model, property
-from pycroft.model import accounting, facilities, user, net, port, finance, session, host, config, logging
+from pycroft.model import (accounting, facilities, dns, user, net, port,
+                           finance, session, host, config, logging)
 from pycroft.helpers import user as usertools
 
 ROOT_NAME = "ag_dsn"
@@ -104,6 +105,11 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         u_d[_u.nutzer_id] = u
         records.append(u)
 
+        records.append(logging.UserLogEntry(
+            author=u_d.get(0, None),
+            message="User imported from legacy DB",
+            user=u))
+
     print("  Translating subnet")
     s_d = {} # you know the drill
     for _s in subnet:
@@ -144,7 +150,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 ip = host.Ip(net_device=nd, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
 
         else: #assume user
-            h = host.UserHost(owner=owner)
+            h = host.UserHost(owner=owner, room=owner.room)
             nd = host.UserNetDevice(host=h, mac=_c.c_etheraddr)
 
             ip = None

@@ -78,13 +78,13 @@ class Test_040_User_Login(FixtureDataTestBase):
             u.login = login
 
         for length in range(1, 30):
-            if 2 < length < 23:
+            if 2 <= length < 23:
                 set_login("a" * length)
             else:
-                self.assertRaisesRegexp(Exception, "invalid unix-login!",
+                self.assertRaisesRegexp(Exception, "invalid unix-login.*",
                                         set_login, "a" * length)
 
-        valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a__4"]
+        valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a_4"]
         invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
         blocked = ["root", "daemon", "bin", "sys", "sync", "games", "man",
                    "lp", "mail", "news", "uucp", "proxy", "majordom",
@@ -94,10 +94,10 @@ class Test_040_User_Login(FixtureDataTestBase):
         for login in valid:
             set_login(login)
         for login in invalid:
-            self.assertRaisesRegexp(Exception, "invalid unix-login!",
+            self.assertRaisesRegexp(Exception, "invalid unix-login.*",
                                     set_login, login)
         for login in blocked:
-            self.assertRaisesRegexp(Exception, "invalid unix-login!",
+            self.assertRaisesRegexp(Exception, "invalid unix-login.*",
                                     set_login, login)
 
         u = user.User.q.filter_by(login=UserData.dummy.login).one()
