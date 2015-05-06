@@ -73,7 +73,12 @@ def user_show(user_id):
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
-    room = Room.q.get(user.room_id)
+    room = user.room
+    if room:
+        room_log_entries = room.room_log_entries
+    else:
+        room_log_entries = []
+
     form = UserLogEntry()
 
     if form.validate_on_submit():
@@ -81,11 +86,11 @@ def user_show(user_id):
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = sorted(
-        chain(user.user_log_entries, room.room_log_entries),
+        chain(user.user_log_entries, room_log_entries),
         key=operator.attrgetter("created_at"), reverse=True
     )
     user_log_list = user.user_log_entries[::-1]
-    room_log_list = room.room_log_entries[::-1]
+    room_log_list = room_log_entries[::-1]
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
@@ -319,7 +324,7 @@ def json_trafficdata(user_id, days=7):
     ).join(
         Ip.host
     ).filter(
-        Host.user_id == user_id
+        Host.owner_id == user_id
     ).filter(
         TrafficVolume.timestamp > traffic_timespan)
 
