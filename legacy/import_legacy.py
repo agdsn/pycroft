@@ -9,6 +9,7 @@ import os
 import sys
 
 from sqlalchemy import create_engine, distinct
+from sqlalchemy.sql import null
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import _request_ctx_stack
 
@@ -43,7 +44,7 @@ def exists_db(connection, name):
 def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     records = []
 
-    # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, ...
+    # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
 
     # order should match sorted_tables, but no individual translation functions
     # since appropriate mapping dicts [a-z]_d would need to be passed anyway
@@ -52,9 +53,11 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     b_d = {} # maps netusers.Wheim.id to translated sqlalchemy object
     print("  Translating buildings")
     for _b in wheim:
-        b = facilities.Dormitory(short_name=_b.kuerzel,
-                                 street=_b.str,
-                                 number=_b.hausnr)
+        b = facilities.Dormitory(
+            id=_b.wheim_id,
+            short_name=_b.kuerzel,
+            street=_b.str,
+            number=_b.hausnr)
         b_d[_b.wheim_id] = b
         records.append(b)
 
@@ -91,17 +94,21 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     for _u in nutzer:
         login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
         room = r_d.get((_u.wheim_id, _u.etage, _u.zimmernr), None)
-        u = user.User(login=login,
-                      name=_u.vname+" "+_u.name,
-                      email=login+"@wh2.tu-dresden.de", #TODO is this correct?
-                      room=room,
-                      registered_at=_u.anmeldedatum,
-                      finance_account=finance.FinanceAccount(name="", type="ASSET"))
+        u = user.User(
+            id=_u.nutzer_id,
+            login=login,
+            name=_u.vname+" "+_u.name,
+            email=login+"@wh2.tu-dresden.de", #TODO is this correct?
+            room=room,
+            registered_at=_u.anmeldedatum,
+            finance_account=finance.FinanceAccount(name="", type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
-            records.append(user.Membership(user=u, group=g_d["root"]))
+            records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
         elif _u.status == 1:
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum))
+        elif _u.status == 8:
+            records.append(user.Membership(user=u, group=g_d["moved_out"], begins_at=null()))
         u_d[_u.nutzer_id] = u
         records.append(u)
 
@@ -123,6 +130,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     # TODO: note, missing transit, server and eduroam subnets
 
     print("  Translating computer")
+    sw_d = {} # switch dict: mgmt_ip -> obj
     for _c in computer:
         owner = u_d[_c.nutzer_id]
         if _c.nutzer_id == 0:
@@ -141,9 +149,11 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
                 mgmt_ip = ".".join(mgmt_ip_blocks)
-                h = host.Switch(owner=owner, name=_c.c_alias, management_ip=mgmt_ip, room=room)
+                name = _c.c_alias or "unnamed_switch"
+                h = host.Switch(owner=owner, name=name, management_ip=mgmt_ip, room=room)
                 nd = host.SwitchNetDevice(host=h, mac=_c.c_etheraddr)
                 ip = host.Ip(net_device=nd, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                sw_d[mgmt_ip] = h
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
                 nd = host.ServerNetDevice(host=h, mac=_c.c_etheraddr)
@@ -161,9 +171,18 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             records.append(ip)
 
     print("  Translating hp4108ports")
-    for _p in hp4108port:
-        #p = port.SwitchPort()
-        pass
+    for _sp in hp4108port:
+        try:
+            switch = sw_d[_sp.ip]
+            port_name = _sp.port
+            sp = port.SwitchPort(switch=switch,name=port_name)
+            # TODO insert proper patch_port names
+            room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
+            pp = port.SwitchPatchPort(switch_port=sp, name="??", room=room)
+            records.extend([sp, pp])
+        except KeyError as e:
+            # Bor34 switch isn't in computers
+            print("KeyError: "+str(e))
 
     return records
 
@@ -210,7 +229,7 @@ def main(args):
                                                 netusers_model.Hp4108Port.zimmernr).distinct().all(),
                         nutzer=session_nu.query(netusers_model.Nutzer).all(),
                         subnet=session_nu.query(netusers_model.Subnet).all(),
-                        hp4108port=session_nu.query(netusers_model.Hp4108Port.ip).distinct().all(),
+                        hp4108port=session_nu.query(netusers_model.Hp4108Port).all(),
                         computer=session_nu.query(netusers_model.Computer).all())
 
     print("Importing records ("+str(len(records))+")")

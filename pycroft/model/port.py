@@ -40,7 +40,7 @@ class SwitchPatchPort(PatchPort):
                                  nullable=False, unique=True)
     switch_port = relationship(SwitchPort,
                                foreign_keys=[switch_port_id],
-                               backref=backref("switch_patch_port",
+                               backref=backref("patch_port",
                                                uselist=False))
 
     __mapper_args__ = {'polymorphic_identity': 'switch_patch_port'}
@@ -51,4 +51,4 @@ class PhonePort(PatchPort):
     id = Column(Integer, ForeignKey(PatchPort.id), primary_key=True,
                 nullable=False)
 
-    __mapper_args__ = {'polymorphic_identity': 'phone_port'}
+    __mapper_args__ = {'polymorphic_identity': 'phone_patch_port'}
