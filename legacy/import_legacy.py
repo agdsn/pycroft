@@ -187,8 +187,6 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     return records
 
 def main(args):
-    # think about this:
-    #  move model translation functions to netusers and userman module?
     engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
     session.set_scoped_session(
         scoped_session(sessionmaker(bind=engine),
@@ -196,7 +194,6 @@ def main(args):
 
     if args.from_origin:
         print("Getting legacy data from origin")
-        raise RuntimeError("not yet tested")
         connection_string_nu = conn_opts["netusers"]
         connection_string_um = conn_opts["userman"]
     else:
@@ -221,7 +218,7 @@ def main(args):
     master_connection.execute("CREATE DATABASE pycroft")
     master_connection.execute("COMMIT")
     print("Creating pycroft model schema")
-    model.create_db_model()
+    model.create_db_model(engine)
 
     records = translate(wheim=session_nu.query(netusers_model.Wheim).all(),
                         zimmer=session_nu.query(netusers_model.Hp4108Port.wheim_id,
