@@ -13,19 +13,10 @@ name = "userman"
 engine = create_engine(conn_opts['userman'], client_encoding='latin1')
 session = scoped_session(sessionmaker(bind=engine))
 
-relevant_tables = [model.FinanzKonten,
-                   model.FinanzBuchungen,
-                   #model.FinanzKonten,
+relevant_tables = [model.FinanzBuchungen,
+                   model.FinanzKonten,
                    model.FinanzKontoTyp,
                    with_polymorphic(model.BankKonto, [model.BkBuchung])
                    ]
 
-'''
- Relevant tables:
- public | bank_konto              | table    | postgres
- public | bk_buchung              | table    | postgres
- public | finanz_buchungen        | table    | postgres
- public | finanz_konten           | table    | postgres
- public | finanz_konto_typ        | table    | postgres
-'''
 

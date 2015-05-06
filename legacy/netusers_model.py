@@ -2,20 +2,52 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import Column, Date, DateTime, Enum, Index, Integer, SmallInteger, String, Table, Text, text
+from sqlalchemy import (Column, Date, DateTime, Enum, Index,
+                        Integer, SmallInteger, String, Table,
+                        Text, text, ForeignKey)
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 metadata = Base.metadata
 
 
+class Nutzer(Base):
+    __tablename__ = u'nutzer'
+    __table_args__ = (
+        Index(u'zimmer', u'etage', u'zimmernr'),
+    )
+
+    nutzer_id = Column(Integer, primary_key=True, server_default=text("'0'"))
+    name = Column(String(30), nullable=False, server_default=text("''"))
+    vname = Column(String(30), nullable=False, server_default=text("''"))
+    wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    etage = Column(Integer, nullable=False, server_default=text("'0'"))
+    zimmernr = Column(String(10), nullable=False, server_default=text("''"))
+    tel = Column(String(20))
+    unix_account = Column(String(40), nullable=False, unique=True)
+    anmeldedatum = Column(Date, nullable=False, server_default=text("'1970-01-01'"))
+    sperrdatum = Column(Date)
+    status = Column(Integer, nullable=False, index=True, server_default=text("'1'"))
+    comment = Column(Text)
+    last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
+    icq_uin = Column(String(255))
+    bezahlt = Column(SmallInteger, nullable=False, server_default=text("'1'"))
+
+    computer = relationship("Computer", backref="nutzer")
+
+
 class Computer(Base):
     __tablename__ = u'computer'
 
-    nutzer_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    computer_id = Column(Integer, primary_key=True)
+
+    nutzer_id = Column(Integer, ForeignKey(Nutzer.nutzer_id), nullable=False)
+
     c_wheim_id = Column(Integer, nullable=False, server_default=text("'0'"))
     c_etage = Column(Integer)
     c_zimmernr = Column(String(10))
+
     c_typ = Column(String(20))
     c_cpu = Column(String(10))
     c_bs = Column(String(20))
@@ -26,7 +58,6 @@ class Computer(Base):
     c_subnet_id = Column(Integer, nullable=False, server_default=text("'0'"))
     c_eth_segment = Column(String(20))
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
-    computer_id = Column(Integer, primary_key=True)
 
 
 class Credit(Base):
@@ -70,29 +101,6 @@ class NewAccount(Base):
     Password = Column(String(8), nullable=False, server_default=text("''"))
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
     email = Column(String(50), nullable=False, server_default=text("''"))
-
-
-class Nutzer(Base):
-    __tablename__ = u'nutzer'
-    __table_args__ = (
-        Index(u'zimmer', u'etage', u'zimmernr'),
-    )
-
-    nutzer_id = Column(Integer, primary_key=True, server_default=text("'0'"))
-    name = Column(String(30), nullable=False, server_default=text("''"))
-    vname = Column(String(30), nullable=False, server_default=text("''"))
-    wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    etage = Column(Integer, nullable=False, server_default=text("'0'"))
-    zimmernr = Column(String(10), nullable=False, server_default=text("''"))
-    tel = Column(String(20))
-    unix_account = Column(String(40), nullable=False, unique=True)
-    anmeldedatum = Column(Date, nullable=False, server_default=text("'1970-01-01'"))
-    sperrdatum = Column(Date)
-    status = Column(Integer, nullable=False, index=True, server_default=text("'1'"))
-    comment = Column(Text)
-    last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
-    icq_uin = Column(String(255))
-    bezahlt = Column(SmallInteger, nullable=False, server_default=text("'1'"))
 
 
 class Status(Base):

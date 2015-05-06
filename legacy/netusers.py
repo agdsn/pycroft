@@ -22,21 +22,4 @@ relevant_tables = [model.Wheim,
                   model.Status,
                   model.Credit,
                   model.ZihIncident]
-"""
-+--------------------+
-| Tables_in_netusers |
-+--------------------+
-| wheim              |
-| hp4108_ports       |
-| nutzer             |
-| computer           |
-| subnet             |
-| status             |
-| credit             |
-| kabel              |
-| new_accounts       |
-| sperr_log          |
-| versionen          |
-| zih_incidents      |
-+--------------------+
-"""
+
