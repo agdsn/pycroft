@@ -20,6 +20,7 @@ class Subnet(ModelBase):
     dns_domain = Column(String)
     reserved_addresses = Column(Integer, default=0, nullable=False)
     ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
+    description = Column(String(50))
 
     # many to many from Subnet to VLAN
     vlans = relationship(VLAN, backref=backref("subnets"),

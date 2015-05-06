@@ -10,7 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from sqlalchemy import Column, ForeignKey, event
+from sqlalchemy import Column, ForeignKey, event, CheckConstraint
 
 import ipaddr
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -23,11 +23,12 @@ from pycroft.model.net import Subnet
 
 
 class Host(ModelBase):
-    discriminator = Column('type', String(50))
+    """Physical or logical/virtual machines"""
+    discriminator = Column('type', String(50), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
+    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=True)
 
     # many to one from Host to Room
@@ -42,7 +43,7 @@ class UserHost(Host):
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     # one to one from Host to User
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 
 
@@ -53,7 +54,7 @@ class ServerHost(Host):
 
     name = Column(String(255))
 
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "server_hosts", cascade="all, delete-orphan"))
 
 
@@ -66,7 +67,7 @@ class Switch(Host):
 
     management_ip = Column(String(127), nullable=False)
 
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "switches", cascade="all, delete-orphan"))
 
 
@@ -78,7 +79,15 @@ class MulticastFlagException(InvalidMACAddressException):
     pass
 
 
+class TypeMismatch(Exception):
+    pass
+
+
 class NetDevice(ModelBase):
+    """A logical network interface (hence the single MAC address), which means
+    many net interfaces can be connected to the same switch port"""
+
+    #foreign key discriminator
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -89,16 +98,16 @@ class NetDevice(ModelBase):
                      nullable=False)
 
     @validates('mac')
-    def validate_mac(self, _, value):
-        match = mac_regex.match(value)
+    def validate_mac(self, _, mac_address):
+        match = mac_regex.match(mac_address)
         if not match:
-            raise InvalidMACAddressException()
+            raise InvalidMACAddressException(mac_address)
         components = match.groupdict()
         mac_bytes = (components['byte1'], components['byte2'],
                      components['byte3'], components['byte4'],
                      components['byte5'], components['byte6'])
         if int(mac_bytes[0], base=16) & 1:
-            raise MulticastFlagException()
+            raise MulticastFlagException(mac_address)
         return ':'.join(mac_bytes).lower()
 
 
@@ -141,6 +150,7 @@ class SwitchNetDevice(NetDevice):
 
 
 class Ip(ModelBase):
+    # TODO: move to 'net'
     def __init__(self, *args, **kwargs):
         super(Ip, self).__init__(*args, **kwargs)
 
@@ -195,7 +205,7 @@ class Ip(ModelBase):
             return value
         if self.subnet is not None:
             assert self._ip_subnet_valid(value, self.subnet),\
-                "Subnet does not contain the given ip"
+                "Subnet "+self.subnet.address+" does not contain the given ip "+value
         return value
 
 

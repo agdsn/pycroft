@@ -7,54 +7,45 @@ from sqlalchemy.orm import relationship, backref
 from pycroft.model.base import ModelBase
 from pycroft.model.host import Switch
 
+class PatchPort(ModelBase):
+    """A patch panel port that's not connected"""
+    id = Column(Integer, primary_key=True)
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room = relationship("Room", backref=backref("patch_ports"))
+    type = Column(String(20))
 
-class Port(ModelBase):
-    # Joined table inheritance
-    discriminator = Column('type', String(15), nullable=False)
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    __mapper_args__ = {
+        'polymorphic_identity': 'unwired_patch_port',
+        'polymorphic_on': type
+    }
 
-    name = Column(String(8), nullable=False)
+class SwitchPort(ModelBase):
+    id = Column(Integer, primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'switch_port'}
 
+    switch_id = Column(Integer, ForeignKey(Switch.id), nullable=False)
+    switch = relationship(Switch, backref=backref("ports"))
     name_regex = re.compile("[A-Z][1-9][0-9]?")
 
 
-class DestinationPort(Port):
-    id = Column(Integer, ForeignKey(Port.id), primary_key=True,
+class SwitchPatchPort(PatchPort):
+    """A patch panel port connected to a switch port"""
+    id = Column(Integer, ForeignKey(PatchPort.id),
+                           primary_key=True)
+
+    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id),
+                                 nullable=False, unique=True)
+    switch_port = relationship(SwitchPort,
+                               foreign_keys=[switch_port_id],
+                               backref=backref("switch_patch_port",
+                                               uselist=False))
+
+    __mapper_args__ = {'polymorphic_identity': 'switch_patch_port'}
+
+
+class PhonePort(PatchPort):
+    """A patch panel port that's connected to a third party"""
+    id = Column(Integer, ForeignKey(PatchPort.id), primary_key=True,
                 nullable=False)
-    __mapper_args__ = {'polymorphic_identity': 'destination_port'}
 
-
-class PatchPort(Port):
-    id = Column(Integer, ForeignKey(Port.id), primary_key=True,
-                nullable=False)
-    __mapper_args__ = {'polymorphic_identity': 'patch_port'}
-
-    # one to one from PatchPort to DestinationPort
-    destination_port_id = Column(Integer, ForeignKey(DestinationPort.id),
-                                 nullable=True)
-    destination_port = relationship(DestinationPort,
-                                    foreign_keys=[destination_port_id],
-                                    backref=backref("patch_port",
-                                                    uselist=False))
-
-    # many to one from PatchPort to Room
-    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
-    room = relationship("Room", backref=backref("patch_ports"))
-
-
-class PhonePort(DestinationPort):
-    # Joined table inheritance
-    id = Column(Integer, ForeignKey(DestinationPort.id), primary_key=True,
-                nullable=False)
     __mapper_args__ = {'polymorphic_identity': 'phone_port'}
-
-
-class SwitchPort(DestinationPort):
-    # Joined table inheritance
-    id = Column(Integer, ForeignKey(DestinationPort.id), primary_key=True,
-                nullable=False)
-    __mapper_args__ = {'polymorphic_identity': 'switch_port'}
-
-    # many to one from SwitchPort to Switch
-    switch_id = Column(Integer, ForeignKey(Switch.id), nullable=False)
-    switch = relationship(Switch, backref=backref("ports"))

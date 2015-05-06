@@ -130,7 +130,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
     patch_port = room.patch_ports[0]
 
-    new_host = UserHost(user=new_user, room=room)
+    new_host = UserHost(owner=new_user, room=room)
     session.session.add(new_host)
     new_net_device = UserNetDevice(mac=mac, host=new_host)
     new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)

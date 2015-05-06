@@ -69,3 +69,4 @@ class Room(ModelBase):
     def __unicode__(self):
         return u"{} {} {}".format(self.dormitory.short_name, self.level,
                                   self.number)
+
