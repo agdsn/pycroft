@@ -1,9 +1,9 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import imap
 import unittest
 import operator
+from pycroft._compat import imap
 from pycroft.helpers.interval import (
     Interval, IntervalSet, closed, closedopen, openclosed, open, empty, single)
 
@@ -283,7 +283,7 @@ class Test_0200_IntervalSet(unittest.TestCase):
         :param iterable[iterable[IntervalSet], unknown)] args_and_expected:
         """
         for args, expected in args_and_expected:
-            args = map(lambda intervals: IntervalSet(intervals), args)
+            args = [IntervalSet(intervals) for intervals in args]
             got = method(*args)
             assert got == expected, (
                 "Evaluating {0}({1}) failed: expected {2}, got {3}".format(

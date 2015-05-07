@@ -15,6 +15,7 @@ from sqlalchemy import Column
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import Integer
+from pycroft._compat import iterkeys
 from pycroft.model.session import session
 
 

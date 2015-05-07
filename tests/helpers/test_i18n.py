@@ -3,13 +3,16 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
 import json
+import traceback
 import unittest
 from unittest import TestCase
+from decimal import Decimal
 import jsonschema
 from pycroft.helpers.i18n import (
     ErroneousMessage, Message, NumericalMessage, SimpleMessage,
     deserialize_param, serialize_param, schema, deferred_dgettext,
-    deferred_dngettext, deferred_gettext, deferred_ngettext, format_datetime)
+    deferred_dngettext, deferred_gettext, deferred_ngettext, format_datetime,
+    Money)
 from pycroft.helpers.interval import (
     UnboundedInterval, closed, closedopen, openclosed, open)
 
@@ -37,6 +40,12 @@ class TestParameterSerialization(unittest.TestCase):
 
     def test_serialize_float(self):
         self.assertValidSerialization(0.5)
+
+    def test_serialize_decimal(self):
+        self.assertValidSerialization(Decimal('3.8e2'))
+
+    def test_serialize_money(self):
+        self.assertValidSerialization(Money(Decimal(20.0), "EUR"))
 
     def test_serialize_datetime(self):
         self.assertValidSerialization(datetime.datetime.utcnow())
@@ -170,3 +179,31 @@ class TestJSONExport(DeferredMessageTestCase):
         m = deferred_dngettext(domain, singular, plural, n)
         self.assertNumericMessageCorrect(m, singular, plural, n, domain, (), {},
                                          plural)
+
+    def get_format_error_message(self, message, args, kwargs):
+        try:
+            message.format(*args, **kwargs)
+        except (TypeError, ValueError, IndexError, KeyError) as e:
+            return u''.join(traceback.format_exception_only(type(e), e))
+        else:
+            raise AssertionError()
+
+    def test_missing_positional_argument(self):
+        message = u"{0} {1}"
+        args = (1,)
+        kwargs = {}
+        error = self.get_format_error_message(message, args, kwargs)
+        m = deferred_gettext(message).format(*args)
+        text = (u'Could not format message "{}" (args={}, kwargs={}): {}'
+                .format(message, args, kwargs, error))
+        self.assertSimpleMessageCorrect(m, message, None, args, kwargs, text)
+
+    def test_missing_keyword_argument(self):
+        message = u"{foo}"
+        args = (1,)
+        kwargs = {}
+        error = self.get_format_error_message(message, args, kwargs)
+        m = deferred_gettext(message).format(*args)
+        text = (u'Could not format message "{}" (args={}, kwargs={}): {}'
+                .format(message, args, kwargs, error))
+        self.assertSimpleMessageCorrect(m, message, None, args, kwargs, text)

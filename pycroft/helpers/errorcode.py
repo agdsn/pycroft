@@ -1,7 +1,8 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from abc import ABCMeta, abstractmethod
+from pycroft._compat import with_metaclass
 
 
 def digits(n, base=10):
@@ -20,14 +21,12 @@ def digits(n, base=10):
     yield n
 
 
-class ErrorCode(object):
+class ErrorCode(with_metaclass(ABCMeta)):
     """
     Error detection code abstract base class.
 
     Subclasses must implement at least the calculate method.
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def calculate(self, number):
         pass

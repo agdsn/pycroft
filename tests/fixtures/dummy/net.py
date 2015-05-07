@@ -2,30 +2,43 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
-from tests.fixtures.dummy.facilities import VLANData
+from ipaddr import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from tests.fixtures.dummy.facilities import DormitoryData
+from tests.fixtures.dummy.dns_zones import DNSZoneData
+
+
+class VLANData(DataSet):
+    class vlan_dummy1:
+        name = "vlan_dom_1"
+        tag = "1"
+        dormitories = [DormitoryData.dummy_house1]
+
+    class vlan_dummy2:
+        name = "vlan_dom_2"
+        tag = "2"
+        dormitories = [DormitoryData.dummy_house2]
 
 
 class SubnetData(DataSet):
     class user_ipv4:
-        address = "141.30.216.0/24"
-        gateway = "141.30.216.1"
-        dns_domain = "wh12.tu-dresden.de"
+        address = IPv4Network("192.168.0.0/24")
+        gateway = IPv4Address("192.168.0.1")
+        primary_dns_zone = DNSZoneData.example_com
+        reverse_dns_zone = DNSZoneData.reverse_192_168_0
         reserved_addresses = 10
-        ip_type = "4"
         vlans = [VLANData.vlan_dummy1]
 
     class user_ipv6:
-        address = "2001:0db8:1234::/48"
-        gateway = "2001:0db8:1234::1"
-        dns_domain = "wh12.tu-dresden.de"
+        address = IPv6Network("2001:db8:0::/48")
+        gateway = IPv6Address("2001:db8:0::1")
+        primary_dns_zone = DNSZoneData.example_com
+        reverse_dns_zone = DNSZoneData.reverse_2001_cdba_0000
         reserved_addresses = 10
-        ip_type = "6"
         vlans = [VLANData.vlan_dummy1]
 
     class dummy_subnet2:
-        address = "141.30.203.0/24"
-        gateway = "141.30.203.1"
-        dns_domain = "wh13.tu-dresden.de"
+        address = IPv4Network("192.168.1.0/24")
+        primary_dns_zone = DNSZoneData.example_com
+        reverse_dns_zone = DNSZoneData.reverse_192_168_1
         reserved_addresses = 10
-        ip_type = "4"
         vlans = [VLANData.vlan_dummy2]

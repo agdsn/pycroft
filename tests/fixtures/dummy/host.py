@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
+from ipaddr import IPv4Address, IPv6Address
 
 from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.net import SubnetData
@@ -63,23 +64,23 @@ class ServerNetDeviceData(DataSet):
         switch_port = SwitchPortData.dummy_switch_port1
 
 
-class IpData(DataSet):
+class IPData(DataSet):
     class dummy_user_ipv4:
-        address = "141.30.216.203"
+        address = IPv4Address("192.168.0.42")
         net_device = UserNetDeviceData.dummy_device
         subnet = SubnetData.user_ipv4
 
     class dummy_user_ipv6:
         subnet = SubnetData.user_ipv6
         net_device = UserNetDeviceData.dummy_device
-        address = "2001:0db8:1234:0000:0000:0000:0000:0010"
+        address = IPv6Address("2001:db8::42")
 
     class dummy_switch_ip:
-        address = "141.30.216.1"
+        address = IPv4Address("192.168.0.1")
         net_device = SwitchNetDeviceData.dummy_switch_device1
         subnet = SubnetData.user_ipv4
 
     class dummy_server_ip:
-        address = "141.30.216.2"
+        address = IPv4Address("192.168.0.2")
         net_device = ServerNetDeviceData.dummy_server_device1
         subnet = SubnetData.user_ipv4

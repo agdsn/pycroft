@@ -107,7 +107,7 @@ class User(ModelBase, UserMixin):
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
-        user = User.q.filter_by(login=login).first()
+        user = User.q.filter_by(login=login).one()
         if user is not None and user.check_password(plaintext_password):
             return user
         return None

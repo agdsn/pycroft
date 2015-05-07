@@ -7,6 +7,7 @@ import re
 
 import wtforms.fields
 import wtforms.ext.sqlalchemy.fields
+from pycroft._compat import iteritems, iterkeys
 from pycroft.model import session
 
 from ..widgets import decorate_field, BootstrapFormControlDecorator, \
@@ -132,15 +133,15 @@ class DateField(wtforms.fields.DateField):
                  **kwargs):
         # Move Bootstrap datepicker specific options to its own dict
         self.datepicker_options = dict((
-            (option, value) for (option, value) in kwargs.iteritems()
+            (option, value) for (option, value) in iteritems(kwargs)
             if option in self.available_datepicker_options
         ))
-        for option in self.datepicker_options.iterkeys():
+        for option in iterkeys(self.datepicker_options):
             kwargs.pop(option)
         defaults = {'default': session.utcnow(), 'language': 'de',
                     'today_highlight': 'true', 'today_btn': 'linked'}
-        self.datepicker_options = dict(chain(defaults.items(),
-                                             self.datepicker_options.items()))
+        self.datepicker_options = dict(chain(
+            iteritems(defaults), iteritems(self.datepicker_options)))
         # The format option is used by both DateField and Bootstrap datepicker,
         # albeit with a different format string syntax.
         self.datepicker_options['format'] = self.convert_format_string(format)

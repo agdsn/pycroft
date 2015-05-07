@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import MetaData, create_engine, Table, Column
@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.expression import ColumnCollection
 from sqlalchemy.types import Integer
+from pycroft._compat import iterkeys
 
 
 def get_passwd(filename):
@@ -20,7 +21,8 @@ def get_passwd(filename):
 
 class ReprMixin(object):
     def __repr__(self):
-        args = ", ".join("{}='{}'".format(key, getattr(self, key)) for key in self.__table__.columns.keys())
+        args = u", ".join(u"{}='{}'".format(key, getattr(self, key))
+                          for key in iterkeys(self.__table__.columns))
         return u"{}({})".format(self.__class__.__name__, args)
 
 

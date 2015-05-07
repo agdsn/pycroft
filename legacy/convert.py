@@ -6,7 +6,8 @@ from datetime import datetime, time
 
 import ipaddr
 
-from mysql import session as my_session, Wheim, Nutzer, Computer
+from .mysql import session as my_session, Wheim, Nutzer, Computer
+from pycroft._compat import itervalues
 from pycroft.model import facilities, session, user, host, logging
 from pycroft.helpers.user import hash_password
 from pycroft.model.dns import ARecord, CNAMERecord
@@ -48,7 +49,7 @@ def do_convert():
                 hostname = computer.c_hname
                 mac = computer.c_etheraddr
                 new_switch_net_device = host.SwitchNetDevice(mac=mac)
-                mgmt_ip = host.Ip(address=pub_ip, net_device=new_switch_net_device)
+                mgmt_ip = host.IP(address=pub_ip, net_device=new_switch_net_device)
                 new_switch = host.Switch(name=hostname, management_ip=mgmt_ip.address)
                 new_switch_net_device.host = new_switch
                 net_devices.append(new_switch_net_device)
@@ -69,7 +70,7 @@ def do_convert():
 
     root = user.User(login="ag_dsn", name="System User", registered_at=datetime.today(), passwd_hash=hash_password("test"))
     root.room = root_room
-    for switch in switches.values():
+    for switch in itervalues(switches):
         switch.user_id = root.id
 
 
@@ -96,10 +97,9 @@ def do_convert():
     subnets = {}
     for subnet in my_session.query(Subnet):
         replaced_subnet_ip = subnet.net_ip.replace("10.10", "141.30")
-        new_subnet = Subnet(address=str(ipaddr.IPv4Network("{}/{}".format(replaced_subnet_ip, subnet.netmask))),
+        new_subnet = Subnet(address=ipaddr.IPv4Network("{}/{}".format(replaced_subnet_ip, subnet.netmask)),
                                       dns_domain=subnet.domain,
-                                      gateway=subnet.default_gateway,
-                                      ip_type="4")
+                                      gateway=subnet.default_gateway)
         subnets[subnet.subnet_id] = new_subnet
 
         vlans[subnet.vlan_name] = VLAN(name=subnet.vlan_name,
@@ -143,18 +143,18 @@ def do_convert():
                           property_group=property_groups["tmpausgezogen"])]
 
 
-    session.session.add_all(houses.values())
+    session.session.add_all(itervalues(houses)())
     session.session.add_all(patch_ports)
     session.session.add_all(rooms)
-    session.session.add_all(switches.values())
+    session.session.add_all(itervalues(switches)())
     session.session.add_all(ips)
     session.session.add_all(net_devices)
     session.session.add_all(switch_ports)
-    session.session.add_all(property_groups.values())
+    session.session.add_all(itervalues(property_groups)())
     session.session.add_all(properties_all)
     session.session.add(root)
-    session.session.add_all(subnets.values())
-    session.session.add_all(vlans.values())
+    session.session.add_all(itervalues(subnets)())
+    session.session.add_all(itervalues(vlans)())
 
     logs = []
     user_hosts = []
@@ -187,7 +187,7 @@ def do_convert():
                     host=new_host)
                 user_net_devices.append(new_net_device)
 
-                new_ip = host.Ip(address=computer.c_ip, net_device=new_net_device,
+                new_ip = host.IP(address=computer.c_ip, net_device=new_net_device,
                                 subnet=subnets[computer.c_subnet_id])
                 ips.append(new_ip)
 
@@ -227,10 +227,10 @@ def do_convert():
     #Atlantis
     atlantis_net_device = host.ServerNetDevice(mac="00:e0:81:b1:3f:0e")
     server_net_devices.append(atlantis_net_device)
-    atlantis_ip_1 = host.Ip(address="141.30.228.39",net_device=atlantis_net_device, subnet=Subnet.q.filter(
+    atlantis_ip_1 = host.IP(address="141.30.228.39",net_device=atlantis_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(atlantis_ip_1)
-    #atlantis_ip_2 = host.Ip(address="141.76.119.130",net_device=atlantis_net_device)
+    #atlantis_ip_2 = host.IP(address="141.76.119.130",net_device=atlantis_net_device)
     #ips.append(atlantis_ip_2)
     atlantis_host = host.ServerHost(room=server_room_wu9_dach, user=root)
     atlantis_net_device.host = atlantis_host
@@ -242,10 +242,10 @@ def do_convert():
     #Seth
     seth_net_device = host.ServerNetDevice(mac="00:04:23:8e:b9:91")
     server_net_devices.append(seth_net_device)
-    seth_ip_1 = host.Ip(address="141.30.228.2",net_device=seth_net_device, subnet=Subnet.q.filter(
+    seth_ip_1 = host.IP(address="141.30.228.2",net_device=seth_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(seth_ip_1)
-    #seth_ip_2 = host.Ip(address="141.76.119.134",net_device=seth_net_device)
+    #seth_ip_2 = host.IP(address="141.76.119.134",net_device=seth_net_device)
     #ips.append(seth_ip_2)
     seth_host = host.ServerHost(room=server_room_wu5_keller, user=root)
     seth_net_device.host = seth_host
@@ -257,7 +257,7 @@ def do_convert():
     #Ramses
     ramses_net_device = host.ServerNetDevice(mac="00:04:23:9a:fe:86")
     server_net_devices.append(ramses_net_device)
-    ramses_ip = host.Ip(address="141.30.228.4",net_device=ramses_net_device, subnet=Subnet.q.filter(
+    ramses_ip = host.IP(address="141.30.228.4",net_device=ramses_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(ramses_ip)
     ramses_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -270,7 +270,7 @@ def do_convert():
     #Helios
     helios_net_device = host.ServerNetDevice(mac="00:e0:81:b2:d4:b0")
     server_net_devices.append(helios_net_device)
-    helios_ip = host.Ip(address="141.30.228.7",net_device=helios_net_device, subnet=Subnet.q.filter(
+    helios_ip = host.IP(address="141.30.228.7",net_device=helios_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(helios_ip)
     helios_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -283,7 +283,7 @@ def do_convert():
     #Gizeh
     gizeh_net_device = host.ServerNetDevice(mac="00:07:e9:10:d3:9a")
     server_net_devices.append(gizeh_net_device)
-    gizeh_ip = host.Ip(address="141.30.226.4",net_device=gizeh_net_device, subnet=Subnet.q.filter(
+    gizeh_ip = host.IP(address="141.30.226.4",net_device=gizeh_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh7.tu-dresden.de").one())
     ips.append(gizeh_ip)
     gizeh_host = host.ServerHost(room=server_room_wu11_dach, user=root)
@@ -296,7 +296,7 @@ def do_convert():
     #Kerberos
     kerberos_net_device = host.ServerNetDevice(mac="00:04:23:dd:ee:e5")
     server_net_devices.append(kerberos_net_device)
-    kerberos_ip = host.Ip(address="141.30.228.3",net_device=kerberos_net_device, subnet=Subnet.q.filter(
+    kerberos_ip = host.IP(address="141.30.228.3",net_device=kerberos_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(kerberos_ip)
     kerberos_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -309,7 +309,7 @@ def do_convert():
     #radio
     radio_net_device = host.ServerNetDevice(mac="00:16:3e:27:c0:b3")
     server_net_devices.append(radio_net_device)
-    radio_ip = host.Ip(address="141.30.228.6",net_device=radio_net_device, subnet=Subnet.q.filter(
+    radio_ip = host.IP(address="141.30.228.6",net_device=radio_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(radio_ip)
     radio_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -322,7 +322,7 @@ def do_convert():
     #exma
     exma_net_device = host.ServerNetDevice(mac="00:16:3e:54:75:af")
     server_net_devices.append(exma_net_device)
-    exma_ip = host.Ip(address="141.30.228.5",net_device=exma_net_device, subnet=Subnet.q.filter(
+    exma_ip = host.IP(address="141.30.228.5",net_device=exma_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(exma_ip)
     exma_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -335,7 +335,7 @@ def do_convert():
     #projecthost
     projecthost_net_device = host.ServerNetDevice(mac="00:16:3e:57:b2:25")
     server_net_devices.append(projecthost_net_device)
-    projecthost_ip = host.Ip(address="141.30.228.10",net_device=projecthost_net_device, subnet=Subnet.q.filter(
+    projecthost_ip = host.IP(address="141.30.228.10",net_device=projecthost_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(projecthost_ip)
     projecthost_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -348,7 +348,7 @@ def do_convert():
     #linkpartner
     linkpartner_net_device = host.ServerNetDevice(mac="00:16:3e:cc:8a:f9")
     server_net_devices.append(linkpartner_net_device)
-    linkpartner_ip = host.Ip(address="141.30.228.11",net_device=linkpartner_net_device, subnet=Subnet.q.filter(
+    linkpartner_ip = host.IP(address="141.30.228.11",net_device=linkpartner_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(linkpartner_ip)
     linkpartner_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -361,7 +361,7 @@ def do_convert():
     #kik
     kik_net_device = host.ServerNetDevice(mac="00:16:3e:1f:7e:25")
     server_net_devices.append(kik_net_device)
-    kik_ip = host.Ip(address="141.30.228.12",net_device=kik_net_device, subnet=Subnet.q.filter(
+    kik_ip = host.IP(address="141.30.228.12",net_device=kik_net_device, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(kik_ip)
     kik_host = host.ServerHost(room=server_room_wu9_dach, user=root)
@@ -398,28 +398,28 @@ def do_convert():
     pan_net_device_7.host = pan_host
     pan_net_device_8.host = pan_host
     server_hosts.append(pan_host)
-    pan_ip_1 = host.Ip(address="141.30.228.1",net_device=pan_net_device_1, subnet=Subnet.q.filter(
+    pan_ip_1 = host.IP(address="141.30.228.1",net_device=pan_net_device_1, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh2.tu-dresden.de").one())
     ips.append(pan_ip_1)
-    pan_ip_2 = host.Ip(address="141.30.224.1",net_device=pan_net_device_2, subnet=Subnet.q.filter(
+    pan_ip_2 = host.IP(address="141.30.224.1",net_device=pan_net_device_2, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh6.tu-dresden.de").one())
     ips.append(pan_ip_2)
-    pan_ip_3 = host.Ip(address="141.30.223.1",net_device=pan_net_device_3, subnet=Subnet.q.filter(
+    pan_ip_3 = host.IP(address="141.30.223.1",net_device=pan_net_device_3, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh5.tu-dresden.de").one())
     ips.append(pan_ip_3)
-    pan_ip_4 = host.Ip(address="141.30.222.1",net_device=pan_net_device_4, subnet=Subnet.q.filter(
+    pan_ip_4 = host.IP(address="141.30.222.1",net_device=pan_net_device_4, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh4.tu-dresden.de").one())
     ips.append(pan_ip_4)
-    pan_ip_5 = host.Ip(address="141.30.227.1",net_device=pan_net_device_5, subnet=Subnet.q.filter(
+    pan_ip_5 = host.IP(address="141.30.227.1",net_device=pan_net_device_5, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh3.tu-dresden.de").one())
     ips.append(pan_ip_5)
-    pan_ip_6 = host.Ip(address="141.30.226.1",net_device=pan_net_device_6, subnet=Subnet.q.filter(
+    pan_ip_6 = host.IP(address="141.30.226.1",net_device=pan_net_device_6, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh7.tu-dresden.de").one())
     ips.append(pan_ip_6)
-    pan_ip_7 = host.Ip(address="141.30.216.1",net_device=pan_net_device_7, subnet=Subnet.q.filter(
+    pan_ip_7 = host.IP(address="141.30.216.1",net_device=pan_net_device_7, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh16.tu-dresden.de").one())
     ips.append(pan_ip_7)
-    pan_ip_8 = host.Ip(address="141.30.202.1",net_device=pan_net_device_8, subnet=Subnet.q.filter(
+    pan_ip_8 = host.IP(address="141.30.202.1",net_device=pan_net_device_8, subnet=Subnet.q.filter(
         Subnet.dns_domain == "wh30.tu-dresden.de").one())
     ips.append(pan_ip_8)
     pan_a_record_1 = host.ARecord(host=pan_host, name="pan.wh2.tu-dresden.de",

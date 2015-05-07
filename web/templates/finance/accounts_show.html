@@ -4,13 +4,13 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% set page_title = "Konto: " + account.name %}
+{% set page_title = "Konto: " + localized(account.name) %}
 {% set inverted = false %}
 
 {% block content %}
     <dl class="dl-horizontal">
         <dt>Name</dt>
-        <dd>{{ account.name }}</dd>
+        <dd>{{ localized(account.name) }}</dd>
         <dt>Typ</dt>
         <dd>{{ account.type }}</dd>
         <dt>Nutzer</dt>

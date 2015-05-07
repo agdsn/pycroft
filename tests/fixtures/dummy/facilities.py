@@ -4,28 +4,16 @@
 from fixture import DataSet
 
 
-class VLANData(DataSet):
-    class vlan_dummy1:
-        name = "vlan_dom_1"
-        tag = "1"
-
-    class vlan_dummy2:
-        name = "vlan_dom_2"
-        tag = "2"
-
-
 class DormitoryData(DataSet):
     class dummy_house1:
         street = "dummy"
         number = "01"
         short_name = "abc"
-        vlans = [VLANData.vlan_dummy1]
 
     class dummy_house2:
         street = "dummy"
         number = "02"
         short_name = "def"
-        vlans = [VLANData.vlan_dummy2]
 
 
 class RoomData(DataSet):

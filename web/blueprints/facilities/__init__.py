@@ -72,17 +72,14 @@ def room_show(room_id):
 @bp.route('/room/logs/<room_id>')
 @access.require('facilities_show')
 def room_logs_json(room_id):
-    return jsonify(items=map(
-        lambda entry: {
+    return jsonify(items=[{
             'created_at': datetime_filter(entry.created_at),
             'user': {
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)
             },
             'message': entry.message
-        },
-        Room.q.get(room_id).room_log_entries[::-1]
-    ))
+        } for entry in reversed(Room.q.get(room_id).room_log_entries)])
 
 
 # ToDo: Review this!
@@ -136,21 +133,15 @@ def user_btn_class(user):
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>/json')
 @access.require('facilities_show')
 def dormitory_level_rooms_json(dormitory_id, level):
-    return jsonify(items=map(
-        lambda room: {
+    return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inmates': map(
-                lambda user: {
+            'inmates': [{
                     'href': url_for("user.user_show", user_id=user.id),
                     'title': user.name,
                     'btn_class': user_btn_class(user)
-                },
-                room.users
-            )
-        },
-        Room.q.filter_by(
-            dormitory_id=dormitory_id, level=level).order_by(Room.number)
-    ))
+                } for user in room.users]
+        } for room in Room.q.filter_by(
+            dormitory_id=dormitory_id, level=level).order_by(Room.number)])

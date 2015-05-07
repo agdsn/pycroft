@@ -40,7 +40,7 @@ def server_run(args):
             for module in (pycroft, web):
                 os.path.dirname(module.__file__)
                 dirname = os.path.join(ctx.app.root_path, 'translations')
-                translations.add(Translations.load(dirname, [get_locale()]))
+                translations.merge(Translations.load(dirname, [get_locale()]))
             ctx.pycroft_translations = translations
         return translations
 

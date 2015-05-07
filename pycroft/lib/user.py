@@ -14,20 +14,21 @@ This module contains.
 from datetime import datetime, time
 import re
 
-from sqlalchemy.sql.expression import func, literal
+from sqlalchemy import and_, exists, func, literal
 
 from pycroft import messages, config
-from pycroft.helpers import user, net
+from pycroft.helpers import user
 from pycroft.helpers.errorcode import Type1Code, Type2Code
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen)
 from pycroft.lib.host import generate_hostname
-from pycroft.lib.net import get_free_ip, select_subnet_for_ip
+from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.dns import ARecord, CNAMERecord
+from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import FinanceAccount
-from pycroft.model.host import Host, Ip, UserHost, UserNetDevice
+from pycroft.model.host import Host, IP, UserHost, UserNetDevice
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup
@@ -79,6 +80,40 @@ def decode_type2_user_id(string):
 from pycroft.lib.finance import RegistrationFee, SemesterFee, post_fees
 
 
+class HostAliasExists(ValueError):
+    pass
+
+
+def setup_ipv4_networking(host):
+    subnets = filter(lambda s: s.address.version == 4,
+                     host.room.dormitory.subnets)
+    for net_device in host.user_net_devices:
+        ip_address, subnet = get_free_ip(subnets)
+        new_ip = IP(net_device=net_device, address=ip_address,
+                    subnet=subnet)
+        session.session.add(new_ip)
+        address_record_name = DNSName(name=generate_hostname(ip_address),
+                                      zone=subnet.primary_dns_zone)
+        session.session.add(AddressRecord(name=address_record_name,
+                                          address=new_ip))
+        ptr_record_name = DNSName(name=ptr_name(subnet.address, ip_address),
+                                  zone=subnet.reverse_dns_zone)
+        session.session.add(ptr_record_name)
+        session.session.add(PTRRecord(name=ptr_record_name,
+                                      address_id=new_ip.id,
+                                      ptrdname=address_record_name))
+        if host.desired_name:
+            name_exists = session.session.query(
+                exists().where(and_(DNSName.name == host.desired_name,
+                                    DNSName.zone == config.user_zone))).scalar()
+            if name_exists:
+                raise HostAliasExists()
+            cname_record_name = DNSName(name=host.desired_name,
+                                        zone=config.user_zone)
+            session.session.add(CNAMERecord(name=cname_record_name,
+                                            cname=address_record_name))
+
+
 @with_transaction
 def move_in(name, login, email, dormitory, level, room_number, mac,
             processor, moved_from_division, already_paid_semester_fee, host_name=None):
@@ -116,32 +151,16 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
 
     # set random initial password
     new_user.set_password(plain_password)
-    session.session.add(new_user)
-    account_name = messages['finance']['user_finance_account_name'].format(
-        user_id=new_user.id)
-    new_user.finance_account.name = account_name
+    with session.session.begin(subtransactions=True):
+        session.session.add(new_user)
+    new_user.finance_account.name = deferred_gettext(u"User {id}").format(
+        id=new_user.id).to_json()
 
     # create one new host (including net_device) for the new user
-    subnets = filter(lambda s: s.ip_type == '4', dormitory.subnets)
-    ip_address = get_free_ip(subnets)
-    subnet = select_subnet_for_ip(ip_address, subnets)
-    #ToDo: Which port to choose if room has more than one?
-    # --> The one that is connected to a switch!
-    # ---> what if there are two or more ports in one room connected to the switch? (double bed room)
-    patch_port = room.patch_ports[0]
-
-    new_host = UserHost(owner=new_user, room=room)
+    new_host = UserHost(user=new_user, room=room, desired_name=host_name)
     session.session.add(new_host)
-    new_net_device = UserNetDevice(mac=mac, host=new_host)
-    new_ip = Ip(net_device=new_net_device, address=ip_address, subnet=subnet)
-    session.session.add(new_ip)
-    new_a_record = ARecord(host=new_host, time_to_live=None,
-                           name=generate_hostname(ip_address),
-                           address=new_ip)
-    session.session.add(new_a_record)
-    if host_name:
-        session.session.add(CNAMERecord(host=new_host, name=host_name,
-                                        record_for=new_a_record))
+    session.session.add(UserNetDevice(mac=mac, host=new_host))
+    setup_ipv4_networking(new_host)
 
     for group in (config.member_group, config.network_access_group):
         make_member_of(new_user, group, processor, closed(now, None))
@@ -163,16 +182,64 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     # Post initial fees
     post_fees([new_user], fees, processor)
 
-    move_in_user_log_entry = log_user_event(
-        author=processor,
-        message=messages["move_in"]["log_message"],
-        user=new_user
-    )
+    log_user_event(author=processor,
+                   message=deferred_gettext(u"Moved in.").to_json(),
+                   user=new_user)
 
     #TODO: print plain password on paper instead
-    print u"new password: " + plain_password
+    print(u"new password: " + plain_password)
 
     return new_user
+
+
+def migrate_user_host(host, new_room, processor):
+    """
+    Migrate a UserHost to a new room and if necessary to a new subnet.
+    If the host changes subnet, it will get a new IP address and existing CNAME
+    records will point to the primary name of the new address.
+    :param UserHost host: Host to be migrated
+    :param Room new_room: new room of the host
+    :param User processor: User processing the migration
+    :return:
+    """
+    old_room = host.room
+    host.room = new_room
+    if old_room.dormitory_id == new_room.dormitory_id:
+        return
+    for net_dev in host.user_net_devices:
+        old_ips = tuple(ip for ip in net_dev.ips)
+        for old_ip in old_ips:
+            ip_address, subnet = get_free_ip(new_room.dormitory.subnets)
+            new_ip = IP(net_device=net_dev, address=ip_address,
+                        subnet=subnet)
+            session.session.add(new_ip)
+            address_record_name = DNSName(name=generate_hostname(ip_address),
+                                          zone=subnet.primary_dns_zone)
+            session.session.add(address_record_name)
+            session.session.add(AddressRecord(name=address_record_name,
+                                              address=new_ip))
+            # Migrate existing CNAME records
+            cname_target_ids = frozenset(r.name.id
+                                         for r in old_ip.address_records)
+            if cname_target_ids:
+                cnames = CNAMERecord.q.filter(CNAMERecord.cname_id.in_(
+                    cname_target_ids
+                ))
+                for cname_record in cnames:
+                    cname_record.cname = address_record_name
+            ptr_record_name = DNSName(name=ptr_name(subnet.address, ip_address),
+                                      zone=subnet.reverse_dns_zone)
+            session.session.add(ptr_record_name)
+            session.session.add(PTRRecord(name=ptr_record_name,
+                                          address_id=new_ip.id,
+                                          ptrdname=address_record_name))
+            old_address = old_ip.address
+            session.session.delete(old_ip)
+
+            message = deferred_gettext(u"Changed IP from {} to {}.").format(
+                old_ip=str(old_address), new_ip=str(new_ip))
+            log_user_event(author=processor, user=host.user,
+                           message=message.to_json())
 
 
 #TODO ensure serializability
@@ -200,32 +267,15 @@ def move(user, dormitory, level, room_number, processor):
 
     user.room = new_room
 
+    message = deferred_gettext(u"Moved from {} to {}.")
     log_user_event(
         author=processor,
-        message=messages["move"]["log_message"].format(
-            from_room=old_room, to_room=new_room),
+        message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
 
     for user_host in user.user_hosts:
-        user_host.room = new_room
-        net_dev = user_host.user_net_device
-
-        # assign a new IP to each net_device
-        if old_room.dormitory_id != new_room.dormitory_id:
-            for ip in net_dev.ips:
-                old_ip = ip.address
-                new_ip = get_free_ip(dormitory.subnets)
-                new_subnet = select_subnet_for_ip(new_ip,
-                                                       dormitory.subnets)
-
-                ip.change_ip(new_ip, new_subnet)
-
-                log_user_event(
-                    author=processor,
-                    message=messages["move"]["ip_change_log_message"].format(
-                        old_ip=old_ip, new_ip=new_ip),
-                    user=user)
+        migrate_user_host(user_host, new_room, processor)
 
     return user
 
@@ -242,8 +292,9 @@ def edit_name(user, name, processor):
         raise ValueError()
     old_name = user.name
     user.name = name
+    message = deferred_gettext(u"Changed name from {} to {}.")
     log_user_event(author=processor, user=user,
-                   message=u"Nutzer {} umbenannt in {}".format(old_name, name))
+                   message=message.format(old_name, name).to_json())
     return user
 
 
@@ -260,9 +311,9 @@ def edit_email(user, email, processor):
         raise ValueError()
     old_email = user.email
     user.email = email
+    message = deferred_gettext(u"Changed e-mail from {} to {}.")
     log_user_event(author=processor, user=user,
-                   message=u"E-Mail-Adresse von {} auf {} "
-                           u"geändert.".format(old_email, email))
+                   message=message.format(old_email, email).to_json())
     return user
 
 
@@ -288,7 +339,7 @@ def has_exceeded_traffic(user, when=None):
     ).join(
         Host.ips
     ).join(
-        Ip.traffic_volumes
+        IP.traffic_volumes
     ).filter(
         Membership.active(when),
         Membership.user_id == user.id
@@ -324,13 +375,9 @@ def block(user, reason, processor, during=None):
     if during is None:
         during = closedopen(session.utcnow(), None)
     make_member_of(user, config.violation_group, processor, during)
-    log_message = messages["block"]["log_message"].format(
-        begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
-        end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert',
-        reason=reason)
-
-    log_user_event(message=log_message, author=processor, user=user)
-
+    message = deferred_gettext(u"Blocked during {during}. Reason: {reason}.")
+    log_user_event(message=message.format(during=during, reason=reason)
+                   .to_json(), author=processor, user=user)
     return user
 
 
@@ -349,16 +396,14 @@ def move_out(user, comment, processor, when):
     for group in (config.member_group, config.network_access_group):
         remove_member_of(user, group, processor, closedopen(when, None))
 
-    log_message = messages["move_out"]["log_message"].format(
-        date=when.strftime("%d.%m.%Y")
-    )
     if comment:
-        log_message += messages["move_out"]["log_message_comment"].format(
-            comment=comment
-        )
+        message = deferred_gettext(u"Moved out on {}. Comment: {}").format(
+            when, comment)
+    else:
+        message = deferred_gettext(u"Moved out on {}.").format(when)
 
     log_user_event(
-        message=log_message,
+        message=message.to_json(),
         author=processor,
         user=user
     )
@@ -383,24 +428,19 @@ def move_out_temporarily(user, comment, processor, during=None):
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
-        if user_host is not None:
-            session.session.delete(user_host.user_net_device.ips[0])
+        for net_device in user_host.user_net_devices:
+            for ip in net_device.ips:
+                session.session.delete(ip)
 
-    log_message = messages["move_out_tmp"]["log_message"].format(
-        begin=during.begin.strftime("%Y.%m.%d") if during.begin else u'unspezifiert',
-        end=during.end.strftime("%Y.%m.%d") if during.end else u'unspezifiert'
-    )
     if comment:
-        log_message += messages["move_out_tmp"]["log_message_comment"].format(
-            comment=comment
-        )
+        message = deferred_gettext(u"Moved out temporarily during {during}. "
+                                   u"Comment: {comment}").format(
+            during=during, comment=comment)
+    else:
+        message = deferred_gettext(u"Moved out temporarily {during}.").format(
+            during=during)
 
-    log_user_event(
-        message=log_message,
-        author=processor,
-        user=user
-    )
-
+    log_user_event(message=message.to_json(), author=processor, user=user)
     return user
 
 
@@ -417,23 +457,11 @@ def is_back(user, processor):
     remove_member_of(user, away_group, processor,
                      closedopen(session.utcnow(), None))
 
-    subnets = user.room.dormitory.subnets
-    ip_address = get_free_ip(subnets)
-    subnet = select_subnet_for_ip(ip_address, subnets)
-
     for user_host in user.user_hosts:
-        session.session.add(Ip(
-            address=ip_address,
-            subnet=subnet,
-            net_device=user_host.user_net_device
-        ))
+        setup_ipv4_networking(user_host)
 
-    log_user_event(
-        message=messages["move_out_tmp"]["log_message_back"],
-        author=processor,
-        user=user
-    )
-
+    log_user_event(message=deferred_gettext(u"Moved back in.").to_json(),
+                   author=processor, user=user)
     return user
 
 
@@ -518,6 +546,10 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
     session.session.add_all(
         Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
         for i in intervals)
+    message = deferred_gettext(u"Added to group {group} during {during}.")
+    log_user_event(message=message.format(group=group.name,
+                                          during=during).to_json(),
+                   user=user, author=processor)
 
 
 @with_transaction
@@ -543,3 +575,7 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     session.session.add_all(
         Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
         for i in intervals)
+    message = deferred_gettext(u"Removed from group {group} during {during}.")
+    log_user_event(message=message.format(group=group.name,
+                                          during=during).to_json(),
+                   user=user, author=processor)

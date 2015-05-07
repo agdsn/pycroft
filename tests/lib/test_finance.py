@@ -1,18 +1,18 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import cStringIO as StringIO
 from datetime import date, datetime, time, timedelta
 import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import messages
+from pycroft._compat import StringIO
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     post_fees, cleanup_description, get_current_semester, import_journal_csv,
     simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
-    SemesterFee, get_semester_for_date)
+    SemesterFee, get_semester_for_date, adjustment_description)
 from pycroft.lib.user import make_member_of
 from pycroft.model.finance import (
     FinanceAccount, Journal, JournalEntry, Transaction)
@@ -48,7 +48,7 @@ class Test_010_Journal(FixtureDataTestBase):
         This test should verify that the csv import works as expected.
         """
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
-        f = StringIO.StringIO(data)
+        f = StringIO(data)
 
         import_journal_csv(f, 4342, date(2015, 1, 1))
 
@@ -61,23 +61,23 @@ class Test_010_Journal(FixtureDataTestBase):
             journal=journal,
             original_description=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
-        self.assertEquals(entry.other_account_number, "12345678")
-        self.assertEquals(entry.other_routing_number, "80040400")
-        self.assertEquals(entry.other_name, u"SCH, AAA")
-        self.assertEquals(entry.amount, 900000)
-        self.assertEquals(entry.posted_at, date(2013, 1, 2))
-        self.assertEquals(entry.valid_on, date(2013, 1, 2))
+        self.assertEqual(entry.other_account_number, "12345678")
+        self.assertEqual(entry.other_routing_number, "80040400")
+        self.assertEqual(entry.other_name, u"SCH, AAA")
+        self.assertEqual(entry.amount, 900000)
+        self.assertEqual(entry.posted_at, date(2013, 1, 2))
+        self.assertEqual(entry.valid_on, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter_by(
             journal=journal,
             original_description=u"Pauschalen"
         ).first()
-        self.assertEquals(entry.posted_at, date(2012, 12, 24))
-        self.assertEquals(entry.valid_on, date(2012, 12, 24))
+        self.assertEqual(entry.posted_at, date(2012, 12, 24))
+        self.assertEqual(entry.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
-        self.assertEquals(entry.amount, -600)
+        self.assertEqual(entry.amount, -600)
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
@@ -85,8 +85,8 @@ class Test_010_Journal(FixtureDataTestBase):
             journal=journal,
             original_description=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEquals(entry.posted_at, date(2013, 12, 29))
-        self.assertEquals(entry.valid_on, date(2013, 1, 10))
+        self.assertEqual(entry.posted_at, date(2013, 12, 29))
+        self.assertEqual(entry.valid_on, date(2013, 1, 10))
 
         JournalEntry.q.delete()
         session.session.commit()
@@ -179,15 +179,12 @@ class FeeTestBase(FixtureDataTestBase):
         ).one()
 
     def assertFeesPosted(self, user, expected_transactions):
-        actual_transactions = map(
-            lambda t: (
-                t.description,
-                t.valid_on,
-                t.splits[0].amount
-                if t.splits[0].account == user.finance_account else
-                t.splits[1].amount),
-            user.finance_account.transactions
-        )
+        actual_transactions = [
+            (t.description,
+             t.valid_on,
+             t.splits[0].amount if t.splits[0].account == user.finance_account
+             else t.splits[1].amount)
+            for t in user.finance_account.transactions]
         self.assertEqual(expected_transactions, actual_transactions)
 
 
@@ -227,10 +224,10 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [double_fee], self.processor)
         single_fee = self.FeeMock(self.fee_account, [self.params])
         post_fees([self.user], [single_fee], self.processor)
-        description = messages['finance']['adjustment_description'].format(
+        description = adjustment_description.format(
             original_description=self.description,
             original_valid_on=self.valid_on
-        )
+        ).to_json()
         correction = [(description, self.valid_on, -self.amount)]
         self.assertFeesPosted(self.user, [self.params] * 2 + correction)
 
@@ -239,10 +236,10 @@ class Test_Fees(FeeTestBase):
         post_fees([self.user], [double_fee], self.processor)
         single_fee = self.FeeMock(self.fee_account, [self.params])
         post_fees([self.user], [single_fee], self.processor)
-        description = messages['finance']['adjustment_description'].format(
+        description = adjustment_description.format(
             original_description=self.description,
             original_valid_on=self.valid_on
-        )
+        ).to_json()
         correction = [(description, self.valid_on, -self.amount)]
         post_fees([self.user], [single_fee], self.processor)
         self.assertFeesPosted(self.user, [self.params] * 2 + correction)
@@ -258,7 +255,7 @@ class TestRegistrationFee(FeeTestBase):
         self.fee = RegistrationFee(self.fee_account)
 
     def test_registration_fee(self):
-        description = messages["finance"]["registration_fee_description"]
+        description = RegistrationFee.description
         amount = SemesterData.with_registration_fee.registration_fee
         valid_on = self.user.registered_at.date()
         self.assertEqual(self.fee.compute(self.user), [(description, valid_on, amount)])
@@ -288,7 +285,8 @@ class TestSemesterFee(FeeTestBase):
         ).one()
 
     def expected_debt(self, semester, regular=True):
-        description = messages["finance"]["semester_fee_description"]
+        description = (SemesterFee.description.format(semester=semester.name)
+                       .to_json())
         registered_at = self.user.registered_at.date()
         if semester.begins_on <= registered_at <= semester.ends_on:
             valid_on = registered_at
@@ -297,7 +295,7 @@ class TestSemesterFee(FeeTestBase):
         amount = (semester.regular_semester_fee
                   if regular else
                   semester.reduced_semester_fee)
-        return description.format(semester=semester.name), valid_on, amount
+        return description, valid_on, amount
 
     def set_registered_at(self, when):
         registered_at = datetime.combine(when, time.min)
@@ -360,8 +358,8 @@ class TestLateFee(FeeTestBase):
         ).one()
 
     def late_fee_for(self, transaction):
-        description = messages['finance']['late_fee_description'].format(
-            original_valid_on=transaction.valid_on)
+        description = LateFee.description.format(
+            original_valid_on=transaction.valid_on).to_json()
         valid_on = (transaction.valid_on + self.payment_deadline +
                     timedelta(days=1))
         amount = get_semester_for_date(valid_on).late_fee

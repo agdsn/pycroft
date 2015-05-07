@@ -10,10 +10,9 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from itertools import imap
 import operator
 from sqlalchemy.ext.hybrid import hybrid_property
-from base import ModelBase
+from .base import ModelBase
 from sqlalchemy import ForeignKey, event, func, select
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
@@ -22,6 +21,8 @@ from sqlalchemy.types import (
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
 from .functions import utcnow
+from pycroft._compat import imap
+from pycroft.helpers.i18n import gettext
 
 
 class Semester(ModelBase):
@@ -163,15 +164,16 @@ def check_transaction_on_save(mapper, connection, target):
     :raises: IllegalTransactionError if transaction contains errors
     """
     if not target.is_balanced:
-        raise IllegalTransactionError("Transaction is not balanced.")
+        raise IllegalTransactionError(gettext(u"Transaction is not balanced."))
     if len(target.splits) < 2:
-        raise IllegalTransactionError("Transaction must consist "
-                                      "of at least two splits.")
+        raise IllegalTransactionError(gettext(u"Transaction must consist "
+                                              u"of at least two splits."))
     marked_accounts = set()
     for split in target.splits:
         if split.account in marked_accounts:
-            raise IllegalTransactionError("Transaction must not have multiple "
-                                          "splits with the same account.")
+            raise IllegalTransactionError(gettext(u"Transaction must not have "
+                                                  u"multiple splits with the "
+                                                  u"same account."))
         marked_accounts.add(split.account)
 
 

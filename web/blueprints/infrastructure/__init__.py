@@ -15,7 +15,7 @@ from flask import Blueprint, flash, redirect, render_template, url_for, jsonify,
     abort
 from pycroft.helpers import net
 from pycroft.model import session
-from pycroft.model.host import Switch, Host, Subnet
+from pycroft.model.host import Switch
 from pycroft.model.net import VLAN, Subnet
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
@@ -23,7 +23,6 @@ from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNAMERecordEditForm
 from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
-from web.blueprints.infrastructure.forms import a_records_query
 from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('infrastructure', __name__, )
@@ -42,16 +41,14 @@ def subnets():
 @access.require('infrastructure_show')
 def subnets_json():
     subnets_list = Subnet.q.all()
-    return jsonify(items=map(
-        lambda subnet: {
+    return jsonify(items=[{
             'id': subnet.id,
-            'domain': subnet.dns_domain,
-            'ip': subnet.address,
+            # TODO href to DNS zones
+            'primary_dns_zone': subnet.primary_dns_zone,
+            'reverse_dns_zone': subnet.reverse_dns_zone,
+            'address': str(subnet.address),
             'gateway': subnet.gateway,
-            'ip_version': "IPv{}".format(subnet.ip_type)
-        },
-        subnets_list
-    ))
+        } for subnet in subnets_list])
 
 
 @bp.route('/switches')
@@ -64,17 +61,14 @@ def switches():
 @bp.route('/switches/json')
 @access.require('infrastructure_show')
 def switches_json():
-    return jsonify(items=map(
-        lambda switch: {
+    return jsonify(items=[{
             'id': switch.id,
             'name': {
                 'title': switch.name,
                 'href': url_for(".switch_show", switch_id=switch.id)
             },
             'ip': switch.management_ip
-        },
-        Switch.q.all()
-    ))
+        } for switch in Switch.q.all()])
 
 
 @bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
@@ -186,22 +180,7 @@ def aaaa_record_create(user_id, host_id):
     methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def cname_record_create(user_id, host_id):
-    form = CNAMERecordCreateForm()
-    form.record_for.query = a_records_query(host_id)
-    host = Host.q.get(host_id)
-
-    if form.validate_on_submit():
-        record = CNAMERecord(host=host, name=form.name.data,
-            record_for=form.record_for.data)
-        session.session.add(record)
-        session.session.commit()
-        flash(u"Neuer CNAMERecord angelegt", 'success')
-
-        return redirect(url_for("user.user_show", user_id=user_id))
-
-    return render_template('infrastructure/recordtype_create.html', form=form,
-        user_id=user_id, host_id=host_id,
-        page_title=u"Neuen CNAMERecord erzeugen")
+    return redirect(url_for("user.user_show", user_id=user_id))
 
 
 @bp.route('/user/<int:user_id>/record_create/<int:host_id>/mx')
@@ -240,8 +219,7 @@ def switch_show_json(switch_id):
         abort(404)
     switch_port_list = switch.ports
     switch_port_list = net.sort_ports(switch_port_list)
-    return jsonify(items=map(
-        lambda port: {
+    return jsonify(items=[{
             "portname": port.name,
             "room": {
                 "href": url_for(
@@ -253,9 +231,7 @@ def switch_show_json(switch_id):
                     port.patch_port.room.number
                 )
             }
-        },
-        switch_port_list
-    ))
+        } for port in switch_port_list])
 
 
 @bp.route('/vlans')
@@ -268,11 +244,8 @@ def vlans():
 @bp.route('/vlans/json')
 @access.require('infrastructure_show')
 def vlans_json():
-    return jsonify(items=map(
-        lambda vlan: {
+    return jsonify(items=[{
             'id': vlan.id,
             'name': vlan.name,
             'tag': vlan.tag
-        },
-        VLAN.q.all()
-    ))
+        } for vlan in VLAN.q.all()])

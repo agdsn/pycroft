@@ -4,15 +4,19 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import date, datetime, time, timedelta
 from functools import partial
-from itertools import imap
+
 import json
-import gettext as gt
 import operator
+import traceback
 from babel import Locale, dates, numbers
 from babel.support import Translations
+from decimal import Decimal
+import collections
 import jsonschema
-from pycroft.helpers.interval import Interval, Bound, NegativeInfinity, \
-    PositiveInfinity
+from pycroft._compat import (
+    string_types, integer_types, iteritems, text_type, imap)
+from pycroft.helpers.interval import (
+    Interval, Bound, NegativeInfinity, PositiveInfinity)
 
 _unspecified_locale = Locale('en', 'US')
 _null_translations = Translations()
@@ -54,35 +58,66 @@ def dngettext(domain, singular, plural, n):
     return get_translations().udngettext(domain, singular, plural, n)
 
 
-def format_number(n, **options):
+def type_specific_options(formatter):
+    formatter.__option_policy__ = 'type-specific'
+    return formatter
+
+
+def ignore_options(formatter):
+    formatter.__option_policy__ = 'ignore'
+    return formatter
+
+
+@type_specific_options
+def format_number(n):
     return numbers.format_number(n, locale=get_locale())
 
 
-def format_date(d, **options):
-    options = options.get(date, {})
-    return dates.format_date(d, locale=get_locale(), **options)
+@type_specific_options
+def format_decimal(d, format=None):
+    return numbers.format_decimal(d, format=format, locale=get_locale())
 
 
-def format_datetime(d, **options):
-    options = options.get(datetime, {})
-    return dates.format_datetime(d, locale=get_locale(), **options)
+Money = collections.namedtuple("Money", ["value", "currency"])
 
 
-def format_time(t, **options):
-    options = options.get(time, {})
-    return dates.format_time(t, locale=get_locale(), **options)
+@type_specific_options
+def format_currency(money, format=None):
+    return numbers.format_currency(*money, format=format, locale=get_locale())
 
 
-def format_timedelta(delta, **options):
-    options = options.get(timedelta, {})
-    return dates.format_timedelta(delta, locale=get_locale(), **options)
+@type_specific_options
+def format_date(d, format='medium'):
+    return dates.format_date(d, format=format, locale=get_locale())
 
 
-def format_bool(v, **options):
+@type_specific_options
+def format_datetime(d, format='medium', tzinfo=None):
+    return dates.format_datetime(d, format=format, tzinfo=tzinfo,
+                                 locale=get_locale())
+
+
+@type_specific_options
+def format_time(t, format='medium', tzinfo=None):
+    return dates.format_time(t, format=format, tzinfo=tzinfo,
+                             locale=get_locale())
+
+
+@type_specific_options
+def format_timedelta(delta, granularity='second', threshold=.85,
+                     add_direction=False, format='medium'):
+    return dates.format_timedelta(
+        delta, granularity=granularity, threshold=threshold,
+        add_direction=add_direction, format=format, locale=get_locale())
+
+
+@ignore_options
+def format_bool(v):
     return gettext(u"True") if v else gettext(u"False")
 
 
-def format_none(n, **options):
+@ignore_options
+def format_none(n):
     return gettext(u"None")
 
 
@@ -101,33 +136,63 @@ def format_interval(interval, **options):
     )
 
 
-identity = lambda x: x
+identity = ignore_options(lambda x: x)
+
 
 formatter_map = {
-    type(None): format_none,
-    str: identity,
-    unicode: identity,
-    bool: format_bool,
-    float: format_number,
-    int: format_number,
+    type(None): identity,
+    bool: identity,
+    float: format_decimal,
+    Decimal: format_decimal,
+    Money: format_currency,
     date: format_date,
     datetime: format_datetime,
     time: format_time,
     timedelta: format_timedelta,
     Interval: format_interval,
 }
+for type_ in string_types:
+    formatter_map[type_] = identity
+for type_ in integer_types:
+    formatter_map[type_] = format_number
 
 
 def format_param(p, options):
     concrete_type = type(p)
-    formatters = (formatter_map[type_] for type_ in concrete_type.__mro__
-                  if type_ in formatter_map)
+    formatters = ((type_, formatter_map[type_])
+                  for type_ in concrete_type.__mro__ if type_ in formatter_map)
     try:
-        formatter = next(formatters)
+        type_, formatter = next(formatters)
     except StopIteration:
         raise TypeError("No formatter available for type {} or any supertype."
-                        .format(concrete_type.__name__))
+                        .format(qualified_typename(concrete_type)))
+    option_policy = getattr(formatter, '__option_policy__', None)
+    if option_policy == 'ignore':
+        options = {}
+    elif option_policy == 'type-specific':
+        options = options.get(type_, {})
     return formatter(p, **options)
+
+
+def deserialize_money(v):
+    try:
+        return Money(Decimal(v[0]), v[1])
+    except IndexError:
+        raise ValueError()
+
+
+def deserialize_datetime(v):
+    try:
+        return datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f")
+    except ValueError:
+        return datetime.strptime(v, "%Y-%m-%dT%H:%M:%S")
+
+
+def deserialize_time(v):
+    try:
+        return datetime.strptime(v, "%H:%M:%S.%f").time()
+    except ValueError:
+        return datetime.strptime(v, "%H:%M:%S").time()
 
 
 def serialize_interval(interval):
@@ -163,16 +228,15 @@ def deserialize_interval(value):
 
 
 def qualified_typename(type_):
-    return type.__module__ + type_.__name__
+    return type_.__module__ + '.' + type_.__name__
 
 
 serialize_map = {
     type(None): identity,
-    str: identity,
-    unicode: identity,
     bool: identity,
     float: identity,
-    int: identity,
+    Decimal: str,
+    Money: lambda m: (str(m.value), m.currency),
     date: operator.methodcaller("isoformat"),
     datetime: operator.methodcaller("isoformat"),
     time: operator.methodcaller("isoformat"),
@@ -180,21 +244,30 @@ serialize_map = {
                           "microseconds": v.microseconds},
     Interval: serialize_interval,
 }
+for type_ in string_types:
+    serialize_map[type_] = identity
+for type_ in integer_types:
+    serialize_map[type_] = identity
 
 
-deserialize_map = {qualified_typename(t): f for t, f in {
+_deserialize_type_map = {
     type(None): identity,
-    str: identity,
-    unicode: identity,
     bool: identity,
     float: identity,
-    int: identity,
+    Decimal: Decimal,
+    Money: deserialize_money,
     date: lambda v: datetime.strptime(v, "%Y-%m-%d").date(),
-    datetime: lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f"),
-    time: lambda v: datetime.strptime(v, "%H:%M:%S.%f").time(),
+    datetime: deserialize_datetime,
+    time: deserialize_time,
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
-}.iteritems()}
+}
+for type_ in string_types:
+    _deserialize_type_map[type_] = identity
+for type_ in integer_types:
+    _deserialize_type_map[type_] = identity
+deserialize_map = dict((qualified_typename(t), f)
+                       for t, f in iteritems(_deserialize_type_map))
 
 
 def serialize_param(param):
@@ -206,9 +279,8 @@ def serialize_param(param):
         type_, serializer = next(serializers)
     except StopIteration:
         raise TypeError("No serialization available for type {} or any"
-                        "supertype".format(concrete_type.__name__))
-    type_name = qualified_typename(type_)
-    return {"type": type_name, "value": serializer(param)}
+                        "supertype".format(qualified_typename(concrete_type)))
+    return {"type": qualified_typename(type_), "value": serializer(param)}
 
 
 def deserialize_param(param):
@@ -226,11 +298,11 @@ schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Message format for deferred localization.",
     "oneOf": [
-        {"$ref": "#/definitions/singular"},
-        {"$ref": "#/definitions/plural"},
+        {"$ref": "#/definitions/simple"},
+        {"$ref": "#/definitions/numerical"},
     ],
     "definitions": {
-        "singular": {
+        "simple": {
             "type": "object",
             "properties": {
                 "domain": {"type": "string"},
@@ -241,7 +313,7 @@ schema = {
             "required": ["message"],
             "additionalProperties": False,
         },
-        "plural": {
+        "numerical": {
             "type": "object",
             "properties": {
                 "domain": {"type": "string"},
@@ -289,18 +361,25 @@ class Message(object):
             return ErroneousMessage(json_string)
         try:
             jsonschema.validate(obj, schema)
-        except jsonschema.ValidationError:
-            return ErroneousMessage("Invalid message: {}".format(json_string))
+        except jsonschema.ValidationError as e:
+            return ErroneousMessage("Message validation failed: {} for "
+                                    "message {}".format(e.message, json_string))
+        args = obj.get(u"args", ())
+        kwargs = obj.get(u"kwargs", {})
+        try:
+            args = tuple(deserialize_param(a) for a in args)
+            kwargs = {k: deserialize_param(v) for k, v in kwargs.iteritems()}
+        except (TypeError, ValueError) as e:
+            error = u''.join(traceback.format_exception_only(type(e), e))
+            return ErroneousMessage("Parameter deserialization error: {} in "
+                                    "message: {}".format(error, json_string))
         if u'plural' in obj:
             m = NumericalMessage(obj[u"singular"], obj[u"plural"], obj[u"n"],
                                  obj.get(u"domain"))
         else:
             m = SimpleMessage(obj[u"message"], obj.get(u"domain"))
-        if u'args' in obj:
-            m.args = tuple(deserialize_param(a) for a in obj[u"args"])
-        if u'kwargs' in obj:
-            m.kwargs = {k: deserialize_param(v)
-                        for k, v in obj[u"kwargs"].iteritems()}
+        m.args = args
+        m.kwargs = kwargs
         return m
 
     def __init__(self, domain=None):
@@ -311,7 +390,7 @@ class Message(object):
     def _base_dict(self):
         raise NotImplementedError()
 
-    def _message(self):
+    def _gettext(self):
         raise NotImplementedError()
 
     def to_json(self):
@@ -323,7 +402,7 @@ class Message(object):
         if self.kwargs:
             obj["kwargs"] = {k: serialize_param(v)
                              for k, v in self.kwargs.iteritems()}
-        return unicode(
+        return text_type(
             json.dumps(obj, ensure_ascii=False, encoding='utf-8'))
 
     def format(self, *args, **kwargs):
@@ -332,11 +411,20 @@ class Message(object):
         return self
 
     def localize(self, **options):
-        msg = self._message()
+        msg = self._gettext()
+        if not self.args and not self.kwargs:
+            return msg
         f = partial(format_param, options=options)
-        args = imap(f, self.args)
-        kwargs = {k: f(v) for k, v in self.kwargs.iteritems()}
-        return msg.format(*args, **kwargs)
+        try:
+            args = tuple(imap(f, self.args))
+            kwargs = {k: f(v) for k, v in iteritems(self.kwargs)}
+            return msg.format(*args, **kwargs)
+        except (TypeError, ValueError, IndexError, KeyError) as e:
+            error = u''.join(traceback.format_exception_only(type(e), e))
+            return gettext(u'Could not format message "{message}" '
+                           u'(args={args}, kwargs={kwargs}): {error}'
+                           .format(message=msg, args=self.args,
+                                   kwargs=self.kwargs, error=error))
 
 
 class ErroneousMessage(Message):
@@ -347,7 +435,7 @@ class ErroneousMessage(Message):
     def _base_dict(self):
         raise AssertionError()
 
-    def _message(self):
+    def _gettext(self):
         return self.text
 
 
@@ -361,11 +449,11 @@ class SimpleMessage(Message):
     def _base_dict(self):
         return {"message": self.message}
 
-    def _message(self):
+    def _gettext(self):
         if self.domain:
-            return gt.dgettext(self.domain, self.message)
+            return dgettext(self.domain, self.message)
         else:
-            return gt.gettext(self.message)
+            return gettext(self.message)
 
 
 class NumericalMessage(Message):
@@ -380,11 +468,15 @@ class NumericalMessage(Message):
     def _base_dict(self):
         return {"singular": self.singular, "plural": self.plural, "n": self.n}
 
-    def _message(self):
+    def _gettext(self):
         if self.domain:
             return dngettext(self.domain, self.singular, self.plural, self.n)
         else:
             return ngettext(self.singular, self.plural, self.n)
+
+
+def localized(json_string):
+    return Message.from_json(json_string).localize()
 
 
 def deferred_gettext(message):

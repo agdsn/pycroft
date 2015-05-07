@@ -15,7 +15,7 @@ today = datetime.utcnow().date()
 
 class SemesterData(DataSet):
     class with_registration_fee:
-        name = "previous semester"
+        name = u"previous semester"
         registration_fee = 2500
         regular_semester_fee = 1500
         reduced_semester_fee = 450
@@ -28,7 +28,7 @@ class SemesterData(DataSet):
         ends_on = today - timedelta(days=91)
 
     class without_registration_fee:
-        name = "current semester"
+        name = u"current semester"
         registration_fee = 0
         regular_semester_fee = 2000
         reduced_semester_fee = 100

@@ -2,32 +2,23 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-    pycroft.model.hosts
-    ~~~~~~~~~~~~~~
-
-    This module contains the classes Host, NetDevice, Switch.
-
-    :copyright: (c) 2011 by AG DSN.
-"""
 from sqlalchemy import Column, ForeignKey, event
-
-import ipaddr
-from sqlalchemy.orm import backref, object_session, relationship, validates
+from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer, String
+from pycroft.helpers.i18n import gettext
+from pycroft.helpers.net import mac_regex
 
 from pycroft.model.base import ModelBase
-from pycroft.helpers.net import mac_regex
-from pycroft.lib.net import MacExistsException
-from pycroft.model.net import Subnet
+from pycroft.model.types import (
+    IPAddress, MACAddress, InvalidMACAddressException)
 
 
 class Host(ModelBase):
-    discriminator = Column('type', String(50), nullable=False)
+    discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=True)
 
     # many to one from Host to Room
@@ -41,8 +32,8 @@ class UserHost(Host):
                 primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
-    # one to one from Host to User
-    owner = relationship("User", backref=backref(
+    desired_name = Column(String(63))
+    user = relationship("User", backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 
 
@@ -53,7 +44,7 @@ class ServerHost(Host):
 
     name = Column(String(255))
 
-    owner = relationship("User", backref=backref(
+    user = relationship("User", backref=backref(
         "server_hosts", cascade="all, delete-orphan"))
 
 
@@ -66,56 +57,31 @@ class Switch(Host):
 
     management_ip = Column(String(127), nullable=False)
 
-    owner = relationship("User", backref=backref(
+    user = relationship("User", backref=backref(
         "switches", cascade="all, delete-orphan"))
-
-
-def _check_user_host_in_user_room(mapper, connection, userhost):
-    if userhost.room is not userhost.owner.room:
-        raise Exception("UserHost can only be in user's room")
-
-event.listen(UserHost, "before_insert", _check_user_host_in_user_room)
-event.listen(UserHost, "before_update", _check_user_host_in_user_room)
-
-
-class InvalidMACAddressException(Exception):
-    pass
 
 
 class MulticastFlagException(InvalidMACAddressException):
     pass
 
 
-class TypeMismatch(Exception):
-    pass
-
-
 class NetDevice(ModelBase):
-    """A logical network interface (hence the single MAC address), which means
-    many net interfaces can be connected to the same switch port"""
-
-    #foreign key discriminator
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    #mac = Column(postgresql.MACADDR, nullable=False)
-    mac = Column(String(17), nullable=False)
+    mac = Column(MACAddress, nullable=False)
 
     host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
                      nullable=False)
 
     @validates('mac')
-    def validate_mac(self, _, mac_address):
-        match = mac_regex.match(mac_address)
+    def validate_mac(self, _, value):
+        match = mac_regex.match(value)
         if not match:
-            raise InvalidMACAddressException(mac_address)
-        components = match.groupdict()
-        mac_bytes = (components['byte1'], components['byte2'],
-                     components['byte3'], components['byte4'],
-                     components['byte5'], components['byte6'])
-        if int(mac_bytes[0], base=16) & 1:
-            raise MulticastFlagException(mac_address)
-        return ':'.join(mac_bytes).lower()
+            raise InvalidMACAddressException()
+        if int(value[0:2], base=16) & 1:
+            raise MulticastFlagException()
+        return value
 
 
 class UserNetDevice(NetDevice):
@@ -125,7 +91,7 @@ class UserNetDevice(NetDevice):
     __mapper_args__ = {'polymorphic_identity': "user_net_device"}
 
     host = relationship(UserHost,
-                        backref=backref("user_net_device", uselist=False,
+                        backref=backref("user_net_devices",
                                         cascade="all, delete-orphan"))
 
 
@@ -156,21 +122,8 @@ class SwitchNetDevice(NetDevice):
                                         cascade="all, delete-orphan"))
 
 
-class IPSubnetMismatchError(ValueError):
-    pass
-
-
-class Ip(ModelBase):
-    # TODO: move to 'net'
-    def __init__(self, *args, **kwargs):
-        super(Ip, self).__init__(*args, **kwargs)
-
-        if self.address is not None and self.subnet is not None:
-            assert self.is_ip_valid, "Subnet does not contain the ip"
-
-    address = Column(String(51), unique=True, nullable=False)
-    #address = Column(postgresql.INET, nullable=True)
-
+class IP(ModelBase):
+    address = Column(IPAddress, nullable=False, unique=True)
     net_device_id = Column(Integer,
                            ForeignKey(NetDevice.id, ondelete="CASCADE"),
                            nullable=False)
@@ -178,8 +131,8 @@ class Ip(ModelBase):
                               backref=backref("ips",
                                               cascade="all, delete-orphan"))
 
-    host = relationship(Host, secondary="net_device", backref=backref("ips"),
-                        viewonly=True)
+    host = relationship(Host, secondary=NetDevice.__table__,
+                        backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
                        nullable=False)
@@ -187,41 +140,33 @@ class Ip(ModelBase):
                           backref=backref("ips", cascade="all, delete-orphan"),
                           lazy='joined')
 
-    def change_ip(self, ip, subnet):
-        self.subnet = None
-        self.address = ip
-        self.subnet = subnet
-
-    def _ip_subnet_valid(self, ip, subnet):
-        return ipaddr.IPAddress(ip) in ipaddr.IPNetwork(subnet.address)
-
-    @property
-    def is_ip_valid(self):
-        if self.address is None or self.subnet is None:
-            return False
-        return self._ip_subnet_valid(self.address, self.subnet)
+    def _check_subnet_valid(self, address, subnet):
+        if address is None or subnet is None:
+            return
+        if address not in subnet:
+            message = gettext('IP address {} is not contained in its subnet {}'
+                              .format(address, subnet))
+            raise ValueError(message)
 
     @validates('subnet')
     def validate_subnet(self, _, value):
         if value is None:
             return value
-        if self.address and not self._ip_subnet_valid(self.address, value):
-            raise IPSubnetMismatchError("Given subnet "+str(value)+" does not contain the ip "+str(self.address))
+        self._check_subnet_valid(self.address, value.address)
         return value
 
     @validates("address")
     def validate_address(self, _, value):
-        if value is None:
+        if value is None or self.subnet is None:
             return value
-        if self.subnet is not None and not self._ip_subnet_valid(value, self.subnet):
-            raise IPSubnetMismatchError("Subnet "+str(self.subnet.address)+" does not contain the given ip "+str(value))
+        self._check_subnet_valid(value, self.subnet.address)
         return value
 
 
 def _check_correct_ip_subnet(mapper, connection, target):
-    if target.address is not None and target.subnet is not None:
-        assert target.is_ip_valid, "Subnet does not contain the ip"
+    if target.subnet is not None:
+        target._check_subnet_valid(target.address, target.subnet.address)
 
 
-event.listen(Ip, "before_insert", _check_correct_ip_subnet)
-event.listen(Ip, "before_update", _check_correct_ip_subnet)
+event.listen(IP, "before_insert", _check_correct_ip_subnet)
+event.listen(IP, "before_update", _check_correct_ip_subnet)

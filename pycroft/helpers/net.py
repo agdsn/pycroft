@@ -3,6 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+import ipaddr
 
 # Byte represented by 2 hexadecimal digits
 BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
@@ -68,7 +69,9 @@ mac_regex = re.compile(r"""
     (?P<byte6>{BYTE_PATTERN})
     # End of string:
     \Z
-""".format(**globals()), re.VERBOSE | re.IGNORECASE)
+    """.format(BYTE_PATTERN=BYTE_PATTERN, SEP1_PATTERN=SEP1_PATTERN,
+               SEP2_PATTERN=SEP2_PATTERN, SEP3_PATTERN=SEP3_PATTERN),
+    re.VERBOSE | re.IGNORECASE)
 
 
 def sort_ports(ports):
@@ -84,3 +87,13 @@ def sort_ports(ports):
     sorted_ports = sorted(ports, key=make_sort_key)
 
     return sorted_ports
+
+
+def reverse_pointer(ip_address):
+    if isinstance(ip_address, ipaddr.IPv4Address):
+        reversed_octets = reversed(ip_address.exploded.split('.'))
+        return '.'.join(reversed_octets) + '.in-addr.arpa'
+    elif isinstance(ip_address, ipaddr.IPv6Address):
+        reversed_chars = reversed(ip_address.exploded.replace(':', ''))
+        return '.'.join(reversed_chars) + '.ip6.arpa'
+    raise TypeError()
