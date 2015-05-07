@@ -195,7 +195,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
         def new_instance():
             host.Ip(net_device=netdev, subnet=subnets[1], address=ip)
 
-        self.assertRaisesRegexp(host.IPSubnetMismatchError, new_instance)
+        self.assertRaises(host.IPSubnetMismatchError, new_instance)
 
 
 class Test_060_Cascades(FixtureDataTestBase):

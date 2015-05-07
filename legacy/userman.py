@@ -16,7 +16,7 @@ session = scoped_session(sessionmaker(bind=engine))
 relevant_tables = [model.FinanzBuchungen,
                    model.FinanzKonten,
                    model.FinanzKontoTyp,
-                   with_polymorphic(model.BankKonto, [model.BkBuchung])
-                   ]
+                   model.BkBuchung,
+                   model.BankKonto]
 
 
