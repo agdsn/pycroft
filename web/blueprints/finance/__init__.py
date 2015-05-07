@@ -20,6 +20,7 @@ from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft._compat import imap
+from pycroft.helpers.i18n import Message, localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
@@ -228,7 +229,7 @@ def accounts_show_json(account_id):
                     "finance.transactions_show",
                     transaction_id=split.transaction_id
                 ),
-                'title': split.transaction.description
+                'title': localized(split.transaction.description)
             },
             'amount': money_filter(split.amount),
             'row_positive': (split.amount > 0) is not inverted
@@ -256,7 +257,7 @@ def transactions_show_json(transaction_id):
         {
             'account': {
                 'href': url_for(".accounts_show", account_id=split.account_id),
-                'title': split.account.name
+                'title': localized(split.account.name)
             },
             'amount': money_filter(split.amount),
             'row_positive': (split.amount > 0) is not inverted
@@ -313,8 +314,9 @@ def semesters_list():
 @bp.route("/semesters/json")
 @access.require('finance_show')
 def semesters_list_json():
-    return jsonify(items=[{
-            'name': semester.name,
+    return jsonify(items=[
+        {
+            'name': localized(semester.name),
             'registration_fee': money_filter(semester.registration_fee),
             'regular_semester_fee': money_filter(
                 semester.regular_semester_fee),
@@ -377,9 +379,10 @@ def semesters_create():
 @bp.route('/json/accounts/system')
 @access.require('finance_show')
 def json_accounts_system():
-    return jsonify(accounts=[{
+    return jsonify(accounts=[
+        {
             "account_id": account.id,
-            "account_name": account.name
+            "account_name": localized(account.name),
         } for account in session.query(FinanceAccount).outerjoin(User).filter(
             User.finance_account == None
         ).all()])

@@ -17,6 +17,7 @@ import operator
 from sqlalchemy import Text
 from pycroft import lib
 from pycroft.helpers import net
+from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
@@ -136,7 +137,7 @@ def user_show_logs_json(user_id, logtype="all"):
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)
             },
-            'message': entry.message,
+            'message': Message.from_json(entry.message).localize(),
             'type': 'user'
         } for entry in user_log_list] + [{
             'created_at': datetime_filter(entry.created_at),
@@ -144,7 +145,7 @@ def user_show_logs_json(user_id, logtype="all"):
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)
             },
-            'message': entry.message,
+            'message': Message.from_json(entry.message).localize(),
             'type': 'room'
         } for entry in room_log_list])
 
