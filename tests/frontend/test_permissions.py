@@ -22,7 +22,7 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code(url_for('login.login'), 200)
 
         # Fetching static content is OK
-        self.assert_response_code('/static/style.css', 200)
+        self.assert_response_code(url_for('static', filename='style.css'), 200)
 
         # Access to other pages/blueprints is NOT OK
         self.assert_response_code(url_for('finance.journals_list'), 302)
@@ -35,8 +35,8 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
     datasets = [MembershipData, PropertyData]
 
     def setUp(self):
-        self.login = "admin"
-        self.password = "password"
+        self.login = UserData.user1_admin.login
+        self.password = UserData.user1_admin.password
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_dormitories(self):
@@ -54,8 +54,8 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
     datasets = [MembershipData, PropertyData]
 
     def setUp(self):
-        self.login = "finanzer"
-        self.password = "password"
+        self.login = UserData.user2_finance.login
+        self.password = UserData.user2_finance.password
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_dormitories(self):
@@ -71,8 +71,8 @@ class Test_040_Permissions_User(FrontendDataTestBase):
     datasets = [UserData, MembershipData, PropertyData]
 
     def setUp(self):
-        self.login = "user"
-        self.password = "password"
+        self.login = UserData.user3_user.login
+        self.password = UserData.user3_user.password
         FrontendDataTestBase.setUp(self)
 
     def test_0010_access_user(self):
