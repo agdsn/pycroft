@@ -202,6 +202,7 @@ def srv_record_create(user_id, host_id):
 
 
 @bp.route('/switch/show/<int:switch_id>')
+@access.require('infrastructure_show')
 def switch_show(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
@@ -213,6 +214,7 @@ def switch_show(switch_id):
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
+@access.require('infrastructure_show')
 def switch_show_json(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:

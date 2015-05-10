@@ -32,6 +32,7 @@ nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
 @bp.route('/')
 @nav.navigate(u"Wohnheime")
+@access.require('facilities_show')
 # careful with permissions here, redirects!
 def overview():
     dormitories_list = Dormitory.q.all()

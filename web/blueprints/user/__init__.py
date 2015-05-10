@@ -47,6 +47,7 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 
 @bp.route('/')
 @nav.navigate(u"Übersicht")
+@access.require('facilities_show')
 def overview():
     return redirect(url_for("facilities.overview"))
 
@@ -266,6 +267,7 @@ def end_membership(membership_id):
 
 
 @bp.route('/json/levels')
+@access.require('facilities_show')
 def json_levels():
     if not request.is_xhr:
         abort(404)
@@ -276,6 +278,7 @@ def json_levels():
 
 
 @bp.route('/json/rooms')
+@access.require('facilities_show')
 def json_rooms():
     if not request.is_xhr:
         abort(404)
@@ -554,6 +557,7 @@ def search_results():
 
 
 @bp.route('/json/groups')
+@access.require('groups_show')
 def json_groups():
     if not request.is_xhr:
         abort(404)
