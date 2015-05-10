@@ -176,4 +176,4 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         return self.assert_response_code(endpoint, 200)
 
     def assert_access_forbidden(self, endpoint):
-        return self.assert_response_code(endpoint, 302)
+        return self.assert_response_code(endpoint, 403)

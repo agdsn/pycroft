@@ -85,7 +85,7 @@ class BlueprintAccess(object):
                 return current_app.login_manager.unauthorized()
             if self._current_has_access(needed_permissions):
                 return wrapped(*args, **kwargs)
-            abort(401)
+            abort(403)
 
         return decorator
 
