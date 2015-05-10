@@ -3,17 +3,21 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from contextlib import contextmanager
+from functools import partial
 import os
 import random
 import string
 import unittest
-from flask import url_for
+from flask import url_for, _request_ctx_stack
 from flask.ext import testing
 from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
+import sys
+from werkzeug.routing import IntegerConverter, UnicodeConverter
+from pycroft._compat import iteritems
 from pycroft.model import session
 from pycroft.model import _all, drop_db_model, create_db_model
 
@@ -129,6 +133,12 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
     login = None
     password = None
 
+    _argument_creator_map = {
+        IntegerConverter: lambda c: 1,
+        UnicodeConverter: lambda c: u"test",
+    }
+    _default_argument_creator = lambda c: u"default"
+
     def _login(self, login, password):
         self.client.post(url_for("login.login"), follow_redirects=True,
                          data={'login': login, 'password': password})
@@ -160,6 +170,25 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
         return app
 
+    def blueprint_urls(self, app, blueprint_name):
+        rules = [rule for rule in app.url_map.iter_rules()
+                 if rule.endpoint.startswith(blueprint_name + '.')]
+        url_adapter = _request_ctx_stack.top.url_adapter
+
+        return map(partial(self._build_rule, url_adapter), rules)
+
+    def _build_rule(self, url_adapter, rule):
+        converters = rule._converters
+        try:
+            values = {
+                k: self._argument_creator_map.get(
+                    type(v), self._default_argument_creator
+                )(v) for k, v in iteritems(converters)}
+        except KeyError as e:
+            raise AssertionError("Cannot create mock argument for {}"
+                                 .format(e.args[0]))
+        return url_adapter.build(rule.endpoint, values, 'GET')
+
     def assert_template_get_request(self, endpoint, template):
         response = self.client.get(endpoint)
         self.assert200(response)
@@ -169,7 +198,13 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def assert_response_code(self, endpoint, code):
         response = self.client.get(endpoint)
-        self.assertStatus(response, code)
+        try:
+            self.assertStatus(response, code)
+        except self.failureException as e:
+            exception = self.failureException("While accessing {}: {}"
+                                              .format(endpoint, e.message))
+            raise self.failureException, exception, sys.exc_info()[2]
+
         return response
 
     def assert_access_allowed(self, endpoint):
