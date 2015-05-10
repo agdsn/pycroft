@@ -11,17 +11,17 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from flask import Flask, redirect, url_for, request, flash, render_template
+from flask.ext.login import current_user, current_app
 from flask.ext.babel import Babel
-from .blueprints import (finance, infrastructure, properties, user, facilities,
-                        login)
-from web.form import widgets
+from pycroft.helpers.i18n import gettext
+from pycroft.model import session
 from . import template_filters
 from . import template_tests
-
-from pycroft.model import session
-from web.blueprints.login import login_manager
-from flask.ext.login import current_user, current_app
-from web.templates import page_resources
+from .blueprints import (
+    finance, infrastructure, properties, user, facilities, login)
+from .blueprints.login import login_manager
+from .form import widgets
+from .templates import page_resources
 
 
 def make_app():
@@ -53,7 +53,6 @@ def make_app():
     infrastructure.nav.register_on(app)
     properties.nav.register_on(app)
 
-    @app.errorhandler(401)
     @app.errorhandler(403)
     @app.errorhandler(404)
     @app.errorhandler(500)
@@ -62,16 +61,19 @@ def make_app():
 
         :param e: The error from the errorhandler
         """
-        if not hasattr(e, 'code') or e.code in (500,):
-            flash(e, "error")
-        elif e.code in (401, 403):
-            flash(u"Nicht genügend Rechte um die Seite zu sehen!", "error")
-        elif e.code in (404,):
-            flash(u"Seite wurde nicht gefunden!", "error")
+        if not hasattr(e, 'code'):
+            code = 500
         else:
-            flash(u"Fehler!", "error")
-
-        return render_template('error.html', error=e)
+            code = e.code
+        if code == 500:
+            message = e.message
+        elif code == 403:
+            message = gettext(u"You are not allowed to access this page.")
+        elif code == 404:
+            message = gettext(u"Page not found.")
+        else:
+            raise AssertionError()
+        return render_template('error.html', error=message), code
 
     @app.route('/')
     def redirect_to_index():
