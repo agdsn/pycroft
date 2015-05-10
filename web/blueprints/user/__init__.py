@@ -269,8 +269,6 @@ def end_membership(membership_id):
 @bp.route('/json/levels')
 @access.require('facilities_show')
 def json_levels():
-    if not request.is_xhr:
-        abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
     levels = session.session.query(Room.level.label('level')).filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
@@ -280,8 +278,6 @@ def json_levels():
 @bp.route('/json/rooms')
 @access.require('facilities_show')
 def json_rooms():
-    if not request.is_xhr:
-        abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
     level = request.args.get('level', 0, type=int)
     rooms = session.session.query(
@@ -559,8 +555,6 @@ def search_results():
 @bp.route('/json/groups')
 @access.require('groups_show')
 def json_groups():
-    if not request.is_xhr:
-        abort(404)
     groups = []
     group_type = request.args.get("group_type", 0, type=str)
     if group_type == 'traff':
