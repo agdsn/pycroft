@@ -17,7 +17,6 @@ from flask import (
 import operator
 from sqlalchemy import Text
 from pycroft import lib
-from pycroft.helpers import net
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits

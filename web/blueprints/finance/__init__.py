@@ -20,7 +20,7 @@ from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft._compat import imap
-from pycroft.helpers.i18n import Message, localized
+from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split

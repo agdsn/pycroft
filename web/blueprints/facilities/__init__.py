@@ -15,7 +15,6 @@ from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
-from pycroft.model.session import session
 from pycroft.model.facilities import Room, Dormitory
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.facilities.forms import RoomForm, DormitoryForm, \
