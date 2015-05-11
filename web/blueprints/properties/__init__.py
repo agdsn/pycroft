@@ -13,8 +13,7 @@
 from itertools import chain
 import operator
 
-from flask import Blueprint, flash, redirect, render_template, url_for
-from flask.json import jsonify
+from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
 from pycroft._compat import itervalues, iterkeys, imap
 
 from pycroft.model import session
@@ -27,8 +26,8 @@ from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
 from web.template_filters import byte_size_filter
 
 
-bp = Blueprint('properties', __name__, )
-access = BlueprintAccess(bp, ['groups_traffic_show', 'groups_show'])
+bp = Blueprint('properties', __name__)
+access = BlueprintAccess(bp, ['groups_show'])
 nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
 
 
@@ -86,7 +85,6 @@ def traffic_group_delete(group_id):
 
 
 @bp.route('/property_groups')
-@access.require('groups_show')
 @nav.navigate(u"Eigenschaftsgruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()

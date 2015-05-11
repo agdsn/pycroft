@@ -10,10 +10,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from datetime import datetime
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, jsonify, render_template, url_for
 from flask.ext.login import current_user
-from flask.json import jsonify
 from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
@@ -25,15 +23,13 @@ from web.blueprints.facilities.forms import RoomForm, DormitoryForm, \
 from web.blueprints.access import BlueprintAccess
 from web.template_filters import datetime_filter
 
-bp = Blueprint('facilities', __name__, )
+bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, ['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
 
 @bp.route('/')
 @nav.navigate(u"Wohnheime")
-@access.require('facilities_show')
-# careful with permissions here, redirects!
 def overview():
     dormitories_list = Dormitory.q.all()
     dormitories_list = facilities.sort_dormitories(dormitories_list)
@@ -42,7 +38,6 @@ def overview():
 
 
 @bp.route('/show/<dormitory_id>')
-@access.require('facilities_show')
 def dormitory_show(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = dormitory.rooms
@@ -51,7 +46,6 @@ def dormitory_show(dormitory_id):
 
 
 @bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
-@access.require('facilities_show')
 def room_show(room_id):
     room = Room.q.get(room_id)
     form = RoomLogEntry()
@@ -71,7 +65,6 @@ def room_show(room_id):
 
 
 @bp.route('/room/logs/<room_id>')
-@access.require('facilities_show')
 def room_logs_json(room_id):
     return jsonify(items=[{
             'created_at': datetime_filter(entry.created_at),
@@ -85,7 +78,6 @@ def room_logs_json(room_id):
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>')
-@access.require('facilities_show')
 def dormitory_levels(dormitory_id):
     dormitory = Dormitory.q.get(dormitory_id)
     rooms_list = Room.q.filter_by(
@@ -100,7 +92,6 @@ def dormitory_levels(dormitory_id):
 
 # ToDo: Review this!
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
-@access.require('facilities_show')
 def dormitory_level_rooms(dormitory_id, level):
     dormitory = Dormitory.q.get(dormitory_id)
     level_l0 = "{:02d}".format(level)
@@ -132,7 +123,6 @@ def user_btn_class(user):
 
 
 @bp.route('/levels/<int:dormitory_id>/rooms/<int:level>/json')
-@access.require('facilities_show')
 def dormitory_level_rooms_json(dormitory_id, level):
     return jsonify(items=[{
             'room': {

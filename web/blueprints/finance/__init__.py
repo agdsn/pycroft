@@ -13,8 +13,8 @@
 from datetime import timedelta
 from itertools import groupby
 from flask import (
-    Blueprint, render_template, redirect, url_for, jsonify,
-    request, flash, abort)
+    Blueprint, abort, flash, jsonify, redirect, render_template, request,
+    url_for)
 from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -36,22 +36,20 @@ from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 
 
-bp = Blueprint('finance', __name__, )
-access = BlueprintAccess(bp, ['finance_show'])
+bp = Blueprint('finance', __name__)
+access = BlueprintAccess(bp, required_properties=['finance_show'])
 nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 
 
 @bp.route('/')
 @bp.route('/journals')
 @bp.route('/journals/list')
-@access.require('finance_show')
 @nav.navigate(u"Journals")
 def journals_list():
     return render_template('finance/journals_list.html')
 
 
 @bp.route('/journals/list/json')
-@access.require('finance_show')
 def journals_list_json():
     return jsonify(items=[
         {
@@ -73,7 +71,6 @@ def journals_list_json():
 
 
 @bp.route('/journals/entries/json')
-@access.require('finance_show')
 def journals_entries_json():
     return jsonify(items=[
         {
@@ -171,7 +168,6 @@ def journals_entries_edit(journal_id, entry_id):
 @bp.route('/accounts')
 @bp.route('/accounts/list')
 @nav.navigate(u"Konten")
-@access.require('finance_show')
 def accounts_list():
     accounts_by_type = dict(imap(
         lambda t: (t[0], list(t[1])),
@@ -187,7 +183,6 @@ def accounts_list():
 
 
 @bp.route('/accounts/<int:account_id>')
-@access.require('finance_show')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
     try:
@@ -217,7 +212,6 @@ def accounts_show(account_id):
 
 
 @bp.route('/accounts/<int:account_id>/json')
-@access.require('finance_show')
 def accounts_show_json(account_id):
     inverted = False
     return jsonify(items=[
@@ -238,7 +232,6 @@ def accounts_show_json(account_id):
 
 
 @bp.route('/transactions/<int:transaction_id>')
-@access.require('finance_show')
 def transactions_show(transaction_id):
     transaction = Transaction.q.get(transaction_id)
     if transaction is None:
@@ -250,7 +243,6 @@ def transactions_show(transaction_id):
 
 
 @bp.route('/transactions/<int:transaction_id>/json')
-@access.require('finance_show')
 def transactions_show_json(transaction_id):
     inverted = False
     return jsonify(items=[
@@ -305,14 +297,12 @@ def accounts_create():
 
 
 @bp.route("/semesters")
-@access.require('finance_show')
 @nav.navigate(u"Semesterliste")
 def semesters_list():
     return render_template('finance/semesters_list.html')
 
 
 @bp.route("/semesters/json")
-@access.require('finance_show')
 def semesters_list_json():
     return jsonify(items=[
         {
@@ -377,7 +367,6 @@ def semesters_create():
 
 
 @bp.route('/json/accounts/system')
-@access.require('finance_show')
 def json_accounts_system():
     return jsonify(accounts=[
         {
@@ -389,7 +378,6 @@ def json_accounts_system():
 
 
 @bp.route('/json/accounts/user-search')
-@access.require('finance_show')
 def json_accounts_user_search():
     query = request.args['query']
     results = session.query(

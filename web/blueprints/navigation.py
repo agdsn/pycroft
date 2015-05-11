@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from flask import request, url_for
@@ -60,13 +60,13 @@ class BlueprintNavigation(object):
     def is_allowed(self):
         """Checks if the user has general access to the blueprint.
 
-        This uses the `BlueprintAccess.has_general_access` to find out
+        This uses the `BlueprintAccess.is_accessible` to find out
         if the user has access to this blueprint (and its navigation).
 
-        If there is no `BlueprintNavigation` given we assume everything
+        If there is no `BlueprintAccess` given we assume everything
         is granted.
         """
-        return self._access.has_general_access
+        return self._access.is_accessible
 
     def navigate(self, text, description=None):
         """A decorator to add a navigation menu entry for the actual view func.
@@ -98,22 +98,22 @@ class BlueprintNavigation(object):
     def __iter__(self):
         """Get all navigation elements the user has access to.
 
-        If there is a `BlueprintNavigation` instance given to this navigation
+        If there is a `BlueprintAccess` instance given to this navigation
         then its used to no show navigation elements which the user has no
-        access to. For this the `BlueprintNavigation.has_access()` is used.
+        access to. For this the `BlueprintNavigation.is_endpoint_accessible()` is used.
 
-        If no `BlueprintNavigation` was set we assume that everything is
+        If no `BlueprintAccess` was set we assume that everything is
         granted.
         """
         for element in self._elements:
-            if self._access.has_access(element["endpoint"]):
+            if self._access.is_endpoint_accessible(element["endpoint"]):
                 yield element
 
     @property
     def dropdown(self):
         """Checks if the menu element needs a dropdown
 
-        `BlueprintNavigation` instances with only one navigateable view
+        `BlueprintNavigation` instances with only one navigable view
         function does not get a dropdown. They are rendered as single links
         within the top navigation bar. This property tells if there will be
         a dropdown or not.
