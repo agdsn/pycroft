@@ -17,7 +17,7 @@ import userman
 
 
 old_dbs = (netusers, userman)
-cachable_tables = reduce(operator.xor,
+cacheable_tables = reduce(operator.xor,
                          [{t.__tablename__ for t in old_db.relevant_tables}
                           for old_db in old_dbs])
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='cache_legacy')
 
     parser.add_argument("--tables", metavar="T", action='store', nargs="+",
-                        choices=cachable_tables)
+                        choices=cacheable_tables)
 
     args = parser.parse_args()
     main(**vars(args))

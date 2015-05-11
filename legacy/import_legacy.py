@@ -242,7 +242,7 @@ if __name__=="__main__":
     source.add_argument("--from-origin", action='store_true')
 
     #parser.add_argument("--tables", metavar="T", action='store', nargs="+",
-    #                choices=cachable_tables)
+    #                choices=cacheable_tables)
 
     args = parser.parse_args()
     main(args)
