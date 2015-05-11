@@ -31,7 +31,7 @@ from pycroft.model import (accounting, facilities, dns, user, net, port,
                            finance, session, host, config, logging)
 from pycroft.helpers import user as usertools
 
-ROOT_NAME = "ag_dsn"
+ROOT_NAME = "agdsn"
 ROOT_PASSWD = "test"
 
 def exists_db(connection, name):
