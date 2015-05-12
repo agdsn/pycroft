@@ -16,15 +16,16 @@ from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
 from tests.fixtures.dummy.host import (
-    IPData, PatchPortData,UserInterfaceData, UserHostData)
+    IPData, SwitchPatchPortData,UserInterfaceData, UserHostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, IPData, PatchPortData, RoomData,
-                SubnetData, UserData, UserInterfaceData, UserHostData, VLANData]
+    datasets = (ConfigData, DormitoryData, IPData, RoomData, SubnetData,
+                SwitchPatchPortData, UserData, UserInterfaceData, UserHostData,
+                VLANData)
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -44,8 +45,8 @@ class Test_010_User_Move(FixtureDataTestBase):
         self.new_room_same_dormitory = facilities.Room.q.filter_by(
             dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
-        self.new_patch_port = PatchPort.q.filter_by(
-            name=PatchPortData.dummy_patch_port2.name).one()
+        self.new_switch_patch_port = PatchPort.q.filter_by(
+            name=SwitchPatchPortData.dummy_patch_port2.name).one()
 
     def test_0010_moves_into_same_room(self):
         self.assertRaisesInTransaction(
@@ -62,10 +63,10 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, FinanceAccountData, IPData,
-                PatchPortData, PropertyData, RoomData, SemesterData, SubnetData,
-                TrafficGroupData, UserData, UserHostData, UserInterfaceData,
-                VLANData]
+    datasets = (ConfigData, DormitoryData, FinanceAccountData, IPData,
+                PropertyData, RoomData, SemesterData, SubnetData,
+                SwitchPatchPortData, TrafficGroupData, UserData, UserHostData,
+                UserInterfaceData, VLANData)
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
@@ -126,8 +127,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [ConfigData, FinanceAccountData, IPData, PatchPortData,
-                SemesterData, TrafficGroupData]
+    datasets = (ConfigData, FinanceAccountData, IPData, SemesterData,
+                SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
@@ -201,8 +202,8 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
 
 class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
-    datasets = [ConfigData, FinanceAccountData, IPData, PatchPortData,
-                PropertyData, SemesterData, TrafficGroupData]
+    datasets = (ConfigData, FinanceAccountData, IPData, PropertyData,
+                SemesterData, SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
@@ -275,7 +276,7 @@ class Test_080_User_Block(FixtureDataTestBase):
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = [ConfigData, IPData, PropertyData, UserData]
+    datasets = (ConfigData, IPData, PropertyData, SwitchPatchPortData, UserData)
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()

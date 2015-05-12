@@ -6,16 +6,8 @@
 
 from flask.ext.wtf import Form
 from wtforms.validators import DataRequired, Regexp
-from pycroft.model.port import Port
 from web.form.fields.core import TextField, SelectField, QuerySelectField
 from web.form.fields.custom import ReadonlyTextField
-
-
-class SwitchPortForm(Form):
-    name = TextField(u"Port Name",
-        [DataRequired(message=u"Name?"),
-         Regexp(regex=Port.name_regex,
-             message=u"Richtig ist z.B. A2")])
 
 
 class CNAMERecordEditForm(Form):

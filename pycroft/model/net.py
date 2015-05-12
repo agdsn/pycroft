@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import (
-    CheckConstraint, Column, Integer, ForeignKey, String, Table, between, event)
+    CheckConstraint, Column, Integer, ForeignKey, String, between, event)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import AddConstraint
 from pycroft.model.base import ModelBase
@@ -13,20 +13,9 @@ class VLAN(ModelBase):
     name = Column(String(127), nullable=False)
     vid = Column(Integer, nullable=False)
 
-    dormitories = relationship(
-        "Dormitory", backref=backref("vlans"),
-        secondary=lambda: association_table_dormitory_vlan)
-
     __table_args = (
         CheckConstraint(between(vid, 1, 4094)),
     )
-
-
-association_table_dormitory_vlan = Table(
-    'association_dormitory_vlan',
-    ModelBase.metadata,
-    Column('dormitory_id', Integer, ForeignKey('dormitory.id')),
-    Column('vlan_id', Integer, ForeignKey(VLAN.id)))
 
 
 class Subnet(ModelBase):

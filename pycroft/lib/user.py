@@ -86,7 +86,9 @@ class HostAliasExists(ValueError):
 
 def setup_ipv4_networking(host):
     subnets = filter(lambda s: s.address.version == 4,
-                     host.room.dormitory.subnets)
+                     [p.switch_interface.default_subnet
+                      for p in host.room.switch_patch_ports
+                      if p.switch_interface is not None])
     for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,
@@ -204,12 +206,15 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
+    subnets = [p.switch_interface.default_subnet
+               for p in new_room.switch_patch_ports
+               if p.switch_interface.default_subnet is not None]
     if old_room.dormitory_id == new_room.dormitory_id:
         return
     for interface in host.user_interfaces:
         old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
-            ip_address, subnet = get_free_ip(new_room.dormitory.subnets)
+            ip_address, subnet = get_free_ip(subnets)
             new_ip = IP(interface=interface, address=ip_address,
                         subnet=subnet)
             session.session.add(new_ip)

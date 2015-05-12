@@ -38,7 +38,7 @@ from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter, ip_get_switch,
-    ip_get_switch_port)
+    ip_get_switch_interface)
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -161,7 +161,7 @@ def user_show_hosts_json(user_id):
                 'ip': ip.address,
                 'mac': ip.interface.mac,
                 'switch': ip_get_switch(user_host, ip),
-                'port': ip_get_switch_port(user_host, ip)
+                'port': ip_get_switch_interface(user_host, ip)
             })
     return jsonify(items=list_items)
 

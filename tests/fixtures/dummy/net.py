@@ -11,12 +11,10 @@ class VLANData(DataSet):
     class vlan_dummy1:
         name = "vlan_dom_1"
         vid = "1"
-        dormitories = [DormitoryData.dummy_house1]
 
     class vlan_dummy2:
         name = "vlan_dom_2"
         vid = "2"
-        dormitories = [DormitoryData.dummy_house2]
 
 
 class SubnetData(DataSet):

@@ -181,16 +181,16 @@ def ip_get_switch(host,ip):
     patch_ports = host.room.patch_ports
     if not patch_ports:
         return "No Switch"
-    return u', '.join(imap(lambda p: p.switch_port.switch.name, patch_ports))
+    return u', '.join(imap(lambda p: p.switch_interface.switch.name, patch_ports))
 
 
 #TODO: usecases — should that srsly return >1 port? (see todo above)
-@template_filter("get_switch_port")
-def ip_get_switch_port(host,ip):
+@template_filter("get_switch_interface")
+def ip_get_switch_interface(host,ip):
     patch_ports = host.room.patch_ports
     if not patch_ports:
         return "No Port"
-    return u', '.join(imap(lambda p: p.switch_port.name, patch_ports))
+    return u', '.join(imap(lambda p: p.switch_interface.name, patch_ports))
 
 
 def register_filters(app):

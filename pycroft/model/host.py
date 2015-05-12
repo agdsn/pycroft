@@ -22,12 +22,12 @@ class Host(ModelBase):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
-                     nullable=True)
+    owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
+                      nullable=True)
 
     # many to one from Host to Room
     room = relationship(Room, backref=backref("hosts"))
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
+    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
                      nullable=True)
 
 
@@ -115,6 +115,20 @@ class UserInterface(Interface):
                                         cascade="all, delete-orphan"))
 
 
+class SwitchInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
+                primary_key=True)
+
+    __mapper_args__ = {'polymorphic_identity': "switch_interface"}
+
+    host = relationship(Switch,
+                        backref=backref("switch_interfaces",
+                                        cascade="all, delete-orphan"))
+    name = Column(String(64), nullable=False)
+    default_subnet_id = Column(Integer, ForeignKey(Subnet.id))
+    default_subnet = relationship(Subnet)
+
+
 class ServerInterface(Interface):
     id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
@@ -125,21 +139,11 @@ class ServerInterface(Interface):
                         backref=backref("server_interfaces",
                                         cascade="all, delete-orphan"))
 
-    #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
-    switch_port_id = Column(Integer, ForeignKey('switch_port.id'),
-                            nullable=True)
-    switch_port = relationship("SwitchPort")
-
-
-class SwitchInterface(Interface):
-    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
-                primary_key=True)
-
-    __mapper_args__ = {'polymorphic_identity': "switch_interface"}
-
-    host = relationship(Switch,
-                        backref=backref("switch_interfaces",
-                                        cascade="all, delete-orphan"))
+    #TODO switch_interface_id nicht Nullable machen: CLash mit Importscript
+    switch_interface_id = Column(Integer, ForeignKey(SwitchInterface.id),
+                                 nullable=True)
+    switch_interface = relationship(SwitchInterface,
+                                    foreign_keys=[switch_interface_id])
 
 
 class IP(ModelBase):
@@ -154,7 +158,7 @@ class IP(ModelBase):
     host = relationship(Host, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
-    subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
+    subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
                        nullable=False)
     subnet = relationship(Subnet,
                           backref=backref("ips", cascade="all, delete-orphan"),

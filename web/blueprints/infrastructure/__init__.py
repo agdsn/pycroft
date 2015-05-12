@@ -19,7 +19,6 @@ from pycroft.model.host import Switch
 from pycroft.model.net import VLAN, Subnet
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.infrastructure.forms import SwitchPortForm
 from web.blueprints.infrastructure.forms import CNAMERecordEditForm
 from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
@@ -213,8 +212,8 @@ def switch_show_json(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
         abort(404)
-    switch_port_list = switch.ports
-    switch_port_list = net.sort_ports(switch_port_list)
+    switch_interface_list = switch.ports
+    switch_interface_list = net.sort_ports(switch_interface_list)
     return jsonify(items=[{
             "portname": port.name,
             "room": {
@@ -227,7 +226,7 @@ def switch_show_json(switch_id):
                     port.patch_port.room.number
                 )
             }
-        } for port in switch_port_list])
+        } for port in switch_interface_list])
 
 
 @bp.route('/vlans')

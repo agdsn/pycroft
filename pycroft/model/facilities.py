@@ -11,14 +11,11 @@
     :copyright: (c) 2011 by AG DSN.
 """
 
-from sqlalchemy import ForeignKey, UniqueConstraint
-from sqlalchemy import Table, Column
-
-from sqlalchemy.orm import backref, object_session, relationship
+from sqlalchemy import Column, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
 from pycroft.model.base import ModelBase
-from pycroft.model.net import VLAN, Subnet
 
 
 class Dormitory(ModelBase):
@@ -27,18 +24,6 @@ class Dormitory(ModelBase):
     street = Column(String(20), nullable=False)
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
-
-    @property
-    def subnets(self):
-        return object_session(self).query(
-            Subnet
-        ).join(
-            VLAN
-        ).join(
-            VLAN.dormitories
-        ).filter(
-            Dormitory.id == self.id
-        ).all()
 
 
 class Room(ModelBase):
