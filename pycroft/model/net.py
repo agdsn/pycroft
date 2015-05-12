@@ -1,7 +1,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import Column, Integer, ForeignKey, String, Table, event
+from sqlalchemy import (
+    CheckConstraint, Column, Integer, ForeignKey, String, Table, between, event)
 from sqlalchemy.orm import relationship, backref, object_session
 from pycroft.lib.net import MacExistsException
 from pycroft.model.base import ModelBase
@@ -16,6 +17,10 @@ class VLAN(ModelBase):
     dormitories = relationship(
         "Dormitory", backref=backref("vlans"),
         secondary=lambda: association_table_dormitory_vlan)
+
+    __table_args = (
+        CheckConstraint(between(tag, 1, 4094))
+    )
 
 
 association_table_dormitory_vlan = Table(
