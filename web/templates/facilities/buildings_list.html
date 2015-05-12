@@ -7,8 +7,8 @@
 
 {% block single_row_content %}
     <ul class="list-unstyled">
-        {% for dormitory in dormitories -%}
-        <li><a href="{{ url_for(".dormitory_show", dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
+        {% for building in buildings -%}
+        <li><a href="{{ url_for(".building_show", building_id=building.id) }}">{{ building.short_name }}</a></li>
         {%- endfor %}
     </ul>
 {% endblock %}

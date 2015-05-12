@@ -6,14 +6,14 @@ from datetime import timedelta
 from pycroft.model.user import Group, Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
 from pycroft.model import session, user
-from tests.fixtures.dummy.facilities import (DormitoryData, RoomData)
+from tests.fixtures.dummy.facilities import (BuildingData, RoomData)
 from tests.fixtures.dummy.user import UserData
 from tests.model.property_fixtures import (
     PropertyData, PropertyGroupData, TrafficGroupData)
 
 
 class PropertyDataTestBase(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData, PropertyGroupData,
+    datasets = [BuildingData, RoomData, UserData, PropertyGroupData,
                 TrafficGroupData, PropertyData]
 
     def setUp(self):

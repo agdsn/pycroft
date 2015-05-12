@@ -9,7 +9,7 @@ from pycroft.helpers.net import mac_regex
 from pycroft.model.finance import Semester
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import dormitory_query
+from web.blueprints.facilities.forms import building_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField,\
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
@@ -52,21 +52,21 @@ class UserEditEMailForm(Form):
 
 
 class UserMoveForm(Form):
-    dormitory = QuerySelectField(u"Wohnheim",
+    building = QuerySelectField(u"Wohnheim",
         [DataRequired(message=u"Wohnheim?")],
         get_label='short_name',
-        query_factory=dormitory_query)
+        query_factory=building_query)
     level = LazyLoadSelectField(u"Etage",
         validators=[NumberRange(message=u"Etage?")],
         coerce=int,
         choices=[],
-        conditions=["dormitory"],
+        conditions=["building"],
         data_endpoint="user.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
         validators=[DataRequired(message=u"Raum?")],
         coerce=str,
         choices=[],
-        conditions=["dormitory", "level"],
+        conditions=["building", "level"],
         data_endpoint="user.json_rooms")
 
 

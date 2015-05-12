@@ -10,14 +10,14 @@ from pycroft.helpers.user import (
 from pycroft.model.finance import FinanceAccount
 from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.property import (
     MembershipData, PropertyData, PropertyGroupData, TrafficGroupData)
 from tests.fixtures.dummy.user import UserData
 
 
 class Test_030_User_Passwords(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData]
+    datasets = [BuildingData, RoomData, UserData]
 
     def setUp(self):
         super(Test_030_User_Passwords, self).setUp()
@@ -64,7 +64,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
 
 
 class Test_040_User_Login(FixtureDataTestBase):
-    datasets = [DormitoryData, RoomData, UserData]
+    datasets = [BuildingData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
         finance_account = FinanceAccount(name='', type='ASSET')

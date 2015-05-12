@@ -6,27 +6,27 @@
 
 from flask.ext.wtf import Form
 from wtforms.validators import Length, DataRequired
-from pycroft.model.facilities import Dormitory
+from pycroft.model.facilities import Building
 from web.form.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField
 
-from pycroft.helpers.facilities import sort_dormitories
+from pycroft.helpers.facilities import sort_buildings
 
 
-def dormitory_query():
-    return sort_dormitories(Dormitory.q.all())
+def building_query():
+    return sort_buildings(Building.q.all())
 
 
 class RoomForm(Form):
     number = TextField(u"Nummer")
     level = TextField(u"Etage")
     inhabitable = BooleanField(u"Bewohnbar")
-    dormitory_id = QuerySelectField(u"Wohnheim",
+    building_id = QuerySelectField(u"Wohnheim",
                                     get_label='short_name',
-                                    query_factory=dormitory_query)
+                                    query_factory=building_query)
 
 
-class DormitoryForm(Form):
+class BuildingForm(Form):
     short_name = TextField(u"Kürzel")
     number = TextField(u"Nummer")
     street = TextField(u"Straße", validators=[Length(min=5)])

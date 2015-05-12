@@ -15,8 +15,8 @@
 {% block content %}gco
     <ul class="breadcrumb">
         <li><a href="{{ url_for('.overview') }}">Wohnheime</a></li>
-        <li><a href="{{ url_for('.dormitory_levels', dormitory_id=room.dormitory.id) }}">{{ room.dormitory.short_name }}</a></li>
-        <li><a href="{{ url_for('.dormitory_level_rooms', dormitory_id=room.dormitory_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
+        <li><a href="{{ url_for('.building_levels', building_id=room.building.id) }}">{{ room.building.short_name }}</a></li>
+        <li><a href="{{ url_for('.building_level_rooms', building_id=room.building_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
         <li class="active">Zimmer {{ room.number }}</li>
     </ul>
     <h2>Überblick</h2>
@@ -24,7 +24,7 @@
         <div class="col-sm-6 col-md-5 col-lg-4">
             <dl class="dl-horizontal">
                 <dt>Wohnheim</dt>
-                <dd>{{ room.dormitory.street }} {{ room.dormitory.number }}</dd>
+                <dd>{{ room.building.street }} {{ room.building.number }}</dd>
                 <dt>Nummer</dt>
                 <dd>{{ room.number }}</dd>
                 <dt>Etage</dt>

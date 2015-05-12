@@ -3,10 +3,10 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.model.dormitory
+    pycroft.model.building
     ~~~~~~~~~~~~~~
 
-    This module contains the classes Dormitory, Room, Subnet, VLAN.
+    This module contains the classes Building, Room, Subnet, VLAN.
 
     :copyright: (c) 2011 by AG DSN.
 """
@@ -18,7 +18,7 @@ from sqlalchemy.types import Boolean, Integer, String
 from pycroft.model.base import ModelBase
 
 
-class Dormitory(ModelBase):
+class Building(ModelBase):
     number = Column(String(3), nullable=False)
     short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(20), nullable=False)
@@ -31,15 +31,15 @@ class Room(ModelBase):
     level = Column(Integer, nullable=False)
     inhabitable = Column(Boolean, nullable=False)
 
-    # many to one from Room to Dormitory
-    dormitory_id = Column(Integer, ForeignKey(Dormitory.id), nullable=False)
-    dormitory = relationship(Dormitory, backref=backref("rooms"))
+    # many to one from Room to Building
+    building_id = Column(Integer, ForeignKey(Building.id), nullable=False)
+    building = relationship(Building, backref=backref("rooms"))
 
     def __str__(self):
-        return "{} {} {}".format(self.dormitory.short_name, self.level,
+        return "{} {} {}".format(self.building.short_name, self.level,
                                  self.number)
 
     def __unicode__(self):
-        return u"{} {} {}".format(self.dormitory.short_name, self.level,
+        return u"{} {} {}".format(self.building.short_name, self.level,
                                   self.number)
 

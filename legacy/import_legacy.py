@@ -54,7 +54,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     b_d = {} # maps netusers.Wheim.id to translated sqlalchemy object
     print("  Translating buildings")
     for _b in wheim:
-        b = facilities.Dormitory(
+        b = facilities.Building(
             id=_b.wheim_id,
             short_name=_b.kuerzel,
             street=_b.str,
@@ -65,7 +65,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     print("  Translating rooms")
     r_d = {} # maps (wheim_id, etage, zimmernr) to translated sqlalchemy object
     for _r in zimmer:
-        r = facilities.Room(dormitory=b_d[_r.wheim_id],
+        r = facilities.Room(building=b_d[_r.wheim_id],
                             level=_r.etage,
                             number=_r.zimmernr,
                             inhabitable=True)
@@ -166,7 +166,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             try:
                 room = r_d[(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)]
             except KeyError:
-                room = facilities.Room(dormitory=b_d[_c.c_wheim_id],
+                room = facilities.Room(building=b_d[_c.c_wheim_id],
                                        level=_c.c_etage,
                                        number=_c.c_zimmernr or '?',
                                        inhabitable=False)
