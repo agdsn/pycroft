@@ -174,14 +174,9 @@ def record_removable_filter(record):
         return True
 
 
-@template_filter("record_readable_name")
-def record_readable_name_filter(record):
-    return record.__class__.__name__
-
-
 #TODO: usecases — should that srsly return >1 switch?
 # Because if yes, there should be a more elegant solution for providing a link
-# in the table this is actually used (`user_show_devices_json()`)!
+# in the table this is actually used (`user_show_hosts_json()`)!
 @template_filter("get_switch")
 def ip_get_switch(host,ip):
     patch_ports = host.room.patch_ports

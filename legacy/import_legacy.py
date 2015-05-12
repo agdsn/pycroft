@@ -151,22 +151,22 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 mgmt_ip = ".".join(mgmt_ip_blocks)
                 name = _c.c_alias or "unnamed_switch"
                 h = host.Switch(owner=owner, name=name, management_ip=mgmt_ip, room=room)
-                nd = host.SwitchNetDevice(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(net_device=nd, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr)
+                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
-                nd = host.ServerNetDevice(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(net_device=nd, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
+                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
 
         else: #assume user
             h = host.UserHost(owner=owner, room=owner.room)
-            nd = host.UserNetDevice(host=h, mac=_c.c_etheraddr)
+            interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
             ip = None
             if _c.nutzer.status == 1:
-                ip = host.IP(net_device=nd, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
-        records.extend([h, nd])
+                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+        records.extend([h, interface])
         if ip:
             records.append(ip)
 

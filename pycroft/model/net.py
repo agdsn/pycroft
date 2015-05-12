@@ -6,7 +6,7 @@ from sqlalchemy import Column, Enum, Integer, ForeignKey, String, Table, event
 from sqlalchemy.orm import relationship, backref, object_session
 from pycroft.lib.net import MacExistsException
 from pycroft.model.base import ModelBase
-from pycroft.model.host import NetDevice, IP
+from pycroft.model.host import Interface, IP
 from pycroft.model.types import IPAddress, IPNetwork
 
 
@@ -36,7 +36,7 @@ class Subnet(ModelBase):
                                  nullable=False)
     reverse_dns_zone = relationship("DNSZone", foreign_keys=[reverse_dns_zone_id])
     reserved_addresses = Column(Integer, default=0, nullable=False)
-    ip_type = Column(Enum("4", "6", name="subnet_ip_type"), nullable=False)
+    description = Column(String(50))
 
     # many to many from Subnet to VLAN
     vlans = relationship(VLAN, backref=backref("subnets"),

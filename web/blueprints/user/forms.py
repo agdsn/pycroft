@@ -120,7 +120,7 @@ class UserMoveOutForm(Form):
     comment = TextAreaField(u"Kommentar")
 
 
-class NetDeviceChangeMacForm(Form):
+class InterfaceChangeMacForm(Form):
     mac = TextField(u"MAC", [
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
 

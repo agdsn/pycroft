@@ -87,7 +87,7 @@ class Test_040_Permissions_User(FrontendDataTestBase):
             url_for('user.edit_email', user_id=1),
             url_for('user.block', user_id=1),
             url_for('user.move_out', user_id=1),
-            url_for('user.change_mac', user_net_device_id=1),
+            url_for('user.change_mac', user_interface_id=1),
             url_for('user.move_out_temporarily', user_id=1),
             url_for('user.is_back', user_id=1),
             url_for('user.json_levels'),

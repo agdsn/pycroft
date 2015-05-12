@@ -16,7 +16,6 @@ from flask import Blueprint, render_template, flash, redirect, url_for,\
 import operator
 from sqlalchemy import Text
 from pycroft import lib
-from pycroft.helpers import net
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
@@ -25,20 +24,20 @@ from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserNetDevice, IP
+from pycroft.model.host import Host, UserInterface, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
-    NetDeviceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
+    InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
-from web.template_filters import datetime_filter, host_cname_filter, \
-    host_name_filter, record_readable_name_filter, ip_get_switch, \
-    ip_get_switch_port
+from web.template_filters import (
+    datetime_filter, host_cname_filter, host_name_filter, ip_get_switch,
+    ip_get_switch_port)
 
 bp = Blueprint('user', __name__, )
 access = BlueprintAccess(bp, ['user_show'])
@@ -158,35 +157,12 @@ def user_show_logs_json(user_id, logtype="all"):
 @bp.route("/show/<user_id>/hosts")
 @access.require('user_show')
 def user_show_hosts_json(user_id):
-    return jsonify(items=[{
-            'host': "{} ({})".format(host_cname_filter(user_host),
-                                     host_name_filter(user_host)),
-            'room': "{} / {}-{}".format(user_host.room.dormitory.short_name,
-                                        user_host.room.level,
-                                        user_host.room.number)
-            if user_host.room else "Kein Raum",
-            'dns_entries': [
-                [record_readable_name_filter(record), record.information_human]
-                for record in user_host.records
-            ],
-            'actions': [
-                # TODO insert links to the pages for editing / deleting
-                #   (if implemented, of course…)
-                {'title': 'Bearbeiten', 'href': '', 'icon': 'glyphicon-edit'},
-                {'title': 'Löschen', 'href': '', 'icon': 'glyphicon-trash'}
-            ]
-        } for user_host in User.q.get(user_id).user_hosts])
-
-
-@bp.route("/show/<user_id>/devices")
-@access.require('user_show')
-def user_show_devices_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
         for ip in user_host.ips:
             list_items.append({
                 'ip': ip.address,
-                'mac': ip.net_device.mac,
+                'mac': ip.interface.mac,
                 'switch': ip_get_switch(user_host, ip),
                 'port': ip_get_switch_port(user_host, ip)
             })
@@ -663,21 +639,21 @@ def move_out(user_id):
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
-@bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
+@bp.route('/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
 @access.require('user_mac_change')
-def change_mac(user_net_device_id):
-    form = NetDeviceChangeMacForm()
-    my_net_device = UserNetDevice.q.get(user_net_device_id)
+def change_mac(user_interface_id):
+    form = InterfaceChangeMacForm()
+    my_interface = UserInterface.q.get(user_interface_id)
     if not form.is_submitted():
-        form.mac.data = my_net_device.mac
+        form.mac.data = my_interface.mac
     if form.validate_on_submit():
-        changed_net_device = lib.net.change_mac(net_device=my_net_device,
+        changed_interface = lib.net.change_mac(interface=my_interface,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
         session.session.commit()
-        return redirect(url_for('.user_show', user_id=changed_net_device.host.user.id))
-    return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)
+        return redirect(url_for('.user_show', user_id=changed_interface.host.user.id))
+    return render_template('user/change_mac.html', form=form, user_interface_id=user_interface_id)
 
 
 @bp.route('/move_out_temporarily/<int:user_id>', methods=['GET', 'POST'])

@@ -5,9 +5,9 @@
 #}
 {% import "macros/table.html" as tbl %}
 {% set cols = [
-    {'name': 'host', 'title': 'Host'},
-    {'name': 'room', 'title': 'Raum'},
-    {'name': 'dns_entries', 'DNS-Einträge': 'Switch', 'formatter': 'listFormatter'},
-    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'multiBtnFormatter'},
+    {'name': 'ip', 'title': 'IP-Adresse'},
+    {'name': 'mac', 'title': 'Mac-Adresse'},
+    {'name': 'switch', 'title': 'Switch'},
+    {'name': 'port', 'title': 'Switchport'},
 ] %}
-{{ tbl.item_table("hosts", url_for(".user_show_hosts_json", user_id=user.id), cols) }}
+{{ tbl.item_table("user_hosts", url_for(".user_show_hosts_json", user_id=user.id), cols) }}

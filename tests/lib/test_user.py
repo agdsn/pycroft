@@ -16,7 +16,7 @@ from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import DormitoryData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
 from tests.fixtures.dummy.host import (
-    IPData, PatchPortData,UserNetDeviceData, UserHostData)
+    IPData, PatchPortData,UserInterfaceData, UserHostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
@@ -24,7 +24,7 @@ from tests.fixtures.dummy.user import UserData
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = [ConfigData, DormitoryData, IPData, PatchPortData, RoomData,
-                SubnetData, UserData, UserNetDeviceData, UserHostData, VLANData]
+                SubnetData, UserData, UserInterfaceData, UserHostData, VLANData]
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -64,7 +64,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = [ConfigData, DormitoryData, FinanceAccountData, IPData,
                 PatchPortData, PropertyData, RoomData, SemesterData, SubnetData,
-                TrafficGroupData, UserData, UserHostData, UserNetDeviceData,
+                TrafficGroupData, UserData, UserHostData, UserInterfaceData,
                 VLANData]
 
     def setUp(self):
@@ -101,12 +101,12 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
 
-        user_host = host.UserHost.q.filter_by(user=new_user).one()
-        self.assertEqual(len(user_host.user_net_devices), 1)
-        user_net_device = user_host.user_net_devices[0]
-        self.assertEqual(len(user_net_device.ips), 1)
-        user_ip = user_net_device.ips[0]
-        self.assertEqual(user_net_device.mac, test_mac)
+        user_host = host.UserHost.q.filter_by(owner=new_user).one()
+        self.assertEqual(len(user_host.user_interfaces), 1)
+        user_interface = user_host.user_interfaces[0]
+        self.assertEqual(len(user_interface.ips), 1)
+        user_ip = user_interface.ips[0]
+        self.assertEqual(user_interface.mac, test_mac)
         user_dns_name = dns.DNSName.q.filter_by(name=test_hostname).one()
         user_cname_record = dns.CNAMERecord.q.filter_by(name=user_dns_name).one()
         self.assertEqual(user_cname_record.name.name, test_hostname)
@@ -244,8 +244,8 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
 
         # check if user has no ips left
         for user_host in new_user.user_hosts:
-            for net_device in user_host.user_net_devices:
-                self.assertEqual(net_device.ips, [])
+            for interface in user_host.user_interfaces:
+                self.assertEqual(interface.ips, [])
 
         # check log message
         log_entry = new_user.user_log_entries[-1]
@@ -292,7 +292,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         session.session.commit()
 
         # check whether user has at least one ip
-        self.assertNotEqual(self.user.user_hosts[0].user_net_devices[0].ips, [])
+        self.assertNotEqual(self.user.user_hosts[0].user_interfaces[0].ips, [])
 
         # check log message
         log_entry = self.user.user_log_entries[-1]

@@ -14,11 +14,11 @@ from pycroft.model.types import (
 
 
 class Host(ModelBase):
-    discriminator = Column('type', String(50))
+    discriminator = Column('type', String(50), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
+    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=True)
 
     # many to one from Host to Room
@@ -33,7 +33,7 @@ class UserHost(Host):
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     desired_name = Column(String(63))
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 
 
@@ -44,7 +44,7 @@ class ServerHost(Host):
 
     name = Column(String(255))
 
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "server_hosts", cascade="all, delete-orphan"))
 
 
@@ -57,15 +57,31 @@ class Switch(Host):
 
     management_ip = Column(String(127), nullable=False)
 
-    user = relationship("User", backref=backref(
+    owner = relationship("User", backref=backref(
         "switches", cascade="all, delete-orphan"))
+
+
+def _check_user_host_in_user_room(mapper, connection, userhost):
+    if userhost.room is not userhost.owner.room:
+        raise Exception("UserHost can only be in user's room")
+
+event.listen(UserHost, "before_insert", _check_user_host_in_user_room)
+event.listen(UserHost, "before_update", _check_user_host_in_user_room)
 
 
 class MulticastFlagException(InvalidMACAddressException):
     pass
 
 
-class NetDevice(ModelBase):
+class TypeMismatch(Exception):
+    pass
+
+
+class Interface(ModelBase):
+    """A logical network interface (hence the single MAC address), which means
+    many net interfaces can be connected to the same switch port"""
+
+    #foreign key discriminator
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -75,34 +91,33 @@ class NetDevice(ModelBase):
                      nullable=False)
 
     @validates('mac')
-    def validate_mac(self, _, value):
-        match = mac_regex.match(value)
+    def validate_mac(self, _, mac_address):
+        match = mac_regex.match(mac_address)
         if not match:
-            raise InvalidMACAddressException()
-        if int(value[0:2], base=16) & 1:
+            raise InvalidMACAddressException("MAC address '"+mac_address+"' is not valid")
+        if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException()
-        return value
+        return mac_address
 
-
-class UserNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+class UserInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    __mapper_args__ = {'polymorphic_identity': "user_net_device"}
+    __mapper_args__ = {'polymorphic_identity': "user_interface"}
 
     host = relationship(UserHost,
-                        backref=backref("user_net_devices",
+                        backref=backref("user_interfaces",
                                         cascade="all, delete-orphan"))
 
 
-class ServerNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+class ServerInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    __mapper_args__ = {'polymorphic_identity': "server_net_device"}
+    __mapper_args__ = {'polymorphic_identity': "server_interface"}
 
     host = relationship(ServerHost,
-                        backref=backref("server_net_devices",
+                        backref=backref("server_interfaces",
                                         cascade="all, delete-orphan"))
 
     #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
@@ -111,27 +126,27 @@ class ServerNetDevice(NetDevice):
     switch_port = relationship("SwitchPort")
 
 
-class SwitchNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+class SwitchInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    __mapper_args__ = {'polymorphic_identity': "switch_net_device"}
+    __mapper_args__ = {'polymorphic_identity': "switch_interface"}
 
     host = relationship("Switch",
-                        backref=backref("switch_net_devices",
+                        backref=backref("switch_interfaces",
                                         cascade="all, delete-orphan"))
 
 
 class IP(ModelBase):
     address = Column(IPAddress, nullable=False, unique=True)
-    net_device_id = Column(Integer,
-                           ForeignKey(NetDevice.id, ondelete="CASCADE"),
+    interface_id = Column(Integer,
+                           ForeignKey(Interface.id, ondelete="CASCADE"),
                            nullable=False)
-    net_device = relationship(NetDevice,
+    interface = relationship(Interface,
                               backref=backref("ips",
                                               cascade="all, delete-orphan"))
 
-    host = relationship(Host, secondary=NetDevice.__table__,
+    host = relationship(Host, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),

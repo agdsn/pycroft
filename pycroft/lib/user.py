@@ -28,7 +28,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import FinanceAccount
-from pycroft.model.host import Host, IP, UserHost, UserNetDevice
+from pycroft.model.host import Host, IP, UserHost, UserInterface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup
@@ -87,9 +87,9 @@ class HostAliasExists(ValueError):
 def setup_ipv4_networking(host):
     subnets = filter(lambda s: s.address.version == 4,
                      host.room.dormitory.subnets)
-    for net_device in host.user_net_devices:
+    for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
-        new_ip = IP(net_device=net_device, address=ip_address,
+        new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
         session.session.add(new_ip)
         address_record_name = DNSName(name=generate_hostname(ip_address),
@@ -156,10 +156,10 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     new_user.finance_account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    # create one new host (including net_device) for the new user
-    new_host = UserHost(user=new_user, room=room, desired_name=host_name)
+    # create one new host (including interface) for the new user
+    new_host = UserHost(owner=new_user, room=room, desired_name=host_name)
     session.session.add(new_host)
-    session.session.add(UserNetDevice(mac=mac, host=new_host))
+    session.session.add(UserInterface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
 
     for group in (config.member_group, config.network_access_group):
@@ -206,11 +206,11 @@ def migrate_user_host(host, new_room, processor):
     host.room = new_room
     if old_room.dormitory_id == new_room.dormitory_id:
         return
-    for net_dev in host.user_net_devices:
-        old_ips = tuple(ip for ip in net_dev.ips)
+    for interface in host.user_interfaces:
+        old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
             ip_address, subnet = get_free_ip(new_room.dormitory.subnets)
-            new_ip = IP(net_device=net_dev, address=ip_address,
+            new_ip = IP(interface=interface, address=ip_address,
                         subnet=subnet)
             session.session.add(new_ip)
             address_record_name = DNSName(name=generate_hostname(ip_address),
@@ -238,7 +238,7 @@ def migrate_user_host(host, new_room, processor):
 
             message = deferred_gettext(u"Changed IP from {} to {}.").format(
                 old_ip=str(old_address), new_ip=str(new_ip))
-            log_user_event(author=processor, user=host.user,
+            log_user_event(author=processor, user=host.owner,
                            message=message.to_json())
 
 
@@ -345,9 +345,32 @@ def has_exceeded_traffic(user, when=None):
         Membership.user_id == user.id
     ).scalar()
 
-#ToDo: Funktion zur Abfrage dr Kontobilanz
+
+def has_balance_of_at_least(user, amount):
+    """Check whether the given user's balance is at least the given
+    amount.
+
+    If a user does not have an account, we treat his balance as if it
+    were exactly zero.
+
+    :param User user: The user we are interested in.
+    :param Integral amount: The amount we want to check for.
+    :return: True if and only if the user's balance is at least the given
+    amount (and False otherwise).
+    """
+    balance = user.finance_account.balance if user.finance_account else 0
+    return balance >= amount
+
+
 def has_positive_balance(user):
-    return True
+    """Check whether the given user's balance is (weakly) positive.
+
+    :param user: The user we are interested in.
+    :return: True if and only if the user's balance is at least zero.
+
+    """
+    return has_balance_of_at_least(user, 0)
+
 
 def has_network_access(user):
     """
@@ -428,8 +451,8 @@ def move_out_temporarily(user, comment, processor, during=None):
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
-        for net_device in user_host.user_net_devices:
-            for ip in net_device.ips:
+        for interface in user_host.user_interfaces:
+            for ip in interface.ips:
                 session.session.delete(ip)
 
     if comment:

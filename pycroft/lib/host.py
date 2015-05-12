@@ -8,22 +8,22 @@ from pycroft.model.session import with_transaction
 
 
 @with_transaction
-def change_mac(net_device, mac, processor):
+def change_mac(interface, mac, processor):
     """
-    This method will change the mac address of the given net device to the new
+    This method will change the mac address of the given interface to the new
     mac address.
 
-    :param net_device: the net device which should become a new mac address.
+    :param interface: the interface which should become a new mac address.
     :param mac: the new mac address.
     :param processor: the user who initiated the mac address change.
-    :return: the changed net device with the new mac address.
+    :return: the changed interface with the new mac address.
     """
-    old_mac = net_device.mac
-    net_device.mac = mac
+    old_mac = interface.mac
+    interface.mac = mac
     message = deferred_gettext(u"Changed MAC address from {} to {}.").format(
         old_mac, mac)
-    log_user_event(message.to_json(), processor, net_device.host.user)
-    return net_device
+    log_user_event(message.to_json(), processor, interface.host.owner)
+    return interface
 
 
 def generate_hostname(ip_address):
