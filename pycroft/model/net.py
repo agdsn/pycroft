@@ -4,6 +4,7 @@
 from sqlalchemy import (
     CheckConstraint, Column, Integer, ForeignKey, String, Table, between, event)
 from sqlalchemy.orm import relationship, backref, object_session
+from sqlalchemy.schema import AddConstraint
 from pycroft.lib.net import MacExistsException
 from pycroft.model.base import ModelBase
 from pycroft.model.host import Interface, IP
@@ -46,3 +47,10 @@ class Subnet(ModelBase):
     vlan = relationship(VLAN, backref=backref("subnets"))
 
 
+# Ensure that the gateway is contained in the subnet
+constraint = CheckConstraint(Subnet.gateway.op('<<')(Subnet.address))
+event.listen(
+    Subnet.__table__,
+    "after_create",
+    AddConstraint(constraint).execute_if(dialect='postgresql')
+)
