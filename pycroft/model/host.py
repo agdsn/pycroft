@@ -3,12 +3,16 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, event
-from sqlalchemy.orm import backref, relationship, validates
+from sqlalchemy.orm import backref, relationship, validates, object_session
 from sqlalchemy.types import Integer, String
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
+from pycroft.lib.net import MacExistsException
 
 from pycroft.model.base import ModelBase
+from pycroft.model.facilities import Room
+from pycroft.model.net import Subnet
+from pycroft.model.user import User
 from pycroft.model.types import (
     IPAddress, MACAddress, InvalidMACAddressException)
 
@@ -22,7 +26,7 @@ class Host(ModelBase):
                      nullable=True)
 
     # many to one from Host to Room
-    room = relationship("Room", backref=backref("hosts"))
+    room = relationship(Room, backref=backref("hosts"))
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
                      nullable=True)
 
@@ -33,7 +37,7 @@ class UserHost(Host):
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     desired_name = Column(String(63))
-    owner = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 
 
@@ -44,7 +48,7 @@ class ServerHost(Host):
 
     name = Column(String(255))
 
-    owner = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "server_hosts", cascade="all, delete-orphan"))
 
 
@@ -57,7 +61,7 @@ class Switch(Host):
 
     management_ip = Column(String(127), nullable=False)
 
-    owner = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "switches", cascade="all, delete-orphan"))
 
 
@@ -133,7 +137,7 @@ class SwitchInterface(Interface):
 
     __mapper_args__ = {'polymorphic_identity': "switch_interface"}
 
-    host = relationship("Switch",
+    host = relationship(Switch,
                         backref=backref("switch_interfaces",
                                         cascade="all, delete-orphan"))
 
@@ -152,7 +156,7 @@ class IP(ModelBase):
 
     subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
                        nullable=False)
-    subnet = relationship("Subnet",
+    subnet = relationship(Subnet,
                           backref=backref("ips", cascade="all, delete-orphan"),
                           lazy='joined')
 

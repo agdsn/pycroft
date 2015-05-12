@@ -3,11 +3,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import (
     CheckConstraint, Column, Integer, ForeignKey, String, Table, between, event)
-from sqlalchemy.orm import relationship, backref, object_session
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import AddConstraint
-from pycroft.lib.net import MacExistsException
 from pycroft.model.base import ModelBase
-from pycroft.model.host import Interface, IP
 from pycroft.model.types import IPAddress, IPNetwork
 
 
