@@ -11,8 +11,9 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from itertools import chain
-from flask import Blueprint, render_template, flash, redirect, url_for,\
-    request, jsonify, abort
+from flask import (
+    Blueprint, abort, flash, jsonify, redirect, render_template, request,
+    url_for)
 import operator
 from sqlalchemy import Text
 from pycroft import lib
@@ -39,7 +40,7 @@ from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter, ip_get_switch,
     ip_get_switch_port)
 
-bp = Blueprint('user', __name__, )
+bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
 nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 
@@ -51,7 +52,6 @@ def overview():
 
 
 @bp.route('/json/search')
-@access.require('user_show')
 def json_search():
     query = request.args['query']
     results = session.session.query(User.id, User.login, User.name).filter(or_(
@@ -65,7 +65,6 @@ def json_search():
 
 
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
-@access.require('user_show')
 def user_show(user_id):
 
     user = User.q.get(user_id)
@@ -125,7 +124,6 @@ def user_show(user_id):
 
 @bp.route("/show/<user_id>/logs")
 @bp.route("/show/<user_id>/logs/<logtype>")
-@access.require('user_show')
 def user_show_logs_json(user_id, logtype="all"):
     user = User.q.get(user_id)
     if user is None:
@@ -155,7 +153,6 @@ def user_show_logs_json(user_id, logtype="all"):
 
 
 @bp.route("/show/<user_id>/hosts")
-@access.require('user_show')
 def user_show_hosts_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
@@ -171,7 +168,6 @@ def user_show_hosts_json(user_id):
 
 @bp.route("/show/<user_id>/groups")
 @bp.route("/show/<user_id>/groups/<group_filter>")
-@access.require('user_show')
 def user_show_groups_json(user_id, group_filter="all"):
     memberships = Membership.q.filter(Membership.user_id == user_id)
     if group_filter is "active":
@@ -247,9 +243,8 @@ def end_membership(membership_id):
 
 
 @bp.route('/json/levels')
+@access.require('facilities_show')
 def json_levels():
-    if not request.is_xhr:
-        abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
     levels = session.session.query(Room.level.label('level')).filter_by(
         dormitory_id=dormitory_id).order_by(Room.level).distinct()
@@ -257,9 +252,8 @@ def json_levels():
 
 
 @bp.route('/json/rooms')
+@access.require('facilities_show')
 def json_rooms():
-    if not request.is_xhr:
-        abort(404)
     dormitory_id = request.args.get('dormitory', 0, type=int)
     level = request.args.get('level', 0, type=int)
     rooms = session.session.query(
@@ -271,7 +265,6 @@ def json_rooms():
 
 @bp.route('/json/traffic/<int:user_id>')
 @bp.route('/json/traffic/<int:user_id>/<int:days>')
-@access.require('user_show')
 def json_trafficdata(user_id, days=7):
     """Generate a Highcharts compatible JSON file to use with traffic graphs.
 
@@ -492,7 +485,6 @@ def edit_email(user_id):
 
 @bp.route('/search', methods=['GET', 'POST'])
 @nav.navigate(u"Suchen")
-@access.require('user_show')
 def search():
     form = UserSearchForm()
     if form.validate_on_submit():
@@ -510,7 +502,6 @@ def search():
 
 
 @bp.route('/search/results')
-@access.require('user_show')
 def search_results():
     user_id = request.args.get('userid')
     name = request.args.get('name')
@@ -535,9 +526,8 @@ def search_results():
 
 
 @bp.route('/json/groups')
+@access.require('groups_show')
 def json_groups():
-    if not request.is_xhr:
-        abort(404)
     groups = []
     group_type = request.args.get("group_type", 0, type=str)
     if group_type == 'traff':
@@ -550,7 +540,6 @@ def json_groups():
 
 @bp.route('/show_by_group', methods=['GET', 'POST'])
 @nav.navigate(u"Nach Gruppe")
-@access.require('user_show')
 def show_by_group():
     form = UserSelectGroupForm()
 
@@ -567,7 +556,6 @@ def show_by_group():
 
 
 @bp.route('/show_by_group/property/<int:property_group_id>')
-@access.require('user_show')
 def list_users_by_property_group(property_group_id):
     property_group = PropertyGroup.q.get(property_group_id)
     user_list = []
@@ -581,7 +569,6 @@ def list_users_by_property_group(property_group_id):
 
 
 @bp.route('/show_by_group/traffic/<int:traffic_group_id>')
-@access.require('user_show')
 def list_users_by_traffic_group(traffic_group_id):
     traffic_group = TrafficGroup.q.get(traffic_group_id)
     user_list = []

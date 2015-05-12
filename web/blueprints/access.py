@@ -1,123 +1,100 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from functools import wraps
+from itertools import chain
 from flask.globals import current_app
-from flask import abort
-from flask.ext.login import current_user, login_required
-import wrapt
+from flask import abort, request
+from flask.ext.login import current_user
 from web.blueprints import bake_endpoint
 
 
+def _check_properties(properties):
+    return all(current_user.has_property(p) for p in properties)
+
+
 class BlueprintAccess(object):
-    """This is used to restrict the access of the user according its group properties
+    """A Blueprint that requires accessing users to have a set of properties.
 
-    Every `flask.Blueprint` module should get such a `BlueprintAccess`
-    instance. It is used to restrict the access to the certain view
-    functions of the blueprint. For this it provides two decorators.
+    Every `flask.Blueprint` module should be augmented with a `BlueprintAccess`
+    instance. It is used to restrict the access to the view functions of the
+    blueprint.
 
-    The first decorator `BlueprintAccess.login_required` checks only
-    if the session has a authenticated user and redirect to the login
-    page if not.
+    Access restrictions can be defined globally for the whole blueprint or on a
+    per-view function basis. Per-view restrictions do not override global
+    restrictions, they are additional.
 
-    The second `BlueprintAccess.require` takes a arglist of permissions
-    from which the user must have _one_. It also chechs if the user is
-    authenticated. If there is no authenticated user it redirects to the
-    login page. If the user have no permission it raises a 401 error.
+    Global restrictions are set with the `BlueprintAccess` objects
+    `required_properties` argument, per-view restrictions are set by providing
+     a `required_properties` argument to the `Blueprint.route` decorator method.
+
+    If the session does not have an authenticated user, `Flask-Login`'s
+    `unauthorized` logic is invoked. This should usually result in the user
+    being redirected to the login page, see the `Flask-Login` documentation for
+    more information.
+
+    If the user lacks a required property, either global or per-view the request
+    will be aborted with a 403 error, that can be handled through a
+    `Flask.error_handler`.
 
     The usage is simple. First you instantiate a `flask.Blueprint`, and
     a `BlueprintAccess`.Then write a view function and register it on both:
+    ```
         my_bp = Blueprint("test", __name__)
-        my_access = BlueprintAccess(my_bp, general=[...])
+        my_access = BlueprintAccess(my_bp, required_properties=["test_show"])
 
-        [...]
-
-        @my_bp.route("/permission")
-        @my_access.require("a_permission", "another_permission")
-        def my_view_permission():
+        @my_bp.route("/protected")
+        @my_access.require_properties("test_delete", "test_admin")
+        def my_protected_view):
             return "Hello World"
-
-        [...]
-
-        @my_bp.route("/permission")
-        @my_access.login_required
-        def my_view_only_login():
-            return "Hello World"
-
-    The general param of the constructor holds a list of permissions
-    required to access the view "in general". Its only used in a
-    `BlueprintNavigation` to check if we render the first level of the
-    menu entry or not.
-
-
     """
-    def __init__(self, blueprint, general=None):
+    def __init__(self, blueprint, required_properties=()):
         """Initialize the `BlueprintAccess`.
 
-        :param general: A list of permissions for general access.
+        :param iterable[str] required_properties: An iterable of properties that
+        are required to access any view function in the blueprint.
         """
         self.blueprint = blueprint
-        self._restrictions = {}
+        self.required_properties = tuple(required_properties)
+        self.endpoint_properties_map = {}
+        blueprint.before_request(self._check_access)
 
-        if general is None:
-            general = []
-        self._general = general
+    def require(self, *required_properties):
+        """Set per-view function restrictions.
 
-    def require(self, *needed_permissions):
-        """Make view function only for autorized users accessible.
-
-        This is a decorator generator for flask view functions, It
-        checks if the current session has a authenticated user and
-        if the user is in a group that has _one_ of the needed
-        permissions.
-
-        The permissions are strings that are given as positional
-        arguments to the decorator generator.
-
+        Decorate flask view functions with this decorator to specify properties
+        a user must have in order to access the view function.
+        :param str required_properties: Names of the properties that are
+        required.
         """
-        @wrapt.decorator
-        def decorator(wrapped, instance, args, kwargs):
-            if needed_permissions:
-                endpoint = bake_endpoint(self.blueprint, wrapped)
-                self._restrictions[endpoint] = needed_permissions
+        global_properties = self.required_properties
+        view_properties = required_properties
 
-            if not current_user.is_authenticated():
-                return current_app.login_manager.unauthorized()
-            if self._current_has_access(needed_permissions):
-                return wrapped(*args, **kwargs)
-            abort(401)
-
+        def decorator(f):
+            endpoint = bake_endpoint(self.blueprint, f)
+            self.endpoint_properties_map[endpoint] = view_properties
+            f.required_properties = view_properties
+            return f
         return decorator
 
-    @property
-    def login_required(self):
-        return login_required
-
-    def _current_has_access(self, permissions):
-        user = current_user
-        for perm in permissions:
-            if user.has_property(perm):
-                return True
-        return False
+    def _check_access(self):
+        if not current_user.is_authenticated():
+            return current_app.login_manager.unauthorized()
+        endpoint = request.endpoint
+        properties = chain(self.required_properties,
+                           self.endpoint_properties_map.get(endpoint, ()))
+        if not _check_properties(properties):
+            abort(403)
 
     @property
-    def has_general_access(self):
-        """Checks if the current user has general access.
+    def is_accessible(self):
+        """Checks if the current user may access this blueprint."""
+        return _check_properties(self.required_properties)
 
+    def is_endpoint_accessible(self, endpoint):
+        """Checks if the current user may access the given endpoint.
+
+        :param str endpoint: A endpoint name
         """
-        if not len(self._general):
-            return True
-        return self._current_has_access(self._general)
-
-    def has_access(self, endpoint):
-        """Checks if the current user has access to the given endppoint.
-
-        :param endpoint: A endpoint name
-        """
-        if endpoint not in self._restrictions:
-            return True
-        return self._current_has_access(self._restrictions[endpoint])
-
-
-def has_property(property):
-    return current_user.has_property(property)
+        endpoint_specific = self.endpoint_properties_map.get(endpoint, ())
+        return _check_properties(chain(self.required_properties,
+                                       endpoint_specific))

@@ -11,8 +11,8 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, redirect, render_template, url_for, jsonify, \
-    abort
+from flask import (
+    Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
 from pycroft.helpers import net
 from pycroft.model import session
 from pycroft.model.host import Switch
@@ -25,20 +25,18 @@ from web.blueprints.infrastructure.forms import CNAMERecordCreateForm
 from web.blueprints.infrastructure.forms import RecordCreateForm
 from web.blueprints.access import BlueprintAccess
 
-bp = Blueprint('infrastructure', __name__, )
+bp = Blueprint('infrastructure', __name__)
 access = BlueprintAccess(bp, ['infrastructure_show'])
 nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 
 
 @bp.route('/subnets')
 @nav.navigate(u"Subnetze")
-@access.require('infrastructure_show')
 def subnets():
     return render_template('infrastructure/subnets_list.html')
 
 
 @bp.route('/subnets/json')
-@access.require('infrastructure_show')
 def subnets_json():
     subnets_list = Subnet.q.all()
     return jsonify(items=[{
@@ -53,13 +51,11 @@ def subnets_json():
 
 @bp.route('/switches')
 @nav.navigate(u"Switche")
-@access.require('infrastructure_show')
 def switches():
     return render_template('infrastructure/switches_list.html')
 
 
 @bp.route('/switches/json')
-@access.require('infrastructure_show')
 def switches_json():
     return jsonify(items=[{
             'id': switch.id,
@@ -236,13 +232,11 @@ def switch_show_json(switch_id):
 
 @bp.route('/vlans')
 @nav.navigate(u"VLANs")
-@access.require('infrastructure_show')
 def vlans():
     return render_template('infrastructure/vlan_list.html')
 
 
 @bp.route('/vlans/json')
-@access.require('infrastructure_show')
 def vlans_json():
     return jsonify(items=[{
             'id': vlan.id,
