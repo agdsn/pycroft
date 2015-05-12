@@ -42,15 +42,6 @@ class Subnet(ModelBase):
     vlans = relationship(VLAN, backref=backref("subnets"),
                          secondary=lambda: association_table_subnet_vlan)
 
-    @property
-    def netmask(self):
-        net = ipaddr.IPNetwork(self.address)
-        return str(net.netmask)
-
-    @property
-    def ip_version(self):
-        return ipaddr.IPNetwork(self.address).version
-
 
 association_table_subnet_vlan = Table(
     "association_subnet_vlan",
