@@ -42,13 +42,7 @@ class Subnet(ModelBase):
     reserved_addresses = Column(Integer, default=0, nullable=False)
     description = Column(String(50))
 
-    # many to many from Subnet to VLAN
-    vlans = relationship(VLAN, backref=backref("subnets"),
-                         secondary=lambda: association_table_subnet_vlan)
+    vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False)
+    vlan = relationship(VLAN, backref=backref("subnets"))
 
 
-association_table_subnet_vlan = Table(
-    "association_subnet_vlan",
-    ModelBase.metadata,
-    Column("subnet_id", Integer, ForeignKey(Subnet.id)),
-    Column("vlan_id", Integer, ForeignKey(VLAN.id)))

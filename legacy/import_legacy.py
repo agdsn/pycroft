@@ -117,14 +117,29 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             message="User imported from legacy database netusers.",
             user=u))
 
+
+    vlan_name_vid_map = {
+        'Wu1': 11,
+        'Wu3': 13,
+        'Wu5': 15,
+        'Wu7': 17,
+        'Wu9': 19,
+        'Wu11': 5,
+        'ZW41': 41,
+        'Bor34': 34,
+    }
+
     print("  Translating subnet")
     s_d = {} # you know the drill
     for _s in subnet:
+        vlan = net.VLAN(name=_s.vlan_name,
+                        vid=vlan_name_vid_map[_s.vlan_name])
         s = net.Subnet(address=_s.net_ip+"/"+_s.netmask,
                        gateway=_s.default_gateway,
                        dns_domain=_s.domain,
                        ip_type="4",
-                       description=_s.vlan_name)
+                       description=_s.vlan_name,
+                       vlan=vlan)
         s_d[_s.subnet_id] = s
         records.append(s)
     # TODO: note, missing transit, server and eduroam subnets

@@ -33,7 +33,7 @@ class Dormitory(ModelBase):
         return object_session(self).query(
             Subnet
         ).join(
-            Subnet.vlans
+            VLAN
         ).join(
             VLAN.dormitories
         ).filter(
