@@ -241,5 +241,5 @@ def vlans_json():
     return jsonify(items=[{
             'id': vlan.id,
             'name': vlan.name,
-            'tag': vlan.tag
+            'vid': vlan.vid,
         } for vlan in VLAN.q.all()])

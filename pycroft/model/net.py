@@ -12,14 +12,14 @@ from pycroft.model.types import IPAddress, IPNetwork
 
 class VLAN(ModelBase):
     name = Column(String(127), nullable=False)
-    tag = Column(Integer, nullable=False)
+    vid = Column(Integer, nullable=False)
 
     dormitories = relationship(
         "Dormitory", backref=backref("vlans"),
         secondary=lambda: association_table_dormitory_vlan)
 
     __table_args = (
-        CheckConstraint(between(tag, 1, 4094))
+        CheckConstraint(between(vid, 1, 4094)),
     )
 
 
