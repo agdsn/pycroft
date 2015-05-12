@@ -9,6 +9,7 @@ import os
 import sys
 
 from sqlalchemy import create_engine, distinct
+import ipaddr
 from sqlalchemy.sql import null
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import _request_ctx_stack
@@ -117,6 +118,19 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             message="User imported from legacy database netusers.",
             user=u))
 
+    print("  Adding DNS zones")
+    primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
+    urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
+    urz_ns = dns.NSRecord(name=dns.DNSName("rnadm", zone=urz_zone))
+    records.append(dns.SOARecord(name=dns.DNSName("@", zone=primary_host_zone),
+                                 mname=urz_ns,
+                                 rname="wuensch.urz.tu-dresden.de.",
+                                 serial=2010010800,
+                                 refresh=10800,
+                                 retry=3600,
+                                 expire=3600000,
+                                 minimum=86400))
+    records.append(primary_host_zone)
 
     vlan_name_vid_map = {
         'Wu1': 11,
@@ -132,12 +146,12 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     print("  Translating subnet")
     s_d = {} # you know the drill
     for _s in subnet:
+        address = ipaddr.IPv4Network(_s.net_ip + "/" + _s.netmask)
         vlan = net.VLAN(name=_s.vlan_name,
                         vid=vlan_name_vid_map[_s.vlan_name])
-        s = net.Subnet(address=_s.net_ip+"/"+_s.netmask,
-                       gateway=_s.default_gateway,
-                       dns_domain=_s.domain,
-                       ip_type="4",
+        s = net.Subnet(address=address,
+                       gateway=ipaddr.IPv4Address(_s.default_gateway),
+                       primary_dns_zone=primary_host_zone,
                        description=_s.vlan_name,
                        vlan=vlan)
         s_d[_s.subnet_id] = s
@@ -190,10 +204,10 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         try:
             switch = sw_d[_sp.ip]
             port_name = _sp.port
-            sp = port.SwitchPort(switch=switch,name=port_name)
+            sp = host.SwitchInterface(host=switch, name=port_name)
             # TODO insert proper patch_port names
             room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
-            pp = port.SwitchPatchPort(switch_port=sp, name="??", room=room)
+            pp = port.SwitchPatchPort(switch_interface=sp, name="??", room=room)
             records.extend([sp, pp])
         except KeyError as e:
             # Bor34 switch isn't in computers
