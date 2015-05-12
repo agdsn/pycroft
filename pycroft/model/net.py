@@ -1,8 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import ipaddr
-from sqlalchemy import Column, Enum, Integer, ForeignKey, String, Table, event
+from sqlalchemy import Column, Integer, ForeignKey, String, Table, event
 from sqlalchemy.orm import relationship, backref, object_session
 from pycroft.lib.net import MacExistsException
 from pycroft.model.base import ModelBase
