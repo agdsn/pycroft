@@ -114,7 +114,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
 
         records.append(logging.UserLogEntry(
             author=u_d.get(0, None),
-            message="User imported from legacy DB",
+            message="User imported from legacy database netusers.",
             user=u))
 
     print("  Translating subnet")
