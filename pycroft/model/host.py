@@ -99,6 +99,7 @@ class Interface(ModelBase):
             raise MulticastFlagException()
         return mac_address
 
+
 class UserInterface(Interface):
     id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
@@ -140,11 +141,11 @@ class SwitchInterface(Interface):
 class IP(ModelBase):
     address = Column(IPAddress, nullable=False, unique=True)
     interface_id = Column(Integer,
-                           ForeignKey(Interface.id, ondelete="CASCADE"),
-                           nullable=False)
+                          ForeignKey(Interface.id, ondelete="CASCADE"),
+                          nullable=False)
     interface = relationship(Interface,
-                              backref=backref("ips",
-                                              cascade="all, delete-orphan"))
+                             backref=backref("ips",
+                                             cascade="all, delete-orphan"))
 
     host = relationship(Host, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
