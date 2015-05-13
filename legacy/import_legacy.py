@@ -183,7 +183,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             if _c.c_typ == "Switch" or "switch" in _c.c_alias.lower():
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
-                mgmt_ip = ".".join(mgmt_ip_blocks)
+                mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
                 name = _c.c_alias or "unnamed_switch"
                 h = host.Switch(owner=owner, name=name, management_ip=mgmt_ip, room=room)
                 interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr)
