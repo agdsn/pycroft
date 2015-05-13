@@ -126,9 +126,8 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     print("  Adding DNS zones")
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
     urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
-    urz_ns = dns.NSRecord(name=dns.DNSName("rnadm", zone=urz_zone))
-    records.append(dns.SOARecord(name=dns.DNSName("@", zone=primary_host_zone),
-                                 mname=urz_ns,
+    records.append(dns.SOARecord(name=dns.DNSName(name="@", zone=primary_host_zone),
+                                 mname=dns.DNSName(name="rnadm", zone=urz_zone),
                                  rname="wuensch.urz.tu-dresden.de.",
                                  serial=2010010800,
                                  refresh=10800,
