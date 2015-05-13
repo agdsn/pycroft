@@ -158,9 +158,9 @@ def user_show_hosts_json(user_id):
     for user_host in User.q.get(user_id).user_hosts:
         for ip in user_host.ips:
             list_items.append({
-                'ip': ip.address,
+                'ip': str(ip.address),
                 'mac': ip.interface.mac,
-                'switch': ip_get_switch(user_host, ip),
+                'switch': str(ip_get_switch(user_host, ip)),
                 'port': ip_get_switch_interface(user_host, ip)
             })
     return jsonify(items=list_items)

@@ -34,9 +34,6 @@
                 <li><a href="#finance">Konto</a></li>
             {% endif %}
             <li><a href="#groups">Gruppen</a></li>
-            {% if current_user is privileged_for('infrastructure_show') %}
-                <li><a href="#hosts">Hosts</a></li>
-            {% endif %}
         </ul>
     </div>
 

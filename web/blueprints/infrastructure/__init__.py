@@ -41,10 +41,10 @@ def subnets_json():
     return jsonify(items=[{
             'id': subnet.id,
             # TODO href to DNS zones
-            'primary_dns_zone': subnet.primary_dns_zone,
-            'reverse_dns_zone': subnet.reverse_dns_zone,
+            'primary_dns_zone': subnet.primary_dns_zone.name,
+            'reverse_dns_zone': getattr(subnet.reverse_dns_zone, "name", None),
             'address': str(subnet.address),
-            'gateway': subnet.gateway,
+            'gateway': str(subnet.gateway),
         } for subnet in subnets_list])
 
 
@@ -62,7 +62,7 @@ def switches_json():
                 'title': switch.name,
                 'href': url_for(".switch_show", switch_id=switch.id)
             },
-            'ip': switch.management_ip
+            'ip': str(switch.management_ip)
         } for switch in Switch.q.all()])
 
 

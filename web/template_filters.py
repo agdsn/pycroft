@@ -16,7 +16,7 @@ from itertools import chain
 import flask.ext.babel
 
 from pycroft._compat import imap
-from pycroft.model import session
+from pycroft.model import session, _all
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
 
@@ -178,16 +178,16 @@ def record_removable_filter(record):
 # in the table this is actually used (`user_show_hosts_json()`)!
 @template_filter("get_switch")
 def ip_get_switch(host,ip):
-    patch_ports = host.room.patch_ports
+    patch_ports = host.room.switch_patch_ports
     if not patch_ports:
         return "No Switch"
-    return u', '.join(imap(lambda p: p.switch_interface.switch.name, patch_ports))
+    return u', '.join(imap(lambda p: p.switch_interface.host.name, patch_ports))
 
 
 #TODO: usecases — should that srsly return >1 port? (see todo above)
 @template_filter("get_switch_interface")
 def ip_get_switch_interface(host,ip):
-    patch_ports = host.room.patch_ports
+    patch_ports = host.room.switch_patch_ports
     if not patch_ports:
         return "No Port"
     return u', '.join(imap(lambda p: p.switch_interface.name, patch_ports))
