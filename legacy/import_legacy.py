@@ -186,20 +186,20 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
                 h = host.Switch(owner=owner, name=_c.c_hname, management_ip=mgmt_ip, room=room)
                 interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr, name='Vlan-Interface 23')
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
                 interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
 
         else: #assume user
             h = host.UserHost(owner=owner, room=owner.room)
             interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
             ip = None
-            if _c.nutzer.status == 1:
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+            if _c.nutzer.status in (1, 2, 4, 5, 7, 12):
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
         records.extend([h, interface])
         if ip:
             records.append(ip)
