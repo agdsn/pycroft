@@ -32,15 +32,6 @@ from pycroft.model import (accounting, facilities, dns, user, net, port,
                            finance, session, host, config, logging, types)
 from pycroft.lib.host import generate_hostname
 from pycroft.helpers import user as usertools
-from collections import defaultdict
-
-class keydefaultdict(defaultdict):
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError( key )
-        else:
-            ret = self[key] = self.default_factory(key)
-            return ret
 
 ROOT_NAME = "agdsn"
 ROOT_PASSWD = "test"
@@ -176,17 +167,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         records.append(s)
     # TODO: note, missing transit, server and eduroam subnets
 
-    def hname((hostname, alias, ip)):
-        if hostname and hostname != "NULL":
-            return hostname
-        if alias:
-            return alias
-        return generate_hostname(ip)
-
-    calias_hostnames_map = keydefaultdict(
-        hname,
-        {("test", "test", ipaddr.IPAddress("1.2.3.4")): "test"}
-    )
+    hname_hostname_map = {"test_alt": "test_neu"}
 
     print("  Translating computer")
     sw_d = {} # switch dict: mgmt_ip -> obj
@@ -208,17 +189,20 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
                 mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
-                h = host.Switch(owner=owner, name=_c.c_hname, management_ip=mgmt_ip, room=room) #should switch mgmt ip be IP db object?
+                h = host.Switch(owner=owner, name=_c.c_hname, management_ip=mgmt_ip, room=room)
                 interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr, name="switch management interface")
                 ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
+                records.append(ip)
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
                 interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
                 ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
-                hostname = calias_hostnames_map[(_c.c_hname, _c.c_alias, ipaddr.IPAddress(_c.c_ip))]
-                dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
-                dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
+                hostname = hname_hostname_map.get(_c.c_hname) or _c.c_hname
+                if hostname and hostname != 'NULL':
+                    records.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
+                else:
+                    records.append(ip)
         else: #assume user
             h = host.UserHost(owner=owner, room=owner.room)
             interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
@@ -227,11 +211,8 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             if _c.nutzer.status in (1, 2, 4, 5, 7, 12):
                 hostname = generate_hostname(ipaddr.IPAddress(_c.c_ip))
                 ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
-                dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
-                dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
+                records.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
         records.extend([h, interface])
-        if ip:
-            records.append(ip)
 
     building_subnet_map = {
         1: 6,
