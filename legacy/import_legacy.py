@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
+# coding=utf-8
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
 from __future__ import print_function
 
 import os
@@ -50,12 +50,17 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     # order should match sorted_tables, but no individual translation functions
     # since appropriate mapping dicts [a-z]_d would need to be passed anyway
 
+    print("Adding site")
+    site = facilities.Site(name=u"Wundtstraße/Zellescher Weg")
+    records.append(site)
+
     print("Translating legacy data")
     b_d = {} # maps netusers.Wheim.id to translated sqlalchemy object
     print("  Translating buildings")
     for _b in wheim:
         b = facilities.Building(
             id=_b.wheim_id,
+            site=site,
             short_name=_b.kuerzel,
             street=_b.str,
             number=_b.hausnr)

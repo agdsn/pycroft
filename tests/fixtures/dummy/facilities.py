@@ -4,13 +4,20 @@
 from fixture import DataSet
 
 
+class SiteData(DataSet):
+    class dummy:
+        name = "dummy"
+
+
 class BuildingData(DataSet):
     class dummy_house1:
+        site = SiteData.dummy
         street = "dummy"
         number = "01"
         short_name = "abc"
 
     class dummy_house2:
+        site = SiteData.dummy
         street = "dummy"
         number = "02"
         short_name = "def"

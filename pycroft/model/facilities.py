@@ -2,15 +2,6 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-    pycroft.model.building
-    ~~~~~~~~~~~~~~
-
-    This module contains the classes Building, Room, Subnet, VLAN.
-
-    :copyright: (c) 2011 by AG DSN.
-"""
-
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
@@ -18,7 +9,13 @@ from sqlalchemy.types import Boolean, Integer, String
 from pycroft.model.base import ModelBase
 
 
+class Site(ModelBase):
+    name = Column(String(255), nullable=False)
+
+
 class Building(ModelBase):
+    site_id = Column(Integer, ForeignKey(Site.id), nullable=False)
+    site = relationship(Site, backref=backref("buildings"))
     number = Column(String(3), nullable=False)
     short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(20), nullable=False)
