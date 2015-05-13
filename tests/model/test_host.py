@@ -14,7 +14,7 @@ from pycroft.model.net import Subnet
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.accounting import TrafficVolumeData
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
@@ -69,7 +69,7 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
 
 
 class Test_030_IpModel(FixtureDataTestBase):
-    datasets = (DormitoryData, RoomData, SubnetData, UserData, UserHostData,
+    datasets = (BuildingData, RoomData, SubnetData, UserData, UserHostData,
                 UserInterfaceData, VLANData)
 
     def test_0030_delete_address(self):
@@ -102,7 +102,7 @@ class Test_030_IpModel(FixtureDataTestBase):
 
 
 class Test_040_IpEvents(FixtureDataTestBase):
-    datasets = (DormitoryData, VLANData, SubnetData, RoomData, UserData,
+    datasets = (BuildingData, VLANData, SubnetData, RoomData, UserData,
                 UserHostData, UserInterfaceData)
 
     def test_0010_correct_subnet_and_ip(self):

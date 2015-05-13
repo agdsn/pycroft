@@ -13,7 +13,7 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, session, logging, finance, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
 from tests.fixtures.dummy.host import (
     IPData, SwitchPatchPortData,UserInterfaceData, UserHostData)
@@ -23,7 +23,7 @@ from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = (ConfigData, DormitoryData, IPData, RoomData, SubnetData,
+    datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
                 SwitchPatchPortData, UserData, UserInterfaceData, UserHostData,
                 VLANData)
 
@@ -33,37 +33,37 @@ class Test_010_User_Move(FixtureDataTestBase):
             login=UserData.dummy.login).one()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
-        self.old_room = self.user.room #dormitory.Room.q.get(1)
-        self.same_dormitory = facilities.Dormitory.q.filter_by(
-            short_name=DormitoryData.dummy_house1.short_name).one()
-        assert self.same_dormitory == self.old_room.dormitory
-        self.other_dormitory = facilities.Dormitory.q.filter_by(
-            short_name=DormitoryData.dummy_house2.short_name).one()
+        self.old_room = self.user.room #building.Room.q.get(1)
+        self.same_building = facilities.Building.q.filter_by(
+            short_name=BuildingData.dummy_house1.short_name).one()
+        assert self.same_building == self.old_room.building
+        self.other_building = facilities.Building.q.filter_by(
+            short_name=BuildingData.dummy_house2.short_name).one()
 
-        self.new_room_other_dormitory = facilities.Room.q.filter_by(
-            dormitory=self.other_dormitory).one()
-        self.new_room_same_dormitory = facilities.Room.q.filter_by(
-            dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
+        self.new_room_other_building = facilities.Room.q.filter_by(
+            building=self.other_building).one()
+        self.new_room_same_building = facilities.Room.q.filter_by(
+            building=self.same_building, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
         self.new_switch_patch_port = PatchPort.q.filter_by(
             name=SwitchPatchPortData.dummy_patch_port2.name).one()
 
     def test_0010_moves_into_same_room(self):
         self.assertRaisesInTransaction(
-            AssertionError, UserHelper.move, self.user, self.old_room.dormitory,
+            AssertionError, UserHelper.move, self.user, self.old_room.building,
             self.old_room.level, self.old_room.number, self.processing_user)
 
-    def test_0020_moves_into_other_dormitory(self):
-        UserHelper.move(self.user, self.new_room_other_dormitory.dormitory,
-            self.new_room_other_dormitory.level,
-            self.new_room_other_dormitory.number, self.processing_user)
-        self.assertEqual(self.user.room, self.new_room_other_dormitory)
-        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_dormitory)
+    def test_0020_moves_into_other_building(self):
+        UserHelper.move(self.user, self.new_room_other_building.building,
+            self.new_room_other_building.level,
+            self.new_room_other_building.number, self.processing_user)
+        self.assertEqual(self.user.room, self.new_room_other_building)
+        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_building)
         #TODO test for changing ip
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = (ConfigData, DormitoryData, FinanceAccountData, IPData,
+    datasets = (ConfigData, BuildingData, FinanceAccountData, IPData,
                 PropertyData, RoomData, SemesterData, SubnetData,
                 SwitchPatchPortData, TrafficGroupData, UserData, UserHostData,
                 UserInterfaceData, VLANData)
@@ -77,7 +77,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
@@ -85,7 +85,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             host_name=test_hostname,
@@ -98,7 +98,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.name, test_name)
         self.assertEqual(new_user.login, test_login)
         self.assertEqual(new_user.email, test_email)
-        self.assertEqual(new_user.room.dormitory, test_dormitory)
+        self.assertEqual(new_user.room.building, test_building)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
 
@@ -139,14 +139,14 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -172,7 +172,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, RoomData, UserData)
 
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
@@ -187,7 +187,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
 
 
 class Test_050_User_Edit_Email(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, RoomData, UserData)
 
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
@@ -214,14 +214,14 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -256,7 +256,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
 
 
 class Test_080_User_Block(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, PropertyData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, PropertyData, RoomData, UserData)
 
     def test_0010_user_has_no_network_access(self):
         u = user.User.q.filter_by(login=UserData.dummy.login).one()

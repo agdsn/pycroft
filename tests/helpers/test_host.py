@@ -14,7 +14,7 @@ from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model import session, user, logging
 from pycroft.model.host import UserInterface, IP, UserHost
 from pycroft.model.net import Subnet
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import (
     UserHostData, UserInterfaceData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
@@ -51,7 +51,7 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
 
 
 class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData,
+    datasets = [BuildingData, VLANData, SubnetData, RoomData, UserData,
                 UserHostData, UserInterfaceData]
 
     def calculate_usable_ips(self, net):

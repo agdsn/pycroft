@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import LazyLoadSelectWidget,\
@@ -22,8 +22,8 @@ class LazyLoadSelectField(fields.SelectField):
     """This is a select field that loads data lazy if a dependency changes
 
     Its used for example for the room selection:
-    The levels are loaded if you select a dormitory. The room numbers are
-    loaded for the selected dormitory and level.
+    The levels are loaded if you select a building. The room numbers are
+    loaded for the selected building and level.
 
     It needs a data endpoint that provides a json object with at least one
     element: "items". This stores a list of items. The item can be either a
@@ -37,7 +37,7 @@ class LazyLoadSelectField(fields.SelectField):
         def json_levels():
             if not request.is_xhr:
                 abort(404)
-            dormitory_id = request.args.get('dormitory', 0, type=int)
+            building_id = request.args.get('building', 0, type=int)
             [...]
             return jsonify(dict(items=[entry.level for entry in levels]))
 

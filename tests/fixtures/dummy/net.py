@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
 from ipaddr import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from tests.fixtures.dummy.facilities import DormitoryData
+from tests.fixtures.dummy.facilities import BuildingData
 from tests.fixtures.dummy.dns_zones import DNSZoneData
 
 

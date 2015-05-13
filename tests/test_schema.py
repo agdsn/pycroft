@@ -35,7 +35,7 @@ class Test_010_SchemaMapping(unittest.TestCase):
         msg = try_mapper(base)
         self.assertIsNone(msg, msg)
 
-    def test_0020_mapping_dormitory(self):
+    def test_0020_mapping_building(self):
         from pycroft.model import facilities
         msg = try_mapper(facilities)
         self.assertIsNone(msg, msg)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
+# coding=utf-8
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
 from __future__ import print_function
 
 import os
@@ -60,12 +60,17 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     # order should match sorted_tables, but no individual translation functions
     # since appropriate mapping dicts [a-z]_d would need to be passed anyway
 
+    print("Adding site")
+    site = facilities.Site(name=u"Wundtstraße/Zellescher Weg")
+    records.append(site)
+
     print("Translating legacy data")
     b_d = {} # maps netusers.Wheim.id to translated sqlalchemy object
     print("  Translating buildings")
     for _b in wheim:
-        b = facilities.Dormitory(
+        b = facilities.Building(
             id=_b.wheim_id,
+            site=site,
             short_name=_b.kuerzel,
             street=_b.str,
             number=_b.hausnr)
@@ -75,7 +80,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
     print("  Translating rooms")
     r_d = {} # maps (wheim_id, etage, zimmernr) to translated sqlalchemy object
     for _r in zimmer:
-        r = facilities.Room(dormitory=b_d[_r.wheim_id],
+        r = facilities.Room(building=b_d[_r.wheim_id],
                             level=_r.etage,
                             number=_r.zimmernr,
                             inhabitable=True)
@@ -130,12 +135,9 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
 
     print("  Adding DNS zones")
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
-    primary_host_zone_name = dns.DNSName(name="@", zone=primary_host_zone)
     urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
-    urz_ns = dns.NSRecord(name=dns.DNSName(name="rnadm", zone=urz_zone),
-                          nsdname=primary_host_zone_name)
-    records.append(dns.SOARecord(name=primary_host_zone_name,
-                                 mname=urz_ns.name,
+    records.append(dns.SOARecord(name=dns.DNSName(name="@", zone=primary_host_zone),
+                                 mname=dns.DNSName(name="rnadm", zone=urz_zone),
                                  rname="wuensch.urz.tu-dresden.de.",
                                  serial=2010010800,
                                  refresh=10800,
@@ -143,8 +145,6 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                                  expire=3600000,
                                  minimum=86400))
     records.append(primary_host_zone)
-
-    agdsn_sld_zone = dns.DNSZone(name="agdsn.de")
 
 
 
@@ -157,8 +157,8 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         'Wu11': 5,
         'ZW41': 41,
         'Bor34': 34,
+        'Servernetz': 22,
         'UNEPWeb': 348,
-        'Servernetz': 22
     }
 
     print("  Translating subnet")
@@ -196,7 +196,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             try:
                 room = r_d[(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)]
             except KeyError:
-                room = facilities.Room(dormitory=b_d[_c.c_wheim_id],
+                room = facilities.Room(building=b_d[_c.c_wheim_id],
                                        level=_c.c_etage,
                                        number=_c.c_zimmernr or '?',
                                        inhabitable=False)
@@ -204,19 +204,18 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 r_d[(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)] = room
                 records.append(room)
 
-            if _c.c_typ == "Switch" or "switch" in _c.c_alias.lower():
+            if _c.c_typ == "Switch":
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
-                mgmt_ip = ".".join(mgmt_ip_blocks)
-                name = _c.c_alias or "unnamed_switch"
-                h = host.Switch(owner=owner, name=name, management_ip=mgmt_ip, room=room)
-                interface = host.SwitchInterface(name="switch management interface", host=h, mac=_c.c_etheraddr)
-                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+                mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
+                h = host.Switch(owner=owner, name=_c.c_hname, management_ip=mgmt_ip, room=room) #should switch mgmt ip be IP db object?
+                interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr, name="switch management interface")
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
                 interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 hostname = calias_hostnames_map[(_c.c_hname, _c.c_alias, ipaddr.IPAddress(_c.c_ip))]
                 dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
                 dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
@@ -225,28 +224,47 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
             ip = None
-            if _c.nutzer.status == 1:
+            if _c.nutzer.status in (1, 2, 4, 5, 7, 12):
                 hostname = generate_hostname(ipaddr.IPAddress(_c.c_ip))
-                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
                 dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
         records.extend([h, interface])
         if ip:
             records.append(ip)
 
+    building_subnet_map = {
+        1: 6,
+        2: 3,
+        3: 8,
+        4: 7,
+        5: 1,
+        6: 2,
+        7: 4,
+        8: 4,
+        9: 4,
+        10: 4,
+        11: 4,
+        12: 10,
+    }
+
     print("  Translating hp4108ports")
     for _sp in hp4108port:
         try:
-            switch = sw_d[_sp.ip]
-            port_name = _sp.port
-            sp = host.SwitchInterface(host=switch, name=port_name, mac="00:12:34:56:78:9a") #TODO proper macs
-            # TODO insert proper patch_port names
-            room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
-            pp = port.SwitchPatchPort(switch_interface=sp, name="??", room=room)
-            records.extend([sp, pp])
+            switch = sw_d[ipaddr.IPv4Address(_sp.ip)]
         except KeyError as e:
             # Bor34 switch isn't in computers
             print("KeyError: "+str(e))
+            continue
+        port_name = _sp.port
+        room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
+        subnet_id = building_subnet_map[room.building.id]
+        sp = host.SwitchInterface(host=switch, name=port_name,
+                                  mac="00:00:00:00:00:01",
+                                  default_subnet=s_d[subnet_id])
+        # TODO insert proper patch_port names
+        pp = port.SwitchPatchPort(switch_interface=sp, name="?? ({})".format(port_name), room=room)
+        records.extend((sp, pp))
 
     return records
 

@@ -59,7 +59,7 @@ class Switch(Host):
 
     name = Column(String(127), nullable=False)
 
-    management_ip = Column(String(127), nullable=False)
+    management_ip = Column(IPAddress, nullable=False)
 
     owner = relationship(User, backref=backref(
         "switches", cascade="all, delete-orphan"))

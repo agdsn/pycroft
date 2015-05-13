@@ -245,20 +245,20 @@ def end_membership(membership_id):
 @bp.route('/json/levels')
 @access.require('facilities_show')
 def json_levels():
-    dormitory_id = request.args.get('dormitory', 0, type=int)
+    building_id = request.args.get('building', 0, type=int)
     levels = session.session.query(Room.level.label('level')).filter_by(
-        dormitory_id=dormitory_id).order_by(Room.level).distinct()
+        building_id=building_id).order_by(Room.level).distinct()
     return jsonify(dict(items=[entry.level for entry in levels]))
 
 
 @bp.route('/json/rooms')
 @access.require('facilities_show')
 def json_rooms():
-    dormitory_id = request.args.get('dormitory', 0, type=int)
+    building_id = request.args.get('building', 0, type=int)
     level = request.args.get('level', 0, type=int)
     rooms = session.session.query(
         Room.number.label("room_num")).filter_by(
-        dormitory_id=dormitory_id, level=level).order_by(
+        building_id=building_id, level=level).order_by(
         Room.number).distinct()
     return jsonify(dict(items=[entry.room_num for entry in rooms]))
 
@@ -319,7 +319,7 @@ def create():
         try:
             new_user = lib.user.move_in(name=form.name.data,
                 login=form.login.data,
-                dormitory=form.dormitory.data, level=form.level.data,
+                building=form.building.data, level=form.level.data,
                 room_number=form.room_number.data,
                 host_name=form.host.data, mac=form.mac.data,
                 processor=current_user,
@@ -356,11 +356,11 @@ def move(user_id):
         if user.room == Room.q.filter_by(
                 number=form.room_number.data,
                 level=form.level.data,
-                dormitory_id=form.dormitory.data.id).one():
+                building_id=form.building.data.id).one():
             flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
             refill_form_data = True
         else:
-            edited_user = lib.user.move(user, form.dormitory.data,
+            edited_user = lib.user.move(user, form.building.data,
                 form.level.data, form.room_number.data, current_user)
             session.session.commit()
 
@@ -368,17 +368,17 @@ def move(user_id):
             return redirect(url_for('.user_show', user_id=edited_user.id))
 
     if not form.is_submitted() or refill_form_data:
-        form.dormitory.data = user.room.dormitory
+        form.building.data = user.room.building
 
         levels = session.session.query(Room.level.label('level')).filter_by(
-            dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
+            building_id=user.room.building.id).order_by(Room.level).distinct()
 
         form.level.choices = [(entry.level, str(entry.level)) for entry in
                                                               levels]
         form.level.data = user.room.level
 
         rooms = session.session.query(Room).filter_by(
-            dormitory_id=user.room.dormitory.id,
+            building_id=user.room.building.id,
             level=user.room.level
         ).order_by(Room.number).distinct()
 

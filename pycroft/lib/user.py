@@ -117,7 +117,7 @@ def setup_ipv4_networking(host):
 
 
 @with_transaction
-def move_in(name, login, email, dormitory, level, room_number, mac,
+def move_in(name, login, email, building, level, room_number, mac,
             processor, moved_from_division, already_paid_semester_fee, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
@@ -125,7 +125,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     :param name: The full name of the user. (Max Mustermann)
     :param login: The unix login for the user.
     :param email: E-Mail address of the user.
-    :param dormitory: The dormitory the user moves in.
+    :param building: The building the user moves in.
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
@@ -136,7 +136,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     """
 
     room = Room.q.filter_by(number=room_number,
-        level=level, dormitory=dormitory).one()
+        level=level, building=building).one()
 
 
     now = session.utcnow()
@@ -209,7 +209,7 @@ def migrate_user_host(host, new_room, processor):
     subnets = [p.switch_interface.default_subnet
                for p in new_room.switch_patch_ports
                if p.switch_interface.default_subnet is not None]
-    if old_room.dormitory_id == new_room.dormitory_id:
+    if old_room.building_id == new_room.building_id:
         return
     for interface in host.user_interfaces:
         old_ips = tuple(ip for ip in interface.ips)
@@ -249,11 +249,11 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, dormitory, level, room_number, processor):
+def move(user, building, level, room_number, processor):
     """
     Moves the user into another room.
     :param user: The user to be moved.
-    :param dormitory: The new dormitory.
+    :param building: The new building.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
     :param processor: The user who is currently logged in.
@@ -264,7 +264,7 @@ def move(user, dormitory, level, room_number, processor):
     new_room = Room.q.filter_by(
         number=room_number,
         level=level,
-        dormitory_id=dormitory.id
+        building_id=building.id
     ).one()
 
     assert old_room != new_room,\
