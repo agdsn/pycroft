@@ -25,9 +25,9 @@ class Subnet(ModelBase):
                                  nullable=False)
     primary_dns_zone = relationship("DNSZone", foreign_keys=[primary_dns_zone_id])
     reverse_dns_zone_id = Column(Integer, ForeignKey("dns_zone.id"),
-                                 nullable=False)
+                                 nullable=True)
     reverse_dns_zone = relationship("DNSZone", foreign_keys=[reverse_dns_zone_id])
-    reserved_addresses = Column(Integer, default=0, nullable=False)
+    reserved_addresses = Column(Integer, default=0, nullable=True)
     description = Column(String(50))
 
     vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False)

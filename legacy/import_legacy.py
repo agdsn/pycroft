@@ -29,8 +29,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pycroft import model, property
 from pycroft.model import (accounting, facilities, dns, user, net, port,
-                           finance, session, host, config, logging)
+                           finance, session, host, config, logging, types)
+from pycroft.lib.host import generate_hostname
 from pycroft.helpers import user as usertools
+from collections import defaultdict
+
+class keydefaultdict(defaultdict):
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError( key )
+        else:
+            ret = self[key] = self.default_factory(key)
+            return ret
 
 ROOT_NAME = "agdsn"
 ROOT_PASSWD = "test"
@@ -120,10 +130,12 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
 
     print("  Adding DNS zones")
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
+    primary_host_zone_name = dns.DNSName(name="@", zone=primary_host_zone)
     urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
-    urz_ns = dns.NSRecord(name=dns.DNSName("rnadm", zone=urz_zone))
-    records.append(dns.SOARecord(name=dns.DNSName("@", zone=primary_host_zone),
-                                 mname=urz_ns,
+    urz_ns = dns.NSRecord(name=dns.DNSName(name="rnadm", zone=urz_zone),
+                          nsdname=primary_host_zone_name)
+    records.append(dns.SOARecord(name=primary_host_zone_name,
+                                 mname=urz_ns.name,
                                  rname="wuensch.urz.tu-dresden.de.",
                                  serial=2010010800,
                                  refresh=10800,
@@ -131,6 +143,10 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                                  expire=3600000,
                                  minimum=86400))
     records.append(primary_host_zone)
+
+    agdsn_sld_zone = dns.DNSZone(name="agdsn.de")
+
+
 
     vlan_name_vid_map = {
         'Wu1': 11,
@@ -141,6 +157,8 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         'Wu11': 5,
         'ZW41': 41,
         'Bor34': 34,
+        'UNEPWeb': 348,
+        'Servernetz': 22
     }
 
     print("  Translating subnet")
@@ -157,6 +175,18 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         s_d[_s.subnet_id] = s
         records.append(s)
     # TODO: note, missing transit, server and eduroam subnets
+
+    def hname((hostname, alias, ip)):
+        if hostname and hostname != "NULL":
+            return hostname
+        if alias:
+            return alias
+        return generate_hostname(ip)
+
+    calias_hostnames_map = keydefaultdict(
+        hname,
+        {("test", "test", ipaddr.IPAddress("1.2.3.4")): "test"}
+    )
 
     print("  Translating computer")
     sw_d = {} # switch dict: mgmt_ip -> obj
@@ -180,21 +210,26 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 mgmt_ip = ".".join(mgmt_ip_blocks)
                 name = _c.c_alias or "unnamed_switch"
                 h = host.Switch(owner=owner, name=name, management_ip=mgmt_ip, room=room)
-                interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                interface = host.SwitchInterface(name="switch management interface", host=h, mac=_c.c_etheraddr)
+                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
             else: #assume server
                 h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
                 interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
-
+                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+                hostname = calias_hostnames_map[(_c.c_hname, _c.c_alias, ipaddr.IPAddress(_c.c_ip))]
+                dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
+                dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
         else: #assume user
             h = host.UserHost(owner=owner, room=owner.room)
             interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
             ip = None
             if _c.nutzer.status == 1:
-                ip = host.IP(interface=interface, address=_c.c_ip, subnet=s_d[_c.c_subnet_id])
+                hostname = generate_hostname(ipaddr.IPAddress(_c.c_ip))
+                ip = host.IP(interface=interface, address=ipaddr.IPAddress(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+                dnsname = dns.DNSName(name=hostname, zone=primary_host_zone)
+                dnsrecord = dns.AddressRecord(name=dnsname, address=ip)
         records.extend([h, interface])
         if ip:
             records.append(ip)
@@ -204,7 +239,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         try:
             switch = sw_d[_sp.ip]
             port_name = _sp.port
-            sp = host.SwitchInterface(host=switch, name=port_name)
+            sp = host.SwitchInterface(host=switch, name=port_name, mac="00:12:34:56:78:9a") #TODO proper macs
             # TODO insert proper patch_port names
             room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
             pp = port.SwitchPatchPort(switch_interface=sp, name="??", room=room)
