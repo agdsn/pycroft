@@ -145,6 +145,8 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
         'Wu11': 5,
         'ZW41': 41,
         'Bor34': 34,
+        'UNEPWeb': 313,
+        'Servernetz': 22,
     }
 
     print("  Translating subnet")
