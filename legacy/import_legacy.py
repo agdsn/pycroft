@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import sys
+from datetime import datetime, timedelta
 
 from sqlalchemy import create_engine, distinct
 import ipaddr
@@ -43,7 +44,7 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
+def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet):
     records = []
 
     # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
@@ -108,7 +109,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
-            finance_account=finance.FinanceAccount(name="", type="ASSET"))
+            finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
@@ -123,6 +124,30 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
             author=u_d.get(0, None),
             message="User imported from legacy database netusers.",
             user=u))
+
+    print("  Translating finance accounts")
+    for _a in finanz_konten:
+        if _a.id%1000 == 0:
+            # fee changes:
+            #   ws02/03 1000: anm2500 sem1750 red450
+            #   ss04 4000: anm2500 sem1500 red450
+            #   ws14/15 25000: anm0 sem2000 red100
+            gauge_semester = datetime(year=2015, month=04, day=13) #26000
+            semester_duration = timedelta(weeks=26)
+            num_semesters_to_gauge = _a.id/1000-26
+            s = finance.Semester(name=_a.name,
+                                 registration_fee=2500 if _a.id < 25000 else 0,
+                                 regular_semester_fee=1750 if _a.id < 4000 else (1500 if _a.id < 25000 else 2000),
+                                 reduced_semester_fee=450 if _a.id < 25000 else 100,
+                                 late_fee=250,
+                                 grace_period=timedelta(days=62),
+                                 reduced_semester_fee_threshold=timedelta(days=62),
+                                 payment_deadline=timedelta(days=31),
+                                 allowed_overdraft=500,
+                                 begins_on=gauge_semester+num_semesters_to_gauge*semester_duration,
+                                 ends_on=gauge_semester+(num_semesters_to_gauge+1)*semester_duration)
+            records.append(s)
+
 
     print("  Adding DNS zones")
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
@@ -185,7 +210,7 @@ def translate(zimmer, wheim, nutzer, hp4108port, computer, subnet):
                 r_d[(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)] = room
                 records.append(room)
 
-            if _c.c_typ == "Switch":
+            if _c.c_typ in ("Switch", "Router"):
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
                 mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
@@ -263,7 +288,6 @@ def main(args):
         print("Getting legacy data from cache")
         connection_string_nu = connection_string_um = conn_opts["legacy"]
 
-
     engine_nu = create_engine(connection_string_nu, echo=False)
     session_nu = scoped_session(sessionmaker(bind=engine_nu))
 
@@ -288,6 +312,7 @@ def main(args):
                                                 netusers_model.Hp4108Port.etage,
                                                 netusers_model.Hp4108Port.zimmernr).distinct().all(),
                         nutzer=session_nu.query(netusers_model.Nutzer).all(),
+                        finanz_konten=session_um.query(userman_model.FinanzKonten).all(),
                         subnet=session_nu.query(netusers_model.Subnet).all(),
                         hp4108port=session_nu.query(netusers_model.Hp4108Port).all(),
                         computer=session_nu.query(netusers_model.Computer).all())
