@@ -10,14 +10,14 @@
         <h3>{{ type }}</h3>
         <ul class="list-unstyled">
         {% for a in accounts %}
-            <li><a href="{{ url_for('.accounts_show', account_id=a.id) }}">{{ localized(a.name) }}</a></li>
+            <li><a href="{{ url_for('.accounts_show', account_id=a.id) }}">{{ a.name|localized }}</a></li>
         {% endfor %}
         </ul>
     </div>
 {%- endmacro %}
 
 {% block content %}
-    <h2>Bestandskonten</h2>
+    <h2><em class="dotted" data-toggle="tooltip" data-placement="right" title="" data-original-title="excepting user accounts">Bestandskonten</em></h2>
     <div class="row">
         {{ list_accounts("Aktivkonten", accounts["ASSET"]) }}
         {{ list_accounts("Passivkonten", accounts["LIABILITY"]) }}
@@ -32,4 +32,13 @@
         <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Neues Konto</a>
     </p>
     {%- endif %}
+{% endblock %}
+
+{% block page_script %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
 {% endblock %}

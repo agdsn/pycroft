@@ -19,6 +19,7 @@ from pycroft._compat import imap
 from pycroft.model import session, _all
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
+from pycroft.helpers.i18n import localized
 
 _filter_registry = {}
 
@@ -36,6 +37,7 @@ _category_map = {"warning": "Warnung",
                  "message": "Hinweis",
                  "success": "Erfolgreich"}
 
+template_filter("localized")(localized)
 
 @template_filter("pretty_category")
 def pretty_category_filter(category):
