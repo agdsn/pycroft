@@ -153,7 +153,7 @@ def room_show(room_id):
         lib.logging.log_room_event(form.message.data, current_user, room)
         flash(u'Kommentar hinzugefügt', 'success')
 
-    room_log_list = room.room_log_entries[::-1]
+    room_log_list = reversed(room.log_entries)
 
     return render_template('facilities/room_show.html',
         page_title=u"Raum " + str(room.building.short_name) + u" " + \
@@ -172,4 +172,4 @@ def room_logs_json(room_id):
                 'href': url_for("user.user_show", user_id=entry.author.id)
             },
             'message': entry.message
-        } for entry in reversed(Room.q.get(room_id).room_log_entries)])
+        } for entry in reversed(Room.q.get(room_id).log_entries)])

@@ -249,7 +249,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
                 self.assertEqual(interface.ips, [])
 
         # check log message
-        log_entry = new_user.user_log_entries[-1]
+        log_entry = new_user.log_entries[-1]
         self.assertAlmostEqual(log_entry.created_at, during.begin,
                                delta=timedelta(seconds=1))
         self.assertEqual(log_entry.author, self.processing_user)
@@ -272,7 +272,7 @@ class Test_080_User_Block(FixtureDataTestBase):
         self.assertFalse(blocked_user.has_property("network_access"))
         self.assertIn(verstoss, blocked_user.active_property_groups())
 
-        self.assertEqual(blocked_user.user_log_entries[0].author, u)
+        self.assertEqual(blocked_user.log_entries[0].author, u)
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
@@ -296,7 +296,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         self.assertNotEqual(self.user.user_hosts[0].user_interfaces[0].ips, [])
 
         # check log message
-        log_entry = self.user.user_log_entries[-1]
+        log_entry = self.user.log_entries[-1]
         self.assertAlmostEqual(log_entry.created_at, session.utcnow(),
                                delta=timedelta(seconds=5))
         self.assertEqual(log_entry.author, self.processing_user)

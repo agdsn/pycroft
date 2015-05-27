@@ -28,7 +28,7 @@ class LogEntry(ModelBase):
 
     # many to one from LogEntry to User
     author = relationship("User",
-                          backref=backref("log_entries"))
+                          backref=backref("authored_log_entries"))
     author_id = Column(Integer, ForeignKey("user.id"))
 
 
@@ -38,7 +38,7 @@ class UserLogEntry(LogEntry):
                 primary_key=True)
 
     # many to one from UserLogEntry to User
-    user = relationship("User", backref=backref("user_log_entries",
+    user = relationship("User", backref=backref("log_entries",
                                                 cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=False)
@@ -49,5 +49,5 @@ class RoomLogEntry(LogEntry):
     id = Column(Integer, ForeignKey('log_entry.id'), primary_key=True)
 
     # many to one from RoomLogEntry to Room
-    room = relationship("Room", backref=backref("room_log_entries"))
+    room = relationship("Room", backref=backref("log_entries"))
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)

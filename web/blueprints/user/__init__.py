@@ -74,7 +74,7 @@ def user_show(user_id):
 
     room = user.room
     if room:
-        room_log_entries = room.room_log_entries
+        room_log_entries = room.log_entries
     else:
         room_log_entries = []
 
@@ -85,11 +85,11 @@ def user_show(user_id):
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = sorted(
-        chain(user.user_log_entries, room_log_entries),
+        chain(user.log_entries, room_log_entries),
         key=operator.attrgetter("created_at"), reverse=True
     )
-    user_log_list = user.user_log_entries[::-1]
-    room_log_list = room_log_entries[::-1]
+    user_log_list = reversed(user.log_entries)
+    room_log_list = reversed(room_log_entries)
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
@@ -128,28 +128,30 @@ def user_show_logs_json(user_id, logtype="all"):
     user = User.q.get(user_id)
     if user is None:
         abort(404)
-    user_log_list = user.user_log_entries[::-1]\
-        if logtype in ["user", "all"] else []
-    room_log_list = Room.q.get(user.room_id).room_log_entries[::-1]\
-        if logtype in ["room", "all"] else []
+    user_log_list = []
+    room_log_list = []
+    if logtype in ["user", "all"]:
+        user_log_list = reversed(user.log_entries)
+    if logtype in ["room", "all"] and user.room:
+        room_log_list = reversed(user.room.log_entries)
 
-    return jsonify(items=[{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': Message.from_json(entry.message).localize(),
-            'type': 'user'
-        } for entry in user_log_list] + [{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': Message.from_json(entry.message).localize(),
-            'type': 'room'
-        } for entry in room_log_list])
+    return jsonify(items=list(chain(({
+        'created_at': datetime_filter(entry.created_at),
+        'user': {
+            'title': entry.author.name,
+            'href': url_for("user.user_show", user_id=entry.author.id)
+        },
+        'message': Message.from_json(entry.message).localize(),
+        'type': 'user'
+    } for entry in user_log_list), ({
+        'created_at': datetime_filter(entry.created_at),
+        'user': {
+            'title': entry.author.name,
+            'href': url_for("user.user_show", user_id=entry.author.id)
+        },
+        'message': Message.from_json(entry.message).localize(),
+        'type': 'room'
+    } for entry in room_log_list))))
 
 
 @bp.route("/show/<user_id>/hosts")
