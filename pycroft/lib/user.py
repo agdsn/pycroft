@@ -500,8 +500,8 @@ def infoflags(user):
     :rtype: list[dict[str, bool]]
     """
     return [
-        {'title': u"Internetzugang", 'val': user.has_property("internet")},
-        {'title': u"Traffic übrig", 'val': has_exceeded_traffic(user)},
+        {'title': u"Netzwerkzugang", 'val': user.has_property("network_access")},
+        {'title': u"Traffic übrig", 'val': not has_exceeded_traffic(user)},
         {'title': u"Bezahlt", 'val': user_has_paid(user)},
         {'title': u"Verstoßfrei", 'val': not user.has_property("violation")},
         {'title': u"Mailkonto", 'val': user.has_property("mail")},

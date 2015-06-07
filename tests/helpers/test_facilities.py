@@ -12,6 +12,7 @@ class Test_010_SimpleBuildingHelpers(unittest.TestCase):
         class fake_dorm(object):
             def __init__(self, num):
                 self.number = num
+                self.street = "fake street"
 
         sorted = sort_buildings([fake_dorm(num) for num in before])
         self.assertEqual([d.number for d in sorted], after)

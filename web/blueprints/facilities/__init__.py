@@ -10,12 +10,12 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, jsonify, render_template, url_for
+from flask import Blueprint, flash, jsonify, render_template, url_for, redirect
 from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
-from pycroft.model.facilities import Room, Building
+from pycroft.model.facilities import Room, Building, Site
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.facilities.forms import (
     RoomForm, BuildingForm, RoomLogEntry)
@@ -26,73 +26,75 @@ bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, ['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
-
 @bp.route('/')
+def root():
+    return redirect(url_for(".overview"))
+
 @nav.navigate(u"Wohnheime")
+@bp.route('/sites/')
 def overview():
-    buildings_list = Building.q.all()
-    buildings_list = facilities.sort_buildings(buildings_list)
-    return render_template('facilities/overview.html',
-        buildings=buildings_list)
+    return render_template('facilities/site_overview.html')
+
+@bp.route('/sites/json')
+def overview_json():
+    return jsonify(items=[{
+            'site': {
+                'title': site.name,
+                'href': url_for("facilities.site_show", site_id=site.id)
+            },
+            'buildings': [{
+                    'href': url_for("facilities.building_levels", building_shortname=building.short_name),
+                    'title': building.street+" "+building.number
+                } for building in facilities.sort_buildings(site.buildings)]
+        } for site in Site.q.all()])
 
 
-@bp.route('/show/<building_id>')
-def building_show(building_id):
-    building = Building.q.get(building_id)
+@bp.route('/sites/<int:site_id>')
+def site_show(site_id):
+    site = Site.q.get(site_id)
+    buildings_list = facilities.sort_buildings(site.buildings)
+    return render_template('facilities/site_show.html',
+        buildings=buildings_list,
+        page_title=site.name)
+
+
+@bp.route('/buildings/<int:building_id>/')
+@bp.route('/buildings/<building_shortname>/')
+def building_show(building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
         page_title=u"Wohnheim " + building.short_name, rooms=rooms_list)
 
 
-@bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
-def room_show(room_id):
-    room = Room.q.get(room_id)
-    form = RoomLogEntry()
-
-    if form.validate_on_submit():
-        lib.logging.log_room_event(form.message.data, current_user, room)
-        flash(u'Kommentar hinzugefügt', 'success')
-
-    room_log_list = room.room_log_entries[::-1]
-
-    return render_template('facilities/room_show.html',
-        page_title=u"Raum " + str(room.building.short_name) + u" " + \
-                   str(room.level) + u"-" + str(room.number),
-        room=room,
-        room_log=room_log_list,
-        form=form)
-
-
-@bp.route('/room/logs/<room_id>')
-def room_logs_json(room_id):
-    return jsonify(items=[{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': entry.message
-        } for entry in reversed(Room.q.get(room_id).room_log_entries)])
-
-
 # ToDo: Review this!
-@bp.route('/levels/<int:building_id>')
-def building_levels(building_id):
-    building = Building.q.get(building_id)
-    rooms_list = Room.q.filter_by(
-        building_id=building_id).order_by(Room.level).distinct()
+@bp.route('/buildings/<int:building_id>/levels/')
+@bp.route('/buildings/<building_shortname>/levels/')
+def building_levels(building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
+    rooms_list = building.rooms
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
 
     return render_template('facilities/levels.html',
-        levels=levels_list, building_id=building_id, building=building,
+        levels=levels_list, building=building,
         page_title=u"Etagen Wohnheim {}".format(building.short_name))
 
 
 # ToDo: Review this!
-@bp.route('/levels/<int:building_id>/rooms/<int:level>')
-def building_level_rooms(building_id, level):
-    building = Building.q.get(building_id)
+@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/')
+@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/')
+def building_level_rooms(level, building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
     level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
@@ -113,7 +115,7 @@ def building_level_rooms(building_id, level):
 def user_btn_class(user):
     if not has_positive_balance(user):
         return "btn-warning"
-    elif not user.has_property("internet"):
+    elif not user.has_property("network_access"):
         return "btn-danger"
     elif has_exceeded_traffic(user):
         return "btn-info"
@@ -121,17 +123,53 @@ def user_btn_class(user):
         return "btn-success"
 
 
-@bp.route('/levels/<int:building_id>/rooms/<int:level>/json')
-def building_level_rooms_json(building_id, level):
+@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/json')
+@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
+def building_level_rooms_json(level, building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inmates': [{
+            'inhabitants': [{
                     'href': url_for("user.user_show", user_id=user.id),
                     'title': user.name,
                     'btn_class': user_btn_class(user)
                 } for user in room.users]
         } for room in Room.q.filter_by(
-            building_id=building_id, level=level).order_by(Room.number)])
+            building=building, level=level).order_by(Room.number)])
+
+
+@bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])
+def room_show(room_id):
+    room = Room.q.get(room_id)
+    form = RoomLogEntry()
+
+    if form.validate_on_submit():
+        lib.logging.log_room_event(form.message.data, current_user, room)
+        flash(u'Kommentar hinzugefügt', 'success')
+
+    room_log_list = room.room_log_entries[::-1]
+
+    return render_template('facilities/room_show.html',
+        page_title=u"Raum " + str(room.building.short_name) + u" " + \
+                   str(room.level) + u"-" + str(room.number),
+        room=room,
+        room_log=room_log_list,
+        form=form)
+
+
+@bp.route('/rooms/<int:room_id>/logs/json')
+def room_logs_json(room_id):
+    return jsonify(items=[{
+            'created_at': datetime_filter(entry.created_at),
+            'user': {
+                'title': entry.author.name,
+                'href': url_for("user.user_show", user_id=entry.author.id)
+            },
+            'message': entry.message
+        } for entry in reversed(Room.q.get(room_id).room_log_entries)])

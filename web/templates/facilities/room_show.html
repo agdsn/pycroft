@@ -12,7 +12,7 @@
     {'name': 'message', 'title': 'Nachricht'}
 ] %}
 
-{% block content %}gco
+{% block content %}
     <ul class="breadcrumb">
         <li><a href="{{ url_for('.overview') }}">Wohnheime</a></li>
         <li><a href="{{ url_for('.building_levels', building_id=room.building.id) }}">{{ room.building.short_name }}</a></li>

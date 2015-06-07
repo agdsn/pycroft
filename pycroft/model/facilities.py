@@ -30,7 +30,7 @@ class Room(ModelBase):
 
     # many to one from Room to Building
     building_id = Column(Integer, ForeignKey(Building.id), nullable=False)
-    building = relationship(Building, backref=backref("rooms"))
+    building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
     def __str__(self):
         return "{} {} {}".format(self.building.short_name, self.level,

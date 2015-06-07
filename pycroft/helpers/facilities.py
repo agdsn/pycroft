@@ -12,17 +12,10 @@ import re
 
 
 def sort_buildings(buildings):
-    number_re = re.compile(r"[0-9]+")
-    letter_re = re.compile(r"[a-z]")
-
     def make_sort_key(building):
-        number = number_re.search(building.number)
-        letter = letter_re.search(building.number.lower())
-
-        if letter:
-            return ord(letter.group(0)) + 256 * int(number.group(0))
-
-        return 256 * int(number.group(0))
+        s = re.split('(\d+)([a-zA-Z]?)', building.number)
+        if len(s) != 4: return building.street, building.number #split unsuccessful
+        return building.street, (int(s[1]), s[2].lower())
 
     sorted_buildings = sorted(buildings, key=make_sort_key)
 
