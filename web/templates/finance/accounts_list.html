@@ -19,13 +19,13 @@
 {% block content %}
     <h2><em class="dotted" data-toggle="tooltip" data-placement="right" title="" data-original-title="excepting user accounts">Bestandskonten</em></h2>
     <div class="row">
-        {{ list_accounts("Aktivkonten", accounts["ASSET"]) }}
-        {{ list_accounts("Passivkonten", accounts["LIABILITY"]) }}
+        {{ list_accounts("Aktivkonten", accounts.get("ASSET", [])) }}
+        {{ list_accounts("Passivkonten", accounts.get("LIABILITY", [])) }}
     </div>
     <h2>Erfolgskonten</h2>
     <div class="row">
-        {{ list_accounts("Aufwandskonten", accounts["EXPENSE"]) }}
-        {{ list_accounts("Ertragskonten", accounts["REVENUE"]) }}
+        {{ list_accounts("Aufwandskonten", accounts.get("EXPENSE", [])) }}
+        {{ list_accounts("Ertragskonten", accounts.get("REVENUE", [])) }}
     </div>
     {% if current_user is privileged_for('finance_change') -%}
     <p>

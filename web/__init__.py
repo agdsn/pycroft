@@ -13,6 +13,8 @@
 from flask import Flask, redirect, url_for, request, flash, render_template
 from flask.ext.login import current_user, current_app
 from flask.ext.babel import Babel
+from jinja2 import StrictUndefined
+from werkzeug.datastructures import ImmutableDict
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
 from . import template_filters
@@ -24,12 +26,22 @@ from .form import widgets
 from .templates import page_resources
 
 
+class PycroftFlask(Flask):
+    """
+    Extend the Flask class to set Jinja options.
+    """
+    jinja_options = ImmutableDict(
+        Flask.jinja_options,
+        undefined=StrictUndefined
+    )
+
+
 def make_app():
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
     """
-    app = Flask(__name__)
+    app = PycroftFlask(__name__)
 
     #initialization code
     login_manager.init_app(app)
