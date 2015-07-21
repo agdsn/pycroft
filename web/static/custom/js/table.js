@@ -69,7 +69,7 @@ function listFormatter(value, row, index) {
 }
 
 function financeRowFormatter(row, index) {
-    if (row['row_positive']) {
+    if (row && row['row_positive']) {
         return {classes: 'success'};
     } else {
         return {classes: 'danger'};

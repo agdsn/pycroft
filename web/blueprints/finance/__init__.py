@@ -165,7 +165,7 @@ def journals_entries_edit(journal_id, entry_id):
     )
 
 
-@bp.route('/accounts')
+@bp.route('/accounts/')
 @bp.route('/accounts/list')
 @nav.navigate(u"Konten")
 def accounts_list():
@@ -194,17 +194,9 @@ def accounts_show(account_id):
         flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
               u" verbunden sind!", "warning")
 
-    splits = (
-        Split.q
-        .join(Transaction)
-        .filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_on)
-    )
-    typed_splits = get_typed_splits(splits)
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
-        splits=splits, typed_splits=typed_splits,
         json_url=url_for('.accounts_show_json', account_id=account_id),
         footer=[{'title': 'Saldo', 'colspan': 3},
                 {'title': money_filter(account.balance)}]
@@ -214,21 +206,38 @@ def accounts_show(account_id):
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id):
     inverted = False
-    return jsonify(items=[
-        {
-            'posted_at': datetime_filter(split.transaction.posted_at),
-            'valid_on': date_filter(split.transaction.valid_on),
-            'description': {
-                'href': url_for(
-                    "finance.transactions_show",
-                    transaction_id=split.transaction_id
-                ),
-                'title': localized(split.transaction.description)
-            },
-            'amount': money_filter(split.amount),
-            'row_positive': (split.amount > 0) is not inverted
-        } for split in Split.q.join(Transaction).filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_on)])
+    limit = request.args.get('limit', None, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    sort_by = request.args.get('sort')
+    sort_order = request.args.get('order')
+    total = Split.q.join(Transaction).filter(Split.account_id == account_id).count()
+
+    return jsonify(
+        items={
+            "total": total,
+            "rows": [
+                {
+                    'id': i+offset,
+                    'posted_at': datetime_filter(split.transaction.posted_at),
+                    #'posted_by': (split.transaction.author.id, split.transaction.author.name),
+                    'valid_on': date_filter(split.transaction.valid_on),
+                    'description': {
+                        'href': url_for(
+                            "finance.transactions_show",
+                            transaction_id=split.transaction_id
+                        ),
+                        'title': localized(split.transaction.description)
+                    },
+                    'amount': money_filter(split.amount),
+                    'row_positive': (split.amount > 0) is not inverted
+                } for i, split in enumerate(
+                    Split.q.join(Transaction)
+                        .filter(Split.account_id == account_id)
+                        .order_by(Transaction.valid_on).
+                        offset(offset).
+                        limit(limit))
+                ]
+        })
 
 
 @bp.route('/transactions/<int:transaction_id>')
