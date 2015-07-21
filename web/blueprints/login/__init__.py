@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -12,13 +12,22 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for, request
-from flask.ext.login import login_user, logout_user, login_required, current_user, LoginManager
+from flask.ext.login import (
+    AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
+    logout_user)
+
 from pycroft.model.user import User
 from web.blueprints.login.forms import LoginForm
 
 bp = Blueprint('login', __name__, )
 
+
+class AnonymousUser(AnonymousUserMixin):
+    def has_property(self, _):
+        return False
+
 login_manager = LoginManager()
+login_manager.anonymous_user = AnonymousUser
 login_manager.login_view = "login.login"
 login_manager.login_message = u"Bitte melden Sie sich an, um diese Seite zu benutzen!"
 
