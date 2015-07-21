@@ -21,6 +21,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
@@ -107,10 +108,12 @@ class User(ModelBase, UserMixin):
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
-        user = User.q.filter_by(login=login).one()
-        if user is not None and user.check_password(plaintext_password):
-            return user
-        return None
+        try:
+            user = User.q.filter_by(login=login).one()
+        except NoResultFound:
+            return None
+        else:
+            return user if user.check_password(plaintext_password) else None
 
     @hybrid_method
     def active_memberships(self, when=None):
