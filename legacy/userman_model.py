@@ -66,80 +66,6 @@ class AnschlussAlt(Base):
     bes = Column(Text)
 
 
-class BankKonto(Base):
-    __tablename__ = u'bank_konto'
-
-    bkid = Column(Integer, primary_key=True, server_default=text("nextval(('\"bank_konto_bkid_seq\"'::text)::regclass)"))
-    datum = Column(Date, nullable=False)
-    wert = Column(Integer, nullable=False, server_default=text("0"))
-    bes = Column(Text)
-
-
-class BkBuchung(BankKonto):
-    __tablename__ = u'bk_buchung'
-
-    bkid = Column(ForeignKey(u'bank_konto.bkid'), primary_key=True)
-    datum = Column(DateTime(True), nullable=False, server_default=text("now()"))
-    bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
-    rechnungs_nr = Column(Integer)
-    konto_id = Column(Integer, nullable=False)
-    uid = Column(Integer)
-
-
-class Buchungen(Base):
-    __tablename__ = u'buchungen'
-
-    oid = Column(OID, primary_key=True)
-    bkid = Column(Integer)
-    fbid = Column(Integer)
-    datum = Column(Date)
-    bearbeiter = Column(String)
-    rechnungs_nr = Column(Integer)
-    soll = Column(Integer)
-    soll_uid = Column(Integer)
-    haben = Column(Integer)
-    haben_uid = Column(Integer)
-    wert = Column(Integer)
-    bes = Column(Text)
-
-
-class Cname(Base):
-    __tablename__ = u'cname'
-
-    cname = Column(String(16), primary_key=True, nullable=False)
-    subnetz_id = Column(ForeignKey(u'subnetz.subnetz_id'), primary_key=True, nullable=False)
-    anschluss_id = Column(ForeignKey(u'anschluss.anschluss_id'), nullable=False)
-
-    anschluss = relationship(u'Anschluss')
-    subnetz = relationship(u'Subnetz')
-
-
-class FinanzBuchungen(Base):
-    __tablename__ = u'finanz_buchungen'
-
-    fbid = Column(Integer, primary_key=True, server_default=text("nextval(('fbid_seq'::text)::regclass)"))
-    datum = Column(Date, nullable=False, server_default=text("('now'::text)::date"))
-    bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
-    rechnungs_nr = Column(Integer)
-    wert = Column(Integer, nullable=False, server_default=text("0"))
-    soll = Column(Integer)
-    soll_uid = Column(Integer)
-    haben = Column(Integer)
-    haben_uid = Column(Integer)
-    bes = Column(Text)
-
-
-class FinanzGruppe(Base):
-    __tablename__ = u'finanz_gruppe'
-
-    fgid = Column(Integer, primary_key=True, server_default=text("nextval(('fgid_seq'::text)::regclass)"))
-    name = Column(String(40), nullable=False)
-    semester = Column(Integer, nullable=False, server_default=text("0"))
-    anschluss = Column(Integer, nullable=False, server_default=text("0"))
-    zw_semester = Column(Integer, nullable=False, server_default=text("0"))
-    zw_anschluss = Column(Integer, nullable=False, server_default=text("0"))
-
-
 class FinanzKonten(Base):
     __tablename__ = u'finanz_konten'
 
@@ -157,12 +83,92 @@ class FinanzKonten(Base):
     children = relationship(u'FinanzKonten', remote_side=[id], backref=u"vater_konto", lazy="joined", join_depth=2)
 
 
+class FinanzBuchungen(Base):
+    __tablename__ = u'finanz_buchungen'
+
+    fbid = Column(Integer, primary_key=True, server_default=text("nextval(('fbid_seq'::text)::regclass)"))
+    datum = Column(Date, nullable=False, server_default=text("('now'::text)::date"))
+    bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
+    rechnungs_nr = Column(Integer)
+    wert = Column(Integer, nullable=False, server_default=text("0"))
+    soll = Column(ForeignKey(FinanzKonten.id), nullable=False)
+    soll_uid = Column(Integer)
+    haben = Column(ForeignKey(FinanzKonten.id), nullable=False)
+    haben_uid = Column(Integer)
+    bes = Column(Text)
+
+
+class FinanzGruppe(Base):
+    __tablename__ = u'finanz_gruppe'
+
+    fgid = Column(Integer, primary_key=True, server_default=text("nextval(('fgid_seq'::text)::regclass)"))
+    name = Column(String(40), nullable=False)
+    semester = Column(Integer, nullable=False, server_default=text("0"))
+    anschluss = Column(Integer, nullable=False, server_default=text("0"))
+    zw_semester = Column(Integer, nullable=False, server_default=text("0"))
+    zw_anschluss = Column(Integer, nullable=False, server_default=text("0"))
+
+
 class FinanzKontoTyp(Base):
     __tablename__ = u'finanz_konto_typ'
 
     konto_typ_id = Column(String(8), primary_key=True)
     name = Column(String(40), nullable=False)
     bes = Column(Text)
+
+
+class BankKonto(Base):
+    """Bankkontobewegungen"""
+    __tablename__ = u'bank_konto'
+
+    bkid = Column(Integer, primary_key=True, server_default=text("nextval(('\"bank_konto_bkid_seq\"'::text)::regclass)"))
+    datum = Column(Date, nullable=False)
+    wert = Column(Integer, nullable=False, server_default=text("0"))
+    bes = Column(Text)
+
+
+class BkBuchung(BankKonto):
+    """Verbuchte Bankkontobewegungen"""
+    __tablename__ = u'bk_buchung'
+
+    bkid = Column(ForeignKey(u'bank_konto.bkid'), primary_key=True)
+    datum = Column(DateTime(True), nullable=False, server_default=text("now()"))
+    bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
+    rechnungs_nr = Column(Integer)
+    konto_id = Column(ForeignKey(FinanzKonten.id), nullable=False)
+    konto = relationship(FinanzKonten, backref="bankbuchungen")
+    uid = Column(Integer)
+
+
+class Buchungen(Base):
+    __tablename__ = u'buchungen'
+
+    oid = Column(OID, primary_key=True)
+    bkid = Column(Integer)
+    fbid = Column(Integer)
+    datum = Column(Date)
+    bearbeiter = Column(String)
+    rechnungs_nr = Column(Integer)
+    soll = Column(ForeignKey(FinanzKonten.id), nullable=False)
+    soll_uid = Column(Integer)
+    soll_konto = relationship(FinanzKonten, backref="soll_buchungen", foreign_keys=[soll])
+    haben = Column(ForeignKey(FinanzKonten.id))
+    haben_konto = relationship(FinanzKonten, backref="haben_buchungen", foreign_keys=[haben])
+    relationship(FinanzKonten)
+    haben_uid = Column(Integer)
+    wert = Column(Integer)
+    bes = Column(Text)
+
+
+class Cname(Base):
+    __tablename__ = u'cname'
+
+    cname = Column(String(16), primary_key=True, nullable=False)
+    subnetz_id = Column(ForeignKey(u'subnetz.subnetz_id'), primary_key=True, nullable=False)
+    anschluss_id = Column(ForeignKey(u'anschluss.anschluss_id'), nullable=False)
+
+    anschluss = relationship(u'Anschluss')
+    subnetz = relationship(u'Subnetz')
 
 
 class Gruppe(Base):

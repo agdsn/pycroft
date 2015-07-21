@@ -7,8 +7,13 @@ from __future__ import print_function
 
 import os
 import sys
+import difflib
+import time
 from datetime import datetime, timedelta
 
+from tools import memoized
+
+import sqlalchemy
 from sqlalchemy import create_engine, distinct
 import ipaddr
 from sqlalchemy.sql import null
@@ -44,7 +49,7 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet):
+def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, computer, subnet):
     records = []
 
     # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
@@ -64,7 +69,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
             id=_b.wheim_id,
             site=site,
             short_name=_b.kuerzel,
-            street=_b.str,
+            street=_b.str.replace(u'strasse', u'straße'),
             number=_b.hausnr)
         b_d[_b.wheim_id] = b
         records.append(b)
@@ -98,7 +103,8 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
     #              )
 
     print("  Translating users")
-    u_d = {} # maps (nutzer_id) to translated sqlalchemy object
+    u_d = {}  # maps (nutzer_id) to translated sqlalchemy object
+    ul_d = {}  # maps unix_account to translated sqlalchemy object
     for _u in nutzer:
         login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
         room = r_d.get((_u.wheim_id, _u.etage, _u.zimmernr), None)
@@ -116,8 +122,10 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
         elif _u.status == 1:
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum))
         elif _u.status == 8:
+            records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
             records.append(user.Membership(user=u, group=g_d["moved_out"], begins_at=null()))
         u_d[_u.nutzer_id] = u
+        ul_d[_u.unix_account] = u
         records.append(u)
 
         records.append(logging.UserLogEntry(
@@ -125,7 +133,36 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
             message="User imported from legacy database netusers.",
             user=u))
 
+    facc_types = {u"Bankkonto": "ASSET",
+                  u"Bankgebühren": "EXPENSE",
+                  u"Nutzerkonto": "ASSET",
+                  u"Forderungen": "ASSET",
+                  u"Verbindlichkeiten": "LIABILITY",
+                  u"Beiträge": "REVENUE",
+                  u"Spenden": "REVENUE",
+                  u"Aktive Technik": "EXPENSE",
+                  u"Passive Technik": "EXPENSE",
+                  u"Büromaterial": "EXPENSE",
+                  u"Öffentlichkeitsarbeit": "EXPENSE"}
+
+    fk_d = {fk.id: fk.name for fk in finanz_konten}
+
+    # TODO: Think about this, this is a pretty unstable/volatile way to do things,
+    #  maybe just save the generated dict to a file to allow for manual changes and
+    #  oversight
+    @memoized
+    def match(fk_id):
+        return (difflib.get_close_matches(fk_d[fk_id],
+                                          facc_types.keys(),
+                                          n=1,
+                                          cutoff=0.5) or [None])[0]
     print("  Translating finance accounts")
+    sem_d = {}
+    a_d = {}
+    for name, type in facc_types.items():
+        a = finance.FinanceAccount(name=name, type=type)
+        records.append(a)
+        a_d[name] = a
     for _a in finanz_konten:
         if _a.id%1000 == 0:
             # fee changes:
@@ -133,7 +170,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
             #   ss04 4000: anm2500 sem1500 red450
             #   ws14/15 25000: anm0 sem2000 red100
             gauge_semester = datetime(year=2015, month=04, day=13) #26000
-            semester_duration = timedelta(weeks=26)
+            semester_duration = timedelta(weeks=52/2)
             num_semesters_to_gauge = _a.id/1000-26
             s = finance.Semester(name=_a.name,
                                  registration_fee=2500 if _a.id < 25000 else 0,
@@ -146,7 +183,59 @@ def translate(zimmer, wheim, nutzer, finanz_konten, hp4108port, computer, subnet
                                  allowed_overdraft=500,
                                  begins_on=gauge_semester+num_semesters_to_gauge*semester_duration,
                                  ends_on=gauge_semester+(num_semesters_to_gauge+1)*semester_duration)
+            sem_d[_a.id] = s
             records.append(s)
+        elif _a.name not in ("Sonstige", "Sosntige",
+                             "Abgaben AG DSN", "Abgaben AGDSN",
+                             "Startguthaben"):
+            acc_name = match(_a.id)
+            print("   ", _a.id, _a.name, "->", acc_name)
+            if acc_name is None and (_a.soll_buchungen or _a.haben_buchungen):
+                raise Exception("Finance account with transactions not mapped")
+
+            hb = _a.haben_buchungen
+            sb = _a.soll_buchungen
+            # make sure we can assign all movements
+            assert bool(acc_name) or not bool(len(hb)+len(sb))
+
+    print("  Translating accounting transactions")
+    for _bu in buchungen:
+        if _bu.wert == 0:
+            print("[INFO] Skipping transaction with zero value")
+            continue
+        if _bu.haben is None:
+            print("[WARN] Skipping one-sided transaction")
+            continue
+        if _bu.soll in match.cache and _bu.haben in match.cache:
+            if u_d.get(_bu.haben_uid):
+                credit_account = u_d[_bu.haben_uid].finance_account
+            else:
+                credit_account = a_d[match(_bu.haben)]
+
+            if u_d.get(_bu.soll_uid):
+                debit_account = u_d[_bu.soll_uid].finance_account
+            else:
+                debit_account = a_d[match(_bu.soll)]
+
+            transaction = finance.Transaction(
+                description=_bu.bes or "NO DESCRIPTION GIVEN",
+                author=ul_d.get(_bu.bearbeiter, u_d[0]),
+                valid_on=_bu.datum)
+            new_credit_split = finance.Split(
+                amount=_bu.wert,
+                account=credit_account,
+                transaction=transaction)
+            new_debit_split = finance.Split(
+                amount=-_bu.wert,
+                account=debit_account,
+                transaction=transaction)
+            records.extend([transaction, new_credit_split, new_debit_split])
+
+            #clean = re.compile('[SW]S\d{2}(/\d{2})?')
+            #name = clean.sub('', _a.name)
+
+            #if name in a_d:
+            #    k = finance.FinanceAccount(name=name)
 
 
     print("  Adding DNS zones")
@@ -313,13 +402,19 @@ def main(args):
                                                 netusers_model.Hp4108Port.zimmernr).distinct().all(),
                         nutzer=session_nu.query(netusers_model.Nutzer).all(),
                         finanz_konten=session_um.query(userman_model.FinanzKonten).all(),
+                        buchungen=session_um.query(userman_model.Buchungen).all(),
                         subnet=session_nu.query(netusers_model.Subnet).all(),
                         hp4108port=session_nu.query(netusers_model.Hp4108Port).all(),
                         computer=session_nu.query(netusers_model.Computer).all())
 
     print("Importing records ("+str(len(records))+")")
-    session.session.add_all(records)
+    t = time.time()
+    if args.bulk and map(int, sqlalchemy.__version__.split(".")) >= [1,0,0]:
+        session.session.bulk_save_objects(records)
+    else:
+        session.session.add_all(records)
     session.session.commit()
+    print("...took",time.time()-t,"seconds.")
 
 if __name__=="__main__":
     import argparse
@@ -328,6 +423,8 @@ if __name__=="__main__":
     source = parser.add_mutually_exclusive_group()
     source.add_argument("--from-cache", action='store_true')
     source.add_argument("--from-origin", action='store_true')
+
+    parser.add_argument("--bulk", action='store_true', default=False)
 
     #parser.add_argument("--tables", metavar="T", action='store', nargs="+",
     #                choices=cacheable_tables)

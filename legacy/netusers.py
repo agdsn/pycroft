@@ -20,6 +20,5 @@ relevant_tables = [model.Wheim,
                   model.Computer,
                   model.Subnet,
                   model.Status,
-                  model.Credit,
                   model.ZihIncident]
 
