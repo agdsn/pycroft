@@ -174,27 +174,6 @@ def record_removable_filter(record):
     else:
         return True
 
-
-#TODO: usecases — should that srsly return >1 switch?
-# Because if yes, there should be a more elegant solution for providing a link
-# in the table this is actually used (`user_show_hosts_json()`)!
-@template_filter("get_switch")
-def ip_get_switch(host,ip):
-    patch_ports = host.room.switch_patch_ports
-    if not patch_ports:
-        return "No Switch"
-    return u', '.join(imap(lambda p: p.switch_interface.host.name, patch_ports))
-
-
-#TODO: usecases — should that srsly return >1 port? (see todo above)
-@template_filter("get_switch_interface")
-def ip_get_switch_interface(host,ip):
-    patch_ports = host.room.switch_patch_ports
-    if not patch_ports:
-        return "No Port"
-    return u', '.join(imap(lambda p: p.switch_interface.name, patch_ports))
-
-
 def register_filters(app):
     for name in _filter_registry:
         app.jinja_env.filters[name] = _filter_registry[name]

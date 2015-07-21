@@ -10,7 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from itertools import chain
+from itertools import chain, imap
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
@@ -37,8 +37,7 @@ from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
 from web.template_filters import (
-    datetime_filter, host_cname_filter, host_name_filter, ip_get_switch,
-    ip_get_switch_interface)
+    datetime_filter, host_cname_filter, host_name_filter)
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -158,12 +157,18 @@ def user_show_logs_json(user_id, logtype="all"):
 def user_show_hosts_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
+        patch_ports = user_host.room.switch_patch_ports
+        switches = u', '.join(imap(lambda p: p.switch_interface.host.name,
+                                   patch_ports))
+
+        ports = u', '.join(imap(lambda p: p.switch_interface.name,
+                                patch_ports))
         for ip in user_host.ips:
             list_items.append({
                 'ip': str(ip.address),
                 'mac': ip.interface.mac,
-                'switch': str(ip_get_switch(user_host, ip)),
-                'port': ip_get_switch_interface(user_host, ip)
+                'switch': switches,
+                'port': ports,
             })
     return jsonify(items=list_items)
 
