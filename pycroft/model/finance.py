@@ -198,6 +198,3 @@ class Split(ModelBase):
                                backref=backref("splits",
                                                cascade="all, delete-orphan"))
 
-    __table_args__ = (
-        CheckConstraint("amount <> 0"),
-    )

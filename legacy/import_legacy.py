@@ -49,7 +49,7 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, computer, subnet):
+def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108port, computer, subnet):
     records = []
 
     # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
@@ -133,8 +133,12 @@ def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, compu
             message="User imported from legacy database netusers.",
             user=u))
 
-    facc_types = {u"Bankkonto": "ASSET",
+    # TODO: look over this
+    facc_types = {u"Startguthaben": "REVENUE",
+                  u"Bankkonto": "ASSET",
                   u"Bankgebühren": "EXPENSE",
+                  u"Abgaben": "EXPENSE",
+                  u"Sonstige": "REVENUE",
                   u"Nutzerkonto": "ASSET",
                   u"Forderungen": "ASSET",
                   u"Verbindlichkeiten": "LIABILITY",
@@ -156,13 +160,27 @@ def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, compu
                                           facc_types.keys(),
                                           n=1,
                                           cutoff=0.5) or [None])[0]
-    print("  Translating finance accounts")
+
+    print("  Creating finance accounts")
     sem_d = {}
     a_d = {}
     for name, type in facc_types.items():
         a = finance.FinanceAccount(name=name, type=type)
         records.append(a)
         a_d[name] = a
+
+    print("  Adding bank journal")
+    bank_journal = finance.Journal(name="Bankkonto 3120219540",
+                                   bank="Ostsächsische Sparkasse Dresden",
+                                   account_number="3120219540",
+                                   routing_number="85050300",
+                                   iban="DE61850503003120219540",
+                                   bic="OSDDDE81XXX",
+                                   hbci_url="https://hbci.example.com/",
+                                   finance_account=a_d["Bankkonto"])
+    records.append(bank_journal)
+
+    print("  Translating finance accounts")
     for _a in finanz_konten:
         if _a.id%1000 == 0:
             # fee changes:
@@ -185,34 +203,45 @@ def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, compu
                                  ends_on=gauge_semester+(num_semesters_to_gauge+1)*semester_duration)
             sem_d[_a.id] = s
             records.append(s)
-        elif _a.name not in ("Sonstige", "Sosntige",
-                             "Abgaben AG DSN", "Abgaben AGDSN",
-                             "Startguthaben"):
+        else:
             acc_name = match(_a.id)
             print("   ", _a.id, _a.name, "->", acc_name)
-            if acc_name is None and (_a.soll_buchungen or _a.haben_buchungen):
-                raise Exception("Finance account with transactions not mapped")
 
-            hb = _a.haben_buchungen
-            sb = _a.soll_buchungen
-            # make sure we can assign all movements
-            assert bool(acc_name) or not bool(len(hb)+len(sb))
+            # make sure we can translate all movements
+            assert bool(acc_name) or not any((_a.haben_buchungen,_a.soll_buchungen))
+
+    print("  Translating bank transactions")
+    je_d = {}
+    for _bk in bankkonto:
+        je = finance.JournalEntry(
+            journal=bank_journal,
+            amount=_bk.wert,
+            description=_bk.bes,
+            original_description=_bk.bes,
+            other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
+            other_routing_number="NO NUMBER GIVEN", #TODO
+            other_name="NO NAME GIVEN", #TODO
+            import_time=_bk.datum,
+            posted_at=_bk.datum,
+            valid_on=_bk.datum,
+            transaction=None)
+        je_d[_bk.bkid] = je
+        records.append(je)
 
     print("  Translating accounting transactions")
     for _bu in buchungen:
-        if _bu.wert == 0:
-            print("[INFO] Skipping transaction with zero value")
-            continue
-        if _bu.haben is None:
-            print("[WARN] Skipping one-sided transaction")
-            continue
+        if _bu.wert == 0 and _bu.haben == _bu.soll:
+            continue # ignore
+        if _bu.haben is None and _bu.soll == 1:
+            continue # unaccounted banking expense, nothing to do
         if _bu.soll in match.cache and _bu.haben in match.cache:
-            if u_d.get(_bu.haben_uid):
+            #handle user finance accounts
+            if _bu.haben_uid in u_d:
                 credit_account = u_d[_bu.haben_uid].finance_account
             else:
                 credit_account = a_d[match(_bu.haben)]
 
-            if u_d.get(_bu.soll_uid):
+            if _bu.soll_uid in u_d:
                 debit_account = u_d[_bu.soll_uid].finance_account
             else:
                 debit_account = a_d[match(_bu.soll)]
@@ -229,14 +258,12 @@ def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, compu
                 amount=-_bu.wert,
                 account=debit_account,
                 transaction=transaction)
+
+            if _bu.bkid is not None:
+                je_d[_bu.bkid].transaction = transaction
             records.extend([transaction, new_credit_split, new_debit_split])
-
-            #clean = re.compile('[SW]S\d{2}(/\d{2})?')
-            #name = clean.sub('', _a.name)
-
-            #if name in a_d:
-            #    k = finance.FinanceAccount(name=name)
-
+        else:
+            raise Exception("Unhandled accounting transaction")
 
     print("  Adding DNS zones")
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
@@ -250,8 +277,6 @@ def translate(zimmer, wheim, nutzer, finanz_konten, buchungen, hp4108port, compu
                                  expire=3600000,
                                  minimum=86400))
     records.append(primary_host_zone)
-
-
 
     vlan_name_vid_map = {
         'Wu1': 11,
@@ -402,6 +427,7 @@ def main(args):
                                                 netusers_model.Hp4108Port.zimmernr).distinct().all(),
                         nutzer=session_nu.query(netusers_model.Nutzer).all(),
                         finanz_konten=session_um.query(userman_model.FinanzKonten).all(),
+                        bankkonto=session_um.query(userman_model.BankKonto).all(),
                         buchungen=session_um.query(userman_model.Buchungen).all(),
                         subnet=session_nu.query(netusers_model.Subnet).all(),
                         hp4108port=session_nu.query(netusers_model.Hp4108Port).all(),
