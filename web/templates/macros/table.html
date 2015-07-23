@@ -10,7 +10,7 @@
     </th>
 {% endmacro %}
 
-{% macro item_table(table_id, data_url="", display_columns, footer=[], row_style="", server_pagination=False) %}
+{% macro item_table(table_id, data_url="", display_columns, footer=[], row_style="", server_pagination=False, sort_order="asc") %}
     <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
         {% if caller is defined %}
             {{ caller() }}
@@ -22,6 +22,7 @@
            {% if data_url %}data-url="{{ data_url }}"{% endif %}
            data-response-handler="responseHandler"
            data-search="true"
+           data-sort-order="{{ sort_order }}"
            {% if server_pagination %}data-side-pagination="server"{% endif %}
            data-pagination="true"
            {% if row_style %}data-row-style="{{ row_style }}"{% endif %}

@@ -185,20 +185,13 @@ def accounts_list():
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
-    try:
-        user = User.q.filter_by(finance_account_id=account.id).one()
-    except NoResultFound:
-        user = None
-    except MultipleResultsFound:
-        user = User.q.filter_by(finance_account_id=account.id).first()
-        flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
-              u" verbunden sind!", "warning")
+    user = account.user
 
     #TODO: typed_splits/account form does not (yet) use server-side pagination,
     # which leads to timeouts on large accounts. So here is a workaround
     # which disables account form for accounts with more than 100 transactions
 
-    if len(account.splits) < 100:
+    if finance.Split.q.filter_by(account=account).count() < 100:
         typed_splits = get_typed_splits(account.splits)
     else:
         typed_splits = None
@@ -221,12 +214,16 @@ def accounts_show_json(account_id):
     sort_by = request.args.get('sort', "valid_on")
     sort_order = request.args.get('order')
     filter = request.args.get('filter') # for account form / typed_split
+    search = request.args.get('search')
 
-    if not hasattr(Transaction, sort_by) and not hasattr(Split, sort_by):
+    if not (sort_by in Transaction.__table__.columns
+            or sort_by in Split.__table__.columns):
         sort_by = "valid_on"
     ordering = sort_by+" desc" if sort_order == "desc" else sort_by
 
     query = Split.q.join(Transaction).filter(Split.account_id == account_id)
+    if search:
+        query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
     if filter == "non-negative":
         query = query.filter(Split.amount >= 0)
     elif filter == "negative":
