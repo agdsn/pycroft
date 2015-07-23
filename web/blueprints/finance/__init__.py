@@ -194,10 +194,20 @@ def accounts_show(account_id):
         flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
               u" verbunden sind!", "warning")
 
+    #TODO: typed_splits/account form does not (yet) use server-side pagination,
+    # which leads to timeouts on large accounts. So here is a workaround
+    # which disables account form for accounts with more than 100 transactions
+
+    if len(account.splits) < 100:
+        typed_splits = get_typed_splits(account.splits)
+    else:
+        typed_splits = None
+
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
         json_url=url_for('.accounts_show_json', account_id=account_id),
+        typed_splits=typed_splits,
         footer=[{'title': 'Saldo', 'colspan': 3},
                 {'title': money_filter(account.balance)}]
     )
@@ -208,9 +218,24 @@ def accounts_show_json(account_id):
     inverted = False
     limit = request.args.get('limit', None, type=int)
     offset = request.args.get('offset', 0, type=int)
-    sort_by = request.args.get('sort')
+    sort_by = request.args.get('sort', "valid_on")
     sort_order = request.args.get('order')
-    total = Split.q.join(Transaction).filter(Split.account_id == account_id).count()
+    filter = request.args.get('filter') # for account form / typed_split
+
+    if not hasattr(Transaction, sort_by) and not hasattr(Split, sort_by):
+        sort_by = "valid_on"
+    ordering = sort_by+" desc" if sort_order == "desc" else sort_by
+
+    query = Split.q.join(Transaction).filter(Split.account_id == account_id)
+    if filter == "non-negative":
+        query = query.filter(Split.amount >= 0)
+    elif filter == "negative":
+        query = query.filter(Split.amount < 0)
+
+    total = query.count()
+    records = (query.order_by(ordering)
+                    .offset(offset)
+                    .limit(limit))
 
     return jsonify(
         items={
@@ -229,13 +254,8 @@ def accounts_show_json(account_id):
                         'title': localized(split.transaction.description)
                     },
                     'amount': money_filter(split.amount),
-                    'row_positive': (split.amount > 0) is not inverted
-                } for i, split in enumerate(
-                    Split.q.join(Transaction)
-                        .filter(Split.account_id == account_id)
-                        .order_by(Transaction.valid_on).
-                        offset(offset).
-                        limit(limit))
+                    'row_positive': (split.amount > 0) ^ inverted
+                } for i, split in enumerate(records)
                 ]
         })
 

@@ -123,7 +123,7 @@ def money_filter(amount):
     """Format a money string from Cents to Euro
     """
     euro = amount/100.0
-    return (u"{:.2f} €".format(euro)).replace('.', ',')
+    return (u"{:.2f}\u202f€".format(euro)).replace('.', ',')
 
 
 @template_filter("host_traffic")

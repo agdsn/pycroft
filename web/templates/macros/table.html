@@ -37,7 +37,7 @@
         </tr>
         </thead>
         {% if footer is defined %}<tfoot><tr>{% for footcol in footer %}
-            <td{% if footcol.colspan and footcol.colspan > 0 %} colspan="{{ footcol.colspan }}"{% endif %}>{{ footcol.title }}</td>
+            <td{% if footcol.colspan is defined and footcol.colspan > 0 %} colspan="{{ footcol.colspan }}"{% endif %}>{{ footcol.title }}</td>
         {% endfor %}</tr></tfoot>{% endif %}
     </table>
 {% endmacro %}
