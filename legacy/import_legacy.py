@@ -229,27 +229,41 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
         records.append(je)
 
     print("  Translating accounting transactions")
+
+    # chooses the new account id given an old accounting transaction and user id
+    def new_acc(old_account_id, old_user_id):
+        if old_user_id: # user referenced
+            if old_user_id not in u_d: # but doesn't exist
+                u = user.User(
+                    id=old_user_id,
+                    login="deleted_user_"+str(old_user_id),
+                    name="Gelöschter Nutzer "+str(old_user_id),
+                    registered_at=datetime.fromtimestamp(0),
+                    finance_account=finance.FinanceAccount(name="Nutzerkonto von gelöschtem Nutzer"+str(old_user_id), type="ASSET"))
+
+                u_d[old_user_id] = u
+                records.append(u)
+
+            account = u_d[old_user_id].finance_account
+        else:
+            account = a_d[match(old_account_id)]
+
+        return account
+
     for _bu in buchungen:
         if _bu.wert == 0 and _bu.haben == _bu.soll:
             continue # ignore
         if _bu.haben is None and _bu.soll == 1:
             continue # unaccounted banking expense, nothing to do
         if _bu.soll in match.cache and _bu.haben in match.cache:
-            #handle user finance accounts
-            if _bu.haben_uid in u_d:
-                credit_account = u_d[_bu.haben_uid].finance_account
-            else:
-                credit_account = a_d[match(_bu.haben)]
-
-            if _bu.soll_uid in u_d:
-                debit_account = u_d[_bu.soll_uid].finance_account
-            else:
-                debit_account = a_d[match(_bu.soll)]
+            credit_account, debit_account = (new_acc(_bu.haben, _bu.haben_uid),
+                                             new_acc(_bu.soll, _bu.soll_uid))
 
             transaction = finance.Transaction(
                 description=_bu.bes or "NO DESCRIPTION GIVEN",
                 author=ul_d.get(_bu.bearbeiter, u_d[0]),
-                valid_on=_bu.datum)
+                valid_on=_bu.datum,
+                posted_at=_bu.datum)
             new_credit_split = finance.Split(
                 amount=_bu.wert,
                 account=credit_account,
@@ -259,7 +273,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
                 account=debit_account,
                 transaction=transaction)
 
-            if _bu.bkid is not None:
+            if _bu.bkid is not None: # link transaction with bank journal
                 je_d[_bu.bkid].transaction = transaction
             records.extend([transaction, new_credit_split, new_debit_split])
         else:
