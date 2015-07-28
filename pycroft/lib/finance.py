@@ -632,3 +632,14 @@ def get_typed_splits(splits):
         ifilter(lambda s: s.amount > 0, splits),
         ifilter(lambda s: s.amount <= 0, splits)
     )
+
+def get_transaction_type(transaction):
+
+    credited = [split.account for split in transaction.splits if split.amount>0]
+    debited = [split.account for split in transaction.splits if split.amount<0]
+
+    cd_accs = (credited, debited)
+    # all involved accounts have the same type:
+    if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs)\
+            and all(len(accs)>0 for accs in cd_accs):
+        return (cd_accs[0][0].type, cd_accs[1][0].type)

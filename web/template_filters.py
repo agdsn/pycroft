@@ -19,7 +19,7 @@ from pycroft._compat import imap
 from pycroft.model import session, _all
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
-from pycroft.helpers.i18n import localized
+from pycroft.helpers.i18n import localized, gettext
 
 _filter_registry = {}
 
@@ -124,6 +124,31 @@ def money_filter(amount):
     """
     euro = amount/100.0
     return (u"{:.2f}\u202f€".format(euro)).replace('.', ',')
+
+@template_filter("account_type")
+def account_type_filter(account_type):
+    types = {
+        "ASSET": gettext("Asset account"),
+        "LIABILITY": gettext("Liability account"),
+        "REVENUE": gettext("Revenue account"),
+        "EXPENSE": gettext("Expense account"),
+    }
+
+    return types.get(account_type)
+
+@template_filter("transaction_type")
+def transaction_type_filter(credit_debit_type):
+    types = {
+        ("ASSET", "LIABILITY"): gettext("Balance sheet extension"),
+        ("LIABILITY", "ASSET"): gettext("Balance sheet contraction"),
+        ("ASSET", "REVENUE"): gettext("Revenue"),
+        ("REVENUE", "ASSET"): gettext("Adjusting entry (Revenue)"),
+        ("EXPENSE", "ASSET"): gettext("Expense"),
+        ("ASSET", "EXPENSE"): gettext("Adjusting entry (Expense)"),
+        ("ASSET", "ASSET"): gettext("Asset exchange"),
+        ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
+    }
+    return types.get(credit_debit_type, gettext("Unknown"))
 
 
 @template_filter("host_traffic")

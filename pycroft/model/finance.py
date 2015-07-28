@@ -125,7 +125,7 @@ class JournalEntry(ModelBase):
     posted_at = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey("transaction.id"))
-    transaction = relationship("Transaction")
+    transaction = relationship("Transaction", backref=backref("journal_entry", uselist=False))
 
 
 class IllegalTransactionError(Exception):
