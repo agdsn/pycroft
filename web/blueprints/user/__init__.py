@@ -157,12 +157,16 @@ def user_show_logs_json(user_id, logtype="all"):
 def user_show_hosts_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
-        patch_ports = user_host.room.switch_patch_ports
-        switches = u', '.join(imap(lambda p: p.switch_interface.host.name,
-                                   patch_ports))
+        if user_host.room:
+            patch_ports = user_host.room.switch_patch_ports
+            switches = u', '.join(imap(lambda p: p.switch_interface.host.name,
+                                       patch_ports))
 
-        ports = u', '.join(imap(lambda p: p.switch_interface.name,
-                                patch_ports))
+            ports = u', '.join(imap(lambda p: p.switch_interface.name,
+                                       patch_ports))
+        else:
+            switches = None
+            ports = None
         for ip in user_host.ips:
             list_items.append({
                 'ip': str(ip.address),

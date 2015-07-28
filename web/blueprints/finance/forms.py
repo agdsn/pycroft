@@ -2,6 +2,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import datetime
 from flask.ext.wtf import Form
 from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional
@@ -10,7 +11,7 @@ from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
     FieldList, StringField, DateField)
 from web.form.fields.custom import TypeaheadField, static
-
+from pycroft.helpers.i18n import gettext
 
 class SemesterCreateForm(Form):
     name = TextField(u"Semestername", validators=[DataRequired()])
@@ -107,15 +108,15 @@ class FinanceAccountCreateForm(Form):
 # Subclass WTForms Form to disable Flask-WTF’s CSRF mechanism
 class SplitCreateForm(WTForm):
     account = TypeaheadField(u"Konto", validators=[DataRequired()])
-    account_id = HiddenField(validators=[DataRequired()])
-    amount = IntegerField(u"Wert", validators=[DataRequired()])
+    account_id = HiddenField(validators=[DataRequired(message=gettext("Missing account."))])
+    amount = IntegerField(u"Wert", validators=[DataRequired(message=gettext("Missing value."))])
 
 
 class TransactionCreateForm(Form):
     description = TextField(u"Beschreibung", validators=[DataRequired()])
     valid_on = DateField(
         u"Gültig ab", validators=[Optional()], today_btn=True,
-        today_highlight=True)
+        today_highlight=True, default=datetime.date.today())
     splits = FieldList(
         FormField(SplitCreateForm),
         validators=[DataRequired()],
