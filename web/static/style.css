@@ -3,10 +3,6 @@
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
-body {
-    padding-top: 70px;
-}
-
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;
     margin: 0;
@@ -107,7 +103,7 @@ section > .body {
     left: 0;
     position: fixed;
     right: 0;
-    top: 50px;
+    top: 0;
     z-index: 1020;
 }
 .subnav-fixed .nav {
