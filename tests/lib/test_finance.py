@@ -6,7 +6,6 @@ import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from pycroft import messages
 from pycroft._compat import StringIO
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (

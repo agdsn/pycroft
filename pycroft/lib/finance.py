@@ -17,7 +17,6 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
-from pycroft import messages
 from pycroft._compat import (
     imap, with_metaclass, ifilter, StringIO, izip_longest)
 from pycroft.helpers.i18n import deferred_gettext, gettext

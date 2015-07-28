@@ -16,7 +16,7 @@ import re
 
 from sqlalchemy import and_, exists, func, literal
 
-from pycroft import messages, config
+from pycroft import config
 from pycroft.helpers import user
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
