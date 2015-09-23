@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -30,7 +30,7 @@ def load_user(userid):
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
-    if current_user is not None and current_user.is_authenticated():
+    if current_user is not None and current_user.is_authenticated:
         flash(u'Sie sind bereits als "{}" angemeldet!'.format(current_user.name), "warning")
         return redirect(url_for('user.overview'))
     form = LoginForm()

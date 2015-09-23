@@ -40,7 +40,7 @@
                         {%- endfor %}
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        {% if current_user.is_authenticated() %}
+                        {% if current_user.is_authenticated %}
                             <li>
                                 <form class="navbar-form" method="get">
                                   <input type="text" class="typeahead form-control" id="nav_search" name="nav_search" autocomplete="on" placeholder="Nutzer suchen…">

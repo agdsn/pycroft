@@ -77,7 +77,7 @@ class BlueprintAccess(object):
         return decorator
 
     def _check_access(self):
-        if not current_user.is_authenticated():
+        if not current_user.is_authenticated:
             return current_app.login_manager.unauthorized()
         endpoint = request.endpoint
         properties = chain(self.required_properties,

@@ -90,7 +90,7 @@ def make_app():
 
         Blueprint "None" is needed for "/static/*" GET requests.
         """
-        if current_user.is_anonymous() and request.blueprint not in ("login", None):
+        if current_user.is_anonymous and request.blueprint not in ("login", None):
             return current_app.login_manager.unauthorized()
 
     return app
