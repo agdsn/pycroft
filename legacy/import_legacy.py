@@ -58,8 +58,9 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     # since appropriate mapping dicts [a-z]_d would need to be passed anyway
 
     print("Adding site")
-    site = facilities.Site(name=u"Wundtstraße/Zellescher Weg")
-    records.append(site)
+    sites = [facilities.Site(name=u"Wundtstraße/Zellescher Weg"),
+             facilities.Site(name=u"Borsbergstraße")]
+    records.extend(sites)
 
     print("Translating legacy data")
     b_d = {} # maps netusers.Wheim.id to translated sqlalchemy object
@@ -67,7 +68,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     for _b in wheim:
         b = facilities.Building(
             id=_b.wheim_id,
-            site=site,
+            site=sites[0] if "Borsberg" not in _b.str else sites[1],
             short_name=_b.kuerzel,
             street=_b.str.replace(u'strasse', u'straße'),
             number=_b.hausnr)
@@ -97,33 +98,42 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
                 user.Property(name=prop_name, property_group=g, granted=modifier))
 
 
-    # no config entry is nullable, so TODO fill this when all finance accounts and groups are set up
-    #config.Config(member_group=members,
-    #              violation_group=violators
-    #              )
-
     print("  Translating users")
-    u_d = {}  # maps (nutzer_id) to translated sqlalchemy object
+    u_d = {}  # maps nutzer_id to translated sqlalchemy object
     ul_d = {}  # maps unix_account to translated sqlalchemy object
     for _u in nutzer:
         login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
         room = r_d.get((_u.wheim_id, _u.etage, _u.zimmernr), None)
-        u = user.User(
-            id=_u.nutzer_id,
-            login=login,
-            name=_u.vname+" "+_u.name,
-            email=login+"@wh2.tu-dresden.de", #TODO is this correct?
-            room=room,
-            registered_at=_u.anmeldedatum,
-            finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
+        try:
+            u = user.User(
+                id=_u.nutzer_id,
+                login=login,
+                name=_u.vname+" "+_u.name,
+                email=login+"@wh2.tu-dresden.de", #TODO is this correct?
+                room=room,
+                registered_at=_u.anmeldedatum,
+                finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
+        except user.InvalidLoginException:
+            if _u.wheim_id != 12: # strange accounts from borsi
+                raise
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
-        elif _u.status == 1:
+        elif _u.status in (1, 2, 4, 5, 7, 12):
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum))
+        elif _u.status in (3, 6, 10):
+            pass # TODO mail-only accounts
+            #records.append(user.Membership(user=u, group=g_d["mail"], begins_at=_u.anmeldedatum))
+        elif _u.status == 9:
+            pass # TODO ex-active group
         elif _u.status == 8:
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
             records.append(user.Membership(user=u, group=g_d["moved_out"], begins_at=null()))
+
+        # suspended groups
+        if _u.status in (5, 6, 7, 12):
+            records.append(user.Membership(user=u, group=g_d["suspended"], begins_at=_u.anmeldedatum))
+
         u_d[_u.nutzer_id] = u
         ul_d[_u.unix_account] = u
         records.append(u)
@@ -400,6 +410,21 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
         pp = port.SwitchPatchPort(switch_interface=sp, name="?? ({})".format(port_name), room=room)
         records.extend((sp, pp))
 
+
+    # no config entry is nullable, so TODO fill this when all finance accounts and groups are set up
+    config.Config(member_group=g_d["member"],
+                    violation_group=g_d["suspended"],
+                    network_access_group=g_d["member"],  # todo: actual network_access_group
+                    away_group=g_d["away"],
+                    moved_from_division_group=g_d["moved_from_division"],
+                    already_paid_semester_fee_group=g_d["already_paid"],
+                    registration_fee_account=a_d[u"Beiträge"],
+                    semester_fee_account=a_d[u"Beiträge"],
+                    late_fee_account=a_d[u"Beiträge"],
+                    additional_fee_account=a_d[u"Beiträge"],
+                    user_zone=primary_host_zone
+                  )
+
     return records
 
 def main(args):
@@ -455,6 +480,12 @@ def main(args):
         session.session.add_all(records)
     session.session.commit()
     print("...took",time.time()-t,"seconds.")
+
+    print("Fixing sequences...")
+    for tablename in ("user",):
+        maxid = engine.execute('select max(id) from \"{tn}\";'.format(tn=tablename)).fetchone()[0]
+        engine.execute("select setval('{}_id_seq', {})".format(tablename, maxid + 1))
+    print("Done.")
 
 if __name__=="__main__":
     import argparse

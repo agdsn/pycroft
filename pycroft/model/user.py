@@ -32,6 +32,10 @@ from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
 
 
+class InvalidLoginException(Exception):
+    pass
+
+
 class User(ModelBase, UserMixin):
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
@@ -79,7 +83,7 @@ class User(ModelBase, UserMixin):
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
         if not User.login_regex.match(value) or value in self.blocked_logins or len(value)>22:
-            raise Exception("invalid unix-login: '"+value+"'")
+            raise InvalidLoginException("invalid unix-login: '"+value+"'")
         return value
 
     @validates('email')
