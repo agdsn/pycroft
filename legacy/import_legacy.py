@@ -104,18 +104,14 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     for _u in nutzer:
         login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
         room = r_d.get((_u.wheim_id, _u.etage, _u.zimmernr), None)
-        try:
-            u = user.User(
-                id=_u.nutzer_id,
-                login=login,
-                name=_u.vname+" "+_u.name,
-                email=login+"@wh2.tu-dresden.de", #TODO is this correct?
-                room=room,
-                registered_at=_u.anmeldedatum,
-                finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
-        except user.InvalidLoginException:
-            if _u.wheim_id != 12: # strange accounts from borsi
-                raise
+        u = user.User(
+            id=_u.nutzer_id,
+            login=login if not login[0].isdigit() else "user_"+login,
+            name=_u.vname+" "+_u.name,
+            email=login+"@wh2.tu-dresden.de", #TODO is this correct?
+            room=room,
+            registered_at=_u.anmeldedatum,
+            finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
@@ -124,11 +120,12 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
         elif _u.status in (3, 6, 10):
             pass # TODO mail-only accounts
             #records.append(user.Membership(user=u, group=g_d["mail"], begins_at=_u.anmeldedatum))
-        elif _u.status == 9:
-            pass # TODO ex-active group
-        elif _u.status == 8:
+        elif _u.status == 9: #ex-aktiv
+            # since there are now time-based memberships, there is no need to have an ex-actives' group
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
-            records.append(user.Membership(user=u, group=g_d["moved_out"], begins_at=null()))
+            records.append(user.Membership(user=u, group=g_d["org"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
+        elif _u.status == 8: #ausgezogen
+            records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
 
         # suspended groups
         if _u.status in (5, 6, 7, 12):
@@ -197,7 +194,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
             #   ws02/03 1000: anm2500 sem1750 red450
             #   ss04 4000: anm2500 sem1500 red450
             #   ws14/15 25000: anm0 sem2000 red100
-            gauge_semester = datetime(year=2015, month=04, day=13) #26000
+            gauge_semester = datetime(year=2015, month=04, day=1) #26000
             semester_duration = timedelta(weeks=52/2)
             num_semesters_to_gauge = _a.id/1000-26
             s = finance.Semester(name=_a.name,
@@ -394,12 +391,23 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
 
     print("  Translating hp4108ports")
     for _sp in hp4108port:
+        mgmt_ip = ipaddr.IPv4Address(_sp.ip)
         try:
-            switch = sw_d[ipaddr.IPv4Address(_sp.ip)]
+            switch = sw_d[mgmt_ip]
         except KeyError as e:
-            # Bor34 switch isn't in computers
-            print("KeyError: "+str(e))
-            continue
+            if _sp.haus == "Borsi34":
+                # Bor34 switch isn't in computers, add it
+                ip_blocks = _sp.ip.split(".")
+                ip_blocks[0] = "141"
+                ip_blocks[1] = "76"
+                bor34_subnet_id = 10
+                switch = host.Switch(owner=u_d[0], name="bor34switch", management_ip=mgmt_ip, room=None) #TODO room
+                interface = host.SwitchInterface(host=switch, mac="00:00:00:00:00:01", name="switch management interface") #TODO proper mac addresses
+                ip = host.IP(interface=interface, address=ipaddr.IPv4Address(".".join(ip_blocks)), subnet=s_d[bor34_subnet_id])
+                records.extend([switch, interface, ip])
+                sw_d[mgmt_ip] = switch
+            else:
+                raise
         port_name = _sp.port
         room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
         subnet_id = building_subnet_map[room.building.id]
@@ -412,7 +420,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
 
 
     # no config entry is nullable, so TODO fill this when all finance accounts and groups are set up
-    config.Config(member_group=g_d["member"],
+    records.append(config.Config(member_group=g_d["member"],
                     violation_group=g_d["suspended"],
                     network_access_group=g_d["member"],  # todo: actual network_access_group
                     away_group=g_d["away"],
@@ -423,7 +431,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
                     late_fee_account=a_d[u"Beiträge"],
                     additional_fee_account=a_d[u"Beiträge"],
                     user_zone=primary_host_zone
-                  )
+                  ))
 
     return records
 
@@ -482,9 +490,9 @@ def main(args):
     print("...took",time.time()-t,"seconds.")
 
     print("Fixing sequences...")
-    for tablename in ("user",):
-        maxid = engine.execute('select max(id) from \"{tn}\";'.format(tn=tablename)).fetchone()[0]
-        engine.execute("select setval('{}_id_seq', {})".format(tablename, maxid + 1))
+    for table in (user.User, facilities.Building):
+        maxid = engine.execute('select max(id) from \"{}\";'.format(table.__tablename__)).fetchone()[0]
+        engine.execute("select setval('{}_id_seq', {})".format(table.__tablename__, maxid + 1))
     print("Done.")
 
 if __name__=="__main__":

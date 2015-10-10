@@ -225,7 +225,7 @@ def switch_show_json(switch_id):
                     port.patch_port.room.level,
                     port.patch_port.room.number
                 )
-            }
+            } if port.patch_port else None
         } for port in switch_interface_list])
 
 

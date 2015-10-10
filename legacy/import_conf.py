@@ -36,10 +36,6 @@ group_props = {
 
     "suspended": ("Gesperrt", {"network_access": False}),
 
-    "moved_out": ("Ausgezogen", {"network_access": False,
-                                 "semester_fee": False,
-                                 "late_fee": False}),
-
     "away": ("Zeitweise ausgezogen", {"network_access": False,
                                       "late_fee": False}),
 
