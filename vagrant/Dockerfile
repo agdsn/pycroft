@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 FROM debian:wheezy
 MAINTAINER Sebastian Schrader <sebastian.schrader@wh2.tu-dresden.de>
-ENV PROJECT_DIR=/pycroft LANG=en_US.utf8 DEBIAN_FRONTEND=noninteractive
+ENV PROJECT_DIR=/pycroft DEBIAN_FRONTEND=noninteractive
 
 COPY etc/apt/sources.list /etc/apt/sources.list
 
@@ -12,7 +12,8 @@ RUN apt-get update && \
     apt-get install -y locales && \
     sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen && \
     locale-gen && \
-    dpkg-reconfigure locales
+    dpkg-reconfigure locales && \
+    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Install Debian packages
 RUN apt-get update && \
