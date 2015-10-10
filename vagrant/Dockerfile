@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 FROM debian:wheezy
 MAINTAINER Sebastian Schrader <sebastian.schrader@wh2.tu-dresden.de>
-ENV PROJECT_DIR=/pycroft DEBIAN_FRONTEND=noninteractive
+ENV PROJECT_DIR=/pycroft LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY etc/apt/sources.list /etc/apt/sources.list
 
