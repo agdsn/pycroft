@@ -10,7 +10,7 @@
     </th>
 {% endmacro %}
 
-{% macro item_table(table_id, data_url="", display_columns, footer=[], row_style="") %}
+{% macro item_table(table_id, data_url="", display_columns=[], footer=[], row_style="", server_pagination=False, sort_order="asc") %}
     <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
         {% if caller %}
             {{ caller() }}
