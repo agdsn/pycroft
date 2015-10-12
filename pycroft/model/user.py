@@ -32,7 +32,7 @@ from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
 
 
-class InvalidLoginException(Exception):
+class InvalidLoginException(ValueError):
     pass
 
 
@@ -223,6 +223,9 @@ class User(ModelBase, UserMixin):
                 )
             )
         ).label("has_property_" + prop)
+#
+#    def group_intervals(self, group, when=UnboundedInterval):
+#
 
     def property_intervals(self, name, when=UnboundedInterval):
         """

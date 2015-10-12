@@ -323,32 +323,44 @@ class SemesterFee(Fee):
     description = deferred_gettext(u"Semester fee {semester}")
 
     def compute(self, user):
-        liability_intervals = _to_date_intervals(
-            user.property_intervals("semester_fee")
-        )
-        if not liability_intervals:
-            return []
-        semesters = get_semesters(closed(
-            liability_intervals[0].begin,
-            liability_intervals[-1].end
-        ))
-        away_intervals = _to_date_intervals(user.property_intervals("away"))
+        regular_fee_intervals = _to_date_intervals(
+            user.property_intervals("semester_fee"))
+
+        reduced_fee_intervals = _to_date_intervals(
+            user.property_intervals("reduced_semester_fee"))
+
         debts = []
+
         # Compute semester fee for each semester the user is liable to pay it
+        semesters = get_semesters()
         for semester in semesters:
             semester_interval = closed(semester.begins_on, semester.ends_on)
-            liable_in_semester = liability_intervals & semester_interval
-            if not liable_in_semester:
-                continue
-            if liable_in_semester.length <= semester.grace_period:
-                continue
-            away_in_semester = away_intervals & semester_interval
-            present_in_semester = liable_in_semester - away_in_semester
-            valid_on = liable_in_semester[0].begin
-            if present_in_semester.length <= semester.reduced_semester_fee_threshold:
-                amount = semester.reduced_semester_fee
-            else:
+            reg_fee_in_semester = regular_fee_intervals & semester_interval
+            red_fee_in_semester = reduced_fee_intervals & semester_interval
+
+            # reduced fee trumps regular fee
+            reg_fee_in_semester = reg_fee_in_semester - red_fee_in_semester
+
+            # IntervalSet is type-agnostic, so cannot do .length of empty sets,
+            # therefore these double checks are required
+            if (reg_fee_in_semester and
+                        reg_fee_in_semester.length >
+                        semester.reduced_semester_fee_threshold):
                 amount = semester.regular_semester_fee
+                valid_on = reg_fee_in_semester[0].begin
+
+            elif (reg_fee_in_semester and
+                        reg_fee_in_semester.length > semester.grace_period):
+                amount = semester.reduced_semester_fee
+                valid_on = reg_fee_in_semester[0].begin
+
+            elif (red_fee_in_semester and
+                        red_fee_in_semester.length > semester.grace_period):
+                    amount = semester.reduced_semester_fee
+                    valid_on = red_fee_in_semester[0].begin
+            else:
+                continue
+
             if amount > 0:
                 debts.append((
                     self.description.format(semester=semester.name).to_json(),

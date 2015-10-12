@@ -123,7 +123,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.finance_account)
         self.assertEqual(new_user.finance_account.balance, 4000)
-        self.assertFalse(new_user.has_property("away"))
+        self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
@@ -232,7 +232,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         session.session.commit()
 
         during = closedopen(session.utcnow(), None)
-        self.assertFalse(new_user.has_property("away"))
+        self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
         UserHelper.move_out_temporarily(new_user, "", self.processing_user,
                                         during)
@@ -241,7 +241,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         # check for tmpAusgezogen group membership
         self.assertIn(new_user, config.away_group.active_users())
         self.assertIn(config.away_group, new_user.active_property_groups())
-        self.assertTrue(new_user.has_property("away"))
+        self.assertTrue(new_user.has_property("reduced_semester_fee"))
 
         # check if user has no ips left
         for user_host in new_user.user_hosts:
@@ -288,7 +288,7 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         session.session.commit()
 
     def test_0010_user_is_back(self):
-        self.assertTrue(self.user.has_property("away"))
+        self.assertTrue(self.user.has_property("reduced_semester_fee"))
         UserHelper.is_back(self.user, self.processing_user)
         session.session.commit()
 
@@ -301,4 +301,4 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
                                delta=timedelta(seconds=5))
         self.assertEqual(log_entry.author, self.processing_user)
 
-        self.assertFalse(self.user.has_property("away"))
+        self.assertFalse(self.user.has_property("reduced_semester_fee"))

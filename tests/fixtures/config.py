@@ -32,7 +32,7 @@ class PropertyGroupData(DataSet):
         name = u"Netzwerkanschluss"
 
     class away:
-        name = u"Vorübergehend Ausgezogen"
+        name = u"Ausgezogen, Mail"
 
     class violation:
         name = u"Verstoß"
@@ -93,7 +93,7 @@ class PropertyData(DataSet):
 
     class away:
         property_group = PropertyGroupData.away
-        name = "away"
+        name = "reduced_semester_fee"
         granted = True
 
     class violation:

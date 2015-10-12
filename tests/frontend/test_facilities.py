@@ -7,12 +7,14 @@ from flask import url_for
 from pycroft.model.facilities import Building, Room
 
 from tests import FrontendDataTestBase
+from tests.fixtures.config import ConfigData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.permissions import UserData, PropertyData, MembershipData
 
 
 class Test_010_Building(FrontendDataTestBase):
-    datasets = (BuildingData, MembershipData, PropertyData, RoomData, UserData)
+    datasets = (ConfigData, BuildingData, MembershipData, PropertyData,
+                RoomData, UserData)
     login = UserData.user1_admin.login
     password = UserData.user1_admin.password
 

@@ -118,8 +118,8 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
         elif _u.status in (1, 2, 4, 5, 7, 12):
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum))
         elif _u.status in (3, 6, 10):
-            pass # TODO mail-only accounts
-            #records.append(user.Membership(user=u, group=g_d["mail"], begins_at=_u.anmeldedatum))
+            records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
+            records.append(user.Membership(user=u, group=g_d["away"], begins_at=_u.last_change.date()))
         elif _u.status == 9: #ex-aktiv
             # since there are now time-based memberships, there is no need to have an ex-actives' group
             records.append(user.Membership(user=u, group=g_d["member"], begins_at=_u.anmeldedatum, ends_at=_u.last_change.date()))
@@ -139,6 +139,13 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
             author=u_d.get(0, None),
             message="User imported from legacy database netusers.",
             user=u))
+
+        # user comment
+        if _u.comment:
+            records.append(logging.UserLogEntry(
+                author=u_d.get(0, None),
+                message="Legacy comment: "+_u.comment,
+                user=u))
 
     # TODO: look over this
     facc_types = {u"Startguthaben": "REVENUE",
