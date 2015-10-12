@@ -13,18 +13,19 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, session, logging, finance, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
 from tests.fixtures.dummy.host import (
-    IPData, PatchPortData,UserNetDeviceData, UserHostData)
+    IPData, SwitchPatchPortData,UserInterfaceData, UserHostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_User_Move(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, IPData, PatchPortData, RoomData,
-                SubnetData, UserData, UserNetDeviceData, UserHostData, VLANData]
+    datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
+                SwitchPatchPortData, UserData, UserInterfaceData, UserHostData,
+                VLANData)
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -32,40 +33,40 @@ class Test_010_User_Move(FixtureDataTestBase):
             login=UserData.dummy.login).one()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
-        self.old_room = self.user.room #dormitory.Room.q.get(1)
-        self.same_dormitory = facilities.Dormitory.q.filter_by(
-            short_name=DormitoryData.dummy_house1.short_name).one()
-        assert self.same_dormitory == self.old_room.dormitory
-        self.other_dormitory = facilities.Dormitory.q.filter_by(
-            short_name=DormitoryData.dummy_house2.short_name).one()
+        self.old_room = self.user.room #building.Room.q.get(1)
+        self.same_building = facilities.Building.q.filter_by(
+            short_name=BuildingData.dummy_house1.short_name).one()
+        assert self.same_building == self.old_room.building
+        self.other_building = facilities.Building.q.filter_by(
+            short_name=BuildingData.dummy_house2.short_name).one()
 
-        self.new_room_other_dormitory = facilities.Room.q.filter_by(
-            dormitory=self.other_dormitory).one()
-        self.new_room_same_dormitory = facilities.Room.q.filter_by(
-            dormitory=self.same_dormitory, number=RoomData.dummy_room3.number,
+        self.new_room_other_building = facilities.Room.q.filter_by(
+            building=self.other_building).one()
+        self.new_room_same_building = facilities.Room.q.filter_by(
+            building=self.same_building, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
-        self.new_patch_port = PatchPort.q.filter_by(
-            name=PatchPortData.dummy_patch_port2.name).one()
+        self.new_switch_patch_port = PatchPort.q.filter_by(
+            name=SwitchPatchPortData.dummy_patch_port2.name).one()
 
     def test_0010_moves_into_same_room(self):
         self.assertRaisesInTransaction(
-            AssertionError, UserHelper.move, self.user, self.old_room.dormitory,
+            AssertionError, UserHelper.move, self.user, self.old_room.building,
             self.old_room.level, self.old_room.number, self.processing_user)
 
-    def test_0020_moves_into_other_dormitory(self):
-        UserHelper.move(self.user, self.new_room_other_dormitory.dormitory,
-            self.new_room_other_dormitory.level,
-            self.new_room_other_dormitory.number, self.processing_user)
-        self.assertEqual(self.user.room, self.new_room_other_dormitory)
-        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_dormitory)
+    def test_0020_moves_into_other_building(self):
+        UserHelper.move(self.user, self.new_room_other_building.building,
+            self.new_room_other_building.level,
+            self.new_room_other_building.number, self.processing_user)
+        self.assertEqual(self.user.room, self.new_room_other_building)
+        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_building)
         #TODO test for changing ip
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, FinanceAccountData, IPData,
-                PatchPortData, PropertyData, RoomData, SemesterData, SubnetData,
-                TrafficGroupData, UserData, UserHostData, UserNetDeviceData,
-                VLANData]
+    datasets = (ConfigData, BuildingData, FinanceAccountData, IPData,
+                PropertyData, RoomData, SemesterData, SubnetData,
+                SwitchPatchPortData, TrafficGroupData, UserData, UserHostData,
+                UserInterfaceData, VLANData)
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
@@ -76,7 +77,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
@@ -84,7 +85,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             host_name=test_hostname,
@@ -97,16 +98,16 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.name, test_name)
         self.assertEqual(new_user.login, test_login)
         self.assertEqual(new_user.email, test_email)
-        self.assertEqual(new_user.room.dormitory, test_dormitory)
+        self.assertEqual(new_user.room.building, test_building)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
 
-        user_host = host.UserHost.q.filter_by(user=new_user).one()
-        self.assertEqual(len(user_host.user_net_devices), 1)
-        user_net_device = user_host.user_net_devices[0]
-        self.assertEqual(len(user_net_device.ips), 1)
-        user_ip = user_net_device.ips[0]
-        self.assertEqual(user_net_device.mac, test_mac)
+        user_host = host.UserHost.q.filter_by(owner=new_user).one()
+        self.assertEqual(len(user_host.user_interfaces), 1)
+        user_interface = user_host.user_interfaces[0]
+        self.assertEqual(len(user_interface.ips), 1)
+        user_ip = user_interface.ips[0]
+        self.assertEqual(user_interface.mac, test_mac)
         user_dns_name = dns.DNSName.q.filter_by(name=test_hostname).one()
         user_cname_record = dns.CNAMERecord.q.filter_by(name=user_dns_name).one()
         self.assertEqual(user_cname_record.name.name, test_hostname)
@@ -122,12 +123,12 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.finance_account)
         self.assertEqual(new_user.finance_account.balance, 4000)
-        self.assertFalse(new_user.has_property("away"))
+        self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = [ConfigData, FinanceAccountData, IPData, PatchPortData,
-                SemesterData, TrafficGroupData]
+    datasets = (ConfigData, FinanceAccountData, IPData, SemesterData,
+                SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
         super(Test_030_User_Move_Out, self).setUp()
@@ -138,14 +139,14 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -171,7 +172,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, RoomData, UserData)
 
     def setUp(self):
         super(Test_040_User_Edit_Name, self).setUp()
@@ -186,7 +187,7 @@ class Test_040_User_Edit_Name(FixtureDataTestBase):
 
 
 class Test_050_User_Edit_Email(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, RoomData, UserData)
 
     def setUp(self):
         super(Test_050_User_Edit_Email, self).setUp()
@@ -201,8 +202,8 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
 
 class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
-    datasets = [ConfigData, FinanceAccountData, IPData, PatchPortData,
-                PropertyData, SemesterData, TrafficGroupData]
+    datasets = (ConfigData, FinanceAccountData, IPData, PropertyData,
+                SemesterData, SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
         super(Test_070_User_Move_Out_Temporarily, self).setUp()
@@ -213,14 +214,14 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_dormitory = facilities.Dormitory.q.first()
+        test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
-            test_dormitory,
+            test_building,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -231,7 +232,7 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         session.session.commit()
 
         during = closedopen(session.utcnow(), None)
-        self.assertFalse(new_user.has_property("away"))
+        self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
         UserHelper.move_out_temporarily(new_user, "", self.processing_user,
                                         during)
@@ -240,22 +241,22 @@ class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
         # check for tmpAusgezogen group membership
         self.assertIn(new_user, config.away_group.active_users())
         self.assertIn(config.away_group, new_user.active_property_groups())
-        self.assertTrue(new_user.has_property("away"))
+        self.assertTrue(new_user.has_property("reduced_semester_fee"))
 
         # check if user has no ips left
         for user_host in new_user.user_hosts:
-            for net_device in user_host.user_net_devices:
-                self.assertEqual(net_device.ips, [])
+            for interface in user_host.user_interfaces:
+                self.assertEqual(interface.ips, [])
 
         # check log message
-        log_entry = new_user.user_log_entries[-1]
+        log_entry = new_user.log_entries[-1]
         self.assertAlmostEqual(log_entry.created_at, during.begin,
                                delta=timedelta(seconds=1))
         self.assertEqual(log_entry.author, self.processing_user)
 
 
 class Test_080_User_Block(FixtureDataTestBase):
-    datasets = [ConfigData, DormitoryData, PropertyData, RoomData, UserData]
+    datasets = (ConfigData, BuildingData, PropertyData, RoomData, UserData)
 
     def test_0010_user_has_no_network_access(self):
         u = user.User.q.filter_by(login=UserData.dummy.login).one()
@@ -271,11 +272,11 @@ class Test_080_User_Block(FixtureDataTestBase):
         self.assertFalse(blocked_user.has_property("network_access"))
         self.assertIn(verstoss, blocked_user.active_property_groups())
 
-        self.assertEqual(blocked_user.user_log_entries[0].author, u)
+        self.assertEqual(blocked_user.log_entries[0].author, u)
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = [ConfigData, IPData, PropertyData, UserData]
+    datasets = (ConfigData, IPData, PropertyData, SwitchPatchPortData, UserData)
 
     def setUp(self):
         super(Test_090_User_Is_Back, self).setUp()
@@ -287,17 +288,17 @@ class Test_090_User_Is_Back(FixtureDataTestBase):
         session.session.commit()
 
     def test_0010_user_is_back(self):
-        self.assertTrue(self.user.has_property("away"))
+        self.assertTrue(self.user.has_property("reduced_semester_fee"))
         UserHelper.is_back(self.user, self.processing_user)
         session.session.commit()
 
         # check whether user has at least one ip
-        self.assertNotEqual(self.user.user_hosts[0].user_net_devices[0].ips, [])
+        self.assertNotEqual(self.user.user_hosts[0].user_interfaces[0].ips, [])
 
         # check log message
-        log_entry = self.user.user_log_entries[-1]
+        log_entry = self.user.log_entries[-1]
         self.assertAlmostEqual(log_entry.created_at, session.utcnow(),
                                delta=timedelta(seconds=5))
         self.assertEqual(log_entry.author, self.processing_user)
 
-        self.assertFalse(self.user.has_property("away"))
+        self.assertFalse(self.user.has_property("reduced_semester_fee"))

@@ -39,7 +39,7 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
         self.password = UserData.user1_admin.password
         FrontendDataTestBase.setUp(self)
 
-    def test_0010_access_dormitories(self):
+    def test_0010_access_buildings(self):
         # Admin has access to view the facilities overview
         self.assert_response_code(url_for('facilities.overview'), 200)
 
@@ -58,7 +58,7 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
         self.password = UserData.user2_finance.password
         FrontendDataTestBase.setUp(self)
 
-    def test_0010_access_dormitories(self):
+    def test_0010_access_buildings(self):
         self.assert_response_code(url_for('facilities.overview'), 200)
 
     def test_0020_access_finance(self):
@@ -83,7 +83,7 @@ class Test_040_Permissions_User(FrontendDataTestBase):
         for url in self.blueprint_urls(current_app, 'finance'):
             self.assert_access_forbidden(url)
 
-    def test_0030_access_dormitories(self):
+    def test_0030_access_buildings(self):
         for url in self.blueprint_urls(current_app, 'facilities'):
             self.assert_access_forbidden(url)
 

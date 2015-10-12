@@ -31,7 +31,7 @@
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#report-form" data-toggle="tab">Kontenform</a></li>
-    <li><a href="#account-form" data-toggle="tab">Staffelform</a></li>
+    {% if typed_splits is not none%}<li><a href="#account-form" data-toggle="tab">Staffelform</a></li>{% endif %}
 </ul>
 <div class="tab-content">
     <div id="report-form"  class="tab-pane active">
@@ -40,10 +40,12 @@
             json_url,
             cols,
             footer,
-            'financeRowFormatter'
-        ) }}
+            'financeRowFormatter',
+            True,
+            "desc")
+        }}
     </div>
-    <div id="account-form" class="tab-pane">
+    {% if typed_splits is not none %}<div id="account-form" class="tab-pane">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -77,5 +79,5 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
+    </div>{% endif %}
 </div>

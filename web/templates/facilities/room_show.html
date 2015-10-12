@@ -5,6 +5,7 @@
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
+{% import "macros/button.html" as btn %}
 {% import "macros/table.html" as tbl %}
 {% set cols = [
     {'name': 'created_at', 'title': 'Erstellt um'},
@@ -12,11 +13,11 @@
     {'name': 'message', 'title': 'Nachricht'}
 ] %}
 
-{% block content %}gco
+{% block content %}
     <ul class="breadcrumb">
         <li><a href="{{ url_for('.overview') }}">Wohnheime</a></li>
-        <li><a href="{{ url_for('.dormitory_levels', dormitory_id=room.dormitory.id) }}">{{ room.dormitory.short_name }}</a></li>
-        <li><a href="{{ url_for('.dormitory_level_rooms', dormitory_id=room.dormitory_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
+        <li><a href="{{ url_for('.building_levels', building_id=room.building.id) }}">{{ room.building.short_name }}</a></li>
+        <li><a href="{{ url_for('.building_level_rooms', building_id=room.building_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
         <li class="active">Zimmer {{ room.number }}</li>
     </ul>
     <h2>Überblick</h2>
@@ -24,7 +25,7 @@
         <div class="col-sm-6 col-md-5 col-lg-4">
             <dl class="dl-horizontal">
                 <dt>Wohnheim</dt>
-                <dd>{{ room.dormitory.street }} {{ room.dormitory.number }}</dd>
+                <dd>{{ room.building.street }} {{ room.building.number }}</dd>
                 <dt>Nummer</dt>
                 <dd>{{ room.number }}</dd>
                 <dt>Etage</dt>
@@ -40,8 +41,8 @@
             {%- else %}
             <h3>Bewohner</h3>
             <ul>
-                {% for user in room.users -%}
-                <li><a href="{{ url_for('user.user_show', user_id=user.id) }}">{{ user.name }}</a> </li>
+                {% for button in user_buttons -%}
+                <li>{{ btn.multiGlyphBtnMacro(button) }}</li>
                 {%- endfor %}
             </ul>
             {%- endif %}
@@ -55,6 +56,6 @@
     </div>
 
     <div class="row">
-        {{ forms.simple_form(form, '') }}
+        {{ forms.simple_form(form, '', '#') }}
     </div>
 {% endblock %}

@@ -25,6 +25,11 @@
         <p class="text-danger">{{ error }}</p>
         {% endfor %}
         {% for split_form_field in form['splits'] -%}
+          {% for field_name, field_errors in split_form_field.errors|dictsort if field_errors %}
+            {% for error in field_errors %}
+                <p class="text-danger">{{ split_form_field[field_name].label }}: {{ error }}</p>
+            {% endfor %}
+          {% endfor %}
         <div class="row split-row">
             {{ split_form_field['account_id'] }}
             <div class="col-sm-3">{{ split_form_field['account'](render_mode='inline') }}</div>

@@ -8,11 +8,11 @@
 {% block content %}
     <ul class="breadcrumb">
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
-        <li class="active">{{ dormitory.short_name }}</li>
+        <li class="active">{{ building.short_name }}</li>
     </ul>
     <div class="row">
         {% for level in levels -%}
-        <div class="level"><a href="{{ url_for('.dormitory_level_rooms', dormitory_id=dormitory_id, level=level) }}" class="btn btn-default btn-large">{{ level }}</a></div>
+        <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-default btn-large">{{ level }}</a></div>
         {%- endfor %}
     </div>
 {% endblock %}

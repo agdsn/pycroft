@@ -3,10 +3,6 @@
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
-body {
-    padding-top: 70px;
-}
-
 a.navbar-brand {
     padding: 0;
 }
@@ -111,7 +107,7 @@ section > .body {
     left: 0;
     position: fixed;
     right: 0;
-    top: 50px;
+    top: 0;
     z-index: 1020;
 }
 .subnav-fixed .nav {
@@ -170,4 +166,13 @@ td.grow {
 
 .sort:active {
     color: lightblue;
+}
+
+em.dotted{
+    font-style: normal;
+    border-bottom: 1px dashed #999;
+}
+
+.btn > .badge {
+    margin-right: 5px;
 }

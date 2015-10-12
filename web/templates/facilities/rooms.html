@@ -8,18 +8,18 @@
 
 {% set cols = [
     {'name': 'room', 'title': 'Raum', 'formatter': 'linkFormatter'},
-    {'name': 'inmates', 'title': 'Bewohner', 'formatter': 'multiBtnFormatter'}
+    {'name': 'inhabitants', 'title': 'Bewohner', 'formatter': 'multiBtnFormatter'}
 ] %}
 
 {% block content %}
     <ul class="breadcrumb">
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
-        <li><a href="{{ url_for('facilities.dormitory_levels', dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
+        <li><a href="{{ url_for('facilities.building_levels', building_shortname=building.short_name) }}">{{ building.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
     {{ tbl.item_table(
         'rooms',
-        url_for('facilities.dormitory_level_rooms_json', dormitory_id=dormitory.id, level=level),
+        url_for('facilities.building_level_rooms_json', building_shortname=building.short_name, level=level),
         cols
     ) }}
 {% endblock %}

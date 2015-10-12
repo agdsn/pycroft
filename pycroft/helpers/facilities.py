@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.helpers.dormitory_helper
+    pycroft.helpers.building_helper
     ~~~~~~~~~~~~~~
 
     :copyright: (c) 2012 by AG DSN.
@@ -11,19 +11,12 @@
 import re
 
 
-def sort_dormitories(dormitories):
-    number_re = re.compile(r"[0-9]+")
-    letter_re = re.compile(r"[a-z]")
+def sort_buildings(buildings):
+    def make_sort_key(building):
+        s = re.split('(\d+)([a-zA-Z]?)', building.number)
+        if len(s) != 4: return building.street, building.number #split unsuccessful
+        return building.street, (int(s[1]), s[2].lower())
 
-    def make_sort_key(dormitory):
-        number = number_re.search(dormitory.number)
-        letter = letter_re.search(dormitory.number.lower())
+    sorted_buildings = sorted(buildings, key=make_sort_key)
 
-        if letter:
-            return ord(letter.group(0)) + 256 * int(number.group(0))
-
-        return 256 * int(number.group(0))
-
-    sorted_dormitories = sorted(dormitories, key=make_sort_key)
-
-    return sorted_dormitories
+    return sorted_buildings

@@ -19,18 +19,38 @@ var glyphBtnTemplate = _.template(
     '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= title %>"><span class="glyphicon <%= glyphicon %>"></span></a>'
 );
 
+var multiGlyphBtnTemplate = _.template(
+    '<a href="<%= href %>" class="btn <%= btn_class %>">' +
+        '<span class="badge">' +
+        '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
+            '<span class="glyphicon <%= glyphicons[i] %>"></span>' +
+        '<% } %>' +
+        '</span>' +
+        '<%= title %>' +
+    '</a>'
+);
+
 function linkFormatter(value, row, index) {
     return linkTemplate({'href': value['href'], 'title': value['title']})
 }
 
 function btnFormatter(value, row, index) {
     if (value['icon']) {
-        return glyphBtnTemplate({
-            'href': value['href'],
-            'title': value['title'],
-            'btn_class': value['btn_class'],
-            'glyphicon': value['icon']
-        })
+        if (value['icon'] instanceof Array) {
+            return multiGlyphBtnTemplate({
+                'href': value['href'],
+                'title': value['title'],
+                'btn_class': value['btn_class'],
+                'glyphicons': value['icon']
+            })
+        } else {
+            return glyphBtnTemplate({
+                'href': value['href'],
+                'title': value['title'],
+                'btn_class': value['btn_class'],
+                'glyphicon': value['icon']
+            })
+        }
     } else {
         return btnTemplate({
             'href': value['href'],
@@ -69,7 +89,7 @@ function listFormatter(value, row, index) {
 }
 
 function financeRowFormatter(row, index) {
-    if (row['row_positive']) {
+    if (row && row['row_positive']) {
         return {classes: 'success'};
     } else {
         return {classes: 'danger'};

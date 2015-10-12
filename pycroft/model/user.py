@@ -21,6 +21,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
@@ -29,6 +30,10 @@ from pycroft.helpers.interval import (
 from pycroft.helpers.user import hash_password, verify_password
 from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
+
+
+class InvalidLoginException(ValueError):
+    pass
 
 
 class User(ModelBase, UserMixin):
@@ -58,7 +63,14 @@ class User(ModelBase, UserMixin):
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)
 
-    login_regex = re.compile("^[a-z][a-z0-9_]{1,20}[a-z0-9]$")
+    login_regex = re.compile(r"""
+        ^
+        # Must begin with a lowercase character
+        [a-z]
+        # Can continue with lowercase characters, numbers and some punctuation
+        # but between punctuation characters must be characters or numbers
+        (?:[._-]?[a-z0-9])+$
+        """, re.VERBOSE)
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
@@ -70,8 +82,8 @@ class User(ModelBase, UserMixin):
     @validates('login')
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
-        if not User.login_regex.match(value) or value in self.blocked_logins:
-            raise Exception("invalid unix-login!")
+        if not User.login_regex.match(value) or value in self.blocked_logins or len(value)>22:
+            raise InvalidLoginException("invalid unix-login: '"+value+"'")
         return value
 
     @validates('email')
@@ -100,10 +112,12 @@ class User(ModelBase, UserMixin):
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
-        user = User.q.filter_by(login=login).one()
-        if user is not None and user.check_password(plaintext_password):
-            return user
-        return None
+        try:
+            user = User.q.filter_by(login=login).one()
+        except NoResultFound:
+            return None
+        else:
+            return user if user.check_password(plaintext_password) else None
 
     @hybrid_method
     def active_memberships(self, when=None):
@@ -209,6 +223,9 @@ class User(ModelBase, UserMixin):
                 )
             )
         ).label("has_property_" + prop)
+#
+#    def group_intervals(self, group, when=UnboundedInterval):
+#
 
     def property_intervals(self, name, when=UnboundedInterval):
         """

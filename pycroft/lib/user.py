@@ -17,7 +17,7 @@ import re
 from sqlalchemy import and_, exists, func, literal
 
 from pycroft import config
-from pycroft.helpers import user
+from pycroft.helpers import user, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
@@ -28,7 +28,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import FinanceAccount
-from pycroft.model.host import Host, IP, UserHost, UserNetDevice
+from pycroft.model.host import Host, IP, UserHost, UserInterface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup
@@ -86,10 +86,12 @@ class HostAliasExists(ValueError):
 
 def setup_ipv4_networking(host):
     subnets = filter(lambda s: s.address.version == 4,
-                     host.room.dormitory.subnets)
-    for net_device in host.user_net_devices:
+                     [p.switch_interface.default_subnet
+                      for p in host.room.switch_patch_ports
+                      if p.switch_interface is not None])
+    for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
-        new_ip = IP(net_device=net_device, address=ip_address,
+        new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
         session.session.add(new_ip)
         address_record_name = DNSName(name=generate_hostname(ip_address),
@@ -115,7 +117,7 @@ def setup_ipv4_networking(host):
 
 
 @with_transaction
-def move_in(name, login, email, dormitory, level, room_number, mac,
+def move_in(name, login, email, building, level, room_number, mac,
             processor, moved_from_division, already_paid_semester_fee, host_name=None):
     """
     This function creates a new user, assign him to a room and creates some
@@ -123,7 +125,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     :param name: The full name of the user. (Max Mustermann)
     :param login: The unix login for the user.
     :param email: E-Mail address of the user.
-    :param dormitory: The dormitory the user moves in.
+    :param building: The building the user moves in.
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
@@ -134,7 +136,7 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     """
 
     room = Room.q.filter_by(number=room_number,
-        level=level, dormitory=dormitory).one()
+        level=level, building=building).one()
 
 
     now = session.utcnow()
@@ -156,10 +158,10 @@ def move_in(name, login, email, dormitory, level, room_number, mac,
     new_user.finance_account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    # create one new host (including net_device) for the new user
-    new_host = UserHost(user=new_user, room=room, desired_name=host_name)
+    # create one new host (including interface) for the new user
+    new_host = UserHost(owner=new_user, room=room, desired_name=host_name)
     session.session.add(new_host)
-    session.session.add(UserNetDevice(mac=mac, host=new_host))
+    session.session.add(UserInterface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
 
     for group in (config.member_group, config.network_access_group):
@@ -204,13 +206,16 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
-    if old_room.dormitory_id == new_room.dormitory_id:
+    subnets = [p.switch_interface.default_subnet
+               for p in new_room.switch_patch_ports
+               if p.switch_interface.default_subnet is not None]
+    if old_room.building_id == new_room.building_id:
         return
-    for net_dev in host.user_net_devices:
-        old_ips = tuple(ip for ip in net_dev.ips)
+    for interface in host.user_interfaces:
+        old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
-            ip_address, subnet = get_free_ip(new_room.dormitory.subnets)
-            new_ip = IP(net_device=net_dev, address=ip_address,
+            ip_address, subnet = get_free_ip(subnets)
+            new_ip = IP(interface=interface, address=ip_address,
                         subnet=subnet)
             session.session.add(new_ip)
             address_record_name = DNSName(name=generate_hostname(ip_address),
@@ -238,17 +243,17 @@ def migrate_user_host(host, new_room, processor):
 
             message = deferred_gettext(u"Changed IP from {} to {}.").format(
                 old_ip=str(old_address), new_ip=str(new_ip))
-            log_user_event(author=processor, user=host.user,
+            log_user_event(author=processor, user=host.owner,
                            message=message.to_json())
 
 
 #TODO ensure serializability
 @with_transaction
-def move(user, dormitory, level, room_number, processor):
+def move(user, building, level, room_number, processor):
     """
     Moves the user into another room.
     :param user: The user to be moved.
-    :param dormitory: The new dormitory.
+    :param building: The new building.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
     :param processor: The user who is currently logged in.
@@ -259,7 +264,7 @@ def move(user, dormitory, level, room_number, processor):
     new_room = Room.q.filter_by(
         number=room_number,
         level=level,
-        dormitory_id=dormitory.id
+        building_id=building.id
     ).one()
 
     assert old_room != new_room,\
@@ -345,9 +350,37 @@ def has_exceeded_traffic(user, when=None):
         Membership.user_id == user.id
     ).scalar()
 
-#ToDo: Funktion zur Abfrage dr Kontobilanz
+
+def is_member(user):
+    """Check whether the given user is a member right now."""
+    return config.member_group in user.active_property_groups()
+
+
+def has_balance_of_at_least(user, amount):
+    """Check whether the given user's balance is at least the given
+    amount.
+
+    If a user does not have an account, we treat his balance as if it
+    were exactly zero.
+
+    :param User user: The user we are interested in.
+    :param Integral amount: The amount we want to check for.
+    :return: True if and only if the user's balance is at least the given
+    amount (and False otherwise).
+    """
+    balance = user.finance_account.balance if user.finance_account else 0
+    return balance >= amount
+
+
 def has_positive_balance(user):
-    return True
+    """Check whether the given user's balance is (weakly) positive.
+
+    :param user: The user we are interested in.
+    :return: True if and only if the user's balance is at least zero.
+
+    """
+    return has_balance_of_at_least(user, 0)
+
 
 def has_network_access(user):
     """
@@ -428,8 +461,8 @@ def move_out_temporarily(user, comment, processor, during=None):
 
     #TODO: the ip should be deleted just! if the user moves out now!
     for user_host in user.user_hosts:
-        for net_device in user_host.user_net_devices:
-            for ip in net_device.ips:
+        for interface in user_host.user_interfaces:
+            for ip in interface.ips:
                 session.session.delete(ip)
 
     if comment:
@@ -465,19 +498,19 @@ def is_back(user, processor):
     return user
 
 
-def infoflags(user):
-    """Returns informational flags regarding the user
-    :param User user: User object
-    :return: A list of infoflags with a title and a value
-    :rtype: list[dict[str, bool]]
+def status(user):
     """
-    return [
-        {'title': u"Internetzugang", 'val': user.has_property("internet")},
-        {'title': u"Traffic übrig", 'val': has_exceeded_traffic(user)},
-        {'title': u"Bezahlt", 'val': user_has_paid(user)},
-        {'title': u"Verstoßfrei", 'val': not user.has_property("violation")},
-        {'title': u"Mailkonto", 'val': user.has_property("mail")},
-    ]
+    :param user: User whose status we want to look at
+    :return: dict of boolean status codes
+    """
+    return AttrDict({
+        'member': is_member(user),
+        'traffic_exceeded': has_exceeded_traffic(user),
+        'network_access': user.has_property('network_access'),
+        'account_balanced': user_has_paid(user),
+        'violation': user.has_property('violation'),
+        'mail': user.has_property('mail')
+    })
 
 
 @with_transaction

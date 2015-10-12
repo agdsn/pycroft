@@ -4,27 +4,25 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% set page_title = "Konto: " + localized(account.name) %}
-{% set inverted = false %}
+{% set page_title = "Konto: " + account.name|localized %}
 
 {% block content %}
+    {% set inverted = false %}
     <dl class="dl-horizontal">
         <dt>Name</dt>
-        <dd>{{ localized(account.name) }}</dd>
+        <dd>{{ account.name|localized }}</dd>
         <dt>Typ</dt>
-        <dd>{{ account.type }}</dd>
+        <dd>{{ gettext(account.type|account_type) }}</dd>
+        {% if user %}
         <dt>Nutzer</dt>
         <dd>
-        {% if user %}
             <a href="{{ url_for("user.user_show", user_id=user.id) }}#finance">
                 <span class="glyphicon glyphicon-user"
                       aria-hidden="true"></span>
                 {{ user.name }}
             </a>
-        {% else %}
-            <span class="text-muted">Kein Nutzerkonto</span>
-        {% endif %}
         </dd>
+        {% endif %}
     </dl>
     {% include "finance/_transaction_table.html" with context %}
 {% endblock %}

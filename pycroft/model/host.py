@@ -3,27 +3,31 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, event
-from sqlalchemy.orm import backref, relationship, validates
+from sqlalchemy.orm import backref, relationship, validates, object_session
 from sqlalchemy.types import Integer, String
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
+from pycroft.lib.net import MacExistsException
 
 from pycroft.model.base import ModelBase
+from pycroft.model.facilities import Room
+from pycroft.model.net import Subnet
+from pycroft.model.user import User
 from pycroft.model.types import (
     IPAddress, MACAddress, InvalidMACAddressException)
 
 
 class Host(ModelBase):
-    discriminator = Column('type', String(50))
+    discriminator = Column('type', String(50), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     # many to one from Host to User
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
-                     nullable=True)
+    owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
+                      nullable=True)
 
     # many to one from Host to Room
-    room = relationship("Room", backref=backref("hosts"))
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
+    room = relationship(Room, backref=backref("hosts"))
+    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
                      nullable=True)
 
 
@@ -33,7 +37,7 @@ class UserHost(Host):
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
     desired_name = Column(String(63))
-    user = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 
 
@@ -44,7 +48,7 @@ class ServerHost(Host):
 
     name = Column(String(255))
 
-    user = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "server_hosts", cascade="all, delete-orphan"))
 
 
@@ -55,17 +59,33 @@ class Switch(Host):
 
     name = Column(String(127), nullable=False)
 
-    management_ip = Column(String(127), nullable=False)
+    management_ip = Column(IPAddress, nullable=False)
 
-    user = relationship("User", backref=backref(
+    owner = relationship(User, backref=backref(
         "switches", cascade="all, delete-orphan"))
+
+
+def _check_user_host_in_user_room(mapper, connection, userhost):
+    if userhost.room is not userhost.owner.room:
+        raise Exception("UserHost can only be in user's room")
+
+event.listen(UserHost, "before_insert", _check_user_host_in_user_room)
+event.listen(UserHost, "before_update", _check_user_host_in_user_room)
 
 
 class MulticastFlagException(InvalidMACAddressException):
     pass
 
 
-class NetDevice(ModelBase):
+class TypeMismatch(Exception):
+    pass
+
+
+class Interface(ModelBase):
+    """A logical network interface (hence the single MAC address), which means
+    many net interfaces can be connected to the same switch port"""
+
+    #foreign key discriminator
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -75,68 +95,72 @@ class NetDevice(ModelBase):
                      nullable=False)
 
     @validates('mac')
-    def validate_mac(self, _, value):
-        match = mac_regex.match(value)
+    def validate_mac(self, _, mac_address):
+        match = mac_regex.match(mac_address)
         if not match:
-            raise InvalidMACAddressException()
-        if int(value[0:2], base=16) & 1:
+            raise InvalidMACAddressException("MAC address '"+mac_address+"' is not valid")
+        if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException()
-        return value
+        return mac_address
 
 
-class UserNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+class UserInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    __mapper_args__ = {'polymorphic_identity': "user_net_device"}
+    __mapper_args__ = {'polymorphic_identity': "user_interface"}
 
     host = relationship(UserHost,
-                        backref=backref("user_net_devices",
+                        backref=backref("user_interfaces",
                                         cascade="all, delete-orphan"))
 
 
-class ServerNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
+class SwitchInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    __mapper_args__ = {'polymorphic_identity': "server_net_device"}
+    __mapper_args__ = {'polymorphic_identity': "switch_interface"}
+
+    host = relationship(Switch,
+                        backref=backref("switch_interfaces",
+                                        cascade="all, delete-orphan"))
+    name = Column(String(64), nullable=False)
+    default_subnet_id = Column(Integer, ForeignKey(Subnet.id))
+    default_subnet = relationship(Subnet)
+
+
+class ServerInterface(Interface):
+    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
+                primary_key=True)
+
+    __mapper_args__ = {'polymorphic_identity': "server_interface"}
 
     host = relationship(ServerHost,
-                        backref=backref("server_net_devices",
+                        backref=backref("server_interfaces",
                                         cascade="all, delete-orphan"))
 
-    #TODO switch_port_id nicht Nullable machen: CLash mit Importscript
-    switch_port_id = Column(Integer, ForeignKey('switch_port.id'),
-                            nullable=True)
-    switch_port = relationship("SwitchPort")
-
-
-class SwitchNetDevice(NetDevice):
-    id = Column(Integer, ForeignKey(NetDevice.id, ondelete="CASCADE"),
-                primary_key=True)
-
-    __mapper_args__ = {'polymorphic_identity': "switch_net_device"}
-
-    host = relationship("Switch",
-                        backref=backref("switch_net_devices",
-                                        cascade="all, delete-orphan"))
+    #TODO switch_interface_id nicht Nullable machen: CLash mit Importscript
+    switch_interface_id = Column(Integer, ForeignKey(SwitchInterface.id),
+                                 nullable=True)
+    switch_interface = relationship(SwitchInterface,
+                                    foreign_keys=[switch_interface_id])
 
 
 class IP(ModelBase):
     address = Column(IPAddress, nullable=False, unique=True)
-    net_device_id = Column(Integer,
-                           ForeignKey(NetDevice.id, ondelete="CASCADE"),
-                           nullable=False)
-    net_device = relationship(NetDevice,
-                              backref=backref("ips",
-                                              cascade="all, delete-orphan"))
+    interface_id = Column(Integer,
+                          ForeignKey(Interface.id, ondelete="CASCADE"),
+                          nullable=False)
+    interface = relationship(Interface,
+                             backref=backref("ips",
+                                             cascade="all, delete-orphan"))
 
-    host = relationship(Host, secondary=NetDevice.__table__,
+    host = relationship(Host, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
-    subnet_id = Column(Integer, ForeignKey("subnet.id", ondelete="CASCADE"),
+    subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
                        nullable=False)
-    subnet = relationship("Subnet",
+    subnet = relationship(Subnet,
                           backref=backref("ips", cascade="all, delete-orphan"),
                           lazy='joined')
 

@@ -10,15 +10,15 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, jsonify, render_template, url_for
+from flask import Blueprint, flash, jsonify, render_template, url_for, redirect
 from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
-from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
-from pycroft.model.facilities import Room, Dormitory
+from pycroft.lib.user import is_member, status
+from pycroft.model.facilities import Room, Building, Site
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.facilities.forms import RoomForm, DormitoryForm, \
-    RoomLogEntry
+from web.blueprints.facilities.forms import (
+    RoomForm, BuildingForm, RoomLogEntry)
 from web.blueprints.access import BlueprintAccess
 from web.template_filters import datetime_filter
 
@@ -26,73 +26,75 @@ bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, ['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
-
 @bp.route('/')
+def root():
+    return redirect(url_for(".overview"))
+
 @nav.navigate(u"Wohnheime")
+@bp.route('/sites/')
 def overview():
-    dormitories_list = Dormitory.q.all()
-    dormitories_list = facilities.sort_dormitories(dormitories_list)
-    return render_template('facilities/overview.html',
-        dormitories=dormitories_list)
+    return render_template('facilities/site_overview.html')
 
-
-@bp.route('/show/<dormitory_id>')
-def dormitory_show(dormitory_id):
-    dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = dormitory.rooms
-    return render_template('facilities/dormitory_show.html',
-        page_title=u"Wohnheim " + dormitory.short_name, rooms=rooms_list)
-
-
-@bp.route('/room/show/<room_id>', methods=['GET', 'POST'])
-def room_show(room_id):
-    room = Room.q.get(room_id)
-    form = RoomLogEntry()
-
-    if form.validate_on_submit():
-        lib.logging.log_room_event(form.message.data, current_user, room)
-        flash(u'Kommentar hinzugefügt', 'success')
-
-    room_log_list = room.room_log_entries[::-1]
-
-    return render_template('facilities/room_show.html',
-        page_title=u"Raum " + str(room.dormitory.short_name) + u" " + \
-                   str(room.level) + u"-" + str(room.number),
-        room=room,
-        room_log=room_log_list,
-        form=form)
-
-
-@bp.route('/room/logs/<room_id>')
-def room_logs_json(room_id):
+@bp.route('/sites/json')
+def overview_json():
     return jsonify(items=[{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
+            'site': {
+                'title': site.name,
+                'href': url_for("facilities.site_show", site_id=site.id)
             },
-            'message': entry.message
-        } for entry in reversed(Room.q.get(room_id).room_log_entries)])
+            'buildings': [{
+                    'href': url_for("facilities.building_levels", building_shortname=building.short_name),
+                    'title': building.street+" "+building.number
+                } for building in facilities.sort_buildings(site.buildings)]
+        } for site in Site.q.all()])
+
+
+@bp.route('/sites/<int:site_id>')
+def site_show(site_id):
+    site = Site.q.get(site_id)
+    buildings_list = facilities.sort_buildings(site.buildings)
+    return render_template('facilities/site_show.html',
+        buildings=buildings_list,
+        page_title=site.name)
+
+
+@bp.route('/buildings/<int:building_id>/')
+@bp.route('/buildings/<building_shortname>/')
+def building_show(building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
+    rooms_list = building.rooms
+    return render_template('facilities/building_show.html',
+        page_title=u"Wohnheim " + building.short_name, rooms=rooms_list)
 
 
 # ToDo: Review this!
-@bp.route('/levels/<int:dormitory_id>')
-def dormitory_levels(dormitory_id):
-    dormitory = Dormitory.q.get(dormitory_id)
-    rooms_list = Room.q.filter_by(
-        dormitory_id=dormitory_id).order_by(Room.level).distinct()
+@bp.route('/buildings/<int:building_id>/levels/')
+@bp.route('/buildings/<building_shortname>/levels/')
+def building_levels(building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
+    rooms_list = building.rooms
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
 
     return render_template('facilities/levels.html',
-        levels=levels_list, dormitory_id=dormitory_id, dormitory=dormitory,
-        page_title=u"Etagen Wohnheim {}".format(dormitory.short_name))
+        levels=levels_list, building=building,
+        page_title=u"Etagen Wohnheim {}".format(building.short_name))
 
 
 # ToDo: Review this!
-@bp.route('/levels/<int:dormitory_id>/rooms/<int:level>')
-def dormitory_level_rooms(dormitory_id, level):
-    dormitory = Dormitory.q.get(dormitory_id)
+@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/')
+@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/')
+def building_level_rooms(level, building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
     level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
@@ -101,37 +103,98 @@ def dormitory_level_rooms(dormitory_id, level):
     return render_template(
         'facilities/rooms.html',
         level=level_l0,
-        dormitory=dormitory,
+        building=building,
         page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(
-            level, dormitory.short_name
+            level, building.short_name
         )
     )
 
 
-#todo think about a better place for this function
-# it surely will be used elsewhere…
-def user_btn_class(user):
-    if not has_positive_balance(user):
-        return "btn-warning"
-    elif not user.has_property("internet"):
-        return "btn-danger"
-    elif has_exceeded_traffic(user):
-        return "btn-info"
+# todo think about a better place for these functions
+# they will surely be used elsewhere…
+def user_btn_style(user):
+    s = status(user)
+    glyphicons = []
+    btn_class = None
+
+    if not s.account_balanced:
+        glyphicons.append('glyphicon-euro')
+        btn_class = 'btn-warning'
+
+    if s.member:
+        if s.traffic_exceeded:
+            glyphicons.append('glyphicon-stats')
+            btn_class = 'btn-warning'
+        if not s.network_access:
+            glyphicons.append('glyphicon-remove')
+            btn_class = 'btn-danger'
+        if s.violation:
+            glyphicons.append('glyphicon-alert')
+            btn_class = 'btn-danger'
     else:
-        return "btn-success"
+        btn_class = 'btn-info'
+
+    glyphicons = glyphicons or ['glyphicon-ok']
+    btn_class = btn_class or 'btn-success'
+
+    return btn_class, glyphicons
 
 
-@bp.route('/levels/<int:dormitory_id>/rooms/<int:level>/json')
-def dormitory_level_rooms_json(dormitory_id, level):
+def user_button(user):
+    btn_class, glyphicons = user_btn_style(user)
+    return {
+        'href': url_for("user.user_show", user_id=user.id),
+        'title': user.name,
+        'icon': glyphicons,
+        'btn_class': btn_class
+    }
+
+
+@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/json')
+@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
+def building_level_rooms_json(level, building_id=None, building_shortname=None):
+    if building_shortname:
+        building = Building.q.filter(Building.short_name == building_shortname).one()
+    else:
+        building = Building.q.get(building_id)
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inmates': [{
-                    'href': url_for("user.user_show", user_id=user.id),
-                    'title': user.name,
-                    'btn_class': user_btn_class(user)
-                } for user in room.users]
+            'inhabitants': [user_button(user)
+                            for user in filter(is_member, room.users)]
         } for room in Room.q.filter_by(
-            dormitory_id=dormitory_id, level=level).order_by(Room.number)])
+            building=building, level=level).order_by(Room.number)])
+
+
+@bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])
+def room_show(room_id):
+    room = Room.q.get(room_id)
+    form = RoomLogEntry()
+
+    if form.validate_on_submit():
+        lib.logging.log_room_event(form.message.data, current_user, room)
+        flash(u'Kommentar hinzugefügt', 'success')
+
+    room_log_list = reversed(room.log_entries)
+
+    return render_template('facilities/room_show.html',
+        page_title=u"Raum " + str(room.building.short_name) + u" " + \
+                   str(room.level) + u"-" + str(room.number),
+        room=room,
+        room_log=room_log_list,
+        user_buttons=map(user_button, room.users),
+        form=form)
+
+
+@bp.route('/rooms/<int:room_id>/logs/json')
+def room_logs_json(room_id):
+    return jsonify(items=[{
+            'created_at': datetime_filter(entry.created_at),
+            'user': {
+                'title': entry.author.name,
+                'href': url_for("user.user_show", user_id=entry.author.id)
+            },
+            'message': entry.message
+        } for entry in reversed(Room.q.get(room_id).log_entries)])

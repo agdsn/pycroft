@@ -12,11 +12,11 @@ from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model import session, user, logging
-from pycroft.model.host import UserNetDevice, IP, UserHost
+from pycroft.model.host import UserInterface, IP, UserHost
 from pycroft.model.net import Subnet
-from tests.fixtures.dummy.facilities import DormitoryData, RoomData
+from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import (
-    UserHostData, UserNetDeviceData)
+    UserHostData, UserInterfaceData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
@@ -51,8 +51,8 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
 
 
 class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [DormitoryData, VLANData, SubnetData, RoomData, UserData,
-                UserHostData, UserNetDeviceData]
+    datasets = [BuildingData, VLANData, SubnetData, RoomData, UserData,
+                UserHostData, UserInterfaceData]
 
     def calculate_usable_ips(self, net):
         ips = ipaddr.IPNetwork(net.address).numhosts
@@ -64,11 +64,11 @@ class Test_020_IpHelper(FixtureDataTestBase):
             ip, subnet = get_free_ip((subnet,))
             self.assertIn(ip, subnet.address)
 
-    def fill_net(self, net, net_device):
+    def fill_net(self, net, interface):
         for num in range(0, self.calculate_usable_ips(net)):
             ip, _ = get_free_ip((net,))
             session.session.add(IP(address=ip, subnet=net,
-                                   net_device=net_device))
+                                   interface=interface))
         session.session.commit()
 
     def test_0030_get_free_ip_next_to_full(self):
@@ -79,32 +79,32 @@ class Test_020_IpHelper(FixtureDataTestBase):
         subnets = (first_net, second_net)
         host = UserHost.q.one()
 
-        net_device = host.user_net_devices[0]
-        self.fill_net(first_net, net_device)
+        interface = host.user_interfaces[0]
+        self.fill_net(first_net, interface)
         session.session.refresh(first_net)
         self.assertRaises(SubnetFullException, get_free_ip, (first_net,))
         try:
             get_free_ip(subnets)
         except SubnetFullException:
             self.fail("Subnets should have free IPs.")
-        self.fill_net(subnets[1], net_device)
+        self.fill_net(subnets[1], interface)
         self.assertRaises(SubnetFullException, get_free_ip, subnets)
 
         session.session.delete(host)
         session.session.commit()
 
 
-class Test_030_change_mac_net_device(FixtureDataTestBase):
-    datasets = [UserNetDeviceData, UserData]
+class Test_030_change_mac_interface(FixtureDataTestBase):
+    datasets = [UserInterfaceData, UserData]
 
     def setUp(self):
-        super(Test_030_change_mac_net_device, self).setUp()
+        super(Test_030_change_mac_interface, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy.login).one()
-        self.dummy_device = UserNetDevice.q.filter_by(
-            mac=UserNetDeviceData.dummy_device.mac).one()
+        self.interface = UserInterface.q.filter_by(
+            mac=UserInterfaceData.dummy.mac).one()
 
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"
-        change_mac(self.dummy_device, new_mac, self.processing_user)
-        self.assertEqual(self.dummy_device.mac, new_mac)
+        change_mac(self.interface, new_mac, self.processing_user)
+        self.assertEqual(self.interface.mac, new_mac)

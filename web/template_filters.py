@@ -16,9 +16,10 @@ from itertools import chain
 import flask.ext.babel
 
 from pycroft._compat import imap
-from pycroft.model import session
+from pycroft.model import session, _all
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
+from pycroft.helpers.i18n import localized, gettext
 
 _filter_registry = {}
 
@@ -36,6 +37,7 @@ _category_map = {"warning": "Warnung",
                  "message": "Hinweis",
                  "success": "Erfolgreich"}
 
+template_filter("localized")(localized)
 
 @template_filter("pretty_category")
 def pretty_category_filter(category):
@@ -121,7 +123,32 @@ def money_filter(amount):
     """Format a money string from Cents to Euro
     """
     euro = amount/100.0
-    return (u"{:.2f} €".format(euro)).replace('.', ',')
+    return (u"{:.2f}\u202f€".format(euro)).replace('.', ',')
+
+@template_filter("account_type")
+def account_type_filter(account_type):
+    types = {
+        "ASSET": gettext("Asset account"),
+        "LIABILITY": gettext("Liability account"),
+        "REVENUE": gettext("Revenue account"),
+        "EXPENSE": gettext("Expense account"),
+    }
+
+    return types.get(account_type)
+
+@template_filter("transaction_type")
+def transaction_type_filter(credit_debit_type):
+    types = {
+        ("ASSET", "LIABILITY"): gettext("Balance sheet extension"),
+        ("LIABILITY", "ASSET"): gettext("Balance sheet contraction"),
+        ("ASSET", "REVENUE"): gettext("Revenue"),
+        ("REVENUE", "ASSET"): gettext("Adjusting entry (Revenue)"),
+        ("EXPENSE", "ASSET"): gettext("Expense"),
+        ("ASSET", "EXPENSE"): gettext("Adjusting entry (Expense)"),
+        ("ASSET", "ASSET"): gettext("Asset exchange"),
+        ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
+    }
+    return types.get(credit_debit_type, gettext("Unknown"))
 
 
 @template_filter("host_traffic")
@@ -171,32 +198,6 @@ def record_removable_filter(record):
         return False
     else:
         return True
-
-
-@template_filter("record_readable_name")
-def record_readable_name_filter(record):
-    return record.__class__.__name__
-
-
-#TODO: usecases — should that srsly return >1 switch?
-# Because if yes, there should be a more elegant solution for providing a link
-# in the table this is actually used (`user_show_devices_json()`)!
-@template_filter("get_switch")
-def ip_get_switch(host,ip):
-    patch_ports = host.room.patch_ports
-    if not patch_ports:
-        return "No Switch"
-    return u', '.join(imap(lambda p: p.destination_port.switch.name, patch_ports))
-
-
-#TODO: usecases — should that srsly return >1 port? (see todo above)
-@template_filter("get_switch_port")
-def ip_get_switch_port(host,ip):
-    patch_ports = host.room.patch_ports
-    if not patch_ports:
-        return "No Port"
-    return u', '.join(imap(lambda p: p.destination_port.name, patch_ports))
-
 
 def register_filters(app):
     for name in _filter_registry:

@@ -82,7 +82,8 @@ def sort_ports(ports):
         number = number_re.search(port.name)
         letter = letter_re.search(port.name.lower())
 
-        return int(number.group(0)) + 1024 * ord(letter.group(0))
+        return (int(number.group(0) if number else -1) +
+                1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
 
     sorted_ports = sorted(ports, key=make_sort_key)
 

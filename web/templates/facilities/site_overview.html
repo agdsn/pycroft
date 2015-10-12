@@ -7,13 +7,14 @@
 {% import "macros/table.html" as tbl %}
 
 {% set cols = [
-    {'name': 'id', 'title': '#'},
-    {'name': 'name', 'title': 'Name'},
-    {'name': 'vid', 'title': 'VID'}
-] %}
+    {'name': 'site', 'title': 'Site', 'formatter': 'linkFormatter'},
+    {'name': 'buildings', 'title': 'Buildings', 'formatter': 'multiBtnFormatter'}]
+    %}
 
 {% block content %}
     {{ tbl.item_table(
-        'vlans', url_for('infrastructure.vlans_json'), cols
+        'sites',
+        url_for('facilities.overview_json'),
+        cols
     ) }}
 {% endblock %}

@@ -165,7 +165,7 @@ def journals_entries_edit(journal_id, entry_id):
     )
 
 
-@bp.route('/accounts')
+@bp.route('/accounts/')
 @bp.route('/accounts/list')
 @nav.navigate(u"Konten")
 def accounts_list():
@@ -185,27 +185,22 @@ def accounts_list():
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
-    try:
-        user = User.q.filter_by(finance_account_id=account.id).one()
-    except NoResultFound:
-        user = None
-    except MultipleResultsFound:
-        user = User.q.filter_by(finance_account_id=account.id).first()
-        flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
-              u" verbunden sind!", "warning")
+    user = account.user
 
-    splits = (
-        Split.q
-        .join(Transaction)
-        .filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_on)
-    )
-    typed_splits = get_typed_splits(splits)
+    #TODO: typed_splits/account form does not (yet) use server-side pagination,
+    # which leads to timeouts on large accounts. So here is a workaround
+    # which disables account form for accounts with more than 100 transactions
+
+    if finance.Split.q.filter_by(account=account).count() < 100:
+        typed_splits = get_typed_splits(account.splits)
+    else:
+        typed_splits = None
+
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
-        splits=splits, typed_splits=typed_splits,
         json_url=url_for('.accounts_show_json', account_id=account_id),
+        typed_splits=typed_splits,
         footer=[{'title': 'Saldo', 'colspan': 3},
                 {'title': money_filter(account.balance)}]
     )
@@ -214,21 +209,52 @@ def accounts_show(account_id):
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id):
     inverted = False
-    return jsonify(items=[
-        {
-            'posted_at': datetime_filter(split.transaction.posted_at),
-            'valid_on': date_filter(split.transaction.valid_on),
-            'description': {
-                'href': url_for(
-                    "finance.transactions_show",
-                    transaction_id=split.transaction_id
-                ),
-                'title': localized(split.transaction.description)
-            },
-            'amount': money_filter(split.amount),
-            'row_positive': (split.amount > 0) is not inverted
-        } for split in Split.q.join(Transaction).filter(Split.account_id == account_id)
-        .order_by(Transaction.valid_on)])
+    limit = request.args.get('limit', None, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    sort_by = request.args.get('sort', "valid_on")
+    sort_order = request.args.get('order')
+    filter = request.args.get('filter') # for account form / typed_split
+    search = request.args.get('search')
+
+    if not (sort_by in Transaction.__table__.columns
+            or sort_by in Split.__table__.columns):
+        sort_by = "valid_on"
+    ordering = sort_by+" desc" if sort_order == "desc" else sort_by
+
+    query = Split.q.join(Transaction).filter(Split.account_id == account_id)
+    if search:
+        query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
+    if filter == "non-negative":
+        query = query.filter(Split.amount >= 0)
+    elif filter == "negative":
+        query = query.filter(Split.amount < 0)
+
+    total = query.count()
+    records = (query.order_by(ordering)
+                    .offset(offset)
+                    .limit(limit))
+
+    return jsonify(
+        items={
+            "total": total,
+            "rows": [
+                {
+                    'id': i+offset,
+                    'posted_at': datetime_filter(split.transaction.posted_at),
+                    #'posted_by': (split.transaction.author.id, split.transaction.author.name),
+                    'valid_on': date_filter(split.transaction.valid_on),
+                    'description': {
+                        'href': url_for(
+                            "finance.transactions_show",
+                            transaction_id=split.transaction_id
+                        ),
+                        'title': localized(split.transaction.description)
+                    },
+                    'amount': money_filter(split.amount),
+                    'row_positive': (split.amount > 0) ^ inverted
+                } for i, split in enumerate(records)
+                ]
+        })
 
 
 @bp.route('/transactions/<int:transaction_id>')
@@ -238,7 +264,8 @@ def transactions_show(transaction_id):
         abort(404)
     return render_template(
         'finance/transactions_show.html',
-        transaction=transaction
+        transaction=transaction,
+        get_transaction_type=finance.get_transaction_type
     )
 
 

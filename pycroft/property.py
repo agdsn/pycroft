@@ -8,9 +8,10 @@ from collections import OrderedDict
 property_categories = OrderedDict((
     (u"Mitglieder", OrderedDict((
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
-        (u"away", u"vorübergehend ausgezogen"),
+        (u"mail", u"hat Zugriff auf Mailkonto"),
         (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
+        (u"reduced_semester_fee", u"muss nur reduzierten Semesterbeitrag bezahlen"),
         (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((

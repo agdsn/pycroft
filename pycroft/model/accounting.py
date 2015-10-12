@@ -23,10 +23,10 @@ class TrafficVolume(ModelBase):
     timestamp = Column(DateTime, nullable=False)
     type = Column(Enum("IN", "OUT", name="traffic_types"), nullable=False)
 
-    # many to one from TrafficVolume to NetDevice
+    # many to one from TrafficVolume to Interface
     ip = relationship("IP", backref=backref("traffic_volumes",
                                             cascade="all, delete-orphan"))
     ip_id = Column(Integer, ForeignKey("ip.id", ondelete="CASCADE"),
                    nullable=False)
 
-    net_device = relationship("NetDevice", secondary="ip", viewonly=True)
+    interface = relationship("Interface", secondary="ip", viewonly=True)

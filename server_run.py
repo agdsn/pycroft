@@ -47,7 +47,7 @@ def server_run(args):
     set_translation_lookup(lookup_translation)
     app.config.from_pyfile('flask.cfg')
 
-    app.run(debug=args.debug, port=args.port, host=args.host)
+    app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pycroft launcher")

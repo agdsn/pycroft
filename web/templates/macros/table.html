@@ -12,16 +12,19 @@
 
 {% macro item_table(table_id, data_url="", display_columns=[], footer=[], row_style="", server_pagination=False, sort_order="asc") %}
     <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
-        {% if caller %}
+        {% if caller is defined %}
             {{ caller() }}
         {% endif %}
     </div>
     <table id="{{ table_id }}" class="table table-striped"
+           data-page-size=20
            data-toggle="table"
            data-cache="false"
            {% if data_url %}data-url="{{ data_url }}"{% endif %}
            data-response-handler="responseHandler"
            data-search="true"
+           data-sort-order="{{ sort_order }}"
+           {% if server_pagination %}data-side-pagination="server"{% endif %}
            data-pagination="true"
            {% if row_style %}data-row-style="{{ row_style }}"{% endif %}
            data-toolbar="#{{ table_id }}-toolbar">
@@ -29,14 +32,14 @@
         <tr>
             {% for col in display_columns %}
                 <th data-sortable="true" data-field="{{ col.name }}"
-                    {% if col.formatter %}data-formatter="{{ col.formatter }}"{% endif %}
-                    {% if col.width in range(1, 12) %}class="col-sm-{{ col. width }}"{% endif %}
+                    {% if col.formatter is defined %}data-formatter="{{ col.formatter }}"{% endif %}
+                    {% if col.width is defined %}class="col-sm-{{ col. width }}"{% endif %}
                 >{{ col.title }}</th>
             {% endfor %}
         </tr>
         </thead>
-        {% if footer|count > 0 %}<tfoot><tr>{% for footcol in footer %}
-            <td{% if footcol.colspan and footcol.colspan > 0 %} colspan="{{ footcol.colspan }}"{% endif %}>{{ footcol.title }}</td>
+        {% if footer is defined %}<tfoot><tr>{% for footcol in footer %}
+            <td{% if footcol.colspan is defined and footcol.colspan > 0 %} colspan="{{ footcol.colspan }}"{% endif %}>{{ footcol.title }}</td>
         {% endfor %}</tr></tfoot>{% endif %}
     </table>
 {% endmacro %}

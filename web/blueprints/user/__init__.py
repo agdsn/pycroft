@@ -10,7 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from itertools import chain
+from itertools import chain, imap
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
@@ -25,20 +25,19 @@ from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserNetDevice, IP
+from pycroft.model.host import Host, UserInterface, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
-    NetDeviceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
+    InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
 from flask.ext.login import current_user
-from web.template_filters import datetime_filter, host_cname_filter, \
-    host_name_filter, record_readable_name_filter, ip_get_switch, \
-    ip_get_switch_port
+from web.template_filters import (
+    datetime_filter, host_cname_filter, host_name_filter)
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -64,6 +63,17 @@ def json_search():
     return jsonify(users=users)
 
 
+def infoflags(user):
+    user_status = lib.user.status(user)
+    return [
+        {'title': u"Netzwerkzugang", 'val': user_status.network_access},
+        {'title': u"Traffic übrig", 'val': not user_status.traffic_exceeded},
+        {'title': u"Bezahlt", 'val': user_status.account_balanced},
+        {'title': u"Verstoßfrei", 'val': not user_status.violation},
+        {'title': u"Mailkonto", 'val': user_status.mail},
+    ]
+
+
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
 def user_show(user_id):
 
@@ -72,7 +82,12 @@ def user_show(user_id):
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
 
-    room = Room.q.get(user.room_id)
+    room = user.room
+    if room:
+        room_log_entries = room.log_entries
+    else:
+        room_log_entries = []
+
     form = UserLogEntry()
 
     if form.validate_on_submit():
@@ -80,11 +95,11 @@ def user_show(user_id):
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = sorted(
-        chain(user.user_log_entries, room.room_log_entries),
+        chain(user.log_entries, room_log_entries),
         key=operator.attrgetter("created_at"), reverse=True
     )
-    user_log_list = user.user_log_entries[::-1]
-    room_log_list = room.room_log_entries[::-1]
+    user_log_list = reversed(user.log_entries)
+    room_log_list = reversed(room_log_entries)
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
@@ -111,7 +126,7 @@ def user_show(user_id):
         form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all(),
-        flags=lib.user.infoflags(user),
+        flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.finance_account_id)
     )
@@ -123,62 +138,52 @@ def user_show_logs_json(user_id, logtype="all"):
     user = User.q.get(user_id)
     if user is None:
         abort(404)
-    user_log_list = user.user_log_entries[::-1]\
-        if logtype in ["user", "all"] else []
-    room_log_list = Room.q.get(user.room_id).room_log_entries[::-1]\
-        if logtype in ["room", "all"] else []
+    user_log_list = []
+    room_log_list = []
+    if logtype in ["user", "all"]:
+        user_log_list = reversed(user.log_entries)
+    if logtype in ["room", "all"] and user.room:
+        room_log_list = reversed(user.room.log_entries)
 
-    return jsonify(items=[{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': Message.from_json(entry.message).localize(),
-            'type': 'user'
-        } for entry in user_log_list] + [{
-            'created_at': datetime_filter(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': Message.from_json(entry.message).localize(),
-            'type': 'room'
-        } for entry in room_log_list])
+    return jsonify(items=list(chain(({
+        'created_at': datetime_filter(entry.created_at),
+        'user': {
+            'title': entry.author.name,
+            'href': url_for("user.user_show", user_id=entry.author.id)
+        },
+        'message': Message.from_json(entry.message).localize(),
+        'type': 'user'
+    } for entry in user_log_list), ({
+        'created_at': datetime_filter(entry.created_at),
+        'user': {
+            'title': entry.author.name,
+            'href': url_for("user.user_show", user_id=entry.author.id)
+        },
+        'message': Message.from_json(entry.message).localize(),
+        'type': 'room'
+    } for entry in room_log_list))))
 
 
 @bp.route("/show/<user_id>/hosts")
 def user_show_hosts_json(user_id):
-    return jsonify(items=[{
-            'host': "{} ({})".format(host_cname_filter(user_host),
-                                     host_name_filter(user_host)),
-            'room': "{} / {}-{}".format(user_host.room.dormitory.short_name,
-                                        user_host.room.level,
-                                        user_host.room.number)
-            if user_host.room else "Kein Raum",
-            'dns_entries': [
-                [record_readable_name_filter(record), record.information_human]
-                for record in user_host.records
-            ],
-            'actions': [
-                # TODO insert links to the pages for editing / deleting
-                #   (if implemented, of course…)
-                {'title': 'Bearbeiten', 'href': '', 'icon': 'glyphicon-edit'},
-                {'title': 'Löschen', 'href': '', 'icon': 'glyphicon-trash'}
-            ]
-        } for user_host in User.q.get(user_id).user_hosts])
-
-
-@bp.route("/show/<user_id>/devices")
-def user_show_devices_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
+        if user_host.room:
+            patch_ports = user_host.room.switch_patch_ports
+            switches = u', '.join(imap(lambda p: p.switch_interface.host.name,
+                                       patch_ports))
+
+            ports = u', '.join(imap(lambda p: p.switch_interface.name,
+                                       patch_ports))
+        else:
+            switches = None
+            ports = None
         for ip in user_host.ips:
             list_items.append({
-                'ip': ip.address,
-                'mac': ip.net_device.mac,
-                'switch': ip_get_switch(user_host, ip),
-                'port': ip_get_switch_port(user_host, ip)
+                'ip': str(ip.address),
+                'mac': ip.interface.mac,
+                'switch': switches,
+                'port': ports,
             })
     return jsonify(items=list_items)
 
@@ -262,20 +267,20 @@ def end_membership(membership_id):
 @bp.route('/json/levels')
 @access.require('facilities_show')
 def json_levels():
-    dormitory_id = request.args.get('dormitory', 0, type=int)
+    building_id = request.args.get('building', 0, type=int)
     levels = session.session.query(Room.level.label('level')).filter_by(
-        dormitory_id=dormitory_id).order_by(Room.level).distinct()
+        building_id=building_id).order_by(Room.level).distinct()
     return jsonify(dict(items=[entry.level for entry in levels]))
 
 
 @bp.route('/json/rooms')
 @access.require('facilities_show')
 def json_rooms():
-    dormitory_id = request.args.get('dormitory', 0, type=int)
+    building_id = request.args.get('building', 0, type=int)
     level = request.args.get('level', 0, type=int)
     rooms = session.session.query(
         Room.number.label("room_num")).filter_by(
-        dormitory_id=dormitory_id, level=level).order_by(
+        building_id=building_id, level=level).order_by(
         Room.number).distinct()
     return jsonify(dict(items=[entry.room_num for entry in rooms]))
 
@@ -299,7 +304,7 @@ def json_trafficdata(user_id, days=7):
     ).join(
         IP.host
     ).filter(
-        Host.user_id == user_id
+        Host.owner_id == user_id
     ).filter(
         TrafficVolume.timestamp > traffic_timespan)
 
@@ -336,7 +341,7 @@ def create():
         try:
             new_user = lib.user.move_in(name=form.name.data,
                 login=form.login.data,
-                dormitory=form.dormitory.data, level=form.level.data,
+                building=form.building.data, level=form.level.data,
                 room_number=form.room_number.data,
                 host_name=form.host.data, mac=form.mac.data,
                 processor=current_user,
@@ -373,11 +378,11 @@ def move(user_id):
         if user.room == Room.q.filter_by(
                 number=form.room_number.data,
                 level=form.level.data,
-                dormitory_id=form.dormitory.data.id).one():
+                building_id=form.building.data.id).one():
             flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
             refill_form_data = True
         else:
-            edited_user = lib.user.move(user, form.dormitory.data,
+            edited_user = lib.user.move(user, form.building.data,
                 form.level.data, form.room_number.data, current_user)
             session.session.commit()
 
@@ -385,17 +390,17 @@ def move(user_id):
             return redirect(url_for('.user_show', user_id=edited_user.id))
 
     if not form.is_submitted() or refill_form_data:
-        form.dormitory.data = user.room.dormitory
+        form.building.data = user.room.building
 
         levels = session.session.query(Room.level.label('level')).filter_by(
-            dormitory_id=user.room.dormitory.id).order_by(Room.level).distinct()
+            building_id=user.room.building.id).order_by(Room.level).distinct()
 
         form.level.choices = [(entry.level, str(entry.level)) for entry in
                                                               levels]
         form.level.data = user.room.level
 
         rooms = session.session.query(Room).filter_by(
-            dormitory_id=user.room.dormitory.id,
+            building_id=user.room.building.id,
             level=user.room.level
         ).order_by(Room.number).distinct()
 
@@ -643,21 +648,21 @@ def move_out(user_id):
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
-@bp.route('/change_mac/<int:user_net_device_id>', methods=['GET', 'POST'])
+@bp.route('/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
 @access.require('user_mac_change')
-def change_mac(user_net_device_id):
-    form = NetDeviceChangeMacForm()
-    my_net_device = UserNetDevice.q.get(user_net_device_id)
+def change_mac(user_interface_id):
+    form = InterfaceChangeMacForm()
+    my_interface = UserInterface.q.get(user_interface_id)
     if not form.is_submitted():
-        form.mac.data = my_net_device.mac
+        form.mac.data = my_interface.mac
     if form.validate_on_submit():
-        changed_net_device = lib.net.change_mac(net_device=my_net_device,
+        changed_interface = lib.net.change_mac(interface=my_interface,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
         session.session.commit()
-        return redirect(url_for('.user_show', user_id=changed_net_device.host.user.id))
-    return render_template('user/change_mac.html', form=form, user_net_device_id=user_net_device_id)
+        return redirect(url_for('.user_show', user_id=changed_interface.host.user.id))
+    return render_template('user/change_mac.html', form=form, user_interface_id=user_interface_id)
 
 
 @bp.route('/move_out_temporarily/<int:user_id>', methods=['GET', 'POST'])

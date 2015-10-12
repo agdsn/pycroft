@@ -35,13 +35,15 @@
                 {{ user.registered_at|datetime }}
             {% endcall %}
 
-            {% call info_row("Wohnort") %}
-                {% if user.is_away %}
-                <a style="text-decoration: line-through;" href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
-                {% else %}
-                <a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.dormitory.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
-                {% endif %}
-            {% endcall %}
+            {% if user.room_id is not none %}
+                {% call info_row("Wohnort") %}
+                    {% if user.has_property("away") %}
+                    <a style="text-decoration: line-through;" href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
+                    {% else %}
+                    <a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
+                    {% endif %}
+                {% endcall %}
+            {% endif %}
 
             {% for flag in flags %}{% call info_row(flag['title']) %}
                 {% if flag['val'] %}
@@ -57,7 +59,7 @@
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Umziehen</a></div>
         <div class="user"><a class="btn btn-info" href="{{ url_for(".block", user_id=user.id) }}">Sperren</a></div>
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">Ausziehen</a></div>
-        {% if not user.is_away %}
+        {% if not user.has_property("away") %}
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_temporarily", user_id=user.id) }}">Vorübergehend ausziehen</a></div>
         {% else %}
         <div class="user"><a class="btn btn-info" href="{{ url_for(".is_back", user_id=user.id) }}">Wieder einziehen</a></div>
