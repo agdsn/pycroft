@@ -17,6 +17,7 @@
         {% endif %}
     </div>
     <table id="{{ table_id }}" class="table table-striped"
+           data-page-size=20
            data-toggle="table"
            data-cache="false"
            {% if data_url %}data-url="{{ data_url }}"{% endif %}

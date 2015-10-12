@@ -63,6 +63,17 @@ def json_search():
     return jsonify(users=users)
 
 
+def infoflags(user):
+    user_status = lib.user.status(user)
+    return [
+        {'title': u"Netzwerkzugang", 'val': user_status.network_access},
+        {'title': u"Traffic übrig", 'val': not user_status.traffic_exceeded},
+        {'title': u"Bezahlt", 'val': user_status.account_balanced},
+        {'title': u"Verstoßfrei", 'val': not user_status.violation},
+        {'title': u"Mailkonto", 'val': user_status.mail},
+    ]
+
+
 @bp.route('/show/<user_id>', methods=['GET', 'POST'])
 def user_show(user_id):
 
@@ -115,7 +126,7 @@ def user_show(user_id):
         form=form,
         memberships=memberships.all(),
         memberships_active=memberships_active.all(),
-        flags=lib.user.infoflags(user),
+        flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.finance_account_id)
     )

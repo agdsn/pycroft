@@ -17,7 +17,7 @@ import re
 from sqlalchemy import and_, exists, func, literal
 
 from pycroft import config
-from pycroft.helpers import user
+from pycroft.helpers import user, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
@@ -351,6 +351,11 @@ def has_exceeded_traffic(user, when=None):
     ).scalar()
 
 
+def is_member(user):
+    """Check whether the given user is a member right now."""
+    return config.member_group in user.active_property_groups()
+
+
 def has_balance_of_at_least(user, amount):
     """Check whether the given user's balance is at least the given
     amount.
@@ -493,19 +498,19 @@ def is_back(user, processor):
     return user
 
 
-def infoflags(user):
-    """Returns informational flags regarding the user
-    :param User user: User object
-    :return: A list of infoflags with a title and a value
-    :rtype: list[dict[str, bool]]
+def status(user):
     """
-    return [
-        {'title': u"Netzwerkzugang", 'val': user.has_property("network_access")},
-        {'title': u"Traffic übrig", 'val': not has_exceeded_traffic(user)},
-        {'title': u"Bezahlt", 'val': user_has_paid(user)},
-        {'title': u"Verstoßfrei", 'val': not user.has_property("violation")},
-        {'title': u"Mailkonto", 'val': user.has_property("mail")},
-    ]
+    :param user: User whose status we want to look at
+    :return: dict of boolean status codes
+    """
+    return AttrDict({
+        'member': is_member(user),
+        'traffic_exceeded': has_exceeded_traffic(user),
+        'network_access': user.has_property('network_access'),
+        'account_balanced': user_has_paid(user),
+        'violation': user.has_property('violation'),
+        'mail': user.has_property('mail')
+    })
 
 
 @with_transaction

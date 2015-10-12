@@ -14,7 +14,7 @@ from flask import Blueprint, flash, jsonify, render_template, url_for, redirect
 from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
-from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
+from pycroft.lib.user import is_member, status
 from pycroft.model.facilities import Room, Building, Site
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.facilities.forms import (
@@ -110,17 +110,44 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
     )
 
 
-#todo think about a better place for this function
-# it surely will be used elsewhere…
-def user_btn_class(user):
-    if not has_positive_balance(user):
-        return "btn-warning"
-    elif not user.has_property("network_access"):
-        return "btn-danger"
-    elif has_exceeded_traffic(user):
-        return "btn-info"
+# todo think about a better place for these functions
+# they will surely be used elsewhere…
+def user_btn_style(user):
+    s = status(user)
+    glyphicons = []
+    btn_class = None
+
+    if not s.account_balanced:
+        glyphicons.append('glyphicon-euro')
+        btn_class = 'btn-warning'
+
+    if s.member:
+        if s.traffic_exceeded:
+            glyphicons.append('glyphicon-stats')
+            btn_class = 'btn-warning'
+        if not s.network_access:
+            glyphicons.append('glyphicon-remove')
+            btn_class = 'btn-danger'
+        if s.violation:
+            glyphicons.append('glyphicon-alert')
+            btn_class = 'btn-danger'
     else:
-        return "btn-success"
+        btn_class = 'btn-info'
+
+    glyphicons = glyphicons or ['glyphicon-ok']
+    btn_class = btn_class or 'btn-success'
+
+    return btn_class, glyphicons
+
+
+def user_button(user):
+    btn_class, glyphicons = user_btn_style(user)
+    return {
+        'href': url_for("user.user_show", user_id=user.id),
+        'title': user.name,
+        'icon': glyphicons,
+        'btn_class': btn_class
+    }
 
 
 @bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/json')
@@ -135,11 +162,8 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inhabitants': [{
-                    'href': url_for("user.user_show", user_id=user.id),
-                    'title': user.name,
-                    'btn_class': user_btn_class(user)
-                } for user in room.users]
+            'inhabitants': [user_button(user)
+                            for user in filter(is_member, room.users)]
         } for room in Room.q.filter_by(
             building=building, level=level).order_by(Room.number)])
 
@@ -160,6 +184,7 @@ def room_show(room_id):
                    str(room.level) + u"-" + str(room.number),
         room=room,
         room_log=room_log_list,
+        user_buttons=map(user_button, room.users),
         form=form)
 
 

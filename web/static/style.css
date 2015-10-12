@@ -168,3 +168,7 @@ em.dotted{
     font-style: normal;
     border-bottom: 1px dashed #999;
 }
+
+.btn > .badge {
+    margin-right: 5px;
+}

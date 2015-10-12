@@ -623,7 +623,7 @@ def process_record(index, record, imported_at):
 def user_has_paid(user):
     return sum(split.amount for split in (Split.q.filter_by(
         account_id=user.finance_account.id
-    ))) >= 0
+    ))) <= 0
 
 
 def get_typed_splits(splits):

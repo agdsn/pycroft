@@ -5,6 +5,7 @@
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
+{% import "macros/button.html" as btn %}
 {% import "macros/table.html" as tbl %}
 {% set cols = [
     {'name': 'created_at', 'title': 'Erstellt um'},
@@ -40,8 +41,8 @@
             {%- else %}
             <h3>Bewohner</h3>
             <ul>
-                {% for user in room.users -%}
-                <li><a href="{{ url_for('user.user_show', user_id=user.id) }}">{{ user.name }}</a> </li>
+                {% for button in user_buttons -%}
+                <li>{{ btn.multiGlyphBtnMacro(button) }}</li>
                 {%- endfor %}
             </ul>
             {%- endif %}
