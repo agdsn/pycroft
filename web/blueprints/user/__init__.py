@@ -16,7 +16,7 @@ from flask import (
     url_for)
 import operator
 from sqlalchemy import Text
-from pycroft import lib
+from pycroft import lib, config
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
@@ -27,6 +27,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserInterface, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
+from pycroft.model.finance import FinanceAccount, Split
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -47,7 +48,35 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    return redirect(url_for("facilities.overview"))
+    uquery = lambda: session.session.query(User)
+
+    entries = [{"title": "Nutzer in Datenbank",
+                "href": None,
+                "number": uquery().count()},
+               {"title": "Mitglieder",
+                "href": None,
+                "number": uquery().join(Membership).filter(
+                                Membership.group == config.member_group,
+                                Membership.active())
+                           .count()},
+               {"title": "Nicht bezahlt",
+                "href": None,
+                "number": uquery().join(User.finance_account)
+                           .join(Split)
+                           .group_by(User.id)
+                           .having(func.sum(Split.amount) > 0)
+                           .count()},
+               {"title": "Nicht bezahlt (Mitglieder)",
+                "href": "#",
+                "number": uquery().join(Membership).filter(
+                                Membership.group == config.member_group,
+                                Membership.active())
+                           .join(User.finance_account)
+                           .join(Split)
+                           .group_by(User.id)
+                           .having(func.sum(Split.amount) > 0)
+                           .count()}]
+    return render_template("user/user_overview.html", entries=entries)
 
 
 @bp.route('/json/search')
