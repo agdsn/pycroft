@@ -32,7 +32,7 @@ from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
-    UserEditNameForm, UserEditEMailForm, UserBlockForm, UserMoveOutForm, \
+    UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
@@ -103,7 +103,7 @@ def infoflags(user):
     ]
 
 
-@bp.route('/show/<user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/', methods=['GET', 'POST'])
 def user_show(user_id):
 
     user = User.q.get(user_id)
@@ -164,8 +164,8 @@ def user_show(user_id):
     )
 
 
-@bp.route("/show/<user_id>/logs")
-@bp.route("/show/<user_id>/logs/<logtype>")
+@bp.route("/<int:user_id>/logs")
+@bp.route("/<int:user_id>/logs/<logtype>")
 def user_show_logs_json(user_id, logtype="all"):
     user = User.q.get(user_id)
     if user is None:
@@ -196,7 +196,7 @@ def user_show_logs_json(user_id, logtype="all"):
     } for entry in room_log_list))))
 
 
-@bp.route("/show/<user_id>/hosts")
+@bp.route("/<int:user_id>/hosts")
 def user_show_hosts_json(user_id):
     list_items = []
     for user_host in User.q.get(user_id).user_hosts:
@@ -220,8 +220,8 @@ def user_show_hosts_json(user_id):
     return jsonify(items=list_items)
 
 
-@bp.route("/show/<user_id>/groups")
-@bp.route("/show/<user_id>/groups/<group_filter>")
+@bp.route("/<int:user_id>/groups")
+@bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all"):
     memberships = Membership.q.filter(Membership.user_id == user_id)
     if group_filter is "active":
@@ -252,7 +252,7 @@ def user_show_groups_json(user_id, group_filter="all"):
         } for membership in memberships.all()])
 
 
-@bp.route('/add_membership/<int:user_id>/', methods=['GET', 'Post'])
+@bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
 @access.require('groups_change_membership')
 def add_membership(user_id):
 
@@ -287,11 +287,15 @@ def add_membership(user_id):
         user_id=user_id, form=form)
 
 
-@bp.route('/end_membership/<int:membership_id>')
+@bp.route('/<int:user_id>/end_membership/<int:membership_id>')
 @access.require('groups_change_membership')
-def end_membership(membership_id):
+def end_membership(user_id, membership_id):
     membership = Membership.q.get(membership_id)
     membership.disable()
+
+    if membership.user.id != user_id:
+        flash(u"Mitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
+        return abort(404)
 
     # ToDo: Make the log messages not Frontend specific (a helper?)
     message = u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' " \
@@ -304,29 +308,8 @@ def end_membership(membership_id):
                             _anchor='groups'))
 
 
-@bp.route('/json/levels')
-@access.require('facilities_show')
-def json_levels():
-    building_id = request.args.get('building', 0, type=int)
-    levels = session.session.query(Room.level.label('level')).filter_by(
-        building_id=building_id).order_by(Room.level).distinct()
-    return jsonify(dict(items=[entry.level for entry in levels]))
-
-
-@bp.route('/json/rooms')
-@access.require('facilities_show')
-def json_rooms():
-    building_id = request.args.get('building', 0, type=int)
-    level = request.args.get('level', 0, type=int)
-    rooms = session.session.query(
-        Room.number.label("room_num")).filter_by(
-        building_id=building_id, level=level).order_by(
-        Room.number).distinct()
-    return jsonify(dict(items=[entry.room_num for entry in rooms]))
-
-
-@bp.route('/json/traffic/<int:user_id>')
-@bp.route('/json/traffic/<int:user_id>/<int:days>')
+@bp.route('/json/<int:user_id>/traffic')
+@bp.route('/json/<int:user_id>/traffic/<int:days>')
 def json_trafficdata(user_id, days=7):
     """Generate a Highcharts compatible JSON file to use with traffic graphs.
 
@@ -403,7 +386,7 @@ def create():
     return render_template('user/user_create.html', form = form)
 
 
-@bp.route('/move/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
 @access.require('user_change')
 def move(user_id):
     user = User.q.get(user_id)
@@ -451,9 +434,9 @@ def move(user_id):
     return render_template('user/user_move.html', user_id=user_id, form=form)
 
 
-@bp.route('edit_membership/<int:membership_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
 @access.require('groups_change_membership')
-def edit_membership(membership_id):
+def edit_membership(user_id, membership_id):
     membership = Membership.q.get(membership_id)
 
     if membership is None:
@@ -499,7 +482,7 @@ def edit_membership(membership_id):
                            form=form)
 
 
-@bp.route('/edit_name/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/edit_name', methods=['GET', 'POST'])
 @access.require('user_change')
 def edit_name(user_id):
     user = User.q.get(user_id)
@@ -523,7 +506,7 @@ def edit_name(user_id):
         form=form)
 
 
-@bp.route('/edit_email/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/edit_email', methods=['GET', 'POST'])
 @access.require('user_change')
 def edit_email(user_id):
     user = User.q.get(user_id)
@@ -602,7 +585,7 @@ def json_groups():
     return jsonify(dict(items=groups))
 
 
-@bp.route('/show_by_group', methods=['GET', 'POST'])
+@bp.route('/by_group', methods=['GET', 'POST'])
 @nav.navigate(u"Nach Gruppe")
 def show_by_group():
     form = UserSelectGroupForm()
@@ -619,7 +602,7 @@ def show_by_group():
     return render_template('user/list_groups.html', groups_form=form)
 
 
-@bp.route('/show_by_group/property/<int:property_group_id>')
+@bp.route('/by_group/property/<int:property_group_id>')
 def list_users_by_property_group(property_group_id):
     property_group = PropertyGroup.q.get(property_group_id)
     user_list = []
@@ -632,7 +615,7 @@ def list_users_by_property_group(property_group_id):
                            users=user_list)
 
 
-@bp.route('/show_by_group/traffic/<int:traffic_group_id>')
+@bp.route('/by_group/traffic/<int:traffic_group_id>')
 def list_users_by_traffic_group(traffic_group_id):
     traffic_group = TrafficGroup.q.get(traffic_group_id)
     user_list = []
@@ -645,10 +628,10 @@ def list_users_by_traffic_group(traffic_group_id):
                            users=user_list)
 
 
-@bp.route('/block/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/suspend', methods=['GET', 'POST'])
 @access.require('user_change')
-def block(user_id):
-    form = UserBlockForm()
+def suspend(user_id):
+    form = UserSuspendForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
         if form.ends_at.unlimited.data:
@@ -658,7 +641,7 @@ def block(user_id):
         during = closedopen(session.utcnow(), ends_at)
 
         try:
-            blocked_user = lib.user.block(
+            blocked_user = lib.user.suspend(
                 user=myUser,
                 reason=form.reason.data,
                 processor=current_user,
@@ -672,7 +655,7 @@ def block(user_id):
     return render_template('user/user_block.html', form=form, user_id=user_id)
 
 
-@bp.route('/move_out/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
 @access.require('user_change')
 def move_out(user_id):
     form = UserMoveOutForm()
@@ -690,9 +673,9 @@ def move_out(user_id):
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
-@bp.route('/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
 @access.require('user_mac_change')
-def change_mac(user_interface_id):
+def change_mac(user_id, user_interface_id):
     form = InterfaceChangeMacForm()
     my_interface = UserInterface.q.get(user_interface_id)
     if not form.is_submitted():
@@ -707,7 +690,7 @@ def change_mac(user_interface_id):
     return render_template('user/change_mac.html', form=form, user_interface_id=user_interface_id)
 
 
-@bp.route('/move_out_temporarily/<int:user_id>', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/move_out_temporarily', methods=['GET', 'POST'])
 @access.require('user_change')
 def move_out_temporarily(user_id):
     form = UserMoveOutForm()
@@ -726,7 +709,7 @@ def move_out_temporarily(user_id):
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
-@bp.route('/is_back/<int:user_id>')
+@bp.route('/<int:user_id>/is_back')
 @access.require('user_change')
 def is_back(user_id):
     my_user = User.q.get(user_id)

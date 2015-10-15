@@ -266,7 +266,7 @@ class Test_080_User_Block(FixtureDataTestBase):
 #       self.assertTrue(u.has_property("network_access"))
         self.assertNotIn(verstoss, u.active_property_groups())
 
-        blocked_user = UserHelper.block(u, u"test", u)
+        blocked_user = UserHelper.suspend(u, u"test", u)
         session.session.commit()
 
         self.assertFalse(blocked_user.has_property("network_access"))

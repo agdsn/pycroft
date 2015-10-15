@@ -394,21 +394,21 @@ def has_network_access(user):
 
 
 @with_transaction
-def block(user, reason, processor, during=None):
+def suspend(user, reason, processor, during=None):
     """
-    This function blocks a user in a given interval by making him a member of
+    This function suspends a user in a given interval by making him a member of
     the violation group in the given interval. A reason should be provided.
-    :param User user: The user to be blocked.
-    :param unicode reason: The reason of blocking.
-    :param User processor: The admin who blocked the user.
-    :param Interval|None during: The interval in which the user is blocked. If
-    None the user will be blocked from now on without an upper bound.
-    :return: The blocked user.
+    :param User user: The user to be suspended.
+    :param unicode reason: The reason for suspending.
+    :param User processor: The admin who suspended the user.
+    :param Interval|None during: The interval in which the user is suspended.
+    If None the user will be suspendeded from now on without an upper bound.
+    :return: The suspended user.
     """
     if during is None:
         during = closedopen(session.utcnow(), None)
     make_member_of(user, config.violation_group, processor, during)
-    message = deferred_gettext(u"Blocked during {during}. Reason: {reason}.")
+    message = deferred_gettext(u"Suspended during {during}. Reason: {reason}.")
     log_user_event(message=message.format(during=during, reason=reason)
                    .to_json(), author=processor, user=user)
     return user

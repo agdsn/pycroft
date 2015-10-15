@@ -61,13 +61,13 @@ class UserMoveForm(Form):
         coerce=int,
         choices=[],
         conditions=["building"],
-        data_endpoint="user.json_levels")
+        data_endpoint="facilities.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
         validators=[DataRequired(message=u"Raum?")],
         coerce=str,
         choices=[],
         conditions=["building", "level"],
-        data_endpoint="user.json_rooms")
+        data_endpoint="facilities.json_rooms")
 
 
 class UserCreateForm(UserEditNameForm, UserMoveForm):
@@ -110,7 +110,7 @@ class UserEditGroupMembership(Form):
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
 
-class UserBlockForm(Form):
+class UserSuspendForm(Form):
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
     reason = TextAreaField(u"Grund", [DataRequired()])
 

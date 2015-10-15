@@ -10,10 +10,12 @@
     :copyright: (c) 2012 by AG DSN.
 """
 
-from flask import Blueprint, flash, jsonify, render_template, url_for, redirect
+from flask import (Blueprint, flash, jsonify, render_template, url_for,
+                   redirect, request)
 from flask.ext.login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
+from pycroft.model import session
 from pycroft.lib.user import is_member, status
 from pycroft.model.facilities import Room, Building, Site
 from web.blueprints.navigation import BlueprintNavigation
@@ -204,3 +206,24 @@ def room_logs_json(room_id):
             },
             'message': entry.message
         } for entry in reversed(Room.q.get(room_id).log_entries)])
+
+
+@bp.route('/json/levels')
+@access.require('facilities_show')
+def json_levels():
+    building_id = request.args.get('building', 0, type=int)
+    levels = session.session.query(Room.level.label('level')).filter_by(
+        building_id=building_id).order_by(Room.level).distinct()
+    return jsonify(dict(items=[entry.level for entry in levels]))
+
+
+@bp.route('/json/rooms')
+@access.require('facilities_show')
+def json_rooms():
+    building_id = request.args.get('building', 0, type=int)
+    level = request.args.get('level', 0, type=int)
+    rooms = session.session.query(
+        Room.number.label("room_num")).filter_by(
+        building_id=building_id, level=level).order_by(
+        Room.number).distinct()
+    return jsonify(dict(items=[entry.room_num for entry in rooms]))
