@@ -4,7 +4,7 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 a.navbar-brand {
-    padding: 0;
+    padding: 0px 15px;
 }
 
 ul.nav li.dropdown:hover > ul.dropdown-menu {

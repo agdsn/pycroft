@@ -16,7 +16,7 @@ import re
 
 from sqlalchemy import and_, exists, func, literal
 
-from pycroft import config
+from pycroft import config, property
 from pycroft.helpers import user, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
@@ -498,6 +498,9 @@ def is_back(user, processor):
     return user
 
 
+admin_properties = property.property_categories[u"Nutzerverwaltung"].keys()
+
+
 def status(user):
     """
     :param user: User whose status we want to look at
@@ -509,7 +512,8 @@ def status(user):
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
-        'mail': user.has_property('mail')
+        'mail': user.has_property('mail'),
+        'admin': any(user.has_property(prop) for prop in admin_properties),
     })
 
 

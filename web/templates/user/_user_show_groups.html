@@ -8,7 +8,7 @@
     {'name': 'group_name', 'title': 'Gruppe'},
     {'name': 'begins_at', 'title': 'Beginn'},
     {'name': 'ends_at', 'title': 'Ende'},
-    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'btnFormatter'}
+    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'multiBtnFormatter'}
 ] %}
 
 <ul class="nav nav-tabs">
@@ -23,7 +23,7 @@
         {{ tbl.item_table("memberships", url_for(".user_show_groups_json", user_id=user.id), cols) }}
     </div>
 </div>
-{% if current_user is privileged_for('groups_change_user') -%}
+{% if current_user is privileged_for('groups_change_membership') -%}
 <p>
     <a class="btn btn-primary" href="{{ url_for(".add_membership", user_id=user.id) }}">Gruppenmitgliedschaft hinzufügen</a>
 </p>

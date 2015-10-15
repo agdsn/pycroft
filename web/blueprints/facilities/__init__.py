@@ -137,6 +137,12 @@ def user_btn_style(user):
     glyphicons = glyphicons or ['glyphicon-ok']
     btn_class = btn_class or 'btn-success'
 
+    if s.admin:
+        glyphicons.append('glyphicon-wrench')
+
+    if not s.member and s.mail:
+        glyphicons.append('glyphicon-envelope')
+
     return btn_class, glyphicons
 
 

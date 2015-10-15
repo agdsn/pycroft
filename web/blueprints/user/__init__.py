@@ -120,7 +120,10 @@ def user_show(user_id):
     form = UserLogEntry()
 
     if form.validate_on_submit():
-        lib.logging.log_user_event(form.message.data, current_user, user)
+        lib.logging.log_user_event(form.message.data,
+                                   author=current_user,
+                                   user=user)
+        session.session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
 
     log_list = sorted(
@@ -238,10 +241,14 @@ def user_show_groups_json(user_id, group_filter="all"):
                           if membership.begins_at is not None else ''),
             'ends_at': (datetime_filter(membership.ends_at)
                         if membership.ends_at is not None else ''),
-            'actions': {'href': url_for(".edit_membership",
+            'actions': [{'href': url_for(".edit_membership",
                                         membership_id=membership.id),
                         'title': 'Bearbeiten',
                         'icon': 'glyphicon-edit'},
+                        {'href': url_for(".end_membership",
+                                         membership_id=membership.id),
+                         'title': "Beenden",
+                         'icon': 'glyphicon-off'}],
         } for membership in memberships.all()])
 
 
@@ -271,14 +278,16 @@ def add_membership(user_id):
         session.session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
-        return redirect(url_for(".user_show", user_id=user_id))
+        return redirect(url_for(".user_show",
+                                user_id=user_id,
+                                _anchor='groups'))
 
     return render_template('user/add_membership.html',
         page_title=u"Neue Gruppenmitgliedschaft für Nutzer {}".format(user_id),
         user_id=user_id, form=form)
 
 
-@bp.route('/delete_membership/<int:membership_id>')
+@bp.route('/end_membership/<int:membership_id>')
 @access.require('groups_change_membership')
 def end_membership(membership_id):
     membership = Membership.q.get(membership_id)
@@ -290,7 +299,9 @@ def end_membership(membership_id):
     lib.logging.log_user_event(message, current_user, membership.user)
     session.session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
-    return redirect(url_for(".user_show", user_id=membership.user_id))
+    return redirect(url_for(".user_show",
+                            user_id=membership.user_id,
+                            _anchor='groups'))
 
 
 @bp.route('/json/levels')
@@ -474,7 +485,9 @@ def edit_membership(membership_id):
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
-        return redirect(url_for('.user_show', user_id=membership.user_id))
+        return redirect(url_for('.user_show',
+                                user_id=membership.user_id,
+                                _anchor='groups'))
 
     return render_template('user/user_edit_membership.html',
                            page_title=(u"Mitgliedschaft {} für "
