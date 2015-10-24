@@ -9,7 +9,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider "virtualbox" do |vb, override|
-      override.vm.box = "chef/debian-7.6"
+      override.vm.box = "debian/jessie64"
   end
 
   config.vm.provider "docker" do |d|

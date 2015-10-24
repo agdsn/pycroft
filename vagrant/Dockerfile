@@ -1,7 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-FROM debian:wheezy
+FROM debian:jessie
 MAINTAINER Sebastian Schrader <sebastian.schrader@wh2.tu-dresden.de>
 ENV PROJECT_DIR=/pycroft LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive
 
@@ -24,6 +24,7 @@ RUN apt-get update && \
         libpq-dev \
         libsqlite3-dev \
         nodejs \
+        npm \
         openssh-server \
         postgresql \
         postgresql-client \
@@ -36,9 +37,6 @@ RUN apt-get update && \
         sysvinit-utils \
         vim && \
     ln -s /usr/bin/nodejs /usr/bin/node
-
-# Install NPM
-RUN curl -s -L https://npmjs.org/install.sh | sh
 
 # Install Bower
 RUN npm install -g bower

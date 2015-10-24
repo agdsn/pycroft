@@ -6,7 +6,7 @@ set -e
 export PGDATA=/postgresql
 export PGHOST=$PGDATA
 export PGDATABASE=pycroft
-PGVERSION=9.1
+PGVERSION=9.4
 PGPATH=/usr/lib/postgresql/$PGVERSION
 PYCROFT_EXAMPLE_DATA=/pycroft/example/pg_example_data.sql
 
@@ -15,7 +15,7 @@ if [ ! -f $PGDATA/postgresql.conf ]; then
     sudo -n mkdir -p $PGDATA
     sudo -n mount -t tmpfs -o size=192M,nr_inodes=8k,mode=0700,uid=vagrant,gid=vagrant,noexec,nodev,nosuid tmpfs $PGDATA
     $PGPATH/bin/initdb -A peer
-    sed -i -e "s|#\?unix_socket_directory = ''|unix_socket_directory = '$PGDATA'|" $PGDATA/postgresql.conf
+    sed -i -e "s|#\?unix_socket_directories = '[A-Za-z0-9\/]*'|unix_socket_directories = '$PGDATA'|" $PGDATA/postgresql.conf
     sed -i -e 's|#\?temp_buffers = [0-9]\+MB|temp_buffers = 64MB|' $PGDATA/postgresql.conf
     sed -i -e 's|#\?shared_buffers = [0-9]\+MB|shared_buffers = 128MB|' $PGDATA/postgresql.conf
     sed -i -e 's|#\?fsync = on|fsync = off|' $PGDATA/postgresql.conf
