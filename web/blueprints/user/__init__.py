@@ -247,10 +247,12 @@ def user_show_groups_json(user_id, group_filter="all"):
             'ends_at': (datetime_filter(membership.ends_at)
                         if membership.ends_at is not None else ''),
             'actions': [{'href': url_for(".edit_membership",
+                                        user_id=user_id,
                                         membership_id=membership.id),
                         'title': 'Bearbeiten',
                         'icon': 'glyphicon-edit'},
                         {'href': url_for(".end_membership",
+                                         user_id=user_id,
                                          membership_id=membership.id),
                          'title': "Beenden",
                          'icon': 'glyphicon-off'}],
