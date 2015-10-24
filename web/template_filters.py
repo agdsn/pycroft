@@ -142,9 +142,9 @@ def transaction_type_filter(credit_debit_type):
         ("ASSET", "LIABILITY"): gettext("Balance sheet extension"),
         ("LIABILITY", "ASSET"): gettext("Balance sheet contraction"),
         ("ASSET", "REVENUE"): gettext("Revenue"),
-        ("REVENUE", "ASSET"): gettext("Adjusting entry (Revenue)"),
+        ("REVENUE", "ASSET"): gettext("Correcting entry (Revenue)"),
         ("EXPENSE", "ASSET"): gettext("Expense"),
-        ("ASSET", "EXPENSE"): gettext("Adjusting entry (Expense)"),
+        ("ASSET", "EXPENSE"): gettext("Correcting entry (Expense)"),
         ("ASSET", "ASSET"): gettext("Asset exchange"),
         ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
     }

@@ -22,6 +22,7 @@ from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
 from .functions import utcnow
 from pycroft._compat import imap
+from pycroft.helpers.interval import closed
 from pycroft.helpers.i18n import gettext
 
 
@@ -53,6 +54,9 @@ class Semester(ModelBase):
     begins_on = Column(Date, nullable=False)
     ends_on = Column(Date, nullable=False)
 
+    def __contains__(self, date):
+        return date in closed(self.begins_on, self.ends_on)
+
     __table_args__ = (
         CheckConstraint('begins_on < ends_on'),
     )
@@ -67,7 +71,8 @@ class FinanceAccount(ModelBase):
                        name="finance_account_type"),
                   nullable=False)
 
-    transactions = relationship("Transaction", secondary="split")
+    transactions = relationship("Transaction", secondary="split",
+                                backref="finance_accounts")
 
     @hybrid_property
     def balance(self):
@@ -76,10 +81,10 @@ class FinanceAccount(ModelBase):
     @balance.expression
     def balance(self):
         return select(
-            func.sum(Split.amount)
-        ).filter(
+            [func.sum(Split.amount)]
+        ).where(
             Split.account_id == self.id
-        )
+        ).label("balance")
 
 
 class Journal(ModelBase):

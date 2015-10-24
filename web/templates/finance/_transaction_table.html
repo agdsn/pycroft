@@ -11,6 +11,13 @@
     'formatter': 'linkFormatter'},
     {'name': 'amount', 'title': 'Wert'}
 ] %}
+
+{% if not inverted is defined %}
+  {% set inverted = False %}
+{% elif inverted %}
+  {% set json_url = json_url + "?style=inverted" %}
+{% endif %}
+
 {% macro render_column_headings() -%}
     <th>Erstellt um</th>
     <th>Gültig am</th>

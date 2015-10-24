@@ -640,8 +640,8 @@ def user_has_paid(user):
 
 def get_typed_splits(splits):
     return izip_longest(
-        ifilter(lambda s: s.amount > 0, splits),
-        ifilter(lambda s: s.amount <= 0, splits)
+        ifilter(lambda s: s.amount >= 0, splits),
+        ifilter(lambda s: s.amount < 0, splits)
     )
 
 def get_transaction_type(transaction):

@@ -208,7 +208,7 @@ def accounts_show(account_id):
 
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id):
-    inverted = False
+    style = request.args.get('style', None)
     limit = request.args.get('limit', None, type=int)
     offset = request.args.get('offset', 0, type=int)
     sort_by = request.args.get('sort', "valid_on")
@@ -251,7 +251,7 @@ def accounts_show_json(account_id):
                         'title': localized(split.transaction.description)
                     },
                     'amount': money_filter(split.amount),
-                    'row_positive': (split.amount > 0) ^ inverted
+                    'row_positive': (split.amount > 0) ^ (style == "inverted")
                 } for i, split in enumerate(records)
                 ]
         })
@@ -271,7 +271,6 @@ def transactions_show(transaction_id):
 
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id):
-    inverted = False
     return jsonify(items=[
         {
             'account': {
@@ -279,7 +278,7 @@ def transactions_show_json(transaction_id):
                 'title': localized(split.account.name)
             },
             'amount': money_filter(split.amount),
-            'row_positive': (split.amount > 0) is not inverted
+            'row_positive': split.amount > 0
         } for split in Transaction.q.get(transaction_id).splits])
 
 

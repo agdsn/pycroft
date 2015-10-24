@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -8,5 +8,5 @@
 {% include "finance/_transaction_table.html" with context %}
 
 <p>
-    <a class="btn btn-primary" href="{{ url_for("finance.accounts_show", account_id=user.finance_account_id) }}">Detaillierte Ansicht</a>
+    <a class="btn btn-primary" href="{{ url_for("user.user_finance_account", user_id=user.id) }}">Detaillierte Ansicht</a>
 </p>

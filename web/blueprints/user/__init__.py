@@ -163,6 +163,11 @@ def user_show(user_id):
                          account_id=user.finance_account_id)
     )
 
+@bp.route("/<int:user_id>/account")
+def user_finance_account(user_id):
+    user = User.q.get(user_id) or abort(404)
+    return redirect(url_for("finance.accounts_show",
+                            account_id=user.finance_account_id))
 
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
