@@ -10,11 +10,12 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from datetime import timedelta
+from datetime import timedelta, datetime
 from itertools import groupby
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
+from json import dumps
 from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -34,7 +35,16 @@ from web.blueprints.finance.forms import (
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
+from web.templates import page_resources
 
+from sqlalchemy.sql.expression import literal_column, func, select, Alias
+
+def json_agg(query):
+    return session.query(func.json_agg(literal_column("row")))\
+        .select_from(Alias(query.subquery(), "row"))
+def json_agg_core(selectable):
+    return select([func.json_agg(literal_column("row"))])\
+        .select_from(selectable.alias("row"))
 
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])
@@ -216,12 +226,14 @@ def accounts_show_json(account_id):
     filter = request.args.get('filter') # for account form / typed_split
     search = request.args.get('search')
 
+    account = FinanceAccount.q.get(account_id) or abort(404)
+
     if not (sort_by in Transaction.__table__.columns
             or sort_by in Split.__table__.columns):
         sort_by = "valid_on"
     ordering = sort_by+" desc" if sort_order == "desc" else sort_by
 
-    query = Split.q.join(Transaction).filter(Split.account_id == account_id)
+    query = Split.q.join(Transaction).filter(Split.account == account)
     if search:
         query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
     if filter == "non-negative":
@@ -235,6 +247,7 @@ def accounts_show_json(account_id):
                     .limit(limit))
 
     return jsonify(
+        name=account.name,
         items={
             "total": total,
             "rows": [
@@ -271,7 +284,10 @@ def transactions_show(transaction_id):
 
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id):
-    return jsonify(items=[
+    transaction = Transaction.q.get(transaction_id)
+    return jsonify(
+        description=transaction.description,
+        items=[
         {
             'account': {
                 'href': url_for(".accounts_show", account_id=split.account_id),
@@ -279,7 +295,71 @@ def transactions_show_json(transaction_id):
             },
             'amount': money_filter(split.amount),
             'row_positive': split.amount > 0
-        } for split in Transaction.q.get(transaction_id).splits])
+        } for split in transaction.splits])
+
+
+@access.require('finance_show')
+@bp.route('/transactions')
+def transactions_all():
+    page_resources.link_script(
+        url_for("static", filename="libs/d3/d3.min.js"))
+    page_resources.link_script(
+        url_for("static", filename="libs/crossfilter/crossfilter.js"))
+    page_resources.link_script(
+        url_for("static", filename="libs/dcjs/dc.min.js"))
+    return render_template('finance/transactions_overview.html',
+                           args=request.args)
+
+
+@access.require('finance_show')
+@bp.route('/transactions/json')
+def transactions_all_json():
+    lower = request.args.get('after', "")
+    upper = request.args.get('before', "")
+    filter = request.args.get('filter', "nonuser")
+    if filter == "nonuser":
+        non_user_transactions = (select([Split.transaction_id])
+                                 .select_from(
+                                    Join(Split, User,
+                                         (User.finance_account_id ==
+                                                    Split.account_id),
+                                        isouter=True))
+                                 .group_by(Split.transaction_id)
+                                 .having(func.bool_and(User.id == None))
+                                 .alias("nut"))
+
+        tid = literal_column("nut.transaction_id")
+        transactions = non_user_transactions.join(Transaction,
+                                                  Transaction.id == tid)
+    else:
+        transactions = Transaction.__table__
+
+    q = (select([Transaction.id,
+                 Transaction.valid_on,
+                 Split.account_id,
+                 FinanceAccount.type,
+                 Split.amount])
+         .select_from(transactions
+                      .join(Split,
+                            Split.transaction_id == Transaction.id)
+                      .join(FinanceAccount,
+                            FinanceAccount.id == Split.account_id)))
+
+    try:
+        datetime.strptime(lower, "%Y-%m-%d").date()
+    except ValueError:
+        not lower or abort(422)
+    else:
+        q = q.where(Transaction.valid_on >= lower)
+
+    try:
+        datetime.strptime(upper, "%Y-%m-%d").date()
+    except ValueError:
+        not upper or abort(422)
+    else:
+        q = q.where(Transaction.valid_on <= upper)
+
+    return dumps(session.execute(json_agg_core(q)).fetchone()[0] or [])
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
@@ -341,6 +421,12 @@ def semesters_list_json():
             'late_fee': money_filter(semester.late_fee),
             'begins_on': date_filter(semester.begins_on),
             'ends_on': date_filter(semester.ends_on),
+            'finance_link': {'href': url_for(".transactions_all",
+                                        filter="all",
+                                        after=semester.begins_on,
+                                        before=semester.ends_on),
+                            'title': 'Finanzübersicht',
+                            'icon': 'glyphicon-euro'},
         } for semester in Semester.q.order_by(Semester.begins_on.desc()).all()])
 
 

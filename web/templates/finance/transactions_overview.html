@@ -1,0 +1,275 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% set page_title = "Buchungsübersicht" %}
+
+{% block page_css %}
+  {{ resources.link_css("libs/dcjs/dc.css") }}
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="dc-data-count" style="float: left;">
+        <h2>
+          <span>
+            <span class="filter-count">?</span>
+             selected out of
+            <span class="total-count">?</span>
+             transactions |
+            <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+          </span>
+        </h2>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-8">
+        <div id="value-chart">
+        </div>
+        <div id="volume-chart">
+          <a class="reset" href="javascript:volumeChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <div id="account-selector">
+                <strong>Accounts</strong>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div id="account-type-selector">
+                <strong>Account types</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div id="transaction-table">
+            <strong>Transactions</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!--
+    <div id="semester-selector">
+        <strong>Semester</strong>
+    </div>
+
+    <div id="processor-selector">
+        <strong>Processor</strong>
+    </div> -->
+{% endblock %}
+
+{% block page_script %}
+  <script type="text/javascript">
+    var dateFormat = d3.time.format('%Y-%m-%d');
+
+
+    //todo custom reduce functions for server-side stuff
+    var volumeChart = dc.barChart('#volume-chart');
+    var amountChart = dc.barChart();
+    var cumAmountChart = dc.lineChart();
+    var valueChart = dc.compositeChart('#value-chart');
+    var accountChart = dc.rowChart('#account-selector');
+    var typeChart = dc.rowChart('#account-type-selector');
+    var transactionTable = dc.dataTable('#transaction-table');
+    var transactionCount = dc.dataCount(".dc-data-count");
+    var dateMin = dateFormat.parse("{{ args.get('after', "") }}");
+    var dateMax = dateFormat.parse("{{ args.get('before', "") }}");
+
+    d3.json('{{ url_for("finance.transactions_all_json", **args) | safe }}', function (data) {
+
+      data.forEach(function (d) {
+        d.dd = dateFormat.parse(d.valid_on);
+        d.month = d3.time.month(d.dd);
+      });
+
+      var ndx = crossfilter(data);
+      var all = ndx.groupAll();
+
+      var transaction = ndx.dimension(function (d) { return d.account_id; });
+      var transactionGroup = transaction.groupAll();
+      transactionCount
+          .dimension(ndx)
+          .group(transactionGroup);
+
+      var account = ndx.dimension(function(d){ return d.account_id; });
+      var accountGroup = account.group();
+      var accountCache = {"Others": "Other accounts"}; //dict of values cached
+      var accountReq = new Set([]); //set of ids being requested
+
+      // todo url_for
+      var accountName = function (acc_id, format_func, action_func) {
+        if (!(acc_id in accountCache)) {
+              var href = "/finance/accounts/" + acc_id;
+              if (!accountReq.has(acc_id)) {
+                accountReq.add(acc_id);
+                jQuery.getJSON(href+"/json?limit=0", function( data ) {
+                    accountCache[acc_id] = data.name;
+                    action_func(acc_id, data.name);
+                  }).complete(function() { accountReq.delete(acc_id) });
+              }
+              return format_func(acc_id);
+            } else {
+              return accountCache[acc_id];
+            }
+      };
+
+      accountChart
+          .height(300)
+          .width(250)
+          .dimension(account)
+          .group(accountGroup)
+          .cap(10)
+          .x(d3.scale.linear().range([1, 100]))
+          .label(function (d) {
+            var format_func = function (acc_id) {return "acc-"+acc_id;};
+            var action_func = function (acc_id, replacement) {
+              jQuery('text:contains("'+format_func(acc_id)+'")').text(replacement);
+            };
+            return accountName(d.key, format_func, action_func);
+          })
+          .ordering(function(d) { return -d.value; })
+          .renderLabel(true)
+          ;//.xAxis().tickValues([]);
+
+      var accountType = ndx.dimension(function(d){ return d.type; });
+      var accountTypeGroup = accountType.group()
+
+      typeChart
+          .height(300)
+          .width(250)
+          .dimension(accountType)
+          .group(accountTypeGroup)
+          .cap(10)
+          .x(d3.scale.linear().range([1, 100]))
+          .label(function (d) {
+            return d.key+" ("+ d.value+")";
+          })
+          .renderLabel(true)
+          ;//.xAxis().tickValues([]);
+
+      var dateDimension = ndx.dimension(function (d) {
+        return d.dd;
+      });
+      var monthDimension = ndx.dimension(function (d) {
+        return d.month;
+      });
+
+      var dateAccessor = function (d){return d.dd;};
+      dateExtent = [];
+      dateExtent = d3.extent(data, dateAccessor);
+      if (!(dateMin === null)) {dateExtent[0] = dateMin;};
+      if (!(dateMax === null)) {dateExtent[1] = dateMax;};
+
+
+      var monthGroup = monthDimension.group().reduceCount();
+      volumeChart
+          .width(700)
+          .height(150)
+          .dimension(monthDimension)
+          .group(monthGroup)
+          .x(d3.time.scale().domain(dateExtent))
+          .gap(0) // gap(0) has overlaps for some reason
+          .xUnits(d3.time.months) //seems to be buggy, so we can't set bar width :(
+        // logscale would also be nice, but that too is buggy
+          .elasticY(true)
+          .margins({top: 20, left: 50, right: 10, bottom: 50})
+          .renderHorizontalGridLines(true)
+          .renderVerticalGridLines(true)
+          .yAxisLabel("# transactions");
+
+      var valueGroup = monthDimension.group().reduceSum(function (d) {return d.amount;});
+      var cumValueGroup = {all: function() {
+        var s = 0; var g = [];
+        valueGroup.all().forEach(function(d, i) {
+          s += d.value; g.push({key: d.key, value: s})
+        });
+        return g;
+      }};
+
+      amountChart
+          .dimension(monthDimension)
+          .group(valueGroup)
+          .brushOn(false)
+          .x(d3.time.scale().domain(dateExtent));
+
+      cumAmountChart
+          .dimension(monthDimension)
+          .group(cumValueGroup)
+          .brushOn(false)
+          .valueAccessor(function (d) {
+            return d.value;
+          })
+          .x(d3.time.scale().domain(dateExtent));
+
+      valueChart
+          .width(700)
+          .dimension(monthDimension)
+          .x(d3.time.scale().domain(dateExtent))
+          .elasticY(true)
+          .margins({top: 20, left: 50, right: 10, bottom: 50})
+          .renderHorizontalGridLines(true)
+          .renderVerticalGridLines(true)
+          .rangeChart(volumeChart)
+          .compose([amountChart, cumAmountChart]);
+
+
+      var linkTemplate = _.template(
+          '<a id="<%= id %>" href="<%= href %>"><%= title %></a>'
+      );
+
+      var descCache = {};
+      var descReq = new Set([]);
+
+      transactionTable
+          .dimension(dateDimension)
+          .columns([
+              function (d) {
+                return d.amount/100.+"&#x202F;€";},
+              function (d) {
+                var format_func = function (acc_id) {
+                  return "<span id=\"acc-"+acc_id+"\"></span>";
+                };
+                var action_func = function (acc_id, replacement) {
+                  jQuery('#acc-'+acc_id).text(replacement);
+                };
+                return accountName(d.account_id, format_func, action_func);
+              },
+              function (d) {return d.type;}
+          ])
+
+          .group(function (d) {
+            var href = "/finance/transactions/"+d.id;
+            // if building template is too slow, jquery may be executed
+            // before document is generated :(
+            var desc = "Link"
+            if (!(d.id in descCache)) {
+                if (!descReq.has(d.id)) {
+                  descReq.add(d.id);
+                  jQuery.getJSON(href+"/json", function( data ) {
+                    jQuery('a[href="'+href+'"]').text(data.description);
+                    descCache[d.id] = data.description;
+                    descReq.delete(d.id);
+                  });
+                }
+            } else {
+              desc = descCache[d.id]
+            }
+            var date = d3.time.format("%Y-%m-%d")(d.dd);
+            var link = linkTemplate({'id': "transaction-link", 'href': href, 'title': desc});
+            return date + " " + link
+          })
+          .sortBy(function(d) {
+              return -d.id;
+          })
+          .size(15);
+
+      dc.renderAll();
+    });
+  </script>
+{% endblock %}
