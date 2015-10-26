@@ -13,6 +13,7 @@ except ImportError:
     OID = Integer
 
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import CheckConstraint
 from sqlalchemy.types import NullType
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -149,7 +150,7 @@ class Buchungen(Base):
     datum = Column(Date)
     bearbeiter = Column(String)
     rechnungs_nr = Column(Integer)
-    soll = Column(ForeignKey(FinanzKonten.id), nullable=False)
+    soll = Column(ForeignKey(FinanzKonten.id))
     soll_uid = Column(Integer)
     soll_konto = relationship(FinanzKonten, backref="soll_buchungen", foreign_keys=[soll])
     haben = Column(ForeignKey(FinanzKonten.id))
@@ -158,6 +159,10 @@ class Buchungen(Base):
     haben_uid = Column(Integer)
     wert = Column(Integer)
     bes = Column(Text)
+
+    __table_args__ = (
+            CheckConstraint('NOT(soll IS NULL AND haben IS NULL)'),
+            )
 
 
 class Cname(Base):

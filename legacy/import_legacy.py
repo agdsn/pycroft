@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env pypy
 # coding=utf-8
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
@@ -9,7 +9,7 @@ import os
 import sys
 import difflib
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from tools import memoized
 
@@ -49,7 +49,7 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108port, computer, subnet):
+def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen, hp4108port, computer, subnet):
     records = []
 
     # TODO: missing or incomplete translations for finance, status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
@@ -97,6 +97,9 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
             records.append(
                 user.Property(name=prop_name, property_group=g, granted=modifier))
 
+    status_d = {}
+    for s in status:
+        status_d[s.id] = s.short_str
 
     print("  Translating users")
     u_d = {}  # maps nutzer_id to translated sqlalchemy object
@@ -111,7 +114,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
             email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
-            finance_account=finance.FinanceAccount(name="Nutzerkonto "+login, type="ASSET"))
+            finance_account=finance.FinanceAccount(name="Nutzerkonto von "+_u.nutzer_id, type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
@@ -137,7 +140,8 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
 
         records.append(logging.UserLogEntry(
             author=u_d.get(0, None),
-            message="User imported from legacy database netusers.",
+            message="User imported from legacy database netusers. "
+                    "Legacy status: "+status_d[_u.status],
             user=u))
 
         # user comment
@@ -151,17 +155,18 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     facc_types = {u"Startguthaben": "REVENUE",
                   u"Bankkonto": "ASSET",
                   u"Bankgebühren": "EXPENSE",
-                  u"Abgaben": "EXPENSE",
-                  u"Sonstige": "REVENUE",
+                  u"Abgaben": "EXPENSE",  # Abgaben = ?
+                  u"Sonstige Ausgaben": "EXPENSE",
                   u"Nutzerkonto": "ASSET",
                   u"Forderungen": "ASSET",
-                  u"Verbindlichkeiten": "LIABILITY",
+                  u"Verbindlichkeiten": "LIABILITY",  # offene Rechnungen
                   u"Beiträge": "REVENUE",
                   u"Spenden": "REVENUE",
                   u"Aktive Technik": "EXPENSE",
                   u"Passive Technik": "EXPENSE",
                   u"Büromaterial": "EXPENSE",
-                  u"Öffentlichkeitsarbeit": "EXPENSE"}
+                  u"Öffentlichkeitsarbeit": "EXPENSE",
+                  u"Beitragsabschreibung": "EXPENSE"}
 
     fk_d = {fk.id: fk.name for fk in finanz_konten}
 
@@ -195,15 +200,24 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     records.append(bank_journal)
 
     print("  Translating finance accounts")
+    gauge_stype, gauge_year, gauge_num = ("ws", 2014, 25) #id=25000 for WS14/15
+    day={"ws": 1, "ss": 1}
+    month={"ws": 10, "ss": 4}
+
+    def semester_begin_date(i):
+        stype = "ss" if (i%2==0) ^ (gauge_stype == "ws") else "ws"
+        years_to_gauge = i//2 + (i%2 if stype != "ws" else 0)
+        return date(day=day[stype],
+                    month=month[stype],
+                    year=gauge_year+years_to_gauge)
+
     for _a in finanz_konten:
         if _a.id%1000 == 0:
+            num_semesters_to_gauge = _a.id/1000-gauge_num
             # fee changes:
             #   ws02/03 1000: anm2500 sem1750 red450
             #   ss04 4000: anm2500 sem1500 red450
             #   ws14/15 25000: anm0 sem2000 red100
-            gauge_semester = datetime(year=2015, month=04, day=1) #26000
-            semester_duration = timedelta(weeks=52/2)
-            num_semesters_to_gauge = _a.id/1000-26
             s = finance.Semester(name=_a.name,
                                  registration_fee=2500 if _a.id < 25000 else 0,
                                  regular_semester_fee=1750 if _a.id < 4000 else (1500 if _a.id < 25000 else 2000),
@@ -213,8 +227,8 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
                                  reduced_semester_fee_threshold=timedelta(days=62),
                                  payment_deadline=timedelta(days=31),
                                  allowed_overdraft=500,
-                                 begins_on=gauge_semester+num_semesters_to_gauge*semester_duration,
-                                 ends_on=gauge_semester+(num_semesters_to_gauge+1)*semester_duration)
+                                 begins_on=semester_begin_date(num_semesters_to_gauge),
+                                 ends_on=semester_begin_date(num_semesters_to_gauge+1)-timedelta(days=1))
             sem_d[_a.id] = s
             records.append(s)
         else:
@@ -264,16 +278,22 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
 
         return account
 
+    #  § 199 Abs. 1 BGB
+    # TODO write-offs? write off mail memberships, but not full fees
+    # TODO reconstruct past memberships based on fees incurred
+    # TODO inspect 4000 transaction on 10538
+
     for _bu in buchungen:
         if _bu.wert == 0 and _bu.haben == _bu.soll:
             continue # ignore
-        if _bu.haben is None and _bu.soll == 1:
+        if (_bu.haben is None and _bu.soll == 1) or (_bu.soll is None and _bu.haben == 1):
             continue # unaccounted banking expense, nothing to do
         if _bu.soll in match.cache and _bu.haben in match.cache:
             credit_account, debit_account = (new_acc(_bu.haben, _bu.haben_uid),
                                              new_acc(_bu.soll, _bu.soll_uid))
 
             transaction = finance.Transaction(
+                id=_bu.oid,
                 description=_bu.bes or "NO DESCRIPTION GIVEN",
                 author=ul_d.get(_bu.bearbeiter, u_d[0]),
                 valid_on=_bu.datum,
@@ -340,7 +360,7 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
     sw_d = {} # switch dict: mgmt_ip -> obj
     for _c in computer:
         owner = u_d[_c.nutzer_id]
-        if _c.nutzer_id == 0:
+        if _c.nutzer_id == 0 or _c.nutzer_id == 11551:  # 11551: bor34
             try:
                 room = r_d[(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)]
             except KeyError:
@@ -356,13 +376,13 @@ def translate(zimmer, wheim, nutzer, finanz_konten, bankkonto, buchungen, hp4108
                 mgmt_ip_blocks = _c.c_ip.split(".")
                 mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
                 mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
-                h = host.Switch(owner=owner, name=_c.c_hname, management_ip=mgmt_ip, room=room)
+                h = host.Switch(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
                 interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr, name="switch management interface")
                 ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 sw_d[mgmt_ip] = h
                 records.append(ip)
             else: #assume server
-                h = host.ServerHost(owner=owner, name=_c.c_alias, room=room)
+                h = host.ServerHost(owner=u_d[0], name=_c.c_alias, room=room)
                 interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
                 ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
                 hostname = hname_hostname_map.get(_c.c_hname) or _c.c_hname
@@ -480,6 +500,7 @@ def main(args):
                                                 netusers_model.Hp4108Port.etage,
                                                 netusers_model.Hp4108Port.zimmernr).distinct().all(),
                         nutzer=session_nu.query(netusers_model.Nutzer).all(),
+                        status=session_nu.query(netusers_model.Status).all(),
                         finanz_konten=session_um.query(userman_model.FinanzKonten).all(),
                         bankkonto=session_um.query(userman_model.BankKonto).all(),
                         buchungen=session_um.query(userman_model.Buchungen).all(),
@@ -497,7 +518,7 @@ def main(args):
     print("...took",time.time()-t,"seconds.")
 
     print("Fixing sequences...")
-    for table in (user.User, facilities.Building):
+    for table in (user.User, facilities.Building, finance.Transaction):
         maxid = engine.execute('select max(id) from \"{}\";'.format(table.__tablename__)).fetchone()[0]
         engine.execute("select setval('{}_id_seq', {})".format(table.__tablename__, maxid + 1))
     print("Done.")
@@ -511,7 +532,8 @@ if __name__=="__main__":
     source.add_argument("--from-origin", action='store_true')
 
     parser.add_argument("--bulk", action='store_true', default=False)
-
+    parser.add_argument("--anonymize", action='store_true', default=False)
+    parser.add_argument("--dump", action='store_true', default=False)
     #parser.add_argument("--tables", metavar="T", action='store', nargs="+",
     #                choices=cacheable_tables)
 
