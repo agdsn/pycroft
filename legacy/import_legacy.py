@@ -114,7 +114,7 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
             email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
-            finance_account=finance.FinanceAccount(name="Nutzerkonto von "+_u.nutzer_id, type="ASSET"))
+            finance_account=finance.FinanceAccount(name="Nutzerkonto von "+str(_u.nutzer_id), type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
