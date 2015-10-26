@@ -15,7 +15,7 @@ curl -O https://bootstrap.pypa.io/get-pip.py
 pypy get-pip.py
 
 pypy -m pip install cffi psycopg2cffi
-sed '/psycopg2/d;/MySQL/d;/pysqlite/d' /pycroft/requirements.txt | xargs -a - -n 1 pypy -m pip install
+sed '/psycopg2/d;/pysqlite/d' /pycroft/requirements.txt | xargs -a - -n 1 pypy -m pip install
 echo -e "from psycopg2cffi import compat\ncompat.register()" > /usr/local/lib/pypy2.7/dist-packages/psycopg2.py
 
 chmod 777 -R /usr/local/lib/pypy2.7/dist-packages/psycopg2cffi # for some reason it needs write access
