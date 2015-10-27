@@ -15,7 +15,6 @@ from itertools import groupby
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
-from json import dumps
 from flask.ext.login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -37,7 +36,7 @@ from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 from web.templates import page_resources
 
-from sqlalchemy.sql.expression import literal_column, func, select, Alias
+from sqlalchemy.sql.expression import literal_column, func, select, Alias, Join
 
 def json_agg(query):
     return session.query(func.json_agg(literal_column("row")))\
@@ -192,10 +191,32 @@ def accounts_list():
     )
 
 
+@bp.route('/accounts/<int:account_id>/balance/json')
+def balance_json(account_id):
+    balance_json = (select([Transaction.valid_on,
+                            func.sum(Split.amount).over(
+                                order_by=Transaction.valid_on).label("balance")
+                            ])
+                    .select_from(
+                        Join(Split, Transaction,
+                             Split.transaction_id==Transaction.id))
+                    .where(Split.account_id == account_id))
+
+    res = session.execute(json_agg_core(balance_json)).first()[0]
+    return jsonify(items=res)
+
+
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
     account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
-    user = account.user
+    try:
+        user = User.q.filter_by(finance_account_id=account.id).one()
+    except NoResultFound:
+        user = None
+    except MultipleResultsFound:
+        user = User.q.filter_by(finance_account_id=account.id).first()
+        flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
+              u" verbunden sind!", "warning")
 
     #TODO: typed_splits/account form does not (yet) use server-side pagination,
     # which leads to timeouts on large accounts. So here is a workaround
@@ -206,10 +227,13 @@ def accounts_show(account_id):
     else:
         typed_splits = None
 
+    page_resources.link_script(
+        url_for("static", filename="libs/d3/d3.min.js"))
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
         json_url=url_for('.accounts_show_json', account_id=account_id),
+        balance_json_url=url_for('.balance_json', account_id=account_id),
         typed_splits=typed_splits,
         footer=[{'title': 'Saldo', 'colspan': 3},
                 {'title': money_filter(account.balance)}]
@@ -304,7 +328,7 @@ def transactions_all():
     page_resources.link_script(
         url_for("static", filename="libs/d3/d3.min.js"))
     page_resources.link_script(
-        url_for("static", filename="libs/crossfilter/crossfilter.js"))
+        url_for("static", filename="libs/crossfilter/crossfilter.min.js"))
     page_resources.link_script(
         url_for("static", filename="libs/dcjs/dc.min.js"))
     return render_template('finance/transactions_overview.html',
@@ -359,7 +383,8 @@ def transactions_all_json():
     else:
         q = q.where(Transaction.valid_on <= upper)
 
-    return dumps(session.execute(json_agg_core(q)).fetchone()[0] or [])
+    res = session.execute(json_agg_core(q)).fetchone()[0] or []
+    return jsonify(items=res)
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])

@@ -81,8 +81,9 @@
     var dateMin = dateFormat.parse("{{ args.get('after', "") }}");
     var dateMax = dateFormat.parse("{{ args.get('before', "") }}");
 
-    d3.json('{{ url_for("finance.transactions_all_json", **args) | safe }}', function (data) {
+    d3.json('{{ url_for("finance.transactions_all_json", **args) | safe }}', function (resp) {
 
+      data = resp.items;
       data.forEach(function (d) {
         d.dd = dateFormat.parse(d.valid_on);
         d.month = d3.time.month(d.dd);
