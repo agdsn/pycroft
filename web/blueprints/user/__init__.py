@@ -645,9 +645,9 @@ def suspend(user_id):
             ends_at = None
         else:
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
-        during = closedopen(session.utcnow(), ends_at)
 
         try:
+            during = closedopen(session.utcnow(), ends_at)
             blocked_user = lib.user.suspend(
                 user=myUser,
                 reason=form.reason.data,
