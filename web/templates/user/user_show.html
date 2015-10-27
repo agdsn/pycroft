@@ -23,7 +23,6 @@
 {% endblock %}
 
 {% block content %}
-
     <div class="subnav">
         <ul class="nav nav-pills">
             <li><a href="#master-data">Stammdaten</a></li>
@@ -119,5 +118,8 @@
             var days = $("#select-days option:selected").val();
             load_trafficchart(days);
         });
+    </script>
+    <script>
+      $('body').scrollspy({ target: '.subnav' })
     </script>
 {% endblock %}
