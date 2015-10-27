@@ -71,9 +71,9 @@
 
     //todo custom reduce functions for server-side stuff
     var volumeChart = dc.barChart('#volume-chart');
-    var amountChart = dc.barChart();
-    var cumAmountChart = dc.lineChart();
     var valueChart = dc.compositeChart('#value-chart');
+    var amountChart = dc.barChart(valueChart);
+    var cumAmountChart = dc.lineChart(valueChart);
     var accountChart = dc.rowChart('#account-selector');
     var typeChart = dc.rowChart('#account-type-selector');
     var transactionTable = dc.dataTable('#transaction-table');
@@ -135,7 +135,7 @@
           })
           .ordering(function(d) { return -d.value; })
           .renderLabel(true)
-          ;//.xAxis().tickValues([]);
+          .xAxis().tickValues([]);
 
       var accountType = ndx.dimension(function(d){ return d.type; });
       var accountTypeGroup = accountType.group()
@@ -151,7 +151,7 @@
             return d.key+" ("+ d.value+")";
           })
           .renderLabel(true)
-          ;//.xAxis().tickValues([]);
+          .xAxis().tickValues([]);
 
       var dateDimension = ndx.dimension(function (d) {
         return d.dd;
@@ -170,7 +170,7 @@
       var monthGroup = monthDimension.group().reduceCount();
       volumeChart
           .width(700)
-          .height(150)
+          .height(100)
           .dimension(monthDimension)
           .group(monthGroup)
           .x(d3.time.scale().domain(dateExtent))
@@ -178,7 +178,7 @@
           .xUnits(d3.time.months) //seems to be buggy, so we can't set bar width :(
         // logscale would also be nice, but that too is buggy
           .elasticY(true)
-          .margins({top: 20, left: 50, right: 10, bottom: 50})
+          .margins({top: 0, left: 70, right: 70, bottom: 25})
           .renderHorizontalGridLines(true)
           .renderVerticalGridLines(true)
           .yAxisLabel("# transactions");
@@ -194,28 +194,30 @@
 
       amountChart
           .dimension(monthDimension)
-          .group(valueGroup)
-          .brushOn(false)
-          .x(d3.time.scale().domain(dateExtent));
+          .group(valueGroup, "Monthly amount transacted");
 
       cumAmountChart
           .dimension(monthDimension)
-          .group(cumValueGroup)
-          .brushOn(false)
-          .valueAccessor(function (d) {
-            return d.value;
-          })
-          .x(d3.time.scale().domain(dateExtent));
+          .group(cumValueGroup, "Cumulative amount transacted")
+          .ordinalColors(["orange"])
+          .useRightYAxis(true)
+          .interpolate("step-after");
 
       valueChart
           .width(700)
+          .height(200)
           .dimension(monthDimension)
           .x(d3.time.scale().domain(dateExtent))
+          .xUnits(d3.time.months)
           .elasticY(true)
-          .margins({top: 20, left: 50, right: 10, bottom: 50})
+          .brushOn(false)
+          .margins({top: 0, left: 70, right: 70, bottom: 25})
           .renderHorizontalGridLines(true)
           .renderVerticalGridLines(true)
+          .yAxisLabel("monthly net amount transacted")
+          .rightYAxisLabel("total net amount transacted")
           .rangeChart(volumeChart)
+          .legend(dc.legend().x(90).y(0).itemHeight(13).gap(5))
           .compose([amountChart, cumAmountChart]);
 
 
@@ -268,6 +270,9 @@
               return -d.id;
           })
           .size(15);
+
+      //TODO transaction value chart (count vs value)
+      //TODO total value transacted chart (count vs value)
 
       dc.renderAll();
     });
