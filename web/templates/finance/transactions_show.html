@@ -31,6 +31,8 @@
             {% if transaction.journal_entry is not none %}
                 <dt>Referenziert von</dt>
                 <dd>{{ transaction.journal_entry.id }}</dd>
+                <dt>Verwendungszweck</dt>
+                <dd>{{ transaction.journal_entry.description }}</dd>
             {% endif %}
         </dl>
     </section>
