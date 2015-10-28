@@ -6,7 +6,7 @@ from datetime import timedelta
 from pycroft.lib.logging import log_user_event, log_room_event
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.logging import RoomLogEntry
+from pycroft.model.logging import RoomLogEntry, LogEntry
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.facilities import RoomData
@@ -36,9 +36,10 @@ class Test_010_UserLogEntry(LogTestBase):
         self.assertEqual(user_log_entry.author, self.user)
         self.assertEqual(user_log_entry.user, self.user)
 
+        self.assertIsNotNone(LogEntry.q.get(user_log_entry.id))
         session.session.delete(user_log_entry)
         session.session.commit()
-
+        self.assertIsNone(LogEntry.q.get(user_log_entry.id))
 
 class Test_020_RoomLogEntry(LogTestBase):
     datasets = [RoomData, RoomLogEntryData]
@@ -61,5 +62,7 @@ class Test_020_RoomLogEntry(LogTestBase):
         self.assertEqual(db_room_log_entry.author, self.user)
         self.assertEqual(db_room_log_entry.room, room)
 
+        self.assertIsNotNone(LogEntry.q.get(db_room_log_entry.id))
         session.session.delete(db_room_log_entry)
         session.session.commit()
+        self.assertIsNone(LogEntry.q.get(db_room_log_entry.id))
