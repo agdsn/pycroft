@@ -58,7 +58,7 @@ class Test_010_Journal(FixtureDataTestBase):
         # test for correct dataimport
         entry = JournalEntry.q.filter_by(
             journal=journal,
-            original_description=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
+            original_reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
         self.assertEqual(entry.other_account_number, "12345678")
         self.assertEqual(entry.other_routing_number, "80040400")
@@ -70,7 +70,7 @@ class Test_010_Journal(FixtureDataTestBase):
         # verify that the right year gets chosen for the transaction
         entry = JournalEntry.q.filter_by(
             journal=journal,
-            original_description=u"Pauschalen"
+            original_reference=u"Pauschalen"
         ).first()
         self.assertEqual(entry.posted_at, date(2012, 12, 24))
         self.assertEqual(entry.valid_on, date(2012, 12, 24))
@@ -82,7 +82,7 @@ class Test_010_Journal(FixtureDataTestBase):
         # which is in the next year
         entry = JournalEntry.q.filter_by(
             journal=journal,
-            original_description=u"BESTELLUNG SUPERMEGATOLLER SERVER"
+            original_reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
         self.assertEqual(entry.posted_at, date(2013, 12, 29))
         self.assertEqual(entry.valid_on, date(2013, 1, 10))
@@ -158,11 +158,11 @@ class Test_010_Journal(FixtureDataTestBase):
 
     def test_0060_cleanup_sepa_description(self):
         clean_sepa_description = u"EREF+Long EREF 1234567890 with a parasitic " \
-                                 u"space SVWZ+A description with parasitic " \
+                                 u"space SVWZ+A reference with parasitic " \
                                  u"spaces at multiples of 28"
         sepa_description = u"EREF+Long EREF 1234567890 w ith a parasitic space " \
-                           u"SVWZ+A description with par asitic spaces at " \
-                           u"multiples  of 28"
+                           u"SVWZ+A reference with paras itic spaces at " \
+                           u"multiples of  28"
         self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
 
 

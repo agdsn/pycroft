@@ -81,7 +81,7 @@ class JournalEntryEditForm(Form):
     journal_name = static(StringField(u"Bankkonto"))
     amount = static(IntegerField(u"Wert"))
     description = StringField(u"Beschreibung")
-    original_description = static(StringField(u"Ursprüngliche Beschreibung"))
+    original_reference = static(StringField(u"Ursprüngliche Verwendung"))
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))

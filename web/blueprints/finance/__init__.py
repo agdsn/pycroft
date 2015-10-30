@@ -86,8 +86,8 @@ def journals_entries_json():
             'journal': entry.journal.name,
             'valid_on': date_filter(entry.valid_on),
             'amount': money_filter(entry.amount),
-            'description': entry.description,
-            'original_description': entry.original_description,
+            'reference': entry.reference,
+            'original_reference': entry.original_reference,
             'ktonr': entry.other_account_number,
             # 'blz': entry.other_bank,   # todo revisit. wuzdat? dunno…
             'name': entry.other_name,

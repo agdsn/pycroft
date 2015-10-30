@@ -442,7 +442,7 @@ MT940_FIELDNAMES = [
     'posted_at',
     'valid_on',
     'type',
-    'description',
+    'reference',
     'other_name',
     'other_account_number',
     'other_routing_number',
@@ -510,8 +510,8 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
     ).filter(
         JournalEntry.posted_at < first_posted_at).scalar()
     a = tuple(session.session.query(
-        JournalEntry.amount, JournalEntry.journal_id, JournalEntry.description,
-        JournalEntry.original_description, JournalEntry.other_account_number,
+        JournalEntry.amount, JournalEntry.journal_id, JournalEntry.reference,
+        JournalEntry.original_reference, JournalEntry.other_account_number,
         JournalEntry.other_routing_number, JournalEntry.other_name,
         JournalEntry.import_time, JournalEntry.posted_at,
         JournalEntry.valid_on
@@ -527,8 +527,8 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
                                 islice(entries, j1, j2)))
             session.session.add_all(imap(
                 lambda e: JournalEntry(
-                    amount=e[0], journal_id=e[1], description=e[2],
-                    original_description=e[3], other_account_number=e[4],
+                    amount=e[0], journal_id=e[1], reference=e[2],
+                    original_reference=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
                     import_time=e[7], posted_at=e[8], valid_on=e[9]),
                 islice(entries, j1, j2)))
@@ -556,7 +556,7 @@ def remove_space_characters(field):
     return u"".join(c for i, c in enumerate(field) if i % 28 != 27 or c != u' ')
 
 
-# Banks are using the original description field to store several subfields with
+# Banks are using the original reference field to store several subfields with
 # SEPA. Subfields start with a four letter tag name and the plus sign, they
 # are separated by space characters.
 sepa_description_field_tags = (
@@ -620,14 +620,14 @@ def process_record(index, record, imported_at):
         raise CSVImportError(
             message.format(record.amount, index, raw_record), e)
     try:
-        description = record.description.decode('utf8')
+        reference = record.reference.decode('utf8')
         other_name = record.other_name.decode('utf8')
     except UnicodeDecodeError as e:
         message = gettext(u"Unicode decoding error. Record {0}: {1}")
         raw_record = restore_record(record)
         raise CSVImportError(message.format(index, raw_record), e)
-    return (amount, journal.id, cleanup_description(description),
-            description, record.other_account_number,
+    return (amount, journal.id, cleanup_description(reference),
+            reference, record.other_account_number,
             record.other_routing_number, other_name, imported_at,
             posted_at, valid_on)
 

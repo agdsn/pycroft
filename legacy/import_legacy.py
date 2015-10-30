@@ -245,7 +245,7 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
             journal=bank_journal,
             amount=_bk.wert,
             description=_bk.bes,
-            original_description=_bk.bes,
+            original_reference=_bk.bes,
             other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
             other_routing_number="NO NUMBER GIVEN", #TODO
             other_name="NO NAME GIVEN", #TODO
