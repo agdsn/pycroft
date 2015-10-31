@@ -27,7 +27,7 @@ from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
-from pycroft.model.finance import FinanceAccount
+from pycroft.model.finance import Account
 from pycroft.model.host import Host, IP, UserHost, UserInterface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -147,7 +147,7 @@ def move_in(name, login, email, building, level, room_number, mac,
         email=email,
         room=room,
         registered_at=now,
-        finance_account=FinanceAccount(name="", type="ASSET")
+        account=Account(name="", type="ASSET")
     )
     plain_password = user.generate_password(12)
 
@@ -155,7 +155,7 @@ def move_in(name, login, email, building, level, room_number, mac,
     new_user.set_password(plain_password)
     with session.session.begin(subtransactions=True):
         session.session.add(new_user)
-    new_user.finance_account.name = deferred_gettext(u"User {id}").format(
+    new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
     # create one new host (including interface) for the new user
@@ -368,7 +368,7 @@ def has_balance_of_at_least(user, amount):
     :return: True if and only if the user's balance is at least the given
     amount (and False otherwise).
     """
-    balance = user.finance_account.balance if user.finance_account else 0
+    balance = user.account.balance if user.account else 0
     return balance >= amount
 
 

@@ -13,27 +13,26 @@ from pycroft.lib.finance import (
     simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
     SemesterFee, get_semester_for_date, adjustment_description)
 from pycroft.lib.user import make_member_of
-from pycroft.model.finance import (
-    FinanceAccount, Journal, JournalEntry, Transaction)
+from pycroft.model.finance import Account, Journal, JournalEntry, Transaction
 from pycroft.model import session
 from pycroft.model.user import PropertyGroup, User
 from tests import FixtureDataTestBase
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
-    FinanceAccountData, JournalData, MembershipData, SemesterData, UserData)
+    AccountData, JournalData, MembershipData, SemesterData, UserData)
 
 
 class Test_010_Journal(FixtureDataTestBase):
 
-    datasets = [FinanceAccountData, JournalData, SemesterData, UserData]
+    datasets = [AccountData, JournalData, SemesterData, UserData]
 
     def setUp(self):
         super(Test_010_Journal, self).setUp()
-        self.bank_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.bank_account.name
+        self.bank_account = Account.q.filter_by(
+            name=AccountData.bank_account.name
         ).one()
-        self.user_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.user_account.name
+        self.user_account = Account.q.filter_by(
+            name=AccountData.user_account.name
         ).one()
         self.journal = Journal.q.filter_by(
             account_number=JournalData.Journal1.account_number
@@ -173,7 +172,7 @@ class FeeTestBase(FixtureDataTestBase):
         super(FeeTestBase, self).setUp()
         self.user = User.q.first()
         self.processor = self.user
-        self.fee_account = FinanceAccount.q.filter_by(
+        self.fee_account = Account.q.filter_by(
             name=self.fee_account_name
         ).one()
 
@@ -181,15 +180,14 @@ class FeeTestBase(FixtureDataTestBase):
         actual_transactions = [
             (t.description,
              t.valid_on,
-             t.splits[0].amount if t.splits[0].account == user.finance_account
+             t.splits[0].amount if t.splits[0].account == user.account
              else t.splits[1].amount)
-            for t in user.finance_account.transactions]
+            for t in user.account.transactions]
         self.assertEqual(expected_transactions, actual_transactions)
 
 
 class Test_Fees(FeeTestBase):
-    datasets = (ConfigData, FinanceAccountData, PropertyData, SemesterData,
-                UserData)
+    datasets = (AccountData, ConfigData, PropertyData, SemesterData, UserData)
     fee_account_name = ConfigData.config.semester_fee_account.name
     description = u"Fee"
     valid_on = datetime.utcnow().date()
@@ -245,7 +243,7 @@ class Test_Fees(FeeTestBase):
 
 
 class TestRegistrationFee(FeeTestBase):
-    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+    datasets = (AccountData, ConfigData, MembershipData, PropertyData,
                 SemesterData, UserData)
     fee_account_name = ConfigData.config.registration_fee_account.name
 
@@ -272,7 +270,7 @@ class TestRegistrationFee(FeeTestBase):
 
 
 class TestSemesterFee(FeeTestBase):
-    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+    datasets = (AccountData, ConfigData, MembershipData, PropertyData,
                 PropertyGroupData, SemesterData, UserData)
     fee_account_name = ConfigData.config.semester_fee_account.name
 
@@ -336,7 +334,7 @@ class TestSemesterFee(FeeTestBase):
 
 
 class TestLateFee(FeeTestBase):
-    datasets = (ConfigData, FinanceAccountData, MembershipData, PropertyData,
+    datasets = (AccountData, ConfigData, MembershipData, PropertyData,
                 PropertyGroupData, SemesterData, UserData)
     fee_account_name = ConfigData.config.late_fee_account.name
 
@@ -349,11 +347,11 @@ class TestLateFee(FeeTestBase):
     def setUp(self):
         super(TestLateFee, self).setUp()
         self.fee = LateFee(self.fee_account, date.today())
-        self.other_fee_account = FinanceAccount.q.filter_by(
+        self.other_fee_account = Account.q.filter_by(
             name=ConfigData.config.semester_fee_account.name
         ).one()
-        self.bank_account = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.bank_account.name
+        self.bank_account = Account.q.filter_by(
+            name=AccountData.bank_account.name
         ).one()
 
     def late_fee_for(self, transaction):
@@ -366,12 +364,12 @@ class TestLateFee(FeeTestBase):
 
     def book_a_fee(self):
         return simple_transaction(
-            self.description, self.other_fee_account, self.user.finance_account,
+            self.description, self.other_fee_account, self.user.account,
             self.amount, self.user, self.valid_on)
 
     def pay_fee(self, delta):
         return simple_transaction(
-            self.description, self.user.finance_account, self.bank_account,
+            self.description, self.user.account, self.bank_account,
             self.amount, self.user, self.valid_on + delta)
 
     def test_no_fees_bocked(self):
@@ -400,7 +398,7 @@ class TestLateFee(FeeTestBase):
         transaction = self.book_a_fee()
         late_fee = self.late_fee_for(transaction)
         simple_transaction(late_fee[0], self.fee_account,
-                           self.user.finance_account, late_fee[1], self.user,
+                           self.user.account, late_fee[1], self.user,
                            late_fee[2])
         self.pay_fee(self.payment_deadline + timedelta(days=1))
         session.session.commit()

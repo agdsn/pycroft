@@ -2,14 +2,6 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-    pycroft.model.finance
-    ~~~~~~~~~~~~~~
-
-    This module contains the classes FinanceAccount, ...
-
-    :copyright: (c) 2011 by AG DSN.
-"""
 import operator
 from sqlalchemy.ext.hybrid import hybrid_property
 from .base import ModelBase
@@ -62,17 +54,17 @@ class Semester(ModelBase):
     )
 
 
-class FinanceAccount(ModelBase):
+class Account(ModelBase):
     name = Column(String(127), nullable=False)
-    type = Column(Enum("ASSET",      # Aktivkonto
-                       "LIABILITY",  # Passivkonto
-                       "EXPENSE",    # Aufwandskonto
-                       "REVENUE",    # Ertragskonto
-                       name="finance_account_type"),
+    type = Column(Enum("ASSET",       # Aktivkonto
+                       "LIABILITY",   # Passivkonto
+                       "EXPENSE",     # Aufwandskonto
+                       "REVENUE",     # Ertragskonto
+                       name="account_type"),
                   nullable=False)
 
     transactions = relationship("Transaction", secondary="split",
-                                backref="finance_accounts")
+                                backref="accounts")
 
     @hybrid_property
     def balance(self):
@@ -95,9 +87,8 @@ class Journal(ModelBase):
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    finance_account_id = Column(Integer, ForeignKey(FinanceAccount.id),
-                                nullable=False)
-    finance_account = relationship(FinanceAccount)
+    account_id = Column(Integer, ForeignKey(Account.id), nullable=False)
+    account = relationship(Account)
 
     __table_args__ = (
         UniqueConstraint(account_number, routing_number),
@@ -189,10 +180,9 @@ event.listen(Transaction, "before_update", check_transaction_on_save)
 class Split(ModelBase):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
     amount = Column(Integer, nullable=False)
-    account_id = Column(Integer,
-                        ForeignKey(FinanceAccount.id, ondelete='CASCADE'),
+    account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
                         nullable=False)
-    account = relationship(FinanceAccount,
+    account = relationship(Account,
                            backref=backref("splits",
                                            cascade="all, delete-orphan"))
 

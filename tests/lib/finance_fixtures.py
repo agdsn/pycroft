@@ -41,7 +41,7 @@ class SemesterData(DataSet):
         ends_on = today + timedelta(days=90)
 
 
-class FinanceAccountData(DataSet):
+class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
         type = "ASSET"
@@ -69,7 +69,7 @@ class UserData(DataSet):
         name = u"Dummy Dummy"
         registered_at = datetime.combine(SemesterData.with_registration_fee.begins_on + timedelta(days=31), time.min)
         room = RoomData.dummy_room1
-        finance_account = FinanceAccountData.user_account
+        account = AccountData.user_account
 
 
 class MembershipData(DataSet):
@@ -107,42 +107,42 @@ class TransactionData(DataSet):
 class SplitData(DataSet):
     class claim1_credit:
         transaction = TransactionData.claim1
-        account = FinanceAccountData.user_account
+        account = AccountData.user_account
         amount = 5000
 
     class claim1_debit:
         transaction = TransactionData.claim1
-        account = FinanceAccountData.semester_fee_account
+        account = AccountData.semester_fee_account
         amount = -5000
 
     class late_fee1_credit:
         transaction = TransactionData.late_fee_for_claim1
-        account = FinanceAccountData.user_account
+        account = AccountData.user_account
         amount = 2500
 
     class late_fee2_credit:
         transaction = TransactionData.late_fee_for_claim1
-        account = FinanceAccountData.late_fee_account
+        account = AccountData.late_fee_account
         amount = -2500
 
     class claim2_credit:
         transaction = TransactionData.claim2
-        account = FinanceAccountData.user_account
+        account = AccountData.user_account
         amount = 5000
 
     class claim2_debit:
         transaction = TransactionData.claim2
-        account = FinanceAccountData.semester_fee_account
+        account = AccountData.semester_fee_account
         amount = -5000
 
     class payment_credit:
         transaction = TransactionData.payment
-        account = FinanceAccountData.bank_account
+        account = AccountData.bank_account
         amount = 5000
 
     class payment_debit:
         transaction = TransactionData.payment
-        account = FinanceAccountData.user_account
+        account = AccountData.user_account
         amount = -5000
 
 
@@ -155,4 +155,4 @@ class JournalData(DataSet):
         iban = "DE61850503003120219540"
         bic = "OSDDDE81XXX"
         hbci_url = "https://hbci.example.com/"
-        finance_account = FinanceAccountData.bank_account
+        account = AccountData.bank_account

@@ -14,7 +14,7 @@ from pycroft.model import (
     user, facilities, session, logging, finance, dns, host)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.finance import SemesterData, FinanceAccountData
+from tests.fixtures.dummy.finance import AccountData, SemesterData
 from tests.fixtures.dummy.host import (
     IPData, SwitchPatchPortData,UserInterfaceData, UserHostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
@@ -63,10 +63,10 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, FinanceAccountData, IPData,
-                PropertyData, RoomData, SemesterData, SubnetData,
-                SwitchPatchPortData, TrafficGroupData, UserData, UserHostData,
-                UserInterfaceData, VLANData)
+    datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
+                RoomData, SemesterData, SubnetData, SwitchPatchPortData,
+                TrafficGroupData, UserData, UserHostData, UserInterfaceData,
+                VLANData)
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
@@ -121,13 +121,13 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             self.assertIn(group, active_user_groups)
 
         self.assertTrue(UserHelper.has_network_access(new_user))
-        self.assertIsNotNone(new_user.finance_account)
-        self.assertEqual(new_user.finance_account.balance, 4000)
+        self.assertIsNotNone(new_user.account)
+        self.assertEqual(new_user.account.balance, 4000)
         self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
-    datasets = (ConfigData, FinanceAccountData, IPData, SemesterData,
+    datasets = (AccountData, ConfigData, IPData, SemesterData,
                 SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
@@ -167,8 +167,7 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
             self.assertLessEqual(membership.ends_at, out_time)
 
         # check if users finance account still exists
-        finance_account = new_user.finance_account
-        self.assertIsNotNone(finance_account)
+        self.assertIsNotNone(new_user.account)
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
@@ -202,7 +201,7 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
 
 
 class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
-    datasets = (ConfigData, FinanceAccountData, IPData, PropertyData,
+    datasets = (AccountData, ConfigData, IPData, PropertyData,
                 SemesterData, SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):

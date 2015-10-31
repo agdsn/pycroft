@@ -22,8 +22,7 @@ from pycroft._compat import (
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.model import session
 from pycroft.model.finance import (
-    Semester, FinanceAccount, Transaction, Split,
-    Journal, JournalEntry)
+    Account, Journal, JournalEntry, Semester, Split, Transaction)
 from pycroft.helpers.interval import (
     closed, single, Bound, Interval, IntervalSet, UnboundedInterval)
 from pycroft.model.functions import sign, least
@@ -85,8 +84,8 @@ def simple_transaction(description, debit_account, credit_account, amount,
     The current system date will be used as transaction date, an optional valid
     date may be specified.
     :param unicode description: Description
-    :param FinanceAccount debit_account: Debit (germ. Soll) account.
-    :param FinanceAccount credit_account: Credit (germ. Haben) account
+    :param Account debit_account: Debit (germ. Soll) account.
+    :param Account credit_account: Credit (germ. Haben) account
     :param int amount: Amount in Eurocents
     :param User author: User who created the transaction
     :param date valid_on: Date, when the transaction should be valid. Current
@@ -142,8 +141,8 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
     The interval boundaries may be None, which indicates no lower and upper
     bound respectively.
-    :param FinanceAccount from_account:
-    :param FinanceAccount to_account:
+    :param Account from_account: source account
+    :param Account to_account: destination account
     :param Interval[date] when: Interval in which transactions became valid
     :rtype: int
     """
@@ -210,7 +209,7 @@ def post_fees(users, fees, processor):
             for description, valid_on, amount in missing_postings:
                 if valid_on <= today:
                     simple_transaction(
-                        description, fee.account, user.finance_account,
+                        description, fee.account, user.account,
                         amount, processor, valid_on)
 
 
@@ -286,7 +285,7 @@ class Fee(with_metaclass(ABCMeta)):
             (split1, split1.transaction_id == Transaction.id),
             (split2, split2.transaction_id == Transaction.id)
         ).filter(
-            split1.account_id == user.finance_account_id,
+            split1.account_id == user.account_id,
             split2.account_id == self.account.id
         ).order_by(Transaction.valid_on)
         return transactions
@@ -392,8 +391,8 @@ class LateFee(Fee):
             (split1, split1.transaction_id == Transaction.id),
             (split2, split2.transaction_id == Transaction.id)
         ).filter(
-            split1.account_id == user.finance_account_id,
-            split2.account_id != user.finance_account_id,
+            split1.account_id == user.account_id,
+            split2.account_id != user.account_id,
             split2.account_id != self.account.id
         ).group_by(
             Transaction.id, Transaction.valid_on
@@ -633,9 +632,7 @@ def process_record(index, record, imported_at):
 
 
 def user_has_paid(user):
-    return sum(split.amount for split in (Split.q.filter_by(
-        account_id=user.finance_account.id
-    ))) <= 0
+    return user.account.balance <= 0
 
 
 def get_typed_splits(splits):

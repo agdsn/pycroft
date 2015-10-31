@@ -23,7 +23,7 @@ class SemesterData(DataSet):
         ends_on = today + timedelta(days=180)
 
 
-class FinanceAccountData(DataSet):
+class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
         type = "ASSET"

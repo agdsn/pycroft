@@ -26,11 +26,11 @@ from pycroft.lib.finance import get_typed_splits
 from pycroft.model.finance import Semester, Journal, JournalEntry, Split
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.finance import FinanceAccount, Transaction
+from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
-    SemesterCreateForm, JournalEntryEditForm, JournalImportForm,
-    JournalCreateForm, FinanceAccountCreateForm, TransactionCreateForm)
+    AccountCreateForm, JournalCreateForm, JournalEntryEditForm,
+    JournalImportForm, SemesterCreateForm, TransactionCreateForm)
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -70,7 +70,7 @@ def journals_list_json():
             'bic': journal.bic,
             'kto': {
                 'href': url_for('.accounts_show',
-                                account_id=journal.finance_account_id),
+                                account_id=journal.account_id),
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
@@ -154,9 +154,9 @@ def journals_entries_edit(journal_id, entry_id):
     form = JournalEntryEditForm(obj=entry, journal_name=entry.journal.name)
 
     if form.validate():
-        debit_account = entry.journal.finance_account
-        credit_account = FinanceAccount.q.filter(
-            FinanceAccount.id == form.finance_account_id.data
+        debit_account = entry.journal.account
+        credit_account = Account.q.filter(
+            Account.id == form.account_id.data
         ).one()
         entry.transaction = finance.simple_transaction(
             description=form.description.data, debit_account=debit_account,
@@ -181,8 +181,8 @@ def accounts_list():
     accounts_by_type = dict(imap(
         lambda t: (t[0], list(t[1])),
         groupby(
-            FinanceAccount.q.outerjoin(User).filter(User.id == None)
-            .order_by(FinanceAccount.type).all(),
+            Account.q.outerjoin(User).filter(User.id == None)
+            .order_by(Account.type).all(),
             lambda a: a.type
         )
     ))
@@ -208,13 +208,13 @@ def balance_json(account_id):
 
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
-    account = FinanceAccount.q.filter(FinanceAccount.id == account_id).one()
+    account = Account.q.get(account_id).one()
     try:
-        user = User.q.filter_by(finance_account_id=account.id).one()
+        user = User.q.filter_by(account_id=account.id).one()
     except NoResultFound:
         user = None
     except MultipleResultsFound:
-        user = User.q.filter_by(finance_account_id=account.id).first()
+        user = User.q.filter_by(account_id=account.id).first()
         flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
               u" verbunden sind!", "warning")
 
@@ -250,7 +250,7 @@ def accounts_show_json(account_id):
     filter = request.args.get('filter') # for account form / typed_split
     search = request.args.get('search')
 
-    account = FinanceAccount.q.get(account_id) or abort(404)
+    account = Account.q.get(account_id) or abort(404)
 
     if not (sort_by in Transaction.__table__.columns
             or sort_by in Split.__table__.columns):
@@ -345,9 +345,8 @@ def transactions_all_json():
         non_user_transactions = (select([Split.transaction_id])
                                  .select_from(
                                     Join(Split, User,
-                                         (User.finance_account_id ==
-                                                    Split.account_id),
-                                        isouter=True))
+                                         (User.account_id == Split.account_id),
+                                         isouter=True))
                                  .group_by(Split.transaction_id)
                                  .having(func.bool_and(User.id == None))
                                  .alias("nut"))
@@ -361,13 +360,11 @@ def transactions_all_json():
     q = (select([Transaction.id,
                  Transaction.valid_on,
                  Split.account_id,
-                 FinanceAccount.type,
+                 Account.type,
                  Split.amount])
          .select_from(transactions
-                      .join(Split,
-                            Split.transaction_id == Transaction.id)
-                      .join(FinanceAccount,
-                            FinanceAccount.id == Split.account_id)))
+                      .join(Split, Split.transaction_id == Transaction.id)
+                      .join(Account, Account.id == Split.account_id)))
 
     try:
         datetime.strptime(lower, "%Y-%m-%d").date()
@@ -396,7 +393,7 @@ def transactions_create():
         splits = []
         for split_form in form.splits:
             splits.append((
-                FinanceAccount.q.get(split_form.account_id.data),
+                Account.q.get(split_form.account_id.data),
                 split_form.amount.data
             ))
         finance.complex_transaction(
@@ -415,10 +412,10 @@ def transactions_create():
 @bp.route('/accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
 def accounts_create():
-    form = FinanceAccountCreateForm()
+    form = AccountCreateForm()
 
     if form.validate_on_submit():
-        new_account = FinanceAccount(name=form.name.data, type=form.type.data)
+        new_account = Account(name=form.name.data, type=form.type.data)
         session.add(new_account)
         session.commit()
         return redirect(url_for('.accounts_list'))
@@ -509,8 +506,8 @@ def json_accounts_system():
         {
             "account_id": account.id,
             "account_name": localized(account.name),
-        } for account in session.query(FinanceAccount).outerjoin(User).filter(
-            User.finance_account == None
+        } for account in session.query(Account).outerjoin(User).filter(
+            User.account == None
         ).all()])
 
 
@@ -518,8 +515,8 @@ def json_accounts_system():
 def json_accounts_user_search():
     query = request.args['query']
     results = session.query(
-        FinanceAccount.id, User.id, User.login, User.name
-    ).select_from(User).join(FinanceAccount).filter(
+        Account.id, User.id, User.login, User.name
+    ).select_from(User).join(Account).filter(
         or_(func.lower(User.name).like(func.lower("%{0}%".format(query))),
             func.lower(User.login).like(func.lower("%{0}%".format(query))),
             cast(User.id, Text).like(u"{0}%".format(query)))

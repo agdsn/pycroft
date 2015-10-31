@@ -76,8 +76,8 @@ class JournalCreateForm(Form):
 
 
 class JournalEntryEditForm(Form):
-    finance_account = TypeaheadField(u"Gegenkonto")
-    finance_account_id = HiddenField(validators=[DataRequired()])
+    account = TypeaheadField(u"Gegenkonto")
+    account_id = HiddenField(validators=[DataRequired()])
     journal_name = static(StringField(u"Bankkonto"))
     amount = static(IntegerField(u"Wert"))
     description = StringField(u"Beschreibung")
@@ -94,7 +94,7 @@ class JournalImportForm(Form):
     csv_file = FileField(u"Umsätze (CSV-MT940)")
 
 
-class FinanceAccountCreateForm(Form):
+class AccountCreateForm(Form):
     name = TextField(u"Name", validators=[DataRequired()])
     type = SelectField(
         u"Typ", validators=[DataRequired()],
@@ -124,9 +124,9 @@ class TransactionCreateForm(Form):
     )
 
     def validate_splits(self, field):
-        if sum(split_form['amount'].data for split_form in field
-               if split_form['amount'].data is not None
-            ) != 0:
+        balance = sum(split_form['amount'].data for split_form in field
+                      if split_form['amount'].data is not None)
+        if balance != 0:
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
 
 

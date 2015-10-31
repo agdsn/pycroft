@@ -5,7 +5,7 @@ from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from pycroft.model.base import ModelBase
 from pycroft.model.dns import DNSZone
-from pycroft.model.finance import FinanceAccount
+from pycroft.model.finance import Account
 from pycroft.model.user import PropertyGroup
 
 
@@ -33,21 +33,21 @@ class Config(ModelBase):
     already_paid_semester_fee_group = relationship(
         PropertyGroup, foreign_keys=[already_paid_semester_fee_group_id])
     registration_fee_account_id = Column(
-        Integer, ForeignKey(FinanceAccount.id), nullable=False)
+        Integer, ForeignKey(Account.id), nullable=False)
     registration_fee_account = relationship(
-        FinanceAccount, foreign_keys=[registration_fee_account_id])
+        Account, foreign_keys=[registration_fee_account_id])
     semester_fee_account_id = Column(
-        Integer, ForeignKey(FinanceAccount.id), nullable=False)
+        Integer, ForeignKey(Account.id), nullable=False)
     semester_fee_account = relationship(
-        FinanceAccount, foreign_keys=[semester_fee_account_id])
+        Account, foreign_keys=[semester_fee_account_id])
     late_fee_account_id = Column(
-        Integer, ForeignKey(FinanceAccount.id), nullable=False)
+        Integer, ForeignKey(Account.id), nullable=False)
     late_fee_account = relationship(
-        FinanceAccount, foreign_keys=[late_fee_account_id])
+        Account, foreign_keys=[late_fee_account_id])
     additional_fee_account_id = Column(
-        Integer, ForeignKey(FinanceAccount.id), nullable=False)
+        Integer, ForeignKey(Account.id), nullable=False)
     additional_fee_account = relationship(
-        FinanceAccount, foreign_keys=[additional_fee_account_id])
+        Account, foreign_keys=[additional_fee_account_id])
     user_zone_id = Column(Integer, ForeignKey(DNSZone.id), nullable=False)
     user_zone = relationship(DNSZone)
     __table_args__ = (CheckConstraint("id = 1"),)
