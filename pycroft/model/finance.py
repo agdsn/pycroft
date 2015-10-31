@@ -87,7 +87,8 @@ class Journal(ModelBase):
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
     hbci_url = Column(String(255), nullable=False)
-    account_id = Column(Integer, ForeignKey(Account.id), nullable=False)
+    account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
+                        unique=True)
     account = relationship(Account)
 
     __table_args__ = (
@@ -120,8 +121,9 @@ class JournalEntry(ModelBase):
     import_time = Column(DateTime, nullable=False)
     posted_at = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
-    transaction_id = Column(Integer, ForeignKey("transaction.id"))
-    transaction = relationship("Transaction", backref=backref("journal_entry", uselist=False))
+    transaction_id = Column(Integer, ForeignKey("transaction.id"), unique=True)
+    transaction = relationship("Transaction",
+                               backref=backref("journal_entry", uselist=False))
 
 
 class IllegalTransactionError(Exception):
