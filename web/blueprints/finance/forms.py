@@ -65,7 +65,7 @@ class SemesterCreateForm(Form):
     )
 
 
-class JournalCreateForm(Form):
+class BankAccountCreateForm(Form):
     name = TextField(u"Name")
     bank = TextField(u"Bank")
     account_number = TextField(u"Kontonummer")
@@ -75,10 +75,10 @@ class JournalCreateForm(Form):
     hbci_url = TextField(u"HBCI-URL")
 
 
-class JournalEntryEditForm(Form):
+class BankAccountActivityEditForm(Form):
     account = TypeaheadField(u"Gegenkonto")
     account_id = HiddenField(validators=[DataRequired()])
-    journal_name = static(StringField(u"Bankkonto"))
+    bank_account_name = static(StringField(u"Bankkonto"))
     amount = static(IntegerField(u"Wert"))
     description = StringField(u"Beschreibung")
     original_reference = static(StringField(u"Ursprüngliche Verwendung"))
@@ -89,7 +89,7 @@ class JournalEntryEditForm(Form):
     posted_at = static(DateField(u"Buchungsdatum"))
 
 
-class JournalImportForm(Form):
+class BankAccountActivitiesImportForm(Form):
     expected_balance = IntegerField(u"Erwarteter Kontostand")
     csv_file = FileField(u"Umsätze (CSV-MT940)")
 

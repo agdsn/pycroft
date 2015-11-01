@@ -23,14 +23,15 @@ from pycroft._compat import imap
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
-from pycroft.model.finance import Semester, Journal, JournalEntry, Split
+from pycroft.model.finance import (
+    Semester, BankAccount, BankAccountActivity, Split)
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
-    AccountCreateForm, JournalCreateForm, JournalEntryEditForm,
-    JournalImportForm, SemesterCreateForm, TransactionCreateForm)
+    AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
+    BankAccountActivitiesImportForm, SemesterCreateForm, TransactionCreateForm)
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -51,68 +52,70 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 
 
 @bp.route('/')
-@bp.route('/journals')
-@bp.route('/journals/list')
-@nav.navigate(u"Journals")
-def journals_list():
-    return render_template('finance/journals_list.html')
+@bp.route('/bank-accounts')
+@bp.route('/bank-accounts/list')
+@nav.navigate(u"Bankkonten")
+def bank_accounts_list():
+    return render_template('finance/bank_accounts_list.html')
 
 
-@bp.route('/journals/list/json')
-def journals_list_json():
+@bp.route('/bank-accounts/list/json')
+def bank_accounts_list_json():
     return jsonify(items=[
         {
-            'name': journal.name,
-            'bank': journal.bank,
-            'ktonr': journal.account_number,
-            'blz': journal.routing_number,
-            'iban': journal.iban,
-            'bic': journal.bic,
+            'name': bank_account.name,
+            'bank': bank_account.bank,
+            'ktonr': bank_account.account_number,
+            'blz': bank_account.routing_number,
+            'iban': bank_account.iban,
+            'bic': bank_account.bic,
             'kto': {
                 'href': url_for('.accounts_show',
-                                account_id=journal.account_id),
+                                account_id=bank_account.account_id),
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'hbci': journal.hbci_url,
-            'change_date': ''.format(journal.last_update)
-        } for journal in Journal.q.all()])
+            'hbci': bank_account.hbci_url,
+            'change_date': ''.format(bank_account.last_update)
+        } for bank_account in BankAccount.q.all()])
 
 
-@bp.route('/journals/entries/json')
-def journals_entries_json():
+@bp.route('/bank-accounts/activities/json')
+def bank_accounts_activities_json():
     return jsonify(items=[
         {
-            'journal': entry.journal.name,
-            'valid_on': date_filter(entry.valid_on),
-            'amount': money_filter(entry.amount),
-            'reference': entry.reference,
-            'original_reference': entry.original_reference,
-            'ktonr': entry.other_account_number,
-            # 'blz': entry.other_bank,   # todo revisit. wuzdat? dunno…
-            'name': entry.other_name,
+            'bank_account': activity.bank_account.name,
+            'valid_on': date_filter(activity.valid_on),
+            'amount': money_filter(activity.amount),
+            'reference': activity.reference,
+            'original_reference': activity.original_reference,
+            'ktonr': activity.other_account_number,
+            # 'blz': activity.other_bank,   # todo revisit. wuzdat? dunno…
+            'name': activity.other_name,
             'actions': ([{
-                             'href': url_for('.journals_entries_edit',
-                                             journal_id=entry.journal_id,
-                                             entry_id=entry.id),
-                             'title': '',
-                             'btn_class': 'btn-primary',
-                             'icon': 'glyphicon-pencil'
-                         }] if privilege_check(current_user,
-                                               'finance_change') else []),
-        } for entry in JournalEntry.q.filter(
-            JournalEntry.transaction_id == None
-        ).order_by(JournalEntry.valid_on).all()])
+                'href': url_for(
+                    '.bank_account_activities_edit',
+                    bank_account_id=activity.bank_account_id,
+                    entry_id=activity.id),
+                'title': '',
+                'btn_class': 'btn-primary',
+                'icon': 'glyphicon-pencil'
+            }]
+                        if privilege_check(current_user, 'finance_change')
+                        else []),
+        } for activity in BankAccountActivity.q.filter(
+            BankAccountActivity.transaction_id == None
+        ).order_by(BankAccountActivity.valid_on).all()])
 
 
-@bp.route('/journals/import', methods=['GET', 'POST'])
+@bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
-@nav.navigate(u"Buchungen importieren")
-def journals_import():
-    form = JournalImportForm()
+@nav.navigate(u"Bankkontobewegungen importieren")
+def bank_accounts_import():
+    form = BankAccountActivitiesImportForm()
     if form.validate_on_submit():
         try:
-            finance.import_journal_csv(
+            finance.import_bank_account_activities_csv(
                 form.csv_file.data, form.expected_balance.data)
             session.commit()
             flash(u"Der CSV-Import war erfolgreich!", "success")
@@ -121,16 +124,16 @@ def journals_import():
             message = u"Der CSV-Import ist fehlgeschlagen: {0}"
             flash(message.format(e.message), "error")
 
-    return render_template('finance/journals_import.html', form=form)
+    return render_template('finance/bank_accounts_import.html', form=form)
 
 
-@bp.route('/journals/create', methods=['GET', 'POST'])
+@bp.route('/bank-accounts/create', methods=['GET', 'POST'])
 @access.require('finance_change')
-def journals_create():
-    form = JournalCreateForm()
+def bank_accounts_create():
+    form = BankAccountCreateForm()
 
     if form.validate_on_submit():
-        new_journal = Journal(
+        new_bank_account = BankAccount(
             name=form.name.data,
             bank=form.bank.data,
             account_number=form.account_number.data,
@@ -138,40 +141,39 @@ def journals_create():
             iban=form.iban.data,
             bic=form.bic.data,
             hbci_url=form.hbci_url.data)
-        session.add(new_journal)
+        session.add(new_bank_account)
         session.commit()
-        return redirect(url_for('.journals'))
+        return redirect(url_for('.bank_accounts'))
 
-    return render_template('finance/journals_create.html',
-                           form=form, page_title=u"Journal erstellen")
+    return render_template('finance/bank_accounts_create.html',
+                           form=form, page_title=u"Bankkonto erstellen")
 
 
-@bp.route('/journals/<int:journal_id>/entries/<int:entry_id>',
+@bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
 @access.require('finance_change')
-def journals_entries_edit(journal_id, entry_id):
-    entry = JournalEntry.q.get(entry_id)
-    form = JournalEntryEditForm(obj=entry, journal_name=entry.journal.name)
+def bank_account_activities_edit(activity_id):
+    activity_id = BankAccountActivity.q.get(activity_id)
+    form = BankAccountActivityEditForm(
+        obj=activity_id, bank_account_name=activity_id.bank_account.name)
 
     if form.validate():
-        debit_account = entry.journal.account
+        debit_account = activity_id.bank_account.account
         credit_account = Account.q.filter(
             Account.id == form.account_id.data
         ).one()
-        entry.transaction = finance.simple_transaction(
+        activity_id.transaction = finance.simple_transaction(
             description=form.description.data, debit_account=debit_account,
-            credit_account=credit_account, amount=entry.amount,
-            author=current_user, valid_on=entry.valid_on)
+            credit_account=credit_account, amount=activity_id.amount,
+            author=current_user, valid_on=activity_id.valid_on)
 
-        session.add(entry)
+        session.add(activity_id)
         session.commit()
 
-        return redirect(url_for('.journals_list'))
+        return redirect(url_for('.bank_accounts_list'))
 
-    return render_template(
-        'finance/journals_entries_edit.html',
-        entry=entry, form=form
-    )
+    return render_template('finance/bank_account_activities_edit.html',
+                           form=form)
 
 
 @bp.route('/accounts/')

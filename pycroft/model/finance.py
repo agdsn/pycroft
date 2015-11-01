@@ -79,7 +79,7 @@ class Account(ModelBase):
         ).label("balance")
 
 
-class Journal(ModelBase):
+class BankAccount(ModelBase):
     name = Column(String(255), nullable=False)
     bank = Column(String(255), nullable=False)
     account_number = Column(String(10), nullable=False)
@@ -98,20 +98,21 @@ class Journal(ModelBase):
 
     @hybrid_property
     def last_update(self):
-        return max(imap(lambda e: e.import_time, self.entries))
+        return max(imap(lambda e: e.import_time, self.activities))
 
     @last_update.expression
     def last_update(self):
         return (
-            select(func.max(JournalEntry.import_time))
-            .where(JournalEntry.journal_id == self.id)
+            select(func.max(BankAccountActivity.import_time))
+            .where(BankAccountActivity.bank_account_id == self.id)
             .label("last_update")
         )
 
 
-class JournalEntry(ModelBase):
-    journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
-    journal = relationship("Journal", backref=backref("entries"))
+class BankAccountActivity(ModelBase):
+    bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
+                             nullable=False)
+    bank_account = relationship(BankAccount, backref=backref("activities"))
     amount = Column(Integer, nullable=False)
     reference = Column(Text, nullable=False)
     original_reference = Column(Text, nullable=False)
@@ -123,7 +124,8 @@ class JournalEntry(ModelBase):
     valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey("transaction.id"), unique=True)
     transaction = relationship("Transaction",
-                               backref=backref("journal_entry", uselist=False))
+                               backref=backref("bank_account_activity",
+                                               uselist=False))
 
 
 class IllegalTransactionError(Exception):
@@ -189,7 +191,7 @@ class Split(ModelBase):
                                            cascade="all, delete-orphan"))
 
     transaction_id = Column(Integer,
-                            ForeignKey("transaction.id", ondelete='CASCADE'),
+                            ForeignKey(Transaction.id, ondelete='CASCADE'),
                             nullable=False)
     transaction = relationship(Transaction,
                                backref=backref("splits",

@@ -8,7 +8,7 @@ import csv
 from datetime import datetime, date, timedelta
 import difflib
 from functools import partial
-from itertools import chain, tee, islice
+from itertools import chain, islice, starmap, tee
 import operator
 import re
 
@@ -22,7 +22,7 @@ from pycroft._compat import (
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.model import session
 from pycroft.model.finance import (
-    Account, Journal, JournalEntry, Semester, Split, Transaction)
+    Account, BankAccount, BankAccountActivity, Semester, Split, Transaction)
 from pycroft.helpers.interval import (
     closed, single, Bound, Interval, IntervalSet, UnboundedInterval)
 from pycroft.model.functions import sign, least
@@ -474,14 +474,14 @@ class CSVImportError(Exception):
         super(CSVImportError, self).__init__(message)
 
 
-def descending_transaction_dates(entries):
-    a, b = tee(imap(operator.itemgetter(8), entries))
+def descending_transaction_dates(activities):
+    a, b = tee(imap(operator.itemgetter(8), activities))
     next(b)
     return all(imap(operator.ge, a, b))
 
 
 @with_transaction
-def import_journal_csv(csv_file, expected_balance, import_time=None):
+def import_bank_account_activities_csv(csv_file, expected_balance, import_time=None):
     if import_time is None:
         import_time = session.utcnow()
 
@@ -491,55 +491,58 @@ def import_journal_csv(csv_file, expected_balance, import_time=None):
     try:
         # Skip first record (header)
         next(records)
-        entries = tuple(imap(lambda r: process_record(r[0], r[1], import_time),
-                             records))
+        activities = tuple(starmap(
+            partial(process_record, imported_at=import_time), records))
     except StopIteration:
         raise CSVImportError(gettext(u"No data present."))
     except csv.Error as e:
         raise CSVImportError(gettext(u"Could not read CSV."), e)
-    if not entries:
+    if not activities:
         raise CSVImportError(gettext(u"No data present."))
-    if not descending_transaction_dates(entries):
+    if not descending_transaction_dates(activities):
         raise CSVImportError(gettext(
             u"Transaction are not sorted according to transaction date in "
             u"descending order."))
-    first_posted_at = entries[-1][8]
+    first_posted_at = activities[-1][8]
     balance = session.session.query(
-        func.coalesce(func.sum(JournalEntry.amount), 0)
+        func.coalesce(func.sum(BankAccountActivity.amount), 0)
     ).filter(
-        JournalEntry.posted_at < first_posted_at).scalar()
+        BankAccountActivity.posted_at < first_posted_at
+    ).scalar()
     a = tuple(session.session.query(
-        JournalEntry.amount, JournalEntry.journal_id, JournalEntry.reference,
-        JournalEntry.original_reference, JournalEntry.other_account_number,
-        JournalEntry.other_routing_number, JournalEntry.other_name,
-        JournalEntry.import_time, JournalEntry.posted_at,
-        JournalEntry.valid_on
+        BankAccountActivity.amount, BankAccountActivity.bank_account_id,
+        BankAccountActivity.reference, BankAccountActivity.original_reference,
+        BankAccountActivity.other_account_number,
+        BankAccountActivity.other_routing_number,
+        BankAccountActivity.other_name, BankAccountActivity.import_time,
+        BankAccountActivity.posted_at, BankAccountActivity.valid_on
     ).filter(
-        JournalEntry.posted_at >= first_posted_at))
-    b = tuple(reversed(entries))
-    matcher = difflib.SequenceMatcher(None, a, b)
+        BankAccountActivity.posted_at >= first_posted_at)
+    )
+    b = tuple(reversed(activities))
+    matcher = difflib.SequenceMatcher(a=a, b=b)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if 'equal' == tag:
             continue
         elif 'insert' == tag:
             balance += sum(imap(operator.itemgetter(0),
-                                islice(entries, j1, j2)))
+                                islice(activities, j1, j2)))
             session.session.add_all(imap(
-                lambda e: JournalEntry(
-                    amount=e[0], journal_id=e[1], reference=e[2],
+                lambda e: BankAccountActivity(
+                    amount=e[0], bank_account_id=e[1], reference=e[2],
                     original_reference=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
                     import_time=e[7], posted_at=e[8], valid_on=e[9]),
-                islice(entries, j1, j2)))
+                islice(activities, j1, j2)))
         elif 'delete' == tag:
             continue
         elif 'replace':
             raise CSVImportError(
                 gettext(u"Import conflict:\n"
-                        u"Database entries:\n{0}\n"
-                        u"File entries:\n{1}").format(
-                    u'\n'.join(islice(entries, i1, i2)),
-                    u'\n'.join(islice(entries, j1, j2))))
+                        u"Database bank account activities:\n{0}\n"
+                        u"File bank account activities:\n{1}").format(
+                    u'\n'.join(islice(activities, i1, i2)),
+                    u'\n'.join(islice(activities, j1, j2))))
         else:
             raise AssertionError()
     if balance != expected_balance:
@@ -593,11 +596,11 @@ def process_record(index, record, imported_at):
         raw_record = restore_record(record)
         raise CSVImportError(message.format(record.currency, index, raw_record))
     try:
-        journal = Journal.q.filter_by(
+        bank_account = BankAccount.q.filter_by(
             account_number=record.our_account_number
         ).one()
     except NoResultFound as e:
-        message = gettext(u"No journal with account number {0}. "
+        message = gettext(u"No bank account with account number {0}. "
                           u"Record {1}: {2}")
         raw_record = restore_record(record)
         raise CSVImportError(
@@ -625,7 +628,7 @@ def process_record(index, record, imported_at):
         message = gettext(u"Unicode decoding error. Record {0}: {1}")
         raw_record = restore_record(record)
         raise CSVImportError(message.format(index, raw_record), e)
-    return (amount, journal.id, cleanup_description(reference),
+    return (amount, bank_account.id, cleanup_description(reference),
             reference, record.other_account_number,
             record.other_routing_number, other_name, imported_at,
             posted_at, valid_on)

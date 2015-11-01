@@ -146,8 +146,8 @@ class SplitData(DataSet):
         amount = -5000
 
 
-class JournalData(DataSet):
-    class Journal1:
+class BankAccountData(DataSet):
+    class dummy:
         name = u"Hauptkonto"
         bank = u"Ostsächsische Sparkasse Dresden"
         account_number = "3120219540"

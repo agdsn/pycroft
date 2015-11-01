@@ -25,7 +25,7 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code(url_for('static', filename='style.css'), 200)
 
         # Access to other pages/blueprints is NOT OK
-        self.assert_response_code(url_for('finance.journals_list'), 302)
+        self.assert_response_code(url_for('finance.bank_accounts_list'), 302)
         self.assert_response_code(url_for('infrastructure.switches'), 302)
 
 
@@ -45,7 +45,7 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
 
     def test_0020_access_finance(self):
         # Admin has no access to finance
-        self.assert_access_forbidden(url_for('finance.journals_list'))
+        self.assert_access_forbidden(url_for('finance.bank_accounts_list'))
 
 
 class Test_030_Permissions_Finance(FrontendDataTestBase):
@@ -62,7 +62,7 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
         self.assert_response_code(url_for('facilities.overview'), 200)
 
     def test_0020_access_finance(self):
-        self.assert_response_code(url_for('finance.journals_list'), 200)
+        self.assert_response_code(url_for('finance.bank_accounts_list'), 200)
 
 
 class Test_040_Permissions_User(FrontendDataTestBase):

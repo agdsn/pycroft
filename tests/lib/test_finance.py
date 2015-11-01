@@ -9,84 +9,82 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from pycroft._compat import StringIO
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
-    post_fees, cleanup_description, get_current_semester, import_journal_csv,
-    simple_transaction, transferred_amount, Fee, LateFee, RegistrationFee,
-    SemesterFee, get_semester_for_date, adjustment_description)
+    Fee, LateFee, RegistrationFee, SemesterFee, adjustment_description,
+    cleanup_description, get_current_semester, get_semester_for_date,
+    import_bank_account_activities_csv, post_fees, simple_transaction, transferred_amount)
 from pycroft.lib.user import make_member_of
-from pycroft.model.finance import Account, Journal, JournalEntry, Transaction
+from pycroft.model.finance import (
+    Account, BankAccount, BankAccountActivity, Transaction)
 from pycroft.model import session
 from pycroft.model.user import PropertyGroup, User
 from tests import FixtureDataTestBase
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
-    AccountData, JournalData, MembershipData, SemesterData, UserData)
+    AccountData, BankAccountData, MembershipData, SemesterData, UserData)
 
 
-class Test_010_Journal(FixtureDataTestBase):
+class Test_010_BankAccount(FixtureDataTestBase):
 
-    datasets = [AccountData, JournalData, SemesterData, UserData]
+    datasets = [AccountData, BankAccountData, SemesterData, UserData]
 
     def setUp(self):
-        super(Test_010_Journal, self).setUp()
-        self.bank_account = Account.q.filter_by(
-            name=AccountData.bank_account.name
+        super(Test_010_BankAccount, self).setUp()
+        self.fee_account = Account.q.filter_by(
+            name=AccountData.semester_fee_account.name
         ).one()
         self.user_account = Account.q.filter_by(
             name=AccountData.user_account.name
-        ).one()
-        self.journal = Journal.q.filter_by(
-            account_number=JournalData.Journal1.account_number
         ).one()
         self.author = User.q.filter_by(
             login=UserData.dummy.login
         ).one()
 
-    def test_0010_import_journal_csv(self):
+    def test_0010_import_bank_account_csv(self):
         """
         This test should verify that the csv import works as expected.
         """
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
         f = StringIO(data)
 
-        import_journal_csv(f, 4342, date(2015, 1, 1))
+        import_bank_account_activities_csv(f, 4342, date(2015, 1, 1))
 
-        journal = (Journal.q
-                   .filter(Journal.iban == JournalData.Journal1.iban)
-                   .one())
+        bank_account = BankAccount.q.filter(
+            BankAccount.iban == BankAccountData.dummy.iban
+        ).one()
 
         # test for correct dataimport
-        entry = JournalEntry.q.filter_by(
-            journal=journal,
+        activity = BankAccountActivity.q.filter_by(
+            bank_account=bank_account,
             original_reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
-        self.assertEqual(entry.other_account_number, "12345678")
-        self.assertEqual(entry.other_routing_number, "80040400")
-        self.assertEqual(entry.other_name, u"SCH, AAA")
-        self.assertEqual(entry.amount, 900000)
-        self.assertEqual(entry.posted_at, date(2013, 1, 2))
-        self.assertEqual(entry.valid_on, date(2013, 1, 2))
+        self.assertEqual(activity.other_account_number, "12345678")
+        self.assertEqual(activity.other_routing_number, "80040400")
+        self.assertEqual(activity.other_name, u"SCH, AAA")
+        self.assertEqual(activity.amount, 900000)
+        self.assertEqual(activity.posted_at, date(2013, 1, 2))
+        self.assertEqual(activity.valid_on, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
-        entry = JournalEntry.q.filter_by(
-            journal=journal,
+        activity = BankAccountActivity.q.filter_by(
+            bank_account=bank_account,
             original_reference=u"Pauschalen"
         ).first()
-        self.assertEqual(entry.posted_at, date(2012, 12, 24))
-        self.assertEqual(entry.valid_on, date(2012, 12, 24))
+        self.assertEqual(activity.posted_at, date(2012, 12, 24))
+        self.assertEqual(activity.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
-        self.assertEqual(entry.amount, -600)
+        self.assertEqual(activity.amount, -600)
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
-        entry = JournalEntry.q.filter_by(
-            journal=journal,
+        activity = BankAccountActivity.q.filter_by(
+            bank_account=bank_account,
             original_reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEqual(entry.posted_at, date(2013, 12, 29))
-        self.assertEqual(entry.valid_on, date(2013, 1, 10))
+        self.assertEqual(activity.posted_at, date(2013, 12, 29))
+        self.assertEqual(activity.valid_on, date(2013, 1, 10))
 
-        JournalEntry.q.delete()
+        BankAccountActivity.q.delete()
         session.session.commit()
 
     def test_0020_get_current_semester(self):
@@ -100,7 +98,7 @@ class Test_010_Journal(FixtureDataTestBase):
     def test_0030_simple_transaction(self):
         try:
             simple_transaction(
-                u"transaction", self.bank_account, self.user_account,
+                u"transaction", self.fee_account, self.user_account,
                 9000, self.author
             )
         except Exception:
@@ -112,38 +110,38 @@ class Test_010_Journal(FixtureDataTestBase):
         amount = 9000
         today = session.utcnow().date()
         simple_transaction(
-            u"transaction", self.bank_account, self.user_account,
+            u"transaction", self.fee_account, self.user_account,
             amount, self.author, today - timedelta(1)
         )
         simple_transaction(
-            u"transaction", self.bank_account, self.user_account,
+            u"transaction", self.fee_account, self.user_account,
             amount, self.author, today
         )
         simple_transaction(
-            u"transaction", self.bank_account, self.user_account,
+            u"transaction", self.fee_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
         self.assertEqual(
             transferred_amount(
-                self.bank_account, self.user_account, single(today)
+                self.fee_account, self.user_account, single(today)
             ),
             amount
         )
         self.assertEqual(
             transferred_amount(
-                self.bank_account, self.user_account, closedopen(today, None)
+                self.fee_account, self.user_account, closedopen(today, None)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.bank_account, self.user_account, openclosed(None, today)
+                self.fee_account, self.user_account, openclosed(None, today)
             ),
             2*amount
         )
         self.assertEqual(
             transferred_amount(
-                self.bank_account, self.user_account
+                self.fee_account, self.user_account
             ),
             3*amount
         )

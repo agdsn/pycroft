@@ -189,16 +189,16 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
         records.append(a)
         a_d[name] = a
 
-    print("  Adding bank journal")
-    bank_journal = finance.Journal(name="Bankkonto 3120219540",
-                                   bank="Ostsächsische Sparkasse Dresden",
-                                   account_number="3120219540",
-                                   routing_number="85050300",
-                                   iban="DE61850503003120219540",
-                                   bic="OSDDDE81XXX",
-                                   hbci_url="https://hbci.example.com/",
-                                   account=a_d["Bankkonto"])
-    records.append(bank_journal)
+    print("  Adding bank bank_account")
+    bank_account = finance.BankAccount(name="Bankkonto 3120219540",
+                                       bank="Ostsächsische Sparkasse Dresden",
+                                       account_number="3120219540",
+                                       routing_number="85050300",
+                                       iban="DE61850503003120219540",
+                                       bic="OSDDDE81XXX",
+                                       hbci_url="https://hbci.example.com/",
+                                       account=a_d["Bankkonto"])
+    records.append(bank_account)
 
     print("  Translating finance accounts")
     gauge_stype, gauge_year, gauge_num = ("ws", 2014, 25) #id=25000 for WS14/15
@@ -242,8 +242,8 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
     print("  Translating bank transactions")
     je_d = {}
     for _bk in bankkonto:
-        je = finance.JournalEntry(
-            journal=bank_journal,
+        je = finance.BankAccountActivity(
+            bank_account=bank_account,
             amount=_bk.wert,
             description=_bk.bes,
             original_reference=_bk.bes,
@@ -310,7 +310,8 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
                 account=debit_account,
                 transaction=transaction)
 
-            if _bu.bkid is not None: # link transaction with bank journal
+            # link bank account activity with transaction
+            if _bu.bkid is not None:
                 je_d[_bu.bkid].transaction = transaction
             records.extend([transaction, new_credit_split, new_debit_split])
         else:
