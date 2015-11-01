@@ -536,7 +536,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance, import_time=N
                 islice(activities, j1, j2)))
         elif 'delete' == tag:
             continue
-        elif 'replace':
+        elif 'replace' == tag:
             raise CSVImportError(
                 gettext(u"Import conflict:\n"
                         u"Database bank account activities:\n{0}\n"
