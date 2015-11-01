@@ -140,7 +140,9 @@ def bank_accounts_create():
             routing_number=form.routing_number.data,
             iban=form.iban.data,
             bic=form.bic.data,
-            hbci_url=form.hbci_url.data)
+            hbci_url=form.hbci_url.data,
+            account=Account(name=form.name.data, type='BANK_ASSET'),
+        )
         session.add(new_bank_account)
         session.commit()
         return redirect(url_for('.bank_accounts'))

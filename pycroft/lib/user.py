@@ -147,7 +147,7 @@ def move_in(name, login, email, building, level, room_number, mac,
         email=email,
         room=room,
         registered_at=now,
-        account=Account(name="", type="ASSET")
+        account=Account(name="", type="USER_ASSET")
     )
     plain_password = user.generate_password(12)
 

@@ -44,7 +44,7 @@ class SemesterData(DataSet):
 class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
-        type = "ASSET"
+        type = "BANK_ASSET"
 
     class registration_fee_account:
         name = u"Registration Fees"
@@ -60,7 +60,7 @@ class AccountData(DataSet):
 
     class user_account:
         name = u"Dummy User"
-        type = "ASSET"
+        type = "USER_ASSET"
 
 
 class UserData(DataSet):

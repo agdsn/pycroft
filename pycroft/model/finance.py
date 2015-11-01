@@ -57,6 +57,8 @@ class Semester(ModelBase):
 class Account(ModelBase):
     name = Column(String(127), nullable=False)
     type = Column(Enum("ASSET",       # Aktivkonto
+                       "USER_ASSET",  # Aktivkonto for users
+                       "BANK_ASSET",  # Aktivkonto for bank accounts
                        "LIABILITY",   # Passivkonto
                        "EXPENSE",     # Aufwandskonto
                        "REVENUE",     # Ertragskonto
