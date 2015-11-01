@@ -47,11 +47,11 @@ class AccountData(DataSet):
         type = "ASSET"
 
     class registration_fee_account:
-        name = u"Fees"
+        name = u"Registration Fees"
         type = "REVENUE"
 
     class semester_fee_account:
-        name = u"Fees"
+        name = u"Semester Fees"
         type = "REVENUE"
 
     class late_fee_account:
