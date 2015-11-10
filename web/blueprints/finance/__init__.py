@@ -211,7 +211,7 @@ def balance_json(account_id):
 
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
-    account = Account.q.get(account_id).one()
+    account = Account.q.get(account_id)
     try:
         user = User.q.filter_by(account_id=account.id).one()
     except NoResultFound:
