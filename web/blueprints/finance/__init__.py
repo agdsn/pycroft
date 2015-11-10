@@ -95,8 +95,7 @@ def bank_accounts_activities_json():
             'actions': ([{
                 'href': url_for(
                     '.bank_account_activities_edit',
-                    bank_account_id=activity.bank_account_id,
-                    entry_id=activity.id),
+                    activity_id=activity.id),
                 'title': '',
                 'btn_class': 'btn-primary',
                 'icon': 'glyphicon-pencil'
