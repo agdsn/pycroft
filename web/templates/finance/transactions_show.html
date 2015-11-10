@@ -28,9 +28,13 @@
                       aria-hidden="true"></span>
                 {{ transaction.author.name }}
             </a></dd>
-            {% if transaction.journal_entry is not none %}
-                <dt>Referenziert von</dt>
-                <dd>{{ transaction.journal_entry.id }}</dd>
+            {% if transaction.bank_account_activity %}
+                <dt>Zugeordnete Bankkontobewegung</dt>
+                <dd>
+                  <a href="{{ url_for('.bank_accounts_activities_edit', activity_id=transaction.bank_account_activity.id) }}">
+                    {{ transaction.bank_account_activity.reference }}
+                  </a>
+                </dd>
             {% endif %}
         </dl>
     </section>

@@ -1,5 +1,5 @@
 {#
- Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
@@ -8,17 +8,17 @@
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
 
-{% set page_title = "Journaleintrag bearbeiten" %}
+{% set page_title = "Bankkontobewegung bearbeiten" %}
 
 {% block single_row_content %}
-    {{ forms.simple_form(form, '', url_for('.journals_list')) }}
+    {{ forms.simple_form(form, '', url_for('.bank_accounts_list')) }}
 {% endblock %}
 
 {% block page_script -%}
     {{ resources.link_script_file('custom/js/account-typeahead.js') }}
     <script type="application/javascript">
         $(function () {
-            account_typeahead($('#finance_account_id'), $('#finance_account'));
+            account_typeahead($('#account_id'), $('#account'));
         });
     </script>
 {%- endblock %}

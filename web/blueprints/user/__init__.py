@@ -27,7 +27,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserInterface, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
-from pycroft.model.finance import FinanceAccount, Split
+from pycroft.model.finance import Split
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -61,7 +61,7 @@ def overview():
                            .count()},
                {"title": "Nicht bezahlt",
                 "href": None,
-                "number": uquery().join(User.finance_account)
+                "number": uquery().join(User.account)
                            .join(Split)
                            .group_by(User.id)
                            .having(func.sum(Split.amount) > 0)
@@ -71,7 +71,7 @@ def overview():
                 "number": uquery().join(Membership).filter(
                                 Membership.group == config.member_group,
                                 Membership.active())
-                           .join(User.finance_account)
+                           .join(User.account)
                            .join(Split)
                            .group_by(User.id)
                            .having(func.sum(Split.amount) > 0)
@@ -143,13 +143,13 @@ def user_show(user_id):
         or_(Membership.ends_at == None,
             Membership.ends_at > functions.utcnow())
     )
-    typed_splits = get_typed_splits(user.finance_account.splits)
+    typed_splits = get_typed_splits(user.account.splits)
 
     return render_template(
         'user/user_show.html',
         user=user,
-        balance=user.finance_account.balance,
-        splits=user.finance_account.splits,
+        balance=user.account.balance,
+        splits=user.account.splits,
         typed_splits=typed_splits,
         all_log=log_list,
         user_log=user_log_list,
@@ -160,14 +160,14 @@ def user_show(user_id):
         memberships_active=memberships_active.all(),
         flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
-                         account_id=user.finance_account_id)
+                         account_id=user.account_id)
     )
 
 @bp.route("/<int:user_id>/account")
-def user_finance_account(user_id):
+def user_account(user_id):
     user = User.q.get(user_id) or abort(404)
     return redirect(url_for("finance.accounts_show",
-                            account_id=user.finance_account_id))
+                            account_id=user.account_id))
 
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
@@ -645,9 +645,9 @@ def suspend(user_id):
             ends_at = None
         else:
             ends_at = datetime.combine(form.ends_at.date.data, time(0))
-        during = closedopen(session.utcnow(), ends_at)
 
         try:
+            during = closedopen(session.utcnow(), ends_at)
             blocked_user = lib.user.suspend(
                 user=myUser,
                 reason=form.reason.data,

@@ -6,7 +6,7 @@ from fixture import DataSet
 from tests.fixtures.dummy.dns_zones import DNSZoneData
 
 
-class FinanceAccountData(DataSet):
+class AccountData(DataSet):
     class registration_fee:
         name = u"Anmeldegebühren"
         type = "REVENUE"
@@ -53,10 +53,10 @@ class ConfigData(DataSet):
         violation_group = PropertyGroupData.violation
         moved_from_division_group = PropertyGroupData.moved_from_division
         already_paid_semester_fee_group = PropertyGroupData.already_paid_semester_fee
-        registration_fee_account = FinanceAccountData.registration_fee
-        semester_fee_account = FinanceAccountData.semester_fee
-        late_fee_account = FinanceAccountData.late_fee
-        additional_fee_account = FinanceAccountData.additional_fee
+        registration_fee_account = AccountData.registration_fee
+        semester_fee_account = AccountData.semester_fee
+        late_fee_account = AccountData.late_fee
+        additional_fee_account = AccountData.additional_fee
         user_zone = DNSZoneData.users_agdsn_de
 
 

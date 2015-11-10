@@ -7,7 +7,7 @@ from datetime import datetime
 from fixture import DataSet
 
 from tests.fixtures.dummy.facilities import RoomData
-from tests.fixtures.dummy.finance import FinanceAccountData
+from tests.fixtures.dummy.finance import AccountData
 
 
 class UserData(DataSet):
@@ -16,11 +16,11 @@ class UserData(DataSet):
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
-        finance_account = FinanceAccountData.dummy_user1
+        account = AccountData.dummy_user1
 
     class privileged:
         login = "admin"
         name = "BOfH"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room3
-        finance_account = FinanceAccountData.dummy_user2
+        account = AccountData.dummy_user2

@@ -5,7 +5,7 @@ from datetime import datetime
 from fixture import DataSet
 from pycroft.helpers.user import hash_password
 from tests.fixtures.dummy.facilities import RoomData
-from tests.fixtures.dummy.finance import FinanceAccountData
+from tests.fixtures.dummy.finance import AccountData
 
 
 class BaseUser():
@@ -15,7 +15,7 @@ class BaseUser():
     passwd_hash = hash_password(password)
     registered_at = datetime.utcnow()
     room = RoomData.dummy_room1  # yes, they all live in the same room
-    finance_account = FinanceAccountData.dummy_asset
+    account = AccountData.dummy_asset
 
 
 class UserData(DataSet):

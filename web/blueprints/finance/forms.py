@@ -65,7 +65,7 @@ class SemesterCreateForm(Form):
     )
 
 
-class JournalCreateForm(Form):
+class BankAccountCreateForm(Form):
     name = TextField(u"Name")
     bank = TextField(u"Bank")
     account_number = TextField(u"Kontonummer")
@@ -75,13 +75,13 @@ class JournalCreateForm(Form):
     hbci_url = TextField(u"HBCI-URL")
 
 
-class JournalEntryEditForm(Form):
-    finance_account = TypeaheadField(u"Gegenkonto")
-    finance_account_id = HiddenField(validators=[DataRequired()])
-    journal_name = static(StringField(u"Bankkonto"))
+class BankAccountActivityEditForm(Form):
+    account = TypeaheadField(u"Gegenkonto")
+    account_id = HiddenField(validators=[DataRequired()])
+    bank_account_name = static(StringField(u"Bankkonto"))
     amount = static(IntegerField(u"Wert"))
     description = StringField(u"Beschreibung")
-    original_description = static(StringField(u"Ursprüngliche Beschreibung"))
+    original_reference = static(StringField(u"Ursprüngliche Verwendung"))
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
@@ -89,12 +89,12 @@ class JournalEntryEditForm(Form):
     posted_at = static(DateField(u"Buchungsdatum"))
 
 
-class JournalImportForm(Form):
+class BankAccountActivitiesImportForm(Form):
     expected_balance = IntegerField(u"Erwarteter Kontostand")
     csv_file = FileField(u"Umsätze (CSV-MT940)")
 
 
-class FinanceAccountCreateForm(Form):
+class AccountCreateForm(Form):
     name = TextField(u"Name", validators=[DataRequired()])
     type = SelectField(
         u"Typ", validators=[DataRequired()],
@@ -124,9 +124,9 @@ class TransactionCreateForm(Form):
     )
 
     def validate_splits(self, field):
-        if sum(split_form['amount'].data for split_form in field
-               if split_form['amount'].data is not None
-            ) != 0:
+        balance = sum(split_form['amount'].data for split_form in field
+                      if split_form['amount'].data is not None)
+        if balance != 0:
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
 
 

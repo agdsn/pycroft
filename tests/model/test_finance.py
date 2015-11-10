@@ -1,26 +1,25 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from pycroft.model.finance import FinanceAccount, IllegalTransactionError, \
-    Transaction, Split
+from pycroft.model.finance import Account, IllegalTransactionError
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from pycroft.model import finance, session
-from tests.fixtures.dummy.finance import FinanceAccountData
+from tests.fixtures.dummy.finance import AccountData
 from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_TransactionSplits(FixtureDataTestBase):
-    datasets = [FinanceAccountData, UserData]
+    datasets = [AccountData, UserData]
 
     def setUp(self):
         super(Test_010_TransactionSplits, self).setUp()
         self.author = User.q.filter_by(login=UserData.privileged.login).one()
-        self.account1 = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.dummy_asset.name
+        self.account1 = Account.q.filter_by(
+            name=AccountData.dummy_asset.name
         ).one()
-        self.account2 = FinanceAccount.q.filter_by(
-            name=FinanceAccountData.dummy_revenue.name
+        self.account2 = Account.q.filter_by(
+            name=AccountData.dummy_revenue.name
         ).one()
 
     def create_transaction(self):

@@ -6,7 +6,7 @@
 {% extends "layout.html" %}
 {% import 'macros/table.html' as tbl %}
 
-{% set cols_journals_list = [
+{% set bank_accounts_columns = [
     {'name': 'name', 'title': 'Name'},
     {'name': 'bank', 'title': 'Bank'},
     {'name': 'ktonr', 'title': 'Kontonummer'},
@@ -17,12 +17,12 @@
     {'name': 'hbci', 'title': 'HBCI-URL'},
     {'name': 'change_date', 'title': 'Zuletzt aktualisiert'},
 ] %}
-{% set cols_entries = [
-    {'name': 'journal', 'title': 'Journal'},
+{% set bank_account_activities_columns = [
+    {'name': 'bank_account', 'title': 'Bankkonto'},
     {'name': 'date', 'title': 'Datum'},
     {'name': 'amount', 'title': 'Betrag'},
-    {'name': 'description', 'title': 'Verwendung'},
-    {'name': 'original_description', 'title': 'Ursprüngliche Verwendung'},
+    {'name': 'reference', 'title': 'Verwendung'},
+    {'name': 'original_reference', 'title': 'Ursprüngliche Verwendung'},
     {'name': 'ktonr', 'title': 'Kontonummer'},
     {'name': 'blz', 'title': 'Bankleitzahl'},
     {'name': 'name', 'title': 'Name'},
@@ -30,24 +30,24 @@
 ] %}
 
 {% block content %}
-    <section id="tbl_journals">
+    <section id="tbl_bank_accounts">
         <h2>Übersicht</h2>
         {{ tbl.item_table(
-            'journals',
-            url_for('.journals_list_json'),
-            cols_journals_list
+            'bank_accounts',
+            url_for('.bank_accounts_list_json'),
+            bank_accounts_columns
         ) }}
         {% if current_user is privileged_for('finance_change') -%}
-        <a class="btn btn-primary" href="{{ url_for('.journals_create') }}">Neues Journal anlegen</a>
+        <a class="btn btn-primary" href="{{ url_for('.bank_accounts_create') }}">Neues Bankkonto anlegen</a>
         {%- endif %}
     </section>
 
     <section>
-        <h2>Unzugeordnete Einträge</h2>
+        <h2>Unzugeordnete Bankkontobewegungen</h2>
         {{ tbl.item_table(
-            'journal_entries',
-            url_for('.journals_entries_json'),
-            cols_entries
+            'bank_accounts_activities',
+            url_for('.bank_accounts_activities_json'),
+            bank_account_activities_columns
         ) }}
     </section>
 {% endblock %}

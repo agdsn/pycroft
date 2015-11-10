@@ -107,6 +107,7 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
     for _u in nutzer:
         login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
         room = r_d.get((_u.wheim_id, _u.etage, _u.zimmernr), None)
+        account_name = "Nutzerkonto von {}".format(_u.nutzer_id)
         u = user.User(
             id=_u.nutzer_id,
             login=login if not login[0].isdigit() else "user_"+login,
@@ -114,7 +115,7 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
             email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
-            finance_account=finance.FinanceAccount(name="Nutzerkonto von "+str(_u.nutzer_id), type="ASSET"))
+            account=finance.Account(name=account_name, type="ASSET"))
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             records.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
@@ -184,20 +185,20 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
     sem_d = {}
     a_d = {}
     for name, type in facc_types.items():
-        a = finance.FinanceAccount(name=name, type=type)
+        a = finance.Account(name=name, type=type)
         records.append(a)
         a_d[name] = a
 
-    print("  Adding bank journal")
-    bank_journal = finance.Journal(name="Bankkonto 3120219540",
-                                   bank="Ostsächsische Sparkasse Dresden",
-                                   account_number="3120219540",
-                                   routing_number="85050300",
-                                   iban="DE61850503003120219540",
-                                   bic="OSDDDE81XXX",
-                                   hbci_url="https://hbci.example.com/",
-                                   finance_account=a_d["Bankkonto"])
-    records.append(bank_journal)
+    print("  Adding bank bank_account")
+    bank_account = finance.BankAccount(name="Bankkonto 3120219540",
+                                       bank="Ostsächsische Sparkasse Dresden",
+                                       account_number="3120219540",
+                                       routing_number="85050300",
+                                       iban="DE61850503003120219540",
+                                       bic="OSDDDE81XXX",
+                                       hbci_url="https://hbci.example.com/",
+                                       account=a_d["Bankkonto"])
+    records.append(bank_account)
 
     print("  Translating finance accounts")
     gauge_stype, gauge_year, gauge_num = ("ws", 2014, 25) #id=25000 for WS14/15
@@ -241,11 +242,11 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
     print("  Translating bank transactions")
     je_d = {}
     for _bk in bankkonto:
-        je = finance.JournalEntry(
-            journal=bank_journal,
+        je = finance.BankAccountActivity(
+            bank_account=bank_account,
             amount=_bk.wert,
             description=_bk.bes,
-            original_description=_bk.bes,
+            original_reference=_bk.bes,
             other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
             other_routing_number="NO NUMBER GIVEN", #TODO
             other_name="NO NAME GIVEN", #TODO
@@ -262,17 +263,19 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
     def new_acc(old_account_id, old_user_id):
         if old_user_id: # user referenced
             if old_user_id not in u_d: # but doesn't exist
+                account_name = ("Nutzerkonto von gelöschtem Nutzer {}"
+                                .format(old_user_id))
                 u = user.User(
                     id=old_user_id,
                     login="deleted_user_"+str(old_user_id),
                     name="Gelöschter Nutzer "+str(old_user_id),
                     registered_at=datetime.fromtimestamp(0),
-                    finance_account=finance.FinanceAccount(name="Nutzerkonto von gelöschtem Nutzer"+str(old_user_id), type="ASSET"))
+                    account=finance.Account(name=account_name, type="ASSET"))
 
                 u_d[old_user_id] = u
                 records.append(u)
 
-            account = u_d[old_user_id].finance_account
+            account = u_d[old_user_id].account
         else:
             account = a_d[match(old_account_id)]
 
@@ -307,7 +310,8 @@ def translate(zimmer, wheim, nutzer, status, finanz_konten, bankkonto, buchungen
                 account=debit_account,
                 transaction=transaction)
 
-            if _bu.bkid is not None: # link transaction with bank journal
+            # link bank account activity with transaction
+            if _bu.bkid is not None:
                 je_d[_bu.bkid].transaction = transaction
             records.extend([transaction, new_credit_split, new_debit_split])
         else:

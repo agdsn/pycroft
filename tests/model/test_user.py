@@ -7,7 +7,7 @@ from pycroft.model import facilities, session, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password)
-from pycroft.model.finance import FinanceAccount
+from pycroft.model.finance import Account
 from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
@@ -67,12 +67,11 @@ class Test_040_User_Login(FixtureDataTestBase):
     datasets = [BuildingData, RoomData, UserData]
 
     def test_0010_user_login_validator(self):
-        finance_account = FinanceAccount(name='', type='ASSET')
+        account = Account(name='', type='ASSET')
         u = user.User(name="John Doe",
                       registered_at=session.utcnow(),
                       room=facilities.Room.q.first(),
-                      finance_account=finance_account
-        )
+                      account=account)
 
         def set_login(login):
             u.login = login

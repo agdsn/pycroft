@@ -2,14 +2,6 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-    pycroft.model.finance
-    ~~~~~~~~~~~~~~
-
-    This module contains the classes FinanceAccount, ...
-
-    :copyright: (c) 2011 by AG DSN.
-"""
 import operator
 from sqlalchemy.ext.hybrid import hybrid_property
 from .base import ModelBase
@@ -62,17 +54,16 @@ class Semester(ModelBase):
     )
 
 
-class FinanceAccount(ModelBase):
+class Account(ModelBase):
     name = Column(String(127), nullable=False)
-    type = Column(Enum("ASSET",      # Aktivkonto
-                       "LIABILITY",  # Passivkonto
-                       "EXPENSE",    # Aufwandskonto
-                       "REVENUE",    # Ertragskonto
-                       name="finance_account_type"),
+    type = Column(Enum("ASSET",       # Aktivkonto
+                       "USER_ASSET",  # Aktivkonto for users
+                       "BANK_ASSET",  # Aktivkonto for bank accounts
+                       "LIABILITY",   # Passivkonto
+                       "EXPENSE",     # Aufwandskonto
+                       "REVENUE",     # Ertragskonto
+                       name="account_type"),
                   nullable=False)
-
-    transactions = relationship("Transaction", secondary="split",
-                                backref="finance_accounts")
 
     @hybrid_property
     def balance(self):
@@ -87,67 +78,16 @@ class FinanceAccount(ModelBase):
         ).label("balance")
 
 
-class Journal(ModelBase):
-    name = Column(String(255), nullable=False)
-    bank = Column(String(255), nullable=False)
-    account_number = Column(String(10), nullable=False)
-    routing_number = Column(String(8), nullable=False)
-    iban = Column(String(34), nullable=False)
-    bic = Column(String(11), nullable=False)
-    hbci_url = Column(String(255), nullable=False)
-    finance_account_id = Column(Integer, ForeignKey(FinanceAccount.id),
-                                nullable=False)
-    finance_account = relationship(FinanceAccount)
-
-    __table_args__ = (
-        UniqueConstraint(account_number, routing_number),
-        UniqueConstraint(iban),
-    )
-
-    @hybrid_property
-    def last_update(self):
-        return max(imap(lambda e: e.import_time, self.entries))
-
-    @last_update.expression
-    def last_update(self):
-        return (
-            select(func.max(JournalEntry.import_time))
-            .where(JournalEntry.journal_id == self.id)
-            .label("last_update")
-        )
-
-
-class JournalEntry(ModelBase):
-    journal_id = Column(Integer, ForeignKey("journal.id"), nullable=False)
-    journal = relationship("Journal", backref=backref("entries"))
-    amount = Column(Integer, nullable=False)
-    description = Column(Text, nullable=False)
-    original_description = Column(Text, nullable=False)
-    other_account_number = Column(String(255), nullable=False)
-    other_routing_number = Column(String(255), nullable=False)
-    other_name = Column(String(255), nullable=False)
-    import_time = Column(DateTime, nullable=False)
-    posted_at = Column(Date, nullable=False)
-    valid_on = Column(Date, nullable=False)
-    transaction_id = Column(Integer, ForeignKey("transaction.id"))
-    transaction = relationship("Transaction", backref=backref("journal_entry", uselist=False))
-
-
-class IllegalTransactionError(Exception):
-    """Indicates an attempt to persist an illegal Transaction."""
-    pass
-
-
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
     author_id = Column(Integer, ForeignKey("user.id", ondelete='SET NULL',
                                            onupdate='CASCADE'),
                        nullable=True)
     author = relationship("User")
-
     posted_at = Column(DateTime, nullable=False,
                        default=utcnow(), onupdate=utcnow())
     valid_on = Column(Date, nullable=False, default=utcnow())
+    accounts = relationship(Account, secondary="split", backref="transactions")
 
     @property
     def is_balanced(self):
@@ -156,6 +96,28 @@ class Transaction(ModelBase):
     @property
     def is_simple(self):
         return len(self.splits) == 2
+
+
+class Split(ModelBase):
+    # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
+    amount = Column(Integer, nullable=False)
+    account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
+                        nullable=False)
+    account = relationship(Account,
+                           backref=backref("splits",
+                                           cascade="all, delete-orphan"))
+
+    transaction_id = Column(Integer,
+                            ForeignKey(Transaction.id, ondelete='CASCADE'),
+                            nullable=False)
+    transaction = relationship(Transaction,
+                               backref=backref("splits",
+                                               cascade="all, delete-orphan"))
+
+
+class IllegalTransactionError(Exception):
+    """Indicates an attempt to persist an illegal Transaction."""
+    pass
 
 
 def check_transaction_on_save(mapper, connection, target):
@@ -186,20 +148,52 @@ event.listen(Transaction, "before_insert", check_transaction_on_save)
 event.listen(Transaction, "before_update", check_transaction_on_save)
 
 
-class Split(ModelBase):
-    # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
-    amount = Column(Integer, nullable=False)
-    account_id = Column(Integer,
-                        ForeignKey(FinanceAccount.id, ondelete='CASCADE'),
-                        nullable=False)
-    account = relationship(FinanceAccount,
-                           backref=backref("splits",
-                                           cascade="all, delete-orphan"))
+class BankAccount(ModelBase):
+    name = Column(String(255), nullable=False)
+    bank = Column(String(255), nullable=False)
+    account_number = Column(String(10), nullable=False)
+    routing_number = Column(String(8), nullable=False)
+    iban = Column(String(34), nullable=False)
+    bic = Column(String(11), nullable=False)
+    hbci_url = Column(String(255), nullable=False)
+    account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
+                        unique=True)
+    account = relationship(Account)
 
-    transaction_id = Column(Integer,
-                            ForeignKey("transaction.id", ondelete='CASCADE'),
-                            nullable=False)
+    __table_args__ = (
+        UniqueConstraint(account_number, routing_number),
+        UniqueConstraint(iban),
+    )
+
+    @hybrid_property
+    def last_update(self):
+        return max(imap(lambda e: e.import_time, self.activities))
+
+    @last_update.expression
+    def last_update(self):
+        return (
+            select(func.max(BankAccountActivity.import_time))
+            .where(BankAccountActivity.bank_account_id == self.id)
+            .label("last_update")
+        )
+
+
+class BankAccountActivity(ModelBase):
+    bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
+                             nullable=False)
+    bank_account = relationship(BankAccount, backref=backref("activities"))
+    amount = Column(Integer, nullable=False)
+    reference = Column(Text, nullable=False)
+    original_reference = Column(Text, nullable=False)
+    other_account_number = Column(String(255), nullable=False)
+    other_routing_number = Column(String(255), nullable=False)
+    other_name = Column(String(255), nullable=False)
+    import_time = Column(DateTime, nullable=False)
+    posted_at = Column(Date, nullable=False)
+    valid_on = Column(Date, nullable=False)
+    transaction_id = Column(Integer, ForeignKey(Transaction.id), unique=True)
     transaction = relationship(Transaction,
-                               backref=backref("splits",
-                                               cascade="all, delete-orphan"))
+                               backref=backref("bank_account_activity",
+                                               uselist=False))
+
 
