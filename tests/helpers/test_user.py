@@ -43,7 +43,7 @@ class TestHashing(unittest.TestCase):
         """Assert that the password scheme used for new passwords is
         ldap_sha512_crypt."""
         expected_hash_method = ldap_sha512_crypt
-        for pw in (generate_password(8) for i in range(100)):
+        for pw in (generate_password(8) for i in range(10)):
             encrypted = hash_password(pw)
             self.assertTrue(expected_hash_method.identify(encrypted),
                             "Expected hashes for method {}, got: {}"
