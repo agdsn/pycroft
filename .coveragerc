@@ -14,11 +14,3 @@ omit =
     migration/*
     web/*
 
-[xml]
-omit =
-    */lib/python2.6/*
-    */pyshared/*
-    tests/*
-    migration/*
-    web/*
-
