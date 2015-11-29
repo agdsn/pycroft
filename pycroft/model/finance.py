@@ -196,4 +196,5 @@ class BankAccountActivity(ModelBase):
                                backref=backref("bank_account_activity",
                                                uselist=False))
 
+BankAccountActivity.__table__.add_is_dependent_on(Split.__table__)
 
