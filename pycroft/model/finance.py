@@ -3,19 +3,22 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import operator
+
+from sqlalchemy import Column, ForeignKey, event, func, select
 from sqlalchemy.ext.hybrid import hybrid_property
-from .base import ModelBase
-from sqlalchemy import ForeignKey, event, func, select
-from sqlalchemy import Column
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.types import (
     Date, DateTime, Enum, Integer, Interval, String, Text)
-from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 
-from .functions import utcnow
 from pycroft._compat import imap
-from pycroft.helpers.interval import closed
 from pycroft.helpers.i18n import gettext
+from pycroft.helpers.interval import closed
+from pycroft.model import ddl
+from .base import ModelBase
+from .functions import utcnow
+
+manager = ddl.DDLManager()
 
 
 class Semester(ModelBase):
@@ -78,6 +81,16 @@ class Account(ModelBase):
         ).label("balance")
 
 
+manager.add_function(
+    Account.__table__,
+    ddl.Function(
+        'account_is_type(integer, account_type)', 'boolean',
+        "SELECT type = $2 FROM account WHERE id = $1 ",
+        volatility='stable', strict=True,
+    )
+)
+
+
 class Transaction(ModelBase):
     description = Column(Text(), nullable=False)
     author_id = Column(Integer, ForeignKey("user.id", ondelete='SET NULL',
@@ -113,6 +126,47 @@ class Split(ModelBase):
     transaction = relationship(Transaction,
                                backref=backref("splits",
                                                cascade="all, delete-orphan"))
+
+
+manager.add_function(
+    Split.__table__,
+    ddl.Function(
+        'split_check_transaction_balanced()', 'trigger',
+        "DECLARE "
+        "   s split; "
+        "   balance integer; "
+        "BEGIN "
+        "   s := COALESCE(NEW, OLD); "
+        "   SELECT SUM(amount) INTO STRICT balance FROM split "
+        "   WHERE transaction_id = s.transaction_id; "
+        "   IF balance <> 0 THEN "
+        "       RAISE EXCEPTION 'transaction %% not balanced', "
+        "       s.transaction_id; "
+        "   END IF; "
+        "   RETURN NULL; "
+        "END;",
+        volatility='stable', strict=True, language='plpgsql'
+    )
+)
+
+manager.add_constraint_trigger(
+    Split.__table__,
+    ddl.ConstraintTrigger(
+        'split_check_transaction_balanced_trigger',
+        Split.__table__, ('INSERT', 'UPDATE', 'DELETE'),
+        'split_check_transaction_balanced()'
+    )
+)
+
+manager.add_function(
+    Split.__table__,
+    ddl.Function(
+        'transaction_includes_account(integer, integer)', 'boolean',
+        "SELECT EXISTS ("
+        "    SELECT FROM split WHERE transaction_id = $1 AND account_id = $2"
+        ")", volatility='stable', strict=True,
+    )
+)
 
 
 class IllegalTransactionError(Exception):
@@ -198,3 +252,33 @@ class BankAccountActivity(ModelBase):
 
 BankAccountActivity.__table__.add_is_dependent_on(Split.__table__)
 
+manager.add_constraint(
+    BankAccount.__table__,
+    CheckConstraint(
+        "account_is_type(account_id, 'BANK_ASSET')",
+        name='bank_account_account_type_check',
+        table=BankAccount.__table__, _autoattach=False
+    )
+)
+
+manager.add_function(
+    BankAccountActivity.__table__,
+    ddl.Function(
+        'bank_account_activity_transaction_includes_account(integer, integer)',
+        'boolean',
+        "SELECT transaction_includes_account("
+        "    $1, (SELECT account_id FROM bank_account WHERE id = $2)"
+        ")", volatility='stable', strict=True,
+    )
+)
+
+manager.add_constraint(
+    BankAccountActivity.__table__,
+    CheckConstraint(
+        "bank_account_activity_transaction_includes_account(transaction_id, bank_account_id)",
+        name='bank_account_activity_transaction_includes_account',
+        table=BankAccountActivity.__table__
+    )
+)
+
+manager.register()
