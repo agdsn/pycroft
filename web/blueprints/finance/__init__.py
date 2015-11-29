@@ -226,9 +226,7 @@ def accounts_show(account_id):
     # which disables account form for accounts with more than 100 transactions
 
     if finance.Split.q.filter_by(account=account).count() < 100:
-        typed_splits = get_typed_splits(
-            sorted(account.splits, key=lambda s: s.transaction.posted_at,
-                reverse=True))
+        typed_splits = get_typed_splits(account.splits)
     else:
         typed_splits = None
 
