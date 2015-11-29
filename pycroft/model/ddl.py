@@ -1,6 +1,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import inspect
+
 from sqlalchemy import event
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ddl
@@ -52,7 +54,7 @@ class Function(ddl.DDLElement):
             raise ValueError("volatility must be 'volatile', 'stable', or "
                              "'immutable'")
         self.name = name
-        self.definition = definition
+        self.definition = inspect.cleandoc(definition)
         self.volatility = volatility
         self.strict = strict
         self.rtype = rtype
@@ -90,7 +92,7 @@ def visit_create_function(element, compiler, **kw):
     return (
         "CREATE OR REPLACE FUNCTION {name} RETURNS {rtype} {volatility} "
         "{strict} {leakproof} LANGUAGE {language} AS "
-        "${quote_tag}$ {definition} ${quote_tag}$"
+        "${quote_tag}${definition}${quote_tag}$"
     ).format(
         name=function.name, rtype=function.rtype,
         volatility=function.volatility,
