@@ -258,7 +258,8 @@ manager.add_constraint(
         "account_is_type(account_id, 'BANK_ASSET')",
         name='bank_account_account_type_check',
         table=BankAccount.__table__, _autoattach=False
-    )
+    ),
+    dialect='postgresql'
 )
 
 manager.add_function(
@@ -278,7 +279,8 @@ manager.add_constraint(
         "bank_account_activity_transaction_includes_account(transaction_id, bank_account_id)",
         name='bank_account_activity_transaction_includes_account',
         table=BankAccountActivity.__table__
-    )
+    ),
+    dialect='postgresql'
 )
 
 manager.register()
