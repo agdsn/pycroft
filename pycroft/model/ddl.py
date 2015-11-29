@@ -177,19 +177,23 @@ class DDLManager(object):
     def __init__(self):
         self.objects = []
 
-    def add(self, target, create_ddl, drop_ddl):
+    def add(self, target, create_ddl, drop_ddl, dialect=None):
+        if dialect:
+            create_ddl = create_ddl.execute_if(dialect=dialect)
+            drop_ddl = drop_ddl.execute_if(dialect=dialect)
         self.objects.append((target, create_ddl, drop_ddl))
 
-    def add_constraint(self, table, constraint):
+    def add_constraint(self, table, constraint, dialect=None):
         self.add(table, AddConstraint(constraint),
-                 DropConstraint(constraint, if_exists=True))
+                 DropConstraint(constraint, if_exists=True), dialect=dialect)
 
-    def add_function(self, table, function):
-        self.add(table, CreateFunction(function), DropFunction(function))
+    def add_function(self, table, function, dialect=None):
+        self.add(table, CreateFunction(function), DropFunction(function),
+                 dialect=dialect)
 
-    def add_constraint_trigger(self, table, constraint_trigger):
+    def add_constraint_trigger(self, table, constraint_trigger, dialect=None):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
-                 DropTrigger(constraint_trigger))
+                 DropTrigger(constraint_trigger), dialect=dialect)
 
     def register(self):
         for target, create_ddl, drop_ddl in self.objects:
