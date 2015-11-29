@@ -257,7 +257,7 @@ manager.add_constraint(
     CheckConstraint(
         "account_is_type(account_id, 'BANK_ASSET')",
         name='bank_account_account_type_check',
-        table=BankAccount.__table__, _autoattach=False
+        table=BankAccount.__table__,
     ),
     dialect='postgresql'
 )
