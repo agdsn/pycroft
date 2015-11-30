@@ -267,22 +267,37 @@ manager.add_constraint(
 manager.add_function(
     BankAccountActivity.__table__,
     ddl.Function(
-        'bank_account_activity_transaction_includes_account(integer, integer)',
-        'boolean',
-        "SELECT transaction_includes_account("
-        "    $1, (SELECT account_id FROM bank_account WHERE id = $2)"
-        ")", volatility='stable', strict=True,
+        'bank_account_activity_transaction_includes_bank_account()',
+        'trigger',
+        """
+        DECLARE
+          activity bank_account_activity;
+          account_id integer;
+        BEGIN
+          activity := COALESCE(NEW, OLD);
+          SELECT bank_account.account_id INTO account_id FROM bank_account
+              WHERE bank_account.id = activity.bank_account_id;
+          IF NOT transaction_includes_account(activity.transaction_id, account_id) THEN
+            RAISE EXCEPTION 'bank_account_activity %% references transaction %% which does not include the bank account',
+                activity.id, activity.transaction_id
+                USING ERRCODE = 'integrity_constraint_violation';
+          END IF;
+          RETURN NULL;
+        END;
+        """,
+        volatility='stable', strict=True, language='plpgsql'
     )
 )
 
-manager.add_constraint(
+
+manager.add_constraint_trigger(
     BankAccountActivity.__table__,
-    CheckConstraint(
-        "bank_account_activity_transaction_includes_account(transaction_id, bank_account_id)",
-        name='bank_account_activity_transaction_includes_account',
-        table=BankAccountActivity.__table__
-    ),
-    dialect='postgresql'
+    ddl.ConstraintTrigger(
+        'bank_account_activity_transaction_includes_bank_account_trigger',
+        BankAccountActivity.__table__,
+        ('INSERT', 'UPDATE', 'DELETE'),
+        'bank_account_activity_transaction_includes_bank_account()'
+    )
 )
 
 manager.register()
