@@ -132,19 +132,21 @@ manager.add_function(
     Split.__table__,
     ddl.Function(
         'split_check_transaction_balanced()', 'trigger',
-        "DECLARE "
-        "   s split; "
-        "   balance integer; "
-        "BEGIN "
-        "   s := COALESCE(NEW, OLD); "
-        "   SELECT SUM(amount) INTO STRICT balance FROM split "
-        "   WHERE transaction_id = s.transaction_id; "
-        "   IF balance <> 0 THEN "
-        "       RAISE EXCEPTION 'transaction %% not balanced', "
-        "       s.transaction_id; "
-        "   END IF; "
-        "   RETURN NULL; "
-        "END;",
+        """
+        DECLARE
+           s split;
+           balance integer;
+        BEGIN
+           s := COALESCE(NEW, OLD);
+           SELECT SUM(amount) INTO STRICT balance FROM split
+           WHERE transaction_id = s.transaction_id;
+           IF balance <> 0 THEN
+               RAISE EXCEPTION 'transaction %% not balanced',
+               s.transaction_id;
+           END IF;
+           RETURN NULL;
+        END;
+        """,
         volatility='stable', strict=True, language='plpgsql'
     )
 )
