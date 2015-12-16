@@ -94,8 +94,11 @@ class FinanzBuchungen(Base):
     wert = Column(Integer, nullable=False, server_default=text("0"))
     soll = Column(ForeignKey(FinanzKonten.id), nullable=False)
     soll_uid = Column(Integer)
+    soll_konto = relationship(FinanzKonten, backref="soll_fb", foreign_keys=[soll])
     haben = Column(ForeignKey(FinanzKonten.id), nullable=False)
     haben_uid = Column(Integer)
+    haben_konto = relationship(FinanzKonten, backref="haben_fb", foreign_keys=[haben])
+
     bes = Column(Text)
 
 
@@ -123,7 +126,7 @@ class BankKonto(Base):
     __tablename__ = u'bank_konto'
 
     bkid = Column(Integer, primary_key=True, server_default=text("nextval(('\"bank_konto_bkid_seq\"'::text)::regclass)"))
-    datum = Column(Date, nullable=False)
+    valid_on = Column(u'datum', Date, nullable=False)
     wert = Column(Integer, nullable=False, server_default=text("0"))
     bes = Column(Text)
 
@@ -132,8 +135,8 @@ class BkBuchung(BankKonto):
     """Verbuchte Bankkontobewegungen"""
     __tablename__ = u'bk_buchung'
 
-    bkid = Column(ForeignKey(u'bank_konto.bkid'), primary_key=True)
-    datum = Column(DateTime(True), nullable=False, server_default=text("now()"))
+    bkid = Column(ForeignKey(BankKonto.bkid), primary_key=True)
+    posted_at = Column(u'datum', DateTime(True), nullable=False, server_default=text("now()"))
     bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
     rechnungs_nr = Column(Integer)
     konto_id = Column(ForeignKey(FinanzKonten.id), nullable=False)

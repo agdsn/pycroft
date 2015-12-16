@@ -84,29 +84,28 @@ def cache_relevant_tables(old_db, _, engine, tables=None):
     # old_db.model.metadata.drop_all(engine)
 
     # type declarative meta
-    relevant_tables = [t for t in old_db.relevant_tables
+    relevant_metas = [t for t in old_db.relevant_tables
                        if tables is None or t.__tablename__ in tables]
     # type table
-    relevant_actual_tables = map(lambda x: x.__table__, relevant_tables)
-    if relevant_tables and tables:
-        for t in relevant_actual_tables:
+    relevant_tables = map(lambda x: x.__table__, relevant_metas)
+    if relevant_metas and tables:
+        for t in relevant_tables:
             #todo drop in reversed sorted_tables order, and recreate other
             # dropped tables... or just let the user handle it :)
             print("Dropping", t.name)
             t.drop(engine, checkfirst=True)
-    old_db.model.metadata.create_all(bind=engine, tables=relevant_actual_tables)
+    old_db.model.metadata.create_all(bind=engine, tables=relevant_tables)
 
     print("Caching " + old_db.name + "...")
     for table in old_db.model.metadata.sorted_tables:
-        if table not in relevant_actual_tables:
+        if table not in relevant_tables:
             continue
-        name = table.name
-        print("  " + name, end=" ")
+        print("  " + table.name, end=" ")
         sys.stdout.flush()
         query = table.select()
 
         # quick and dirty fix for adjacency list:
-        if name == u"finanz_konten":
+        if table.name == u"finanz_konten":
             print('[ordered adjacency list]', end=" ")
             query = query.order_by("konto_id")
 

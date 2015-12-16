@@ -14,8 +14,10 @@ engine = create_engine(conn_opts['userman'], client_encoding='latin1')
 session = scoped_session(sessionmaker(bind=engine))
 
 relevant_tables = [model.FinanzKonten,
+                   model.BkBuchung,
                    model.BankKonto,
-                   model.Buchungen,
+                   model.FinanzBuchungen,
+                   #model.Log,
                    model.FinanzKontoTyp]
 
 

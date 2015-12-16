@@ -5,11 +5,24 @@
 from sqlalchemy import (Column, Date, DateTime, Enum, Index,
                         Integer, SmallInteger, String, Table,
                         Text, text, ForeignKey)
+from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 metadata = Base.metadata
+
+
+class Status(Base):
+    __tablename__ = u'status'
+
+    id = Column(Integer, primary_key=True, server_default=text("'0'"))
+    short_str = Column(String(30), nullable=False, server_default=text("''"))
+    long_str = Column(String(60), nullable=False, server_default=text("''"))
+    account = Column(Enum(u'Y', u'N', name="tmp1"), nullable=False, server_default=text("'Y'"))
+    ip = Column(Enum(u'Y', u'N', name="tmp2"), nullable=False, server_default=text("'Y'"))
+    del_account = Column(Enum(u'Y', u'N', name="tmp3"), nullable=False, server_default=text("'Y'"))
+    dns = Column(Enum(u'Y', u'N', name="tmp4"), nullable=False, server_default=text("'Y'"))
 
 
 class Nutzer(Base):
@@ -28,13 +41,14 @@ class Nutzer(Base):
     unix_account = Column(String(40), nullable=False, unique=True)
     anmeldedatum = Column(Date, nullable=False, server_default=text("'1970-01-01'"))
     sperrdatum = Column(Date)
-    status = Column(Integer, nullable=False, index=True, server_default=text("'1'"))
+    status_id = Column(u"status", ForeignKey(Status.id), nullable=False, index=True, server_default=text("'1'"))
     comment = Column(Text)
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
     icq_uin = Column(String(255))
     bezahlt = Column(SmallInteger, nullable=False, server_default=text("'1'"))
 
     computer = relationship("Computer", backref="nutzer")
+    status = relationship(Status, lazy='joined')
 
 
 class Computer(Base):
@@ -52,7 +66,7 @@ class Computer(Base):
     c_cpu = Column(String(10))
     c_bs = Column(String(20))
     c_etheraddr = Column(String(20))
-    c_ip = Column(String(15), nullable=False, index=True, server_default=text("''"))
+    c_ip = Column(INET, nullable=False, index=True)
     c_hname = Column(String(20), nullable=False, server_default=text("''"))
     c_alias = Column(String(20))
     c_subnet_id = Column(Integer, nullable=False, server_default=text("'0'"))
@@ -75,15 +89,17 @@ class Hp4108Port(Base):
     )
 
     id = Column(Integer, primary_key=True)
-    etage = Column(String(10))
-    zimmernr = Column(String(10))
     port = Column(String(10))
     haus = Column(String(10))
-    ip = Column(String(20))
+
+    wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    etage = Column(String(10))
+    zimmernr = Column(String(10))
+
+    ip = Column(INET)
+
     sperrbar = Column(String(1))
     kommentar = Column(String(50))
-    wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-
 
 class Kabel(Base):
     __tablename__ = u'kabel'
@@ -101,18 +117,6 @@ class NewAccount(Base):
     Password = Column(String(8), nullable=False, server_default=text("''"))
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
     email = Column(String(50), nullable=False, server_default=text("''"))
-
-
-class Status(Base):
-    __tablename__ = u'status'
-
-    id = Column(Integer, primary_key=True, server_default=text("'0'"))
-    short_str = Column(String(30), nullable=False, server_default=text("''"))
-    long_str = Column(String(60), nullable=False, server_default=text("''"))
-    account = Column(Enum(u'Y', u'N', name="tmp1"), nullable=False, server_default=text("'Y'"))
-    ip = Column(Enum(u'Y', u'N', name="tmp2"), nullable=False, server_default=text("'Y'"))
-    del_account = Column(Enum(u'Y', u'N', name="tmp3"), nullable=False, server_default=text("'Y'"))
-    dns = Column(Enum(u'Y', u'N', name="tmp4"), nullable=False, server_default=text("'Y'"))
 
 
 class Subnet(Base):
