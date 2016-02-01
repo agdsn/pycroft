@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -229,7 +229,7 @@ def user_show_hosts_json(user_id):
 @bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all"):
     memberships = Membership.q.filter(Membership.user_id == user_id)
-    if group_filter is "active":
+    if group_filter == "active":
         memberships = memberships.filter(
             # it is important to use == here, "is" does NOT work
             or_(Membership.begins_at == None,
