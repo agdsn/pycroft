@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -405,6 +405,7 @@ def transactions_create():
             splits=splits,
             valid_on=form.valid_on.data,
         )
+        session.commit()
         return redirect(url_for('.accounts_list'))
     return render_template(
         'finance/transactions_create.html',
