@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
@@ -120,10 +120,7 @@ def byte_size_filter(value):
 
 @template_filter("money")
 def money_filter(amount):
-    """Format a money string from Cents to Euro
-    """
-    euro = amount/100.0
-    return (u"{:.2f}\u202f€".format(euro)).replace('.', ',')
+    return (u"{:.2f}\u202f€".format(amount)).replace('.', ',')
 
 @template_filter("account_type")
 def account_type_filter(account_type):

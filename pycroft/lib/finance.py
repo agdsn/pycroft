@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 import csv
 from datetime import datetime, date, timedelta
+from decimal import Decimal
 import difflib
 from functools import partial
 from itertools import chain, islice, starmap, tee
@@ -129,6 +130,7 @@ def complex_transaction(description, author, splits, valid_on=None):
         for (account, amount) in splits
     )
     session.session.add_all(objects)
+    return new_transaction
 
 
 def transferred_amount(from_account, to_account, when=UnboundedInterval):
@@ -615,7 +617,7 @@ def process_record(index, record, imported_at):
         raise CSVImportError(message.format(index, raw_record), e)
 
     try:
-        amount = int(record.amount.replace(u",", u""))
+        amount = Decimal(record.amount.replace(u",", u"."))
     except ValueError as e:
         message = gettext(u"Illegal value format {0}. Record {1}: {2}")
         raw_record = restore_record(record)

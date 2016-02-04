@@ -1,9 +1,10 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from __future__ import absolute_import
+from decimal import Decimal
 import ipaddr
-from sqlalchemy import String, TypeDecorator
+from sqlalchemy import String, TypeDecorator, Integer
 from sqlalchemy.dialects.postgresql import MACADDR, INET
 from pycroft.helpers.net import mac_regex
 
@@ -72,6 +73,23 @@ class MACAddress(TypeDecorator):
 
     def python_type(self):
         return str
+
+
+class Money(TypeDecorator):
+    impl = Integer
+
+    def python_type(self):
+        return Decimal
+
+    def process_bind_param(self, value, dialect):
+        cents = value.scaleb(2)
+        if int(cents) != cents:
+            raise ValueError("Fractional cents are invalid.")
+        else:
+            return int(cents)
+
+    def process_result_value(self, value, dialect):
+        return Decimal(value).scaleb(-2)
 
 
 class InvalidMACAddressException(ValueError):

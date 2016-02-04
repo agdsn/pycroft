@@ -1,4 +1,4 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
@@ -14,7 +14,7 @@ from ..widgets import decorate_field, BootstrapFormControlDecorator, \
     BootstrapStandardDecorator, BootstrapFormGroupDecorator, \
     BootstrapRadioDecorator, BootstrapCheckboxDecorator, \
     BootstrapFieldListWidget, BootstrapFormFieldWidget, \
-    BootstrapDatepickerWidget, decorate
+    BootstrapDatepickerWidget, MoneyFieldDecorator, decorate
 
 
 class SelectField(wtforms.fields.SelectField):
@@ -74,6 +74,15 @@ class DecimalField(wtforms.fields.DecimalField):
         BootstrapFormGroupDecorator
     )
 
+
+class MoneyField(wtforms.fields.DecimalField):
+    widget = decorate_field(
+        wtforms.fields.DecimalField,
+        MoneyFieldDecorator,
+        BootstrapFormControlDecorator,
+        BootstrapStandardDecorator,
+        BootstrapFormGroupDecorator
+    )
 
 class FloatField(wtforms.fields.FloatField):
     widget = decorate_field(

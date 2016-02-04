@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import operator
@@ -15,6 +15,7 @@ from pycroft._compat import imap
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
+from pycroft.model.types import Money
 from .base import ModelBase
 from .functions import utcnow
 
@@ -113,7 +114,7 @@ class Transaction(ModelBase):
 
 class Split(ModelBase):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
-    amount = Column(Integer, nullable=False)
+    amount = Column(Money, nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
                         nullable=False)
     account = relationship(Account,
@@ -206,7 +207,7 @@ class BankAccountActivity(ModelBase):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
                              nullable=False)
     bank_account = relationship(BankAccount, backref=backref("activities"))
-    amount = Column(Integer, nullable=False)
+    amount = Column(Money, nullable=False)
     reference = Column(Text, nullable=False)
     original_reference = Column(Text, nullable=False)
     other_account_number = Column(String(255), nullable=False)

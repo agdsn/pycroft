@@ -1,10 +1,10 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from web.form.widgets import LazyLoadSelectWidget,\
     BootstrapFormControlDecorator, BootstrapStandardDecorator, \
     BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
-    decorators, decorate_field
+    decorators, decorate_field, Disabler
 from wtforms import TextField, StringField
 from wtforms import fields
 
@@ -15,6 +15,12 @@ def static(field):
         BootstrapStaticFieldWidget(),
         *reversed(list(decorators(widget)))
     )
+    return field
+
+
+def disabled(field):
+    widget = field.kwargs.get("widget", field.field_class.widget)
+    field.kwargs["widget"] = Disabler(widget)
     return field
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
@@ -9,8 +9,8 @@ from wtforms.validators import DataRequired, NumberRange, Optional
 
 from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
-    FieldList, StringField, DateField)
-from web.form.fields.custom import TypeaheadField, static
+    FieldList, StringField, DateField, MoneyField)
+from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
 
 class SemesterCreateForm(Form):
@@ -79,7 +79,7 @@ class BankAccountActivityEditForm(Form):
     account = TypeaheadField(u"Gegenkonto")
     account_id = HiddenField(validators=[DataRequired()])
     bank_account_name = static(StringField(u"Bankkonto"))
-    amount = static(IntegerField(u"Wert"))
+    amount = disabled(MoneyField(u"Wert"))
     description = StringField(u"Beschreibung")
     original_reference = static(StringField(u"Ursprüngliche Verwendung"))
     other_account_number = static(StringField(u"Kontonummer"))
@@ -109,7 +109,12 @@ class AccountCreateForm(Form):
 class SplitCreateForm(WTForm):
     account = TypeaheadField(u"Konto", validators=[DataRequired()])
     account_id = HiddenField(validators=[DataRequired(message=gettext("Missing account."))])
-    amount = IntegerField(u"Wert", validators=[DataRequired(message=gettext("Missing value."))])
+    amount = MoneyField(u"Wert", validators=[DataRequired(message=gettext("Invalid value."))])
+
+    def validate_amount(self, field):
+        cents = field.data.shift(2)
+        if cents == 0 or cents != int(cents):
+            raise ValidationError(gettext("Invalid value."))
 
 
 class TransactionCreateForm(Form):

@@ -154,21 +154,22 @@ def bank_accounts_create():
           methods=["GET", "POST"])
 @access.require('finance_change')
 def bank_account_activities_edit(activity_id):
-    activity_id = BankAccountActivity.q.get(activity_id)
+    activity = BankAccountActivity.q.get(activity_id)
+    print activity_id
     form = BankAccountActivityEditForm(
-        obj=activity_id, bank_account_name=activity_id.bank_account.name)
+        obj=activity, bank_account_name=activity.bank_account.name)
 
     if form.validate():
-        debit_account = activity_id.bank_account.account
+        debit_account = activity.bank_account.account
         credit_account = Account.q.filter(
             Account.id == form.account_id.data
         ).one()
-        activity_id.transaction = finance.simple_transaction(
+        activity.transaction = finance.simple_transaction(
             description=form.description.data, debit_account=debit_account,
-            credit_account=credit_account, amount=activity_id.amount,
-            author=current_user, valid_on=activity_id.valid_on)
+            credit_account=credit_account, amount=activity.amount,
+            author=current_user, valid_on=activity.valid_on)
 
-        session.add(activity_id)
+        session.add(activity)
         session.commit()
 
         return redirect(url_for('.bank_accounts_list'))
@@ -399,14 +400,15 @@ def transactions_create():
                 Account.q.get(split_form.account_id.data),
                 split_form.amount.data
             ))
-        finance.complex_transaction(
+        transaction = finance.complex_transaction(
             description=form.description.data,
             author=current_user,
             splits=splits,
             valid_on=form.valid_on.data,
         )
         session.commit()
-        return redirect(url_for('.accounts_list'))
+        return redirect(url_for('.transactions_show',
+                                transaction_id=transaction.id))
     return render_template(
         'finance/transactions_create.html',
         form=form

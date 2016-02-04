@@ -1,4 +1,5 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# coding=utf-8
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from itertools import chain
@@ -275,3 +276,17 @@ class LazyLoadSelectWidget(wtforms.widgets.Select):
         kwargs['data-url'] = url_for(field.data_endpoint)
 
         return super(LazyLoadSelectWidget, self).__call__(field, **kwargs)
+
+
+class Disabler(WidgetDecorator):
+    def __call__(self, field, **kwargs):
+        kwargs['disabled'] = True
+        return self.widget(field, **kwargs)
+
+
+class MoneyFieldDecorator(WidgetDecorator):
+    """Adds the Bootstrap form-control class to a widget."""
+    def __call__(self, field, **kwargs):
+        kwargs['class_'] += ' money-amount'
+        return (u"<div class=\"input-group\">" + self.widget(field, **kwargs) +
+                u"<span class=\"input-group-addon\">€</span></div>")
