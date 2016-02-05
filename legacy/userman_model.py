@@ -1,7 +1,9 @@
 # coding: utf-8
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import sys
+import os
 from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Table, Text, text
 from sqlalchemy.dialects.postgresql import INET
 
@@ -17,6 +19,8 @@ from sqlalchemy.schema import CheckConstraint
 from sqlalchemy.types import NullType
 from sqlalchemy.ext.declarative import declarative_base
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pycroft.model.types import Money
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -91,7 +95,7 @@ class FinanzBuchungen(Base):
     datum = Column(Date, nullable=False, server_default=text("('now'::text)::date"))
     bearbeiter = Column(String, nullable=False, server_default=text("\"current_user\"()"))
     rechnungs_nr = Column(Integer)
-    wert = Column(Integer, nullable=False, server_default=text("0"))
+    wert = Column(Money, nullable=False, server_default=text("0"))
     soll = Column(ForeignKey(FinanzKonten.id), nullable=False)
     soll_uid = Column(Integer)
     soll_konto = relationship(FinanzKonten, backref="soll_fb", foreign_keys=[soll])
@@ -127,7 +131,7 @@ class BankKonto(Base):
 
     bkid = Column(Integer, primary_key=True, server_default=text("nextval(('\"bank_konto_bkid_seq\"'::text)::regclass)"))
     valid_on = Column(u'datum', Date, nullable=False)
-    wert = Column(Integer, nullable=False, server_default=text("0"))
+    wert = Column(Money, nullable=False, server_default=text("0"))
     bes = Column(Text)
 
 
@@ -160,7 +164,7 @@ class Buchungen(Base):
     haben_konto = relationship(FinanzKonten, backref="haben_buchungen", foreign_keys=[haben])
     relationship(FinanzKonten)
     haben_uid = Column(Integer)
-    wert = Column(Integer)
+    wert = Column(Money)
     bes = Column(Text)
 
     __table_args__ = (
@@ -350,7 +354,7 @@ t_nutzer_buchungen = Table(
     Column(u'soll_uid', Integer),
     Column(u'haben', Integer),
     Column(u'haben_uid', Integer),
-    Column(u'wert', Integer),
+    Column(u'wert', Money),
     Column(u'bes', Text)
 )
 
@@ -362,7 +366,7 @@ t_nutzer_konto_uebersicht = Table(
     Column(u'vname', String(40)),
     Column(u'gid', Integer),
     Column(u'gruppen_name', String(40)),
-    Column(u'wert', BigInteger),
+    Column(u'wert', Money),
     Column(u'tage', Integer)
 )
 
