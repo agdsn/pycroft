@@ -7,7 +7,7 @@ from decimal import Decimal
 from pycroft.model.types import Money
 
 
-class Money(TestCase):
+class MoneyTypeDecorator(TestCase):
     correct_pairs = {1234: [Decimal('12.34')],
                       550: [5.5, Decimal('5.50')],
                      1000: [10, 10., Decimal('10')],
