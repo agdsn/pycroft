@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from __future__ import absolute_import
 from decimal import Decimal
+from numbers import Number
 import ipaddr
 from sqlalchemy import String, TypeDecorator, Integer
 from sqlalchemy.dialects.postgresql import MACADDR, INET
@@ -81,14 +82,20 @@ class Money(TypeDecorator):
     def python_type(self):
         return Decimal
 
-    def process_bind_param(self, value, dialect):
-        cents = value.scaleb(2)
+    @staticmethod
+    def process_bind_param(value, dialect):
+        if not isinstance(value, Number):
+            raise ValueError("{} is not a valid money amount".format(
+                repr(value)))
+        cents = Decimal(value).scaleb(2)
         if int(cents) != cents:
-            raise ValueError("Fractional cents are invalid.")
+            raise ValueError("{} is not a valid money amount".format(
+                Decimal(value)))
         else:
             return int(cents)
 
-    def process_result_value(self, value, dialect):
+    @staticmethod
+    def process_result_value(value, dialect):
         return Decimal(value).scaleb(-2)
 
 

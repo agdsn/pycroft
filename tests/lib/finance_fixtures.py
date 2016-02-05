@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, time, timedelta
@@ -16,27 +16,27 @@ today = datetime.utcnow().date()
 class SemesterData(DataSet):
     class with_registration_fee:
         name = u"previous semester"
-        registration_fee = 2500
-        regular_semester_fee = 1500
-        reduced_semester_fee = 450
-        late_fee = 250
+        registration_fee = 25.00
+        regular_semester_fee = 15.00
+        reduced_semester_fee = 4.50
+        late_fee = 2.50
         grace_period = timedelta(62)
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
-        allowed_overdraft = 500
+        allowed_overdraft = 5.00
         begins_on = today - timedelta(days=271)
         ends_on = today - timedelta(days=91)
 
     class without_registration_fee:
         name = u"current semester"
         registration_fee = 0
-        regular_semester_fee = 2000
-        reduced_semester_fee = 100
-        late_fee = 250
+        regular_semester_fee = 20.00
+        reduced_semester_fee = 1.00
+        late_fee = 2.50
         grace_period = timedelta(62)
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
-        allowed_overdraft = 500
+        allowed_overdraft = 5.00
         begins_on = today - timedelta(days=90)
         ends_on = today + timedelta(days=90)
 
@@ -108,42 +108,42 @@ class SplitData(DataSet):
     class claim1_credit:
         transaction = TransactionData.claim1
         account = AccountData.user_account
-        amount = 5000
+        amount = 50.00
 
     class claim1_debit:
         transaction = TransactionData.claim1
         account = AccountData.semester_fee_account
-        amount = -5000
+        amount = -50.00
 
     class late_fee1_credit:
         transaction = TransactionData.late_fee_for_claim1
         account = AccountData.user_account
-        amount = 2500
+        amount = 25.00
 
     class late_fee2_credit:
         transaction = TransactionData.late_fee_for_claim1
         account = AccountData.late_fee_account
-        amount = -2500
+        amount = -25.00
 
     class claim2_credit:
         transaction = TransactionData.claim2
         account = AccountData.user_account
-        amount = 5000
+        amount = 50.00
 
     class claim2_debit:
         transaction = TransactionData.claim2
         account = AccountData.semester_fee_account
-        amount = -5000
+        amount = -50.00
 
     class payment_credit:
         transaction = TransactionData.payment
         account = AccountData.bank_account
-        amount = 5000
+        amount = 50.00
 
     class payment_debit:
         transaction = TransactionData.payment
         account = AccountData.user_account
-        amount = -5000
+        amount = -50.00
 
 
 class BankAccountData(DataSet):

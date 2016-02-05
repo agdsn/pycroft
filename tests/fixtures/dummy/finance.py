@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
@@ -11,14 +11,14 @@ today = datetime.utcnow().date()
 class SemesterData(DataSet):
     class dummy_semester1:
         name = "first semester"
-        registration_fee = 2500
-        regular_semester_fee = 1500
-        reduced_semester_fee = 450
-        late_fee = 250
+        registration_fee = 25.00
+        regular_semester_fee = 15.00
+        reduced_semester_fee = 4.50
+        late_fee = 2.50
         grace_period = timedelta(62)
         reduced_semester_fee_threshold = timedelta(62)
         payment_deadline = timedelta(31)
-        allowed_overdraft = 500
+        allowed_overdraft = 5.00
         begins_on = today
         ends_on = today + timedelta(days=180)
 

@@ -1,7 +1,8 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -46,7 +47,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
         f = StringIO(data)
 
-        import_bank_account_activities_csv(f, 4342, date(2015, 1, 1))
+        import_bank_account_activities_csv(f, Decimal('43.42'), date(2015, 1, 1))
 
         bank_account = BankAccount.q.filter(
             BankAccount.iban == BankAccountData.dummy.iban
@@ -60,7 +61,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         self.assertEqual(activity.other_account_number, "12345678")
         self.assertEqual(activity.other_routing_number, "80040400")
         self.assertEqual(activity.other_name, u"SCH, AAA")
-        self.assertEqual(activity.amount, 900000)
+        self.assertEqual(activity.amount, 9000.00)
         self.assertEqual(activity.posted_at, date(2013, 1, 2))
         self.assertEqual(activity.valid_on, date(2013, 1, 2))
 
@@ -73,7 +74,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         self.assertEqual(activity.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
-        self.assertEqual(activity.amount, -600)
+        self.assertEqual(activity.amount, -6.00)
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
@@ -99,7 +100,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         try:
             simple_transaction(
                 u"transaction", self.fee_account, self.user_account,
-                9000, self.author
+                90.00, self.author
             )
         except Exception:
             self.fail()
@@ -107,7 +108,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         session.session.commit()
 
     def test_0030_transferred_value(self):
-        amount = 9000
+        amount = 90.00
         today = session.utcnow().date()
         simple_transaction(
             u"transaction", self.fee_account, self.user_account,
@@ -121,6 +122,10 @@ class Test_010_BankAccount(FixtureDataTestBase):
             u"transaction", self.fee_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
+        print type(transferred_amount(
+                self.fee_account, self.user_account, single(today)
+            ))
+        print type(amount)
         self.assertEqual(
             transferred_amount(
                 self.fee_account, self.user_account, single(today)
@@ -189,7 +194,7 @@ class Test_Fees(FeeTestBase):
     fee_account_name = ConfigData.config.semester_fee_account.name
     description = u"Fee"
     valid_on = datetime.utcnow().date()
-    amount = 9000
+    amount = 90.00
     params = (description, valid_on, amount)
 
     class FeeMock(Fee):
@@ -336,11 +341,11 @@ class TestLateFee(FeeTestBase):
                 PropertyGroupData, SemesterData, UserData)
     fee_account_name = ConfigData.config.late_fee_account.name
 
-    allowed_overdraft = 500
+    allowed_overdraft = 5.00
     payment_deadline = timedelta(31)
     valid_on = SemesterData.with_registration_fee.begins_on
     description = u"Fee description"
-    amount = 1000
+    amount = 10.00
 
     def setUp(self):
         super(TestLateFee, self).setUp()

@@ -24,15 +24,15 @@ manager = ddl.DDLManager()
 
 class Semester(ModelBase):
     name = Column(String, nullable=False)
-    registration_fee = Column(Integer, CheckConstraint('registration_fee >= 0'),
+    registration_fee = Column(Money, CheckConstraint('registration_fee >= 0'),
                               nullable=False)
-    regular_semester_fee = Column(Integer,
+    regular_semester_fee = Column(Money,
                                   CheckConstraint('regular_semester_fee >= 0'),
                                   nullable=False)
-    reduced_semester_fee = Column(Integer,
+    reduced_semester_fee = Column(Money,
                                   CheckConstraint('reduced_semester_fee >= 0'),
                                   nullable=False)
-    late_fee = Column(Integer, CheckConstraint('late_fee >= 0'), nullable=False)
+    late_fee = Column(Money, CheckConstraint('late_fee >= 0'), nullable=False)
     # Timedelta a person has to be member in a semester to be charged any
     # semester fee at all(grace period)
     grace_period = Column(Interval, nullable=False)
@@ -44,7 +44,7 @@ class Semester(ModelBase):
     payment_deadline = Column(Interval, nullable=False)
     # Amount of outstanding debt a member can have without being charged a late
     # fee
-    allowed_overdraft = Column(Integer,
+    allowed_overdraft = Column(Money,
                                CheckConstraint('allowed_overdraft >= 0'),
                                nullable=False)
     begins_on = Column(Date, nullable=False)

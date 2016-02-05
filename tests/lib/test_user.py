@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+# Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
@@ -122,7 +122,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.account)
-        self.assertEqual(new_user.account.balance, 4000)
+        self.assertEqual(new_user.account.balance,
+                         (SemesterData.dummy_semester1.registration_fee +
+                          SemesterData.dummy_semester1.regular_semester_fee))
         self.assertFalse(new_user.has_property("reduced_semester_fee"))
 
 

@@ -28,6 +28,7 @@ from pycroft.helpers.interval import (
     closed, single, Bound, Interval, IntervalSet, UnboundedInterval)
 from pycroft.model.functions import sign, least
 from pycroft.model.session import with_transaction
+from pycroft.model.types import Money
 from pycroft.model.user import User
 
 
@@ -154,7 +155,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
         cast(func.sum(
             sign(split2.amount) *
             least(func.abs(split1.amount), func.abs(split2.amount))
-        ), Integer)
+        ), Money)
     ).select_from(
         split1
     ).join(
