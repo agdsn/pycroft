@@ -13,6 +13,7 @@
 from cmath import log
 from datetime import datetime, timedelta
 from itertools import chain
+from re import sub
 import flask.ext.babel
 
 from pycroft._compat import imap
@@ -125,6 +126,8 @@ def money_filter(amount):
 @template_filter("account_type")
 def account_type_filter(account_type):
     types = {
+        "USER_ASSET": gettext("User account (asset)"),
+        "BANK_ASSET": gettext("Bank account (asset)"),
         "ASSET": gettext("Asset account"),
         "LIABILITY": gettext("Liability account"),
         "REVENUE": gettext("Revenue account"),
@@ -135,6 +138,9 @@ def account_type_filter(account_type):
 
 @template_filter("transaction_type")
 def transaction_type_filter(credit_debit_type):
+    def replacer(types):
+        return types and tuple(sub(r'[A-Z]+_(?=ASSET)', r'', t) for t in types)
+
     types = {
         ("ASSET", "LIABILITY"): gettext("Balance sheet extension"),
         ("LIABILITY", "ASSET"): gettext("Balance sheet contraction"),
@@ -145,7 +151,7 @@ def transaction_type_filter(credit_debit_type):
         ("ASSET", "ASSET"): gettext("Asset exchange"),
         ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
     }
-    return types.get(credit_debit_type, gettext("Unknown"))
+    return types.get(replacer(credit_debit_type), gettext("Unknown"))
 
 
 @template_filter("host_traffic")

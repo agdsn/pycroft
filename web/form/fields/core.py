@@ -84,6 +84,12 @@ class MoneyField(wtforms.fields.DecimalField):
         BootstrapFormGroupDecorator
     )
 
+    def process_formdata(self, valuelist):
+        if valuelist:
+            valuelist[0] = valuelist[0].replace(",", ".")
+        return super(MoneyField, self).process_formdata(valuelist)
+
+
 class FloatField(wtforms.fields.FloatField):
     widget = decorate_field(
         wtforms.fields.FloatField,
