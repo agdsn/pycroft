@@ -1,0 +1,36 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen") -%}
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+        <a href="{{ cancel_to }}" class="btn">{{ cancel_text }}</a>
+    </div>
+{%- endmacro %}
+
+
+{% macro bootstrap_simple_field(field) -%}
+    <div class="control-group{% if field.errors %} error{% endif %}">
+        {{ field.label(class="control-label") }}
+        <div class="controls">
+            {{ field }}
+            {% if field.errors -%}
+                <span class="help-inline">{% for error in field.errors %}{% if not loop.first %}; {% endif %}{{ error }}{% endfor %}</span>
+            {%- endif %}
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro simple_form(form, submit_to, cancel_to) -%}
+    <form method="POST" action="{{ submit_to }}" class="form-horizontal">
+        {{ form.hidden_tag() }}
+        {% for field in form %}
+            {% if field.type not in ["HiddenField", "CSRFTokenField"] %}
+                {{ bootstrap_simple_field(field) }}
+            {% endif %}
+        {% endfor %}
+    {{ form_actions(cancel_to) }}
+    </form>
+{%- endmacro %}

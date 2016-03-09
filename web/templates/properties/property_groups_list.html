@@ -1,0 +1,51 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% block content %}
+    <a href="{{ url_for(".property_group_create") }}" class="btn">neue Eigenschaften Gruppe</a>
+    {% if property_groups %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th></th>
+            {% for property_group in property_groups %}
+            <th>{{ property_group.name }} <br> <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">löschen</a></th>
+            {% endfor %}
+        </tr>
+        </thead>
+
+        {% for category in property_categories %}
+            <thead>
+            <tr>
+                <th colspan="{{ num_groups + 1 }}">{{ category[0] }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for property in category[1] %}
+            <tr>
+                <td>{{ property[1] }}</td>
+                {% for property_group in property_groups %}
+                <td>
+                    {% if  property_group.has_property(property[0]) %}
+                        <a href="{{ url_for(".property_group_delete_property", group_id=property_group.id, property_name=property[0]) }}"
+                           class="icon-ok remove-button" title="Löschen">
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for(".property_group_add_property", group_id=property_group.id, property_name=property[0]) }}"
+                           class="icon-ban-circle add-button" title="Hinzufügen">
+                        </a>
+                    {% endif %}
+                </td>
+                {% endfor %}
+
+            </tr>
+            {% endfor %}
+            <tbody>
+        {% endfor %}
+    </table>
+    {% endif %}
+{% endblock %}

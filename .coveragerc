@@ -1,0 +1,24 @@
+[run]
+omit =
+    */lib/python2.6/*
+    */pyshared/*
+    tests/*
+    migration/*
+    web/*
+
+[report]
+omit =
+    */lib/python2.6/*
+    */pyshared/*
+    tests/*
+    migration/*
+    web/*
+
+[xml]
+omit =
+    */lib/python2.6/*
+    */pyshared/*
+    tests/*
+    migration/*
+    web/*
+

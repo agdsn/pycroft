@@ -1,0 +1,91 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% set page_title = "Nutzer anzeigen" %}
+{% import "macros/forms.html" as forms %}
+
+{% block content %}
+
+    <div class="subnav">
+        <ul class="nav nav-pills">
+            <li><a href="#basedata">Basisdaten</a></li>
+            <li><a href="#traffic">Traffic</a></li>
+            <li><a href="#hosts">Hosts</a></li>
+            <li><a href="#logs">Logeinträge</a></li>
+            <li><a href="#finance">Kontoeinträge</a></li>
+            <li><a href="#groups">Gruppen</a></li>
+        </ul>
+    </div>
+
+
+    {# Stammdaten #}
+    <section id="basedata">
+        <div class="page-header"><h2>Basisdaten</h2></div>
+        <div>
+            {% include "user/_user_show_basedata.html" with context %}
+        </div>
+    </section>
+
+
+    {# Traffic #}
+    <section id="traffic">
+        <div class="page-header"><h2>Traffic</h2></div>
+        <div class="body">
+            {% include "user/_user_show_traffic.html" with context %}
+        </div>
+    </section>
+
+
+    {# Hosts-Tabelle #}
+    <section id="hosts">
+        <div class="page-header"><h2>Hosts</h2></div>
+        <div class="body">
+            {% include "user/_user_show_hosts.html" with context %}
+        </div>
+    </section>
+
+
+    {# Logeintrage des Nutzers #}
+    <section id="logs">
+        <div class="page-header"><h2>Logeinträge</h2></div>
+        <div class="body">
+            {% include "user/_user_show_logs.html" with context %}
+        </div>
+    </section>
+
+
+    {# Kontostand des Nutzers #}
+    <section id="finance">
+        <div class="page-header"><h2>Kontoeinträge</h2></div>
+        <div class="body">
+            {% include "user/_user_show_finance.html" with context %}
+        </div>
+    </section>
+
+
+    {# Gruppen des Nutzers #}
+    <section id="groups">
+        <div class="page-header"><h2>Gruppen</h2></div>
+        <div class="body">
+            {% include "user/_user_show_groups.html" with context %}
+        </div>
+    </section>
+{% endblock %}
+
+
+{% block page_script %}
+    <script type="text/javascript" src="{{ url_for("static", filename="highcharts/highcharts.js") }}"></script>
+    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/trafficgraph.js") }}"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            load_trafficchart();
+        });
+    </script>
+    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/navigation.js") }}"></script>
+    <script type="text/javascript">
+        $(".subnav").subNavBar();
+    </script>
+{% endblock %}

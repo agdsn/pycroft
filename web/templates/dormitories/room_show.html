@@ -1,0 +1,34 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% block content %}
+    <ul class="breadcrumb">
+        <li>
+            <a href="{{ url_for('dormitories.overview') }}">Wohnheime</a>
+            <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="{{ url_for('dormitories.dormitory_levels', dormitory_id=room.dormitory.id) }}">{{ room.dormitory.short_name }}</a>
+            <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="{{url_for('.dormitory_level_rooms', dormitory_id=room.dormitory_id, level=room.level)}}">
+                Etage {{ room.level|level_number }}
+            </a>
+            <span class="divider">/</span>
+        </li>
+        <li class="active">Zimmer {{ room.number }}</li>
+    </ul>
+    <ul class="unstyled">
+        <li>Wohnheim: {{ room.dormitory.street }} {{ room.dormitory.number
+                }}</li>
+        <li>Nummer: {{ room.number }}</li>
+        <li>Etage: {{ room.level }}</li>
+        <li>Bewohnbar: {{ room.inhabitable }}</li>
+    </ul>
+    <div><a href="{{ url_for('.room_delete', room_id=room.id) }}" class="btn">Löschen</a></div>
+{% endblock %}

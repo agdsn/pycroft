@@ -1,0 +1,109 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% import "macros/navigation.html" as navigation with context %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">​
+    <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.min.css") }}">​
+    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
+    {% block page_css %}{% endblock %}
+    <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}">​
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top navbar-inverse">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand" href="/">Userman</a>
+            <div class="nav-collapse">
+                <ul class="nav">
+                    {% for element in config.blueprint_navigation -%}
+                        {{ navigation.blueprint_element(element) }}
+                    {%- endfor %}
+                </ul>
+                {% if current_user.is_authenticated() %}
+                    <ul class="nav pull-right"><li><a href="{{ url_for("login.logout") }}"><i style="margin-top: 1px" class="icon-off icon-white"></i></a></li></ul>
+                    <p class="navbar-text pull-right">Logged in as <a href="#">{{ current_user.name }}</a></p>
+                {% else %}
+                    <ul class="nav pull-right"><li><a href="{{ url_for("login.login") }}">Anmelden <i style="margin-top: 1px" class="icon-off icon-white"></i></a></li></ul>
+                {% endif %}
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) -%}
+        {% if messages -%}
+            <div class="flash-messages">
+            {% for category, message in messages -%}
+                <div class="alert fade in alert-{{ category }}">
+                    <a class="close" data-dismiss="alert" href="#">×</a>
+                    <strong>{{ category|pretty_category }}:</strong> {{ message }}
+                </div>
+            {%- endfor %}
+            </div>
+            <p>&nbsp;</p>
+        {%- endif %}
+    {%- endwith %}
+    <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
+    {% block content %}{% endblock %}
+</div> <!-- /container -->
+
+<script type="text/javascript" src="{{ url_for("static", filename="jquery/jquery-1.7.2.min.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="bootstrap/js/bootstrap.js") }}"></script>
+<script type="text/javascript">
+    $('.dropdown-toggle').dropdown();
+    $(function() {
+        var isFixed = 0,
+            $window = $(window),
+            $subnav = $(".subnav");
+
+        function place_alerts() {
+            var $messages = $(".flash-messages");
+            if (!$messages.length)
+                return;
+            var offset = $messages.offset().top,
+                    top = $window.scrollTop();
+
+            if (isFixed) {
+                if (top < 2) {
+                    $messages.removeClass("flash-messages-fixed");
+                    $messages.css("margin-top", 0);
+                    isFixed = 0;
+                }
+                if ($subnav.length) {
+                    var padding = 28;
+                    if (top < 60) {
+                        padding = (top / 2) - 2;
+                    }
+                    $messages.css("margin-top", padding);
+                }
+            } else {
+                if (top >= 2) {
+                    var width = $messages.width();
+                    $messages.addClass("flash-messages-fixed");
+                    $messages.css("width", width);
+                    isFixed = 1;
+
+                    // reemit event as workaround to get proper subnav offset calc
+                    $window.trigger("scroll");
+                }
+            }
+        }
+
+        $(window).on("scroll", place_alerts);
+    })
+</script>
+{% block page_script %}{% endblock %}
+</body>
+</html>

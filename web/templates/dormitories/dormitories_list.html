@@ -1,0 +1,14 @@
+{#
+ Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% block content %}
+    <ul class="unstyled">
+    {% for dormitory in dormitories %}
+        <li><a href="{{ url_for(".dormitory_show", dormitory_id=dormitory.id) }}">{{ dormitory.short_name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}
