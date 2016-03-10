@@ -157,6 +157,60 @@ class SQLiteTestCase(DialectSpecificTestCase):
     dialect = 'sqlite'
 
 
+class FactoryDataTestBase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        setup()
+
+    @classmethod
+    def tearDownClass(cls):
+        teardown()
+
+    def setUp(self):
+        super(FixtureDataTestBase, self).setUp()
+        self.transaction = connection.begin_nested()
+        s = scoped_session(sessionmaker(bind=connection))
+        session.set_scoped_session(s)
+        print("#"*200)
+        print("Scoped session set!")
+
+    def tearDown(self):
+        # Rollback the session
+        # TODO: this fails.
+        session.session.rollback()
+        session.Session.remove()
+        # Rollback the outer transaction to the savepoint
+        self.transaction.rollback()
+        super(FactoryDataTestBase, self).tearDown()
+
+    @contextmanager
+    def _rollback_with_context(self, context):
+        with context:
+            try:
+                yield
+            except:
+                session.session.rollback()
+                raise
+
+    def assertRaisesInTransaction(self, excClass, callableObj=None,
+                                  *args, **kwargs):
+        context = super(FrontendDataTestBase, self).assertRaises(excClass)
+        if callableObj is None:
+            return self._rollback_with_context(context)
+        with self._rollback_with_context(context):
+            callableObj(*args, **kwargs)
+
+    def assertRaisesRegexpInTransaction(self, expected_exception,
+                                        expected_regexp, callable_obj=None,
+                                        *args, **kwargs):
+        context = super(FrontendDataTestBase, self).assertRaisesRegexp(
+            expected_exception, expected_regexp)
+        if callable_obj is None:
+            return self._rollback_with_context(context)
+        with self._rollback_with_context(context):
+            callable_obj(*args, **kwargs)
+
+
 class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
     """A TestCase baseclass that handles frontend tests.
 
