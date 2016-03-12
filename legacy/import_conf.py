@@ -64,6 +64,23 @@ group_props = {
 }
 
 
+status_groups_map = {
+    1: ("member",),  # bezahlt, ok
+    2: ("member",),  # angemeldet, aber nicht bezahlt
+    3: ("away",),    # nicht bezahlt, hat nur Mail
+    4: ("member",),  # angemeldet, nicht bezahlt, 2. Warnung
+    5: ("member", "suspended"),  # angemeldet, nicht bezahlt, gesperrt
+    6: ("away",),  # angemeldet, gesperrt (ruhend)
+    7: ("member", "violator"),  # angemeldet, gesperrt (Verstoss gegen Netzordnung)
+    8: (),  # ausgezogen, gesperrt
+    9: (),  # Ex-Aktiver
+    10: ("away",), # E-Mail, ehemals IP
+    11: (),  # uebrig in Wu die in Renovierung
+    12: ("member",)  # gesperrt wegen Trafficueberschreitung
+
+}
+
+
 site_name_map = {
     0: u"Wundtstraße/Zellescher Weg",
     1: u"Borsbergstraße",
