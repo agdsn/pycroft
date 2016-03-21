@@ -8,13 +8,15 @@ from __future__ import print_function
 import os
 import sys
 from collections import Counter
-import logging as log
+import logging as std_logging
+log = std_logging.getLogger('import')
 
 from tools import timed
 
 import sqlalchemy
-from sqlalchemy import create_engine, or_, not_
+from sqlalchemy import create_engine, or_, not_, Integer
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.sql.expression import cast
 from flask import _request_ctx_stack
 
 from conn import conn_opts
@@ -91,12 +93,19 @@ def main(args):
         root_computer_cond = or_(netusers_model.Computer.nutzer_id == 0,
                                  netusers_model.Computer.nutzer_id == 11551)
 
+        zimmer_hp4108 = session_nu.query(
+            netusers_model.Hp4108Port.wheim_id,
+            cast(netusers_model.Hp4108Port.etage, Integer).label('etage'),
+            netusers_model.Hp4108Port.zimmernr).distinct()
+
+        zimmer_nutzer = session_nu.query(
+            netusers_model.Nutzer.wheim_id,
+            netusers_model.Nutzer.etage,
+            netusers_model.Nutzer.zimmernr).distinct()
+
         legacy_data = {
             'wheim': session_nu.query(netusers_model.Wheim).all(),
-            'zimmer': session_nu.query(
-                netusers_model.Hp4108Port.wheim_id,
-                netusers_model.Hp4108Port.etage,
-                netusers_model.Hp4108Port.zimmernr).distinct().all(),
+            'zimmer': zimmer_hp4108.union(zimmer_nutzer).all(),
             'nutzer': (session_nu.query(netusers_model.Nutzer)
                        .order_by(netusers_model.Nutzer.nutzer_id).all()),
             'semester': session_um.query(userman_model.FinanzKonten).filter(
@@ -161,6 +170,7 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     if args.log_level:
-        log.basicConfig(level=getattr(log, args.log_level))
+        std_logging.basicConfig(level=getattr(std_logging, args.log_level),
+                                format='[%(levelname).4s] %(name)s:%(funcName)s:%(message)s')
     main(args)
     log.info("Import finished.")

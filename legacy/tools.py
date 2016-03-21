@@ -3,9 +3,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from __future__ import print_function
-
+import logging as std_logging
+log = std_logging.getLogger('import')
 import collections
-import functools
 import time
 
 
@@ -51,16 +51,7 @@ class TranslationRegistry(object):
             return func
         return decorator
 
-    def satisfies(self, *instr_attrs):
-        """Provides foreign key constraints of given InstrumentedAttributes
-        locally"""
-        def decorator(func):
-            for instr_attr in instr_attrs:
-                self._satisfies[func].update(instr_attr.property.columns)
-            return func
-        return decorator
-
-    def provides(self, *metas):
+    def provides(self, *metas, **kwargs):
         """main translation function to create given ModelMetas"""
         def decorator(func):
             for meta in metas:
@@ -70,6 +61,8 @@ class TranslationRegistry(object):
                 for fkc in meta.__table__.foreign_key_constraints:
                     if fkc.referred_table in parent_tables:
                         self._satisfies[func].update(fkc.columns)
+            for instr_attr in kwargs.get('satisfies', ()):
+                self._satisfies[func].update(instr_attr.property.columns)
             return func
         return decorator
 

@@ -84,6 +84,7 @@ status_groups_map = {
 site_name_map = {
     0: u"Wundtstraße/Zellescher Weg",
     1: u"Borsbergstraße",
+    2: u"Zeunerstraße",
 }
 
 
@@ -100,4 +101,35 @@ building_site_map = {
     10: 0,
     11: 0,
     12: 1,
+    13: 2,
+}
+
+building_subnet_map = {
+    1: 6,
+    2: 3,
+    3: 8,
+    4: 7,
+    5: 1,
+    6: 2,
+    7: 4,
+    8: 4,
+    9: 4,
+    10: 4,
+    11: 4,
+    12: 10,
+    13: 11,
+}
+
+vlan_name_vid_map = {
+    'Wu1': 11,
+    'Wu3': 13,
+    'Wu5': 15,
+    'Wu7': 17,
+    'Wu9': 19,
+    'Wu11': 5,
+    'ZW41': 41,
+    'Bor34': 34,
+    'Servernetz': 22,
+    'UNEP': 348,
+    'Zeu': 234,
 }

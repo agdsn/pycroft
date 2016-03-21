@@ -3,7 +3,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from collections import Counter
-import logging as log
+import logging as std_logging
+log = std_logging.getLogger('translate')
 import operator
 import re
 from datetime import datetime, date, timedelta
@@ -140,11 +141,8 @@ def membership_from_fees(user, semesters, n):
     for split in other_fees:
         desc = split.transaction.description
         if not con_fee_re.match(desc) and not late_fee_re.match(desc):
-            if ("kleidung" in desc.lower() or
-                    "spende" in desc.lower() or
-                    "ausgleich" in desc.lower() or
-                    "rueck" in desc.lower() or
-                    u"rück" in desc.lower()):
+            if re.search(u"(kleidung|r(u|ue|ü)ck|ausgleich|spende)", desc,
+                         flags=re.IGNORECASE|re.UNICODE):
                 n.ignored += 1
             else:
                 n.unclassified += 1

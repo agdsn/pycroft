@@ -5,7 +5,8 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, date
 import difflib
-import logging as log
+import logging as std_logging
+log = std_logging.getLogger('translate')
 import os
 import sys
 
@@ -21,8 +22,7 @@ from pycroft.helpers import user as usertools, AttrDict
 from pycroft.helpers.interval import (open, closedopen, closed, IntervalSet,
                                       PositiveInfinity, NegativeInfinity)
 
-from import_conf import (group_props, site_name_map, building_site_map,
-                         status_groups_map)
+from import_conf import *
 from tools import TranslationRegistry
 from reconstruct_memberships import membership_from_fees
 # TODO: missing or incomplete translations for status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
@@ -95,8 +95,7 @@ def translate_logs(data, resources):
     return []
 
 
-@reg.satisfies(user.User.account_id)
-@reg.provides(user.User)
+@reg.provides(user.User, satisfies=(user.User.account_id,))
 def translate_users(data, resources):
     r_d = resources['zimmer']
 
@@ -108,7 +107,7 @@ def translate_users(data, resources):
     ignored_rooms = []
     for _u in data['nutzer']:
         ou_d[_u.nutzer_id] = _u
-        login = _u.unix_account if _u.nutzer_id != 0 else ROOT_NAME
+        login = _u.unix_account.strip() if _u.nutzer_id != 0 else ROOT_NAME
         try:
             room = r_d[(_u.wheim_id, _u.etage, _u.zimmernr)]
         except KeyError:
@@ -307,8 +306,8 @@ def get_acc(old_account_id, old_user_id, u_d, a_d):
     return account
 
 
-@reg.satisfies(finance.BankAccountActivity.transaction_id)
-@reg.provides(finance.BankAccountActivity)
+@reg.provides(finance.BankAccountActivity,
+              satisfies=(finance.BankAccountActivity.transaction_id,))
 def translate_bank_transactions(data, resources):
     bank_account = resources['bank_account']
 
@@ -381,8 +380,8 @@ def translate_finance_transactions(data, resources):
     return objs
 
 
-@reg.satisfies(dns.SOARecord.name_id, dns.SOARecord.mname_id)
-@reg.provides(dns.DNSZone, dns.SOARecord)
+@reg.provides(dns.DNSZone, dns.SOARecord,
+              satisfies=(dns.SOARecord.name_id, dns.SOARecord.mname_id))
 def generate_dns_zone(data, resources):
     primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
     urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
@@ -403,18 +402,6 @@ def generate_dns_zone(data, resources):
 @reg.provides(net.VLAN, net.Subnet)
 def generate_subnets_vlans(data, resources):
     primary_host_zone = resources['primary_host_zone']
-    vlan_name_vid_map = {
-        'Wu1': 11,
-        'Wu3': 13,
-        'Wu5': 15,
-        'Wu7': 17,
-        'Wu9': 19,
-        'Wu11': 5,
-        'ZW41': 41,
-        'Bor34': 34,
-        'Servernetz': 22,
-        'UNEP': 348,
-    }
 
     s_d = resources['subnet'] = {}
     for _s in data['subnet']:
@@ -434,11 +421,11 @@ def generate_subnets_vlans(data, resources):
     return s_d.values()
 
 
-@reg.satisfies(host.IP.interface_id, dns.AddressRecord.name_id)
 @reg.provides(host.Host, host.Interface,
                 host.ServerHost, host.UserHost, host.Switch,
                 host.ServerInterface, host.UserInterface, host.SwitchInterface,
-                host.IP, dns.AddressRecord)
+                host.IP, dns.AddressRecord,
+              satisfies=(host.IP.interface_id, dns.AddressRecord.name_id))
 def translate_hosts(data, resources):
     legacy_hostname_map = {}
     u_d = resources['user']
@@ -504,21 +491,6 @@ def translate_ports(data, resources):
     sw_d = resources['switch']
     s_d = resources['subnet']
     r_d = resources['zimmer']
-
-    building_subnet_map = {
-        1: 6,
-        2: 3,
-        3: 8,
-        4: 7,
-        5: 1,
-        6: 2,
-        7: 4,
-        8: 4,
-        9: 4,
-        10: 4,
-        11: 4,
-        12: 10,
-    }
 
     objs = []
     for _sp in data['port']:
