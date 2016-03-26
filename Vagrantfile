@@ -15,6 +15,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider "docker" do |d|
     d.privileged = true
     d.build_dir = "vagrant/"
+    d.build_args = ["--tag=agdsn/pycroft:latest"]
     d.has_ssh = true
   end
 
