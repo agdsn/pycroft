@@ -131,5 +131,5 @@ vlan_name_vid_map = {
     'Bor34': 34,
     'Servernetz': 22,
     'UNEP': 348,
-    'Zeu': 234,
+    'Zeu1f': 234,
 }
