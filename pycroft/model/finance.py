@@ -127,7 +127,42 @@ class Split(ModelBase):
     transaction = relationship(Transaction,
                                backref=backref("splits",
                                                cascade="all, delete-orphan"))
+    __table_args = (
+        UniqueConstraint(transaction_id, account_id),
+    )
 
+
+manager.add_function(
+    Split.__table__,
+    ddl.Function(
+        'split_check_transaction_balanced()', 'trigger',
+        """
+        DECLARE
+           s split;
+           balance integer;
+        BEGIN
+           s := COALESCE(NEW, OLD);
+           SELECT SUM(amount) INTO STRICT balance FROM split
+           WHERE transaction_id = s.transaction_id;
+           IF balance <> 0 THEN
+               RAISE EXCEPTION 'transaction %% not balanced',
+               s.transaction_id;
+           END IF;
+           RETURN NULL;
+        END;
+        """,
+        volatility='stable', strict=True, language='plpgsql'
+    )
+)
+
+manager.add_constraint_trigger(
+    Split.__table__,
+    ddl.ConstraintTrigger(
+        'split_check_transaction_balanced_trigger',
+        Split.__table__, ('INSERT', 'UPDATE', 'DELETE'),
+        'split_check_transaction_balanced()'
+    )
+)
 
 manager.add_function(
     Split.__table__,
@@ -231,6 +266,42 @@ manager.add_constraint(
         table=BankAccount.__table__,
     ),
     dialect='postgresql'
+)
+
+manager.add_function(
+    BankAccountActivity.__table__,
+    ddl.Function(
+        'bank_account_activity_transaction_includes_bank_account()',
+        'trigger',
+        """
+        DECLARE
+          activity bank_account_activity;
+          account_id integer;
+        BEGIN
+          activity := COALESCE(NEW, OLD);
+          SELECT bank_account.account_id INTO account_id FROM bank_account
+              WHERE bank_account.id = activity.bank_account_id;
+          IF NOT transaction_includes_account(activity.transaction_id, account_id) THEN
+            RAISE EXCEPTION 'bank_account_activity %% references transaction %% which does not include the bank account',
+                activity.id, activity.transaction_id
+                USING ERRCODE = 'integrity_constraint_violation';
+          END IF;
+          RETURN NULL;
+        END;
+        """,
+        volatility='stable', strict=True, language='plpgsql'
+    )
+)
+
+
+manager.add_constraint_trigger(
+    BankAccountActivity.__table__,
+    ddl.ConstraintTrigger(
+        'bank_account_activity_transaction_includes_bank_account_trigger',
+        BankAccountActivity.__table__,
+        ('INSERT', 'UPDATE', 'DELETE'),
+        'bank_account_activity_transaction_includes_bank_account()'
+    )
 )
 
 manager.register()
