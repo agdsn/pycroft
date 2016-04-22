@@ -1,9 +1,11 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import operator
+import pkgutil
+import unittest
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-import pkgutil
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
@@ -12,11 +14,13 @@ from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     Fee, LateFee, RegistrationFee, SemesterFee, adjustment_description,
     cleanup_description, get_current_semester, get_semester_for_date,
-    import_bank_account_activities_csv, post_fees, simple_transaction, transferred_amount)
+    import_bank_account_activities_csv, post_fees, simple_transaction,
+    transferred_amount,
+    is_ordered)
 from pycroft.lib.user import make_member_of
+from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction)
-from pycroft.model import session
 from pycroft.model.user import PropertyGroup, User
 from tests import FixtureDataTestBase
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
@@ -407,3 +411,10 @@ class TestLateFee(FeeTestBase):
         session.session.commit()
         self.assertEqual(self.fee.compute(self.user),
                          [self.late_fee_for(transaction)])
+
+
+class TestIsOrdered(unittest.TestCase):
+    def test_ordered(self):
+        self.assertTrue(is_ordered((1, 2, 3)))
+        self.assertFalse(is_ordered((1, 3, 2)))
+        self.assertTrue(is_ordered((3, 2, 1), relation=operator.gt))

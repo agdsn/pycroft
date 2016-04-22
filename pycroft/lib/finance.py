@@ -477,10 +477,18 @@ class CSVImportError(Exception):
         super(CSVImportError, self).__init__(message)
 
 
-def descending_transaction_dates(activities):
-    a, b = tee(imap(operator.itemgetter(8), activities))
+def is_ordered(iterable, relation=operator.le):
+    """
+    Check that an iterable is ordered with respect to a given relation.
+    :param iterable[T] iterable: an iterable
+    :param (T,T) -> bool op: a binary relation (i.e. a function that returns a bool)
+    :return: True, if each element and its successor yield True under the given
+    relation.
+    :rtype: bool
+    """
+    a, b = tee(iterable)
     next(b)
-    return all(imap(operator.ge, a, b))
+    return all(imap(relation, a, b))
 
 
 @with_transaction
@@ -502,7 +510,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance, import_time=N
         raise CSVImportError(gettext(u"Could not read CSV."), e)
     if not activities:
         raise CSVImportError(gettext(u"No data present."))
-    if not descending_transaction_dates(activities):
+    if not is_ordered(imap(operator.itemgetter(8), activities), operator.ge):
         raise CSVImportError(gettext(
             u"Transaction are not sorted according to transaction date in "
             u"descending order."))

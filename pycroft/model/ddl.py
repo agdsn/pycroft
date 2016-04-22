@@ -5,11 +5,10 @@ import inspect
 
 from sqlalchemy import event
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import ddl
-from sqlalchemy.sql.ddl import AddConstraint
+from sqlalchemy import schema
 
 
-class DropConstraint(ddl.DropConstraint):
+class DropConstraint(schema.DropConstraint):
     """
     Extends SQLALchemy's DropConstraint with support for IF EXISTS
     """
@@ -32,7 +31,7 @@ def visit_drop_constraint(drop_constraint, compiler, **kw):
     )
 
 
-class Function(ddl.DDLElement):
+class Function(schema.DDLElement):
     on = 'postgresql'
 
     def __init__(self, name, rtype, definition, volatility='volatile',
@@ -63,7 +62,7 @@ class Function(ddl.DDLElement):
         self.quote_tag = quote_tag
 
 
-class CreateFunction(ddl.DDLElement):
+class CreateFunction(schema.DDLElement):
     """
     Represents a CREATE FUNCTION DDL statement
     """
@@ -73,7 +72,7 @@ class CreateFunction(ddl.DDLElement):
         self.function = function
 
 
-class DropFunction(ddl.DDLElement):
+class DropFunction(schema.DDLElement):
     """
     Represents a DROP FUNCTION DDL statement
     """
@@ -111,7 +110,7 @@ def visit_drop_function(element, compiler, **kw):
     return "DROP FUNCTION IF EXISTS {name}".format(name=element.function.name)
 
 
-class ConstraintTrigger(ddl.DDLElement):
+class ConstraintTrigger(schema.DDLElement):
     def __init__(self, name, table, events, function_call):
         """
         Construct a constraint trigger
@@ -126,7 +125,7 @@ class ConstraintTrigger(ddl.DDLElement):
         self.function_call = function_call
 
 
-class CreateConstraintTrigger(ddl.DDLElement):
+class CreateConstraintTrigger(schema.DDLElement):
     """
     Represents a CREATE CONSTRAINT TRIGGER DDL statement
     """
@@ -136,7 +135,7 @@ class CreateConstraintTrigger(ddl.DDLElement):
         self.constraint_trigger = constraint_trigger
 
 
-class DropTrigger(ddl.DDLElement):
+class DropTrigger(schema.DDLElement):
     """
     Represents a DROP TRIGGER DDL statement.
     """
@@ -186,7 +185,7 @@ class DDLManager(object):
         self.objects.append((target, create_ddl, drop_ddl))
 
     def add_constraint(self, table, constraint, dialect=None):
-        self.add(table, AddConstraint(constraint),
+        self.add(table, schema.AddConstraint(constraint),
                  DropConstraint(constraint, if_exists=True), dialect=dialect)
 
     def add_function(self, table, function, dialect=None):
