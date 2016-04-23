@@ -1,6 +1,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from sqlalchemy.exc import IntegrityError
+
 from pycroft.model.finance import Account, IllegalTransactionError
 from pycroft.model.user import User
 from tests import FixtureDataTestBase
@@ -83,5 +85,5 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
         s2 = self.create_split(t, self.account2, -50)
         s2 = self.create_split(t, self.account2, -50)
         session.session.add_all([t, s1, s2])
-        self.assertRaises(IllegalTransactionError, session.session.commit)
+        self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()

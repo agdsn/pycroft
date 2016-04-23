@@ -180,14 +180,14 @@ class IllegalTransactionError(Exception):
     pass
 
 
+@event.listens_for(Transaction, "before_insert")
+@event.listens_for(Transaction, "before_update")
 def check_transaction_on_save(mapper, connection, target):
     """
     Check transaction constraints.
 
     Transaction must be balanced, an account mustn't be referenced by more than
     one split and it must consist of at least two splits.
-    The last constraints prohibits transactions on the same account and
-    difficulties to calculate the transferred value between two accounts.
     :raises: IllegalTransactionError if transaction contains errors
     """
     if not target.is_balanced:
@@ -195,13 +195,6 @@ def check_transaction_on_save(mapper, connection, target):
     if len(target.splits) < 2:
         raise IllegalTransactionError(gettext(u"Transaction must consist "
                                               u"of at least two splits."))
-    marked_accounts = set()
-    for split in target.splits:
-        if split.account in marked_accounts:
-            raise IllegalTransactionError(gettext(u"Transaction must not have "
-                                                  u"multiple splits with the "
-                                                  u"same account."))
-        marked_accounts.add(split.account)
 
 
 event.listen(Transaction, "before_insert", check_transaction_on_save)
