@@ -146,7 +146,8 @@ manager.add_function(
            WHERE transaction_id = s.transaction_id;
            IF balance <> 0 THEN
                RAISE EXCEPTION 'transaction %% not balanced',
-               s.transaction_id;
+               s.transaction_id
+               USING ERRCODE = 'integrity_constraint_violation';
            END IF;
            RETURN NULL;
         END;
