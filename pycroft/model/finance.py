@@ -219,15 +219,15 @@ class BankAccount(ModelBase):
     )
 
     @hybrid_property
-    def last_update(self):
+    def last_updated_at(self):
         return max(imap(operator.attrgetter('imported_at'), self.activities))
 
-    @last_update.expression
-    def last_update(self):
+    @last_updated_at.expression
+    def last_updated_at(self):
         return (
             select(func.max(BankAccountActivity.imported_at))
             .where(BankAccountActivity.bank_account_id == self.id)
-            .label("last_update")
+            .label("last_updated_at")
         )
 
 

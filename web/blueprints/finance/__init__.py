@@ -75,7 +75,7 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'change_date': ''.format(bank_account.last_update)
+            'change_date': ''.format(bank_account.last_updated_at)
         } for bank_account in BankAccount.q.all()])
 
 
