@@ -75,7 +75,6 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'hbci': bank_account.hbci_url,
             'change_date': ''.format(bank_account.last_update)
         } for bank_account in BankAccount.q.all()])
 
@@ -139,7 +138,6 @@ def bank_accounts_create():
             routing_number=form.routing_number.data,
             iban=form.iban.data,
             bic=form.bic.data,
-            hbci_url=form.hbci_url.data,
             account=Account(name=form.name.data, type='BANK_ASSET'),
         )
         session.add(new_bank_account)

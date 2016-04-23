@@ -154,5 +154,4 @@ class BankAccountData(DataSet):
         routing_number = "85050300"
         iban = "DE61850503003120219540"
         bic = "OSDDDE81XXX"
-        hbci_url = "https://hbci.example.com/"
         account = AccountData.bank_account

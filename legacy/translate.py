@@ -281,7 +281,6 @@ def generate_bank_account(data, resources):
         routing_number="85050300",
         iban="DE61850503003120219540",
         bic="OSDDDE81XXX",
-        hbci_url="https://hbci.example.com/",
         account=an_d["Bankkonto"])
 
     resources['bank_account'] = bank_account

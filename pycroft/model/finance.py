@@ -209,7 +209,6 @@ class BankAccount(ModelBase):
     routing_number = Column(String(8), nullable=False)
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
-    hbci_url = Column(String(255), nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
                         unique=True)
     account = relationship(Account)

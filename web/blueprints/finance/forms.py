@@ -72,7 +72,6 @@ class BankAccountCreateForm(Form):
     routing_number = TextField(u"Bankleitzahl (BLZ)")
     iban = TextField(u"IBAN")
     bic = TextField(u"BIC")
-    hbci_url = TextField(u"HBCI-URL")
 
 
 class BankAccountActivityEditForm(Form):
