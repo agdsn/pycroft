@@ -492,9 +492,20 @@ def is_ordered(iterable, relation=operator.le):
 
 
 @with_transaction
-def import_bank_account_activities_csv(csv_file, expected_balance, import_time=None):
-    if import_time is None:
-        import_time = session.utcnow()
+def import_bank_account_activities_csv(csv_file, expected_balance,
+                                       imported_at=None):
+    """
+    Import bank account activities from a MT940 CSV file into the database.
+
+    The new activities are merged with the activities that are already saved to
+    the database.
+    :param csv_file:
+    :param expected_balance:
+    :param imported_at:
+    :return:
+    """
+    if imported_at is None:
+        imported_at = session.utcnow()
 
     # Convert to MT940Record and enumerate
     reader = csv.reader(csv_file, dialect=MT940Dialect)
@@ -503,7 +514,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance, import_time=N
         # Skip first record (header)
         next(records)
         activities = tuple(starmap(
-            partial(process_record, imported_at=import_time), records))
+            partial(process_record, imported_at=imported_at), records))
     except StopIteration:
         raise CSVImportError(gettext(u"No data present."))
     except csv.Error as e:
@@ -525,7 +536,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance, import_time=N
         BankAccountActivity.reference, BankAccountActivity.original_reference,
         BankAccountActivity.other_account_number,
         BankAccountActivity.other_routing_number,
-        BankAccountActivity.other_name, BankAccountActivity.import_time,
+        BankAccountActivity.other_name, BankAccountActivity.imported_at,
         BankAccountActivity.posted_at, BankAccountActivity.valid_on
     ).filter(
         BankAccountActivity.posted_at >= first_posted_at)
@@ -543,7 +554,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance, import_time=N
                     amount=e[0], bank_account_id=e[1], reference=e[2],
                     original_reference=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
-                    import_time=e[7], posted_at=e[8], valid_on=e[9]),
+                    imported_at=e[7], posted_at=e[8], valid_on=e[9]),
                 islice(activities, j1, j2)))
         elif 'delete' == tag:
             continue

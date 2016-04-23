@@ -345,7 +345,7 @@ def translate_bank_transactions(data, resources):
             other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
             other_routing_number="NO NUMBER GIVEN", #TODO
             other_name="NO NAME GIVEN", #TODO
-            import_time=_bt.valid_on,
+            imported_at=_bt.valid_on,
             posted_at=_bt.valid_on,
             valid_on=_bt.valid_on,
             transaction=None)

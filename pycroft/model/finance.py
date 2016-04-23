@@ -227,12 +227,12 @@ class BankAccount(ModelBase):
 
     @hybrid_property
     def last_update(self):
-        return max(imap(lambda e: e.import_time, self.activities))
+        return max(imap(operator.attrgetter('imported_at'), self.activities))
 
     @last_update.expression
     def last_update(self):
         return (
-            select(func.max(BankAccountActivity.import_time))
+            select(func.max(BankAccountActivity.imported_at))
             .where(BankAccountActivity.bank_account_id == self.id)
             .label("last_update")
         )
@@ -248,7 +248,7 @@ class BankAccountActivity(ModelBase):
     other_account_number = Column(String(255), nullable=False)
     other_routing_number = Column(String(255), nullable=False)
     other_name = Column(String(255), nullable=False)
-    import_time = Column(DateTime, nullable=False)
+    imported_at = Column(DateTime, nullable=False)
     posted_at = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey(Transaction.id), unique=True)
