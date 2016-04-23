@@ -441,7 +441,7 @@ class LateFee(Fee):
 
 MT940_FIELDNAMES = [
     'our_account_number',
-    'posted_at',
+    'posted_on',
     'valid_on',
     'type',
     'reference',
@@ -525,11 +525,11 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
         raise CSVImportError(gettext(
             u"Transaction are not sorted according to transaction date in "
             u"descending order."))
-    first_posted_at = activities[-1][8]
+    first_posted_on = activities[-1][8]
     balance = session.session.query(
         func.coalesce(func.sum(BankAccountActivity.amount), 0)
     ).filter(
-        BankAccountActivity.posted_at < first_posted_at
+        BankAccountActivity.posted_on < first_posted_on
     ).scalar()
     a = tuple(session.session.query(
         BankAccountActivity.amount, BankAccountActivity.bank_account_id,
@@ -537,9 +537,9 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
         BankAccountActivity.other_account_number,
         BankAccountActivity.other_routing_number,
         BankAccountActivity.other_name, BankAccountActivity.imported_at,
-        BankAccountActivity.posted_at, BankAccountActivity.valid_on
+        BankAccountActivity.posted_on, BankAccountActivity.valid_on
     ).filter(
-        BankAccountActivity.posted_at >= first_posted_at)
+        BankAccountActivity.posted_on >= first_posted_on)
     )
     b = tuple(reversed(activities))
     matcher = difflib.SequenceMatcher(a=a, b=b)
@@ -554,7 +554,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
                     amount=e[0], bank_account_id=e[1], reference=e[2],
                     original_reference=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
-                    imported_at=e[7], posted_at=e[8], valid_on=e[9]),
+                    imported_at=e[7], posted_on=e[8], valid_on=e[9]),
                 islice(activities, j1, j2)))
         elif 'delete' == tag:
             continue
@@ -630,7 +630,7 @@ def process_record(index, record, imported_at):
 
     try:
         valid_on = datetime.strptime(record.valid_on, u"%d.%m.%y").date()
-        posted_at = datetime.strptime(record.posted_at, u"%d.%m.%y").date()
+        posted_on = datetime.strptime(record.posted_on, u"%d.%m.%y").date()
     except ValueError as e:
         message = gettext(u"Illegal date format. Record {1}: {2}")
         raw_record = restore_record(record)
@@ -653,7 +653,7 @@ def process_record(index, record, imported_at):
     return (amount, bank_account.id, cleanup_description(reference),
             reference, record.other_account_number,
             record.other_routing_number, other_name, imported_at,
-            posted_at, valid_on)
+            posted_on, valid_on)
 
 
 def user_has_paid(user):
@@ -661,8 +661,7 @@ def user_has_paid(user):
 
 
 def get_typed_splits(splits):
-    splits = sorted(splits, key=lambda s: s.transaction.posted_at,
-        reverse=True)
+    splits = sorted(splits, key=lambda s: s.transaction.posted_on, reverse=True)
     return izip_longest(
         ifilter(lambda s: s.amount >= 0, splits),
         ifilter(lambda s: s.amount < 0, splits)

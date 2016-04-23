@@ -66,7 +66,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         self.assertEqual(activity.other_routing_number, "80040400")
         self.assertEqual(activity.other_name, u"SCH, AAA")
         self.assertEqual(activity.amount, 9000.00)
-        self.assertEqual(activity.posted_at, date(2013, 1, 2))
+        self.assertEqual(activity.posted_on, date(2013, 1, 2))
         self.assertEqual(activity.valid_on, date(2013, 1, 2))
 
         # verify that the right year gets chosen for the transaction
@@ -74,7 +74,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
             bank_account=bank_account,
             original_reference=u"Pauschalen"
         ).first()
-        self.assertEqual(activity.posted_at, date(2012, 12, 24))
+        self.assertEqual(activity.posted_on, date(2012, 12, 24))
         self.assertEqual(activity.valid_on, date(2012, 12, 24))
 
         # verify that a negative amount is imported correctly
@@ -86,7 +86,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
             bank_account=bank_account,
             original_reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEqual(activity.posted_at, date(2013, 12, 29))
+        self.assertEqual(activity.posted_on, date(2013, 12, 29))
         self.assertEqual(activity.valid_on, date(2013, 1, 10))
 
         BankAccountActivity.q.delete()

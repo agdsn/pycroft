@@ -249,7 +249,7 @@ class BankAccountActivity(ModelBase):
     other_routing_number = Column(String(255), nullable=False)
     other_name = Column(String(255), nullable=False)
     imported_at = Column(DateTime, nullable=False)
-    posted_at = Column(Date, nullable=False)
+    posted_on = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey(Transaction.id), unique=True)
     transaction = relationship(Transaction,

@@ -86,7 +86,7 @@ class BankAccountActivityEditForm(Form):
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
     valid_on = static(DateField(u"Valutadatum"))
-    posted_at = static(DateField(u"Buchungsdatum"))
+    posted_on = static(DateField(u"Buchungsdatum"))
 
 
 class BankAccountActivitiesImportForm(Form):

@@ -346,7 +346,7 @@ def translate_bank_transactions(data, resources):
             other_routing_number="NO NUMBER GIVEN", #TODO
             other_name="NO NAME GIVEN", #TODO
             imported_at=_bt.valid_on,
-            posted_at=_bt.valid_on,
+            posted_on=_bt.valid_on,
             valid_on=_bt.valid_on,
             transaction=None)
         bt_d[_bt.bkid] = bt
