@@ -7,7 +7,8 @@ import operator
 from sqlalchemy import Column, ForeignKey, event, func, select
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.schema import CheckConstraint, UniqueConstraint
+from sqlalchemy.schema import (
+    CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
 from sqlalchemy.types import (
     Date, DateTime, Enum, Integer, Interval, String, Text)
 
@@ -165,16 +166,6 @@ manager.add_constraint_trigger(
     )
 )
 
-manager.add_function(
-    Split.__table__,
-    ddl.Function(
-        'transaction_includes_account(integer, integer)', 'boolean',
-        "SELECT EXISTS ("
-        "    SELECT FROM split WHERE transaction_id = $1 AND account_id = $2"
-        ")", volatility='stable', strict=True,
-    )
-)
-
 
 class IllegalTransactionError(Exception):
     """Indicates an attempt to persist an illegal Transaction."""
@@ -244,10 +235,20 @@ class BankAccountActivity(ModelBase):
     imported_at = Column(DateTime, nullable=False)
     posted_on = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
-    transaction_id = Column(Integer, ForeignKey(Transaction.id), unique=True)
-    transaction = relationship(Transaction,
-                               backref=backref("bank_account_activity",
-                                               uselist=False))
+    transaction_id = Column(Integer, ForeignKey(Transaction.id))
+    transaction = relationship(Transaction, viewonly=True)
+    account_id = Column(Integer, ForeignKey(Account.id))
+    account = relationship(Account, viewonly=True)
+    split = relationship(Split, foreign_keys=(transaction_id, account_id),
+                         backref=backref("bank_account_activity",
+                                         uselist=False))
+    __table_args = (
+        ForeignKeyConstraint((transaction_id, account_id),
+                             (Split.transaction_id, Split.account_id),
+                             onupdate='CASCADE',
+                             ondelete='SET NULL'),
+        UniqueConstraint(transaction_id, account_id),
+    )
 
 BankAccountActivity.__table__.add_is_dependent_on(Split.__table__)
 
@@ -264,19 +265,28 @@ manager.add_constraint(
 manager.add_function(
     BankAccountActivity.__table__,
     ddl.Function(
-        'bank_account_activity_transaction_includes_bank_account()',
+        'bank_account_activity_matches_referenced_split()',
         'trigger',
         """
         DECLARE
-          activity bank_account_activity;
-          account_id integer;
+          v_activity bank_account_activity;
+          v_bank_account_account_id integer;
+          v_split split;
         BEGIN
-          activity := COALESCE(NEW, OLD);
-          SELECT bank_account.account_id INTO account_id FROM bank_account
-              WHERE bank_account.id = activity.bank_account_id;
-          IF NOT transaction_includes_account(activity.transaction_id, account_id) THEN
-            RAISE EXCEPTION 'bank_account_activity %% references transaction %% which does not include the bank account',
-                activity.id, activity.transaction_id
+          v_activity := COALESCE(NEW, OLD);
+          SELECT bank_account.account_id INTO v_bank_account_account_id FROM bank_account
+              WHERE bank_account.id = v_activity.bank_account_id;
+          SELECT * INTO v_split FROM split
+              WHERE split.transaction_id = v_activity.transaction_id
+              AND split.account_id = v_activity.account_id;
+          IF v_bank_account_account_id <> v_activity.account_id THEN
+            RAISE EXCEPTION 'bank_account_activity %%: account_id of referenced bank_account %%  is different (%% <> %%)',
+                v_activity.id, v_activity.bank_account_id, v_activity.account_id, v_bank_account_account_id
+                USING ERRCODE = 'integrity_constraint_violation';
+          END IF;
+          IF v_split IS NOT NULL AND v_split.amount <> v_activity.amount THEN
+            RAISE EXCEPTION 'bank_account_activity %%: amount of referenced split %% is different (%% <> %%)',
+                v_activity.id, v_split.id, v_activity.amount, v_split.amount
                 USING ERRCODE = 'integrity_constraint_violation';
           END IF;
           RETURN NULL;
@@ -290,10 +300,10 @@ manager.add_function(
 manager.add_constraint_trigger(
     BankAccountActivity.__table__,
     ddl.ConstraintTrigger(
-        'bank_account_activity_transaction_includes_bank_account_trigger',
+        'bank_account_activity_matches_referenced_split_trigger',
         BankAccountActivity.__table__,
         ('INSERT', 'UPDATE', 'DELETE'),
-        'bank_account_activity_transaction_includes_bank_account()'
+        'bank_account_activity_matches_referenced_split()'
     )
 )
 

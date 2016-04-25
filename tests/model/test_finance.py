@@ -76,7 +76,7 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
         s1 = self.create_split(t, self.account1, 100)
         s2 = self.create_split(t, self.account1, -100)
         session.session.add_all([t, s1, s2])
-        self.assertRaises(IllegalTransactionError, session.session.commit)
+        self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
 
     def test_0050_fail_on_multiple_split_same_account(self):

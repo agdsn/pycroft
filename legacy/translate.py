@@ -347,7 +347,7 @@ def translate_bank_transactions(data, resources):
             imported_at=_bt.valid_on,
             posted_on=_bt.valid_on,
             valid_on=_bt.valid_on,
-            transaction=None)
+            split=None)
         bt_d[_bt.bkid] = bt
     return bt_d.values()
 
@@ -386,18 +386,24 @@ def translate_finance_transactions(data, resources):
 
     min_id = max(b.fbid for b in data['finance_transaction']) + 1
     for i, _bt in enumerate(data['accounted_bank_transaction']):
-        tss = simple_transaction(
+        transaction = finance.Transaction(
             id=min_id+i,
-            amount=_bt.wert,
-            credit_account=an_d[u"Bankkonto"],
-            debit_account=get_acc(_bt.konto_id, _bt.uid, u_d, a_d),
             description=a(_bt.bes, "[redacted]") or "NO DESCRIPTION GIVEN",
             author=ul_d.get(_bt.bearbeiter, u_d[0]),
             valid_on=_bt.valid_on,
             posted_at=_bt.posted_at)
-
-        bt_d[_bt.bkid].transaction = tss[0]
-        objs.extend(tss)
+        credit_split = finance.Split(
+            amount=_bt.wert,
+            account=an_d[u"Bankkonto"],
+            bank_account_activity=bt_d[_bt.bkid],
+            transaction=transaction,
+        )
+        debit_split = finance.Split(
+            amount=-_bt.wert,
+            account=get_acc(_bt.konto_id, _bt.uid, u_d, a_d),
+            transaction=transaction,
+        )
+        objs.extend((transaction, credit_split, debit_split))
 
     return objs
 
