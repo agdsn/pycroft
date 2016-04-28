@@ -139,18 +139,24 @@ manager.add_function(
         'split_check_transaction_balanced()', 'trigger',
         """
         DECLARE
-           s split;
-           balance integer;
+          s split;
+          count integer;
+          balance integer;
         BEGIN
-           s := COALESCE(NEW, OLD);
-           SELECT SUM(amount) INTO STRICT balance FROM split
-           WHERE transaction_id = s.transaction_id;
-           IF balance <> 0 THEN
-               RAISE EXCEPTION 'transaction %% not balanced',
-               s.transaction_id
-               USING ERRCODE = 'integrity_constraint_violation';
-           END IF;
-           RETURN NULL;
+          s := COALESCE(NEW, OLD);
+          SELECT COUNT(*), SUM(amount) INTO STRICT count, balance FROM split
+              WHERE transaction_id = s.transaction_id;
+          IF count < 2 THEN
+            RAISE EXCEPTION 'transaction %% has less than two splits',
+            s.transaction_id
+            USING ERRCODE = 'integrity_constraint_violation';
+          END IF;
+          IF balance <> 0 THEN
+            RAISE EXCEPTION 'transaction %% not balanced',
+                s.transaction_id
+                USING ERRCODE = 'integrity_constraint_violation';
+          END IF;
+          RETURN NULL;
         END;
         """,
         volatility='stable', strict=True, language='plpgsql'
