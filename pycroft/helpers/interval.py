@@ -540,6 +540,12 @@ class IntervalSet(collections.Sequence):
     def __init__(self, intervals=None):
         self._intervals = _mangle_argument(intervals)
 
+    def __hash__(self):
+        return hash(self._intervals)
+
+    def __nonzero__(self):
+        return True if self._intervals else False
+
     def __len__(self):
         return len(self._intervals)
 
