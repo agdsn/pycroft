@@ -10,11 +10,12 @@ import sys
 from collections import Counter
 import logging as std_logging
 log = std_logging.getLogger('import')
+import random
 
 from tools import timed
 
 import sqlalchemy
-from sqlalchemy import create_engine, or_, not_, Integer
+from sqlalchemy import create_engine, or_, not_, Integer, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql.expression import cast
 from flask import _request_ctx_stack
@@ -28,7 +29,7 @@ from pycroft.model import (accounting, facilities, dns, user, net, port,
 
 import userman_model
 import netusers_model
-from translate import reg
+import translate
 
 
 def exists_db(connection, name):
@@ -38,12 +39,12 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def translate(data):
+def translate_all(data):
     objs = []
     resources = {}
 
     log.info("Generating execution order...")
-    for func in reg.sorted_functions():
+    for func in translate.reg.sorted_functions():
         log.info("  {func}...".format(func=func.__name__))
         o = func(data, resources)
         log.info("  ...{func} ({details}).".format(
@@ -98,14 +99,16 @@ def main(args):
             cast(netusers_model.Hp4108Port.etage, Integer).label('etage'),
             netusers_model.Hp4108Port.zimmernr).distinct()
 
-        zimmer_nutzer = session_nu.query(
+        zimmer_nutzer_zeubor = session_nu.query(
             netusers_model.Nutzer.wheim_id,
             netusers_model.Nutzer.etage,
-            netusers_model.Nutzer.zimmernr).distinct()
+            netusers_model.Nutzer.zimmernr).filter(or_(
+                netusers_model.Nutzer.wheim_id == 12,
+                netusers_model.Nutzer.wheim_id == 13)).distinct()
 
         legacy_data = {
             'wheim': session_nu.query(netusers_model.Wheim).all(),
-            'zimmer': zimmer_hp4108.union(zimmer_nutzer).all(),
+            'zimmer': zimmer_hp4108.union(zimmer_nutzer_zeubor).all(),
             'nutzer': (session_nu.query(netusers_model.Nutzer)
                        .order_by(netusers_model.Nutzer.nutzer_id).all()),
             'semester': session_um.query(userman_model.FinanzKonten).filter(
@@ -129,7 +132,17 @@ def main(args):
             'port': session_nu.query(netusers_model.Hp4108Port).all(),
         }
 
-        objs = translate(legacy_data)
+        if args.anonymize:
+            translate.anonymize_flag = True
+            max_uid = session_nu.query(
+                func.max(netusers_model.Nutzer.nutzer_id)).one()[0]
+            fr = range(max_uid + 1); to = random.sample(fr, len(fr))
+            translate.a_uids.update(zip(fr, to))
+
+            translate.a_rooms.update(zip(
+                fr, [random.choice(legacy_data['zimmer']) for i in fr]))
+
+        objs = translate_all(legacy_data)
 
     with timed(log, thing="Importing {} records".format(len(objs))):
         if args.bulk and map(int, sqlalchemy.__version__.split(".")) >= [1,0,0]:
@@ -151,8 +164,8 @@ def main(args):
 
 if __name__=="__main__":
     import argparse
-    parser = argparse.ArgumentParser(prog='import_legacy',
-                                     description='fill the hovercraft with eels')
+    parser = argparse.ArgumentParser(
+        prog='import_legacy', description='fill the hovercraft with eels')
     parser.add_argument("-l", "--log", dest="log_level",
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         default='INFO')
@@ -164,13 +177,29 @@ if __name__=="__main__":
 
     parser.add_argument("--bulk", action='store_true', default=False)
     parser.add_argument("--anonymize", action='store_true', default=False)
-    parser.add_argument("--dump", action='store_true', default=False)
     #parser.add_argument("--tables", metavar="T", action='store', nargs="+",
     #                choices=cacheable_tables)
-
     args = parser.parse_args()
-    if args.log_level:
-        std_logging.basicConfig(level=getattr(std_logging, args.log_level),
-                                format='[%(levelname).4s] %(name)s:%(funcName)s:%(message)s')
+
+    import_log_fname = "import.log"
+    sqlalchemy_log_fname = "import.sqlalchemy.log"
+
+    log.info("Logging to %s and %s"%(import_log_fname, sqlalchemy_log_fname))
+
+    log_fmt = '[%(levelname).4s] %(name)s:%(funcName)s:%(message)s'
+    formatter = std_logging.Formatter(log_fmt)
+    std_logging.basicConfig(level=std_logging.DEBUG,
+                            format=log_fmt,
+                            filename=import_log_fname,
+                            filemode='w')
+    console = std_logging.StreamHandler()
+    console.setLevel(getattr(std_logging, args.log_level))
+    console.setFormatter(formatter)
+    std_logging.getLogger('').addHandler(console)
+
+    sqlalchemy_loghandler = std_logging.FileHandler(sqlalchemy_log_fname)
+    std_logging.getLogger('sqlalchemy').addHandler(sqlalchemy_loghandler)
+    sqlalchemy_loghandler.setLevel(std_logging.DEBUG)
+
     main(args)
     log.info("Import finished.")

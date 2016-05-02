@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, date
 import difflib
 import logging as std_logging
-log = std_logging.getLogger('translate')
+log = std_logging.getLogger('import.translate')
 import os
 import sys
 
@@ -31,6 +31,21 @@ ROOT_NAME = "agdsn"
 ROOT_PASSWD = "test"
 
 reg = TranslationRegistry()
+anonymize_flag = False
+a_uids = {None: None} # uid -> uid
+a_rooms = {} # uid -> room
+
+def a_uid(uid):
+    return a_uids[uid] if anonymize_flag else uid
+
+
+def a_room(uid, room_tuple):
+    return a_rooms[uid] if anonymize_flag else room_tuple
+
+
+def a(val, anon_val=None):
+    return anon_val if anonymize_flag else val
+
 
 @reg.provides(facilities.Site)
 def generate_sites(data, resources):
@@ -107,18 +122,26 @@ def translate_users(data, resources):
     ignored_rooms = []
     for _u in data['nutzer']:
         ou_d[_u.nutzer_id] = _u
-        login = _u.unix_account.strip() if _u.nutzer_id != 0 else ROOT_NAME
+        login = a(_u.unix_account.strip(), str(a_uid(_u.nutzer_id))) if _u.nutzer_id != 0 else ROOT_NAME
+        if not user.User.login_regex.match(login):
+            login = "user_{}".format(a_uid(_u.nutzer_id))
+        if login != _u.unix_account and not anonymize_flag:
+            log.warning("Renaming login '%s' to '%s'", _u.unix_account, login)
+
+        _r = (_u.wheim_id, _u.etage, _u.zimmernr)
         try:
-            room = r_d[(_u.wheim_id, _u.etage, _u.zimmernr)]
+            room = r_d[a_room(_u.nutzer_id, _r)]
         except KeyError:
-            ignored_rooms.append((_u.wheim_id, _u.etage, _u.zimmernr))
+            ignored_rooms.append(a_room(_u.nutzer_id, _r))
+            log.warning("Ignoring room %s not present in hp4108_ports", _r)
             room = None
 
-        account_name = "Nutzerkonto von {}".format(_u.nutzer_id)
+        account_name = "Nutzerkonto von {}".format(a_uid(_u.nutzer_id))
+
         u = user.User(
-            id=_u.nutzer_id,
-            login=login if not login[0].isdigit() else "user_"+login,
-            name=_u.vname+" "+_u.name,
+            id=a_uid(_u.nutzer_id),
+            login=login,
+            name=a(_u.vname+" "+_u.name, str(a_uid(_u.nutzer_id))),
             email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
@@ -142,7 +165,7 @@ def translate_users(data, resources):
                 user=u))
 
     if ignored_rooms:
-        log.warning("Ignoring {num} ({uniq}) rooms missing from hp4108port".format(
+        log.warning("Ignored {num} ({uniq}) rooms missing from hp4108port".format(
             num=len(ignored_rooms), uniq=len(set(ignored_rooms))))
     return objs
 
@@ -291,9 +314,9 @@ def get_acc(old_account_id, old_user_id, u_d, a_d):
             account_name = ("Nutzerkonto von gelöschtem Nutzer {}"
                             .format(old_user_id))
             u = user.User(
-                id=old_user_id,
-                login="deleted_user_"+str(old_user_id),
-                name="Gelöschter Nutzer "+str(old_user_id),
+                id=a_uid(old_user_id),
+                login="deleted_user_"+str(a_uid(old_user_id)),
+                name="Gelöschter Nutzer "+str(a_uid(old_user_id)),
                 registered_at=datetime.fromtimestamp(0),
                 account=finance.Account(name=account_name, type="ASSET"))
 
@@ -317,8 +340,8 @@ def translate_bank_transactions(data, resources):
             id=_bt.bkid,
             bank_account=bank_account,
             amount=_bt.wert,
-            reference=_bt.bes,
-            original_reference=_bt.bes,
+            reference=a(_bt.bes, "[redacted]"),
+            original_reference=a(_bt.bes, "[redacted]"),
             other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
             other_routing_number="NO NUMBER GIVEN", #TODO
             other_name="NO NAME GIVEN", #TODO
@@ -369,7 +392,7 @@ def translate_finance_transactions(data, resources):
             amount=_bt.wert,
             credit_account=an_d[u"Bankkonto"],
             debit_account=get_acc(_bt.konto_id, _bt.uid, u_d, a_d),
-            description=_bt.bes or "NO DESCRIPTION GIVEN",
+            description=a(_bt.bes, "[redacted]") or "NO DESCRIPTION GIVEN",
             author=ul_d.get(_bt.bearbeiter, u_d[0]),
             valid_on=_bt.valid_on,
             posted_at=_bt.posted_at)
@@ -406,8 +429,14 @@ def generate_subnets_vlans(data, resources):
     s_d = resources['subnet'] = {}
     for _s in data['subnet']:
         address = ipaddr.IPv4Network(_s.net_ip + "/" + _s.netmask)
-        vlan = net.VLAN(name=_s.vlan_name,
-                        vid=vlan_name_vid_map[_s.vlan_name])
+        try:
+            vlan = net.VLAN(name=_s.vlan_name,
+                            vid=vlan_name_vid_map[_s.vlan_name])
+        except KeyError as e:
+            log.warning("Ignoring subnet %s missing from vlan_name_vid_map",
+                        _s.vlan_name)
+            continue
+
         s = net.Subnet(address=address,
                        gateway=ipaddr.IPv4Address(_s.default_gateway),
                        primary_dns_zone=primary_host_zone,
@@ -466,7 +495,7 @@ def translate_hosts(data, resources):
         h = host.ServerHost(owner=u_d[0], name=_c.c_alias, room=room)
         interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
         ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
-        hostname = legacy_hostname_map.get(_c.c_hname) or _c.c_hname
+        hostname = legacy_hostname_map.get(_c.c_hname, _c.c_hname)
         if hostname and hostname != 'NULL':
             objs.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
         else:
@@ -494,7 +523,7 @@ def translate_ports(data, resources):
 
     objs = []
     for _sp in data['port']:
-        mgmt_ip = ipaddr.IPv4Address(_sp.ip)
+        mgmt_ip = _sp.ip and ipaddr.IPv4Address(_sp.ip)
         try:
             switch = sw_d[mgmt_ip]
         except KeyError as e:

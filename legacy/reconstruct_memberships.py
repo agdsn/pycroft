@@ -2,23 +2,47 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from collections import Counter
+from collections import Counter, defaultdict
 import logging as std_logging
-log = std_logging.getLogger('translate')
+log = std_logging.getLogger('import.translate')
 import operator
 import re
 from datetime import datetime, date, timedelta
+from tools import invert_dict
 
-from pycroft.helpers.interval import open, closedopen, closed, IntervalSet
+from pycroft.helpers.interval import (open, closedopen, closed, IntervalSet,
+                                      NegativeInfinity, PositiveInfinity)
 
 
 sem_fee_re = re.compile(u"(Sems?e?ster|[Mm]ail|Email)(geb(ü|ue)hr(en)?|[Bb]eitrr?ag|account)?( (?P<stype>[WSws][Ss]) ?(?P<syear1>(20)?[0-9]{2})(/(?P<syear2>(20)?[0-9]{2}))?)?")
 con_fee_re = re.compile(u"(Au?nschluss|Anmelde)geb(ü|ue)hr$")
 late_fee_re = re.compile(u"([Vv]ers?s(ä|ae|a)u?mniss?|[Vv]ersp(ä|ae)tungs)geb(ü|ue)hr")
+fee_new_re = re.compile(u"Mitgliedsbeitrag (?P<year>[0-9]{4})-(?P<month>0?[1-9]|1[0-2])$")
 
 
 class MatchException(Exception):
     pass
+
+
+def interval_count(interval_list):
+    counter = {
+        IntervalSet(closedopen(NegativeInfinity, PositiveInfinity)): 0}
+    for interval in interval_list:
+        isect = {k: k & interval for k in counter if k & interval}
+        for isected_interval in isect:
+            previous_count = counter.pop(isected_interval)
+            # intersecting part:
+            counter[isect[isected_interval]] = previous_count + 1
+            # non-intersecting parts:
+            for interval_unchanged in (isected_interval -
+                                           isect[isected_interval]):
+                if interval_unchanged:
+                    counter[IntervalSet(interval_unchanged)] = previous_count
+    return counter
+
+
+def sem_to_interval(s):
+    return closedopen(s.begins_on, s.ends_on + timedelta(days=1))
 
 
 def match_semester(date, semesters):
@@ -45,29 +69,99 @@ def match_semester_re(match, semesters):
                 if (s.begins_on == date(day=1, month=month, year=int(syear1))))
 
 
+def fee_semester_classifier(features):
+    (val_date, sem_date, sem_grace, sem_name, is_first_fee,
+    more_fees_within_grace_time, reg_date, split, sem_fees) = features
+    if sem_name == sem_date:
+        if (is_first_fee and sem_grace != sem_date and
+                not more_fees_within_grace_time):
+            return sem_grace, 1
+        else:
+            return sem_date, 3
+
+    else:  # sem_date != sem_name and maybe sem_name = None
+        if not is_first_fee:
+            # subsequent fee with wrong semester name
+            if val_date == sem_date.begins_on:
+                return sem_date, 4
+
+            # fee for previous semester
+            elif (sem_name and
+                  val_date - sem_name.ends_on < timedelta(weeks=52/2) and
+                  (split.amount == sem_name.reduced_semester_fee or
+                           "nachtra" in split.transaction.description.lower())):
+                return sem_name, 5
+
+            else:
+                if sem_name:
+                    raise MatchException("name!=date [subsequent fee]")
+                else:  # assume date is correct
+                    return sem_date, 6
+
+        elif is_first_fee:
+            if (abs((reg_date - val_date).days) > 1 and
+                    reg_date != datetime.fromtimestamp(0).date()):
+                raise MatchException(
+                    "first user fee is not on registration date, "
+                    "reg={}, first={}".format(reg_date, val_date))
+            # within gracetime for next semester, name correct
+            if sem_name == sem_grace and not more_fees_within_grace_time:
+                # correctly named fee (grace)
+                return sem_name, 7
+
+            elif len(sem_fees) > 1:
+                # next fee is within grace period, i.e. no grace given
+                if more_fees_within_grace_time:
+                    return sem_date, 8
+                else:  # next fee is not within grace period
+                    return sem_grace, 9
+
+            # user only has one semester fee, with name not matching date and
+            # name not matching semester within gracetime
+            else:
+                if sem_name == None:  # assume date is correct if fee is unnamed
+                    return sem_date, 10
+                else:
+                    raise MatchException("too many unknowns [first&only fee]")
+    return None, -1
+
 def membership_from_fees(user, semesters, n):
     reg_date = user.registered_at
-    sems_regular = []
-    sems_reduced = []
+    intervals_regular = []
+    intervals_reduced = []
     splits = sorted(user.account.splits,
                     key=operator.attrgetter('transaction.valid_on'))
     sem_fees = []; sem_fee_dates = []
     other_fees = []
     for split in splits:
         if split.amount > 0:  # fee
-            match = sem_fee_re.match(split.transaction.description)
+            match = (sem_fee_re.match(split.transaction.description) or
+                     fee_new_re.match(split.transaction.description))
             if match:
                 sem_fees.append((split, match))
                 sem_fee_dates.append(split.transaction.valid_on)
             else:
                 other_fees.append(split)
 
-    for i_fee, (split, sem_fee_match) in enumerate(sem_fees):
+    for i_fee, (split, fee_match) in enumerate(sem_fees):
+
+        if fee_match.re == fee_new_re:
+            year = int(fee_match.group('year'))
+            month = int(fee_match.group('month'))
+            next_month = month % 12 + 1
+            next_month_year = year + (month + 1 - next_month)/12
+            month_interval = closedopen(
+                date(year=year, month=month, day=1),
+                date(year=next_month_year, month=next_month, day=1))
+            intervals_regular.append(month_interval)
+            n.ok += 1
+            continue
+
+
         val_date = split.transaction.valid_on
-        sem = None
         sem_date = match_semester(val_date, semesters)
         sem_grace = match_semester(val_date+sem_date.grace_period, semesters)
-        sem_name = match_semester_re(sem_fee_match, semesters)
+        sem_name = match_semester_re(fee_match, semesters)
 
         first_fee = (i_fee == 0)
         more_fees_within_grace_time = (len(sem_fees)>1 and
@@ -75,67 +169,40 @@ def membership_from_fees(user, semesters, n):
 
         try:
             # attempt to gauge best semester
-            if sem_name == sem_date:
-                if first_fee and sem_grace != sem_date:
-                    if not more_fees_within_grace_time:
-                        sem = sem_grace
-                    else:
-                        sem = sem_date
-                else:
-                    sem = sem_date
-
-            else: # sem_date != sem_name and maybe sem_name = None
-                if not first_fee:
-                    if val_date == sem_date.begins_on:  # subsequent fee with wrong semester name
-                        sem = sem_date
-
-                    # fee for previous semester
-                    elif sem_name and (val_date - sem_name.ends_on < timedelta(weeks=52/2) and
-                      (split.amount == sem_name.reduced_semester_fee or "nachtra" in split.transaction.description.lower())):
-                            sem = sem_name
-
-                    else:
-                        if sem_name:
-                            raise MatchException("name!=date [subsequent fee]")
-                        else:  # assume date is correct
-                            sem = sem_date
-
-                elif first_fee:
-                    if abs((reg_date - val_date).days) > 1 and reg_date != datetime.fromtimestamp(0).date():
-                        raise MatchException("first user fee is not on registration date, reg={}, first={}".format(reg_date, val_date))
-
-                    if sem_name == sem_grace and not more_fees_within_grace_time: # within gracetime for next semester, name correct
-                        # correctly named fee (grace)
-                        sem = sem_name
-
-                    elif len(sem_fees) > 1:
-                        if more_fees_within_grace_time: #next fee is within grace period, i.e. no grace given
-                            sem = sem_date
-                        else: # next fee is not within grace period
-                            sem = sem_grace
-
-                    else: # user only has one semester fee, with name not matching date and name not matching semester within gracetime
-                        if sem_name == None: # assume date is correct if fee is unnamed
-                            sem = sem_date
-                        else:
-                            raise MatchException("too many unknowns [first&only fee]")
+            sem, branch = fee_semester_classifier(features=(
+                val_date, sem_date, sem_grace, sem_name, first_fee,
+                more_fees_within_grace_time, reg_date, split, sem_fees))
 
             if (split.amount == sem.regular_semester_fee or
                     split.amount == sem.regular_semester_fee + sem.late_fee):
-                sems_regular.append(sem)
+                intervals_regular.append(sem_to_interval(sem))
             elif split.amount == sem.reduced_semester_fee:
-                sems_reduced.append(sem)
+                intervals_reduced.append(sem_to_interval(sem))
             else:
-                raise MatchException("non-matching fee amount for sem "+sem.name)
+                raise MatchException(
+                    "non-matching fee amount ({}) "
+                    "for sem {} ({}/{}/{})".format(
+                        split.amount, sem.name, sem.regular_semester_fee,
+                        sem.reduced_semester_fee, sem.late_fee))
 
+            if sem is None:
+                raise MatchException("logic error")
         except MatchException as e:
-            log.warning(u"failed: {}".format(e.message))
+            log.error(u"failed: {} {} '{}' {}".format(
+                split.transaction.id, val_date, split.transaction.description,
+                e.message))
             n.failed += 1
         else:
             if sem == sem_name:
                 n.ok += 1
             else:
-                log.debug(u"using fix")
+                log.warn(u"Assuming tx {id} '{desc}' ({date}) is fee for "
+                          u"{sem} ({branch})".format(
+                    id=split.transaction.id,
+                    desc=split.transaction.description,
+                    date=val_date,
+                    sem=sem.name,
+                    branch=branch))
                 n.fixed += 1
 
     for split in other_fees:
@@ -146,19 +213,20 @@ def membership_from_fees(user, semesters, n):
                 n.ignored += 1
             else:
                 n.unclassified += 1
-                log.warning(u"User {}: Unclassified user fee: {} {} {}".format(
+                log.warning(u"User {}: Unclassified fee: {} {} {}".format(
                     user.id, desc, split.amount, split.transaction.id))
 
-    # check if any semesters are used twice, meaning i probably made a mistake
-    if len(set(sems_regular)) != len(sems_regular):
-        log.warning(u"User {} overbilled for semesters {}".format(
-            user.id,
-            {k.name: v for k, v in Counter(sems_regular).items() if v != 1}))
+    # check if any fee intervals overlap
+    count_regular_duration = invert_dict(interval_count(intervals_regular))
 
-    sem_to_interval = lambda s: closedopen(s.begins_on,
-                                           s.ends_on+timedelta(days=1))
-    regular_duration = sum(map(sem_to_interval, sems_regular), IntervalSet())
-    reduced_duration = sum(map(sem_to_interval, sems_reduced), IntervalSet())
+    if any(count > 1 for count in count_regular_duration):
+        log.warning(u"User {} overbilled for period {}".format(
+            user.id,
+            {str(sum(v, IntervalSet())): k
+             for k, v in count_regular_duration.items() if k > 1}))
+
+    regular_duration = sum(intervals_regular, IntervalSet())
+    reduced_duration = sum(intervals_reduced, IntervalSet())
 
     # people that were away at some point, i.e. intervalset non-contiguous
     if len(regular_duration) > 1:
