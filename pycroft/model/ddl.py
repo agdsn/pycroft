@@ -91,7 +91,7 @@ def visit_create_function(element, compiler, **kw):
     return (
         "CREATE OR REPLACE FUNCTION {name} RETURNS {rtype} {volatility} "
         "{strict} {leakproof} LANGUAGE {language} AS "
-        "${quote_tag}${definition}${quote_tag}$"
+        "${quote_tag}$\n{definition}\n${quote_tag}$"
     ).format(
         name=function.name, rtype=function.rtype,
         volatility=function.volatility,
