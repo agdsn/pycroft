@@ -256,7 +256,6 @@ class BankAccountActivity(ModelBase):
         UniqueConstraint(transaction_id, account_id),
     )
 
-BankAccountActivity.__table__.add_is_dependent_on(Split.__table__)
 
 manager.add_constraint(
     BankAccount.__table__,
