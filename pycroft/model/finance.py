@@ -77,7 +77,7 @@ class Account(ModelBase):
     @balance.expression
     def balance(self):
         return select(
-            [func.sum(Split.amount)]
+            [func.coalesce(func.sum(Split.amount), 0)]
         ).where(
             Split.account_id == self.id
         ).label("balance")
