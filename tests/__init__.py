@@ -98,20 +98,20 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
             try:
                 yield
             except:
-                session.session.rollback()
+                # Check if the session is in “partial rollback” state
+                if not session.session.is_active:
+                    session.session.rollback()
                 raise
 
-    def assertRaisesInTransaction(self, excClass, callableObj=None,
-                                  *args, **kwargs):
+    def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
         context = super(FixtureDataTestBase, self).assertRaises(excClass)
         if callableObj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
             callableObj(*args, **kwargs)
 
-    def assertRaisesRegexpInTransaction(self, expected_exception,
-                                        expected_regexp, callable_obj=None,
-                                        *args, **kwargs):
+    def assertRaisesRegexp(self, expected_exception, expected_regexp,
+                           callable_obj=None, *args, **kwargs):
         context = super(FixtureDataTestBase, self).assertRaisesRegexp(
             expected_exception, expected_regexp)
         if callable_obj is None:

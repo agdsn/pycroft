@@ -49,7 +49,7 @@ class Test_010_User_Move(FixtureDataTestBase):
             name=SwitchPatchPortData.dummy_patch_port2.name).one()
 
     def test_0010_moves_into_same_room(self):
-        self.assertRaisesInTransaction(
+        self.assertRaises(
             AssertionError, UserHelper.move, self.user, self.old_room.building,
             self.old_room.level, self.old_room.number, self.processing_user)
 

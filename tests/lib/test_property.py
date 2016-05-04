@@ -133,5 +133,5 @@ class Test_040_Property(FixtureDataTestBase):
             self.fail(e.message)
 
     def test_0035_remove_wrong_property(self):
-        self.assertRaisesInTransaction(ValueError, remove_property, self.group,
-                                       "non_existent_property")
+        self.assertRaises(ValueError, remove_property, self.group,
+                          "non_existent_property")
