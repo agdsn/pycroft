@@ -195,6 +195,13 @@ def check_transaction_on_save(mapper, connection, target):
                                               u"of at least two splits."))
 
 
+@event.listens_for(Split, "before_update")
+@event.listens_for(Split, "after_delete")
+def check_split_on_update(mapper, connection, target):
+    if not target.transaction.is_balanced:
+        raise IllegalTransactionError(gettext(u"Transaction is not balanced."))
+
+
 event.listen(Transaction, "before_insert", check_transaction_on_save)
 event.listen(Transaction, "before_update", check_transaction_on_save)
 

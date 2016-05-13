@@ -106,6 +106,24 @@ class TestTransactionSplits(FinanceModelTest):
         session.session.add(s3)
         self.assertRaises(IllegalTransactionError, session.session.commit)
 
+    def test_unbalance_with_update(self):
+        t = self.create_transaction()
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -100)
+        session.session.add_all([t, s1, s2])
+        session.session.commit()
+        s2.amount = -50
+        self.assertRaises(IllegalTransactionError, session.session.commit)
+
+    def test_unbalance_with_delete(self):
+        t = self.create_transaction()
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -100)
+        session.session.add_all([t, s1, s2])
+        session.session.commit()
+        session.session.delete(s2)
+        self.assertRaises(IllegalTransactionError, session.session.commit)
+
 
 class TestBankAccountActivity(FinanceModelTest, PostgreSQLTestCase):
     datasets = (AccountData, BankAccountData, UserData)
