@@ -131,6 +131,32 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
             callable_obj(*args, **kwargs)
 
 
+class DialectSpecificTestCase(FixtureDataTestBase):
+    """
+    This is a database test that will only run on a specific SQLAlchemy dialect.
+    """
+    dialect = None
+
+    def setUp(self):
+        global connection
+        if connection is None:
+            raise AssertionError("A database connection should already have "
+                                 "been initialized with setupClass or "
+                                 "module/package-level setup function.")
+        if connection.dialect.name != self.dialect:
+            self.skipTest("This test runs only on the '{}' dialect"
+                          .format(self.dialect))
+        super(DialectSpecificTestCase, self).setUp()
+
+
+class PostgreSQLTestCase(DialectSpecificTestCase):
+    dialect = 'postgresql'
+
+
+class SQLiteTestCase(DialectSpecificTestCase):
+    dialect = 'sqlite'
+
+
 class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
     """A TestCase baseclass that handles frontend tests.
 
