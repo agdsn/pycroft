@@ -104,7 +104,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         try:
             simple_transaction(
                 u"transaction", self.fee_account, self.user_account,
-                90.00, self.author
+                Decimal(90), self.author
             )
         except Exception:
             self.fail()
@@ -112,7 +112,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         session.session.commit()
 
     def test_0030_transferred_value(self):
-        amount = 90.00
+        amount = Decimal(90)
         today = session.utcnow().date()
         simple_transaction(
             u"transaction", self.fee_account, self.user_account,
