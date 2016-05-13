@@ -241,9 +241,12 @@ class BankAccountActivity(ModelBase):
     imported_at = Column(DateTime, nullable=False)
     posted_on = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
-    transaction_id = Column(Integer, ForeignKey(Transaction.id))
+    transaction_id = Column(Integer, ForeignKey(Transaction.id,
+                                                onupdate='CASCADE',
+                                                ondelete='SET NULL'))
     transaction = relationship(Transaction, viewonly=True)
-    account_id = Column(Integer, ForeignKey(Account.id))
+    account_id = Column(Integer, ForeignKey(Account.id, onupdate='CASCADE',
+                                            ondelete='SET NULL'))
     account = relationship(Account, viewonly=True)
     split = relationship(Split, foreign_keys=(transaction_id, account_id),
                          backref=backref("bank_account_activity",
