@@ -23,6 +23,9 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
         self.revenue_account = Account.q.filter_by(
             name=AccountData.dummy_revenue.name
         ).one()
+        self.liability_account = Account.q.filter_by(
+            name=AccountData.dummy_liability.name
+        ).one()
 
     def create_transaction(self):
         return finance.Transaction(
@@ -87,3 +90,13 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
         session.session.add_all([t, s1, s2, s3])
         self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
+
+    def test_unbalance_with_insert(self):
+        t = self.create_transaction()
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -100)
+        session.session.add_all([t, s1, s2])
+        session.session.commit()
+        s3 = self.create_split(t, self.liability_account, 50)
+        session.session.add(s3)
+        self.assertRaises(IllegalTransactionError, session.session.commit)
