@@ -83,14 +83,25 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
+        self.addCleanup(self.cleanup)
 
-    def tearDown(self):
+    def _rollback(self):
         # Rollback the session
         session.session.rollback()
         session.Session.remove()
         # Rollback the outer transaction to the savepoint
         self.transaction.rollback()
+        self.transaction = None
+
+    def tearDown(self):
+        self._rollback()
         super(FixtureDataTestBase, self).tearDown()
+
+    def cleanup(self):
+        if self.transaction is None:
+            return
+        self._rollback()
+        self.data.teardown()
 
     @contextmanager
     def _rollback_with_context(self, context):
