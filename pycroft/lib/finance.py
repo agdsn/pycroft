@@ -88,7 +88,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :param unicode description: Description
     :param Account debit_account: Debit (germ. Soll) account.
     :param Account credit_account: Credit (germ. Haben) account
-    :param int amount: Amount in Eurocents
+    :param Decimal amount: Amount in Eurocents
     :param User author: User who created the transaction
     :param date valid_on: Date, when the transaction should be valid. Current
     database date, if omitted.
