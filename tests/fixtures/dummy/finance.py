@@ -25,7 +25,7 @@ class SemesterData(DataSet):
 
 class AccountData(DataSet):
     class bank_account:
-        name = u"Bankkonto 3120219540"
+        name = u"Bankkonto 1020304050"
         type = "BANK_ASSET"
 
     class dummy_asset:
@@ -51,3 +51,14 @@ class AccountData(DataSet):
     class dummy_user2:
         name = u'User account'
         type = 'USER_ASSET'
+
+
+class BankAccountData(DataSet):
+    class dummy:
+        name = u"Beispielkonto"
+        bank = u"Beispielbank"
+        account_number = "1020304050"
+        routing_number = "12345678"
+        iban = "DE61123456781020304050"
+        bic = "ABCDEFGH123"
+        account = AccountData.bank_account
