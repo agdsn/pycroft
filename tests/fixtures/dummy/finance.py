@@ -26,7 +26,7 @@ class SemesterData(DataSet):
 class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
-        type = "ASSET"
+        type = "BANK_ASSET"
 
     class dummy_asset:
         name = u"An asset account"
@@ -46,8 +46,8 @@ class AccountData(DataSet):
 
     class dummy_user1:
         name = u'User account'
-        type = 'ASSET'
+        type = 'USER_ASSET'
 
     class dummy_user2:
         name = u'User account'
-        type = 'ASSET'
+        type = 'USER_ASSET'
