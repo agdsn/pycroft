@@ -17,10 +17,10 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
     def setUp(self):
         super(Test_010_TransactionSplits, self).setUp()
         self.author = User.q.filter_by(login=UserData.privileged.login).one()
-        self.account1 = Account.q.filter_by(
+        self.asset_account = Account.q.filter_by(
             name=AccountData.dummy_asset.name
         ).one()
-        self.account2 = Account.q.filter_by(
+        self.revenue_account = Account.q.filter_by(
             name=AccountData.dummy_revenue.name
         ).one()
 
@@ -45,15 +45,15 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
 
     def test_0020_fail_on_unbalanced(self):
         t = self.create_transaction()
-        s = self.create_split(t, self.account1, 100)
+        s = self.create_split(t, self.asset_account, 100)
         session.session.add_all([t, s])
         self.assertRaises(IllegalTransactionError, session.session.commit)
         session.session.rollback()
 
     def test_0030_insert_balanced(self):
         t = self.create_transaction()
-        s1 = self.create_split(t, self.account1, 100)
-        s2 = self.create_split(t, self.account2, -100)
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -100)
         session.session.add_all([t, s1, s2])
         try:
             session.session.commit()
@@ -63,8 +63,8 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
 
     def test_0040_delete_cascade(self):
         t = self.create_transaction()
-        s1 = self.create_split(t, self.account1, 100)
-        s2 = self.create_split(t, self.account2, -100)
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -100)
         session.session.add_all([t, s1, s2])
         session.session.commit()
         session.session.delete(t)
@@ -73,17 +73,17 @@ class Test_010_TransactionSplits(FixtureDataTestBase):
 
     def test_0050_fail_on_self_transaction(self):
         t = self.create_transaction()
-        s1 = self.create_split(t, self.account1, 100)
-        s2 = self.create_split(t, self.account1, -100)
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.asset_account, -100)
         session.session.add_all([t, s1, s2])
         self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
 
     def test_0050_fail_on_multiple_split_same_account(self):
         t = self.create_transaction()
-        s1 = self.create_split(t, self.account1, 100)
-        s2 = self.create_split(t, self.account2, -50)
-        s2 = self.create_split(t, self.account2, -50)
-        session.session.add_all([t, s1, s2])
+        s1 = self.create_split(t, self.asset_account, 100)
+        s2 = self.create_split(t, self.revenue_account, -50)
+        s3 = self.create_split(t, self.revenue_account, -50)
+        session.session.add_all([t, s1, s2, s3])
         self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
