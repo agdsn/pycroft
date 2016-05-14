@@ -19,11 +19,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.vm.box = "debian/jessie64"
   end
 
-  config.vm.synced_folder ".", "/pycroft"
-
-  # Don't create /vagrant
-  config.vm.synced_folder ".", "/vagrant", disabled: true
-
   #pycroft web and database server, built automatically
   config.vm.define "webdb", primary: true do |webdb|
     webdb.vm.provider "virtualbox" do |vb, override|

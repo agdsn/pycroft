@@ -13,13 +13,6 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="Pycroft" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-    <PathMappingSettings>
-      <option name="pathMappings">
-        <list>
-          <mapping local-root="$PROJECT_DIR$/" remote-root="/pycroft/" />
-        </list>
-      </option>
-    </PathMappingSettings>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/server_run.py" />
     <option name="PARAMETERS" value="--exposed --debug" />
     <option name="SHOW_COMMAND_LINE" value="false" />
