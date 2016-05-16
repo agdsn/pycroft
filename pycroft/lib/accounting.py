@@ -52,7 +52,7 @@ def traffic_consumption(user, start=None, end=None):
     assert start > end
 
     value = session.session.query(
-        func.sum(TrafficVolume.size).label("amount")
+        func.coalesce(func.sum(TrafficVolume.size), 0).label("amount")
     ).join(
         TrafficVolume.ip
     ).join(
