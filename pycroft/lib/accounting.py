@@ -316,4 +316,4 @@ def has_exceeded_traffic(user):
     credit = active_user_credit(user)
     used = traffic_consumption(user, today, today - timedelta(days=1))
 
-    return credit < used
+    return credit is None or credit < used
