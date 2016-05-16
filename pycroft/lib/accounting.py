@@ -65,8 +65,8 @@ def traffic_consumption(user, start=None, end=None):
         TrafficVolume.timestamp <= start
     ).filter(
         TrafficVolume.timestamp > end
-    ).one()
-    return value.amount
+    ).scalar()
+    return value
 
 
 def active_user_credit(user):
