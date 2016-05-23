@@ -167,7 +167,7 @@ class FactoryDataTestBase(unittest.TestCase):
         teardown()
 
     def setUp(self):
-        super(FixtureDataTestBase, self).setUp()
+        super(FactoryDataTestBase, self).setUp()
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
@@ -194,7 +194,7 @@ class FactoryDataTestBase(unittest.TestCase):
 
     def assertRaisesInTransaction(self, excClass, callableObj=None,
                                   *args, **kwargs):
-        context = super(FrontendDataTestBase, self).assertRaises(excClass)
+        context = super(FactoryDataTestBase, self).assertRaises(excClass)
         if callableObj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
@@ -203,7 +203,7 @@ class FactoryDataTestBase(unittest.TestCase):
     def assertRaisesRegexpInTransaction(self, expected_exception,
                                         expected_regexp, callable_obj=None,
                                         *args, **kwargs):
-        context = super(FrontendDataTestBase, self).assertRaisesRegexp(
+        context = super(FactoryDataTestBase, self).assertRaisesRegexp(
             expected_exception, expected_regexp)
         if callable_obj is None:
             return self._rollback_with_context(context)
