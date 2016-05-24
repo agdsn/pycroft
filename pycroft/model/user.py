@@ -72,10 +72,10 @@ class User(ModelBase, UserMixin):
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
-    blocked_logins = ["root", "daemon", "bin", "sys", "sync", "games", "man",
+    blocked_logins = {"root", "daemon", "bin", "sys", "sync", "games", "man",
                       "lp", "mail", "news", "uucp", "proxy", "majordom",
                       "postgres", "wwwadmin", "backup", "msql", "operator",
-                      "ftp", "ftpadmin", "guest", "bb", "nobody"]
+                      "ftp", "ftpadmin", "guest", "bb", "nobody"}
 
     @validates('login')
     def validate_login(self, _, value):
