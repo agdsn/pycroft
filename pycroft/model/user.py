@@ -32,7 +32,11 @@ from pycroft.model import session, functions
 from pycroft.model.base import ModelBase
 
 
-class InvalidLoginException(ValueError):
+class IllegalLoginError(ValueError):
+    pass
+
+
+class IllegalEmailError(ValueError):
     pass
 
 
@@ -77,16 +81,35 @@ class User(ModelBase, UserMixin):
                       "postgres", "wwwadmin", "backup", "msql", "operator",
                       "ftp", "ftpadmin", "guest", "bb", "nobody"}
 
+    login_character_limit = 22
+
     @validates('login')
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
-        if not User.login_regex.match(value) or value in self.blocked_logins or len(value)>22:
-            raise InvalidLoginException("invalid unix-login: '"+value+"'")
+        if not self.login_regex.match(value):
+            raise IllegalLoginError(
+                "Illegal login '{}': Logins must begin with a lower case "
+                "letter and may be followed by lower case letters, digits or "
+                "punctuation (dash, underscore and dot). Punctuation "
+                "characters must be separated by at least on letter or digit."
+                .format(value)
+            )
+        if value in self.blocked_logins:
+            raise IllegalLoginError(
+                "Illegal login '{}': This login is blocked and may not be used."
+                .format(value)
+            )
+        if len(value) > self.login_character_limit:
+            raise IllegalLoginError(
+                "Illegal login '{}': Logins are limited to at most {} "
+                "characters.".format(value, self.login_character_limit)
+            )
         return value
 
     @validates('email')
     def validate_email(self, _, value):
-        assert User.email_regex.match(value)
+        if not self.email_regex.match(value):
+            raise IllegalEmailError("Illegal email '{}'".format(value))
         return value
 
     @validates('passwd_hash')

@@ -8,7 +8,8 @@ from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password)
 from pycroft.model.finance import Account
-from pycroft.model.user import Membership, PropertyGroup, TrafficGroup
+from pycroft.model.user import (
+    IllegalLoginError, Membership, PropertyGroup, TrafficGroup)
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.property import (
@@ -80,7 +81,7 @@ class Test_040_User_Login(FixtureDataTestBase):
             if 2 <= length < 23:
                 set_login("a" * length)
             else:
-                self.assertRaisesRegexp(Exception, "invalid unix-login.*",
+                self.assertRaisesRegexp(IllegalLoginError, "invalid unix-login.*",
                                         set_login, "a" * length)
 
         valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a_4"]
