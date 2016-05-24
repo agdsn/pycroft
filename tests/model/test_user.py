@@ -74,15 +74,12 @@ class Test_040_User_Login(FixtureDataTestBase):
                       room=facilities.Room.q.first(),
                       account=account)
 
-        def set_login(login):
-            u.login = login
-
         for length in range(1, 30):
             if 2 <= length < 23:
-                set_login("a" * length)
+                u.login = "a" * length
             else:
-                self.assertRaisesRegexp(IllegalLoginError, "invalid unix-login.*",
-                                        set_login, "a" * length)
+                with self.assertRaises(IllegalLoginError):
+                    u.login = "a" * length
 
         valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a_4"]
         invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
@@ -92,21 +89,18 @@ class Test_040_User_Login(FixtureDataTestBase):
                    "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
         for login in valid:
-            set_login(login)
+            u.login = login
         for login in invalid:
-            self.assertRaisesRegexp(Exception, "invalid unix-login.*",
-                                    set_login, login)
+            with self.assertRaises(IllegalLoginError):
+                u.login = login
         for login in blocked:
-            self.assertRaisesRegexp(Exception, "invalid unix-login.*",
-                                    set_login, login)
+            with self.assertRaises(IllegalLoginError):
+                u.login = login
 
         u = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.assertRaisesRegexp(
-            AssertionError,
-            "user already in the database - cannot change login anymore!",
-            set_login, "abc")
-
-        session.session.commit()
+        with self.assertRaisesRegexp(AssertionError,
+                "user already in the database - cannot change login anymore!"):
+            u.login = "abc"
 
 
 class TestActiveHybridMethods(FixtureDataTestBase):
