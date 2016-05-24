@@ -54,32 +54,23 @@ def teardown():
     connection = None
 
 
-class FixtureDataTestBase(DataTestCase, unittest.TestCase):
-    """A TestCase baseclass that handles database fixtures.
+class SQLAlchemyTestCase(unittest.TestCase):
+    """Base class for test cases that require an initialized database
 
-    You only need to define a `datasets` class member with a list of
-    the fixture DataSets. The type of the fixture element will be taken
-    from the name of the DataSet class. It needs "Data" as suffic. So if
-    you want to provide fixtures for the User model the name of the DataSet
-    has to be "UserData". See also test_property.py for an example.
-
-    If you overwrite the `tearDown` or `setUpClass` methods don't forget
-    to call the ones in the superclass.
+    Tests will executed inside a nested transaction using SAVEPOINTs before each
+    test is test executed. Tests are rolled back after execution regardless of
+    their outcome.
     """
     @classmethod
     def setUpClass(cls):
         setup()
-        cls.fixture = SQLAlchemyFixture(
-            env=_all, style=NamedDataStyle(),
-            engine=connection
-        )
 
     @classmethod
     def tearDownClass(cls):
         teardown()
 
     def setUp(self):
-        super(FixtureDataTestBase, self).setUp()
+        super(SQLAlchemyTestCase, self).setUp()
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
@@ -95,13 +86,12 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
 
     def tearDown(self):
         self._rollback()
-        super(FixtureDataTestBase, self).tearDown()
+        super(SQLAlchemyTestCase, self).tearDown()
 
     def cleanup(self):
         if self.transaction is None:
             return
         self._rollback()
-        self.data.teardown()
 
     @contextmanager
     def _rollback_with_context(self, context):
@@ -115,7 +105,7 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
                 raise
 
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
-        context = super(FixtureDataTestBase, self).assertRaises(excClass)
+        context = super(SQLAlchemyTestCase, self).assertRaises(excClass)
         if callableObj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
@@ -123,12 +113,42 @@ class FixtureDataTestBase(DataTestCase, unittest.TestCase):
 
     def assertRaisesRegexp(self, expected_exception, expected_regexp,
                            callable_obj=None, *args, **kwargs):
-        context = super(FixtureDataTestBase, self).assertRaisesRegexp(
+        context = super(SQLAlchemyTestCase, self).assertRaisesRegexp(
             expected_exception, expected_regexp)
         if callable_obj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
             callable_obj(*args, **kwargs)
+
+
+class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
+    """A TestCase baseclass that handles database fixtures.
+
+    You only need to define a `datasets` class member with a list of
+    the fixture DataSets. The type of the fixture element will be taken
+    from the name of the DataSet class. It needs "Data" as suffix. So if
+    you want to provide fixtures for the User model the name of the DataSet
+    has to be "UserData". See also test_property.py for an example.
+
+    If you overwrite the `setUp` or `tearDown` methods don't forget
+    to call super at the beginning or end of your implementation.
+
+    The multiple inheritance is necessary, because the definition of
+    DataTestCase is broken. It does not inherit from unittest.TestCase and it
+    does not call super() in its setUp and tearDown methods. To get the MRO
+    right, we have to resort to this.
+    """
+    @classmethod
+    def setUpClass(cls):
+        SQLAlchemyTestCase.setUpClass()
+        cls.fixture = SQLAlchemyFixture(
+            env=_all, style=NamedDataStyle(),
+            engine=connection
+        )
+
+    def cleanup(self):
+        super(FixtureDataTestBase, self).cleanup()
+        self.data.teardown()
 
 
 class DialectSpecificTestCase(FixtureDataTestBase):
@@ -157,58 +177,8 @@ class SQLiteTestCase(DialectSpecificTestCase):
     dialect = 'sqlite'
 
 
-class FactoryDataTestBase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        setup()
-
-    @classmethod
-    def tearDownClass(cls):
-        teardown()
-
-    def setUp(self):
-        super(FactoryDataTestBase, self).setUp()
-        self.transaction = connection.begin_nested()
-        s = scoped_session(sessionmaker(bind=connection))
-        session.set_scoped_session(s)
-        print("#"*200)
-        print("Scoped session set!")
-
-    def tearDown(self):
-        # Rollback the session
-        # TODO: this fails.
-        session.session.rollback()
-        session.Session.remove()
-        # Rollback the outer transaction to the savepoint
-        self.transaction.rollback()
-        super(FactoryDataTestBase, self).tearDown()
-
-    @contextmanager
-    def _rollback_with_context(self, context):
-        with context:
-            try:
-                yield
-            except:
-                session.session.rollback()
-                raise
-
-    def assertRaisesInTransaction(self, excClass, callableObj=None,
-                                  *args, **kwargs):
-        context = super(FactoryDataTestBase, self).assertRaises(excClass)
-        if callableObj is None:
-            return self._rollback_with_context(context)
-        with self._rollback_with_context(context):
-            callableObj(*args, **kwargs)
-
-    def assertRaisesRegexpInTransaction(self, expected_exception,
-                                        expected_regexp, callable_obj=None,
-                                        *args, **kwargs):
-        context = super(FactoryDataTestBase, self).assertRaisesRegexp(
-            expected_exception, expected_regexp)
-        if callable_obj is None:
-            return self._rollback_with_context(context)
-        with self._rollback_with_context(context):
-            callable_obj(*args, **kwargs)
+class FactoryDataTestBase(SQLAlchemyTestCase):
+    pass
 
 
 class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
