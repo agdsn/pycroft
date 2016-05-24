@@ -2,17 +2,18 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import string
 from datetime import datetime
 
 from factory import SubFactory, LazyAttribute
 from factory.alchemy import SQLAlchemyModelFactory as Factory
+from factory.faker import Faker
 from factory.fuzzy import FuzzyChoice, FuzzyDateTime, FuzzyInteger, FuzzyText
 
-from pycroft.model.session import session
 from pycroft.model.facilities import Site, Building, Room
 from pycroft.model.finance import Account
+from pycroft.model.session import session
 from pycroft.model.user import User
-
 from tests.factories.dummy.utc import utc
 
 
@@ -72,11 +73,11 @@ class UserFactory(BaseFactory):
     class Meta:
         model = User
 
-    login = FuzzyText(length=40)
+    login = FuzzyText(length=22, chars=string.ascii_lowercase)
     name = FuzzyText(length=255)
     registered_at = FuzzyDateTime(datetime(2001, 9, 11, tzinfo=utc))
     passwd_hash = FuzzyText()
-    email = FuzzyText(length=255)
+    email = Faker('email')
     # one to one from User to Account
     account = SubFactory(AccountFactory)
     account_id = LazyAttribute(lambda self: self.account.id)

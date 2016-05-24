@@ -10,6 +10,5 @@ class TestTest(FactoryDataTestBase):
         super(FactoryDataTestBase, self).setUp()
 
     def test_user_initialized(self):
-        # user = UserFactory()
-        # self.assertTrue(user)
-        assert False
+        user = UserFactory()
+        self.assertTrue(user)
