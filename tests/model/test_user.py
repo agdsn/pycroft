@@ -45,7 +45,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
     def test_0020_set_and_verify_password(self):
         password = generate_password(4)
 
-        self.user.set_password(password)
+        self.user.password = password
         session.session.commit()
 
         self.assertTrue(self.user.check_password(password))

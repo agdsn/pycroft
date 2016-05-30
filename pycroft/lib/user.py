@@ -138,8 +138,8 @@ def move_in(name, login, email, building, level, room_number, mac,
     room = Room.q.filter_by(number=room_number,
         level=level, building=building).one()
 
-
     now = session.utcnow()
+    plain_password = user.generate_password(12)
     # create a new user
     new_user = User(
         login=login,
@@ -147,12 +147,10 @@ def move_in(name, login, email, building, level, room_number, mac,
         email=email,
         room=room,
         registered_at=now,
-        account=Account(name="", type="USER_ASSET")
+        account=Account(name="", type="USER_ASSET"),
+        password=plain_password
     )
-    plain_password = user.generate_password(12)
 
-    # set random initial password
-    new_user.set_password(plain_password)
     with session.session.begin(subtransactions=True):
         session.session.add(new_user)
     new_user.account.name = deferred_gettext(u"User {id}").format(

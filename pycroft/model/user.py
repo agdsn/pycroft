@@ -18,7 +18,7 @@ from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
     String, and_, exists, join, literal, not_, null, or_, select)
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
@@ -83,6 +83,12 @@ class User(ModelBase, UserMixin):
 
     login_character_limit = 22
 
+    def __init__(self, **kwargs):
+        password = kwargs.pop('password', None)
+        super(User, self).__init__(**kwargs)
+        if password is not None:
+            self.password = password
+
     @validates('login')
     def validate_login(self, _, value):
         assert not has_identity(self), "user already in the database - cannot change login anymore!"
@@ -125,11 +131,16 @@ class User(ModelBase, UserMixin):
         """
         return verify_password(plaintext_password, self.passwd_hash)
 
-    def set_password(self, plain_password):
+    @hybrid_property
+    def password(self):
         """Store a hash of a given plaintext passwd for the user.
 
         """
-        self.passwd_hash = hash_password(plain_password)
+        raise RuntimeError("Password can not be read, only set")
+
+    @password.setter
+    def password(self, value):
+        self.passwd_hash = hash_password(value)
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
