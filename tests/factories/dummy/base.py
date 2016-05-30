@@ -2,19 +2,14 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import string
-from datetime import datetime
-
 from factory import SubFactory, LazyAttribute
 from factory.alchemy import SQLAlchemyModelFactory as Factory
 from factory.faker import Faker
-from factory.fuzzy import FuzzyChoice, FuzzyDateTime, FuzzyInteger, FuzzyText
 
 from pycroft.model.facilities import Site, Building, Room
 from pycroft.model.finance import Account
 from pycroft.model.session import session
 from pycroft.model.user import User
-from tests.factories.dummy.utc import utc
 
 
 class BaseFactory(Factory):
@@ -26,7 +21,7 @@ class SiteFactory(BaseFactory):
     class Meta:
         model = Site
 
-    name = FuzzyText()
+    name = Faker('street_name')
 
 
 class BuildingFactory(BaseFactory):
@@ -34,55 +29,47 @@ class BuildingFactory(BaseFactory):
         model = Building
 
     site = SubFactory(SiteFactory)
-    site_id = LazyAttribute(lambda self: self.site.id)
 
-    number = FuzzyText(length=3)
-    short_name = FuzzyText(length=8)
-    street = FuzzyText(length=20)
+    number = Faker('building_number')
+    street = LazyAttribute(lambda b: b.site.name)
+    short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
 
 
 class RoomFactory(BaseFactory):
     class Meta:
         model = Room
 
-    number = FuzzyText(length=36)
-    level = FuzzyInteger(0)
-    inhabitable = FuzzyChoice([True, False])
+    number = Faker('numerify', text='## #')
+    level = Faker('random_int', min=0, max=16)
+    inhabitable = Faker('boolean')
 
-    # many to one from Room to Building
     building = SubFactory(BuildingFactory)
-    building_id = LazyAttribute(lambda self: self.building.id)
 
 
 class AccountFactory(BaseFactory):
     class Meta:
         model = Account
 
-    name = FuzzyText(length=127)
-    type = FuzzyChoice([
+    name = Faker('word')
+    type = Faker('random_element', elements=(
         "ASSET",       # Aktivkonto
         "USER_ASSET",  # Aktivkonto for users
         "BANK_ASSET",  # Aktivkonto for bank accounts
         "LIABILITY",   # Passivkonto
         "EXPENSE",     # Aufwandskonto
         "REVENUE",     # Ertragskonto
-    ])
+    ))
 
 
 class UserFactory(BaseFactory):
     class Meta:
         model = User
 
-    login = FuzzyText(length=22, chars=string.ascii_lowercase)
-    name = FuzzyText(length=255)
-    registered_at = FuzzyDateTime(datetime(2001, 9, 11, tzinfo=utc))
-    passwd_hash = FuzzyText()
+    login = Faker('user_name')
+    name = Faker('name')
+    registered_at = Faker('date_time')
+    password = Faker('password')
     email = Faker('email')
-    # one to one from User to Account
-    account = SubFactory(AccountFactory)
-    account_id = LazyAttribute(lambda self: self.account.id)
-
-    # many to one from User to Room
+    account = SubFactory(AccountFactory, type="USER_ASSET")
     room = SubFactory(RoomFactory)
-    room_id = LazyAttribute(lambda self: self.room.id)
     # TODO: create subclasses for `dummy` and `privileged` user
