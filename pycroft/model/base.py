@@ -11,11 +11,12 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
+
 from sqlalchemy import Column
-from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.declarative import (
+    DeclarativeMeta, as_declarative, declared_attr)
 from sqlalchemy.types import Integer
-from pycroft._compat import iterkeys
+
 from pycroft.model.session import session
 
 
@@ -31,7 +32,8 @@ class _ModelMeta(DeclarativeMeta):
         return session.query(cls)
 
 
-class _Base(object):
+@as_declarative(metaclass=_ModelMeta)
+class ModelBase(object):
     """Baseclass for all database models."""
     id = Column(Integer, primary_key=True)
 
@@ -51,6 +53,3 @@ class _Base(object):
             self.__module__, self.__class__.__name__,
             ", ".join("{0}={1!r}".format(key, getattr(self, key, "<unknown>"))
                       for key in self.__mapper__.columns.keys()))
-
-
-ModelBase = declarative_base(cls=_Base, metaclass=_ModelMeta)
