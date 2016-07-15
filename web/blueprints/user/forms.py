@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from flask_wtf import Form
 from wtforms.validators import (
-    Regexp, NumberRange, ValidationError, DataRequired, Email)
+    Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
 from pycroft.helpers.net import mac_regex
 from pycroft.model.finance import Semester
 from pycroft.model.host import Host
@@ -78,7 +78,8 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
     mac = TextField(u"MAC", [
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     host = TextField(u"Host")
-    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!")])
+    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
+                                  Optional()])
     moved_from_division = BooleanField(u"Umzug aus anderer Sektion")
 
     already_paid_semester_fee = BooleanField\

@@ -114,6 +114,8 @@ class User(ModelBase, UserMixin):
 
     @validates('email')
     def validate_email(self, _, value):
+        if not value:
+            return value
         if not self.email_regex.match(value):
             raise IllegalEmailError("Illegal email '{}'".format(value))
         return value
