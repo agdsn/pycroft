@@ -7,7 +7,7 @@ import logging as std_logging
 log = std_logging.getLogger('import')
 import collections
 import time
-
+from sqlalchemy.orm import RelationshipProperty, ColumnProperty
 
 class timed(object):
     def __init__(self, logger, thing="", **kwargs):
@@ -62,7 +62,13 @@ class TranslationRegistry(object):
                     if fkc.referred_table in parent_tables:
                         self._satisfies[func].update(fkc.columns)
             for instr_attr in kwargs.get('satisfies', ()):
-                self._satisfies[func].update(instr_attr.property.columns)
+                prop = instr_attr.property
+                if isinstance(prop, ColumnProperty):
+                    self._satisfies[func].update(prop.columns)
+                elif isinstance(prop, RelationshipProperty):
+                    self._satisfies[func].update(prop.local_columns)
+                else:
+                    raise NotImplementedError
             return func
         return decorator
 
@@ -117,6 +123,7 @@ class TranslationRegistry(object):
                     ready_funcs.add(func)
 
         if func_dep_map:
-            raise DependencyError("Cyclic dependencies present")
+            raise DependencyError("Cyclic dependencies present: {}".format(
+                func_dep_map))
         else:
             return sorted_funcs

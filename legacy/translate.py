@@ -238,7 +238,9 @@ def translate_finance_accounts(data, resources):
         u"Passive Technik": "EXPENSE",
         u"Büromaterial": "EXPENSE",
         u"Öffentlichkeitsarbeit": "EXPENSE",
-        u"Beitragsabschreibung": "EXPENSE"}
+        u"Beitragsabschreibung": "EXPENSE",
+        u"Fehlbuchung andere Sektionen": "EXPENSE",  # mein lieber Herr Finanzverein...
+    }
 
     objs = []
     a_d = resources['account'] = {}
@@ -329,7 +331,8 @@ def get_acc(old_account_id, old_user_id, u_d, a_d):
 
 
 @reg.provides(finance.BankAccountActivity,
-              satisfies=(finance.BankAccountActivity.transaction_id,))
+              satisfies=(finance.BankAccountActivity.transaction_id,
+                         finance.BankAccountActivity.split))
 def translate_bank_transactions(data, resources):
     bank_account = resources['bank_account']
 

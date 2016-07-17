@@ -23,7 +23,7 @@ curl -O https://bootstrap.pypa.io/get-pip.py
 pypy get-pip.py
 
 pypy -m pip install psycopg2cffi==2.7.4
-sed '/psycopg2/d;/pysqlite/d' /pycroft/requirements.txt > pypy_requirements.txt
+sed '/psycopg2/d;/pysqlite/d' ../requirements.txt > pypy_requirements.txt
 pypy -m pip install -r pypy_requirements.txt
 
 echo "Applying psycopg2 to psycopg2cffi compatibility fix" 
