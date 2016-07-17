@@ -12,7 +12,7 @@
 
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request)
-from flask.ext.login import current_user
+from flask_login import current_user
 from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.model import session

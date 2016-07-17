@@ -4,7 +4,7 @@
 from itertools import chain
 from flask.globals import current_app
 from flask import abort, request
-from flask.ext.login import current_user
+from flask_login import current_user
 from web.blueprints import bake_endpoint
 
 

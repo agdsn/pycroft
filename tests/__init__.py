@@ -9,7 +9,7 @@ import random
 import string
 import unittest
 from flask import url_for, _request_ctx_stack
-from flask.ext import testing
+import flask_testing as testing
 from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from sqlalchemy import create_engine

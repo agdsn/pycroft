@@ -12,7 +12,7 @@
 """
 
 from flask import Blueprint, render_template, flash, redirect, url_for, request
-from flask.ext.login import (
+from flask_login import (
     AnonymousUserMixin, LoginManager, current_user, login_required, login_user,
     logout_user)
 

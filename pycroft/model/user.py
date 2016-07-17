@@ -13,7 +13,7 @@
 from datetime import datetime
 import re
 
-from flask.ext.login import UserMixin
+from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
     String, and_, exists, join, literal, not_, null, or_, select)

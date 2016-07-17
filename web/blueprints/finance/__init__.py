@@ -15,7 +15,7 @@ from itertools import groupby
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 

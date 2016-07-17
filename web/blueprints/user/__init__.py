@@ -36,7 +36,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
 from datetime import datetime, timedelta, time
-from flask.ext.login import current_user
+from flask_login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
 

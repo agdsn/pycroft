@@ -14,7 +14,7 @@ from cmath import log
 from datetime import datetime, timedelta
 from itertools import chain
 from re import sub
-import flask.ext.babel
+import flask_babel
 
 from pycroft._compat import imap
 from pycroft.model import session, _all
@@ -56,7 +56,7 @@ def date_filter(dt, format=None):
     """
     if dt is None:
         return u"k/A"
-    return flask.ext.babel.format_date(dt, format)
+    return flask_babel.format_date(dt, format)
 
 
 @template_filter("datetime")
@@ -68,7 +68,7 @@ def datetime_filter(dt, format=None):
     """
     if dt is None:
         return u"k/A"
-    return flask.ext.babel.format_datetime(dt, format)
+    return flask_babel.format_datetime(dt, format)
 
 
 @template_filter("timesince")
