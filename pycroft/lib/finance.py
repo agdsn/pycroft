@@ -661,7 +661,7 @@ def user_has_paid(user):
 
 
 def get_typed_splits(splits):
-    splits = sorted(splits, key=lambda s: s.transaction.posted_on, reverse=True)
+    splits = sorted(splits, key=lambda s: s.transaction.posted_at, reverse=True)
     return izip_longest(
         ifilter(lambda s: s.amount >= 0, splits),
         ifilter(lambda s: s.amount < 0, splits)

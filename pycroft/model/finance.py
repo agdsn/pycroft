@@ -251,7 +251,9 @@ class BankAccountActivity(ModelBase):
     transaction_id = Column(Integer, ForeignKey(Transaction.id,
                                                 onupdate='CASCADE',
                                                 ondelete='SET NULL'))
-    transaction = relationship(Transaction, viewonly=True)
+    transaction = relationship(Transaction, viewonly=True,
+                               backref=backref("bank_account_activities",
+                                               uselist=True))
     account_id = Column(Integer, ForeignKey(Account.id, onupdate='CASCADE',
                                             ondelete='SET NULL'))
     account = relationship(Account, viewonly=True)
