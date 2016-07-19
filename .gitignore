@@ -11,3 +11,6 @@ doc/_build
 .vagrant
 web/static/libs/**
 
+*.log
+.coverage
+TAGS
