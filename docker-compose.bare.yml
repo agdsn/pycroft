@@ -1,0 +1,17 @@
+version: '2'
+services:
+  web:
+    build:
+      context: .
+      # dockerfile: build/Dockerfile
+    environment:
+      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432
+    command: python server_run.py --debug --exposed
+    ports:
+      - 5001:5000
+    links:
+      - db:db
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=password
