@@ -39,7 +39,7 @@ COPY vagrant/requirements.txt /
 RUN pip install -r /requirements.txt
 
 RUN adduser --disabled-password --gecos "Application" pycroft
-RUN mkdir -p $PROJECT_DIR/ && chown -R pycroft:pycroft $PROJECT_DIR/
+RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
 USER pycroft
 
 # Installing the js dependencies via bower cannot be done as root
@@ -47,6 +47,7 @@ COPY bower.json .bowerrc $PROJECT_DIR/
 RUN mkdir -p $PROJECT_DIR/web/static/libs/
 
 COPY . $PROJECT_DIR
+RUN chown -R pycroft:pycroft $PROJECT_DIR
 
 WORKDIR $PROJECT_DIR
 
