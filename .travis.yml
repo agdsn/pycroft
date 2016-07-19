@@ -30,5 +30,4 @@ before_install:
 
 script:
   - docker-compose build
-  - docker-compose run --rm -u root web pip install coverage pylint
-  - docker-compose run --rm web nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy
+  - docker-compose run --rm -u root web sh -c 'pip install coverage pylint && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'

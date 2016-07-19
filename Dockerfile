@@ -27,7 +27,6 @@ RUN apt-get update \
         python-dev \
         python-pip \
         sqlite3 \
-        sudo \
         vim \
     && ln -s /usr/bin/nodejs /usr/bin/node
 
@@ -40,15 +39,17 @@ RUN pip install -r /requirements.txt
 
 RUN adduser --disabled-password --gecos "Application" pycroft
 RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
-USER pycroft
 
 # Installing the js dependencies via bower cannot be done as root
 COPY bower.json .bowerrc $PROJECT_DIR/
-RUN mkdir -p $PROJECT_DIR/web/static/libs/
+RUN export BOWER_DIR=$PROJECT_DIR/web/static/libs/ \
+    && mkdir -p $BOWER_DIR \
+    && chown pycroft:pycroft $BOWER_DIR
 
 COPY . $PROJECT_DIR
 RUN chown -R pycroft:pycroft $PROJECT_DIR
 
+USER pycroft
 WORKDIR $PROJECT_DIR
 
 RUN echo "Installing js dependencies." \
