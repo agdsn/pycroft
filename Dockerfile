@@ -28,10 +28,8 @@ RUN apt-get update \
         python-pip \
         sqlite3 \
         vim \
-    && ln -s /usr/bin/nodejs /usr/bin/node
-
-# Install Bower
-RUN npm install -g bower
+    && ln -s /usr/bin/nodejs /usr/bin/node \
+    && npm install -g bower
 
 # Install Python packages
 COPY vagrant/requirements.txt /
