@@ -21,6 +21,7 @@ from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
+from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
@@ -689,12 +690,12 @@ def change_mac(user_id, user_interface_id):
     if not form.is_submitted():
         form.mac.data = my_interface.mac
     if form.validate_on_submit():
-        changed_interface = lib.net.change_mac(interface=my_interface,
+        changed_interface = lib_change_mac(interface=my_interface,
             mac=form.mac.data,
             processor=current_user)
         flash(u'Mac geändert', 'success')
         session.session.commit()
-        return redirect(url_for('.user_show', user_id=changed_interface.host.user.id))
+        return redirect(url_for('.user_show', user_id=changed_interface.host.owner.id))
     return render_template('user/change_mac.html',
                            form=form, user_id=user_id,
                            user_interface_id=user_interface_id)
