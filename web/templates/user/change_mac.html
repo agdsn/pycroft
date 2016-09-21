@@ -9,5 +9,5 @@
 {% import "macros/resources.html" as resources %}
 {% block page_css %}{{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}{% endblock %}
 {% block single_row_content %}
-    {{ forms.simple_form(form, '', url_for('.change_mac',user_interface_id=user_interface_id)  ) }}
+    {{ forms.simple_form(form, '', url_for('.change_mac', user_id=user_id, user_interface_id=user_interface_id)  ) }}
 {% endblock %}

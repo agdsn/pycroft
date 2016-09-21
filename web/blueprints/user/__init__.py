@@ -217,6 +217,7 @@ def user_show_hosts_json(user_id):
             ports = None
         for ip in user_host.ips:
             list_items.append({
+                'id': str(user_host.id),
                 'ip': str(ip.address),
                 'mac': ip.interface.mac,
                 'switch': switches,
@@ -694,7 +695,9 @@ def change_mac(user_id, user_interface_id):
         flash(u'Mac geändert', 'success')
         session.session.commit()
         return redirect(url_for('.user_show', user_id=changed_interface.host.user.id))
-    return render_template('user/change_mac.html', form=form, user_interface_id=user_interface_id)
+    return render_template('user/change_mac.html',
+                           form=form, user_id=user_id,
+                           user_interface_id=user_interface_id)
 
 
 @bp.route('/<int:user_id>/move_out_temporarily', methods=['GET', 'POST'])
