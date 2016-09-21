@@ -223,6 +223,11 @@ def user_show_hosts_json(user_id):
                 'mac': ip.interface.mac,
                 'switch': switches,
                 'port': ports,
+                'action': {'href': url_for('.change_mac', user_id=user_id,
+                                           user_interface_id=ip.interface.id),
+                           'title': "Bearbeiten",
+                           'icon': 'glyphicon-pencil',
+                           'btn-class': 'btn-link'}
             })
     return jsonify(items=list_items)
 
