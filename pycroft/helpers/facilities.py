@@ -10,6 +10,8 @@
 """
 import re
 
+from pycroft.model.facilities import Building
+
 
 def sort_buildings(buildings):
     def make_sort_key(building):
@@ -20,3 +22,23 @@ def sort_buildings(buildings):
     sorted_buildings = sorted(buildings, key=make_sort_key)
 
     return sorted_buildings
+
+
+def determine_building(shortname=None, id=None):
+    """Determine building from shortname or id in this order.
+
+    :param str shortname: The short name of the building
+    :param int id: The id of the building
+
+    :return: The unique building
+
+    :raises: ValueError if none of both provided
+
+    """
+    if shortname:
+        return Building.q.filter(Building.short_name == shortname).one()
+
+    if id:
+        return Building.q.get(id)
+
+    raise ValueError("Either shortname or id must be given to identify the building!")

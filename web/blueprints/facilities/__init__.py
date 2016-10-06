@@ -63,10 +63,7 @@ def site_show(site_id):
 @bp.route('/buildings/<int:building_id>/')
 @bp.route('/buildings/<building_shortname>/')
 def building_show(building_id=None, building_shortname=None):
-    if building_shortname:
-        building = Building.q.filter(Building.short_name == building_shortname).one()
-    else:
-        building = Building.q.get(building_id)
+    building = facilities.determine_building(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
         page_title=u"Wohnheim " + building.short_name, rooms=rooms_list)
@@ -76,10 +73,7 @@ def building_show(building_id=None, building_shortname=None):
 @bp.route('/buildings/<int:building_id>/levels/')
 @bp.route('/buildings/<building_shortname>/levels/')
 def building_levels(building_id=None, building_shortname=None):
-    if building_shortname:
-        building = Building.q.filter(Building.short_name == building_shortname).one()
-    else:
-        building = Building.q.get(building_id)
+    building = facilities.determine_building(id=building_id, shortname=building_shortname)
     rooms_list = building.rooms
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
@@ -93,10 +87,7 @@ def building_levels(building_id=None, building_shortname=None):
 @bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/')
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/')
 def building_level_rooms(level, building_id=None, building_shortname=None):
-    if building_shortname:
-        building = Building.q.filter(Building.short_name == building_shortname).one()
-    else:
-        building = Building.q.get(building_id)
+    building = facilities.determine_building(building_shortname, building_id)
     level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
@@ -176,10 +167,7 @@ def user_button(user):
 @bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/json')
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
-    if building_shortname:
-        building = Building.q.filter(Building.short_name == building_shortname).one()
-    else:
-        building = Building.q.get(building_id)
+    building = facilities.determine_building(id=building_id, shortname=building_shortname)
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
