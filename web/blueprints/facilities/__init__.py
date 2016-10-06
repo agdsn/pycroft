@@ -115,6 +115,21 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 # todo think about a better place for these functions
 # they will surely be used elsewhere…
 def user_btn_style(user):
+    """Determine the icons and style of the button to a users page.
+
+    First, add glyphicons concerning status warnings (finance,
+    traffic, no network access, abuse), or an ok icon.  Append admin
+    and mail-only icons.
+
+    The button class is ``info`` for non-members, ``success`` for
+    members, ``warning`` for traffic, and ``danger`` for other
+    felonies.
+
+    :param User user: The user to analyze
+
+    :return: The bootstrap glyphicon classes and the button class
+    :rtype: tuple(list(str),str)
+    """
     s = status(user)
     glyphicons = []
     btn_class = None
