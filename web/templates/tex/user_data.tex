@@ -8,9 +8,9 @@
 \begin{document}
 
 \begin{tabular}{l l}
-Nutzer-ID: & 12345 \\
-Some-key: & some-value \\
-Other-key & some-other-value
+{% for key, value in user_data %}
+{{ key }} & {{ value }} \\
+{% endfor %}
 \end{tabular}
 
 \end{document}
