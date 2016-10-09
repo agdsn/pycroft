@@ -8,7 +8,7 @@
 \begin{document}
 
 \begin{tabular}{l l}
-{% for key, value in user_data %}
+{% for key, value in user_data.iteritems() %}
 {{ key }} & {{ value }} \\
 {% endfor %}
 \end{tabular}
