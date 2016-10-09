@@ -4,7 +4,7 @@
 from flask import Response, render_template
 import tex
 
-def generate_user_data_pdf(filename, uid, **user_data):
+def generate_user_data_pdf( uid, user_data):
     resp = Response(
         tex.latex2pdf(
             render_template("tex/user_data.tex", user_data=user_data)
