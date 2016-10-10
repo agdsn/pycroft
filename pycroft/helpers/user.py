@@ -12,6 +12,7 @@ crypt_context = ldap_context.copy(
 
 
 def generate_password(length):
+    #without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
               ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
     return passlib.utils.generate_password(length, charset)
