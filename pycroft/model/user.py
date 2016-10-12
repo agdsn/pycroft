@@ -76,9 +76,17 @@ class User(ModelBase, UserMixin):
     email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
-    blocked_logins = {"root", "daemon", "bin", "sys", "sync", "games", "man",
-                      "lp", "mail", "news", "uucp", "proxy", "majordom",
-                      "postgres", "wwwadmin", "backup", "msql", "operator",
+    blocked_logins = {"abuse", "admin", "administrator", "autoconfic",
+                      "broadcasthost", "root", "daemon", "bin", "sys", "sync",
+                      "games", "man", "hostmaster", "imap", "info", "is",
+                      "isatap", "it", "localdomain", "localhost",
+                      "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
+                      "majordom", "marketing", "mis", "noc",
+                      "noreply", "no-reply", "pop", "pop3", "postmaster",
+                      "postgres", "sales", "smtp", "ssladmin",
+                      "ssladministrator", "sslwebmaster", "support",
+                      "sysadmin", "usenet", "webmaster", "wpad", "www"
+                      "wwwadmin", "backup", "msql", "operator",
                       "ftp", "ftpadmin", "guest", "bb", "nobody"}
 
     login_character_limit = 22
