@@ -42,17 +42,18 @@ RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
 COPY bower.json .bowerrc $PROJECT_DIR/
 RUN export BOWER_DIR=$PROJECT_DIR/web/static/libs/ \
     && mkdir -p $BOWER_DIR \
-    && chown pycroft:pycroft $BOWER_DIR
+    && chown pycroft:pycroft $BOWER_DIR \
+    && cd $PROJECT_DIR/ \
+    && echo "Installing js dependencies." \
+    && bower --allow-root install -F \
+    && bower --allow-root update -F
 
 COPY . $PROJECT_DIR
+
 RUN chown -R pycroft:pycroft $PROJECT_DIR
 
 USER pycroft
 WORKDIR $PROJECT_DIR
-
-RUN echo "Installing js dependencies." \
-    && bower install -F \
-    && bower update -F
 
 EXPOSE 5000
 CMD ["./server_run.py", "--debug", "--exposed"]
