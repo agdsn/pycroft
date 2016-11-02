@@ -83,9 +83,17 @@ class Test_040_User_Login(FixtureDataTestBase):
 
         valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a_4"]
         invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
-        blocked = ["root", "daemon", "bin", "sys", "sync", "games", "man",
-                   "lp", "mail", "news", "uucp", "proxy", "majordom",
-                   "postgres", "wwwadmin", "backup", "msql", "operator",
+        blocked = ["abuse", "admin", "administrator", "autoconfic",
+                   "broadcasthost", "root", "daemon", "bin", "sys", "sync",
+                   "games", "man", "hostmaster", "imap", "info", "is",
+                   "isatap", "it", "localdomain", "localhost",
+                   "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
+                   "majordom", "marketing", "mis", "noc",
+                   "noreply", "no-reply", "pop", "pop3", "postmaster",
+                   "postgres", "sales", "smtp", "ssladmin",
+                   "ssladministrator", "sslwebmaster", "support",
+                   "sysadmin", "usenet", "webmaster", "wpad", "www"
+                   "wwwadmin", "backup", "msql", "operator",
                    "ftp", "ftpadmin", "guest", "bb", "nobody"]
 
         for login in valid:
