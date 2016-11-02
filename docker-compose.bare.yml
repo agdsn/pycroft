@@ -9,9 +9,10 @@ services:
     command: python server_run.py --debug --exposed
     ports:
       - 5001:5000
-    links:
-      - db:db
   db:
     image: postgres
     environment:
       - POSTGRES_PASSWORD=password
+      - PGDATA=/postgres
+    tmpfs:
+      - /postgres
