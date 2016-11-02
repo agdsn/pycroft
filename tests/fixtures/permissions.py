@@ -21,7 +21,7 @@ class BaseUser():
 class UserData(DataSet):
     class user1_admin(BaseUser):
         # Normal admin
-        login = "admin"
+        login = "testadmin"  # "admin" is blocked
 
     class user2_finance(BaseUser):
         # Admin with permission to view Finance

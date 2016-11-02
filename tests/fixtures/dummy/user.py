@@ -19,7 +19,7 @@ class UserData(DataSet):
         account = AccountData.dummy_user1
 
     class privileged:
-        login = "admin"
+        login = "testadmin"  # "admin" is blocked
         name = "BOfH"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room3
