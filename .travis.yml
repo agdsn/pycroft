@@ -8,27 +8,14 @@ cache:
 
 services:
   - docker
-env:
-  global:
-    - DOCKER_VERSION=1.11.1-0~trusty
-    - DOCKER_COMPOSE_VERSION=1.7.1
 
 before_install:
   # list docker-engine versions
   - apt-cache madison docker-engine
-
-  # upgrade docker-engine to specific version
-  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine=${DOCKER_VERSION}
-
-  # upgrade docker-compose
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
   - "docker version"
   - "docker-compose version"
 
 script:
   - export DOCKER_COMPOSE="docker-compose -f docker-compose-travis.yml"
   - $DOCKER_COMPOSE build
-  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip install coverage pylint && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
+  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
