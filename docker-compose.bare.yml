@@ -5,7 +5,7 @@ services:
       context: .
       # dockerfile: build/Dockerfile
     environment:
-      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432
+      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
     command: python server_run.py --debug --exposed
     ports:
       - 5001:5000
