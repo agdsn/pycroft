@@ -267,7 +267,7 @@ def translate_finance_accounts(data, resources):
         # make sure all accounts that are mapped to None do not have any
         # transactions associated with them
 
-        if (acc_name is None and (_a.haben_fb or _a.soll_fb or _a.bankbuchungen))
+        if (acc_name is None and (_a.haben_fb or _a.soll_fb or _a.bankbuchungen)):
             raise ValueError("No name found for account with transactions"
                              " (id={})".format(_a.id))
 
