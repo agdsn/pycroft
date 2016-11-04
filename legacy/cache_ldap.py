@@ -18,7 +18,9 @@ def get_ldap_results():
     server = ldap3.Server(host=opts['host'], port=opts['port'],
                           get_info=ldap3.SCHEMA, tls=None)
     connection = ldap3.Connection(server, opts['bind_dn'], opts['bind_pw'])
-    connection.bind()
+    success = connection.bind()
+    if not success:
+        raise ValueError("Bind not successful. Perhaps check your `conn.py`")
     connection.search(search_base=opts['base_dn'], search_scope=ldap3.SUBTREE,
                       search_filter="(objectClass=inetOrgPerson)",
                       attributes=ldap3.ALL_ATTRIBUTES)
