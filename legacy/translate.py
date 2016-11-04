@@ -240,6 +240,7 @@ def translate_finance_accounts(data, resources):
         u"Öffentlichkeitsarbeit": "EXPENSE",
         u"Beitragsabschreibung": "EXPENSE",
         u"Fehlbuchung andere Sektionen": "EXPENSE",  # mein lieber Herr Finanzverein...
+        u"Rücküberweisung": "EXPENSE",
     }
 
     objs = []
@@ -266,8 +267,9 @@ def translate_finance_accounts(data, resources):
         # make sure all accounts that are mapped to None do not have any
         # transactions associated with them
 
-        assert not (acc_name is None and
-                    (_a.haben_fb or _a.soll_fb or _a.bankbuchungen))
+        if (acc_name is None and (_a.haben_fb or _a.soll_fb or _a.bankbuchungen))
+            raise ValueError("No name found for account with transactions"
+                             " (id={})".format(_a.id))
 
     return objs
 
