@@ -5,6 +5,7 @@ import ldap3
 from sqlalchemy import create_engine
 
 from conn import conn_opts
+from ldap_model import Nutzer
 
 
 def get_ldap_results():
@@ -25,23 +26,14 @@ def get_ldap_results():
     return connection.response
 
 
-def import_ldap_entries(results):
-    """Import ldap entries into the cache database.
+def create_ldap_tables(engine):
+    Nutzer.metadata.create_all(bind=engine)
 
-    :param list results: The results from ldap3.Connection.search
-    """
-    # engine = create_engine(conn_opts['ldap'])
-    # session = scoped_session(sessionmaker(bind=engine))
-    for result in results:
-        # form: attrs[…]
+
+def cache_ldap(session, engine):
+    """Import ldap entries into the cache database."""
+
+    for result in get_ldap_results():
         print("Add user", result['dn'])
-        # session.add(Nutzer.from_ldap_attributes(result['attributes']))
-    # session.commit()
-
-
-if __name__ == '__main__':
-    ldap_results = get_ldap_results()
-
-    print("Got {} results.".format(len(ldap_results)))
-
-    import_ldap_entries(ldap_results)
+        session.add(Nutzer.from_ldap_attributes(result['attributes']))
+    session.commit()

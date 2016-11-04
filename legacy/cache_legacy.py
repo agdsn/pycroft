@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from conn import conn_opts
+from cache_ldap import cache_ldap, create_ldap_tables
 import netusers
 import userman
 
@@ -116,7 +117,7 @@ def cache_relevant_tables(old_db, _, engine, tables=None):
     print("Finished caching " + old_db.name)
 
 
-def main(tables=None):
+def main(tables=None, ldap=True):
     # if 'tables' is None, we cache the full range of tables
     master_engine = create_engine(conn_opts['master'])
     master_connection = master_engine.connect()
@@ -134,6 +135,9 @@ def main(tables=None):
     for old_db in old_dbs:
         cache_relevant_tables(old_db, session, engine, tables)
 
+    if ldap:
+        create_ldap_tables(engine=engine)
+        cache_ldap(session=session, engine=engine)
 
 if __name__ == "__main__":
     import argparse
