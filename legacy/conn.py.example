@@ -6,4 +6,12 @@ conn_opts = {
     "legacy": "postgresql:///legacy",
     "pycroft": 'postgres:///pycroft',
     "master": "postgresql:///postgres",
+    "ldap": {
+        'host': '',
+        'port': 389,
+        # admin dn or something else getting `userPassword`
+        'base_dn': "ou=Nutzer,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
+        'bind_dn': '',
+        'bind_pw': '',
+    },
 }
