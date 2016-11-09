@@ -34,8 +34,9 @@ def create_ldap_tables(engine):
 
 def cache_ldap(session, engine):
     """Import ldap entries into the cache database."""
+    results = get_ldap_results()
 
-    for result in get_ldap_results():
-        print("Add user", result['dn'])
+    for result in results:
         session.add(Nutzer.from_ldap_attributes(result['attributes']))
     session.commit()
+    print("Cached {} ldap entries".format(len(results)))

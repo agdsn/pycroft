@@ -117,7 +117,7 @@ def cache_relevant_tables(old_db, _, engine, tables=None):
     print("Finished caching " + old_db.name)
 
 
-def main(tables=None, ldap=True):
+def main(tables=None, sql_only=True, ldap_only=False):
     # if 'tables' is None, we cache the full range of tables
     master_engine = create_engine(conn_opts['master'])
     master_connection = master_engine.connect()
@@ -132,10 +132,10 @@ def main(tables=None, ldap=True):
     master_connection.close()
     session, meta, engine = make_session()
 
-    for old_db in old_dbs:
+    for old_db in old_dbs if not ldap_only else []:
         cache_relevant_tables(old_db, session, engine, tables)
 
-    if ldap:
+    if not sql_only:
         create_ldap_tables(engine=engine)
         cache_ldap(session=session, engine=engine)
 
@@ -146,6 +146,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--tables", metavar="T", action='store', nargs="+",
                         choices=cacheable_tables)
-
+    parser.add_argument("--ldap-only", action='store_true')
+    parser.add_argument("--sql-only", action='store_true')
     args = parser.parse_args()
     main(**vars(args))

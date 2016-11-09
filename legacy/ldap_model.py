@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class Nutzer(Base):
-    __tablename__ = 'nutzer'
+    __tablename__ = 'ldap_nutzer'
 
     uid = Column(String, primary_key=True)
     mail = Column(String)
