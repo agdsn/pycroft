@@ -33,6 +33,13 @@ import translate
 
 
 def exists_db(connection, name):
+    """Check whether a database exists.
+
+    :param connection: A connection
+    :param name: The name of the database
+    :returns: Whether the db exists
+    :rtype: bool
+    """
     exists = connection.execute("SELECT 1 FROM pg_database WHERE datname = {}".format(name)).first()
     connection.execute("COMMIT")
 
@@ -40,6 +47,14 @@ def exists_db(connection, name):
 
 
 def translate_all(data):
+    """Translate legacy data into a list of new objects.
+
+    :param dict data: A dict with keys being the table names and
+        values being lists of the legacy ORM objects.
+
+    :returns: The new ORM objects.
+    :rtype: list
+    """
     objs = []
     resources = {}
 
@@ -57,7 +72,9 @@ def translate_all(data):
 
     return objs
 
+
 def main(args):
+    """Import the legacy data according to ``args``"""
     engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
     session.set_scoped_session(
         scoped_session(sessionmaker(bind=engine),
