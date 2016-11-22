@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 from wtforms.validators import DataRequired, Regexp, NumberRange
 from web.form.fields.core import TextField
 
