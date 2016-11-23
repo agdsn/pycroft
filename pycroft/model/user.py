@@ -16,7 +16,7 @@ import re
 from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
-    String, and_, exists, join, literal, not_, null, or_, select)
+    Sequence, String, and_, exists, join, literal, not_, null, or_, select)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -46,6 +46,11 @@ class User(ModelBase, UserMixin):
     registered_at = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
+
+    uid_number = Column(Integer, nullable=False, unique=True,
+                        server_default=Sequence('uid_number_seq', start=1000).next_value())
+    gid_number = Column(Integer, nullable=False, default=100)
+    login_shell = Column(String, nullable=False, default="/bin/bash")
 
     # one to one from User to Account
     account = relationship("Account", backref=backref("user", uselist=False))
@@ -160,6 +165,14 @@ class User(ModelBase, UserMixin):
             return None
         else:
             return user if user.check_password(plaintext_password) else None
+
+    @hybrid_property
+    def home_directory(self):
+        """Generate home-directory from login.
+
+        Consistency in legacy data confirmed 2016-11-22
+        """
+        return '/home/{}'.format(self.login)
 
     @hybrid_method
     def active_memberships(self, when=None):
