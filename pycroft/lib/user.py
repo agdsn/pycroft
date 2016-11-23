@@ -140,6 +140,7 @@ def move_in(name, login, email, building, level, room_number, mac,
 
     now = session.utcnow()
     plain_password = user.generate_password(12)
+    new_uid = session.session.query(func.max(User.uid_number)).one()[0] + 1
     # create a new user
     new_user = User(
         login=login,

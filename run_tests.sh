@@ -4,5 +4,4 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 pip install coverage pylint
 find . -name "*.pyc" -delete
-PYCROFT_DB_URI=sqlite:///:memory: nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy
-
+PYCROFT_DB_URI=sqlite:///:memory: nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy $@

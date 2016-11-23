@@ -52,7 +52,27 @@ class TranslationRegistry(object):
         return decorator
 
     def provides(self, *metas, **kwargs):
-        """main translation function to create given ModelMetas"""
+        """Register a translation function to create given ModelMetas
+
+        Register that the decorated function provides the `metas` and
+        what foreign keys are satisfied by the parent tables (those in
+        in meta.__bases__) already.
+
+        This decorator does not change the decorated function.
+
+        The decorated function
+
+        :param metas: Subclasses of _ModelMeta that are provided by
+            that function (:attr:`_provides[meta]` is set to
+            ``func``).
+        :param satisfies: An iterable of Attributes that are
+            considered to be satisfied by the decorated function.
+            They must have a `property` attribute of either
+            :py:cls:`ColumnProperty` or
+            :py:cls:`RelationshipProperty`.  The ``property.columns``
+            or ``property.local_columns`` are registered to
+            ``_satisfies[func]``, respectively.
+        """
         def decorator(func):
             for meta in metas:
                 self._provides[meta.__table__] = func

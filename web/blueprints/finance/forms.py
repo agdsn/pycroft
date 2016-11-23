@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional
 
@@ -132,5 +132,3 @@ class TransactionCreateForm(Form):
                       if split_form['amount'].data is not None)
         if balance != 0:
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
-
-
