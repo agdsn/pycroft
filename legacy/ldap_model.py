@@ -19,9 +19,14 @@ class Nutzer(Base):
 
     @classmethod
     def from_ldap_attributes(cls, result):
+        if result.get('mail'):
+            mail = result['mail'][0]
+        else:
+            mail = None
+
         return cls(
             uid=result['uid'][0],
-            mail=result.get('mail'),
+            mail=mail,
             # we can safely assume users only have exactly one password.
             # I checked this for our production data on 2016-11-03.
             userPassword=result['userPassword'][0],
