@@ -16,7 +16,7 @@ import re
 from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
-    String, and_, exists, join, literal, not_, null, or_, select)
+    String, and_, exists, join, literal, not_, null, or_, select, Sequence)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -50,6 +50,10 @@ class User(ModelBase, UserMixin):
     # one to one from User to Account
     account = relationship("Account", backref=backref("user", uselist=False))
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
+
+    unix_account = relationship('UnixAccount')  # backref not really needed.
+    unix_account_id = Column(Integer, ForeignKey('unix_account.id'),
+                             nullable=True, unique=True)
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
@@ -445,3 +449,13 @@ class TrafficGroup(Group):
                 nullable=False)
     # in byte per seven days, zero is no limit
     traffic_limit = Column(BigInteger, nullable=False)
+
+
+_uid_seq = Sequence('_uid_seq', start=1000, metadata=ModelBase.metadata)
+
+class UnixAccount(ModelBase):
+    uid = Column(Integer, nullable=False, unique=True,
+                        server_default=_uid_seq.next_value())
+    gid = Column(Integer, nullable=False, default=100)
+    login_shell = Column(String, nullable=False, default="/bin/bash")
+    home_directory = Column(String, nullable=False, unique=True)

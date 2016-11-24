@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
+from tests.fixtures.dummy import unixaccount
 from pycroft.model import facilities, session, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
@@ -109,6 +110,34 @@ class Test_040_User_Login(FixtureDataTestBase):
         with self.assertRaisesRegexp(AssertionError,
                 "user already in the database - cannot change login anymore!"):
             u.login = "abc"
+
+
+class TestUnixAccounts(FixtureDataTestBase):
+    datasets = [unixaccount.UserData]
+
+    def setUp(self):
+        super(TestUnixAccounts, self).setUp()
+        self.dummy_account = user.UnixAccount.q.filter_by(
+            home_directory=unixaccount.UnixAccountData.dummy.home_directory
+        ).one()
+        self.custom_account = user.UnixAccount.q.filter_by(
+            home_directory=unixaccount.UnixAccountData.explicit_ids.home_directory
+        ).one()
+        self.dummy_user = user.User.q.filter_by(login=unixaccount.UserData.dummy.login).one()
+        self.ldap_user = user.User.q.filter_by(login=unixaccount.UserData.withldap.login).one()
+
+    def test_correct_default_values(self):
+        self.assertEqual(self.dummy_account.gid, 100)
+        self.assertGreaterEqual(self.dummy_account.uid, 1000)
+        self.assertTrue(self.dummy_account.login_shell)
+
+    def test_custom_ids_set(self):
+        self.assertEqual(self.custom_account.gid, 27)
+        self.assertEqual(self.custom_account.uid, 1042)
+
+    def test_account_reference(self):
+        self.assertEqual(self.ldap_user.unix_account, self.dummy_account)
+        self.assertTrue(self.dummy_user.unix_account == None)
 
 
 class TestActiveHybridMethods(FixtureDataTestBase):
