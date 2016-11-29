@@ -100,7 +100,7 @@ class Interface(ModelBase):
         if not match:
             raise InvalidMACAddressException("MAC address '"+mac_address+"' is not valid")
         if int(mac_address[0:2], base=16) & 1:
-            raise MulticastFlagException()
+            raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
 
 

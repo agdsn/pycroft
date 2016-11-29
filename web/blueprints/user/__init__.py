@@ -29,6 +29,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserInterface, IP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
+from pycroft.model.types import InvalidMACAddressException
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -393,7 +394,7 @@ def create():
 
         except (MacExistsException,
                 SubnetFullException,
-                ValueError) as error:
+                InvalidMACAddressException) as error:
             flash(error.message, 'error')
             session.session.rollback()
 
