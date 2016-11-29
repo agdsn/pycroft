@@ -9,11 +9,11 @@ from pycroft._compat import ifilter
 
 
 class SubnetFullException(Exception):
-    pass
+    message = "Subnet full"
 
 
 class MacExistsException(Exception):
-    pass
+    message = "MAC exists"
 
 
 def get_free_ip(subnets):

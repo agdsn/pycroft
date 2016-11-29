@@ -74,7 +74,7 @@ event.listen(UserHost, "before_update", _check_user_host_in_user_room)
 
 
 class MulticastFlagException(InvalidMACAddressException):
-    pass
+    message = "Multicast bit set in MAC address"
 
 
 class TypeMismatch(Exception):
