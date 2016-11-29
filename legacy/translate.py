@@ -9,7 +9,7 @@ import logging as std_logging
 log = std_logging.getLogger('import.translate')
 import os
 import sys
-
+from itertools import islice
 
 import ipaddr
 from sqlalchemy.sql import null
@@ -241,6 +241,7 @@ def translate_finance_accounts(data, resources):
         u"Beitragsabschreibung": "EXPENSE",
         u"Fehlbuchung andere Sektionen": "EXPENSE",  # mein lieber Herr Finanzverein...
         u"Rücküberweisung": "EXPENSE",
+        u"Import Zeu und Bor": "EXPENSE",
     }
 
     objs = []
@@ -447,10 +448,14 @@ def generate_subnets_vlans(data, resources):
                         _s.vlan_name)
             continue
 
+        rev_dnszone_name = '.'.join(islice(
+            reversed(address.ip.exploded.split('.')),
+            min((address.max_prefixlen-address.prefixlen + 7//8), 1),
+            4)) + ".in-addr.arpa" # cp. from pycroft/lib/net.py:ptr_name
         s = net.Subnet(address=address,
                        gateway=ipaddr.IPv4Address(_s.default_gateway),
                        primary_dns_zone=primary_host_zone,
-                       reverse_dns_zone=primary_host_zone, # TODO temporary fix
+                       reverse_dns_zone=dns.DNSZone(name=rev_dnszone_name),
                        description=_s.vlan_name,
                        vlan=vlan)
         s_d[_s.subnet_id] = s
