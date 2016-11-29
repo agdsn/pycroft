@@ -127,6 +127,7 @@ def room_show(room_id):
     if form.validate_on_submit():
         lib.logging.log_room_event(form.message.data, current_user, room)
         flash(u'Kommentar hinzugefügt', 'success')
+        session.session.commit()
 
     room_log_list = reversed(room.log_entries)
 
