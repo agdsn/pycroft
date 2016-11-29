@@ -11,6 +11,7 @@ conn_opts = {
         'port': 389,
         # admin dn or something else getting `userPassword`
         'base_dn': "ou=Nutzer,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
+        'group_base_dn': "ou=Gruppen,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
         'bind_dn': '',
         'bind_pw': '',
     },
