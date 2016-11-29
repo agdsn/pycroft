@@ -138,14 +138,29 @@ def translate_users(data, resources):
 
         account_name = "Nutzerkonto von {}".format(a_uid(_u.nutzer_id))
 
+
+        try:
+            ldap_account = resources['ldap_accounts'][_u.unix_account]
+        except KeyError:
+            # use kwargs in order to not give the password hash
+            ldap_kwargs = {'unix_account': None, 'email': None}
+        else:
+            ldap_kwargs = {
+                'unix_account': resources['unix_accounts'][_u.unix_account],
+                # User.email is NOT meant to be the redirection mail!
+                # 'email': ldap_account.mail,
+                'passwd_hash': ldap_account.userPassword,
+            }
+
         u = user.User(
             id=a_uid(_u.nutzer_id),
             login=login,
             name=a(_u.vname+" "+_u.name, str(a_uid(_u.nutzer_id))),
-            email=login+"@wh2.tu-dresden.de", #TODO is this correct?
             room=room,
             registered_at=_u.anmeldedatum,
-            account=finance.Account(name=account_name, type="USER_ASSET"))
+            account=finance.Account(name=account_name, type="USER_ASSET"),
+            **ldap_kwargs
+        )
 
         objs.append(u)
         u_d[_u.nutzer_id] = u
@@ -167,6 +182,28 @@ def translate_users(data, resources):
     if ignored_rooms:
         log.warning("Ignored {num} ({uniq}) rooms missing from hp4108port".format(
             num=len(ignored_rooms), uniq=len(set(ignored_rooms))))
+    return objs
+
+
+@reg.provides(user.UnixAccount, satisfies=(user.User.unix_account_id,))
+def translate_unix_accounts(data, resources):
+    objs = []
+    # legacy ldap accounts needed later for: mail, pw hash
+    ldap_accounts = resources['ldap_accounts'] = {}  # login → legacy ldap obj
+    # new unix accounts needed for: id (foreign_key)
+    unix_accounts = resources['unix_accounts'] = {}  # login → new obj
+
+    for ldap_user in data['ldap_nutzer']:
+        ldap_accounts[ldap_user.uid] = ldap_user
+        acc = user.UnixAccount(
+            uid=ldap_user.uidNumber,
+            gid=ldap_user.gidNumber,
+            home_directory=ldap_user.homeDirectory,
+            login_shell=ldap_user.loginShell,
+        )
+        unix_accounts[ldap_user.uid] = acc
+        objs.append(acc)
+
     return objs
 
 

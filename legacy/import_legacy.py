@@ -29,6 +29,7 @@ from pycroft.model import (accounting, facilities, dns, user, net, port,
 
 import userman_model
 import netusers_model
+import ldap_model
 import translate
 
 
@@ -84,15 +85,22 @@ def main(args):
         log.info("Getting legacy data from origin")
         connection_string_nu = conn_opts["netusers"]
         connection_string_um = conn_opts["userman"]
+        log.warning("Importing ldap data without caching first is not supported.")
+        ldap_available = False
     else:
         log.info("Getting legacy data from cache")
-        connection_string_nu = connection_string_um = conn_opts["legacy"]
+        ldap_available = True
+        connection_string_nu = connection_string_um = connection_string_ldap = conn_opts["legacy"]
 
     engine_nu = create_engine(connection_string_nu, echo=False)
     session_nu = scoped_session(sessionmaker(bind=engine_nu))
 
     engine_um = create_engine(connection_string_um, echo=False)
     session_um = scoped_session(sessionmaker(bind=engine_um))
+
+    if ldap_available:
+        engine_ldap = create_engine(connection_string_ldap, echo=False)
+        session_ldap = scoped_session(sessionmaker(bind=engine_ldap))
 
     master_engine = create_engine(conn_opts['master'])
     master_connection = master_engine.connect()
@@ -147,6 +155,9 @@ def main(args):
                 userman_model.FinanzBuchungen).all(),
             'subnet': session_nu.query(netusers_model.Subnet).all(),
             'port': session_nu.query(netusers_model.Hp4108Port).all(),
+            # annotate type in the name since differing from rest
+            'ldap_nutzer': (session_ldap.query(ldap_model.Nutzer).all()
+                            if ldap_available else [])
         }
 
         if args.anonymize:
