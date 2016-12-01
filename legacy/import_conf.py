@@ -11,7 +11,11 @@ member_props = {"network_access": True,
 org_props = {"user_show": True,
              "user_change": True,
              "user_mac_change": True,
-             "finance_show": True}
+             "finance_show": True,
+             "infrastructure_show": True,
+             "facilities_show": True,
+             "groups_show": True,
+             "groups_traffic_show": True}
 
 finance_admin_props = {"finance_change": True}
 
@@ -133,4 +137,3 @@ vlan_name_vid_map = {
     'UNEP': 348,
     'Zeu1f': 234,
 }
-
