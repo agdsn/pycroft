@@ -649,12 +649,24 @@ def reconstruct_memberships(data, resources):
                                         begins_at=interval.begin,
                                         ends_at=interval.end))
 
-            if _u.status_id == 9:  # ex-aktiv
+            try:
+                ldap_account = resources['ldap_accounts'][_u.unix_account]
+            except KeyError:
+                continue
+
+            if ldap_account.exaktiv:  # ex-aktiv
                 objs.append(
                     user.Membership(user=u,
                                     group=g_d["org"],
                                     begins_at=u.registered_at,
                                     ends_at=u.registered_at+timedelta(days=1)))
+
+            if ldap_account.aktiv:
+                objs.append(
+                    user.Membership(user=u,
+                                    group=g_d['org'],
+                                    begins_at=u.registered_at)
+                )
 
     log.info("#fees {}".format((" ".join("{0}:{{{0}}}".format(key) for key in n.__dict__.keys())).format(**n.__dict__)))
 
