@@ -10,6 +10,7 @@ from babel.support import Translations
 from flask import _request_ctx_stack
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import pycroft
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
@@ -26,7 +27,7 @@ def server_run(args):
     except KeyError:
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
                            "set to an SQLAlchemy connection string.")
-    engine = create_engine(connection_string, echo=False)
+    engine = create_engine(connection_string, echo=args.profile)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
 
@@ -46,13 +47,17 @@ def server_run(args):
 
     set_translation_lookup(lookup_translation)
     app.config.from_pyfile('flask.cfg')
-
+    if args.profile:
+        app.config['PROFILE'] = True
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
     app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
                         help="run in debug mode")
+    parser.add_argument("--profile", action="store_true",
+                        help="profile and log sql queries")
     parser.add_argument("--exposed", action="store_const", const='0.0.0.0',
                         dest='host', help="expose server on network")
     parser.add_argument("-p","--port", action="store",
