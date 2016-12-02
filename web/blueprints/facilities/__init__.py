@@ -13,12 +13,13 @@
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request)
 from flask_login import current_user
-from pycroft import lib
+from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.helpers.frontend import user_button
 from pycroft.model import session
-from pycroft.lib.user import is_member
+from pycroft.lib.user import status_query
 from pycroft.model.facilities import Room, Building, Site
+from pycroft.model.user import User
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.facilities.forms import (
     RoomForm, BuildingForm, RoomLogEntry)
@@ -108,15 +109,27 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
+    rooms = session.session.query(Room).filter(
+        Room.building==building, Room.level==level
+    ).order_by(Room.number).all()
+
+    status_q = status_query().join(Room).filter(
+        Room.building == building, Room.level == level,
+        User.member_of(config.member_group)
+    )
+
+    statuses = {r.id: [] for r in rooms}
+    for row in status_q.all():
+        statuses[row.User.room_id].append(row)
+
+
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inhabitants': [user_button(user)
-                            for user in filter(is_member, room.users)]
-        } for room in Room.q.filter_by(
-            building=building, level=level).order_by(Room.number)])
+            'inhabitants': [user_button(s.User, s) for s in statuses[room.id]]
+        } for room in rooms])
 
 
 @bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])

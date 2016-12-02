@@ -222,6 +222,27 @@ class User(ModelBase, UserMixin):
         )
 
     @hybrid_method
+    def member_of(self, group, when=None):
+        return group in self.active_property_groups(when)
+
+    @member_of.expression
+    def member_of(cls, group, when=None):
+        return exists(
+            select([null()]).select_from(
+                PropertyGroup.__table__.join(
+                    Membership.__table__,
+                    PropertyGroup.id == Membership.group_id
+                    )
+            ).where(
+                and_(
+                    Membership.user_id == cls.id,
+                    PropertyGroup.id == group.id,
+                    Membership.active(when)
+                )
+            )
+        )
+
+    @hybrid_method
     def has_property(self, property_name, when=None):
         """
         :param str property_name: name of a property

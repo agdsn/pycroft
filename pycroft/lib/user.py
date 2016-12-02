@@ -14,14 +14,14 @@ This module contains.
 from datetime import datetime, time
 import re
 
-from sqlalchemy import and_, exists, func, literal
+from sqlalchemy import and_, or_, exists, func, literal, literal_column
 
 from pycroft import config, property
 from pycroft.helpers import user, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
-    Interval, IntervalSet, UnboundedInterval, closed, closedopen)
+    Interval, IntervalSet, UnboundedInterval, closed, closedopen, single)
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.accounting import TrafficVolume
@@ -513,6 +513,23 @@ def status(user):
         'mail': user.has_property('mail'),
         'admin': any(user.has_property(prop) for prop in admin_properties),
     })
+
+
+def status_query():
+    now = single(session.utcnow())
+    return session.session.query(
+        User,
+        User.member_of(config.member_group, now).label('member'),
+        # traffic ignored due to pending traffic rework
+        literal_column("false").label('traffic_exceeded'),
+        (Account.balance < 0).label('account_balanced'),
+
+        # a User.properties hybrid attribute would be preferrable
+        (User.has_property('network_access', now)).label('network_access'),
+        (User.has_property('violation', now)).label('violation'),
+        (User.has_property('mail', now)).label('mail'),
+        or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
+    ).join(Account)
 
 
 @with_transaction
