@@ -5,9 +5,10 @@
 
 import argparse
 import os
+from time import time
 
 from babel.support import Translations
-from flask import _request_ctx_stack
+from flask import _request_ctx_stack, g, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.contrib.profiler import ProfilerMiddleware
@@ -22,6 +23,18 @@ def server_run(args):
     from web import make_app
 
     app = make_app()
+    @app.before_request
+    def get_time():
+        g.request_time = time()
+
+    @app.teardown_request
+    def time_response(exception=None):
+        time_taken = time() - g.request_time
+        if time_taken > 0.5:
+            app.logger.warn(
+                "Response took {duration} seconds for request {path}".format(
+                path=request.full_path, duration=time_taken))
+
     try:
         connection_string = os.environ['PYCROFT_DB_URI']
     except KeyError:
