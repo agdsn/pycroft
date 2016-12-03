@@ -638,6 +638,17 @@ def reconstruct_memberships(data, resources):
             gname_duration = defaultdict(IntervalSet)
             gname_duration["member"], gname_duration["away"] = membership_from_fees(u, semesters, n)
 
+
+            # if the membership could be reconstructed ending at the
+            # beginning of the current month (last fee), delete the
+            # ending and make it unbounded
+            latest_membership_end = max(gname_duration['member']).end \
+                                    if gname_duration['member'] else None
+
+            if latest_membership_end is not None and \
+                   latest_membership_end.replace(day=1) == date.today().replace(day=1):
+                gname_duration['member'] += IntervalSet(closedopen(latest_membership_end, None))
+
             for gname in status_groups_map[_u.status_id]: # current memberships
                 gname_duration[gname] += IntervalSet(
                     closedopen(datetime.now().date(), None))
