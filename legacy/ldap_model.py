@@ -11,7 +11,7 @@ class Nutzer(Base):
 
     uid = Column(String, primary_key=True)
     mail = Column(String)
-    userPassword = Column(String, nullable=False)
+    userPassword = Column(String)
     homeDirectory = Column(String, nullable=False)
     uidNumber = Column(Integer, nullable=False)
     gidNumber = Column(Integer, nullable=False)

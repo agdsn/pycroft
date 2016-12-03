@@ -72,15 +72,26 @@ def parse_groups(group_response):
     return group_mappings
 
 
-def cache_ldap(session, engine):
+def cache_ldap(session):
     """Import ldap entries into the cache database."""
     response = fetch_ldap_information()
 
     group_mappings = parse_groups(response.group_response)
+    no_pw_count = 0
+
+    print("Caching ldap…")
 
     for user_entry in response.user_response:
-
-        session.add(Nutzer.from_ldap_attributes(user_entry['attributes'],
+        attrs = user_entry['attributes']
+        if 'userPassword' not in attrs:
+            no_pw_count += 1
+            attrs['userPassword'] = [None]
+        session.add(Nutzer.from_ldap_attributes(attrs,
                                                 group_mappings=group_mappings))
+    if no_pw_count:
+        print("  {}/{} ldap entries without `userPassword`."
+              " Are you sure you have sufficient privileges?"
+              .format(no_pw_count, len(response.user_response)))
+
     session.commit()
-    print("Cached {} ldap users".format(len(response.user_response)))
+    print("  Cached {} ldap users".format(len(response.user_response)))

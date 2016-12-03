@@ -137,7 +137,7 @@ def main(tables=None, sql_only=True, ldap_only=False):
 
     if not sql_only:
         create_ldap_tables(engine=engine)
-        cache_ldap(session=session, engine=engine)
+        cache_ldap(session=session)
 
 if __name__ == "__main__":
     import argparse
