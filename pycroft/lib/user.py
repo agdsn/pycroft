@@ -349,11 +349,6 @@ def has_exceeded_traffic(user, when=None):
     ).scalar()
 
 
-def is_member(user):
-    """Check whether the given user is a member right now."""
-    return config.member_group in user.active_property_groups()
-
-
 def has_balance_of_at_least(user, amount):
     """Check whether the given user's balance is at least the given
     amount.
@@ -505,7 +500,7 @@ def status(user):
     :return: dict of boolean status codes
     """
     return AttrDict({
-        'member': is_member(user),
+        'member': user.member_of(config.member_group),
         'traffic_exceeded': has_exceeded_traffic(user),
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
