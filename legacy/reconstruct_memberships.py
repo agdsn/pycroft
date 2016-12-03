@@ -41,6 +41,28 @@ def interval_count(interval_list):
     return counter
 
 
+def nextmonth(original_date):
+    return (original_date.replace(day=1) + timedelta(days=32)).replace(day=1)
+
+
+def prevmonth(original_date):
+    return (original_date.replace(day=1) - timedelta(days=1)).replace(day=1)
+
+
+def advance_some_months(original_date, months):
+    current_date = original_date
+    for _ in range(months):
+        current_date = nextmonth(current_date)
+    return current_date
+
+
+def recede_some_months(original_date, months):
+    current_date = original_date
+    for _ in range(months):
+        current_date = prevmonth(current_date)
+    return current_date
+
+
 def sem_to_interval(s):
     return closedopen(s.begins_on, s.ends_on + timedelta(days=1))
 
@@ -179,11 +201,55 @@ def membership_from_fees(user, semesters, n):
             elif split.amount == sem.reduced_semester_fee:
                 intervals_reduced.append(sem_to_interval(sem))
             else:
-                raise MatchException(
-                    "non-matching fee amount ({}) "
-                    "for sem {} ({}/{}/{})".format(
-                        split.amount, sem.name, sem.regular_semester_fee,
-                        sem.reduced_semester_fee, sem.late_fee))
+                log.warning("non-matching fee amount ({}) for sem {} ({}/{}/{})."
+                            " Trying discrete proportional fitting of 1..6 months."
+                            .format(split.amount, sem.name, sem.regular_semester_fee,
+                                    sem.reduced_semester_fee, sem.late_fee))
+                if split.amount > sem.regular_semester_fee:
+                    raise MatchException("Booked fee is higher than regular semester fee.")
+
+                # Reconstruct to how many months the fee has ben
+                # reduced proportionally by the head of finance:
+                # amount / fee_per_month = amount * 6 / fee
+                proportional_months = float(split.amount) * 6 / sem.regular_semester_fee
+                if not proportional_months.is_integer():
+                    raise MatchException(
+                        "Proportional fit failed ({} vs. {} corresponds to {} months)"
+                        .format(split.amount, sem.regular_semester_fee, proportional_months))
+                num_months = int(proportional_months)
+                log.debug("The manually awarded fee corresponds to %s months", num_months)
+
+                uncropped_interval = sem_to_interval(sem)
+                intervals_below = [i for i in intervals_regular if i <= uncropped_interval]
+                intervals_above = [i for i in intervals_regular if i >= uncropped_interval]
+
+                touching_above = min(intervals_above).meets(uncropped_interval) \
+                                 if intervals_above else False
+                touching_below = max(intervals_below).meets(uncropped_interval) \
+                                 if intervals_below else False
+
+                if touching_above and touching_below:
+                    log.warning("Membership Intervals touch seamlessly above and below"
+                                " despite reduced fee. Not cropping.")
+                    cropped_interval = uncropped_interval
+                elif touching_below:
+                    log.debug("Membership intervals touch below, cropping above.")
+                    new_upper_bound = recede_some_months(uncropped_interval.end, num_months)
+                    cropped_interval = closedopen(uncropped_interval.begin, new_upper_bound)
+                elif touching_above:
+                    log.debug("Membership intervals touch above, cropping below.")
+                    new_lower_bound = advance_some_months(uncropped_interval.begin, num_months)
+                    cropped_interval = closedopen(new_lower_bound, uncropped_interval.end)
+                else:
+                    log.debug("max below / min above: %s / %s",
+                              max(intervals_below) if intervals_below else "-",
+                              min(intervals_above) if intervals_above else "-")
+                    raise MatchException("Interval with customly reduced fee booking is isolated."
+                                         " Not fitting.")
+
+                log.debug("cropped_interval: %s", cropped_interval)
+                intervals_regular.append(cropped_interval)
+
 
             if sem is None:
                 raise MatchException("logic error")
