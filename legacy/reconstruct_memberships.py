@@ -41,26 +41,10 @@ def interval_count(interval_list):
     return counter
 
 
-def nextmonth(original_date):
-    return (original_date.replace(day=1) + timedelta(days=32)).replace(day=1)
-
-
-def prevmonth(original_date):
-    return (original_date.replace(day=1) - timedelta(days=1)).replace(day=1)
-
-
-def advance_some_months(original_date, months):
-    current_date = original_date
-    for _ in range(months):
-        current_date = nextmonth(current_date)
-    return current_date
-
-
-def recede_some_months(original_date, months):
-    current_date = original_date
-    for _ in range(months):
-        current_date = prevmonth(current_date)
-    return current_date
+def monthdelta(date, delta):
+     new_month = (date.month + delta - 1) % 12 + 1
+     year_delta = (date.month + delta - new_month) / 12
+     return date.replace(year=date.year+year_delta, month=new_month, day=1)
 
 
 def sem_to_interval(s):
@@ -234,11 +218,11 @@ def membership_from_fees(user, semesters, n):
                     cropped_interval = uncropped_interval
                 elif touching_below:
                     log.debug("Membership intervals touch below, cropping above.")
-                    new_upper_bound = recede_some_months(uncropped_interval.end, num_months)
+                    new_upper_bound = monthdelta(uncropped_interval.end, -num_months)
                     cropped_interval = closedopen(uncropped_interval.begin, new_upper_bound)
                 elif touching_above:
                     log.debug("Membership intervals touch above, cropping below.")
-                    new_lower_bound = advance_some_months(uncropped_interval.begin, num_months)
+                    new_lower_bound = monthdelta(uncropped_interval.begin, num_months)
                     cropped_interval = closedopen(new_lower_bound, uncropped_interval.end)
                 else:
                     log.debug("max below / min above: %s / %s",
