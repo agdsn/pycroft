@@ -24,7 +24,7 @@ from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen, single)
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
-from pycroft.model.traffic import TrafficCredit, TrafficDebit, TrafficBalance
+from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
@@ -322,44 +322,47 @@ def edit_email(user, email, processor):
 
 def traffic_balance(user):
     try:
-        old_balance = user._traffic_balance.balance
-        old_balance_ts = user._traffic_balance.timestamp
+        bal = user._traffic_balance
+        balance = bal.amount
+        balance_ts = bal.timestamp
     except AttributeError:
-        old_balance = 0
-        old_balance_ts = datetime.fromtimestamp(0)
+        balance = 0
+        balance_ts = datetime.fromtimestamp(0)
 
-    traffic_events = user.traffic_debit + user.traffic_credit
-
-    # print old_balance_val, list(event.amount for event in traffic_events)
-    balance = old_balance + sum(event.amount for event in traffic_events
-                                if (old_balance_ts <=
-                                    event.timestamp <=
-                                    datetime.now()))
+    now = session.utcnow()
+    if balance_ts > now:
+        return None
 
     # NOTE: if balance timestamp is in future, balance is always None
+    #       because consistency cannot be guaranteed
+
+    balance += sum(-event.amount for event in self.traffic_volumes
+                   if (balance_ts <= event.timestamp <= now))
+    balance += sum(event.amount for event in self.traffic_credits
+                   if (balance_ts <= event.timestamp <= now))
     return balance
 
 
 def traffic_events_expr():
     events = union_all(select([
-        TrafficCredit.amount.label('amount'),
+        TrafficCredit.amount,
         TrafficCredit.user_id,
         TrafficCredit.timestamp,
         literal("credit").label('type')]),
 
-        select([TrafficDebit.amount.label('amount'),
+        select([(-TrafficVolume.amount).label('amount'),
                 Host.owner_id.label('user_id'),
-                TrafficDebit.timestamp,
+                TrafficVolume.timestamp,
                 literal("debit").label('type')]
                ).select_from(
-            TrafficDebit.__table__.join(
+            TrafficVolume.__table__.join(
                 IP.__table__
             ).join(
                 Interface.__table__
             ).join(
                 Host.__table__)),
 
-        select([TrafficBalance.balance.label('amount'),
+        select([TrafficBalance.amount,
                 TrafficBalance.user_id.label('user_id'),
                 TrafficBalance.timestamp,
                 literal("balance").label('type')]  # ).select_from(
@@ -394,6 +397,7 @@ def traffic_balance_expr():
     )
 
     # NOTE: if balance timestamp is in future, balance is always None
+    #       since consistency cannot be guaranteed
     return balance.label('traffic_balance')
 
 

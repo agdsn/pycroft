@@ -134,7 +134,6 @@
 
         data.forEach(function(d) {
           d.timestamp = parseTimestamp(d.timestamp);
-           d.amount = -d.amount; //invert sign
         });
 
         // Determine the first and list dates in the data set
@@ -160,7 +159,7 @@
 
         var traffic_by_type = d3.nest()
                 .key(function(d) {
-                    return d.traffic_type
+                    return d.type
                 })
                 .map(data, d3.map);
 
@@ -186,7 +185,7 @@
         var traffic_type = svg.selectAll(".traffic_type")
             .data(stacked_traffic, function(d) {return d.traffic_type;});
 
-        // BUG: traffic_type box color not being updated
+        // BUG: type box color not being updated
           traffic_type.enter().append("g")
             .attr("class", "traffic_type")
             .style("fill", function(d, i) {

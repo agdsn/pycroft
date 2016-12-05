@@ -25,7 +25,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import make_member_of, traffic_events_expr, has_exceeded_traffic, traffic_balance, traffic_balance_expr
 from pycroft.model import functions, session
-from pycroft.model.traffic import TrafficDebit
+from pycroft.model.traffic import TrafficVolume
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserInterface, IP, Interface
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
@@ -346,12 +346,12 @@ def json_trafficdata(user_id, days=7):
             .select_from(selectable.alias("row"))
 
     traffic_volumes = session.session.query(
-        TrafficDebit
+        TrafficVolume
     ).join(IP).join(Interface).join(Host).filter(
-        and_(TrafficDebit.timestamp > traffic_timespan,
+        and_(TrafficVolume.timestamp > traffic_timespan,
              Host.owner_id == user_id)
     ).order_by(
-        TrafficDebit.timestamp)
+        TrafficVolume.timestamp)
 
     traffic_volumes = json_agg(traffic_volumes).one()[0]
 
