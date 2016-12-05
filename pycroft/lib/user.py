@@ -401,7 +401,6 @@ def traffic_balance_expr():
     return balance.label('traffic_balance')
 
 
-#ToDo: Usecases überprüfen: standardmäßig nicht False?
 def has_exceeded_traffic(user):
     """
     The function calculates the balance of the users traffic.
@@ -409,11 +408,7 @@ def has_exceeded_traffic(user):
     :return: True if the user has more traffic than allowed and false if he
     did not exceed the limit.
     """
-    return session.session.query(
-        (traffic_balance_expr() < 0).label("has_exceeded_traffic")
-    ).filter(
-        User.id == user.id
-    ).scalar()
+    return traffic_balance(user) < 0
 
 
 def has_balance_of_at_least(user, amount):

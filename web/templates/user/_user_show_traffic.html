@@ -56,7 +56,6 @@
   <script>
   var parent = d3.select("#traffic-graph");
   var days_select = document.getElementById("select-days");
-  console.log(days_select);
 
   var _width = parent.node().getBoundingClientRect().width;
   var margin = {top: 25, right: 20, bottom: 50, left: 50},
@@ -132,18 +131,24 @@
         if (error) throw error;
         data = resp.items.debits;
 
+        if (data === null) return;
+
         data.forEach(function(d) {
-          d.timestamp = parseTimestamp(d.timestamp);
+            var ts = parseTimestamp(d.timestamp);
+            if (ts === null) {
+                ts = parseTimestamp(d.timestamp.slice(0, -7)); //chop off µs
+                if (ts === null) throw "Could not parse timestamp "+d.timestamp;
+            }
+
+            d.timestamp = ts
         });
 
-        // Determine the first and list dates in the data set
+        // Determine the first and last dates in the data set
         var dayExtent = d3.extent(data, function(d) { return d.timestamp; });
 
         // Bin by day
         var dayBins = d3.time.days(d3.time.day.offset(dayExtent[0],-1),
                                        d3.time.day.offset(dayExtent[1],1));
-
-
         var bin_traffic = function(data, traffic_type) {
             hist = d3.layout.histogram()
                     .bins(dayBins)
@@ -156,13 +161,11 @@
                     });
             return binned_data
             };
-
         var traffic_by_type = d3.nest()
                 .key(function(d) {
                     return d.type
                 })
                 .map(data, d3.map);
-
         var binned_traffic_by_type = [];
         traffic_by_type.forEach(function(key, value) {
             // bin data for each singular data point by day
@@ -172,7 +175,6 @@
                 values: binned_values
             });
         });
-
         var stacked_traffic = stack(binned_traffic_by_type);
 
         today = new Date();
@@ -181,7 +183,6 @@
                 return d.y + d.y0;
             })]);
 
-        console.log(stacked_traffic);
         var traffic_type = svg.selectAll(".traffic_type")
             .data(stacked_traffic, function(d) {return d.traffic_type;});
 

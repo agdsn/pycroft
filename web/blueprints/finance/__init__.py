@@ -36,15 +36,10 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 from web.templates import page_resources
+from web.blueprints.helpers.api import json_agg_core
 
-from sqlalchemy.sql.expression import literal_column, func, select, Alias, Join
+from sqlalchemy.sql.expression import literal_column, func, select, Join
 
-def json_agg(query):
-    return session.query(func.json_agg(literal_column("row")))\
-        .select_from(Alias(query.subquery(), "row"))
-def json_agg_core(selectable):
-    return select([func.json_agg(literal_column("row"))])\
-        .select_from(selectable.alias("row"))
 
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])

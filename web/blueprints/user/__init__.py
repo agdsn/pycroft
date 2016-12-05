@@ -16,14 +16,13 @@ from flask import (
     url_for)
 import operator
 from sqlalchemy import Text, and_
-from sqlalchemy.sql.expression import literal_column, func, select, Alias
 from pycroft import lib, config
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
-from pycroft.lib.user import make_member_of, traffic_events_expr, has_exceeded_traffic, traffic_balance, traffic_balance_expr
+from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume
 from pycroft.model.facilities import Room
@@ -38,6 +37,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta, time
 from flask_login import current_user
 from web.template_filters import (
@@ -334,16 +334,8 @@ def json_trafficdata(user_id, days=7):
     :param days: optional amount of days to be included
     :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
     """
-    traffic_timespan = session.utcnow() - timedelta(days=days)
+    traffic_timespan = (session.utcnow() - timedelta(days=days)).date()
     # get all traffic volumes for the user in the timespan
-
-    def json_agg(query):
-        return session.session.query(func.json_agg(literal_column("row"))) \
-            .select_from(Alias(query.subquery(), "row"))
-
-    def json_agg_core(selectable):
-        return select([func.json_agg(literal_column("row"))]) \
-            .select_from(selectable.alias("row"))
 
     traffic_volumes = session.session.query(
         TrafficVolume
