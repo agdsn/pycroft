@@ -336,9 +336,9 @@ def traffic_balance(user):
     # NOTE: if balance timestamp is in future, balance is always None
     #       because consistency cannot be guaranteed
 
-    balance += sum(-event.amount for event in self.traffic_volumes
+    balance += sum(-event.amount for event in user.traffic_volumes
                    if (balance_ts <= event.timestamp <= now))
-    balance += sum(event.amount for event in self.traffic_credits
+    balance += sum(event.amount for event in user.traffic_credits
                    if (balance_ts <= event.timestamp <= now))
     return balance
 

@@ -13,7 +13,7 @@ from pycroft.model import session, host, user, traffic
 from pycroft.model.net import Subnet
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.accounting import TrafficVolumeData
+from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData
 from tests.fixtures.dummy.net import SubnetData, VLANData

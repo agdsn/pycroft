@@ -24,7 +24,7 @@ class UserInterfaceData(DataSet):
 class SwitchData(DataSet):
     class dummy:
         name = "dummy_switch"
-        user = UserData.privileged
+        owner = UserData.privileged
         room = RoomData.dummy_room1
         management_ip = "141.30.216.15"
 
@@ -72,7 +72,7 @@ class SwitchPatchPortData(DataSet):
 
 class ServerHostData(DataSet):
     class dummy:
-        user = UserData.dummy
+        owner = UserData.dummy
         room = RoomData.dummy_room1
 
 
