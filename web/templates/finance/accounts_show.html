@@ -61,21 +61,8 @@
 {% endblock %}
 
 {% block page_script %}
+  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/d3locale.js") }}"></script>
 <script>
-var de = d3.locale({
-  "decimal": ",",
-  "thousands": ".",
-  "grouping": [3],
-  "currency": ["", "€"],
-  "dateTime": "%a %b %e %X %Y",
-  "date": "%d.%m.%Y",
-  "time": "%H:%M:%S",
-  "periods": ["AM", "PM"],
-  "days": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-  "shortDays": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-  "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-  "shortMonths": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Dez"]
-});
 var parent = d3.select("#balance-graph");
 var _width = parent.node().getBoundingClientRect().width;
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -92,7 +79,8 @@ var y = d3.scale.linear()
 
 var xAxis = d3.svg.axis()
     .scale(x)
-    .orient("bottom");
+    .orient("bottom")
+    .tickFormat(timeFormat);
 
 var yAxis = d3.svg.axis()
     .scale(y)

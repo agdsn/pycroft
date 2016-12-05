@@ -23,11 +23,7 @@
   display: none;
 }
 
-.bar {
-  shape-rendering: crispEdges;
-}
-
-.legend {
+.bar, .legend {
   shape-rendering: crispEdges;
 }
 
@@ -37,23 +33,6 @@
   shape-rendering: crispEdges;
 }
 
-.line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-
-.area {
-  stroke-width: 0;
-}
-
-.area-blue {
-  fill: lightsteelblue;
-}
-
-.area-red {
-  fill: #deb0c4;
-}
 </style>
 {% endblock %}
 
@@ -72,32 +51,9 @@
 
 {% block page_script %}
   <script type="text/javascript" src="{{ url_for("static", filename="libs/d3/d3.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/d3locale.js") }}"></script>
 
   <script>
-  var de = d3.locale({
-    "decimal": ",",
-    "thousands": ".",
-    "grouping": [3],
-    "currency": ["", "€"],
-    "dateTime": "%a %b %e %X %Y",
-    "date": "%d.%m.%Y",
-    "time": "%H:%M:%S",
-    "periods": ["AM", "PM"],
-    "days": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-    "shortDays": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-    "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-    "shortMonths": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Dez"]
-  });
-  var timeFormat = de.timeFormat.multi([
-    ["%H:%M", function(d) { return d.getMinutes(); }],
-    ["%H:%M", function(d) { return d.getHours(); }],
-    ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
-    ["%b %d", function(d) { return d.getDate() != 1; }],
-    ["%B", function(d) { return d.getMonth(); }],
-    ["%Y", function() { return true; }]
-  ]);
-
-
   var parent = d3.select("#traffic-graph");
   var days_select = document.getElementById("select-days");
   console.log(days_select);
@@ -115,13 +71,6 @@
   var y = d3.scale.linear()
       .range([height, 0]);
 
-  /*
-    var _color = d3.scale.category10();
-  color = function (arg) {
-      rv = _color(arg);
-    console.log("for arg", arg, "returning", rv, "caller:", arguments.callee.caller.toString());
-      return rv;
-  };*/
   var color = d3.scale.ordinal()
   .domain(["IN", "OUT"])
   .range(["lightsteelblue", "#deb0c4"]);
