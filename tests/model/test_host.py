@@ -9,7 +9,7 @@ from ipaddr import IPv4Address
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import MacExistsException, get_free_ip
-from pycroft.model import session, host, user, accounting
+from pycroft.model import session, host, user, traffic
 from pycroft.model.net import Subnet
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
@@ -179,7 +179,7 @@ class Test_060_Cascades(FixtureDataTestBase):
             address=IPData.dummy_user_ipv4.address).one()
         session.session.delete(test_ip)
         session.session.commit()
-        self.assertIsNone(accounting.TrafficVolume.q.first())
+        self.assertIsNone(traffic.TrafficVolume.q.first())
 
     def test_0010_cascade_on_delete_interface(self):
         test_interface = host.Interface.q.filter_by(

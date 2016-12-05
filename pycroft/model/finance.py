@@ -75,11 +75,11 @@ class Account(ModelBase):
         return sum(imap(operator.attrgetter("amount"), self.splits))
 
     @balance.expression
-    def balance(self):
+    def balance(cls):
         return select(
             [func.coalesce(func.sum(Split.amount), 0)]
         ).where(
-            Split.account_id == self.id
+            Split.account_id == cls.id
         ).label("balance")
 
 

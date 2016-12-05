@@ -12,4 +12,4 @@ $(function() {
     };
     unlimited.on('click', update_state);
     update_state();
-})
+});

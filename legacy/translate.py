@@ -15,7 +15,7 @@ import ipaddr
 from sqlalchemy.sql import null
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pycroft.model import (accounting, facilities, dns, user, net, port,
+from pycroft.model import (traffic, facilities, dns, user, net, port,
                            finance, session, host, config, logging, types)
 from pycroft.lib.host import generate_hostname
 from pycroft.helpers import user as usertools, AttrDict

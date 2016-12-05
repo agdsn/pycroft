@@ -24,7 +24,7 @@ from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen, single)
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
-from pycroft.model.accounting import TrafficCredit, TrafficDebit, TrafficBalance
+from pycroft.model.traffic import TrafficCredit, TrafficDebit, TrafficBalance
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account

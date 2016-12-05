@@ -25,7 +25,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import make_member_of, traffic_events_expr, has_exceeded_traffic, traffic_balance, traffic_balance_expr
 from pycroft.model import functions, session
-from pycroft.model.accounting import TrafficDebit
+from pycroft.model.traffic import TrafficDebit
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, UserInterface, IP, Interface
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup

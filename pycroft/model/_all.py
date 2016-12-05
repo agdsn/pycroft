@@ -12,7 +12,7 @@ This is necessary for things like sqlalchemy-schemadisplay.
 :copyright: (c) 2011 by AG DSN.
 """
 
-from .accounting import *
+from .traffic import *
 from .config import *
 from .dns import *
 from .facilities import *

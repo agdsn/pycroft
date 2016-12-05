@@ -61,8 +61,8 @@ class Test_010_SchemaMapping(unittest.TestCase):
         self.assertIsNone(msg, msg)
 
     def test_0080_mapping_accounting(self):
-        from pycroft.model import accounting
-        msg = try_mapper(accounting)
+        from pycroft.model import traffic
+        msg = try_mapper(traffic)
         self.assertIsNone(msg, msg)
 
     def test_0090_mapping_config(self):
