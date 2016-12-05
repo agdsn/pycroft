@@ -15,18 +15,19 @@ from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
 import operator
-from sqlalchemy import Text
+from sqlalchemy import Text, and_
+from sqlalchemy.sql.expression import literal_column, func, select, Alias
 from pycroft import lib, config
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
-from pycroft.lib.user import make_member_of
+from pycroft.lib.user import make_member_of, traffic_events_expr, has_exceeded_traffic, traffic_balance, traffic_balance_expr
 from pycroft.model import functions, session
-from pycroft.model.accounting import TrafficVolume
+from pycroft.model.accounting import TrafficDebit
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserInterface, IP
+from pycroft.model.host import Host, UserInterface, IP, Interface
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
@@ -162,7 +163,8 @@ def user_show(user_id):
         memberships_active=memberships_active.all(),
         flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
-                         account_id=user.account_id)
+                         account_id=user.account_id),
+        traffic_json_url=url_for('.json_trafficdata', user_id=user_id)
     )
 
 @bp.route("/<int:user_id>/account")
@@ -323,8 +325,8 @@ def end_membership(user_id, membership_id):
                             _anchor='groups'))
 
 
-@bp.route('/json/<int:user_id>/traffic')
-@bp.route('/json/<int:user_id>/traffic/<int:days>')
+@bp.route('/<int:user_id>/traffic/json')
+@bp.route('/<int:user_id>/traffic/json/<int:days>')
 def json_trafficdata(user_id, days=7):
     """Generate a Highcharts compatible JSON file to use with traffic graphs.
 
@@ -333,40 +335,32 @@ def json_trafficdata(user_id, days=7):
     :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
     """
     traffic_timespan = session.utcnow() - timedelta(days=days)
-
     # get all traffic volumes for the user in the timespan
+
+    def json_agg(query):
+        return session.session.query(func.json_agg(literal_column("row"))) \
+            .select_from(Alias(query.subquery(), "row"))
+
+    def json_agg_core(selectable):
+        return select([func.json_agg(literal_column("row"))]) \
+            .select_from(selectable.alias("row"))
+
     traffic_volumes = session.session.query(
-        TrafficVolume
-    ).join(
-        TrafficVolume.ip
-    ).join(
-        IP.host
-    ).filter(
-        Host.owner_id == user_id
-    ).filter(
-        TrafficVolume.timestamp > traffic_timespan)
+        TrafficDebit
+    ).join(IP).join(Interface).join(Host).filter(
+        and_(TrafficDebit.timestamp > traffic_timespan,
+             Host.owner_id == user_id)
+    ).order_by(
+        TrafficDebit.timestamp)
 
-    # filter for INPUT and OUTPUT
-    traffic_volume_in = traffic_volumes.filter(TrafficVolume.type == 'IN').all()
-    traffic_volume_out = traffic_volumes.filter(TrafficVolume.type == 'OUT').all()
-
-    # generate the data arrays which will be used in the JSON
-    tv_in = []
-    for volume in traffic_volume_in:
-        tv_in.append([volume.timestamp, volume.size / 1024 / 1024])
-    tv_out = []
-    for volume in traffic_volume_out:
-        tv_out.append([volume.timestamp, volume.size / 1024 / 1024])
-
-    # reverse, so data is in chronological order
-    for tv in (tv_in, tv_out):
-        tv.reverse()
+    traffic_volumes = json_agg(traffic_volumes).one()[0]
 
     return jsonify(
-        series=[
-            {"name": 'Input', "data": tv_in, "stack": 0},
-            {"name": 'Output', "data": tv_out, "stack": 1}
-        ]
+        items={
+            'debits': traffic_volumes,
+            'credits': [],
+            'balance': None
+        }
     )
 
 

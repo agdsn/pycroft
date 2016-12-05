@@ -3,13 +3,368 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+{% block page_css %}
+<style>
 
-    <div id="trafficgraph-day-selector" class="col-sm-2">
+#trafficgraph-day-selector {
+  float: left;
+  overflow: hidden;
+  padding-right: 0;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.bar {
+  shape-rendering: crispEdges;
+}
+
+.legend {
+  shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.area {
+  stroke-width: 0;
+}
+
+.area-blue {
+  fill: lightsteelblue;
+}
+
+.area-red {
+  fill: #deb0c4;
+}
+</style>
+{% endblock %}
+
+<div class="row">
+    <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
         <label for="select-days">Zeitraum</label>
-        <select id="select-days" multiple="multiple">
-            <option value="7">7 Tage</option>
+        <select id="select-days" class="form-control" onchange="load_trafficchart(this)">
+            <option value="7" selected>7 Tage</option>
             <option value="14">14 Tage</option>
             <option value="21">21 Tage</option>
         </select>
     </div>
-    <div id="trafficchart" class="col-sm-10" data-trafficurl="{{ url_for(".json_trafficdata", user_id=user.id) }}"></div>
+    <div id="traffic-graph" class="col-sm-10" data-src="{{ traffic_json_url }}"></div>
+</div>
+
+
+{% block page_script %}
+  <script type="text/javascript" src="{{ url_for("static", filename="libs/d3/d3.min.js") }}"></script>
+
+  <script>
+  var de = d3.locale({
+    "decimal": ",",
+    "thousands": ".",
+    "grouping": [3],
+    "currency": ["", "€"],
+    "dateTime": "%a %b %e %X %Y",
+    "date": "%d.%m.%Y",
+    "time": "%H:%M:%S",
+    "periods": ["AM", "PM"],
+    "days": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+    "shortDays": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+    "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "shortMonths": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Dez"]
+  });
+  var timeFormat = de.timeFormat.multi([
+    ["%H:%M", function(d) { return d.getMinutes(); }],
+    ["%H:%M", function(d) { return d.getHours(); }],
+    ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+    ["%b %d", function(d) { return d.getDate() != 1; }],
+    ["%B", function(d) { return d.getMonth(); }],
+    ["%Y", function() { return true; }]
+  ]);
+
+
+  var parent = d3.select("#traffic-graph");
+  var days_select = document.getElementById("select-days");
+  console.log(days_select);
+
+  var _width = parent.node().getBoundingClientRect().width;
+  var margin = {top: 25, right: 20, bottom: 50, left: 50},
+      width = _width - margin.left - margin.right,
+      height = 200 - margin.top - margin.bottom;
+
+  var parseTimestamp = de.timeFormat("%Y-%m-%dT%H:%M:%S").parse;
+
+  var x = d3.time.scale()
+      .range([0, width]);
+
+  var y = d3.scale.linear()
+      .range([height, 0]);
+
+  /*
+    var _color = d3.scale.category10();
+  color = function (arg) {
+      rv = _color(arg);
+    console.log("for arg", arg, "returning", rv, "caller:", arguments.callee.caller.toString());
+      return rv;
+  };*/
+  var color = d3.scale.ordinal()
+  .domain(["IN", "OUT"])
+  .range(["lightsteelblue", "#deb0c4"]);
+
+  var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .tickFormat(timeFormat);
+
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .tickFormat(de.numberFormat("s"));
+
+  var stack = d3.layout.stack()
+      .values(function(d) {
+          return d.values;
+      });
+
+  // round to 'n' significant digits
+  // I know rounding, I have the best rounding
+  function round(value, n) {
+      if(value == 0) {
+          return 0;
+      }
+
+      var d = Math.ceil(Math.log10(value < 0 ? -value: value));
+      var power = n - parseInt(d);
+
+      var magnitude = Math.pow(10, power);
+      var shifted = Math.round(value*magnitude);
+      return shifted/magnitude;
+  }
+
+  var svg = parent.append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  //x axis
+  svg.append("g")
+      .attr("class", "xaxis axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  // y axis
+  svg.append("g")
+      .attr("class", "yaxis axis")
+      .call(yAxis)
+    .append("text")
+      .text("Traffic");
+
+  var data_src = parent.attr("data-src");
+
+  function load_trafficchart(sel) {
+      var days = sel.value;
+      d3.json(data_src + '/' + days, function(error, resp) {
+        if (error) throw error;
+        data = resp.items.debits;
+
+        data.forEach(function(d) {
+          d.timestamp = parseTimestamp(d.timestamp);
+           d.amount = -d.amount; //invert sign
+        });
+
+        // Determine the first and list dates in the data set
+        var dayExtent = d3.extent(data, function(d) { return d.timestamp; });
+
+        // Bin by day
+        var dayBins = d3.time.days(d3.time.day.offset(dayExtent[0],-1),
+                                       d3.time.day.offset(dayExtent[1],1));
+
+
+        var bin_traffic = function(data, traffic_type) {
+            hist = d3.layout.histogram()
+                    .bins(dayBins)
+                    .value(function(d) {return d.timestamp});
+            var binned_data = hist(data);
+            binned_data.forEach(
+                    function(bin) {
+                        bin.traffic_type = traffic_type;
+                        bin.y = d3.sum(bin, function(d) {return d.amount;})
+                    });
+            return binned_data
+            };
+
+        var traffic_by_type = d3.nest()
+                .key(function(d) {
+                    return d.traffic_type
+                })
+                .map(data, d3.map);
+
+        var binned_traffic_by_type = [];
+        traffic_by_type.forEach(function(key, value) {
+            // bin data for each singular data point by day
+            var binned_values = bin_traffic(value, key);
+            binned_traffic_by_type.push({
+                traffic_type: key,
+                values: binned_values
+            });
+        });
+
+        var stacked_traffic = stack(binned_traffic_by_type);
+
+        today = new Date();
+        x.domain(d3.extent(dayBins));
+        y.domain([0, d3.max(stacked_traffic[stacked_traffic.length - 1].values, function(d) {
+                return d.y + d.y0;
+            })]);
+
+        console.log(stacked_traffic);
+        var traffic_type = svg.selectAll(".traffic_type")
+            .data(stacked_traffic, function(d) {return d.traffic_type;});
+
+        // BUG: traffic_type box color not being updated
+          traffic_type.enter().append("g")
+            .attr("class", "traffic_type")
+            .style("fill", function(d, i) {
+                return color(d.traffic_type);
+            })
+            .style("stroke", function(d, i) {
+                return d3.rgb(color(d.traffic_type)).darker();
+            });
+
+        bars = traffic_type.selectAll(".bar")
+              .data(function(d) { //data
+                  return d.values;
+              }, function(d) {return d.x}); //key for object constancy
+
+            bars.exit()
+              .transition()
+                .duration(300)
+              .attr("y", y(0))
+              .attr("height", height - y(0))
+              .style('fill-opacity', 1e-6)
+              .remove();
+
+
+          bars.enter().append("rect")
+                  .attr("class", "bar")
+                  .attr("y", y(0))
+                  .attr("height", height - y(0))
+                  .on("mouseover", function() { tooltip.style("opacity", 1); })
+                  .on("mouseout", function() { tooltip.style("opacity", 0); })
+                  .on("mousemove", function(d) {
+                    var xPosition = d3.mouse(this)[0] - 15;
+                    var yPosition = d3.mouse(this)[1] - 25;
+                    tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+                    tooltip.select("text").text(de.numberFormat("s")(round(d.y, 3))+"\n"+d.traffic_type);
+                  });
+
+          bars.transition().duration(300)
+              .attr("x", function(d) {
+                  return x(d.x);
+              })
+              .attr("width", function(d) {
+                  return x(new Date(d.x.getTime() + d.dx)) - x(d.x) - 2;
+              })
+              .attr("y", function(d) {
+                  return y(d.y0 + d.y);
+              })
+              .attr("height", function(d) {
+                  return y(d.y0) - y(d.y0 + d.y);
+              });
+
+
+            traffic_type.exit()
+                    .transition().duration(300)
+                .remove();
+
+          //update axes
+          svg.selectAll(".xaxis").call(xAxis);
+          svg.selectAll(".yaxis").call(yAxis);
+
+          // rotate x axis tick labels
+          svg.selectAll(".xaxis text")  // select all the text elements for the xaxis
+                .attr("transform", function(d) {
+                   return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-30)";
+               });
+
+
+
+        // legend
+        var maxLegendWidth = 110;
+        var xStart = (width - maxLegendWidth * color.domain().length) / 2;
+        var leg = {y: -13, width: 18, height: 18};
+
+        var legend = svg.selectAll(".legend")
+            .data(color.domain().slice());
+
+        legend.exit().remove();
+
+        leg_enter = legend.enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) {
+                    return "translate(" + i * maxLegendWidth + ",0)";
+                });
+
+        leg_enter.append("rect")
+                .attr("x", xStart)
+                .attr("y", leg.y-leg.height/2)
+                .attr("width", leg.width)
+                .attr("height", leg.height)
+                .style("fill", function(d) {return color(d)})
+                .style("stroke", function(d, i) {return d3.rgb(color(d)).darker();})
+
+        leg_enter.append("text")
+                .attr("x", xStart + 24)
+                .attr("y", leg.y)
+                .attr("dy", ".35em")
+                .style("text-anchor", "start")
+                .text(function(d) {return d;});
+
+        // line at current time
+        var today = svg.selectAll(".vline-now")
+                .data([today])
+                .enter().append("line")
+                .attr("class", "vline-now")
+                .attr("x1", function(d) {return x(d)})
+                .attr("y1", 0)
+                .attr("x2", function(d) {return x(d)})
+                .attr("y2", height)
+                .style("stroke-width", 1)
+                .style("stroke", "red")
+                .style("fill", "none");
+
+        // tooltip
+        var tooltip = svg.append("g")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+        tooltip.append("text")
+                .attr("x", 15)
+                .attr("dy", "1.2em")
+                .style("text-anchor", "middle")
+                .attr("font-size", "12px");
+    });
+
+
+
+  }
+  load_trafficchart(days_select);
+  </script>
+
+{% endblock %}

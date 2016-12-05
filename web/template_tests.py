@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from pycroft.lib.user import has_positive_balance, has_exceeded_traffic
+from pycroft.lib.user import has_positive_balance#, has_exceeded_traffic
 
 _check_registry = {}
 
@@ -29,11 +29,11 @@ def no_network_access_check(user):
     return not user.has_property("network_access")
 
 
-@template_check("user_with_traffic_exceeded")
-def exceeded_traffic_check(user):
-    """Tests if user has exceeded his traffic
-    """
-    return has_exceeded_traffic(user)
+#@template_check("user_with_traffic_exceeded")
+#def exceeded_traffic_check(user):
+#    """Tests if user has exceeded his traffic
+#    """
+#    return has_exceeded_traffic(user)
 
 @template_check("privileged_for")
 def privilege_check(user, *required_privileges):

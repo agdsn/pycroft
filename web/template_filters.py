@@ -18,7 +18,7 @@ import flask_babel
 
 from pycroft._compat import imap
 from pycroft.model import session, _all
-from pycroft.model.accounting import TrafficVolume
+#from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
 from pycroft.helpers.i18n import localized, gettext
 
@@ -153,7 +153,7 @@ def transaction_type_filter(credit_debit_type):
     }
     return types.get(replacer(credit_debit_type), gettext("Unknown"))
 
-
+"""
 @template_filter("host_traffic")
 def host_traffic_filter(host):
     traffic_timespan = datetime.utcnow() - timedelta(days=7)
@@ -175,7 +175,7 @@ def host_traffic_filter(host):
         traffic_sum += ( traffic.size / 1024 / 1024 )
 
     return u"{} MB".format(traffic_sum)
-
+"""
 
 @template_filter("host_name")
 def host_name_filter(host):

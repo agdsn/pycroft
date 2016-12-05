@@ -14,7 +14,7 @@ This module contains.
 from datetime import datetime, time
 import re
 
-from sqlalchemy import and_, or_, exists, func, literal, literal_column
+from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
 
 from pycroft import config, property
 from pycroft.helpers import user, AttrDict
@@ -24,11 +24,11 @@ from pycroft.helpers.interval import (
     Interval, IntervalSet, UnboundedInterval, closed, closedopen, single)
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
-from pycroft.model.accounting import TrafficVolume
+from pycroft.model.accounting import TrafficCredit, TrafficDebit, TrafficBalance
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, IP, UserHost, UserInterface
+from pycroft.model.host import Host, IP, UserHost, UserInterface, Interface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup
@@ -320,8 +320,85 @@ def edit_email(user, email, processor):
     return user
 
 
+def traffic_balance(user):
+    try:
+        old_balance = user._traffic_balance.balance
+        old_balance_ts = user._traffic_balance.timestamp
+    except AttributeError:
+        old_balance = 0
+        old_balance_ts = datetime.fromtimestamp(0)
+
+    traffic_events = user.traffic_debit + user.traffic_credit
+
+    # print old_balance_val, list(event.amount for event in traffic_events)
+    balance = old_balance + sum(event.amount for event in traffic_events
+                                if (old_balance_ts <=
+                                    event.timestamp <=
+                                    datetime.now()))
+
+    # NOTE: if balance timestamp is in future, balance is always None
+    return balance
+
+
+def traffic_events_expr():
+    events = union_all(select([
+        TrafficCredit.amount.label('amount'),
+        TrafficCredit.user_id,
+        TrafficCredit.timestamp,
+        literal("credit").label('type')]),
+
+        select([TrafficDebit.amount.label('amount'),
+                Host.owner_id.label('user_id'),
+                TrafficDebit.timestamp,
+                literal("debit").label('type')]
+               ).select_from(
+            TrafficDebit.__table__.join(
+                IP.__table__
+            ).join(
+                Interface.__table__
+            ).join(
+                Host.__table__)),
+
+        select([TrafficBalance.balance.label('amount'),
+                TrafficBalance.user_id.label('user_id'),
+                TrafficBalance.timestamp,
+                literal("balance").label('type')]  # ).select_from(
+               # .__table__.outerjoin(TrafficBalance)
+               )
+    ).alias('traffic_events')
+
+    return events
+
+
+def traffic_balance_expr():
+    # not a hybrid attribute expression due to circular import dependencies
+
+    balance = select(
+        [func.sum(literal_column('traffic_events.amount'))]
+    ).select_from(
+        traffic_events_expr()
+    ).where(
+        and_(
+            literal_column('traffic_events.user_id') == User.id,
+            literal_column('traffic_events.timestamp') <= func.now(),
+            literal_column('traffic_events.timestamp') >=
+            func.coalesce(
+                select([TrafficBalance.timestamp]
+                       ).where(
+                    TrafficBalance.user_id == User.id
+                ).correlate_except(
+                    TrafficBalance).as_scalar(),
+                datetime.fromtimestamp(0)
+            ).label(
+                'balance_timestamp'))
+    )
+
+    # NOTE: if balance timestamp is in future, balance is always None
+    return balance.label('traffic_balance')
+
+
 #ToDo: Usecases überprüfen: standardmäßig nicht False?
-def has_exceeded_traffic(user, when=None):
+def has_exceeded_traffic(user):
     """
     The function calculates the balance of the users traffic.
     :param user: The user object which has to be checked.
@@ -329,23 +406,9 @@ def has_exceeded_traffic(user, when=None):
     did not exceed the limit.
     """
     return session.session.query(
-        (
-            func.max(TrafficGroup.traffic_limit) * literal(1.10) <
-            func.sum(TrafficVolume.size)
-        ).label("has_exceeded_traffic")
-    ).select_from(
-        TrafficGroup
-    ).join(
-        Membership
-    ).join(
-        User.user_hosts
-    ).join(
-        Host.ips
-    ).join(
-        IP.traffic_volumes
+        (traffic_balance_expr() < 0).label("has_exceeded_traffic")
     ).filter(
-        Membership.active(when),
-        Membership.user_id == user.id
+        User.id == user.id
     ).scalar()
 
 
