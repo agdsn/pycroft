@@ -4,12 +4,14 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import CIDR
+from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.types import Integer, String
 
 from pycroft.helpers.net import mac_regex
 from pycroft.model.base import ModelBase
 from pycroft.model.facilities import Room
+from pycroft.model.net import PublicIP, PrivateSubnet
 from pycroft.model.types import (
     IPAddress, MACAddress, InvalidMACAddressException)
 from pycroft.model.user import User
@@ -25,7 +27,7 @@ class HostReservation(ModelBase):
 
     mac = Column(MACAddress, nullable=False)
 
-    ip = Column(CIDR, nullable=False, unique=True)
+    address = Column(CIDR, nullable=False, unique=True)
 
     @validates('mac')
     def validate_mac(self, _, mac_address):
@@ -64,6 +66,7 @@ class TypeMismatch(Exception):
 class SwitchInterface(ModelBase):
     id = Column(Integer, primary_key=True)
 
+    host_id = Column(Integer, ForeignKey(NAS.id))
     host = relationship(NAS,
                         backref=backref("switch_interfaces",
                                         cascade="all, delete-orphan"))
@@ -75,3 +78,19 @@ class SwitchInterface(ModelBase):
     destination_room = relationship(Room, backref=backref("switch_interfaces"))
     destination_room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
                  nullable=True)
+
+
+class Forwarding(ModelBase):
+    id = Column(Integer, primary_key=True)
+
+    public_ip = Column(INET, ForeignKey(PublicIP.address))
+
+    private_ip = Column(INET, ForeignKey(HostReservation.address))
+    private_net = relationship(PrivateSubnet, primaryjoin="forwarding.private_net.op('<<=', is_comparison=True)"
+                                       "(foreign(private_subnet.cidr))",
+                           viewonly=True)
+
+    protocol = Column(String(10))
+    source_port = Column(Integer(5))
+    destination_port = Column(Integer(5))
+    comment = Column(String)
