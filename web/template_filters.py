@@ -19,7 +19,7 @@ import flask_babel
 from pycroft._compat import imap
 from pycroft.model import session, _all
 from pycroft.model.accounting import TrafficVolume
-from pycroft.model.host import Host, IP
+from pycroft.model.host import Host, PublicIP
 from pycroft.helpers.i18n import localized, gettext
 
 _filter_registry = {}
@@ -163,7 +163,7 @@ def host_traffic_filter(host):
     ).join(
         TrafficVolume.ip
     ).join(
-        IP.host
+        PublicIP.host
     ).filter(
         Host.id == host.id
     ).filter(

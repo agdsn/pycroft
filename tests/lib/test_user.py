@@ -102,7 +102,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
 
-        user_host = host.UserHost.q.filter_by(owner=new_user).one()
+        user_host = host.HostReservation.q.filter_by(owner=new_user).one()
         self.assertEqual(len(user_host.user_interfaces), 1)
         user_interface = user_host.user_interfaces[0]
         self.assertEqual(len(user_interface.ips), 1)

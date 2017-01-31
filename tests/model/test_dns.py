@@ -8,7 +8,7 @@ from sqlalchemy import inspect
 from pycroft.model.dns import (
     AddressRecord, DNSZone, CNAMERecord, MXRecord, NSRecord, SOARecord,
     SRVRecord, TXTRecord, record_types)
-from pycroft.model.host import IP, UserHost
+from pycroft.model.host import PublicIP, HostReservation
 from pycroft.model import session
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.dns_records import (
@@ -94,7 +94,7 @@ class TestCascades(FixtureDataTestBase):
 
     def test_record_on_host_delete(self):
         address_records = []
-        for host in UserHost.q.all():
+        for host in HostReservation.q.all():
             for ip in host.ips:
                 address_records.extend(ip.address_records)
             session.session.delete(host)
@@ -102,14 +102,14 @@ class TestCascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).deleted for o in address_records))
 
     def test_0040_address_record_on_ipv4_delete(self):
-        ip = IP.q.filter_by(address=IPData.dummy_user_ipv4.address).one()
+        ip = PublicIP.q.filter_by(address=IPData.dummy_user_ipv4.address).one()
         records = ip.address_records
         session.session.delete(ip)
         session.session.commit()
         self.assertTrue(all(inspect(r).deleted for r in records))
 
     def test_0045_address_record_on_ipv6_delete(self):
-        ip = IP.q.filter_by(address=IPData.dummy_user_ipv6.address).one()
+        ip = PublicIP.q.filter_by(address=IPData.dummy_user_ipv6.address).one()
         address_records = ip.address_records
         session.session.delete(ip)
         session.session.commit()

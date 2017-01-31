@@ -471,7 +471,7 @@ def generate_dns_zone(data, resources):
     return primary_host_zone, soa_record
 
 
-@reg.provides(net.VLAN, net.Subnet)
+@reg.provides(net.GlobalVLAN, net.GlobalSubnet)
 def generate_subnets_vlans(data, resources):
     primary_host_zone = resources['primary_host_zone']
 
@@ -479,8 +479,8 @@ def generate_subnets_vlans(data, resources):
     for _s in data['subnet']:
         address = ipaddr.IPv4Network(_s.net_ip + "/" + _s.netmask)
         try:
-            vlan = net.VLAN(name=_s.vlan_name,
-                            vid=vlan_name_vid_map[_s.vlan_name])
+            vlan = net.GlobalVLAN(name=_s.vlan_name,
+                                  vid=vlan_name_vid_map[_s.vlan_name])
         except KeyError as e:
             log.warning("Ignoring subnet %s missing from vlan_name_vid_map",
                         _s.vlan_name)
@@ -490,12 +490,12 @@ def generate_subnets_vlans(data, resources):
             reversed(address.ip.exploded.split('.')),
             min((address.max_prefixlen-address.prefixlen + 7//8), 1),
             4)) + ".in-addr.arpa" # cp. from pycroft/lib/net.py:ptr_name
-        s = net.Subnet(address=address,
-                       gateway=ipaddr.IPv4Address(_s.default_gateway),
-                       primary_dns_zone=primary_host_zone,
-                       reverse_dns_zone=dns.DNSZone(name=rev_dnszone_name),
-                       description=_s.vlan_name,
-                       vlan=vlan)
+        s = net.GlobalSubnet(address=address,
+                             gateway=ipaddr.IPv4Address(_s.default_gateway),
+                             primary_dns_zone=primary_host_zone,
+                             reverse_dns_zone=dns.DNSZone(name=rev_dnszone_name),
+                             description=_s.vlan_name,
+                             vlan=vlan)
         s_d[_s.subnet_id] = s
 
     # TODO: note, missing transit, server and eduroam subnets
@@ -504,10 +504,10 @@ def generate_subnets_vlans(data, resources):
 
 
 @reg.provides(host.Host, host.Interface,
-                host.ServerHost, host.UserHost, host.Switch,
-                host.ServerInterface, host.UserInterface, host.SwitchInterface,
-                host.IP, dns.AddressRecord,
-              satisfies=(host.IP.interface_id, dns.AddressRecord.name_id))
+              host.ServerHost, host.HostReservation, host.NAS,
+              host.ServerInterface, host.UserInterface, host.SwitchInterface,
+              host.PublicIP, dns.AddressRecord,
+              satisfies=(host.PublicIP.interface_id, dns.AddressRecord.name_id))
 def translate_hosts(data, resources):
     legacy_hostname_map = {}
     u_d = resources['user']
@@ -537,9 +537,9 @@ def translate_hosts(data, resources):
         mgmt_ip_blocks = _c.c_ip.split(".")
         mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
         mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
-        h = host.Switch(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
+        h = host.NAS(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
         interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01", name="switch management interface")
-        ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+        ip = host.PublicIP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
         sw_d[mgmt_ip] = h
         objs.append(ip)
 
@@ -547,7 +547,7 @@ def translate_hosts(data, resources):
         room = get_or_create_room(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)
         h = host.ServerHost(owner=u_d[0], name=_c.c_alias, room=room)
         interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
-        ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+        ip = host.PublicIP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
         hostname = legacy_hostname_map.get(_c.c_hname, _c.c_hname)
         if hostname and hostname != 'NULL':
             objs.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
@@ -556,12 +556,12 @@ def translate_hosts(data, resources):
 
     for _c in data['userhost']:
         owner = u_d[_c.nutzer_id]
-        h = host.UserHost(owner=owner, room=owner.room)
+        h = host.HostReservation(owner=owner, room=owner.room)
         interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
         if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
             hostname = generate_hostname(ipaddr.IPAddress(_c.c_ip))
-            ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+            ip = host.PublicIP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
             objs.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
         else:
             objs.append(interface)

@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import MacExistsException, get_free_ip
 from pycroft.model import session, host, user, accounting
-from pycroft.model.net import Subnet
+from pycroft.model.net import GlobalSubnet
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.accounting import TrafficVolumeData
@@ -42,7 +42,7 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
 
     def test_0010_mac_validate(self):
 
-        interface = host.UserInterface(host=host.UserHost.q.first())
+        interface = host.UserInterface(host=host.HostReservation.q.first())
 
         # Try some bad macs
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff")
@@ -73,10 +73,10 @@ class Test_030_IpModel(FixtureDataTestBase):
                 UserInterfaceData, VLANData)
 
     def test_0030_delete_address(self):
-        subnet = Subnet.q.first()
+        subnet = GlobalSubnet.q.first()
         interface = host.Interface.q.first()
         ip, _ = get_free_ip((subnet, ))
-        ip_addr = host.IP(interface=interface, address=ip, subnet=subnet)
+        ip_addr = host.PublicIP(interface=interface, address=ip, subnet=subnet)
 
         session.session.add(ip_addr)
         session.session.commit()
@@ -87,10 +87,10 @@ class Test_030_IpModel(FixtureDataTestBase):
             session.session.commit()
 
     def test_0040_delete_subnet(self):
-        subnet = Subnet.q.first()
+        subnet = GlobalSubnet.q.first()
         interface = host.Interface.q.first()
         ip, _ = get_free_ip((subnet, ))
-        ip_addr = host.IP(interface=interface, address=ip, subnet=subnet)
+        ip_addr = host.PublicIP(interface=interface, address=ip, subnet=subnet)
 
         session.session.add(ip_addr)
         session.session.commit()
@@ -106,12 +106,12 @@ class Test_040_IpEvents(FixtureDataTestBase):
                 UserHostData, UserInterfaceData)
 
     def test_0010_correct_subnet_and_ip(self):
-        subnet = Subnet.q.first()
+        subnet = GlobalSubnet.q.first()
         interface = host.Interface.q.first()
 
         ip_address, _ = get_free_ip((subnet, ))
 
-        ip = host.IP(interface=interface)
+        ip = host.PublicIP(interface=interface)
         ip.address = ip_address
         ip.subnet = subnet
         session.session.add(ip)
@@ -119,19 +119,19 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
         interface = host.Interface.q.first()
         ip_address, _ = get_free_ip((subnet, ))
-        ip = host.IP(address=ip_address, subnet=subnet, interface=interface)
+        ip = host.PublicIP(address=ip_address, subnet=subnet, interface=interface)
         session.session.add(ip)
         session.session.commit()
 
-        host.IP.q.filter(host.IP.interface == interface).delete()
+        host.PublicIP.q.filter(host.PublicIP.interface == interface).delete()
         session.session.commit()
 
     def test_0020_missing_subnet(self):
-        subnet = Subnet.q.first()
+        subnet = GlobalSubnet.q.first()
         interface = host.Interface.q.first()
 
         ip_address, _ = get_free_ip((subnet, ))
-        ip = host.IP(interface=interface)
+        ip = host.PublicIP(interface=interface)
         ip.address = ip_address
 
         def commit():
@@ -140,10 +140,10 @@ class Test_040_IpEvents(FixtureDataTestBase):
         self.assertRaises(IntegrityError, commit)
 
     def test_0030_missing_ip(self):
-        subnet = Subnet.q.first()
+        subnet = GlobalSubnet.q.first()
         interface = host.Interface.q.first()
 
-        ip = host.IP(interface=interface)
+        ip = host.PublicIP(interface=interface)
         ip.subnet = subnet
 
         def commit():
@@ -152,22 +152,22 @@ class Test_040_IpEvents(FixtureDataTestBase):
         self.assertRaises(IntegrityError, commit)
 
     def test_0040_wrong_subnet(self):
-        subnets = Subnet.q.all()
+        subnets = GlobalSubnet.q.all()
         interface = host.Interface.q.first()
         ip_address, _ = get_free_ip((subnets[0], ))
 
-        ip = host.IP(interface=interface, address=ip_address)
+        ip = host.PublicIP(interface=interface, address=ip_address)
 
         with self.assertRaises(ValueError):
             ip.subnet = subnets[1]
 
-        ip = host.IP(interface=interface, subnet=subnets[1])
+        ip = host.PublicIP(interface=interface, subnet=subnets[1])
 
         with self.assertRaises(ValueError):
             ip.address = ip_address
 
         with self.assertRaises(ValueError):
-            host.IP(interface=interface, subnet=subnets[1], address=ip_address)
+            host.PublicIP(interface=interface, subnet=subnets[1], address=ip_address)
 
 
 class Test_060_Cascades(FixtureDataTestBase):
@@ -175,7 +175,7 @@ class Test_060_Cascades(FixtureDataTestBase):
                 TrafficVolumeData)
 
     def test_0010_cascade_on_delete_ip(self):
-        test_ip = host.IP.q.filter_by(
+        test_ip = host.PublicIP.q.filter_by(
             address=IPData.dummy_user_ipv4.address).one()
         session.session.delete(test_ip)
         session.session.commit()
@@ -192,7 +192,7 @@ class Test_060_Cascades(FixtureDataTestBase):
                             for o in chain(ips, traffic_volumes)))
 
     def test_0010_cascade_on_delete_host(self):
-        test_host = host.UserHost.q.first()
+        test_host = host.HostReservation.q.first()
         interfaces = test_host.user_interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))

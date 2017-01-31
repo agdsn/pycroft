@@ -12,8 +12,8 @@ from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model import session, user, logging
-from pycroft.model.host import UserInterface, IP, UserHost
-from pycroft.model.net import Subnet
+from pycroft.model.host import UserInterface, PublicIP, HostReservation
+from pycroft.model.net import GlobalSubnet
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import (
     UserHostData, UserInterfaceData)
@@ -59,7 +59,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
         return ips - net.reserved_addresses - 2
 
     def test_0010_get_free_ip_simple(self):
-        subnets = Subnet.q.all()
+        subnets = GlobalSubnet.q.all()
         for subnet in subnets:
             ip, subnet = get_free_ip((subnet,))
             self.assertIn(ip, subnet.address)
@@ -67,17 +67,17 @@ class Test_020_IpHelper(FixtureDataTestBase):
     def fill_net(self, net, interface):
         for num in range(0, self.calculate_usable_ips(net)):
             ip, _ = get_free_ip((net,))
-            session.session.add(IP(address=ip, subnet=net,
-                                   interface=interface))
+            session.session.add(PublicIP(address=ip, subnet=net,
+                                         interface=interface))
         session.session.commit()
 
     def test_0030_get_free_ip_next_to_full(self):
-        first_net = Subnet.q.filter_by(
+        first_net = GlobalSubnet.q.filter_by(
             address=SubnetData.user_ipv4.address).one()
-        second_net = Subnet.q.filter_by(
+        second_net = GlobalSubnet.q.filter_by(
             address=SubnetData.dummy_subnet2.address).one()
         subnets = (first_net, second_net)
-        host = UserHost.q.one()
+        host = HostReservation.q.one()
 
         interface = host.user_interfaces[0]
         self.fill_net(first_net, interface)

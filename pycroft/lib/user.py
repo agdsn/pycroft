@@ -28,7 +28,7 @@ from pycroft.model.accounting import TrafficVolume
 from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, IP, UserHost, UserInterface
+from pycroft.model.host import Host, PublicIP, HostReservation, UserInterface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup
@@ -91,8 +91,8 @@ def setup_ipv4_networking(host):
                       if p.switch_interface is not None])
     for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
-        new_ip = IP(interface=interface, address=ip_address,
-                    subnet=subnet)
+        new_ip = PublicIP(interface=interface, address=ip_address,
+                          subnet=subnet)
         session.session.add(new_ip)
         address_record_name = DNSName(name=generate_hostname(ip_address),
                                       zone=subnet.primary_dns_zone)
@@ -157,7 +157,7 @@ def move_in(name, login, email, building, level, room_number, mac,
         id=new_user.id).to_json()
 
     # create one new host (including interface) for the new user
-    new_host = UserHost(owner=new_user, room=room, desired_name=host_name)
+    new_host = HostReservation(owner=new_user, room=room, desired_name=host_name)
     session.session.add(new_host)
     session.session.add(UserInterface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
@@ -197,7 +197,7 @@ def migrate_user_host(host, new_room, processor):
     Migrate a UserHost to a new room and if necessary to a new subnet.
     If the host changes subnet, it will get a new IP address and existing CNAME
     records will point to the primary name of the new address.
-    :param UserHost host: Host to be migrated
+    :param HostReservation host: Host to be migrated
     :param Room new_room: new room of the host
     :param User processor: User processing the migration
     :return:
@@ -213,8 +213,8 @@ def migrate_user_host(host, new_room, processor):
         old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
             ip_address, subnet = get_free_ip(subnets)
-            new_ip = IP(interface=interface, address=ip_address,
-                        subnet=subnet)
+            new_ip = PublicIP(interface=interface, address=ip_address,
+                              subnet=subnet)
             session.session.add(new_ip)
             address_record_name = DNSName(name=generate_hostname(ip_address),
                                           zone=subnet.primary_dns_zone)
@@ -342,7 +342,7 @@ def has_exceeded_traffic(user, when=None):
     ).join(
         Host.ips
     ).join(
-        IP.traffic_volumes
+        PublicIP.traffic_volumes
     ).filter(
         Membership.active(when),
         Membership.user_id == user.id

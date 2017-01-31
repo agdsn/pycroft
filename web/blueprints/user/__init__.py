@@ -26,7 +26,7 @@ from pycroft.lib.user import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.accounting import TrafficVolume
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserInterface, IP
+from pycroft.model.host import Host, UserInterface, PublicIP
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
@@ -340,7 +340,7 @@ def json_trafficdata(user_id, days=7):
     ).join(
         TrafficVolume.ip
     ).join(
-        IP.host
+        PublicIP.host
     ).filter(
         Host.owner_id == user_id
     ).filter(

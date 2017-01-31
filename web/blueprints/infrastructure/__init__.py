@@ -15,8 +15,8 @@ from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
 from pycroft.helpers import net
 from pycroft.model import session
-from pycroft.model.host import Switch
-from pycroft.model.net import VLAN, Subnet
+from pycroft.model.host import NAS
+from pycroft.model.net import GlobalVLAN, GlobalSubnet
 from pycroft.model.dns import Record, CNAMERecord
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.infrastructure.forms import CNAMERecordEditForm
@@ -37,7 +37,7 @@ def subnets():
 
 @bp.route('/subnets/json')
 def subnets_json():
-    subnets_list = Subnet.q.all()
+    subnets_list = GlobalSubnet.q.all()
     return jsonify(items=[{
             'id': subnet.id,
             # TODO href to DNS zones
@@ -63,7 +63,7 @@ def switches_json():
                 'href': url_for(".switch_show", switch_id=switch.id)
             },
             'ip': str(switch.management_ip)
-        } for switch in Switch.q.all()])
+        } for switch in NAS.q.all()])
 
 
 @bp.route('/user/<int:user_id>/record_delete/<int:record_id>')
@@ -198,7 +198,7 @@ def srv_record_create(user_id, host_id):
 
 @bp.route('/switch/show/<int:switch_id>')
 def switch_show(switch_id):
-    switch = Switch.q.get(switch_id)
+    switch = NAS.q.get(switch_id)
     if not switch:
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
@@ -209,7 +209,7 @@ def switch_show(switch_id):
 
 @bp.route('/switch/show/<int:switch_id>/json')
 def switch_show_json(switch_id):
-    switch = Switch.q.get(switch_id)
+    switch = NAS.q.get(switch_id)
     if not switch:
         abort(404)
     switch_interface_list = switch.switch_interfaces
@@ -241,4 +241,4 @@ def vlans_json():
             'id': vlan.id,
             'name': vlan.name,
             'vid': vlan.vid,
-        } for vlan in VLAN.q.all()])
+        } for vlan in GlobalVLAN.q.all()])

@@ -1,13 +1,14 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import chain, imap
 import operator
+from itertools import chain, imap
+
 from sqlalchemy import (
     ForeignKey, Column, String, Integer, UniqueConstraint, event)
 from sqlalchemy.orm import backref, relationship
+
 from pycroft.model.base import ModelBase
-from pycroft.model.host import IP
 
 
 class DNSZone(ModelBase):
@@ -83,9 +84,9 @@ class Record(ModelBase):
 
 class AddressRecord(Record):
     name_id, name, zone = Record._relationships("address_records")
-    address_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
+    address_id = Column(Integer, ForeignKey(PublicIP.id, ondelete="CASCADE"),
                         nullable=False)
-    address = relationship(IP, lazy=False,
+    address = relationship(PublicIP, lazy=False,
                            backref=backref("address_records",
                                            passive_deletes=True,
                                            cascade="all, delete-orphan"))
@@ -139,11 +140,11 @@ class NSRecord(Record):
 class PTRRecord(Record):
     record_type = 'PTR'
     name_id, name, zone = Record._relationships("ptr_records")
-    address_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
+    address_id = Column(Integer, ForeignKey(PublicIP.id, ondelete="CASCADE"),
                         nullable=False, unique=True)
-    address = relationship(IP, backref=backref("ptr_record", uselist=False,
-                                               passive_deletes=True,
-                                               cascade="all, delete-orphan"))
+    address = relationship(PublicIP, backref=backref("ptr_record", uselist=False,
+                                                     passive_deletes=True,
+                                                     cascade="all, delete-orphan"))
     ptrdname_id = Column(Integer, ForeignKey(DNSName.id, ondelete="CASCADE"),
                          nullable=False)
     ptrdname = relationship(DNSName, foreign_keys=[ptrdname_id], lazy=False)
