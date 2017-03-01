@@ -48,33 +48,42 @@ class Record(object):
         attributes = {}  #TODO: Fill
         return cls(dn=dn, attrs=attributes)
 
+    def __sub__(self, other):
+        """Return the action needed to transform another record into this one"""
+        raise NotImplementedError
+
 
 class LdapExporter(object):
     RecordState = RecordState
     Record = Record
 
     def __init__(self, current, desired):
-        self.state = defaultdict(self.RecordState)
+        self.states = defaultdict(self.RecordState)
         self.populate_current(current)
         self.populate_desired(desired)
+        self.actions = []
 
     def populate_current(self, current_objects):
         for obj in current_objects:
             record = self.Record.from_ldap_record(obj)
-            self.state[record.dn].current = record
+            self.states[record.dn].current = record
 
     def populate_desired(self, desired_objects):
         for obj in desired_objects:
             record = self.Record.from_db_user(obj)
-            self.state[record.dn].desired = record
+            self.states[record.dn].desired = record
 
-    def consolidate_state_to_action(self, state):
-        """Turn a RecordState into an Action (add/del/mod/idle)
+    def compile_actions(self):
+        """Consolidate current and desired records into necessary actions"""
+        if self.actions:
+            raise RuntimeError("Actions can only be compiled once")
+        for state in self.states:
+            self.actions.append(state.desired - state.current)
 
-        TODO: Implement (perhaps in Record.__sub__ s.t.
-        ``action = desired - current``)
-        """
-        raise NotImplementedError
+    def execute_all(self):
+        for action in self.actions:
+            #TODO: Do we need a connection? perhaps introduce it as a parameter
+            action.execute()
 
 
 def init_db_session():
