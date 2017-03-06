@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pycroft.model.user import User
+from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 BASE_DN = ''  #TODO: implement configuration
 
@@ -17,6 +18,12 @@ class RecordState(object):
     def __init__(self, current=None, desired=None):
         self.current = current
         self.desired = desired
+
+    def __eq__(self, other):
+        try:
+            return self.current == other.current and self.desired == other.desired
+        except KeyError:
+            return False
 
     def __repr__(self):
         set_attributes = []
@@ -50,8 +57,21 @@ class Record(object):
 
     def __sub__(self, other):
         """Return the action needed to transform another record into this one"""
-        raise NotImplementedError
+        if other is None:
+            return AddAction(record=self)
 
+        if self.dn != getattr(other, 'dn', object()):
+            raise TypeError("Cannot compute difference to record with different dn")
+
+        if self == other:
+            return IdleAction(self)
+
+        return ModifyAction.from_two_records(desired_record=self, current_record=other)
+
+    def __rsub__(self, other):
+        if other is None:
+            return DeleteAction(record=self)
+        return NotImplemented
 
 class LdapExporter(object):
     RecordState = RecordState
