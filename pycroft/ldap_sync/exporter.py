@@ -58,11 +58,11 @@ class LdapExporter(object):
     Record = Record
 
     def __init__(self, current, desired):
-        self.states = defaultdict(self.RecordState)
+        self.states_dict = defaultdict(self.RecordState)
         for record in current:
-            self.states[record.dn].current = record
+            self.states_dict[record.dn].current = record
         for record in desired:
-            self.states[record.dn].desired = record
+            self.states_dict[record.dn].desired = record
         self.actions = []
 
     @classmethod
@@ -81,7 +81,7 @@ class LdapExporter(object):
         """Consolidate current and desired records into necessary actions"""
         if self.actions:
             raise RuntimeError("Actions can only be compiled once")
-        for state in self.states:
+        for state in self.states_dict.values():
             self.actions.append(state.desired - state.current)
 
     def execute_all(self):
