@@ -59,19 +59,23 @@ class LdapExporter(object):
 
     def __init__(self, current, desired):
         self.states = defaultdict(self.RecordState)
-        self.populate_current(current)
-        self.populate_desired(desired)
+        for record in current:
+            self.states[record.dn].current = record
+        for record in desired:
+            self.states[record.dn].desired = record
         self.actions = []
 
-    def populate_current(self, current_objects):
-        for obj in current_objects:
-            record = self.Record.from_ldap_record(obj)
-            self.states[record.dn].current = record
+    @classmethod
+    def from_orm_objects_and_ldap_result(cls, current, desired):
+        """Construct an exporter instance with non-raw parameters
 
-    def populate_desired(self, desired_objects):
-        for obj in desired_objects:
-            record = self.Record.from_db_user(obj)
-            self.states[record.dn].desired = record
+        :param cls:
+        :param current: An iterable of records as returned by
+            ldapsearch
+        :param desired: An iterable of sqlalchemy objects
+        """
+        return cls((cls.Record.from_ldap_record(x) for x in current),
+                   (cls.Record.from_db_user(x) for x in desired))
 
     def compile_actions(self):
         """Consolidate current and desired records into necessary actions"""
