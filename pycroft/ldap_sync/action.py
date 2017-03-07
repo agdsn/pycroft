@@ -1,9 +1,14 @@
+from abc import ABCMeta, abstractmethod
+
 class Action(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self, record):
         self.record = record
 
+    @abstractmethod
     def execute(self, *a, **kw):
-        raise NotImplementedError("Action subclass must implement `execute`.")
+        pass
 
 
 class AddAction(Action):

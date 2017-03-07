@@ -3,7 +3,22 @@
 from unittest import TestCase
 
 from pycroft.ldap_sync.exporter import LdapExporter, Record, RecordState
-from pycroft.ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
+from pycroft.ldap_sync.action import Action, AddAction, DeleteAction, IdleAction, ModifyAction
+
+
+class ActionSubclassTestCase(TestCase):
+    def test_instantiation_fails(self):
+        with self.assertRaises(TypeError):
+            Action(record=None)
+
+    def test_subclassing_with_execute_works(self):
+        class A(Action):
+            def execute(self):
+                pass
+        try:
+            A(record=None)
+        except TypeError as e:
+            self.fail("Subclassing raised Exception {}".format(e))
 
 
 class RecordTestCase(TestCase):
