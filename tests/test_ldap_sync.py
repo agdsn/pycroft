@@ -104,7 +104,11 @@ class RecordTestCase(TestCase):
         assert False
 
     def test_record_from_ldap_record(self):
-        assert False
+        ldapsearch_record = {'dn': 'somedn',
+                             'attributes': {'foo': u'bar'},
+                             'raw_attributes': {'foo': b'bar'}}
+        record = Record.from_ldap_record(ldapsearch_record)
+        self.assertEqual(record.attrs, ldapsearch_record['attributes'])
 
 
 class RecordStateTestCase(TestCase):

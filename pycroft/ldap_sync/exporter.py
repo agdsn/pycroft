@@ -51,9 +51,7 @@ class Record(object):
 
     @classmethod
     def from_ldap_record(cls, record):
-        dn = dn_from_username(record.uid)
-        attributes = {}  #TODO: Fill
-        return cls(dn=dn, attrs=attributes)
+        return cls(dn=record['dn'], attrs=record['attributes'])
 
     def __sub__(self, other):
         """Return the action needed to transform another record into this one"""
