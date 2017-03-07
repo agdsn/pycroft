@@ -26,7 +26,7 @@ class RecordTestCase(TestCase):
         self.record = Record(dn='test', attrs={'bar': 'shizzle'})
 
     def test_record_equality(self):
-        self.assertEqual(self.record, self.record)
+        self.assertEqual(self.record, Record(dn='test', attrs={'bar': 'shizzle'}))
 
     def test_record_subtraction_with_none_adds(self):
         difference = self.record - None

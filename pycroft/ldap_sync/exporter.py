@@ -73,6 +73,15 @@ class Record(object):
             return DeleteAction(record=self)
         return NotImplemented
 
+    def __eq__(self, other):
+        try:
+            return self.dn == other.dn and self.attrs == other.attrs
+        except KeyError:
+            return False
+
+    def __repr__(self):
+        return "<{} dn={}>".format(type(self).__name__, self.dn)
+
 class LdapExporter(object):
     RecordState = RecordState
     Record = Record
