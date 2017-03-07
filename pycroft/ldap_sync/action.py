@@ -28,6 +28,11 @@ class ModifyAction(Action):
 
         This method doesn't check whether the dn is equal, it only
         acesses ``record.attrs``, respectively.
+
+        This method also doesn't check whether both dicts have equal
+        keys, meaning keys not given in :param:`desired_record.attrs`
+        won't end up in the modification dict.  Removing attributes
+        has to be done by explicitly setting them to an empty string.
         """
         current_attrs = current_record.attrs
         updated_attrs = desired_record.attrs
