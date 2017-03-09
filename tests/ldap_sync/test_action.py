@@ -3,7 +3,7 @@ from unittest import TestCase
 import ldap3
 
 from pycroft.ldap_sync.exporter import Record, dn_from_username
-from pycroft.ldap_sync.action import Action, AddAction, ModifyAction, LDAP_OBJECTCLASSES
+from pycroft.ldap_sync.action import Action, AddAction, ModifyAction, DeleteAction, LDAP_OBJECTCLASSES
 
 
 class ActionSubclassTestCase(TestCase):
@@ -141,3 +141,16 @@ class AddActionTestCase(MockedLdapTestBase):
             self.validate_attribute_type(key=key, value=value)
             self.assertIn(key, received_attributes)
             self.assertEqual(received_attributes[key], value)
+
+
+class DeleteActionTestCase(MockedLdapTestBase):
+    def setUp(self):
+        super(DeleteActionTestCase, self).setUp()
+        self.uid = 'shizzle'
+        self.dn = dn_from_username(self.uid, base=self.base)
+        self.connection.add(self.dn, LDAP_OBJECTCLASSES)
+        record = Record(dn=self.dn, attrs={})
+        DeleteAction(record=record).execute(self.connection)
+
+    def test_no_objects(self):
+        self.assertEqual(len(self.get_all_objects()), 0)
