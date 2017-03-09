@@ -58,6 +58,7 @@
     <div class="col-sm-6 col-md-5 col-lg-4">
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Umziehen</a></div>
         <div class="user"><a class="btn btn-info" href="{{ url_for(".suspend", user_id=user.id) }}">Sperren</a></div>
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".reset_password", user_id=user.id) }}">Passwort zurücksetzen</a></div>
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">Ausziehen</a></div>
         {% if not user.has_property("away") %}
         <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out_temporarily", user_id=user.id) }}">Vorübergehend ausziehen</a></div>

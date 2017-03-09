@@ -24,8 +24,11 @@ RUN apt-get update \
         libsqlite3-dev \
         nodejs \
         npm \
+        python-cairo \
         python-dev \
+        python-gtk2 \
         python-pip \
+        python-poppler \
         sqlite3 \
         vim \
     && ln -s /usr/bin/nodejs /usr/bin/node \

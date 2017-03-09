@@ -117,6 +117,14 @@ def setup_ipv4_networking(host):
 
 
 @with_transaction
+def reset_password(myUser):
+    plain_password = user.generate_password(12)
+    myUser.password = plain_password
+    return plain_password
+
+
+
+@with_transaction
 def move_in(name, login, email, building, level, room_number, mac,
             processor, moved_from_division, already_paid_semester_fee, host_name=None):
     """
@@ -186,10 +194,7 @@ def move_in(name, login, email, building, level, room_number, mac,
                    message=deferred_gettext(u"Moved in.").to_json(),
                    user=new_user)
 
-    #TODO: print plain password on paper instead
-    print(u"new password: " + plain_password)
-
-    return new_user
+    return (new_user, plain_password)
 
 
 def migrate_user_host(host, new_room, processor):
