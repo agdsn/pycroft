@@ -11,18 +11,25 @@ class _dn_proxy(object):
     def __init__(self):
         self.value = None
 
-    def __get__(self):
+    def __get__(self, instance, owner):
         if self.value is None:
             raise RuntimeError("Base DN hasn't been configured yet or set to None")
 
         return self.value
 
-    def __set__(self, value):
+    def __set__(self, instance, value):
         self.value = value
 
-BASE_DN = _dn_proxy()  #TODO: implement configuration
 
-def dn_from_username(username, base=BASE_DN):
+class Config(object):
+    BASE_DN = _dn_proxy()
+
+
+config = Config()
+
+def dn_from_username(username, base=None):
+    if base is None:
+        base = config.BASE_DN
     return "uid={},{}".format(username, base)
 
 

@@ -2,7 +2,7 @@
 # pylint: disable=missing-docstring
 from unittest import TestCase
 
-from pycroft.ldap_sync.exporter import LdapExporter, Record, RecordState
+from pycroft.ldap_sync.exporter import LdapExporter, Record, RecordState, config
 from pycroft.ldap_sync.action import Action, AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -101,3 +101,16 @@ class EmptyLdapTestCase(TestCase):
 # - nonexistent record → add
 # - obsolete record → del
 # - nonexistent record → del
+
+
+class BaseDNProxyTestCase(TestCase):
+    def test_basedn_set_correctly(self):
+        config.BASE_DN = 'shizzle'
+        try:
+            self.assertTrue(config.BASE_DN)
+        except RuntimeError:
+            self.fail("config.BASE_DN raised RuntimeError")
+
+    def test_basedn_raises_when_not_set(self):
+        with self.assertRaises(RuntimeError):
+            config.BASE_DN  # pylint: disable=pointless-statement
