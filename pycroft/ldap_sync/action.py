@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
+
 class Action(object):
     __metaclass__ = ABCMeta
 
@@ -13,8 +15,7 @@ class Action(object):
 
 class AddAction(Action):
     def execute(self, connection):
-        #TODO: Correct ldap objectclasses?
-        connection.add(self.record.dn, ['inetOrgPerson'], self.record.attrs)
+        connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
 
 
 class ModifyAction(Action):
