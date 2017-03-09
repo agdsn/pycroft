@@ -15,6 +15,7 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import pycroft
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
+from pycroft.model import create_db_model
 from pycroft.model.session import set_scoped_session
 import web
 from scripts.schema import AlembicHelper, SchemaStrategist

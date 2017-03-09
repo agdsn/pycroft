@@ -43,6 +43,10 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
 
 
+class UserResetPasswordForm(Form):
+    pass
+
+
 class UserEditNameForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
 

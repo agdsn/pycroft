@@ -93,6 +93,12 @@ def setup_ipv4_networking(host):
                     subnet=subnet)
         session.session.add(new_ip)
 
+@with_transaction
+def reset_password(myUser):
+    plain_password = user_helper.generate_password(12)
+    myUser.password = plain_password
+    return plain_password
+
 
 @with_transaction
 def move_in(name, login, email, building, level, room_number, mac, processor,
@@ -164,10 +170,7 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
                    user=new_user)
 
-    #TODO: print plain password on paper instead
-    print(u"new password: " + plain_password)
-
-    return new_user
+    return (new_user, plain_password)
 
 
 @with_transaction

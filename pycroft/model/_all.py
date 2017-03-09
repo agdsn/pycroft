@@ -21,3 +21,4 @@ from .host import *
 from .port import *
 from .net import *
 from .user import *
+from .webstorage import *
