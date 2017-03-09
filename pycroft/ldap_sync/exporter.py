@@ -7,7 +7,20 @@ from sqlalchemy.orm import sessionmaker
 from pycroft.model.user import User
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
-BASE_DN = ''  #TODO: implement configuration
+class _dn_proxy(object):
+    def __init__(self):
+        self.value = None
+
+    def __get__(self):
+        if self.value is None:
+            raise RuntimeError("Base DN hasn't been configured yet or set to None")
+
+        return self.value
+
+    def __set__(self, value):
+        self.value = value
+
+BASE_DN = _dn_proxy()  #TODO: implement configuration
 
 def dn_from_username(username, base=BASE_DN):
     return "uid={},{}".format(username, base)
@@ -36,8 +49,6 @@ class RecordState(object):
 
 
 class Record(object):
-    BASE_DN = BASE_DN
-
     def __init__(self, dn, attrs):
         """Create a new record with a dn and certain attributes."""
         self.dn = dn
