@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+import ldap3
+
 LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
 
 class Action(object):
@@ -9,7 +11,7 @@ class Action(object):
         self.record = record
 
     @abstractmethod
-    def execute(self, *a, **kw):
+    def execute(self, connection):
         pass
 
 
@@ -20,6 +22,14 @@ class AddAction(Action):
 
 class ModifyAction(Action):
     def __init__(self, record, modifications):
+        """Initialize a new ModifyAction operating on `record` with
+        `modifications`
+
+        :param Record record:
+        :param dict modifications: a dict with entries of the form
+            ``'attribute_name': new_value``, where the value is a list
+            if the corresponding attribute is not single-valued.
+        """
         self.modifications = modifications
         super(ModifyAction, self).__init__(record)
 
@@ -47,7 +57,11 @@ class ModifyAction(Action):
         return cls(record=desired_record, modifications=updated_attrs)
 
     def execute(self, connection):
-        raise NotImplementedError
+        connection.modify(dn=self.record.dn, changes={
+            # attention: new_value might be list!
+            attr: (ldap3.MODIFY_REPLACE, new_value)
+            for attr, new_value in self.modifications.items()
+        })
 
 
 class DeleteAction(Action):

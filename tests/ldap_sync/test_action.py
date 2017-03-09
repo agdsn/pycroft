@@ -3,7 +3,8 @@ from unittest import TestCase
 import ldap3
 
 from pycroft.ldap_sync.exporter import Record, dn_from_username
-from pycroft.ldap_sync.action import Action, AddAction, ModifyAction, DeleteAction, LDAP_OBJECTCLASSES
+from pycroft.ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, \
+     DeleteAction, LDAP_OBJECTCLASSES
 
 
 class ActionSubclassTestCase(TestCase):
@@ -154,3 +155,28 @@ class DeleteActionTestCase(MockedLdapTestBase):
 
     def test_no_objects(self):
         self.assertEqual(len(self.get_all_objects()), 0)
+
+
+class ModifyActionTestCase(MockedLdapTestBase):
+    def setUp(self):
+        super(ModifyActionTestCase, self).setUp()
+        self.uid = 'shizzle'
+        self.dn = dn_from_username(self.uid, base=self.base)
+        self.connection.add(self.dn, LDAP_OBJECTCLASSES)
+        record = Record(dn=self.dn, attrs={})
+        action = ModifyAction(record=record, modifications={'emailAddress': 'new@shizzle.de'})
+        action.execute(self.connection)
+
+    def test_one_object_changed(self):
+        objs = self.get_all_objects()
+        self.assertEqual(len(objs), 1)
+
+    def test_mail_changed(self):
+        self.assertEqual(self.get_all_objects()[0]['attributes']['emailAddress'],
+                         ['new@shizzle.de'])
+
+
+class IdleActionTestCase(TestCase):
+    def test_execute_does_nothing(self):
+        record = Record(dn='test', attrs={})
+        IdleAction(record=record).execute()
