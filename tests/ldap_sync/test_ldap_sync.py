@@ -40,21 +40,58 @@ class RecordTestCase(TestCase):
         difference = self.record - Record(dn='test', attrs={'bar': ''})
         self.assertIsInstance(difference, ModifyAction)
 
-    def test_record_from_orm(self):
-        # user = object()  #TODO: use actual ORM object
-        # record = Record.from_db_user(user)
-        # attrs = record.attrs
-        # self.assertEqual(user.name, attrs['name'])
-        # self.assertEqual(user.email, attrs['email'])
-        # # … and so on.
-        assert False
-
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
                              'attributes': {'foo': u'bar', 'shizzle': u'baz'},
                              'raw_attributes': {'foo': b'bar'}}
         record = Record.from_ldap_record(ldapsearch_record)
         self.assertEqual(record.attrs, {'foo': [u'bar'], 'shizzle': [u'baz']})
+
+
+class RecordFromOrmTestCase(TestCase):
+    class complete_user(object):
+        name = 'foo bar shizzle'
+        login = 'shizzle'
+        email = 'shizzle@agdsn.de'
+        class unix_account(object):
+            uid = 10006
+            gid = 100
+            home_directory = '/home/test'
+            login_shell = '/bin/bash'
+        passwd_hash = 'somehash'
+
+    def setUp(self):
+        self.attrs = Record.from_db_user(self.complete_user).attrs
+
+    def test_attributes_passed(self):
+        pass
+
+    def test_uid_correct(self):
+        self.assertEqual(self.attrs['uid'], ['shizzle'])
+
+    def test_uidNumber_correct(self):
+        self.assertEqual(self.attrs['uidNumber'], [10006])
+
+    def test_gidNumber_correct(self):
+        self.assertEqual(self.attrs['gidNumber'], [100])
+
+    def test_homeDirectory_correct(self):
+        self.assertEqual(self.attrs['homeDirectory'], ['/home/test'])
+
+    def test_userPassword_correct(self):
+        self.assertEqual(self.attrs['userPassword'], ['somehash'])
+
+    def test_gecos_correct(self):
+        self.assertEqual(self.attrs['gecos'], ['foo bar shizzle'])
+
+    def test_cn_correct(self):
+        self.assertEqual(self.attrs['cn'], ['foo bar shizzle'])
+
+    def test_sn_correct(self):
+        self.assertEqual(self.attrs['sn'], ['foo bar shizzle'])
+
+    def test_emailAddress_correct(self):
+        self.assertEqual(self.attrs['emailAddress'], ['shizzle@agdsn.de'])
 
 
 class CanonicalizationTestCase(TestCase):

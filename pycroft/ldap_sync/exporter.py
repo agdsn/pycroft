@@ -84,7 +84,21 @@ class Record(object):
     @classmethod
     def from_db_user(cls, user):
         dn = dn_from_username(user.login)
-        attributes = {}  #TODO: Fill
+        if user.unix_account == None:
+            raise ValueError("User object must have a UnixAccount")
+
+        attributes = {
+            'uid': user.login,  # REQ by posixAccount, shadowAccount
+            'uidNumber': user.unix_account.uid,  # SV, REQ by posixAccount
+            'gidNumber': user.unix_account.gid,  # SV, REQ by posixAccount
+            'homeDirectory': user.unix_account.home_directory,  # SV, REQ by posixAccount
+            'userPassword': user.passwd_hash,  # MAY by posixAccount, shadowAccount
+            'gecos': user.name,  # SV, MAY by posixAccount
+            'loginShell': user.unix_account.login_shell,  # SV, MAY by posixAccount
+            'cn': user.name,  # REQ by posixAccount, inetOrgPerson(person)
+            'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
+            'emailAddress': user.email,  # MAY by inetOrgPerson
+        }
         return cls(dn=dn, attrs=attributes)
 
     @classmethod
