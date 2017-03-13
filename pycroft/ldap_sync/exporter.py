@@ -1,3 +1,4 @@
+# -*- coding: utf-8; -*-
 import os
 from collections import defaultdict
 
@@ -55,11 +56,30 @@ class RecordState(object):
         return "<{cls}{attrs}>".format(cls=type(self).__name__, attrs=attrs_string)
 
 
+def _canonicalize_to_list(value):
+    """Canonicalize a value to a list.
+
+    If value is a list, return it.  If it is None or an empty string,
+    return an empty list.  Else, return value.
+    """
+    if isinstance(value, list):
+        return value
+    if value == '' or value is None:
+        return []
+    return [value]
+
+
 class Record(object):
     def __init__(self, dn, attrs):
-        """Create a new record with a dn and certain attributes."""
+        """Create a new record with a dn and certain attributes.
+
+        :param str dn: The DN of the record
+        :param dict attrs: The attributes of the record.  Every value
+            will be canonicalized to a list to allow for a senseful
+            comparison between two records.
+        """
         self.dn = dn
-        self.attrs = attrs
+        self.attrs = {key: _canonicalize_to_list(val) for key, val in attrs.items()}
 
     @classmethod
     def from_db_user(cls, user):

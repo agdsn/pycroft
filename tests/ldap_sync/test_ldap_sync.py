@@ -2,7 +2,8 @@
 # pylint: disable=missing-docstring
 from unittest import TestCase
 
-from pycroft.ldap_sync.exporter import LdapExporter, Record, RecordState, config
+from pycroft.ldap_sync.exporter import LdapExporter, Record, RecordState, \
+     config, _canonicalize_to_list
 from pycroft.ldap_sync.action import Action, AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -12,6 +13,9 @@ class RecordTestCase(TestCase):
 
     def test_record_equality(self):
         self.assertEqual(self.record, Record(dn='test', attrs={'bar': 'shizzle'}))
+
+    def test_record_noncanonical_equality(self):
+        self.assertEqual(self.record, Record(dn='test', attrs={'bar': ['shizzle']}))
 
     def test_record_subtraction_with_none_adds(self):
         difference = self.record - None
@@ -47,10 +51,33 @@ class RecordTestCase(TestCase):
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
-                             'attributes': {'foo': u'bar'},
+                             'attributes': {'foo': u'bar', 'shizzle': u'baz'},
                              'raw_attributes': {'foo': b'bar'}}
         record = Record.from_ldap_record(ldapsearch_record)
-        self.assertEqual(record.attrs, ldapsearch_record['attributes'])
+        self.assertEqual(record.attrs, {'foo': [u'bar'], 'shizzle': [u'baz']})
+
+
+class CanonicalizationTestCase(TestCase):
+    def test_empty_string_gives_empty_list(self):
+        self.assertEqual(_canonicalize_to_list(''), [])
+
+    def test_none_gives_empty_list(self):
+        self.assertEqual(_canonicalize_to_list(None), [])
+
+    def test_zero_gets_kept(self):
+        self.assertEqual(_canonicalize_to_list(0), [0])
+
+    def test_string_gets_kept(self):
+        self.assertEqual(_canonicalize_to_list('teststring'), ['teststring'])
+
+    def test_false_gets_kept(self):
+        self.assertEqual(_canonicalize_to_list(False), [False])
+
+    def test_empty_list_gets_passed_identially(self):
+        self.assertEqual(_canonicalize_to_list([]), [])
+
+    def test_filled_list_gets_passed_identially(self):
+        self.assertEqual(_canonicalize_to_list(['l', 'bar', 0, None]), ['l', 'bar', 0, None])
 
 
 class RecordStateTestCase(TestCase):

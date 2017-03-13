@@ -40,14 +40,14 @@ class ModifyActionConstructorTestCase(TestCase):
             current={'foo': 'baz', 'email': 'admin@sci.hub'},
             desired={'foo': 'bar', 'email': 'admin@sci.hub'},
         )
-        self.assertEqual(action.modifications, {'foo': 'bar'})
+        self.assertEqual(action.modifications, {'foo': ['bar']})
 
     def test_empty_attribute_emptied(self):
         action = self.action_from_attrs(
             current={'foo': 'bar', 'email': 'admin@sci.hub'},
             desired={'foo': 'bar', 'email': ''},
         )
-        self.assertEqual(action.modifications, {'email': ''})
+        self.assertEqual(action.modifications, {'email': []})
 
     def test_nongiven_attribute_doesnt_matter(self):
         action = self.action_from_attrs(
@@ -61,14 +61,14 @@ class ModifyActionConstructorTestCase(TestCase):
             current={'foo': 'bar'},
             desired={'foo': 'bar', 'email': 'admin@sci.hub'},
         )
-        self.assertEqual(action.modifications, {'email': 'admin@sci.hub'})
+        self.assertEqual(action.modifications, {'email': ['admin@sci.hub']})
 
     def test_attribute_none_will_be_set(self):
         action = self.action_from_attrs(
             current={'foo': 'bar'},
             desired={'foo': None},
         )
-        self.assertEqual(action.modifications, {'foo': None})
+        self.assertEqual(action.modifications, {'foo': []})
 
 
 class MockedLdapTestBase(TestCase):
