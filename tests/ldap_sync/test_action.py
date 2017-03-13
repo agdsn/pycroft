@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import ldap3
 
-from pycroft.ldap_sync.exporter import Record, dn_from_username
+from pycroft.ldap_sync.record import Record, dn_from_username
 from pycroft.ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, \
      DeleteAction, LDAP_OBJECTCLASSES
 
