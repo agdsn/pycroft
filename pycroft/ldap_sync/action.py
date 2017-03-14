@@ -16,6 +16,11 @@ class Action(object):
 
 
 class AddAction(Action):
+    def __init__(self, record):
+        # We don't want to add e.g. an empty `mail` field
+        record.remove_empty_attributes()
+        super(AddAction, self).__init__(record)
+
     def execute(self, connection):
         connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
 

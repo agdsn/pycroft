@@ -45,6 +45,18 @@ class RecordTestCase(TestCase):
         self.assertEqual(record.attrs, {'foo': [u'bar'], 'shizzle': [u'baz']})
 
 
+class EmptyAttributeRecordTestCase(TestCase):
+    def setUp(self):
+        self.record = Record(dn='test', attrs={'emailAddress': None})
+
+    def test_attribute_is_empty_list(self):
+        self.assertEqual(self.record.attrs['emailAddress'], [])
+
+    def test_empty_attribute_removed(self):
+        self.record.remove_empty_attributes()
+        self.assertNotIn('emailAddress', self.record.attrs)
+
+
 class RecordFromOrmTestCase(TestCase):
     class complete_user(object):
         name = 'foo bar shizzle'

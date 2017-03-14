@@ -77,6 +77,10 @@ class Record(object):
     def from_ldap_record(cls, record):
         return cls(dn=record['dn'], attrs=record['attributes'])
 
+    def remove_empty_attributes(self):
+        #TODO: to be tested
+        self.attrs = {key: val for key, val in self.attrs.items() if val}
+
     def __sub__(self, other):
         """Return the action needed to transform another record into this one"""
         if other is None:
