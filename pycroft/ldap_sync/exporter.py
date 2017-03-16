@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import ldap3
 from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from pycroft.model.user import User
 from pycroft.model.session import set_scoped_session, session as global_session
@@ -66,54 +66,78 @@ class LdapExporter(object):
             action.execute(*a, **kw)
 
 
-def init_db_session():
-    #TODO: implement+test
+def establish_and_return_session():
     try:
         connection_string = os.environ['PYCROFT_DB_URI']
     except KeyError:
         print("Please give the database URI in `PYCROFT_DB_URI`")
         exit(1)
     engine = create_engine(connection_string)
-    session = sessionmaker(bind=engine)
-    return session
+    set_scoped_session(scoped_session(sessionmaker(bind=engine)))
+    return global_session  # from pycroft.model.session
 
 
-def iter_db_users_to_sync(session):
-    #TODO: return only objects which have an active connection
-    return session.query(User).all()
+def fetch_users_to_sync(session):
+    """Fetch the users who should be synced
+
+    :param session: The SQLAlchemy session to use
+
+    :returns: A list of :py:cls:`User` objects having the property
+              'mail' having a unix_account.
+    """
+    count_mail_but_not_account = (
+        session.query(func.count(User.id))
+        .filter(User.has_property('mail'),
+                User.unix_account == None)
+        .scalar()
+    )
+    print("Warning: {} Users have the 'mail' property but not a unix account!"
+          .format(count_mail_but_not_account))
+
+    return User.q.filter(User.has_property('mail'), User.unix_account != None).all()
 
 
-def init_ldap_connection():
-    #TODO: implement
-    connection = None
-    # server = ldap3.Server()
-    # connection = ldap3.Connection(server)
+def establish_and_return_ldap_connection():
+    server = ldap3.Server('host')
+    return ldap3.Connection(server, user='cn=admin', password='admin_pw')
+
+
+def fetch_current_ldap_users(connection):
+    success = connection.search(search_base='ou=users,dc=agdsn,dc=de',
+                                search_filter='(objectclass=*)',
+                                attributes=ldap3.ALL_ATTRIBUTES)
+    if not success:
+        print("No ldap users found!")
+        return []
+
+    return connection.response
+
+
+def fake_connection():
+    server = ldap3.Server('mocked')
+    connection = ldap3.Connection(server, client_strategy=ldap3.MOCK_SYNC)
+    connection.open()
     return connection
 
 
-def iter_current_ldap_users(connection):
-    #TODO: call search
-    # connection.search()
-    return []
-
-
 def main():
-    #TODO: would a cm be better? we only need one query and need not leave the
-    #session open
-    session = init_db_session()
-    db_users = iter_db_users_to_sync(session)
-    #TODO: fetch db objects
-    # users = User.filter_by(<has_connection?>).all()
-    connection = init_ldap_connection()
-    ldap_users = iter_current_ldap_users(connection)
 
-    #TODO: init ldap
-    #TODO: fetch ldap objects
+    db_users = fetch_users_to_sync(session=establish_and_return_session())
+    print("Got {} database users".format(len(db_users)))
 
-    #TODO: call registry
-    exporter = LdapExporter(current=db_users, desired=ldap_users)
-    # exporter.compile_actions()
-    # exporter.execute_all()
+    #TODO: configure it to use a real connection
+    # connection = establish_and_return_ldap_connection()
+    connection = fake_connection()
+    ldap_users = fetch_current_ldap_users(connection)
+    config.BASE_DN = 'ou=users,dc=agdsn,dc=de'
+
+    print("Initializing the ldap exporter")
+    exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
+                                                             desired=db_users)
+    print("Done!")
+    exporter.compile_actions()
+    print("Have {} actions…".format(len(exporter.actions)))
+    exporter.execute_all(connection)
 
 
 if __name__ == '__main__':
