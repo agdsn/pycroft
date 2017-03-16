@@ -1,14 +1,19 @@
+# -*- coding: utf-8; -*-
+import logging
 from abc import ABCMeta, abstractmethod
 
 import ldap3
+
 
 LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
 
 class Action(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, record):
+    def __init__(self, record, logger=None):
         self.record = record
+        self.logger = (logger if logger is not None
+                       else logging.getLogger('ldap_sync.action'))
 
     @abstractmethod
     def execute(self, connection):
@@ -22,6 +27,7 @@ class AddAction(Action):
         super(AddAction, self).__init__(record)
 
     def execute(self, connection):
+        self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
 
 
@@ -62,6 +68,8 @@ class ModifyAction(Action):
         return cls(record=desired_record, modifications=updated_attrs)
 
     def execute(self, connection):
+        self.logger.debug("Executing %s for %s (%s)", type(self).__name__, self.record.dn,
+                          ', '.join(self.modifications))
         connection.modify(dn=self.record.dn, changes={
             # attention: new_value might be list!
             attr: (ldap3.MODIFY_REPLACE, new_value)
@@ -71,9 +79,12 @@ class ModifyAction(Action):
 
 class DeleteAction(Action):
     def execute(self, connection):
+        self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         connection.delete(self.record.dn)
 
 
 class IdleAction(Action):
     def execute(self, *a, **kw):
+        # logging here would be useless noise, and would contradict the nature
+        # of an “idle” action.
         pass

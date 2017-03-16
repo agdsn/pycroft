@@ -1,6 +1,9 @@
 # -*- coding: utf-8; -*-
+from __future__ import print_function
+
+import logging
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import ldap3
 from sqlalchemy import create_engine, func
@@ -9,6 +12,8 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from pycroft.model.user import User
 from pycroft.model.session import set_scoped_session, session as global_session
 from .record import Record, RecordState, config
+
+logger = logging.getLogger('ldap_sync')
 
 
 class LdapExporter(object):
@@ -91,8 +96,8 @@ def fetch_users_to_sync(session):
                 User.unix_account == None)
         .scalar()
     )
-    print("Warning: {} Users have the 'mail' property but not a unix account!"
-          .format(count_mail_but_not_account))
+    logger.warning("%s users have the 'mail' property but not a unix_account",
+                   count_mail_but_not_account)
 
     return User.q.filter(User.has_property('mail'), User.unix_account != None).all()
 
@@ -107,7 +112,6 @@ def fetch_current_ldap_users(connection):
                                 search_filter='(objectclass=*)',
                                 attributes=ldap3.ALL_ATTRIBUTES)
     if not success:
-        print("No ldap users found!")
         return []
 
     return connection.response
@@ -120,24 +124,47 @@ def fake_connection():
     return connection
 
 
-def main():
+def add_stdout_logging(logger):
+    handler = logging.StreamHandler()
+    fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
+    handler.setFormatter(fmt)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
+
+def sync_all(db_users, ldap_users, connection):
+    exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
+                                                             desired=db_users)
+    logger.info("Initialized LdapExporter (%s unique objects in total) from fetched objects",
+                len(exporter.states_dict))
+
+    exporter.compile_actions()
+    action_types = Counter((type(a).__name__ for a in exporter.actions))
+    logger.info("Compiled %s actions (%s)", len(exporter.actions),
+                ", ".join("{}: {}".format(type_, count)
+                          for type_, count in action_types.items()))
+
+    logger.info("Executing actions")
+    exporter.execute_all(connection)
+    logger.info("Executed %s actions", len(exporter.actions))
+
+
+def main():
+    add_stdout_logging(logger)
     db_users = fetch_users_to_sync(session=establish_and_return_session())
-    print("Got {} database users".format(len(db_users)))
+    logger.info("Fetched %s database users", len(db_users))
 
     #TODO: configure it to use a real connection
     # connection = establish_and_return_ldap_connection()
     connection = fake_connection()
-    ldap_users = fetch_current_ldap_users(connection)
-    config.BASE_DN = 'ou=users,dc=agdsn,dc=de'
 
-    print("Initializing the ldap exporter")
-    exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
-                                                             desired=db_users)
-    print("Done!")
-    exporter.compile_actions()
-    print("Have {} actions…".format(len(exporter.actions)))
-    exporter.execute_all(connection)
+    ldap_users = fetch_current_ldap_users(connection)
+    logger.info("Fetched %s ldap users", len(ldap_users))
+
+    config.BASE_DN = 'ou=users,dc=agdsn,dc=de'
+    logger.debug("BASE_DN set to %s", config.BASE_DN)
+
+    sync_all(db_users, ldap_users, connection)
 
 
 if __name__ == '__main__':
