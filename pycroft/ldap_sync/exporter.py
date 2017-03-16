@@ -2,14 +2,35 @@
 import os
 from collections import defaultdict
 
-from sqlalchemy import create_engine
+import ldap3
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 
 from pycroft.model.user import User
-from .record import Record, RecordState
+from pycroft.model.session import set_scoped_session, session as global_session
+from .record import Record, RecordState, config
 
 
 class LdapExporter(object):
+    """The ldap Exporter
+
+    Usage:
+
+        >>> from pycroft.ldap_sync.record import Record
+        >>> record = Record(dn='cn=admin,ou=users,dc=agdsn,dc=de', attrs={})
+        >>> exporter = LdapExporter(current=[], desired=[record])
+        >>> exporter.compile_actions()
+        >>> exporter.execute_all()
+
+    Since the desired state is to be represented by a postgres
+    database and the current state by the LDAP being synced to,
+    :py:meth:`from_orm_objects_and_ldap_result` is there to not
+    have to convert the entries to :py:cls:`Record`s manually.
+
+    :param iterable current: An iterable of :py:cls:`Record`s
+    :param iterable desired: An iterable of the desired
+        :py:cls:`Record`s
+    """
     RecordState = RecordState
     Record = Record
 
@@ -40,10 +61,9 @@ class LdapExporter(object):
         for state in self.states_dict.values():
             self.actions.append(state.desired - state.current)
 
-    def execute_all(self):
+    def execute_all(self, *a, **kw):
         for action in self.actions:
-            #TODO: Do we need a connection? perhaps introduce it as a parameter
-            action.execute()
+            action.execute(*a, **kw)
 
 
 def init_db_session():
