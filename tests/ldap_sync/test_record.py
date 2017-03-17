@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pycroft.ldap_sync.record import Record, RecordState, config, _canonicalize_to_list
+from pycroft.ldap_sync.record import Record, RecordState, _canonicalize_to_list
 from pycroft.ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -70,7 +70,7 @@ class RecordFromOrmTestCase(TestCase):
         passwd_hash = 'somehash'
 
     def setUp(self):
-        self.attrs = Record.from_db_user(self.complete_user).attrs
+        self.attrs = Record.from_db_user(self.complete_user, base_dn='o=test').attrs
 
     def test_attributes_passed(self):
         pass
@@ -145,16 +145,3 @@ class RecordStateTestCase(TestCase):
 
     def test_not_equal_to_none(self):
         self.assertNotEqual(RecordState(), RecordState(current=self.record))
-
-
-class BaseDNProxyTestCase(TestCase):
-    def test_basedn_set_correctly(self):
-        config.BASE_DN = 'shizzle'
-        try:
-            self.assertTrue(config.BASE_DN)
-        except RuntimeError:
-            self.fail("config.BASE_DN raised RuntimeError")
-
-    def test_basedn_raises_when_not_set(self):
-        with self.assertRaises(RuntimeError):
-            config.BASE_DN  # pylint: disable=pointless-statement

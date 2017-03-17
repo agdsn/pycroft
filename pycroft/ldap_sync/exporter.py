@@ -1,8 +1,10 @@
 # -*- coding: utf-8; -*-
 from __future__ import print_function
 
+import argparse
 import logging
 import os
+import sys
 from collections import Counter, defaultdict
 
 import ldap3
@@ -11,7 +13,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from pycroft.model.user import User
 from pycroft.model.session import set_scoped_session, session as global_session
-from .record import Record, RecordState, config
+from .record import Record, RecordState
 
 logger = logging.getLogger('ldap_sync')
 
@@ -48,7 +50,7 @@ class LdapExporter(object):
         self.actions = []
 
     @classmethod
-    def from_orm_objects_and_ldap_result(cls, current, desired):
+    def from_orm_objects_and_ldap_result(cls, current, desired, base_dn):
         """Construct an exporter instance with non-raw parameters
 
         :param cls:
@@ -57,7 +59,7 @@ class LdapExporter(object):
         :param desired: An iterable of sqlalchemy objects
         """
         return cls((cls.Record.from_ldap_record(x) for x in current),
-                   (cls.Record.from_db_user(x) for x in desired))
+                   (cls.Record.from_db_user(x, base_dn) for x in desired))
 
     def compile_actions(self):
         """Consolidate current and desired records into necessary actions"""
@@ -71,12 +73,7 @@ class LdapExporter(object):
             action.execute(*a, **kw)
 
 
-def establish_and_return_session():
-    try:
-        connection_string = os.environ['PYCROFT_DB_URI']
-    except KeyError:
-        print("Please give the database URI in `PYCROFT_DB_URI`")
-        exit(1)
+def establish_and_return_session(connection_string):
     engine = create_engine(connection_string)
     set_scoped_session(scoped_session(sessionmaker(bind=engine)))
     return global_session  # from pycroft.model.session
@@ -102,9 +99,9 @@ def fetch_users_to_sync(session):
     return User.q.filter(User.has_property('mail'), User.unix_account != None).all()
 
 
-def establish_and_return_ldap_connection():
-    server = ldap3.Server('host')
-    return ldap3.Connection(server, user='cn=admin', password='admin_pw')
+def establish_and_return_ldap_connection(host, port, bind_dn, bind_pw):
+    server = ldap3.Server(host=host, port=port)
+    return ldap3.Connection(server, user=bind_dn, password=bind_pw, auto_bind=True)
 
 
 def fetch_current_ldap_users(connection):
@@ -132,9 +129,10 @@ def add_stdout_logging(logger):
     logger.setLevel(logging.INFO)
 
 
-def sync_all(db_users, ldap_users, connection):
+def sync_all(db_users, ldap_users, connection, base_dn):
     exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
-                                                             desired=db_users)
+                                                             desired=db_users,
+                                                             base_dn=base_dn)
     logger.info("Initialized LdapExporter (%s unique objects in total) from fetched objects",
                 len(exporter.states_dict))
 
@@ -149,23 +147,75 @@ def sync_all(db_users, ldap_users, connection):
     logger.info("Executed %s actions", len(exporter.actions))
 
 
+def get_config_or_exit():
+    keys = ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn']
+    try:
+        config= {
+            # e.g. 'host': 'PYCROFT_LDAP_HOST'
+            key: os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
+            for key in keys
+        }
+        config['db_uri'] = os.environ['PYCROFT_DB_URI']
+        return config
+    except KeyError as exc:
+        logger.critical("%s not set, quitting", exc.args[0])
+        exit()
+
+
 def main():
-    add_stdout_logging(logger)
-    db_users = fetch_users_to_sync(session=establish_and_return_session())
+    logger.info("Starting the production sync. See --help for other options.")
+    config = get_config_or_exit()
+
+    db_users = fetch_users_to_sync(
+        session=establish_and_return_session(config['db_uri'])
+    )
     logger.info("Fetched %s database users", len(db_users))
 
-    #TODO: configure it to use a real connection
-    # connection = establish_and_return_ldap_connection()
-    connection = fake_connection()
+    connection = establish_and_return_ldap_connection(
+        host=config['host'],
+        port=config['port'],
+        bind_dn=config['bind_dn'],
+        bind_pw=config['bind_pw'],
+    )
 
     ldap_users = fetch_current_ldap_users(connection)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    config.BASE_DN = 'ou=users,dc=agdsn,dc=de'
-    logger.debug("BASE_DN set to %s", config.BASE_DN)
+    sync_all(db_users, ldap_users, connection, base_dn=config['base_dn'])
 
-    sync_all(db_users, ldap_users, connection)
+
+def main_fake_ldap():
+    logger.info("Starting sync using a mocked LDAP backend. See --help for other options.")
+    try:
+        db_uri = os.environ['PYCROFT_DB_URI']
+    except KeyError:
+        logger.critical('PYCROFT_DB_URI not set')
+        exit()
+
+    db_users = fetch_users_to_sync(
+        session=establish_and_return_session(db_uri)
+    )
+    logger.info("Fetched %s database users", len(db_users))
+
+    connection = fake_connection()
+    BASE_DN = 'ou=users,dc=agdsn,dc=de'
+    logger.debug("BASE_DN set to %s", BASE_DN)
+
+    ldap_users = fetch_current_ldap_users(connection)
+    logger.info("Fetched %s ldap users", len(ldap_users))
+
+    sync_all(db_users, ldap_users, connection, base_dn=BASE_DN)
 
 
 if __name__ == '__main__':
-    main()
+    add_stdout_logging(logger)
+    parser = argparse.ArgumentParser(description="Pycroft ldap syncer")
+    parser.add_argument('--fake', dest='fake', action='store_true',
+                        help="Use a mocked LDAP backend")
+    parser.set_defaults(fake=False)
+    args = parser.parse_args()
+
+    if args.fake:
+        main_fake_ldap()
+    else:
+        main()

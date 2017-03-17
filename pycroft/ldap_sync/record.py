@@ -1,30 +1,7 @@
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
-class _dn_proxy(object):
-    def __init__(self):
-        self.value = None
-
-    def __get__(self, instance, owner):
-        if self.value is None:
-            raise RuntimeError("Base DN hasn't been configured yet or set to None")
-
-        return self.value
-
-    def __set__(self, instance, value):
-        self.value = value
-
-
-class Config(object):
-    BASE_DN = _dn_proxy()
-
-
-config = Config()
-
-
-def dn_from_username(username, base=None):
-    if base is None:
-        base = config.BASE_DN
+def dn_from_username(username, base):
     return "uid={},{}".format(username, base)
 
 
@@ -54,8 +31,8 @@ class Record(object):
         self.attrs = {key: _canonicalize_to_list(val) for key, val in attrs.items()}
 
     @classmethod
-    def from_db_user(cls, user):
-        dn = dn_from_username(user.login)
+    def from_db_user(cls, user, base_dn):
+        dn = dn_from_username(user.login, base=base_dn)
         if user.unix_account == None:
             raise ValueError("User object must have a UnixAccount")
 
