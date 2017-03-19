@@ -28,8 +28,8 @@ RUN apt-get update && \
         openssh-server \
         postgresql \
         postgresql-client \
-        python-dev \
-        python-pip \
+        python3-dev \
+        python3-pip \
         sqlite3 \
         sudo \
         supervisor \
@@ -43,7 +43,7 @@ RUN npm install -g bower
 
 # Install Python packages
 COPY requirements.txt /
-RUN pip install -r /requirements.txt
+RUN pip3 install -r /requirements.txt
 
 # Add vagrant user
 COPY home/vagrant/ /home/vagrant/

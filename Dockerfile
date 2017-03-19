@@ -16,7 +16,7 @@ RUN apt-get update \
 
 # Install Debian packages
 RUN apt-get update \
-    && apt-get -y install \
+    && apt-get install -y --no-install-recommends \
         bash \
         curl \
         git \
@@ -24,8 +24,10 @@ RUN apt-get update \
         libsqlite3-dev \
         nodejs \
         npm \
-        python-dev \
-        python-pip \
+        python3-dev \
+        python3-pip \
+        # For compiling things in pip
+        build-essential \
         sqlite3 \
         vim \
     && ln -s /usr/bin/nodejs /usr/bin/node \
@@ -33,7 +35,7 @@ RUN apt-get update \
 
 # Install Python packages
 COPY vagrant/requirements.txt /
-RUN pip install -r /requirements.txt
+RUN pip3 install -r /requirements.txt
 
 RUN adduser --disabled-password --gecos "Application" pycroft
 RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
