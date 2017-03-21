@@ -10,13 +10,14 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from itertools import chain, imap
+from itertools import chain
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
 import operator
 from sqlalchemy import Text, and_
 from pycroft import lib, config
+from pycroft._compat import imap
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits

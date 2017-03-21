@@ -1,11 +1,12 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import chain, imap
+from itertools import chain
 import operator
 from sqlalchemy import (
     ForeignKey, Column, String, Integer, UniqueConstraint, event)
 from sqlalchemy.orm import backref, relationship
+from pycroft._compat import imap
 from pycroft.model.base import ModelBase
 from pycroft.model.host import IP
 
