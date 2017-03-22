@@ -5,7 +5,7 @@ import argparse
 import logging
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 
 import ldap3
 from sqlalchemy import create_engine, func
@@ -104,14 +104,15 @@ def establish_and_return_ldap_connection(host, port, bind_dn, bind_pw):
     return ldap3.Connection(server, user=bind_dn, password=bind_pw, auto_bind=True)
 
 
-def fetch_current_ldap_users(connection):
-    success = connection.search(search_base='ou=users,dc=agdsn,dc=de',
+def fetch_current_ldap_users(connection, base_dn):
+    success = connection.search(search_base=base_dn,
                                 search_filter='(objectclass=*)',
                                 attributes=ldap3.ALL_ATTRIBUTES)
     if not success:
+        logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []
 
-    return connection.response
+    return [r for r in connection.response if r['dn'] != base_dn]
 
 
 def fake_connection():
@@ -191,7 +192,7 @@ def main():
         bind_pw=config.bind_pw,
     )
 
-    ldap_users = fetch_current_ldap_users(connection)
+    ldap_users = fetch_current_ldap_users(connection, base_dn=config.base_dn)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
     sync_all(db_users, ldap_users, connection, base_dn=config.base_dn)
@@ -214,7 +215,7 @@ def main_fake_ldap():
     BASE_DN = 'ou=users,dc=agdsn,dc=de'
     logger.debug("BASE_DN set to %s", BASE_DN)
 
-    ldap_users = fetch_current_ldap_users(connection)
+    ldap_users = fetch_current_ldap_users(connection, base_dn=config.BASE_DN)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
     sync_all(db_users, ldap_users, connection, base_dn=BASE_DN)

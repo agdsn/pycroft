@@ -19,6 +19,12 @@ class Action(object):
     def execute(self, connection):
         pass
 
+    def debug_whether_success(self, connection):
+        if connection.result['result']:
+            self.logger.warning("Operation unsuccessful: %s", connection.result)
+        else:
+            self.logger.debug("Operation successful")
+
 
 class AddAction(Action):
     def __init__(self, record):
@@ -29,6 +35,7 @@ class AddAction(Action):
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
+        self.debug_whether_success(connection)
 
 
 class ModifyAction(Action):
@@ -75,12 +82,14 @@ class ModifyAction(Action):
             attr: (ldap3.MODIFY_REPLACE, new_value)
             for attr, new_value in self.modifications.items()
         })
+        self.debug_whether_success(connection)
 
 
 class DeleteAction(Action):
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         connection.delete(self.record.dn)
+        self.debug_whether_success(connection)
 
 
 class IdleAction(Action):

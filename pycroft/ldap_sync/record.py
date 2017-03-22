@@ -81,7 +81,7 @@ class Record(object):
     def __eq__(self, other):
         try:
             return self.dn == other.dn and self.attrs == other.attrs
-        except KeyError:
+        except AttributeError:
             return False
 
     def __repr__(self):

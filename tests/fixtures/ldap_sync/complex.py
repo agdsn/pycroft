@@ -38,6 +38,7 @@ class UserData(DataSet):
         room = RoomData.dummy_room3
         account = AccountData.dummy_user3
         unix_account = UnixAccountData.dummy_account_2
+        email = 'ich-liebe-die@agdsn.de'
 
     class active_user2(dummy):
         """unix_account and 'mail'"""
