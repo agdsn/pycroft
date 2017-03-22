@@ -41,3 +41,9 @@ class RoomData(DataSet):
         level = 2
         inhabitable = True
         building = BuildingData.dummy_house1
+
+    class dummy_room4(dummy_room1):
+        number = "2"
+
+    class dummy_room5(dummy_room1):
+        number = "2"

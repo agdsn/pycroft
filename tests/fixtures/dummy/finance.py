@@ -48,9 +48,17 @@ class AccountData(DataSet):
         name = u'User account'
         type = 'USER_ASSET'
 
-    class dummy_user2:
-        name = u'User account'
-        type = 'USER_ASSET'
+    class dummy_user2(dummy_user1):
+        pass
+
+    class dummy_user3(dummy_user1):
+        pass
+
+    class dummy_user4(dummy_user1):
+        pass
+
+    class dummy_user5(dummy_user1):
+        pass
 
 
 class BankAccountData(DataSet):

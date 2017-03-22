@@ -118,7 +118,7 @@ class TestUnixAccounts(FixtureDataTestBase):
     def setUp(self):
         super(TestUnixAccounts, self).setUp()
         self.dummy_account = user.UnixAccount.q.filter_by(
-            home_directory=unixaccount.UnixAccountData.dummy.home_directory
+            home_directory=unixaccount.UnixAccountData.dummy_account_1.home_directory
         ).one()
         self.custom_account = user.UnixAccount.q.filter_by(
             home_directory=unixaccount.UnixAccountData.explicit_ids.home_directory

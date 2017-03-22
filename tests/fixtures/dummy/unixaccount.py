@@ -7,13 +7,24 @@ from tests.fixtures.dummy.finance import AccountData
 
 
 class UnixAccountData(DataSet):
-    class dummy:
-        home_directory = '/home/dummy'
-
     class explicit_ids:
         home_directory = '/home/explicit'
         uid = 1042
         gid = 27  # if you know what I mean
+    class dummy_account_1:
+        home_directory = '/home/dummy1'
+
+    class dummy_account_2:
+        home_directory = '/home/dummy2'
+
+    class dummy_account_3:
+        home_directory = '/home/dummy3'
+
+    class dummy_account_4:
+        home_directory = '/home/dummy4'
+
+    class dummy_account_5:
+        home_directory = '/home/dummy5'
 
 
 class UserData(DataSet):
@@ -31,4 +42,4 @@ class UserData(DataSet):
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room2
         account = AccountData.dummy_user2
-        unix_account = UnixAccountData.dummy
+        unix_account = UnixAccountData.dummy_account_1
