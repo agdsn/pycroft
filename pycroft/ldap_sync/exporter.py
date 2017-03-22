@@ -147,16 +147,19 @@ def sync_all(db_users, ldap_users, connection, base_dn):
     logger.info("Executed %s actions", len(exporter.actions))
 
 
+def get_config():
+    config= {
+        # e.g. 'host': 'PYCROFT_LDAP_HOST'
+        key: os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
+        for key in ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn']
+    }
+    config['db_uri'] = os.environ['PYCROFT_DB_URI']
+    return config
+
+
 def get_config_or_exit():
-    keys = ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn']
     try:
-        config= {
-            # e.g. 'host': 'PYCROFT_LDAP_HOST'
-            key: os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
-            for key in keys
-        }
-        config['db_uri'] = os.environ['PYCROFT_DB_URI']
-        return config
+        return get_config()
     except KeyError as exc:
         logger.critical("%s not set, quitting", exc.args[0])
         exit()
