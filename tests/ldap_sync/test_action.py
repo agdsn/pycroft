@@ -113,7 +113,7 @@ SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
 class AddActionTestCase(MockedLdapTestBase):
     def setUp(self):
         super(AddActionTestCase, self).setUp()
-        self.attributes = {'uid': ['shizzle'], 'emailAddress': ['bas'],
+        self.attributes = {'uid': ['shizzle'], 'mail': ['bas'],
                            'userPassword': ['$1$dtruiandetnuhgaldrensutrhawtruhs']}
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
@@ -164,7 +164,7 @@ class ModifyActionTestCase(MockedLdapTestBase):
         self.dn = dn_from_username(self.uid, base=self.base)
         self.connection.add(self.dn, LDAP_OBJECTCLASSES)
         record = Record(dn=self.dn, attrs={})
-        action = ModifyAction(record=record, modifications={'emailAddress': 'new@shizzle.de'})
+        action = ModifyAction(record=record, modifications={'mail': 'new@shizzle.de'})
         action.execute(self.connection)
 
     def test_one_object_changed(self):
@@ -172,7 +172,7 @@ class ModifyActionTestCase(MockedLdapTestBase):
         self.assertEqual(len(objs), 1)
 
     def test_mail_changed(self):
-        self.assertEqual(self.get_all_objects()[0]['attributes']['emailAddress'],
+        self.assertEqual(self.get_all_objects()[0]['attributes']['mail'],
                          ['new@shizzle.de'])
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -37,6 +38,7 @@ class Record(object):
             raise ValueError("User object must have a UnixAccount")
 
         attributes = {
+            # REQ – required, MAY – optional, SV – single valued
             'uid': user.login,  # REQ by posixAccount, shadowAccount
             'uidNumber': user.unix_account.uid,  # SV, REQ by posixAccount
             'gidNumber': user.unix_account.gid,  # SV, REQ by posixAccount
@@ -46,7 +48,7 @@ class Record(object):
             'loginShell': user.unix_account.login_shell,  # SV, MAY by posixAccount
             'cn': user.name,  # REQ by posixAccount, inetOrgPerson(person)
             'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
-            'emailAddress': user.email,  # MAY by inetOrgPerson
+            'mail': user.email,  # MAY by inetOrgPerson
         }
         return cls(dn=dn, attrs=attributes)
 

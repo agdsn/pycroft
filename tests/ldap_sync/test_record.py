@@ -47,14 +47,14 @@ class RecordTestCase(TestCase):
 
 class EmptyAttributeRecordTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={'emailAddress': None})
+        self.record = Record(dn='test', attrs={'mail': None})
 
     def test_attribute_is_empty_list(self):
-        self.assertEqual(self.record.attrs['emailAddress'], [])
+        self.assertEqual(self.record.attrs['mail'], [])
 
     def test_empty_attribute_removed(self):
         self.record.remove_empty_attributes()
-        self.assertNotIn('emailAddress', self.record.attrs)
+        self.assertNotIn('mail', self.record.attrs)
 
 
 class RecordFromOrmTestCase(TestCase):
@@ -99,8 +99,8 @@ class RecordFromOrmTestCase(TestCase):
     def test_sn_correct(self):
         self.assertEqual(self.attrs['sn'], ['foo bar shizzle'])
 
-    def test_emailAddress_correct(self):
-        self.assertEqual(self.attrs['emailAddress'], ['shizzle@agdsn.de'])
+    def test_mail_correct(self):
+        self.assertEqual(self.attrs['mail'], ['shizzle@agdsn.de'])
 
 
 class CanonicalizationTestCase(TestCase):
