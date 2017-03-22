@@ -6,9 +6,17 @@ services:
       service: web
     volumes:
       - ./:/pycroft
+    # A service being extended may have no links.
     links:
       - db:db
+      - ldap:ldap
+    ports:
+      - 5001:5000
   db:
     extends:
       file: docker-compose.bare.yml
       service: db
+  ldap:
+    extends:
+      file: docker-compose.bare.yml
+      service: ldap

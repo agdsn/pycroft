@@ -6,9 +6,12 @@ services:
       # dockerfile: build/Dockerfile
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
+      - PYCROFT_LDAP_HOST=ldap
+      - PYCROFT_LDAP_PORT=389
+      - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
+      - PYCROFT_LDAP_BIND_PW=password
+      - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
     command: python server_run.py --debug --exposed
-    ports:
-      - 5001:5000
   db:
     image: postgres
     environment:
@@ -17,3 +20,8 @@ services:
       - PGDATA=/postgres
     tmpfs:
       - /postgres
+  ldap:
+    image: dinkel/openldap
+    environment:
+      - SLAPD_PASSWORD=password
+      - SLAPD_DOMAIN=agdsn.de
