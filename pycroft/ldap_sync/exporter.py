@@ -147,13 +147,23 @@ def sync_all(db_users, ldap_users, connection, base_dn):
     logger.info("Executed %s actions", len(exporter.actions))
 
 
+
+_sync_config = namedtuple(
+    'LdapSyncConfig',
+    ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn', 'db_uri']
+)
+
+
 def get_config():
-    config= {
+    config_dict = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
-        for key in ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn']
+        for key in _sync_config._fields if key != 'db_uri'
     }
-    config['db_uri'] = os.environ['PYCROFT_DB_URI']
+    config_dict['port'] = int(config_dict['port'])
+    config_dict['db_uri'] = os.environ['PYCROFT_DB_URI']
+    config = _sync_config(**config_dict)
+
     return config
 
 
@@ -170,21 +180,21 @@ def main():
     config = get_config_or_exit()
 
     db_users = fetch_users_to_sync(
-        session=establish_and_return_session(config['db_uri'])
+        session=establish_and_return_session(config.db_uri)
     )
     logger.info("Fetched %s database users", len(db_users))
 
     connection = establish_and_return_ldap_connection(
-        host=config['host'],
-        port=config['port'],
-        bind_dn=config['bind_dn'],
-        bind_pw=config['bind_pw'],
+        host=config.host,
+        port=config.port,
+        bind_dn=config.bind_dn,
+        bind_pw=config.bind_pw,
     )
 
     ldap_users = fetch_current_ldap_users(connection)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    sync_all(db_users, ldap_users, connection, base_dn=config['base_dn'])
+    sync_all(db_users, ldap_users, connection, base_dn=config.base_dn)
 
 
 def main_fake_ldap():
