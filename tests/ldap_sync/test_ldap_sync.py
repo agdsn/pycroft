@@ -80,11 +80,11 @@ class MultipleUsersFilterTestCase(FixtureDataTestBase):
 
     def test_correct_users_fetched(self):
         users = fetch_users_to_sync(session)
-        expected_logins = [
+        expected_logins = {
             complex_fixtures.UserData.active_user1.login,
             complex_fixtures.UserData.active_user2.login,
-        ]
-        self.assertEqual([u.login for u in users], expected_logins)
+        }
+        self.assertEqual({u.login for u in users}, expected_logins)
 
 
 class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
