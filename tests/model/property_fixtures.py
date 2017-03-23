@@ -1,7 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import datetime
+from datetime import timedelta
 from fixture import DataSet
 
 
@@ -16,11 +16,15 @@ class PropertyGroupData(DataSet):
 class TrafficGroupData(DataSet):
     class group1:
         name = "traffic group1"
-        traffic_limit = 1000
+        credit_limit = 1000
+        credit_amount = 500
+        credit_interval = timedelta(days=1)
 
     class group2:
         name = "traffic group2"
-        traffic_limit = 2000
+        credit_limit = 2000
+        credit_amount = 50
+        credit_interval = timedelta(hours=3)
 
 
 class PropertyData(DataSet):

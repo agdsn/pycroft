@@ -2,18 +2,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-"""
-pycroft.model.accounting
-~~~~~~~~~~~~~~
-
-This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
-
-:copyright: (c) 2011 by AG DSN.
-"""
 from sqlalchemy import Column, ForeignKey, CheckConstraint
-from sqlalchemy.orm import relationship, backref, reconstructor
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
+
 from pycroft.model.base import ModelBase
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
@@ -21,7 +14,9 @@ from pycroft.model.host import IP, Interface, Host
 
 
 class TrafficBalance(ModelBase):
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False, unique=True)
+    id = None
+    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
+                     primary_key=True)
     user = relationship(User,
                         backref=backref("_traffic_balance", uselist=False))
     amount = Column(BigInteger, nullable=False)
@@ -29,6 +24,7 @@ class TrafficBalance(ModelBase):
 
 
 class TrafficEvent(AbstractConcreteBase, ModelBase):
+    __table_name__ = None
     timestamp = Column(DateTime, default=utcnow(), nullable=False)
     amount = Column(BigInteger, CheckConstraint('amount >= 0'),
                     nullable=False)

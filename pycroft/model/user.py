@@ -16,7 +16,8 @@ import re
 from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
-    String, and_, exists, join, literal, not_, null, or_, select, Sequence)
+    String, and_, exists, join, literal, not_, null, or_, select, Sequence,
+    Interval)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -468,11 +469,13 @@ class TrafficGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
     id = Column(Integer, ForeignKey(Group.id), primary_key=True,
                 nullable=False)
-    # in byte per seven days, zero is no limit
-    traffic_limit = Column(BigInteger, nullable=False)
+    credit_limit = Column(BigInteger, nullable=False)
+    credit_interval = Column(Interval, nullable=False)
+    credit_amount = Column(BigInteger, nullable=False)
 
 
 _uid_seq = Sequence('_uid_seq', start=1000, metadata=ModelBase.metadata)
+
 
 class UnixAccount(ModelBase):
     uid = Column(Integer, nullable=False, unique=True,

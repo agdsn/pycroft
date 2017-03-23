@@ -36,4 +36,7 @@ class PropertyData(DataSet):
 class TrafficGroupData(DataSet):
     class dummy:
         name = "dummy"
-        traffic_limit = 7000
+        credit_limit = 7000
+        credit_amount = 2000
+        credit_interval = timedelta(days=1)
+

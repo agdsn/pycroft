@@ -70,6 +70,9 @@
   var y = d3.scale.linear()
       .range([height, 0]);
 
+  var y1 = d3.scale.linear()
+      .range([height, 0]);
+
   var color = d3.scale.ordinal()
   .domain(["IN", "OUT"])
   .range(["lightsteelblue", "#deb0c4"]);
@@ -83,6 +86,15 @@
       .scale(y)
       .orient("left")
       .tickFormat(de.numberFormat("s"));
+
+  var yAxisRight = d3.svg.axis()
+      .scale(y1)
+      .orient("right")
+      .tickFormat(de.numberFormat("s"));
+
+  //var valueline2 = d3.svg.line()
+  //    .x(function(d) { return x(d.date); })
+  //    .y(function(d) { return y1(d.open); });
 
   var stack = d3.layout.stack()
       .values(function(d) {
@@ -105,8 +117,10 @@
   }
 
   var svg = parent.append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("viewBox", "0 0 " +
+            (width + margin.left + margin.right) + " " +
+            (height+ margin.top + margin.bottom))
+      .classed("svg-content-responsive", true)
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -129,7 +143,7 @@
       var days = sel.value;
       d3.json(data_src + '/' + days, function(error, resp) {
         if (error) throw error;
-        data = resp.items.debits;
+        var data = resp.items.debits;
 
         if (data === null) return;
 
@@ -150,7 +164,7 @@
         var dayBins = d3.time.days(d3.time.day.offset(dayExtent[0],-1),
                                        d3.time.day.offset(dayExtent[1],1));
         var bin_traffic = function(data, traffic_type) {
-            hist = d3.layout.histogram()
+            var hist = d3.layout.histogram()
                     .bins(dayBins)
                     .value(function(d) {return d.timestamp});
             var binned_data = hist(data);
@@ -175,7 +189,8 @@
                 values: binned_values
             });
         });
-        var stacked_traffic = stack(binned_traffic_by_type);
+        var stacked_traffic = stack(binned_traffic_by_type).sort(
+                function(a, b) {return a.traffic_type < b.traffic_type});
 
         today = new Date();
         x.domain(d3.extent(dayBins));
@@ -196,7 +211,7 @@
                 return d3.rgb(color(d.traffic_type)).darker();
             });
 
-        bars = traffic_type.selectAll(".bar")
+        var bars = traffic_type.selectAll(".bar")
               .data(function(d) { //data
                   return d.values;
               }, function(d) {return d.x}); //key for object constancy
@@ -204,19 +219,31 @@
             bars.exit()
               .transition()
                 .duration(300)
-              .attr("y", y(0))
-              .attr("height", height - y(0))
+              .attr("x", function(d) {return x(d.x) - width})
               .style('fill-opacity', 1e-6)
               .remove();
 
 
           bars.enter().append("rect")
                   .attr("class", "bar")
-                  .attr("y", y(0))
-                  .attr("height", height - y(0))
-                  .on("mouseover", function() { tooltip.style("opacity", 1); })
-                  .on("mouseout", function() { tooltip.style("opacity", 0); })
+                  .attr("x", function(d) {return x(d.x) - width})
+                  //.attr("height", height - y(0))
+                  .on("mouseover", function() {
+                              // tooltip
+                      var tooltip = svg.append("g")
+                              .attr("class", "tooltip")
+                              .style("opacity", 1);
+                      tooltip.append("text")
+                              .attr("x", 15)
+                              .attr("dy", "1.2em")
+                              .style("text-anchor", "middle")
+                              .attr("font-size", "12px");
+                      })
+                  .on("mouseout", function() {
+                      tooltip = svg.selectAll(".tooltip");
+                      tooltip.remove();})
                   .on("mousemove", function(d) {
+                    tooltip = svg.selectAll(".tooltip");
                     var xPosition = d3.mouse(this)[0] - 15;
                     var yPosition = d3.mouse(this)[1] - 25;
                     tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
@@ -264,7 +291,7 @@
 
         legend.exit().remove();
 
-        leg_enter = legend.enter().append("g")
+        var leg_enter = legend.enter().append("g")
                 .attr("class", "legend")
                 .attr("transform", function(d, i) {
                     return "translate(" + i * maxLegendWidth + ",0)";
@@ -286,9 +313,13 @@
                 .text(function(d) {return d;});
 
         // line at current time
-        var today = svg.selectAll(".vline-now")
-                .data([today])
-                .enter().append("line")
+        var todayline = svg.selectAll(".vline-now")
+                .data([today]);
+
+        todayline.exit()
+              .remove();
+
+        todayline.enter().append("line")
                 .attr("class", "vline-now")
                 .attr("x1", function(d) {return x(d)})
                 .attr("y1", 0)
@@ -298,16 +329,10 @@
                 .style("stroke", "red")
                 .style("fill", "none");
 
-        // tooltip
-        var tooltip = svg.append("g")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-        tooltip.append("text")
-                .attr("x", 15)
-                .attr("dy", "1.2em")
-                .style("text-anchor", "middle")
-                .attr("font-size", "12px");
+        todayline.transition()
+                .duration(300)
+              .attr("x1", function(d) {return x(d)})
+              .attr("x2", function(d) {return x(d)})
     });
 
 
