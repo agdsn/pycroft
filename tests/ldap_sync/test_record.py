@@ -6,13 +6,13 @@ from pycroft.ldap_sync.action import AddAction, DeleteAction, IdleAction, Modify
 
 class RecordTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={'bar': 'shizzle'})
+        self.record = Record(dn='test', attrs={'mail': 'shizzle'})
 
     def test_record_equality(self):
-        self.assertEqual(self.record, Record(dn='test', attrs={'bar': 'shizzle'}))
+        self.assertEqual(self.record, Record(dn='test', attrs={'mail': 'shizzle'}))
 
     def test_record_noncanonical_equality(self):
-        self.assertEqual(self.record, Record(dn='test', attrs={'bar': ['shizzle']}))
+        self.assertEqual(self.record, Record(dn='test', attrs={'mail': ['shizzle']}))
 
     def test_record_subtraction_with_none_adds(self):
         difference = self.record - None
@@ -34,15 +34,17 @@ class RecordTestCase(TestCase):
         self.assertIsInstance(difference, IdleAction)
 
     def test_correctly_different_record_modifies(self):
-        difference = self.record - Record(dn='test', attrs={'bar': ''})
+        difference = self.record - Record(dn='test', attrs={'mail': ''})
         self.assertIsInstance(difference, ModifyAction)
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
-                             'attributes': {'foo': u'bar', 'shizzle': u'baz'},
-                             'raw_attributes': {'foo': b'bar'}}
+                             'attributes': {'foo': u'mail', 'gecos': u'baz'},
+                             'raw_attributes': {'foo': b'mail'}}
         record = Record.from_ldap_record(ldapsearch_record)
-        self.assertEqual(record.attrs, {'foo': [u'bar'], 'shizzle': [u'baz']})
+        self.assertLessEqual({'foo': [u'mail'], 'gecos': [u'baz']}, record.attrs)
+        for key in Record.ENFORCED_KEYS:
+            self.assertIn(key, record.attrs)
 
 
 class EmptyAttributeRecordTestCase(TestCase):

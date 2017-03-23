@@ -30,45 +30,38 @@ class ModifyActionConstructorTestCase(TestCase):
                                              current_record=current_record)
 
     def test_desired_record_passed(self):
-        desired = Record(dn=None, attrs={'foo': 'test'})
+        desired = Record(dn=None, attrs={'gecos': 'test'})
         current = Record(dn=None, attrs={})
         action = ModifyAction.from_two_records(desired_record=desired, current_record=current)
         self.assertEqual(action.record, desired)
 
     def test_one_attribute_changed(self):
         action = self.action_from_attrs(
-            current={'foo': 'baz', 'email': 'admin@sci.hub'},
-            desired={'foo': 'bar', 'email': 'admin@sci.hub'},
+            current={'gecos': 'baz', 'mail': 'admin@sci.hub'},
+            desired={'gecos': 'bar', 'mail': 'admin@sci.hub'},
         )
-        self.assertEqual(action.modifications, {'foo': ['bar']})
+        self.assertEqual(action.modifications, {'gecos': ['bar']})
 
     def test_empty_attribute_emptied(self):
         action = self.action_from_attrs(
-            current={'foo': 'bar', 'email': 'admin@sci.hub'},
-            desired={'foo': 'bar', 'email': ''},
+            current={'gecos': 'bar', 'mail': 'admin@sci.hub'},
+            desired={'gecos': 'bar', 'mail': ''},
         )
-        self.assertEqual(action.modifications, {'email': []})
-
-    def test_nongiven_attribute_doesnt_matter(self):
-        action = self.action_from_attrs(
-            current={'foo': 'bar', 'email': 'admin@sci.hub'},
-            desired={'foo': 'bar'},
-        )
-        self.assertEqual(action.modifications, {})
+        self.assertEqual(action.modifications, {'mail': []})
 
     def test_new_attribute_will_be_set(self):
         action = self.action_from_attrs(
             current={'foo': 'bar'},
-            desired={'foo': 'bar', 'email': 'admin@sci.hub'},
+            desired={'foo': 'bar', 'mail': 'admin@sci.hub'},
         )
-        self.assertEqual(action.modifications, {'email': ['admin@sci.hub']})
+        self.assertEqual(action.modifications, {'mail': ['admin@sci.hub']})
 
     def test_attribute_none_will_be_set(self):
         action = self.action_from_attrs(
-            current={'foo': 'bar'},
-            desired={'foo': None},
+            current={'gecos': 'bar'},
+            desired={'gecos': None},
         )
-        self.assertEqual(action.modifications, {'foo': []})
+        self.assertEqual(action.modifications, {'gecos': []})
 
 
 class MockedLdapTestBase(TestCase):

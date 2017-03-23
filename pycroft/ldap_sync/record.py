@@ -26,10 +26,17 @@ class Record(object):
         :param str dn: The DN of the record
         :param dict attrs: The attributes of the record.  Every value
             will be canonicalized to a list to allow for a senseful
-            comparison between two records.
+            comparison between two records.  Additionally, the keys
+            are fixed to a certain set.
         """
         self.dn = dn
+        attrs = {k: v for k, v in attrs.items() if k in self.ENFORCED_KEYS}
+        for key in self.ENFORCED_KEYS:
+            attrs.setdefault(key, [])
         self.attrs = {key: _canonicalize_to_list(val) for key, val in attrs.items()}
+
+    ENFORCED_KEYS = frozenset(['mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
+                               'homeDirectory', 'gidNumber', 'uidNumber', 'uid'])
 
     @classmethod
     def from_db_user(cls, user, base_dn):
