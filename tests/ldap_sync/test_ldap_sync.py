@@ -10,7 +10,7 @@ from pycroft.model.session import session
 from pycroft.ldap_sync.exporter import LdapExporter, fetch_users_to_sync, get_config, \
      establish_and_return_ldap_connection, fetch_current_ldap_users, sync_all
 from pycroft.ldap_sync.record import Record, RecordState
-from pycroft.ldap_sync.action import AddAction, IdleAction
+from pycroft.ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.user import UserData
 import tests.fixtures.ldap_sync.simple as simple_fixtures
@@ -150,10 +150,18 @@ class LdapSyncerTestBase(LdapTestBase, FixtureDataTestBase):
         self.users_to_sync = fetch_users_to_sync(session)
         self.initial_ldap_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
 
-    def build_exporter(self):
+    def build_exporter(self, current=None, desired=None):
+        """Return an LdapExporter from ldap and orm users
+
+        It does not compile actions.
+        """
+        if current is None:
+            current = self.initial_ldap_users
+        if desired is None:
+            desired = self.users_to_sync
         return LdapExporter.from_orm_objects_and_ldap_result(
-            current=self.initial_ldap_users,
-            desired=self.users_to_sync,
+            current=current,
+            desired=desired,
             base_dn=self.base_dn,
         )
 
@@ -222,7 +230,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             }
             self.assertLessEqual(effective_attributes_in_db, ldap_record.attrs)
 
-    def test_modification_yields_modifyaction(self):
+    def test_mail_deletion(self):
         users_with_mail = [u for u in self.users_to_sync if u.email is not None]
         if not users_with_mail:
             raise RuntimeError("Fixtures do not provide a syncable user with a mail address")
@@ -239,3 +247,41 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
         modified_record = [u for u in newest_users if u['dn'] == mod_dn][0]
         self.assertNotIn('mail', modified_record)
+
+    def test_mail_creation(self):
+        users_without_mail = [u for u in self.users_to_sync if u.email is not None]
+        if not users_without_mail:
+            raise RuntimeError("Fixtures do not provide a syncable user without a mail address")
+        mod_user = users_without_mail[0]
+        mod_dn = Record.from_db_user(mod_user, self.base_dn).dn
+        mod_user.email = 'not_'+mod_user.email
+        session.add(mod_user)
+        session.commit()
+
+        users_to_sync = fetch_users_to_sync(session)
+        exporter = self.build_exporter(current=self.new_ldap_users,
+                                       desired=users_to_sync)
+        exporter.compile_actions()
+        relevant_actions = [a for a in exporter.actions if not isinstance(a, IdleAction)]
+        self.assertEqual(len(relevant_actions), 1)
+        self.assertEqual(type(relevant_actions[0]), ModifyAction)
+        exporter.execute_all(self.conn)
+
+        newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
+        modified_ldap_record = [u for u in newest_users if u['dn'] == mod_dn][0]
+        self.assertEqual(modified_ldap_record['attributes']['mail'], [mod_user.email])
+
+    def test_no_desired_records_removes_everything(self):
+        exporter = self.build_exporter(current=self.new_ldap_users, desired=[])
+        exporter.compile_actions()
+
+        # Test the actions are correct
+        self.assertEqual(len(exporter.actions), len(self.new_ldap_users))
+        for action in exporter.actions:
+            self.assertEqual(type(action), DeleteAction)
+
+        # Actually execute these and check they delete everything
+        exporter.execute_all(self.conn)
+
+        newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
+        self.assertEqual(newest_users, [])
