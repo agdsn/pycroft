@@ -8,6 +8,13 @@ import ldap3
 LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
 
 class Action(object):
+    """An Action on an ldap record
+
+    This represents an Action on a specific LDAP record, which may
+    result in addition, deletion or modification.  In any way, a
+    subclass must implement the :py:meth:`execute` method acting on an
+    :py:obj:`ldap3.Connection`
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, record, logger=None):

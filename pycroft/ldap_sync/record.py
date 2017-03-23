@@ -20,15 +20,20 @@ def _canonicalize_to_list(value):
 
 
 class Record(object):
-    def __init__(self, dn, attrs):
-        """Create a new record with a dn and certain attributes.
+    """Create a new record with a dn and certain attributes.
 
-        :param str dn: The DN of the record
-        :param dict attrs: The attributes of the record.  Every value
-            will be canonicalized to a list to allow for a senseful
-            comparison between two records.  Additionally, the keys
-            are fixed to a certain set.
-        """
+    A record represents the user which is to be synced to the LDAP,
+    and consists of a dn and relevant attributes.  Constructors are
+    provided for SQLAlchemy ORM objects as well as entries of an ldap
+    search response.
+
+    :param str dn: The DN of the record
+    :param dict attrs: The attributes of the record.  Every value will
+        be canonicalized to a list to allow for a senseful comparison
+        between two records.  Additionally, the keys are fixed to a
+        certain set.
+    """
+    def __init__(self, dn, attrs):
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.ENFORCED_KEYS}
         for key in self.ENFORCED_KEYS:
@@ -95,7 +100,15 @@ class Record(object):
 
 
 class RecordState(object):
-    """A Class representing the state of a user record."""
+    """A Class representing the state (current, desired) of a user
+    record.
+
+    This class is essentially a duple consisting of a current and
+    desired record to represent the difference.
+
+    :param Record current: The current record
+    :param Record desired: The desired record
+    """
     def __init__(self, current=None, desired=None):
         self.current = current
         self.desired = desired
