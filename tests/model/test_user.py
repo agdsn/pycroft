@@ -121,7 +121,7 @@ class TestUnixAccounts(FixtureDataTestBase):
             home_directory=unixaccount.UnixAccountData.dummy_account_1.home_directory
         ).one()
         self.custom_account = user.UnixAccount.q.filter_by(
-            home_directory=unixaccount.UnixAccountData.explicit_ids.home_directory
+            home_directory=unixaccount.UnixAccountData.explicit_gid.home_directory
         ).one()
         self.dummy_user = user.User.q.filter_by(login=unixaccount.UserData.dummy.login).one()
         self.ldap_user = user.User.q.filter_by(login=unixaccount.UserData.withldap.login).one()
@@ -133,7 +133,6 @@ class TestUnixAccounts(FixtureDataTestBase):
 
     def test_custom_ids_set(self):
         self.assertEqual(self.custom_account.gid, 27)
-        self.assertEqual(self.custom_account.uid, 1042)
 
     def test_account_reference(self):
         self.assertEqual(self.ldap_user.unix_account, self.dummy_account)

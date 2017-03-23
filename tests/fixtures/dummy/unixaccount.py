@@ -7,10 +7,10 @@ from tests.fixtures.dummy.finance import AccountData
 
 
 class UnixAccountData(DataSet):
-    class explicit_ids:
+    class explicit_gid:
         home_directory = '/home/explicit'
-        uid = 1042
         gid = 27  # if you know what I mean
+
     class dummy_account_1:
         home_directory = '/home/dummy1'
 
