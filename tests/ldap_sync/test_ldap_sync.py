@@ -38,13 +38,7 @@ class EmptyLdapTestCase(TestCase):
         self.assertEqual(len(self.exporter.actions), 1)
         action = self.exporter.actions[0]
         self.assertIsInstance(action, AddAction)
-        #TODO: test that the correct thing was added
 
-# to test:
-# - nonexistent record → add
-# - obsolete record → del
-# - existent record → mod
-# - full sync + full sync = all add + all Idle
 
 class LdapSyncLoggerMutedMixin(object):
     def setUp(self):

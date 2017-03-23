@@ -64,7 +64,6 @@ class Record(object):
         return cls(dn=record['dn'], attrs=record['attributes'])
 
     def remove_empty_attributes(self):
-        #TODO: to be tested
         self.attrs = {key: val for key, val in self.attrs.items() if val}
 
     def __sub__(self, other):
