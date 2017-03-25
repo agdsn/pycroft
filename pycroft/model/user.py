@@ -289,7 +289,7 @@ class User(ModelBase, UserMixin):
                     Property.granted == true()
                 )
             )
-        ).label("has_property_" + prop)
+        ).self_group().label("has_property_" + prop)
 #
 #    def group_intervals(self, group, when=UnboundedInterval):
 #
