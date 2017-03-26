@@ -23,7 +23,7 @@ class LdapExporter(object):
 
     Usage:
 
-        >>> from pycroft.ldap_sync.record import Record
+        >>> from ldap_sync.record import Record
         >>> record = Record(dn='cn=admin,ou=users,dc=agdsn,dc=de', attrs={})
         >>> exporter = LdapExporter(current=[], desired=[record])
         >>> exporter.compile_actions()

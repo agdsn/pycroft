@@ -7,10 +7,10 @@ from unittest import TestCase
 import ldap3
 
 from pycroft.model.session import session
-from pycroft.ldap_sync.exporter import LdapExporter, fetch_users_to_sync, get_config, \
+from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, get_config, \
      establish_and_return_ldap_connection, fetch_current_ldap_users, sync_all
-from pycroft.ldap_sync.record import Record, RecordState
-from pycroft.ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
+from ldap_sync.record import Record, RecordState
+from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.user import UserData
 import tests.fixtures.ldap_sync.simple as simple_fixtures

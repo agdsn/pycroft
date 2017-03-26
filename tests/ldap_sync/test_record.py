@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from pycroft.ldap_sync.record import Record, RecordState, _canonicalize_to_list
-from pycroft.ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
+from ldap_sync.record import Record, RecordState, _canonicalize_to_list
+from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
 class RecordTestCase(TestCase):
