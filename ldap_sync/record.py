@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from ldap3.utils.conv import escape_filter_chars
+
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -19,6 +21,16 @@ def _canonicalize_to_list(value):
     return [value]
 
 
+def _maybe_escape_filter_chars(value):
+    """Escape and return according to RFC04515 if type is string-like.
+
+    Else, return the unchanged object.
+    """
+    if isinstance(value, type(b'')) or isinstance(value, type(u'')):
+        return escape_filter_chars(value)
+    return value
+
+
 class Record(object):
     """Create a new record with a dn and certain attributes.
 
@@ -30,15 +42,18 @@ class Record(object):
     :param str dn: The DN of the record
     :param dict attrs: The attributes of the record.  Every value will
         be canonicalized to a list to allow for a senseful comparison
-        between two records.  Additionally, the keys are fixed to a
-        certain set.
+        between two records, as well as escaped according to RFC04515.
+        Additionally, the keys are fixed to a certain set.
     """
     def __init__(self, dn, attrs):
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.ENFORCED_KEYS}
         for key in self.ENFORCED_KEYS:
             attrs.setdefault(key, [])
-        self.attrs = {key: _canonicalize_to_list(val) for key, val in attrs.items()}
+        # escape_filter_chars is idempotent ⇒ no double escaping
+        self.attrs = {key: [_maybe_escape_filter_chars(x)
+                            for x in _canonicalize_to_list(val)]
+                      for key, val in attrs.items()}
 
     ENFORCED_KEYS = frozenset(['mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
                                'homeDirectory', 'gidNumber', 'uidNumber', 'uid'])

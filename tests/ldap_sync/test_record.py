@@ -4,6 +4,24 @@ from ldap_sync.record import Record, RecordState, _canonicalize_to_list
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
+class RecordDirectInitTestCase(TestCase):
+    def setUp(self):
+        self.record = Record(dn='test', attrs={'userPassword': "{CRYPT}**shizzle",
+                                               'mail': None, 'cn': "User", 'uid': 50})
+
+    def test_empty_attr_converted_to_list(self):
+        self.assertLessEqual({'mail': []}, self.record.attrs)
+
+    def test_nonempty_attr_converted_to_list(self):
+        self.assertLessEqual({'cn': ["User"]}, self.record.attrs)
+
+    def test_critical_chars_escaped_and_converted_to_list(self):
+        self.assertEqual(self.record.attrs['userPassword'], ["{CRYPT}\\2a\\2ashizzle"])
+
+    def test_int_attrs_not_converted_to_string(self):
+        self.assertEqual(self.record.attrs['uid'], [50])
+
+
 class RecordTestCase(TestCase):
     def setUp(self):
         self.record = Record(dn='test', attrs={'mail': 'shizzle'})
