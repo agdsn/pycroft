@@ -1,7 +1,6 @@
 # -*- coding: utf-8; -*-
 from __future__ import print_function
 
-import argparse
 import logging
 import os
 import sys
@@ -122,12 +121,12 @@ def fake_connection():
     return connection
 
 
-def add_stdout_logging(logger):
+def add_stdout_logging(logger, level=logging.INFO):
     handler = logging.StreamHandler()
     fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
     handler.setFormatter(fmt)
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
 
 
 def sync_all(db_users, ldap_users, connection, base_dn):
@@ -174,62 +173,3 @@ def get_config_or_exit():
     except KeyError as exc:
         logger.critical("%s not set, quitting", exc.args[0])
         exit()
-
-
-def main():
-    logger.info("Starting the production sync. See --help for other options.")
-    config = get_config_or_exit()
-
-    db_users = fetch_users_to_sync(
-        session=establish_and_return_session(config.db_uri)
-    )
-    logger.info("Fetched %s database users", len(db_users))
-
-    connection = establish_and_return_ldap_connection(
-        host=config.host,
-        port=config.port,
-        bind_dn=config.bind_dn,
-        bind_pw=config.bind_pw,
-    )
-
-    ldap_users = fetch_current_ldap_users(connection, base_dn=config.base_dn)
-    logger.info("Fetched %s ldap users", len(ldap_users))
-
-    sync_all(db_users, ldap_users, connection, base_dn=config.base_dn)
-
-
-def main_fake_ldap():
-    logger.info("Starting sync using a mocked LDAP backend. See --help for other options.")
-    try:
-        db_uri = os.environ['PYCROFT_DB_URI']
-    except KeyError:
-        logger.critical('PYCROFT_DB_URI not set')
-        exit()
-
-    db_users = fetch_users_to_sync(
-        session=establish_and_return_session(db_uri)
-    )
-    logger.info("Fetched %s database users", len(db_users))
-
-    connection = fake_connection()
-    BASE_DN = 'ou=users,dc=agdsn,dc=de'
-    logger.debug("BASE_DN set to %s", BASE_DN)
-
-    ldap_users = fetch_current_ldap_users(connection, base_dn=config.BASE_DN)
-    logger.info("Fetched %s ldap users", len(ldap_users))
-
-    sync_all(db_users, ldap_users, connection, base_dn=BASE_DN)
-
-
-if __name__ == '__main__':
-    add_stdout_logging(logger)
-    parser = argparse.ArgumentParser(description="Pycroft ldap syncer")
-    parser.add_argument('--fake', dest='fake', action='store_true',
-                        help="Use a mocked LDAP backend")
-    parser.set_defaults(fake=False)
-    args = parser.parse_args()
-
-    if args.fake:
-        main_fake_ldap()
-    else:
-        main()
