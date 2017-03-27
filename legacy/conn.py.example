@@ -1,15 +1,39 @@
-#!/usr/bin/env python2
+# -*- mode: python; coding: utf-8 -*-
+"""
+example conn.py
+
+You at least need access to the netusers, userman, and the pycroft
+“legacy” target database.  If ldap is cached, you need to specify the
+ldap section as well.  For this, it is not required to use an admin
+account, although this inhibits reading the ``userPassword`` field.
+Look up ``--help`` for details on how to enable/disable ldap caching.
+
+Note: When working inside docker and having to reference “localhost”,
+you need to provide the IP address from inside the docker network
+(such as 172.18.0.1).
+
+To get the gateway IP, you can use docker inspect specifically like
+this:
+
+docker inspect <container> --format="{{range \
+.NetworkSettings.Networks}}{{.Gateway}}{{end}}"
+"""
 
 conn_opts = {
+    # our two lovely and enduring databases looking forward to an
+    # honorable death
     "netusers": 'mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1:13306/netusers?charset=utf8&use_unicode=0',
     "userman": 'postgresql://<USER>@127.0.0.1:15432/userman',
+    # legacy db - where the whole legacy system will be represented
+    # after caching
     "legacy": "postgresql:///legacy",
+    # pycroft target db – not used when caching, only on import
     "pycroft": 'postgres:///pycroft',
     "master": "postgresql:///postgres",
+    # OPTIONAL if not caching LDAP (see ``--help`` on how to disable)
     "ldap": {
         'host': '',
         'port': 389,
-        # admin dn or something else getting `userPassword`
         'base_dn': "ou=Nutzer,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
         'group_base_dn': "ou=Gruppen,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
         'bind_dn': '',

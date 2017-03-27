@@ -11,7 +11,15 @@ import operator
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from conn import conn_opts
+try:
+    from conn import conn_opts
+except ImportError:
+    print("Please provide configuration in the legacy/conn.py module.\n"
+          "See conn.py.example for the required variables"
+          " and further documentation.")
+    exit()
+
+# cache_ldap make use of conn, so importing later
 from cache_ldap import cache_ldap, create_ldap_tables
 import netusers
 import userman
