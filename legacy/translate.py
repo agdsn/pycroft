@@ -147,8 +147,7 @@ def translate_users(data, resources):
         else:
             ldap_kwargs = {
                 'unix_account': resources['unix_accounts'][_u.unix_account],
-                # User.email is NOT meant to be the redirection mail!
-                # 'email': ldap_account.mail,
+                'email': ldap_account.mail,
             }
             if ldap_account.userPassword:
                 ldap_kwargs['passwd_hash'] = ldap_account.userPassword
