@@ -279,6 +279,7 @@ def translate_finance_accounts(data, resources):
         u"Fehlbuchung andere Sektionen": "EXPENSE",  # mein lieber Herr Finanzverein...
         u"Rücküberweisung": "EXPENSE",
         u"Import Zeu und Bor": "EXPENSE",
+        u"Aufwandsentschädigungen": "EXPENSE",
     }
 
     objs = []
