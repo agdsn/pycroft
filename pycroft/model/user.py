@@ -78,7 +78,8 @@ class User(ModelBase, UserMixin):
         # but between punctuation characters must be characters or numbers
         (?:[._-]?[a-z0-9])+$
         """, re.VERBOSE)
-    email_regex = re.compile(r"^[a-zA-Z0-9]+(?:(?:\+|-|_|\.)[a-zA-Z0-9]+)*"
+    email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
+                             r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
     blocked_logins = {"abuse", "admin", "administrator", "autoconfic",
