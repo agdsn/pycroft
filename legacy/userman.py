@@ -10,7 +10,7 @@ import userman_model as model
 
 name = "userman"
 
-engine = create_engine(conn_opts['userman'], client_encoding='latin1')
+engine = create_engine(conn_opts['userman'], client_encoding='utf-8')
 session = scoped_session(sessionmaker(bind=engine))
 
 relevant_tables = [model.FinanzKonten,
