@@ -9,7 +9,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider "docker" do |d|
-    d.create_args = ["--cap-add=SYS_ADMIN", "--security-opt=seccomp:unconfined"]
+    d.create_args = ["--cap-add=SYS_ADMIN"]
     d.build_dir = "vagrant/"
     d.build_args = ["--tag=agdsn/pycroft:latest"]
     d.has_ssh = true
