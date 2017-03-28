@@ -20,7 +20,13 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql.expression import cast
 from flask import _request_ctx_stack
 
-from conn import conn_opts
+try:
+    from conn import conn_opts
+except ImportError:
+    print("Please provide configuration in the legacy/conn.py module.\n"
+          "See conn.py.example for the required variables"
+          " and further documentation.")
+    exit()
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model, property
