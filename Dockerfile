@@ -56,4 +56,5 @@ USER pycroft
 WORKDIR $PROJECT_DIR
 
 EXPOSE 5000
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["./server_run.py", "--debug", "--exposed"]
