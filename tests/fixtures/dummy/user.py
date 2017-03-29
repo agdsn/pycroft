@@ -24,3 +24,10 @@ class UserData(DataSet):
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room3
         account = AccountData.dummy_user2
+
+    class anotheruser:
+        login = "argwarg"
+        name = "Thomas Jefferson"
+        registered_at = datetime.utcnow()
+        room = RoomData.dummy_room2
+        account = AccountData.dummy_user3

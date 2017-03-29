@@ -5,12 +5,11 @@
 from sqlalchemy import Column, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
-from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from pycroft.model.base import ModelBase
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
-from pycroft.model.host import IP, Interface, Host
+from pycroft.model.host import IP
 
 
 class TrafficBalance(ModelBase):
@@ -23,14 +22,13 @@ class TrafficBalance(ModelBase):
     timestamp = Column(DateTime, default=utcnow(), nullable=False)
 
 
-class TrafficEvent(AbstractConcreteBase, ModelBase):
-    __table_name__ = None
+class TrafficEvent(object):
     timestamp = Column(DateTime, default=utcnow(), nullable=False)
     amount = Column(BigInteger, CheckConstraint('amount >= 0'),
                     nullable=False)
 
 
-class TrafficVolume(TrafficEvent):
+class TrafficVolume(TrafficEvent, ModelBase):
     type = Column(Enum("IN", "OUT", name="traffic_types"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
@@ -45,21 +43,11 @@ class TrafficVolume(TrafficEvent):
                         viewonly=True,  # cascade via ip
                         uselist=False)
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'traffic_volume',
-        'concrete': True,
-    }
 
-
-class TrafficCredit(TrafficEvent):
+class TrafficCredit(TrafficEvent, ModelBase):
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
                      nullable=False)
     user = relationship(User,
                         backref=backref("traffic_credits",
                                         cascade="all, delete-orphan"),
                         uselist=False)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'traffic_credit',
-        'concrete': True,
-    }

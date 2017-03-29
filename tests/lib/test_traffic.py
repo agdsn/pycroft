@@ -19,34 +19,46 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
                 ServerHostData, ServerInterfaceData,
                 TrafficVolumeData, TrafficBalanceData, TrafficCreditData]
 
-    def test_0010_balance_calculation(self):
-        # User with multiple ips and multiple hosts
-        user = User.q.filter_by(login=UserData.dummy.login).one()
-        correct_balance_user = (
-            TrafficBalanceData.dummy_balance.amount +
-            TrafficCreditData.dummy_credit.amount -
-            TrafficVolumeData.dummy_volume_ipv6.amount -
-            TrafficVolumeData.dummy_volume_server.amount -
-            TrafficVolumeData.dummy_volume.amount)
+    def setUp(self):
+        super(Test_010_BalanceCalculation, self).setUp()
+        self.users = [# User with multiple ips and multiple hosts:
+                      User.q.filter_by(login=UserData.dummy.login).one(),
 
-        self.assertEqual(correct_balance_user, traffic_balance(user))
+                      # User with one host and no past balance
+                      User.q.filter_by(login=UserData.privileged.login).one(),
 
-        self.assertEqual(correct_balance_user,
-                         session.session.query(traffic_balance_expr()).filter(
-                             User.id == user.id).one().traffic_balance)
+                      # User with balance timestamp in future
+                      User.q.filter_by(login=UserData.anotheruser.login).one()]
+        self.correct_balance = {
+            self.users[0]: (
+                TrafficBalanceData.dummy_balance.amount +
+                TrafficCreditData.dummy_credit.amount -
+                TrafficVolumeData.dummy_volume_ipv6.amount -
+                TrafficVolumeData.dummy_volume_server.amount -
+                TrafficVolumeData.dummy_volume.amount),
+            self.users[1]: (-TrafficVolumeData.dummy_volume_switch.amount),
+            self.users[2]: None,
+        }
 
-        # User with one host and no past balance
-        privileged = User.q.filter_by(login=UserData.privileged.login).one()
-        correct_balance_priv = (
-            -TrafficVolumeData.dummy_volume_switch.amount)
-        self.assertEqual(correct_balance_priv, traffic_balance(privileged))
-        self.assertEqual(correct_balance_priv,
-                         session.session.query(traffic_balance_expr()).filter(
-                             User.id == privileged.id).one().traffic_balance)
+    def test_0010_orm(self):
+        orm_values = map(lambda u: (u.id, traffic_balance(u)), self.users)
+        correct_values = map(lambda (u, b): (u.id, b),
+                             self.correct_balance.items())
+        self.assertEqual(set(orm_values), set(correct_values))
 
+    def test_0010_expr(self):
+        expr_values = session.session.query(
+            User.id, traffic_balance_expr()).all()
+        correct_values = map(lambda (u, b): (u.id, b),
+                             self.correct_balance.items())
+        self.assertEqual(set(expr_values), set(correct_values))
+
+    def test_0030_expr_comparator(self):
         # test comparator expression
-        correct_values = [(user.id, correct_balance_user>0),
-                          (privileged.id, correct_balance_priv>0)]
+        correct_values = map(lambda (u, b): (u.id, b > 0
+                                                   if b is not None else None),
+                             self.correct_balance.items())
         res = session.session.query(User.id, traffic_balance_expr()>0).all()
 
-        self.assertEqual(correct_values, res)
+        self.assertEqual(set(correct_values), set(res))
+

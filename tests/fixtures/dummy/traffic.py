@@ -63,4 +63,8 @@ class TrafficBalanceData(DataSet):
         timestamp = datetime.utcnow() - timedelta(hours=1)
         amount = int(2.73 * 2**20)
 
+    class dummy_balance3:
+        user = UserData.anotheruser
+        timestamp = datetime.utcnow() + timedelta(days=1)
+        amount = int(6.12 * 2**30)
 
