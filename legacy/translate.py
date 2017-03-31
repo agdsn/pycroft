@@ -88,7 +88,7 @@ def translate_rooms(data, resources):
     return r_d.values()
 
 
-@reg.provides(user.Property, user.PropertyGroup, user.Group)
+@reg.provides(user.Property, user.PropertyGroup, user.TrafficGroup, user.Group)
 def generate_groups(data, resources):
     properties_l = []
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
@@ -99,6 +99,11 @@ def generate_groups(data, resources):
         for prop_name, modifier in properties.iteritems():
             properties_l.append(user.Property(
                 name=prop_name, property_group=g, granted=modifier))
+    g_d['usertraffic'] = user.TrafficGroup(
+        name="Nutzer-Trafficgruppe",
+        credit_amount=3*2**30,
+        credit_interval=timedelta(days=1),
+        credit_limit=21*3*2**30)
     return g_d.values()+properties_l
 
 
@@ -679,6 +684,13 @@ def reconstruct_memberships(data, resources):
                                     group=g_d['org'],
                                     begins_at=u.registered_at)
                 )
+                # db: ex-aktiv, ldap: aktiv bedeutet: aktiv, aber ausgezogen
+                if _u.status_id == 9:
+                    objs.append(
+                        user.Membership(user=u,
+                                        group=g_d['away'],
+                                        begins_at=date.today())
+                    )
 
     log.info("#fees {}".format((" ".join("{0}:{{{0}}}".format(key) for key in n.__dict__.keys())).format(**n.__dict__)))
 

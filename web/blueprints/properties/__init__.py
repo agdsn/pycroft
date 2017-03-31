@@ -12,6 +12,7 @@
 """
 from itertools import chain
 import operator
+from datetime import date
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
 from pycroft._compat import itervalues, iterkeys, imap
@@ -45,7 +46,9 @@ def traffic_groups():
 def traffic_groups_json():
     return jsonify(items=[{
             'name': group.name,
-            'limit': byte_size_filter(group.traffic_limit),
+            'credit_limit': byte_size_filter(group.credit_limit),
+            'credit_interval': str(group.credit_interval),
+            'credit_amount': byte_size_filter(group.credit_amount),
             'delete': {
                 'href': url_for(".traffic_group_delete", group_id=group.id),
                 'title': 'Löschen',
@@ -63,14 +66,16 @@ def traffic_group_create():
         # traffic limit in byte per seven days
         group = TrafficGroup(
             name=form.name.data,
-            traffic_limit=int(form.traffic_limit.data)*1024*1024*1024)
+            credit_limit=int(form.credit_limit.data)*1024*1024*1024,
+            credit_amount=int(form.credit_amount.data)*1024*1024*1024,
+            credit_interval=form.credit_interval.data-date.fromtimestamp(0))
         session.session.add(group)
         session.session.commit()
-        message = u'Traffic Gruppe {0} angelegt'
+        message = u'Trafficgruppe {0} angelegt'
         flash(message.format(group.name), 'success')
         return redirect(url_for('.traffic_groups'))
     return render_template('properties/traffic_group_create.html', form=form,
-    page_title = u"Neue Traffic Gruppe")
+    page_title = u"Neue Trafficgruppe")
 
 
 @bp.route('/traffic_group/<group_id>/delete')
@@ -79,7 +84,7 @@ def traffic_group_delete(group_id):
     group = TrafficGroup.q.get(group_id)
     session.session.delete(group)
     session.session.commit()
-    message = u'Traffic Gruppe {0} gelöscht'
+    message = u'Trafficgruppe {0} gelöscht'
     flash(message.format(group.name), 'success')
     return redirect(url_for('.traffic_groups'))
 

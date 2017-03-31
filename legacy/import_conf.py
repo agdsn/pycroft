@@ -45,7 +45,7 @@ group_props = {
     "violator": ("Verstoß gegen Netzordnung", {"network_access": False,
                                               "violation": True}),
 
-    # nutzer ∈ member \ away= normales mitglied, mailmitgliedschaft, semesterbeitrag
+    # nutzer ∈ member \ away = normales mitglied, mailmitgliedschaft, semesterbeitrag
     #        ∈ away ∩ member = temporär ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∈ away \ member = permanent ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∉ away ∪ member = permanent ausgezogen, keine mailmitgliedschaft, kein semesterbeitrag
@@ -69,18 +69,18 @@ group_props = {
 
 
 status_groups_map = {
-    1: ("member",),  # bezahlt, ok
-    2: ("member",),  # angemeldet, aber nicht bezahlt
+    1: ("member", "usertraffic"),  # bezahlt, ok
+    2: ("member", "usertraffic"),  # angemeldet, aber nicht bezahlt
     3: ("away",),    # nicht bezahlt, hat nur Mail
-    4: ("member",),  # angemeldet, nicht bezahlt, 2. Warnung
-    5: ("member", "suspended"),  # angemeldet, nicht bezahlt, gesperrt
+    4: ("member", "usertraffic"),  # angemeldet, nicht bezahlt, 2. Warnung
+    5: ("member", "suspended", "usertraffic"),  # angemeldet, nicht bezahlt, gesperrt
     6: ("away",),  # angemeldet, gesperrt (ruhend)
     7: ("member", "violator"),  # angemeldet, gesperrt (Verstoss gegen Netzordnung)
     8: (),  # ausgezogen, gesperrt
     9: (),  # Ex-Aktiver
     10: ("away",), # E-Mail, ehemals IP
     11: (),  # uebrig in Wu die in Renovierung
-    12: ("member",)  # gesperrt wegen Trafficueberschreitung
+    12: ("member", "usertraffic")  # gesperrt wegen Trafficueberschreitung
 
 }
 

@@ -163,7 +163,6 @@ def membership_from_fees(user, semesters, n):
             n.ok += 1
             continue
 
-
         val_date = split.transaction.valid_on
         sem_date = match_semester(val_date, semesters)
         sem_grace = match_semester(val_date+sem_date.grace_period, semesters)
