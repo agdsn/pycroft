@@ -148,7 +148,7 @@ def bank_accounts_create():
 @access.require('finance_change')
 def bank_account_activities_edit(activity_id):
     activity = BankAccountActivity.q.get(activity_id)
-    print activity_id
+    print(activity_id)
     form = BankAccountActivityEditForm(
         obj=activity, bank_account_name=activity.bank_account.name)
 

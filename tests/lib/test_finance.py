@@ -126,10 +126,10 @@ class Test_010_BankAccount(FixtureDataTestBase):
             u"transaction", self.fee_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
-        print type(transferred_amount(
+        print(type(transferred_amount(
                 self.fee_account, self.user_account, single(today)
-            ))
-        print type(amount)
+            )))
+        print(type(amount))
         self.assertEqual(
             transferred_amount(
                 self.fee_account, self.user_account, single(today)

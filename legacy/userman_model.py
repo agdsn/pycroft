@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import INET
 try:
     from sqlalchemy.dialects.postgresql import OID
 except ImportError:
-    print "No OID type, using Integer"
+    print("No OID type, using Integer")
     OID = Integer
 
 from sqlalchemy.orm import relationship

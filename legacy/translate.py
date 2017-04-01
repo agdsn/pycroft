@@ -22,9 +22,9 @@ from pycroft.helpers import user as usertools, AttrDict
 from pycroft.helpers.interval import (open, closedopen, closed, IntervalSet,
                                       PositiveInfinity, NegativeInfinity)
 
-from import_conf import *
-from tools import TranslationRegistry
-from reconstruct_memberships import membership_from_fees
+from .import_conf import *
+from .tools import TranslationRegistry
+from .reconstruct_memberships import membership_from_fees
 # TODO: missing or incomplete translations for status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
 
 ROOT_NAME = "agdsn"
@@ -51,7 +51,7 @@ def a(val, anon_val=None):
 def generate_sites(data, resources):
     site_d = resources['site'] = {id_: facilities.Site(name=name)
                           for id_, name in site_name_map.items()}
-    return site_d.values()
+    return list(site_d.values())
 
 
 @reg.provides(facilities.Building)
@@ -67,7 +67,7 @@ def translate_buildings(data, resources):
             street=_b.str.replace(u'strasse', u'straße'),
             number=_b.hausnr)
         b_d[_b.wheim_id] = b
-    return b_d.values()
+    return list(b_d.values())
 
 
 @reg.provides(facilities.Room)
@@ -85,7 +85,7 @@ def translate_rooms(data, resources):
         # _r.etage is VARCHAR here,
         # conversion to int is needed since it's an int everywhere else
         r_d[(_r.wheim_id, int(_r.etage), _r.zimmernr)] = r
-    return r_d.values()
+    return list(r_d.values())
 
 
 @reg.provides(user.Property, user.PropertyGroup, user.TrafficGroup, user.Group)
@@ -93,10 +93,10 @@ def generate_groups(data, resources):
     properties_l = []
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
 
-    for role, (group_name, properties) in group_props.iteritems():
+    for role, (group_name, properties) in group_props.items():
         g = user.PropertyGroup(name=group_name)
         g_d[role] = g
-        for prop_name, modifier in properties.iteritems():
+        for prop_name, modifier in properties.items():
             properties_l.append(user.Property(
                 name=prop_name, property_group=g, granted=modifier))
     g_d['usertraffic'] = user.TrafficGroup(
@@ -104,7 +104,7 @@ def generate_groups(data, resources):
         credit_amount=3*2**30,
         credit_interval=timedelta(days=1),
         credit_limit=21*3*2**30)
-    return g_d.values()+properties_l
+    return list(g_d.values())+properties_l
 
 
 @reg.provides(logging.UserLogEntry)
@@ -259,7 +259,7 @@ def translate_semesters(data, resources):
                           allowed_overdraft=5.00,
                           begins_on=date(2016, 4, 1),
                           ends_on=date(2016, 10, 1)-timedelta(days=1))
-    return sem_d.values()
+    return list(sem_d.values())
 
 
 @reg.provides(finance.Account)
@@ -398,7 +398,7 @@ def translate_bank_transactions(data, resources):
             valid_on=_bt.valid_on,
             split=None)
         bt_d[_bt.bkid] = bt
-    return bt_d.values()
+    return list(bt_d.values())
 
 
 @reg.requires_function(translate_bank_transactions)
@@ -505,7 +505,7 @@ def generate_subnets_vlans(data, resources):
 
     # TODO: note, missing transit, server and eduroam subnets
 
-    return s_d.values()
+    return list(s_d.values())
 
 
 @reg.provides(host.Host, host.Interface,
@@ -630,7 +630,7 @@ def generate_config(data, resources):
 def reconstruct_memberships(data, resources):
     u_d = resources['user']
     g_d = resources['group']
-    semesters = resources['semester'].values()
+    semesters = list(resources['semester'].values())
 
     n = AttrDict(ok=0, fixed=0, failed=0, unclassified=0, ignored=0)
 

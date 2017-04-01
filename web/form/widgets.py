@@ -12,6 +12,7 @@ from wtforms.widgets.core import html_params, HTMLString
 
 from pycroft._compat import imap, reduce, iteritems
 from web.templates import page_resources
+from functools import reduce
 
 
 class WidgetDecorator(object):

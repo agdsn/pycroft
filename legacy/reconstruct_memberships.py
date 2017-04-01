@@ -8,7 +8,7 @@ log = std_logging.getLogger('import.translate')
 import operator
 import re
 from datetime import datetime, date, timedelta
-from tools import invert_dict
+from .tools import invert_dict
 
 from pycroft.helpers.interval import (open, closedopen, closed, IntervalSet,
                                       NegativeInfinity, PositiveInfinity)
@@ -53,7 +53,7 @@ def sem_to_interval(s):
 
 def match_semester(date, semesters):
     # interval tree would be nicer
-    sems = filter(lambda sem: date in sem, semesters)
+    sems = [sem for sem in semesters if date in sem]
     return sems[0]
 
 

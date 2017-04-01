@@ -41,23 +41,21 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
         }
 
     def test_0010_orm(self):
-        orm_values = map(lambda u: (u.id, traffic_balance(u)), self.users)
-        correct_values = map(lambda (u, b): (u.id, b),
-                             self.correct_balance.items())
+        orm_values = [(u.id, traffic_balance(u)) for u in self.users]
+        correct_values = [(u_b[0].id, u_b[1]) for u_b in self.correct_balance.items()]
         self.assertEqual(set(orm_values), set(correct_values))
 
     def test_0010_expr(self):
         expr_values = session.session.query(
             User.id, traffic_balance_expr()).all()
-        correct_values = map(lambda (u, b): (u.id, b),
-                             self.correct_balance.items())
+        correct_values = [(u_b1[0].id, u_b1[1]) for u_b1 in self.correct_balance.items()]
         self.assertEqual(set(expr_values), set(correct_values))
 
     def test_0030_expr_comparator(self):
         # test comparator expression
-        correct_values = map(lambda (u, b): (u.id, b > 0
-                                                   if b is not None else None),
-                             self.correct_balance.items())
+        correct_values = [(u_b2[0].id, u_b2[1] > 0
+                           if u_b2[1] is not None else None)
+                          for u_b2 in self.correct_balance.items()]
         res = session.session.query(User.id, traffic_balance_expr()>0).all()
 
         self.assertEqual(set(correct_values), set(res))

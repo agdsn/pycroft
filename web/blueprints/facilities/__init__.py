@@ -150,7 +150,7 @@ def room_show(room_id):
                    str(room.level) + u"-" + str(room.number),
         room=room,
         room_log=room_log_list,
-        user_buttons=map(user_button, room.users),
+        user_buttons=list(map(user_button, room.users)),
         form=form)
 
 

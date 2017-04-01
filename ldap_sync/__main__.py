@@ -69,7 +69,7 @@ parser.add_argument('--fake', dest='fake', action='store_true',
                     help="Use a mocked LDAP backend")
 group_log = parser.add_mutually_exclusive_group()
 group_log.add_argument("-l", "--log", dest='loglevel', type=str,
-                       choices=NAME_LEVEL_MAPPING.keys(),
+                       choices=list(NAME_LEVEL_MAPPING.keys()),
                        help="Set the loglevel")
 group_log.add_argument("-d", "--debug", dest='debug', action='store_true',
                        help="Short for --log=debug")

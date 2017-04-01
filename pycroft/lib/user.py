@@ -85,10 +85,9 @@ class HostAliasExists(ValueError):
 
 
 def setup_ipv4_networking(host):
-    subnets = filter(lambda s: s.address.version == 4,
-                     [p.switch_interface.default_subnet
+    subnets = [s for s in [p.switch_interface.default_subnet
                       for p in host.room.switch_patch_ports
-                      if p.switch_interface is not None])
+                      if p.switch_interface is not None] if s.address.version == 4]
     for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,

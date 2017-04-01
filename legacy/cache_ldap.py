@@ -6,8 +6,8 @@ from collections import namedtuple
 import ldap3
 from sqlalchemy import create_engine
 
-from conn import conn_opts
-from ldap_model import Nutzer
+from .conn import conn_opts
+from .ldap_model import Nutzer
 
 
 _combined_response = namedtuple('CombinedLdapResponse',

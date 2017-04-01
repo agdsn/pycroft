@@ -12,7 +12,7 @@ import logging as std_logging
 log = std_logging.getLogger('import')
 import random
 
-from tools import timed
+from .tools import timed
 
 import sqlalchemy
 from sqlalchemy import create_engine, or_, not_, Integer, func
@@ -21,7 +21,7 @@ from sqlalchemy.sql.expression import cast
 from flask import _request_ctx_stack
 
 try:
-    from conn import conn_opts
+    from .conn import conn_opts
 except ImportError:
     print("Please provide configuration in the legacy/conn.py module.\n"
           "See conn.py.example for the required variables"
@@ -33,10 +33,10 @@ from pycroft import model, property
 from pycroft.model import (traffic, facilities, dns, user, net, port,
                            finance, session, host, config, logging, types)
 
-import userman_model
-import netusers_model
-import ldap_model
-import translate
+from . import userman_model
+from . import netusers_model
+from . import ldap_model
+from . import translate
 
 
 def exists_db(connection, name):
@@ -72,8 +72,9 @@ def translate_all(data):
         log.info("  ...{func} ({details}).".format(
             func=func.__name__,
             details=", ".join(["{}: {}".format(k, v)
-                               for k, v in Counter(map(
-                                    lambda ob: type(ob).__name__, o)).items()])
+                               for k, v in Counter(
+                                   [type(ob).__name__ for ob in o]
+                                ).items()])
         ))
         objs.extend(o)
 
@@ -179,7 +180,7 @@ def main(args):
         objs = translate_all(legacy_data)
 
     with timed(log, thing="Importing {} records".format(len(objs))):
-        if args.bulk and map(int, sqlalchemy.__version__.split(".")) >= [1,0,0]:
+        if args.bulk and list(map(int, sqlalchemy.__version__.split("."))) >= [1,0,0]:
             session.session.bulk_save_objects(objs)
         else:
             session.session.add_all(objs)

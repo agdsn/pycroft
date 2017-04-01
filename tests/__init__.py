@@ -212,7 +212,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
                  if rule.endpoint.startswith(blueprint_name + '.')]
         url_adapter = _request_ctx_stack.top.url_adapter
 
-        return map(partial(self._build_rule, url_adapter), rules)
+        return list(map(partial(self._build_rule, url_adapter), rules))
 
     def _build_rule(self, url_adapter, rule):
         converters = rule._converters
@@ -240,7 +240,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
         except self.failureException as e:
             exception = self.failureException("While accessing {}: {}"
                                               .format(endpoint, e.message))
-            raise self.failureException, exception, sys.exc_info()[2]
+            raise self.failureException(exception).with_traceback(sys.exc_info()[2])
 
         return response
 

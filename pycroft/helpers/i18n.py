@@ -368,7 +368,7 @@ class Message(object):
         kwargs = obj.get(u"kwargs", {})
         try:
             args = tuple(deserialize_param(a) for a in args)
-            kwargs = {k: deserialize_param(v) for k, v in kwargs.iteritems()}
+            kwargs = {k: deserialize_param(v) for k, v in kwargs.items()}
         except (TypeError, ValueError) as e:
             error = u''.join(traceback.format_exception_only(type(e), e))
             return ErroneousMessage("Parameter deserialization error: {} in "
@@ -401,7 +401,7 @@ class Message(object):
             obj["args"] = tuple(serialize_param(a) for a in self.args)
         if self.kwargs:
             obj["kwargs"] = {k: serialize_param(v)
-                             for k, v in self.kwargs.iteritems()}
+                             for k, v in self.kwargs.items()}
         return text_type(
             json.dumps(obj, ensure_ascii=False, encoding='utf-8'))
 

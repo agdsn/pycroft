@@ -5,9 +5,9 @@ from sqlalchemy import create_engine
 
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from conn import conn_opts
+from .conn import conn_opts
 
-import netusers_model as model
+from . import netusers_model as model
 
 name = "netusers"
 

@@ -5,6 +5,7 @@ import collections
 from itertools import tee, chain
 import operator
 from pycroft._compat import text_type, imap, reduce, izip, ifilterfalse
+from functools import reduce
 
 
 __all__ = (
@@ -543,7 +544,7 @@ class IntervalSet(collections.Sequence):
     def __hash__(self):
         return hash(self._intervals)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True if self._intervals else False
 
     def __len__(self):

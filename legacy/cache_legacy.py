@@ -10,9 +10,10 @@ import operator
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
+from functools import reduce
 
 try:
-    from conn import conn_opts
+    from .conn import conn_opts
 except ImportError:
     print("Please provide configuration in the legacy/conn.py module.\n"
           "See conn.py.example for the required variables"
@@ -20,9 +21,9 @@ except ImportError:
     exit()
 
 # cache_ldap make use of conn, so importing later
-from cache_ldap import cache_ldap, create_ldap_tables
-import netusers
-import userman
+from .cache_ldap import cache_ldap, create_ldap_tables
+from . import netusers
+from . import userman
 
 
 old_dbs = (netusers, userman)
@@ -61,7 +62,7 @@ def cache_relevant_tables_alt(old_db, session, engine):
     # slow
     relevant_tables = old_db.relevant_tables
     ordered_relevant_tables = []
-    relevant_actual_tables = map(lambda x: x.__table__, relevant_tables)
+    relevant_actual_tables = [x.__table__ for x in relevant_tables]
     old_db.model.metadata.create_all(bind=engine, tables=relevant_actual_tables)
     sys.stdout.write("Caching " + old_db.name + "...\n")
     for table in old_db.model.metadata.sorted_tables:
@@ -96,7 +97,7 @@ def cache_relevant_tables(old_db, _, engine, tables=None):
     relevant_metas = [t for t in old_db.relevant_tables
                        if tables is None or t.__tablename__ in tables]
     # type table
-    relevant_tables = map(lambda x: x.__table__, relevant_metas)
+    relevant_tables = [x.__table__ for x in relevant_metas]
     if relevant_metas and tables:
         for t in relevant_tables:
             #todo drop in reversed sorted_tables order, and recreate other
