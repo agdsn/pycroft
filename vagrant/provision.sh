@@ -8,7 +8,7 @@ DEBIAN_FRONTEND=noninteractive
 
 cp -a /pycroft/vagrant/etc/apt/sources.list /etc/apt/
 apt-get update
-apt-get install -y git postgresql postgresql-client libpq-dev sqlite3 libsqlite3-dev python-dev python-pip nodejs npm supervisor sysv-rc sysvinit-utils
+apt-get install -y git postgresql postgresql-client libpq-dev sqlite3 libsqlite3-dev python3-dev python3-pip nodejs npm supervisor sysv-rc sysvinit-utils
 [ -f /usr/bin/node ] || ln -s /usr/bin/nodejs /usr/bin/node
 service postgresql stop
 update-rc.d postgresql remove
@@ -23,7 +23,7 @@ echo "Installing bower"
 which bower || npm install -g bower
 
 echo "Installing python packages..."
-pip install -r /pycroft/vagrant/requirements.txt
+pip3 install -r /pycroft/vagrant/requirements.txt
 
 echo "Installing JavaScript dependencies"
 cd /pycroft

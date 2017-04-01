@@ -18,4 +18,4 @@ before_install:
 script:
   - export DOCKER_COMPOSE="docker-compose -f docker-compose-travis.yml"
   - $DOCKER_COMPOSE build
-  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
+  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip3 install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'

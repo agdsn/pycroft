@@ -22,11 +22,11 @@ apt-get -t testing install pypy pypy-lib pypy-dev # to get pypy>2.6, importer br
 curl -O https://bootstrap.pypa.io/get-pip.py
 pypy get-pip.py
 
-pypy -m pip install psycopg2cffi==2.7.4
+pypy -m pip3 install psycopg2cffi==2.7.4
 sed '/psycopg2/d;/pysqlite/d' ../requirements.txt > pypy_requirements.txt
-pypy -m pip install -r pypy_requirements.txt
+pypy -m pip3 install -r pypy_requirements.txt
 
-echo "Applying psycopg2 to psycopg2cffi compatibility fix" 
+echo "Applying psycopg2 to psycopg2cffi compatibility fix"
 echo -e "from psycopg2cffi import compat\ncompat.register()" > /usr/local/lib/pypy2.7/dist-packages/psycopg2.py
 
 chmod 777 -R /usr/local/lib/pypy2.7/dist-packages/psycopg2cffi # for some reason it needs write access
