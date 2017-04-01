@@ -30,7 +30,7 @@ except ImportError:
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model, property
-from pycroft.model import (traffic, facilities, dns, user, net, port,
+from pycroft.model import (traffic, facilities, user, net, port,
                            finance, session, host, config, logging, types)
 
 from . import userman_model

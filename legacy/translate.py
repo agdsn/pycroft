@@ -15,7 +15,7 @@ import ipaddr
 from sqlalchemy.sql import null
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pycroft.model import (traffic, facilities, dns, user, net, port,
+from pycroft.model import (traffic, facilities, user, net, port,
                            finance, session, host, config, logging, types)
 from pycroft.lib.host import generate_hostname
 from pycroft.helpers import user as usertools, AttrDict
@@ -228,7 +228,7 @@ def translate_semesters(data, resources):
                     year=gauge_year+years_to_gauge)
 
     for _sem in data['semester']:
-        num_semesters_to_gauge = _sem.id/1000-gauge_num
+        num_semesters_to_gauge = _sem.id//1000-gauge_num
         # fee changes:
         #   ws02/03 1000: anm2500 sem1750 red450
         #   ss04 4000: anm2500 sem1500 red450
@@ -457,28 +457,8 @@ def translate_finance_transactions(data, resources):
     return objs
 
 
-@reg.provides(dns.DNSZone, dns.SOARecord,
-              satisfies=(dns.SOARecord.name_id, dns.SOARecord.mname_id))
-def generate_dns_zone(data, resources):
-    primary_host_zone = dns.DNSZone(name="agdsn.tu-dresden.de")
-    urz_zone = dns.DNSZone(name="urz.tu-dresden.de")
-    soa_record = dns.SOARecord(
-        name=dns.DNSName(name="@", zone=primary_host_zone),
-        mname=dns.DNSName(name="rnadm", zone=urz_zone),
-        rname="wuensch.urz.tu-dresden.de.",
-        serial=2010010800,
-        refresh=10800,
-        retry=3600,
-        expire=3600000,
-        minimum=86400)
-    resources['primary_host_zone'] = primary_host_zone
-    resources['soa_record'] = soa_record
-    return primary_host_zone, soa_record
-
-
 @reg.provides(net.VLAN, net.Subnet)
 def generate_subnets_vlans(data, resources):
-    primary_host_zone = resources['primary_host_zone']
 
     s_d = resources['subnet'] = {}
     for _s in data['subnet']:
@@ -491,14 +471,8 @@ def generate_subnets_vlans(data, resources):
                         _s.vlan_name)
             continue
 
-        rev_dnszone_name = '.'.join(islice(
-            reversed(address.ip.exploded.split('.')),
-            min((address.max_prefixlen-address.prefixlen + 7//8), 1),
-            4)) + ".in-addr.arpa" # cp. from pycroft/lib/net.py:ptr_name
         s = net.Subnet(address=address,
                        gateway=ipaddr.IPv4Address(_s.default_gateway),
-                       primary_dns_zone=primary_host_zone,
-                       reverse_dns_zone=dns.DNSZone(name=rev_dnszone_name),
                        description=_s.vlan_name,
                        vlan=vlan)
         s_d[_s.subnet_id] = s
@@ -511,15 +485,14 @@ def generate_subnets_vlans(data, resources):
 @reg.provides(host.Host, host.Interface,
                 host.ServerHost, host.UserHost, host.Switch,
                 host.ServerInterface, host.UserInterface, host.SwitchInterface,
-                host.IP, dns.AddressRecord,
-              satisfies=(host.IP.interface_id, dns.AddressRecord.name_id))
+                host.IP,
+              satisfies=(host.IP.interface_id,))
 def translate_hosts(data, resources):
     legacy_hostname_map = {}
     u_d = resources['user']
     s_d = resources['subnet']
     r_d = resources['zimmer']
     b_d = resources['wheim']
-    primary_host_zone = resources['primary_host_zone']
 
     objs = []
     sw_d = resources['switch'] = {}  # switch dict: mgmt_ip -> obj
@@ -553,11 +526,7 @@ def translate_hosts(data, resources):
         h = host.ServerHost(owner=u_d[0], name=_c.c_alias, room=room)
         interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
         ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
-        hostname = legacy_hostname_map.get(_c.c_hname, _c.c_hname)
-        if hostname and hostname != 'NULL':
-            objs.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
-        else:
-            objs.append(ip)
+        objs.append(ip)
 
     for _c in data['userhost']:
         owner = u_d[_c.nutzer_id]
@@ -565,9 +534,8 @@ def translate_hosts(data, resources):
         interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
         if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
-            hostname = generate_hostname(ipaddr.IPAddress(_c.c_ip))
             ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
-            objs.append(dns.AddressRecord(name=dns.DNSName(name=hostname, zone=primary_host_zone), address=ip))
+            objs.append(ip)
         else:
             objs.append(interface)
     return objs
@@ -608,7 +576,6 @@ def translate_ports(data, resources):
 def generate_config(data, resources):
     g_d = resources['group']
     an_d = resources['accountname']
-    primary_host_zone = resources['primary_host_zone']
 
     return [config.Config(
         member_group=g_d["member"],
@@ -621,7 +588,6 @@ def generate_config(data, resources):
         semester_fee_account=an_d[u"Beiträge"],
         late_fee_account=an_d[u"Beiträge"],
         additional_fee_account=an_d[u"Beiträge"],
-        user_zone=primary_host_zone
 )]
 
 
