@@ -26,7 +26,7 @@ class MatchException(Exception):
 
 def interval_count(interval_list):
     counter = {
-        IntervalSet(closedopen(NegativeInfinity, PositiveInfinity)): 0}
+        IntervalSet(open(NegativeInfinity, PositiveInfinity)): 0}
     for interval in interval_list:
         isect = {k: k & interval for k in counter if k & interval}
         for isected_interval in isect:
@@ -43,7 +43,7 @@ def interval_count(interval_list):
 
 def monthdelta(date, delta):
      new_month = (date.month + delta - 1) % 12 + 1
-     year_delta = (date.month + delta - new_month) / 12
+     year_delta = (date.month + delta - new_month) // 12
      return date.replace(year=date.year+year_delta, month=new_month, day=1)
 
 
@@ -155,7 +155,7 @@ def membership_from_fees(user, semesters, n):
             year = int(fee_match.group('year'))
             month = int(fee_match.group('month'))
             next_month = month % 12 + 1
-            next_month_year = year + (month + 1 - next_month)/12
+            next_month_year = year + (month + 1 - next_month)//12
             month_interval = closedopen(
                 date(year=year, month=month, day=1),
                 date(year=next_month_year, month=next_month, day=1))
@@ -239,7 +239,7 @@ def membership_from_fees(user, semesters, n):
         except MatchException as e:
             log.error(u"failed: {} {} '{}' {}".format(
                 split.transaction.id, val_date, split.transaction.description,
-                e.message))
+                str(e)))
             n.failed += 1
         else:
             if sem == sem_name:

@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 import difflib
 from functools import partial
-from itertools import chain, islice, starmap, tee
+from itertools import chain, islice, starmap, tee, zip_longest
 from io import StringIO
 import operator
 import re
@@ -659,8 +659,8 @@ def user_has_paid(user):
 def get_typed_splits(splits):
     splits = sorted(splits, key=lambda s: s.transaction.posted_at, reverse=True)
     return zip_longest(
-        (s for s in splits if s >= 0),
-        (s for s in splits if s < 0),
+        (s for s in splits if s.amount >= 0),
+        (s for s in splits if s.amount < 0),
     )
 
 def get_transaction_type(transaction):

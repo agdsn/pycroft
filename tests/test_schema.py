@@ -24,7 +24,7 @@ def try_mapper(module):
             class_mapper(cls)
         except Exception as ex:
             if isinstance(ex, sqlalchemy.exc.InvalidRequestError):
-                message = ex.args[0]
+                message = str(ex)
                 if message.startswith("One or more mappers failed to initialize"):
                     return message
     return None

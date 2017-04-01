@@ -11,7 +11,6 @@ services:
       - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
       - PYCROFT_LDAP_BIND_PW=password
       - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
-    command: python server_run.py --debug --exposed
   db:
     image: postgres
     environment:

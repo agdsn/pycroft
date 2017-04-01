@@ -42,6 +42,9 @@ class Bound(tuple):
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
 
+    def __hash__(self):
+        return hash((self[0], self[1]))
+
     def __le__(self, other):
         if self.value is PositiveInfinity:
             return other.value is PositiveInfinity
@@ -138,6 +141,9 @@ class Interval(tuple):
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
         return tuple.__new__(cls, (lower_bound, upper_bound))
+
+    def __hash__(self):
+        return hash((self[0], self[1]))
 
     @property
     def lower_bound(self):
