@@ -4,7 +4,6 @@
 from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from pycroft.model.base import ModelBase
-from pycroft.model.dns import DNSZone
 from pycroft.model.finance import Account
 from pycroft.model.user import PropertyGroup
 
@@ -48,6 +47,4 @@ class Config(ModelBase):
         Integer, ForeignKey(Account.id), nullable=False)
     additional_fee_account = relationship(
         Account, foreign_keys=[additional_fee_account_id])
-    user_zone_id = Column(Integer, ForeignKey(DNSZone.id), nullable=False)
-    user_zone = relationship(DNSZone)
     __table_args__ = (CheckConstraint("id = 1"),)

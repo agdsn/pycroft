@@ -11,7 +11,7 @@ from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, facilities, session, logging, finance, dns, host)
+    user, facilities, session, logging, finance, host)
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import AccountData, SemesterData
@@ -108,11 +108,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(len(user_interface.ips), 1)
         user_ip = user_interface.ips[0]
         self.assertEqual(user_interface.mac, test_mac)
-        user_dns_name = dns.DNSName.q.filter_by(name=test_hostname).one()
-        user_cname_record = dns.CNAMERecord.q.filter_by(name=user_dns_name).one()
-        self.assertEqual(user_cname_record.name.name, test_hostname)
-        user_address_record = dns.AddressRecord.q.filter_by(address=user_ip).one()
-        self.assertEqual(user_cname_record.cname, user_address_record.name)
 
         # checks the initial group memberships
         active_user_groups = (new_user.active_property_groups() +

@@ -25,7 +25,6 @@ from pycroft.helpers.interval import (
 from pycroft.lib.host import generate_hostname
 from pycroft.lib.net import get_free_ip, ptr_name
 from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
-from pycroft.model.dns import AddressRecord, CNAMERecord, DNSName, PTRRecord
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import Host, IP, UserHost, UserInterface, Interface
@@ -85,6 +84,7 @@ class HostAliasExists(ValueError):
 
 
 def setup_ipv4_networking(host):
+    """Add suitable ips for every interface of a host"""
     subnets = [s for s in [p.switch_interface.default_subnet
                       for p in host.room.switch_patch_ports
                       if p.switch_interface is not None] if s.address.version == 4]
@@ -93,26 +93,6 @@ def setup_ipv4_networking(host):
         new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
         session.session.add(new_ip)
-        address_record_name = DNSName(name=generate_hostname(ip_address),
-                                      zone=subnet.primary_dns_zone)
-        session.session.add(AddressRecord(name=address_record_name,
-                                          address=new_ip))
-        ptr_record_name = DNSName(name=ptr_name(subnet.address, ip_address),
-                                  zone=subnet.reverse_dns_zone)
-        session.session.add(ptr_record_name)
-        session.session.add(PTRRecord(name=ptr_record_name,
-                                      address_id=new_ip.id,
-                                      ptrdname=address_record_name))
-        if host.desired_name:
-            name_exists = session.session.query(
-                exists().where(and_(DNSName.name == host.desired_name,
-                                    DNSName.zone == config.user_zone))).scalar()
-            if name_exists:
-                raise HostAliasExists()
-            cname_record_name = DNSName(name=host.desired_name,
-                                        zone=config.user_zone)
-            session.session.add(CNAMERecord(name=cname_record_name,
-                                            cname=address_record_name))
 
 
 @with_transaction
@@ -194,8 +174,7 @@ def move_in(name, login, email, building, level, room_number, mac,
 def migrate_user_host(host, new_room, processor):
     """
     Migrate a UserHost to a new room and if necessary to a new subnet.
-    If the host changes subnet, it will get a new IP address and existing CNAME
-    records will point to the primary name of the new address.
+    If the host changes subnet, it will get a new IP address.
     :param UserHost host: Host to be migrated
     :param Room new_room: new room of the host
     :param User processor: User processing the migration
@@ -215,26 +194,7 @@ def migrate_user_host(host, new_room, processor):
             new_ip = IP(interface=interface, address=ip_address,
                         subnet=subnet)
             session.session.add(new_ip)
-            address_record_name = DNSName(name=generate_hostname(ip_address),
-                                          zone=subnet.primary_dns_zone)
-            session.session.add(address_record_name)
-            session.session.add(AddressRecord(name=address_record_name,
-                                              address=new_ip))
-            # Migrate existing CNAME records
-            cname_target_ids = frozenset(r.name.id
-                                         for r in old_ip.address_records)
-            if cname_target_ids:
-                cnames = CNAMERecord.q.filter(CNAMERecord.cname_id.in_(
-                    cname_target_ids
-                ))
-                for cname_record in cnames:
-                    cname_record.cname = address_record_name
-            ptr_record_name = DNSName(name=ptr_name(subnet.address, ip_address),
-                                      zone=subnet.reverse_dns_zone)
-            session.session.add(ptr_record_name)
-            session.session.add(PTRRecord(name=ptr_record_name,
-                                          address_id=new_ip.id,
-                                          ptrdname=address_record_name))
+
             old_address = old_ip.address
             session.session.delete(old_ip)
 

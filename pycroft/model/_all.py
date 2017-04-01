@@ -14,7 +14,6 @@ This is necessary for things like sqlalchemy-schemadisplay.
 
 from .traffic import *
 from .config import *
-from .dns import *
 from .facilities import *
 from .finance import *
 from .logging import *

@@ -3,7 +3,6 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
-from tests.fixtures.dummy.dns_zones import DNSZoneData
 
 
 class AccountData(DataSet):
@@ -57,7 +56,6 @@ class ConfigData(DataSet):
         semester_fee_account = AccountData.semester_fee
         late_fee_account = AccountData.late_fee
         additional_fee_account = AccountData.additional_fee
-        user_zone = DNSZoneData.users_agdsn_de
 
 
 class PropertyData(DataSet):
