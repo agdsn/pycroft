@@ -13,8 +13,6 @@ from babel.support import Translations
 from decimal import Decimal
 import collections
 import jsonschema
-from pycroft._compat import (
-    string_types, integer_types, iteritems, text_type, imap)
 from pycroft.helpers.interval import (
     Interval, Bound, NegativeInfinity, PositiveInfinity)
 
@@ -142,6 +140,8 @@ identity = ignore_options(lambda x: x)
 formatter_map = {
     type(None): identity,
     bool: identity,
+    str: identity,
+    int: format_number,
     float: format_decimal,
     Decimal: format_decimal,
     Money: format_currency,
@@ -151,10 +151,6 @@ formatter_map = {
     timedelta: format_timedelta,
     Interval: format_interval,
 }
-for type_ in string_types:
-    formatter_map[type_] = identity
-for type_ in integer_types:
-    formatter_map[type_] = format_number
 
 
 def format_param(p, options):
@@ -212,6 +208,27 @@ def serialize_interval(interval):
     }
 
 
+def qualified_typename(type_):
+    return type_.__module__ + '.' + type_.__name__
+
+
+serialize_map = {
+    type(None): identity,
+    bool: identity,
+    float: identity,
+    str: identity,
+    int: identity,
+    Decimal: str,
+    Money: lambda m: (str(m.value), m.currency),
+    date: operator.methodcaller("isoformat"),
+    datetime: operator.methodcaller("isoformat"),
+    time: operator.methodcaller("isoformat"),
+    timedelta: lambda v: {"days": v.days, "seconds": v.seconds,
+                          "microseconds": v.microseconds},
+    Interval: serialize_interval,
+}
+
+
 def deserialize_interval(value):
     try:
         lower_value = (deserialize_param(value['lower_value'])
@@ -227,32 +244,11 @@ def deserialize_interval(value):
     return Interval(lower_bound, upper_bound)
 
 
-def qualified_typename(type_):
-    return type_.__module__ + '.' + type_.__name__
-
-
-serialize_map = {
-    type(None): identity,
-    bool: identity,
-    float: identity,
-    Decimal: str,
-    Money: lambda m: (str(m.value), m.currency),
-    date: operator.methodcaller("isoformat"),
-    datetime: operator.methodcaller("isoformat"),
-    time: operator.methodcaller("isoformat"),
-    timedelta: lambda v: {"days": v.days, "seconds": v.seconds,
-                          "microseconds": v.microseconds},
-    Interval: serialize_interval,
-}
-for type_ in string_types:
-    serialize_map[type_] = identity
-for type_ in integer_types:
-    serialize_map[type_] = identity
-
-
 _deserialize_type_map = {
     type(None): identity,
     bool: identity,
+    str: identity,
+    int: identity,
     float: identity,
     Decimal: Decimal,
     Money: deserialize_money,
@@ -262,12 +258,8 @@ _deserialize_type_map = {
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
 }
-for type_ in string_types:
-    _deserialize_type_map[type_] = identity
-for type_ in integer_types:
-    _deserialize_type_map[type_] = identity
 deserialize_map = dict((qualified_typename(t), f)
-                       for t, f in iteritems(_deserialize_type_map))
+                       for t, f in _deserialize_type_map.items())
 
 
 def serialize_param(param):
@@ -402,8 +394,7 @@ class Message(object):
         if self.kwargs:
             obj["kwargs"] = {k: serialize_param(v)
                              for k, v in self.kwargs.items()}
-        return text_type(
-            json.dumps(obj, ensure_ascii=False))
+        return json.dumps(obj, ensure_ascii=False)
 
     def format(self, *args, **kwargs):
         self.args = args
@@ -416,8 +407,8 @@ class Message(object):
             return msg
         f = partial(format_param, options=options)
         try:
-            args = tuple(imap(f, self.args))
-            kwargs = {k: f(v) for k, v in iteritems(self.kwargs)}
+            args = tuple(f(a) for a in self.args)
+            kwargs = {k: f(v) for k, v in self.kwargs.items()}
             return msg.format(*args, **kwargs)
         except (TypeError, ValueError, IndexError, KeyError) as e:
             error = u''.join(traceback.format_exception_only(type(e), e))

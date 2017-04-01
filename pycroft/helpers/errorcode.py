@@ -2,7 +2,6 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from abc import ABCMeta, abstractmethod
-from pycroft._compat import with_metaclass
 
 
 def digits(n, base=10):
@@ -21,7 +20,7 @@ def digits(n, base=10):
     yield n
 
 
-class ErrorCode(with_metaclass(ABCMeta)):
+class ErrorCode(metaclass=ABCMeta):
     """
     Error detection code abstract base class.
 

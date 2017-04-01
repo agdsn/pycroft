@@ -6,10 +6,10 @@ import pkgutil
 import unittest
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from io import StringIO
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from pycroft._compat import StringIO
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     Fee, LateFee, RegistrationFee, SemesterFee, adjustment_description,

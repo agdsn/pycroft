@@ -17,7 +17,6 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
 import sys
 from werkzeug.routing import IntegerConverter, UnicodeConverter
-from pycroft._compat import iteritems
 from pycroft.model import session
 from pycroft.model import _all, drop_db_model, create_db_model
 
@@ -220,7 +219,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
             values = {
                 k: self._argument_creator_map.get(
                     type(v), self._default_argument_creator
-                )(v) for k, v in iteritems(converters)}
+                )(v) for k, v in converters.items()}
         except KeyError as e:
             raise AssertionError("Cannot create mock argument for {}"
                                  .format(e.args[0]))

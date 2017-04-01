@@ -2,14 +2,13 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import collections
-from itertools import tee, chain
+from itertools import tee, chain, filterfalse
 import operator
-from pycroft._compat import text_type, imap, reduce, izip, ifilterfalse
 from functools import reduce
 
 
 __all__ = (
-    'Interval', 'closed', 'closedopen', 'openclosed', 'open', 'single', 'empty'
+    'Interval', 'closed', 'closedopen', 'openclosed', 'open', 'single', 'empty',
     'UnboundedInterval', 'IntervalSet'
 )
 
@@ -21,7 +20,7 @@ def _infinity(name):
     return type(name + "Type", (object, ), {
         '__repr__': lambda self: "{0}.{1}".format(self.__module__, name),
         '__str__': lambda self: name,
-        '__unicode__': lambda self: text_type(name),
+        '__unicode__': lambda self: name,
     })()
 
 
@@ -551,7 +550,7 @@ class IntervalSet(collections.Sequence):
         """
         return reduce(
             lambda a, b: None if a is None or b is None else a + b,
-            imap(operator.attrgetter("length"), self._intervals)
+            (i.length for i in self._intervals)
         )
 
     def __iter__(self):
@@ -571,10 +570,10 @@ class IntervalSet(collections.Sequence):
             self._intervals)
 
     def __str__(self):
-        return "{{{0}}}".format(", ".join(imap(str, self._intervals)))
+        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
 
     def __unicode__(self):
-        return u"{{{0}}}".format(u", ".join(imap(text_type, self._intervals)))
+        return u"{{{0}}}".format(u", ".join(str(i) for i in self._intervals))
 
     def complement(self):
         return _create(_complement(self._intervals))
@@ -678,7 +677,7 @@ def _complement(intervals):
         yield Interval(Bound(NegativeInfinity, False), ~first.lower_bound)
     a, b = tee(intervals)
     last = first
-    for current_, next_ in izip(chain((first,), a), b):
+    for current_, next_ in zip(chain((first,), a), b):
         yield Interval(~current_.upper_bound, ~next_.lower_bound)
         last = next_
     if not last.upper_bound.unbounded:
@@ -696,7 +695,7 @@ def _join(intervals):
     :returns: merged list of intervals
     :rtype: iterable[Interval]
     """
-    intervals = ifilterfalse(operator.attrgetter("empty"), iter(intervals))
+    intervals = filterfalse(operator.attrgetter("empty"), iter(intervals))
     top = next(intervals)
     for interval in intervals:
         join = top.join(interval)

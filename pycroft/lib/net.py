@@ -5,8 +5,6 @@ from __future__ import division
 from itertools import islice
 from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 
-from pycroft._compat import ifilter
-
 
 class SubnetFullException(Exception):
     message = "Subnet full"
@@ -21,7 +19,7 @@ def get_free_ip(subnets):
         reserved = subnet.reserved_addresses or 0
         used_ips = frozenset(ip.address for ip in subnet.ips)
         unreserved = islice(subnet.address.iterhosts(), reserved, None)
-        unused = ifilter(lambda ip: ip not in used_ips, unreserved)
+        unused = (ip for ip in unreserved if ip not in used_ips)
         try:
             return next(unused), subnet
         except StopIteration:

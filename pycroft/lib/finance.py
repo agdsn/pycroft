@@ -10,6 +10,7 @@ from decimal import Decimal
 import difflib
 from functools import partial
 from itertools import chain, islice, starmap, tee
+from io import StringIO
 import operator
 import re
 
@@ -18,8 +19,6 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
-from pycroft._compat import (
-    imap, with_metaclass, ifilter, StringIO, izip_longest)
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.model import session
 from pycroft.model.finance import (
@@ -254,10 +253,10 @@ def _to_date_intervals(intervals):
     :param IntervalSet[datetime] intervals:
     :rtype: IntervalSet[date]
     """
-    return IntervalSet(imap(_to_date_interval, intervals))
+    return IntervalSet(_to_date_interval(i) for i in intervals)
 
 
-class Fee(with_metaclass(ABCMeta)):
+class Fee(metaclass=ABCMeta):
     """
     Fees must be idempotent, that means if a fee has been applied to a user,
     another application must not result in any change. This property allows
@@ -513,7 +512,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
 
     # Convert to MT940Record and enumerate
     reader = csv.reader(csv_file, dialect=MT940Dialect)
-    records = enumerate(imap(MT940Record._make, reader), 1)
+    records = enumerate((MT940Record._make(r) for r in reader), 1)
     try:
         # Skip first record (header)
         next(records)
@@ -551,15 +550,15 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
         if 'equal' == tag:
             continue
         elif 'insert' == tag:
-            balance += sum(imap(operator.itemgetter(0),
-                                islice(activities, j1, j2)))
-            session.session.add_all(imap(
-                lambda e: BankAccountActivity(
+            balance += sum(a[0] for a in islice(activities, j1, j2))
+            session.session.add_all(
+                BankAccountActivity(
                     amount=e[0], bank_account_id=e[1], reference=e[2],
                     original_reference=e[3], other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
-                    imported_at=e[7], posted_on=e[8], valid_on=e[9]),
-                islice(activities, j1, j2)))
+                    imported_at=e[7], posted_on=e[8], valid_on=e[9]
+                ) for e in islice(activities, j1, j2)
+            )
         elif 'delete' == tag:
             continue
         elif 'replace' == tag:
@@ -602,8 +601,7 @@ def cleanup_description(description):
     match = sepa_description_pattern.match(description)
     if match is None:
         return description
-    fields = ifilter(partial(operator.is_not, None), match.groups())
-    return u' '.join(imap(remove_space_characters, fields))
+    return u' '.join(remove_space_characters(f) for f in match.groups() if f is not None)
 
 
 def restore_record(record):
@@ -660,9 +658,9 @@ def user_has_paid(user):
 
 def get_typed_splits(splits):
     splits = sorted(splits, key=lambda s: s.transaction.posted_at, reverse=True)
-    return izip_longest(
-        ifilter(lambda s: s.amount >= 0, splits),
-        ifilter(lambda s: s.amount < 0, splits)
+    return zip_longest(
+        (s for s in splits if s >= 0),
+        (s for s in splits if s < 0),
     )
 
 def get_transaction_type(transaction):

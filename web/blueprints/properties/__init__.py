@@ -15,7 +15,6 @@ import operator
 from datetime import date
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
-from pycroft._compat import itervalues, iterkeys, imap
 
 from pycroft.model import session
 from pycroft.property import property_categories
@@ -95,11 +94,10 @@ def property_groups():
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
     properties_with_description = set(chain(*(
-        iterkeys(category) for category in itervalues(categories)
+        category.keys() for category in categories.values()
     )))
-    properties = set(imap(
-        operator.itemgetter(0),
-        Property.q.distinct().values(Property.name)))
+    properties = set(property_name[0] for property_name
+                     in Property.q.distinct().values(Property.name))
     categories[u"Ohne Beschreibung"] = {
         p: p for p in properties if p not in properties_with_description
     }

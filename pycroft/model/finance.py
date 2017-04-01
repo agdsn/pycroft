@@ -12,7 +12,6 @@ from sqlalchemy.schema import (
 from sqlalchemy.types import (
     Date, DateTime, Enum, Integer, Interval, String, Text)
 
-from pycroft._compat import imap
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
@@ -72,7 +71,7 @@ class Account(ModelBase):
 
     @hybrid_property
     def balance(self):
-        return sum(imap(operator.attrgetter("amount"), self.splits))
+        return sum(s.amount for s in self.splits)
 
     @balance.expression
     def balance(cls):
@@ -224,7 +223,7 @@ class BankAccount(ModelBase):
 
     @hybrid_property
     def last_updated_at(self):
-        return max(imap(operator.attrgetter('imported_at'), self.activities))
+        return max(act.imported_at for act in self.activities)
 
     @last_updated_at.expression
     def last_updated_at(self):

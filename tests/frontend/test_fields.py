@@ -3,7 +3,6 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import string
 from unittest import TestCase
-from pycroft._compat import iteritems, iterkeys
 from web.form.fields.core import DateField
 
 __author__ = 'shreyder'
@@ -11,7 +10,7 @@ __author__ = 'shreyder'
 
 class Test_010_BootstrapDatepicker(TestCase):
     def test_0010_convert_format_string(self):
-        for directive, replacement in iteritems(DateField.supported_directives):
+        for directive, replacement in DateField.supported_directives.items():
             self.assertEqual(
                 DateField.convert_format_string("%" + directive),
                 replacement
@@ -30,7 +29,7 @@ class Test_010_BootstrapDatepicker(TestCase):
                 "%" + directive
             )
         unknown_directives = set(string.ascii_letters).difference(
-            set(iterkeys(DateField.supported_directives)),
+            set(DateField.supported_directives.keys()),
             set(DateField.unsupported_directives)
         )
         for directive in unknown_directives:

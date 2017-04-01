@@ -16,7 +16,6 @@ from itertools import chain
 from re import sub
 import flask_babel
 
-from pycroft._compat import imap
 from pycroft.model import session, _all
 #from pycroft.model.accounting import TrafficVolume
 from pycroft.model.host import Host, IP
@@ -105,13 +104,13 @@ def timesince_filter(dt, default="just now"):
 
 
 def prefix_unit_filter(value, unit, factor, prefixes):
-    units = list(chain(unit, imap(lambda p: p + unit, prefixes)))
+    units = list(chain(unit, (p + unit for p in prefixes)))
     if value > 0:
         n = min(int(log(value, factor).real), len(units)-1)
         #todo change decimal formatting appropriately, previous {0:,4f} is wrong
         return "{0:,f} {1}".format(float(value)/factor**n, units[n])
-    else:
-        return "0 {0}".format(units[0])
+
+    return "0 {0}".format(units[0])
 
 
 @template_filter("byte_size")

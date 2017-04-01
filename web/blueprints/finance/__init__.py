@@ -19,7 +19,6 @@ from flask_login import current_user
 from sqlalchemy import func, or_, Text, cast
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from pycroft._compat import imap
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits
@@ -176,14 +175,14 @@ def bank_account_activities_edit(activity_id):
 @bp.route('/accounts/list')
 @nav.navigate(u"Konten")
 def accounts_list():
-    accounts_by_type = dict(imap(
-        lambda t: (t[0], list(t[1])),
-        groupby(
+    accounts_by_type = {
+        t[0]: list(t[1])
+        for t in groupby(
             Account.q.outerjoin(User).filter(User.id == None)
             .order_by(Account.type).all(),
             lambda a: a.type
         )
-    ))
+    }
     return render_template(
         'finance/accounts_list.html', accounts=accounts_by_type
     )

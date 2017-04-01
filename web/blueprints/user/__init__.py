@@ -17,7 +17,6 @@ from flask import (
 import operator
 from sqlalchemy import Text, and_
 from pycroft import lib, config
-from pycroft._compat import imap
 from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
@@ -212,11 +211,8 @@ def user_show_hosts_json(user_id):
     for user_host in User.q.get(user_id).user_hosts:
         if user_host.room:
             patch_ports = user_host.room.switch_patch_ports
-            switches = u', '.join(imap(lambda p: p.switch_interface.host.name,
-                                       patch_ports))
-
-            ports = u', '.join(imap(lambda p: p.switch_interface.name,
-                                       patch_ports))
+            switches = ', '.join(p.switch_interface.host.name for p in patch_ports)
+            ports = ', '.join(p.switch_interface.name for p in patch_ports)
         else:
             switches = None
             ports = None

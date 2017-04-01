@@ -3,7 +3,6 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import unittest
 import operator
-from pycroft._compat import imap
 from pycroft.helpers.interval import (
     Interval, IntervalSet, closed, closedopen, openclosed, open, empty, single)
 
@@ -11,12 +10,12 @@ from pycroft.helpers.interval import (
 class IntervalTestCase(unittest.TestCase):
     def assertCallTrue(self, relation, args):
         self.assertCallEquals(
-            relation, imap(lambda arg: (arg, True), args)
+            relation, ((a, True) for a in args)
         )
 
     def assertCallFalse(self, relation, args):
         self.assertCallEquals(
-            relation, imap(lambda arg: (arg, False), args)
+            relation, ((a, False) for a in args)
         )
 
     def assertCallEquals(self, method, args_and_expected):
@@ -29,7 +28,7 @@ class IntervalTestCase(unittest.TestCase):
             assert got == expected, (
                 "Evaluating {0}({1}) failed: expected {2}, got {3}".format(
                     getattr(method, '__name__', str(method)),
-                    ', '.join(imap(str, args)),
+                    ', '.join(str(a) for a in args),
                     expected, got
                 )
             )

@@ -6,7 +6,6 @@ import operator
 from sqlalchemy import (
     ForeignKey, Column, String, Integer, UniqueConstraint, event)
 from sqlalchemy.orm import backref, relationship
-from pycroft._compat import imap
 from pycroft.model.base import ModelBase
 from pycroft.model.host import IP
 
@@ -16,9 +15,8 @@ class DNSZone(ModelBase):
 
     def export(self):
         records = sorted(Record.records(self), key=operator.attrgetter("name"))
-        return u"\n".join(chain(
-            (u"$ORIGIN {0}".format(self.name),),
-            imap(operator.methodcaller("export"), records)))
+        return u"\n".join(chain((u"$ORIGIN {0}".format(self.name),),
+                                (r.export() for r in records)))
 
 
 class DNSName(ModelBase):
@@ -218,7 +216,7 @@ record_types = (AddressRecord, CNAMERecord, MXRecord, NSRecord, SOARecord,
 
 def _cname_exclusive(mapper, connection, target):
     records = Record.records(target.name)
-    has_cname = any(imap(lambda r: isinstance(r, CNAMERecord), records))
+    has_cname = any(isinstance(r, CNAMERecord) for r in records)
     if has_cname and len(records) > 1:
         raise ValueError("Domain name {0} has a CNAME record, it must not "
                          "have any other resource "

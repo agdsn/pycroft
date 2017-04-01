@@ -5,7 +5,6 @@ from itertools import chain
 import operator
 from sqlalchemy import inspect
 
-from pycroft._compat import imap
 from pycroft.model.dns import (
     AddressRecord, DNSZone, CNAMERecord, MXRecord, NSRecord, SOARecord,
     SRVRecord, TXTRecord, record_types)
@@ -84,8 +83,7 @@ class TestZoneGeneration(FixtureDataTestBase):
             for record_type in record_types))
         records = sorted(records, key=operator.attrgetter("name"))
         expected = u"\n".join(chain((u"$ORIGIN {0}".format(zone.name),),
-                                    imap(operator.methodcaller("export"),
-                                         records)))
+                                    (r.export() for r in records)))
         self.assertEqual(zone.export(), expected)
 
 
