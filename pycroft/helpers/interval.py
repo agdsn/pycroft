@@ -43,12 +43,6 @@ class Bound(tuple):
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
 
-    def __init__(self, value, is_closed):
-        """
-        See __new__
-        """
-        super(Bound, self).__init__((value, is_closed))
-
     def __le__(self, other):
         if self.value is PositiveInfinity:
             return other.value is PositiveInfinity
@@ -145,12 +139,6 @@ class Interval(tuple):
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
         return tuple.__new__(cls, (lower_bound, upper_bound))
-
-    def __init__(self, lower_bound, upper_bound):
-        """
-        See __new__
-        """
-        super(Interval, self).__init__((lower_bound, upper_bound))
 
     @property
     def lower_bound(self):
@@ -736,7 +724,7 @@ def _intersect(left, right):
         intersect = a.intersect(b)
         if intersect is not None and not intersect.empty:
             yield intersect
-        if cmp(a.upper_bound, b.upper_bound) < 0:
+        if a.upper_bound < b.upper_bound:
             a = next(left)
         else:
             b = next(right)

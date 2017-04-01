@@ -41,7 +41,7 @@ def encode_type1_user_id(user_id):
     return u"{0:04d}-{1:d}".format(user_id, Type1Code.calculate(user_id))
 
 
-type1_user_id_pattern = re.compile(ur"^(\d{4,})-(\d)$", re.UNICODE)
+type1_user_id_pattern = re.compile(r"^(\d{4,})-(\d)$")
 
 
 def decode_type1_user_id(string):
@@ -61,7 +61,7 @@ def encode_type2_user_id(user_id):
     return u"{0:04d}-{1:02d}".format(user_id, Type2Code.calculate(user_id))
 
 
-type2_user_id_pattern = re.compile(ur"^(\d{4,})-(\d{2})$", re.UNICODE)
+type2_user_id_pattern = re.compile(r"^(\d{4,})-(\d{2})$")
 
 
 def decode_type2_user_id(string):

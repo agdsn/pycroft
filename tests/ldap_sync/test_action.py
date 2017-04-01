@@ -95,7 +95,7 @@ class MockedLdapTestBase(TestCase):
                              .format(value, key))
 
     def tearDown(self):
-        self.connection.unbind()
+        self.connection.strategy.close()  # unbinds connection
 
 
 SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
@@ -106,7 +106,7 @@ SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
 class AddActionTestCase(MockedLdapTestBase):
     def setUp(self):
         super(AddActionTestCase, self).setUp()
-        self.attributes = {'uid': ['shizzle'], 'mail': ['bas'],
+        self.attributes = {'mail': ['bas'],
                            'userPassword': ['$1$dtruiandetnuhgaldrensutrhawtruhs']}
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)

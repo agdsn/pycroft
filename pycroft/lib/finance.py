@@ -487,8 +487,12 @@ def is_ordered(iterable, relation=operator.le):
     :rtype: bool
     """
     a, b = tee(iterable)
-    next(b)
-    return all(imap(relation, a, b))
+    try:
+        next(b)
+    except StopIteration:
+        # iterable is empty
+        return True
+    return all(relation(x, y) for x, y in zip(a, b))
 
 
 @with_transaction
@@ -513,15 +517,15 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
     try:
         # Skip first record (header)
         next(records)
-        activities = tuple(starmap(
-            partial(process_record, imported_at=imported_at), records))
+        activities = tuple(process_record(index, record, imported_at=imported_at)
+                           for index, record in records)
     except StopIteration:
         raise CSVImportError(gettext(u"No data present."))
     except csv.Error as e:
         raise CSVImportError(gettext(u"Could not read CSV."), e)
     if not activities:
         raise CSVImportError(gettext(u"No data present."))
-    if not is_ordered(imap(operator.itemgetter(8), activities), operator.ge):
+    if not is_ordered((a[8] for a in activities), operator.ge):
         raise CSVImportError(gettext(
             u"Transaction are not sorted according to transaction date in "
             u"descending order."))
@@ -586,11 +590,11 @@ def remove_space_characters(field):
 sepa_description_field_tags = (
     u'EREF', u'KREF', u'MREF', u'CRED', u'DEBT', u'SVWZ', u'ABWA', u'ABWE'
 )
-sepa_description_pattern = re.compile(ur''.join(chain(
-    ur'^',
-    [ur'(?:({0}\+.*?)(?: (?!$)|$))?'.format(tag)
+sepa_description_pattern = re.compile(''.join(chain(
+    '^',
+    [r'(?:({0}\+.*?)(?: (?!$)|$))?'.format(tag)
      for tag in sepa_description_field_tags],
-    ur'$'
+    '$'
 )), re.UNICODE)
 
 
@@ -643,16 +647,10 @@ def process_record(index, record, imported_at):
         raw_record = restore_record(record)
         raise CSVImportError(
             message.format(record.amount, index, raw_record), e)
-    try:
-        reference = record.reference.decode('utf8')
-        other_name = record.other_name.decode('utf8')
-    except UnicodeDecodeError as e:
-        message = gettext(u"Unicode decoding error. Record {0}: {1}")
-        raw_record = restore_record(record)
-        raise CSVImportError(message.format(index, raw_record), e)
-    return (amount, bank_account.id, cleanup_description(reference),
-            reference, record.other_account_number,
-            record.other_routing_number, other_name, imported_at,
+
+    return (amount, bank_account.id, cleanup_description(record.reference),
+            record.reference, record.other_account_number,
+            record.other_routing_number, record.other_name, imported_at,
             posted_on, valid_on)
 
 

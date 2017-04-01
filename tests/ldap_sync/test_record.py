@@ -1,7 +1,14 @@
-from unittest import TestCase
+from unittest import TestCase as TestCase_
 
 from ldap_sync.record import Record, RecordState, _canonicalize_to_list
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
+
+
+class TestCase(TestCase_):
+    def assertSubDict(self, subdict, container):
+        container_subdict = {k: v for k, v in container.items() if k in subdict}
+        if subdict != container_subdict:
+            self.fail("{} not a subdict of {}".format(subdict, container))
 
 
 class RecordDirectInitTestCase(TestCase):
@@ -10,10 +17,10 @@ class RecordDirectInitTestCase(TestCase):
                                                'mail': None, 'cn': "User", 'uid': 50})
 
     def test_empty_attr_converted_to_list(self):
-        self.assertLessEqual({'mail': []}, self.record.attrs)
+        self.assertSubDict({'mail': []}, self.record.attrs)
 
     def test_nonempty_attr_converted_to_list(self):
-        self.assertLessEqual({'cn': ["User"]}, self.record.attrs)
+        self.assertSubDict({'cn': ["User"]}, self.record.attrs)
 
     def test_critical_chars_escaped_and_converted_to_list(self):
         self.assertEqual(self.record.attrs['userPassword'], ["{CRYPT}\\2a\\2ashizzle"])
@@ -57,10 +64,10 @@ class RecordTestCase(TestCase):
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
-                             'attributes': {'foo': u'mail', 'gecos': u'baz'},
-                             'raw_attributes': {'foo': b'mail'}}
+                             'attributes': {'mail': u'mail', 'gecos': u'baz'},
+                             'raw_attributes': {'mail': b'mail'}}
         record = Record.from_ldap_record(ldapsearch_record)
-        self.assertLessEqual({'foo': [u'mail'], 'gecos': [u'baz']}, record.attrs)
+        self.assertSubDict({'mail': [u'mail'], 'gecos': [u'baz']}, record.attrs)
         for key in Record.ENFORCED_KEYS:
             self.assertIn(key, record.attrs)
 

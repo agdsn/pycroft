@@ -403,7 +403,7 @@ class Message(object):
             obj["kwargs"] = {k: serialize_param(v)
                              for k, v in self.kwargs.items()}
         return text_type(
-            json.dumps(obj, ensure_ascii=False, encoding='utf-8'))
+            json.dumps(obj, ensure_ascii=False))
 
     def format(self, *args, **kwargs):
         self.args = args

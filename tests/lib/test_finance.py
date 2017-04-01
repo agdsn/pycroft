@@ -49,7 +49,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         This test should verify that the csv import works as expected.
         """
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
-        f = StringIO(data)
+        f = StringIO(data.decode('utf-8'))
 
         import_bank_account_activities_csv(f, Decimal('43.42'), date(2015, 1, 1))
 

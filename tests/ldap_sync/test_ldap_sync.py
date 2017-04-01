@@ -222,7 +222,9 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
                 for key, val in records[ldap_record.dn].attrs.items()
                 if val != []
             }
-            self.assertLessEqual(effective_attributes_in_db, ldap_record.attrs)
+            self.assertEqual(effective_attributes_in_db,
+                             {k: v for k,v in ldap_record.attrs.items()
+                              if k in effective_attributes_in_db})
 
     def test_mail_deletion(self):
         users_with_mail = [u for u in self.users_to_sync if u.email is not None]

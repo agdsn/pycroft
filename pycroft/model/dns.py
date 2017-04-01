@@ -37,6 +37,18 @@ class DNSName(ModelBase):
             return u"{0}.".format(self.zone.name)
         return u"{0}.{1}.".format(self.name, self.zone.name)
 
+    def __lt__(self, other):
+        return self.name < getattr(other, 'name')
+
+    def __le__(self, other):
+        return self.name <= getattr(other, 'name')
+
+    def __gt__(self, other):
+        return self.name > getattr(other, 'name')
+
+    def __ge__(self, other):
+        return self.name >= getattr(other, 'name')
+
 
 class Record(ModelBase):
     """
