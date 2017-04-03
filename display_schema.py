@@ -27,7 +27,7 @@ def fetch_mappers():
             mappers.append(class_mapper(cls))
         except Exception as ex:
             if isinstance(ex, sqlalchemy.exc.InvalidRequestError):
-                if ex.message.startswith("One or more mappers failed to initialize"):
+                if str(ex).startswith("One or more mappers failed to initialize"):
                     raise
             print("ignoring {}".format(attr))
 

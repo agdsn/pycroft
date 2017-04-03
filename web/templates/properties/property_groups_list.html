@@ -42,7 +42,7 @@
             <tr>
                 <th colspan="{{ property_groups|length + 1 }}">{{ category }}</th>
             </tr>
-            {% for property_name, property_description in properties.iteritems() -%}
+            {% for property_name, property_description in properties.items() -%}
             <tr>
                 <td>{{ property_description }}</td>
                 {% for property_group in property_groups|sort(attribute="name") -%}

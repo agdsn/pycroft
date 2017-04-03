@@ -44,7 +44,7 @@ USE_VAGRANT = True
 conn_opts = {
     # our two lovely and enduring databases looking forward to an
     # honorable death
-    "netusers": 'mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1:13306/netusers?charset=utf8&use_unicode=0',
+    "netusers": 'mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1:13306/netusers?charset=utf8&use_unicode=1',
     "userman": 'postgresql://<USER>@127.0.0.1:15432/userman',
     # OPTIONAL if not caching LDAP (see ``--help`` on how to disable)
     "ldap": {
