@@ -97,7 +97,7 @@ def setup_ipv4_networking(host):
 
 @with_transaction
 def move_in(name, login, email, building, level, room_number, mac,
-            processor, moved_from_division, already_paid_semester_fee, host_name=None):
+            processor, moved_from_division, already_paid_semester_fee):
     """
     This function creates a new user, assign him to a room and creates some
     initial groups and transactions.
@@ -136,7 +136,7 @@ def move_in(name, login, email, building, level, room_number, mac,
         id=new_user.id).to_json()
 
     # create one new host (including interface) for the new user
-    new_host = UserHost(owner=new_user, room=room, desired_name=host_name)
+    new_host = UserHost(owner=new_user, room=room)
     session.session.add(new_host)
     session.session.add(UserInterface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)

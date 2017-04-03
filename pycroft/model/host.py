@@ -36,7 +36,6 @@ class UserHost(Host):
                 primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'user_host'}
 
-    desired_name = Column(String(63))
     owner = relationship(User, backref=backref(
         "user_hosts", cascade="all, delete-orphan"))
 

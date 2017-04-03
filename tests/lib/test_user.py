@@ -78,7 +78,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_login = u"hans66"
         test_email = u"hans@hans.de"
         test_building = facilities.Building.q.first()
-        test_hostname = "hans"
         test_mac = "12:11:11:11:11:11"
 
         new_user = UserHelper.move_in(
@@ -88,7 +87,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             test_building,
             level=1,
             room_number="1",
-            host_name=test_hostname,
             mac=test_mac,
             processor=self.processing_user,
             moved_from_division=False,
