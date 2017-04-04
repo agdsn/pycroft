@@ -30,7 +30,7 @@ from pycroft.model.finance import Account
 from pycroft.model.host import Host, IP, UserHost, UserInterface, Interface
 from pycroft.model import session
 from pycroft.model.session import with_transaction
-from pycroft.model.user import User, Membership, TrafficGroup
+from pycroft.model.user import User, Membership, TrafficGroup, UnixAccount
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.finance import get_current_semester, user_has_paid
 
@@ -130,8 +130,12 @@ def move_in(name, login, email, building, level, room_number, mac,
         password=plain_password
     )
 
+    account = UnixAccount(home_directory="/home/{}".format(login))
+    new_user.unix_account = account
+
     with session.session.begin(subtransactions=True):
         session.session.add(new_user)
+        session.session.add(account)
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 

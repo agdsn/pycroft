@@ -119,6 +119,10 @@ class Test_020_User_Move_In(FixtureDataTestBase):
                          (SemesterData.dummy_semester1.registration_fee +
                           SemesterData.dummy_semester1.regular_semester_fee))
         self.assertFalse(new_user.has_property("reduced_semester_fee"))
+        self.assertTrue(new_user.unix_account is not None)
+        account = new_user.unix_account
+        self.assertTrue(account.home_directory.endswith(new_user.login))
+        self.assertTrue(account.home_directory.startswith('/home/'))
 
 
 class Test_030_User_Move_Out(FixtureDataTestBase):
