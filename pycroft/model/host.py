@@ -132,8 +132,6 @@ class SwitchInterface(Interface):
                         backref=backref("switch_interfaces",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
-    default_subnet_id = Column(Integer, ForeignKey(Subnet.id))
-    default_subnet = relationship(Subnet)
     subnets = relationship('Subnet', secondary='switch_interface_association',
                            back_populates='switch_interfaces')
 

@@ -85,9 +85,10 @@ class HostAliasExists(ValueError):
 
 def setup_ipv4_networking(host):
     """Add suitable ips for every interface of a host"""
-    subnets = [s for s in [p.switch_interface.default_subnet
-                      for p in host.room.switch_patch_ports
-                      if p.switch_interface is not None] if s.address.version == 4]
+    subnets = [s for p in host.room.switch_patch_ports
+               for s in p.switch_interface.subnets
+               if s.address.version == 4
+               if p.switch_interface is not None]
     for interface in host.user_interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,
@@ -186,9 +187,8 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
-    subnets = [p.switch_interface.default_subnet
-               for p in new_room.switch_patch_ports
-               if p.switch_interface.default_subnet is not None]
+    subnets = [subnet for p in new_room.switch_patch_ports
+               for subnet in p.switch_interface.subnets]
     if old_room.building_id == new_room.building_id:
         return
     for interface in host.user_interfaces:

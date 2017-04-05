@@ -34,14 +34,12 @@ class SwitchInterfaceData(DataSet):
         name = "A20"
         mac = "00:00:00:00:00:14"
         host = SwitchData.dummy
-        default_subnet = SubnetData.user_ipv4
         subnets = [SubnetData.dummy_subnet3]
 
     class dummy_port2:
         name = "A21"
         mac = "00:00:00:00:00:15"
         host = SwitchData.dummy
-        default_subnet = SubnetData.dummy_subnet2
         subnets = [SubnetData.dummy_subnet4]
 
     class dummy_port3:
