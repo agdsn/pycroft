@@ -32,3 +32,9 @@ class SubnetData(DataSet):
         address = IPv4Network("192.168.1.0/24")
         reserved_addresses = 10
         vlan = VLANData.vlan_dummy2
+
+    class dummy_subnet3(dummy_subnet2):
+        address = IPv4Network("192.168.2.0/24")
+
+    class dummy_subnet4(dummy_subnet2):
+        address = IPv4Network("192.168.3.0/24")

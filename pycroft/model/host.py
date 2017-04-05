@@ -4,6 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, event
 from sqlalchemy.orm import backref, relationship, validates, object_session
+from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
@@ -114,6 +115,13 @@ class UserInterface(Interface):
                                         cascade="all, delete-orphan"))
 
 
+switch_interface_association_table = Table(
+    'switch_interface_association', ModelBase.metadata,
+    Column('switch_interface_id', Integer, ForeignKey('switch_interface.id', ondelete='CASCADE')),
+    Column('subnet_id', Integer, ForeignKey('subnet.id', ondelete='CASCADE')),
+)
+
+
 class SwitchInterface(Interface):
     id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
                 primary_key=True)
@@ -126,6 +134,8 @@ class SwitchInterface(Interface):
     name = Column(String(64), nullable=False)
     default_subnet_id = Column(Integer, ForeignKey(Subnet.id))
     default_subnet = relationship(Subnet)
+    subnets = relationship('Subnet', secondary='switch_interface_association',
+                           back_populates='switch_interfaces')
 
 
 class ServerInterface(Interface):
