@@ -512,14 +512,14 @@ def translate_hosts(data, resources):
 
     for _c in data['switch']:
         room = get_or_create_room(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)
-        mgmt_ip_blocks = _c.c_ip.split(".")
-        mgmt_ip_blocks[0] = mgmt_ip_blocks[1] = "10"
-        mgmt_ip = ipaddr.IPv4Address(".".join(mgmt_ip_blocks))
+        if _c.mgmt_ip is None:
+            log.warning("Ignoring Switch %s without `mgmt_ip`", _c.c_hname)
+            continue
+        mgmt_ip = ipaddr.IPv4Address(_c.mgmt_ip)
         h = host.Switch(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
-        interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01", name="switch management interface")
-        ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+        interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01",
+                                         name="switch management interface")
         sw_d[mgmt_ip] = h
-        objs.append(ip)
 
     for _c in data['server']:
         room = get_or_create_room(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)

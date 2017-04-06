@@ -71,6 +71,7 @@ class Computer(Base):
     c_alias = Column(String(20))
     c_subnet_id = Column(Integer, nullable=False, server_default=text("'0'"))
     c_eth_segment = Column(String(20))
+    mgmt_ip = Column(INET, nullable=True)
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
 
 
