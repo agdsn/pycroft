@@ -23,6 +23,7 @@
     <h2>Überblick</h2>
     <div class="row">
         <div class="col-sm-6 col-md-5 col-lg-4">
+            <h3>Stammdaten</h3>
             <dl class="dl-horizontal">
                 <dt>Wohnheim</dt>
                 <dd>{{ room.building.street }} {{ room.building.number }}</dd>
@@ -49,6 +50,38 @@
         </div>
         {%- endif %}
     </div>
+
+    <h2>Patchports</h2>
+    {% if ports %}
+    <ul class="list-unstyled">
+        {% for port in ports %}
+        <li><dl class="dl-horizontal">
+            <dt>Patchpanel-Port</dt>
+            <dd>{{ port.name }}</dd>
+            <dt>Typ</dt>
+            <dd>{{ port.type }}</dd>
+
+            {% if port.type == 'switch_patch_port' %}
+            <dt>Gepatched zu</dt>
+            <dd><a href={{ url_for('infrastructure.switch_show',
+                                   switch_id=port.switch_interface.host.id) }}>
+                    {{ port.switch_interface.host.name }}/{{ port.switch_interface.name }}
+            </a></dd>
+            <dt>Anliegende <a href="{{ url_for('infrastructure.subnets') }}">Subnets</a></dt>
+            <dd>
+                {% for net in port.switch_interface.subnets %}
+                    {{ net.address | string }}
+                {% endfor %}
+            </dd>
+            {% else %}
+                <dt>Gepatched zu</dt><dd>Ungepatched</dd>
+            {% endif %}
+        </dl></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <span class="text-muted">Dieser Raum ist mit keinem Patchport verbunden.</span>
+    {% endif %}
 
     <h2>Log</h2>
     <div class="row">

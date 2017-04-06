@@ -32,6 +32,8 @@ class Room(ModelBase):
     building_id = Column(Integer, ForeignKey(Building.id), nullable=False)
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
+    all_patch_ports = relationship('PatchPort')
+
     def __str__(self):
         return "{} {} {}".format(self.building.short_name, self.level,
                                  self.number)
@@ -39,4 +41,3 @@ class Room(ModelBase):
     def __unicode__(self):
         return u"{} {} {}".format(self.building.short_name, self.level,
                                   self.number)
-
