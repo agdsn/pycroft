@@ -12,6 +12,13 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
 from functools import reduce
 
+# This is a fix I'm not proud of, but it prevents a partial and thus
+# corrupt declaration of pycroft-model-classes which happens
+# implicitly whenever you import from pycroft.$module, as
+# pycroft.__init__ import the config which needs the pycroft model
+from pycroft.model import _all
+
+
 try:
     from .conn import conn_opts
 except ImportError:
