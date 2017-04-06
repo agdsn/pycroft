@@ -559,11 +559,11 @@ def translate_ports(data, resources):
 
         port_name = _sp.port
         room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
-        subnet_id = building_subnet_map[room.building.id]
+        subnet_ids = building_subnets_map[room.building.id]
         sp = host.SwitchInterface(
             host=switch, name=port_name,
             mac="00:00:00:00:00:01",
-            default_subnet=s_d[subnet_id])
+            subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
         # TODO insert proper patch_port names
         pp = port.SwitchPatchPort(
             switch_interface=sp, name="?? ({})".format(port_name), room=room)

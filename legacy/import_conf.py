@@ -113,27 +113,23 @@ building_site_map = {
     15: 3,  # Bu24
 }
 
-building_subnet_map = {
+building_subnets_map = {
     # building_id: subnet_id
-    1: 6,  # Wu5
-    2: 3,  # Wu7
-    3: 8,  # Wu9
-    4: 7,  # Wu11
-    5: 1,  # Wu1
-    6: 2,  # Wu3
-    7: 4,  # ZW41
-    8: 4,  # ZW41A
-    9: 4,  # ZW41B
-    10: 4,  # ZW41C
-    11: 4,  # ZW41D
-    12: 10,  # Bor34
-    #TODO: but the zeu1f has more than 1 subnet?
-    # what does this affect?
-    13: 11,  # Zeu1f
-    # Zeu1f has also subnet#12, but this mapping is only used to determine the
-    # default subnet.
-    14: 13,  # Bu22
-    15: 14,  # Bu24
+    1: [6],  # Wu5
+    2: [3],  # Wu7
+    3: [8],  # Wu9
+    4: [7],  # Wu11
+    5: [1],  # Wu1
+    6: [2],  # Wu3
+    7: [4],  # ZW41
+    8: [4],  # ZW41A
+    9: [4],  # ZW41B
+    10: [4],  # ZW41C
+    11: [4],  # ZW41D
+    12: [10],  # Bor34
+    13: [11, 12],  # Zeu1f
+    14: [13],  # Bu22
+    15: [14],  # Bu24
 }
 
 vlan_name_vid_map = {
