@@ -77,7 +77,6 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         validate_unique_login])
     mac = TextField(u"MAC", [
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
-    host = TextField(u"Host")
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
     moved_from_division = BooleanField(u"Umzug aus anderer Sektion")

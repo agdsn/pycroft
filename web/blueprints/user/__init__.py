@@ -368,7 +368,7 @@ def create():
                 login=form.login.data,
                 building=form.building.data, level=form.level.data,
                 room_number=form.room_number.data,
-                host_name=form.host.data, mac=form.mac.data,
+                mac=form.mac.data,
                 processor=current_user,
                 email=form.email.data,
                 moved_from_division=form.moved_from_division.data,
