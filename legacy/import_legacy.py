@@ -187,15 +187,22 @@ def main(args):
         session.session.commit()
 
     log.info("Fixing sequences...")
-    for meta in (user.User, facilities.Building, finance.Transaction,
-                 finance.BankAccountActivity):
-        maxid = engine.execute('select max(id) from \"{}\";'.format(
-            meta.__tablename__)).fetchone()[0]
 
+    # `id` sequence from various metas
+    cols_to_fix = [
+        (meta, 'id', '{}_id_seq'.format(meta.__tablename__)) for meta in
+        [user.User, facilities.Building, finance.Transaction, finance.BankAccountActivity]
+    ]
+    # `uid` sequence from UnixAccount
+    cols_to_fix.append((user.UnixAccount, 'uid', 'unix_account_uid_seq'))
+
+    for meta, column_name, sequence_name in cols_to_fix:
+        maxid = engine.execute('select max({}) from \"{}\";'
+                               .format(column_name, meta.__tablename__)).fetchone()[0]
         if maxid:
-            engine.execute("select setval('{}_id_seq', {})".format(
-                meta.__tablename__, maxid + 1))
-            log.info("  fixing {}".format(meta.__tablename__))
+            engine.execute("select setval('{}', {})".format(sequence_name, maxid + 1))
+            log.info("  fixing %s(%s)", sequence_name, meta.__tablename__)
+
 
 if __name__=="__main__":
     import argparse
