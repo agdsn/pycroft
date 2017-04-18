@@ -186,6 +186,19 @@ def main(args):
             session.session.add_all(objs)
         session.session.commit()
 
+    # after everything is imported, use a query
+    room_query = (session.session.query(facilities.Room, func.count(net.Subnet.id))
+                  .select_from(facilities.Room)
+                  .join(facilities.Room.switch_patch_ports)
+                  .join(port.SwitchPatchPort.switch_interface)
+                  .join(host.SwitchInterface.subnets)
+                  .group_by(net.Subnet)
+                  .group_by(facilities.Room))
+
+    iter_bad_rooms = (r for r in room_query.all() if not r[0])
+    for bad_room in iter_bad_rooms:
+        log.warning("Room %s isn't connected to any subnets", bad_room)
+
     log.info("Fixing sequences...")
 
     # `id` sequence from various metas

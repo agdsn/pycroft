@@ -184,10 +184,10 @@ def membership_from_fees(user, semesters, n):
             elif split.amount == sem.reduced_semester_fee:
                 intervals_reduced.append(sem_to_interval(sem))
             else:
-                log.warning("non-matching fee amount ({}) for sem {} ({}/{}/{})."
-                            " Trying discrete proportional fitting of 1..6 months."
-                            .format(split.amount, sem.name, sem.regular_semester_fee,
-                                    sem.reduced_semester_fee, sem.late_fee))
+                log.info("Non-matching fee amount ({}) for sem {} ({}/{}/{})."
+                         " Trying discrete proportional fitting of 1..6 months..."
+                         .format(split.amount, sem.name, sem.regular_semester_fee,
+                                 sem.reduced_semester_fee, sem.late_fee))
                 if split.amount > sem.regular_semester_fee:
                     raise MatchException("Booked fee is higher than regular semester fee.")
 
@@ -200,7 +200,7 @@ def membership_from_fees(user, semesters, n):
                         "Proportional fit failed ({} vs. {} corresponds to {} months)"
                         .format(split.amount, sem.regular_semester_fee, proportional_months))
                 num_months = int(proportional_months)
-                log.debug("The manually awarded fee corresponds to %s months", num_months)
+                log.debug("...The manually awarded fee corresponds to %s months", num_months)
 
                 uncropped_interval = sem_to_interval(sem)
                 intervals_below = [i for i in intervals_regular if i <= uncropped_interval]
@@ -212,25 +212,35 @@ def membership_from_fees(user, semesters, n):
                                  if intervals_below else False
 
                 if touching_above and touching_below:
-                    log.warning("Membership Intervals touch seamlessly above and below"
+                    log.warning("...Membership Intervals touch seamlessly above and below"
                                 " despite reduced fee. Not cropping.")
                     cropped_interval = uncropped_interval
                 elif touching_below:
-                    log.debug("Membership intervals touch below, cropping above.")
+                    log.debug("...Membership intervals touch below, cropping above.")
                     new_upper_bound = monthdelta(uncropped_interval.end, -num_months)
                     cropped_interval = closedopen(uncropped_interval.begin, new_upper_bound)
-                elif touching_above:
-                    log.debug("Membership intervals touch above, cropping below.")
+                elif touching_above or not intervals_above:
+                    # The second condition may be encountered when the
+                    # „later“ memberships haven't been processed yet,
+                    # so it might seem the current interval is
+                    # isolated, although it might not be.
+                    if touching_above:
+                        log.debug("...Membership intervals touch above, cropping below.")
+                    else:
+                        log.debug("...Interval is isolated, but no interval lies above it."
+                                 " This is probably due to unfinished processing."
+                                 " Cropping below.")
                     new_lower_bound = monthdelta(uncropped_interval.begin, num_months)
                     cropped_interval = closedopen(new_lower_bound, uncropped_interval.end)
                 else:
-                    log.debug("max below / min above: %s / %s",
+                    log.debug("...max below / min above: %s / %s",
                               max(intervals_below) if intervals_below else "-",
                               min(intervals_above) if intervals_above else "-")
                     raise MatchException("Interval with customly reduced fee booking is isolated."
                                          " Not fitting.")
 
-                log.debug("cropped_interval: %s", cropped_interval)
+                log.info("...Cropped interval boundaries reconstructed by reduced fee: %s",
+                         cropped_interval)
                 intervals_regular.append(cropped_interval)
 
 
