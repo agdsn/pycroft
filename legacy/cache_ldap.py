@@ -7,7 +7,7 @@ import ldap3
 from sqlalchemy import create_engine
 
 from .conn import conn_opts
-from .ldap_model import Nutzer
+from .ldap_model import Nutzer, metadata
 
 
 _combined_response = namedtuple('CombinedLdapResponse',
@@ -39,7 +39,7 @@ def fetch_ldap_information():
 
 
 def create_ldap_tables(engine):
-    Nutzer.metadata.create_all(bind=engine)
+    metadata.create_all(bind=engine)
 
 
 def first_ldap_field(dn):

@@ -46,6 +46,7 @@ class Nutzer(Base):
     last_change = Column(DateTime, nullable=False, server_default=text("'1970-01-01'"))
     icq_uin = Column(String(255))
     bezahlt = Column(SmallInteger, nullable=False, server_default=text("'1'"))
+    internet_by_rental = Column(SmallInteger, nullable=False, server_default=text("'0'"))
 
     computer = relationship("Computer", backref="nutzer")
     status = relationship(Status, lazy='joined')

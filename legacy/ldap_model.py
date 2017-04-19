@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 
 Base = declarative_base()
+metadata = Base.metadata
 
 
 class Nutzer(Base):
