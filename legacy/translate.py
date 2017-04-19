@@ -606,57 +606,59 @@ def reconstruct_memberships(data, resources):
         if _u.nutzer_id == 0:
             u.passwd_hash = usertools.hash_password(ROOT_PASSWD)
             objs.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
-        else:
-            gname_duration = defaultdict(IntervalSet)
-            gname_duration["member"], gname_duration["away"] = membership_from_fees(u, semesters, n)
+            continue
+
+        # Use reconstruction from fees
+        gname_duration = defaultdict(IntervalSet)
+        gname_duration["member"], gname_duration["away"] = membership_from_fees(u, semesters, n)
 
 
-            # if the membership could be reconstructed ending at the
-            # beginning of the current month (last fee), delete the
-            # ending and make it unbounded
-            latest_membership_end = max(gname_duration['member']).end \
-                                    if gname_duration['member'] else None
+        # if the membership could be reconstructed ending at the
+        # beginning of the current month (last fee), delete the
+        # ending and make it unbounded
+        latest_membership_end = max(gname_duration['member']).end \
+                                if gname_duration['member'] else None
 
-            if latest_membership_end is not None and \
-                   latest_membership_end.replace(day=1) == date.today().replace(day=1):
-                gname_duration['member'] += IntervalSet(closedopen(latest_membership_end, None))
+        if latest_membership_end is not None and \
+               latest_membership_end.replace(day=1) == date.today().replace(day=1):
+            gname_duration['member'] += IntervalSet(closedopen(latest_membership_end, None))
 
-            for gname in status_groups_map[_u.status_id]: # current memberships
-                gname_duration[gname] += IntervalSet(
-                    closedopen(datetime.now().date(), None))
+        for gname in status_groups_map[_u.status_id]: # current memberships
+            gname_duration[gname] += IntervalSet(
+                closedopen(datetime.now().date(), None))
 
-            for gname, duration in gname_duration.items():
-                for interval in duration:
-                    objs.append(
-                        user.Membership(user=u, group=g_d[gname],
-                                        begins_at=interval.begin,
-                                        ends_at=interval.end))
+        for gname, duration in gname_duration.items():
+            for interval in duration:
+                objs.append(
+                    user.Membership(user=u, group=g_d[gname],
+                                    begins_at=interval.begin,
+                                    ends_at=interval.end))
 
-            try:
-                ldap_account = resources['ldap_accounts'][_u.unix_account]
-            except KeyError:
-                continue
+        try:
+            ldap_account = resources['ldap_accounts'][_u.unix_account]
+        except KeyError:
+            continue
 
-            if ldap_account.exaktiv:  # ex-aktiv
+        if ldap_account.exaktiv:  # ex-aktiv
+            objs.append(
+                user.Membership(user=u,
+                                group=g_d["org"],
+                                begins_at=u.registered_at,
+                                ends_at=u.registered_at+timedelta(days=1)))
+
+        if ldap_account.aktiv:
+            objs.append(
+                user.Membership(user=u,
+                                group=g_d['org'],
+                                begins_at=u.registered_at)
+            )
+            # db: ex-aktiv, ldap: aktiv bedeutet: aktiv, aber ausgezogen
+            if _u.status_id == 9:
                 objs.append(
                     user.Membership(user=u,
-                                    group=g_d["org"],
-                                    begins_at=u.registered_at,
-                                    ends_at=u.registered_at+timedelta(days=1)))
-
-            if ldap_account.aktiv:
-                objs.append(
-                    user.Membership(user=u,
-                                    group=g_d['org'],
-                                    begins_at=u.registered_at)
+                                    group=g_d['away'],
+                                    begins_at=date.today())
                 )
-                # db: ex-aktiv, ldap: aktiv bedeutet: aktiv, aber ausgezogen
-                if _u.status_id == 9:
-                    objs.append(
-                        user.Membership(user=u,
-                                        group=g_d['away'],
-                                        begins_at=date.today())
-                    )
 
     log.info("#fees {}".format((" ".join("{0}:{{{0}}}".format(key) for key in n.__dict__.keys())).format(**n.__dict__)))
 

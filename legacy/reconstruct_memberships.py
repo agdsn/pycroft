@@ -131,7 +131,16 @@ def fee_semester_classifier(features):
                     raise MatchException("too many unknowns [first&only fee]")
     return None, -1
 
+
 def membership_from_fees(user, semesters, n):
+    """Reconstruct normal and reduced membership intervals from fees
+
+    This function tries to classify the fees paid by the user in order
+    to reconstruct at which times the user was a member.
+
+    :returns: A duple of normal and reduced interval lists
+    :rtype: tuple(IntervalSet, IntervalSet)
+    """
     reg_date = user.registered_at
     intervals_regular = []
     intervals_reduced = []
