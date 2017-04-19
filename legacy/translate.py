@@ -171,11 +171,22 @@ def translate_users(data, resources):
         u_d[_u.nutzer_id] = u
         ul_d[_u.unix_account] = u
 
+        if _u.internet_by_rental:
+            extern_membership = user.Membership(
+                user=u, group=resources['group']['external'],
+                begins_at=_u.anmeldedatum,
+                # ends_at=None
+            )
+            objs.append(extern_membership)
+
         objs.append(logging.UserLogEntry(
             author=u_d.get(0, None),
-            message="User imported from legacy database netusers. "
-                    "Legacy status: "+_u.status.short_str,
-            user=u))
+            message=("User imported from legacy database netusers. "
+                     "Legacy status: {}. Internet by rental: {}"
+                     .format(_u.status.short_str,
+                             "YES" if _u.internet_by_rental else "NO")),
+            user=u
+        ))
 
         # user comment
         if _u.comment:

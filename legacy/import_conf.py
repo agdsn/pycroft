@@ -35,6 +35,8 @@ infra_admin_props = {"infrastructure_show": True,
 group_props = {
     "caretaker": ("Hausmeister", {"network_access": True}),
 
+    "external": ("Extern", {'network_access': True}),
+
     "member": ("Mitglied", member_props),
 
     "org": ("Org", org_props),
