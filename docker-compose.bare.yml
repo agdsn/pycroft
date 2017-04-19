@@ -16,9 +16,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=pycroft
-      - PGDATA=/postgres
-    tmpfs:
-      - /postgres
   ldap:
     image: dinkel/openldap
     environment:

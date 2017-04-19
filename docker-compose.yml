@@ -16,7 +16,12 @@ services:
     extends:
       file: docker-compose.bare.yml
       service: db
+    volumes:
+      - "pycroft_postgres:/var/lib/postgresql/data"
   ldap:
     extends:
       file: docker-compose.bare.yml
       service: ldap
+
+volumes:
+  pycroft_postgres:
