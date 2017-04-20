@@ -71,6 +71,7 @@ group_props = {
 }
 
 
+# Memberships being added due to the current status
 status_groups_map = {
     1: ("member", "usertraffic"),  # bezahlt, ok
     2: ("member", "usertraffic"),  # angemeldet, aber nicht bezahlt
@@ -84,7 +85,6 @@ status_groups_map = {
     10: ("away",), # E-Mail, ehemals IP
     11: (),  # uebrig in Wu die in Renovierung
     12: ("member", "usertraffic")  # gesperrt wegen Trafficueberschreitung
-
 }
 
 

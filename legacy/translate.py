@@ -92,6 +92,7 @@ def translate_rooms(data, resources):
 def generate_groups(data, resources):
     properties_l = []
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
+    #TODO: create other groups
 
     for role, (group_name, properties) in group_props.items():
         g = user.PropertyGroup(name=group_name)
@@ -619,10 +620,15 @@ def reconstruct_memberships(data, resources):
             objs.append(user.Membership(user=u, group=g_d["root"], begins_at=null()))
             continue
 
+
+        # PHASE 1  - gather initial intervals from `membership_from_fees`
+
         # Use reconstruction from fees
         gname_duration = defaultdict(IntervalSet)
         gname_duration["member"], gname_duration["away"] = membership_from_fees(u, semesters, n)
 
+
+        # PHASE 2 - make 'member' membership ending today `closedopen`
 
         # if the membership could be reconstructed ending at the
         # beginning of the current month (last fee), delete the
@@ -634,9 +640,17 @@ def reconstruct_memberships(data, resources):
                latest_membership_end.replace(day=1) == date.today().replace(day=1):
             gname_duration['member'] += IntervalSet(closedopen(latest_membership_end, None))
 
+
+        # PHASE 3 - Add memberships according to current status
+
         for gname in status_groups_map[_u.status_id]: # current memberships
+            # don't add 'member' group because of status when extern
+            if _u.internet_by_rental and gname == 'member':
+                continue
             gname_duration[gname] += IntervalSet(
                 closedopen(datetime.now().date(), None))
+
+        # PHASE 4 - Add 'member' and 'away' memberships for the intervals built
 
         for gname, duration in gname_duration.items():
             for interval in duration:
@@ -644,6 +658,9 @@ def reconstruct_memberships(data, resources):
                     user.Membership(user=u, group=g_d[gname],
                                     begins_at=interval.begin,
                                     ends_at=interval.end))
+
+
+        # PHASE 5 - Add (ex)-aktiv memberships according to LDAP groups
 
         try:
             ldap_account = resources['ldap_accounts'][_u.unix_account]
