@@ -37,15 +37,15 @@ class HadesLogs:
                            .format(e, _CONFIGURATION_DOCS)) from e
         self.timeout = app.config.get('HADES_TIMEOUT', 5)
 
-        self.celery = Celery(app_name=app_name,
-                             broker=broker_uri, backend=backend_uri)
+        self.celery = Celery(app_name, broker=broker_uri, backend=backend_uri)
 
     def create_task(self, name, *args, **kwargs):
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
     def fetch_logs(self, nasipaddress, nasportid):
-        task = self.create_task(name='', nasipaddress=nasipaddress, nasportid=nasportid)
+        task = self.create_task(name='get_port_auth_attempts',
+                                nasipaddress=nasipaddress, nasportid=nasportid)
 
         try:
             task.apply_async().wait(timeout=self.timeout)
