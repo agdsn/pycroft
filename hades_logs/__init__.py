@@ -1,3 +1,5 @@
+from celery import Celery, signature
+from celery.exceptions import TimeoutError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
@@ -13,8 +15,8 @@ A minimal example configuration would look like this:
 """
 
 
-def build_hades_celery_app(app_name, broker_uri, backend_uri):
-    pass  # TODO: install celery and build with Celery()
+class HadesTimeout(RuntimeError):
+    pass
 
 
 class HadesLogs:
@@ -33,8 +35,22 @@ class HadesLogs:
         except KeyError as e:
             raise KeyError("Missing config key: {}\n{}"
                            .format(e, _CONFIGURATION_DOCS)) from e
+        self.timeout = app.config.get('HADES_TIMEOUT', 5)
 
-        build_hades_celery_app(app_name, broker_uri, backend_uri)
+        self.celery = Celery(app_name=app_name,
+                             broker=broker_uri, backend=backend_uri)
+
+    def create_task(self, name, *args, **kwargs):
+        full_task_name = '{}.{}'.format(self.celery.main, name)
+        return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
+
+    def fetch_logs(self, nasipaddress, nasportid):
+        task = self.create_task(name='', nasipaddress=nasipaddress, nasportid=nasportid)
+
+        try:
+            task.apply_async().wait(timeout=self.timeout)
+        except TimeoutError as e:
+            raise HadesTimeout("The Hades lookup task has timed out") from e
 
 
 hades_logs = LocalProxy(lambda: current_app.extensions['hades_logs'])

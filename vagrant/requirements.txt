@@ -22,3 +22,4 @@ psycopg2>=2.6.1,<2.7
 wrapt>=1.10.8,<1.11
 # only needed for ldap caching
 ldap3==2.1.0
+celery==4.0.2
