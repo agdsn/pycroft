@@ -48,7 +48,7 @@ class HadesLogs:
                                 nasipaddress=nasipaddress, nasportid=nasportid)
 
         try:
-            task.apply_async().wait(timeout=self.timeout)
+            return task.apply_async().wait(timeout=self.timeout)
         except TimeoutError as e:
             raise HadesTimeout("The Hades lookup task has timed out") from e
 
