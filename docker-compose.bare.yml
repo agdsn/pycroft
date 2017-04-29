@@ -11,6 +11,13 @@ services:
       - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
       - PYCROFT_LDAP_BIND_PW=password
       - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
+  dummy_worker:  # a dummy worker mocking hades for testing the client
+    build:
+      context: .
+    command: "celery -A dummy_celery_worker worker --loglevel=info"
+    environment:
+      - TEST_HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
+      - TEST_HADES_RESULT_BACKEND_URI=amqp://celery:celery@rabbitmq:5672/
   db:
     image: postgres
     environment:
@@ -21,3 +28,8 @@ services:
     environment:
       - SLAPD_PASSWORD=password
       - SLAPD_DOMAIN=agdsn.de
+  rabbitmq:
+    image: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=celery
+      - RABBITMQ_DEFAULT_PASS=celery
