@@ -1,10 +1,9 @@
 version: '2'
 services:
   web:
-    # this container will run our tests
     extends:
-      file: docker-compose.travis.yml
-      service: web
+      file: common-services.yml
+      service: web_testing
     volumes:
       - ./:/pycroft
     links:
@@ -13,7 +12,7 @@ services:
       - rabbitmq:rabbitmq
   dummy_worker:
     extends:
-      file: docker-compose.bare.yml
+      file: common-services.yml
       service: dummy_worker
     volumes:
       - ./:/pycroft
@@ -21,13 +20,13 @@ services:
       - rabbitmq:rabbitmq
   db:
     extends:
-      file: docker-compose-travis.yml  # not using `bare` b/c we want to have the tmpfs
-      service: db
+      file: common-services.yml
+      service: db_optimized
   ldap:
     extends:
-      file: docker-compose.bare.yml
+      file: common-services.yml
       service: ldap
   rabbitmq:
     extends:
-      file: docker-compose.bare.yml
+      file: common-services.yml
       service: rabbitmq

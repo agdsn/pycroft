@@ -2,7 +2,7 @@ version: '2'
 services:
   web:
     extends:
-      file: docker-compose.bare.yml
+      file: common-services.yml
       service: web
     volumes:
       - ./:/pycroft
@@ -13,10 +13,11 @@ services:
       - 5001:5000
   db:
     extends:
-      file: docker-compose.bare.yml
+      file: common-services.yml
       service: db
     volumes:
       - "pycroft_postgres:/var/lib/postgresql/data"
+      - "./:/pycroft"
 
 volumes:
   pycroft_postgres:

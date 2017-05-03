@@ -6,6 +6,14 @@ services:
       # dockerfile: build/Dockerfile
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
+  # testing variants of `web`
+  web_testing:
+    extends:
+      service: web
+    command: "/bin/true"
+    environment:
+      - HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
+      - HADES_RESULT_BACKEND_URI=amqp://celery:celery@rabbitmq:5672/
       - PYCROFT_LDAP_HOST=ldap
       - PYCROFT_LDAP_PORT=389
       - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
@@ -23,6 +31,13 @@ services:
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=pycroft
+  db_optimized:
+    extends:
+      service: db
+    environment:
+      - PGDATA=/postgres
+    tmpfs:
+      - /postgres
   ldap:
     image: dinkel/openldap
     environment:
