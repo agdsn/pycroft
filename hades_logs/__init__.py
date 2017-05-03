@@ -20,6 +20,35 @@ class HadesTimeout(RuntimeError):
 
 
 class HadesLogs:
+    """The ``HadesLogs`` Flask extension
+
+    This extension provides access to the Hades RPC.  The core
+    functionality is provided by :py:meth:`fetch_logs`.
+
+    You need to provide the following configuration to
+    :py:obj:`app.config`:
+
+        - 'HADES_CELERY_APP_NAME': The Name of the celery app
+
+        - 'HADES_BROKER_URI': The broker URI
+
+        - 'HADES_RESULT_BACKEND_URI': The URI of the Result backend
+
+        - 'HADES_TIMEOUT' (Optional, default=5): The Timeout to wait
+          with each task in seconds.
+
+    Usage:
+
+    >>> from flask import Flask
+
+    >>> from hades_logs import HadesLogs
+
+    >>> app = Flask('test')
+
+    >>> logs = HadesLogs(app)
+
+    >>> logs.fetch_logs(<nasip>, <portid>)
+    """
     def __init__(self, app=None):
         self.app = app
         if app is not None:
@@ -40,10 +69,24 @@ class HadesLogs:
         self.celery = Celery(app_name, broker=broker_uri, backend=backend_uri)
 
     def create_task(self, name, *args, **kwargs):
+        """Create a Celery task object by name, args and kwargs
+
+        ``*args`` and ``**kwargs`` are passed to the corresponding
+        parameters of :py:func:`Celery.signature(name, args, kwargs)`
+
+        :param name: The name of the task without the celery app name.
+            Assembling is done using :py:attr:`self.celery.main`.
+        """
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
     def fetch_logs(self, nasipaddress, nasportid):
+        """[WIP] Fetch the logs of the given port
+
+        :param ipaddr nasipaddress: The IP address of the NAS
+        :param str nasportid: The port identifier (e.g. `C12`) of the
+            NAS port
+        """
         task = self.create_task(name='get_port_auth_attempts',
                                 nasipaddress=nasipaddress, nasportid=nasportid)
 
