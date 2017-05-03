@@ -4,19 +4,31 @@ dist: trusty
 
 cache:
   directories:
-    - /var/lib/docker/image
+    - /home/travis/docker
 
 services:
   - docker
+
+env:
+  global:
+    - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.gz
 
 before_install:
   # list docker-engine versions
   - apt-cache madison docker-engine
   - "docker version"
   - "docker-compose version"
+  - env
+  - if [ -f "${DOCKER_CACHE_FILE}" ]; then echo "Unpacking cache file ${DOCKER_CACHE_FILE}"; gunzip -c "${DOCKER_CACHE_FILE}" | docker load || echo Cache loading failed; fi
+  - "docker images -a"
+
+# skip the builtin pip install
+install: true
 
 script:
   - export DOCKER_COMPOSE="docker-compose -f docker-compose.travis.yml"
   - $DOCKER_COMPOSE build
+  - "docker images -a"
   - $DOCKER_COMPOSE up -d
   - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip3 install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
+  - "docker save $(for image in $(docker images | grep pycroft | awk '{print $3;}'); do docker history -q $image; done | sort  | uniq  | grep -v missing) | gzip > ${DOCKER_CACHE_FILE}"
