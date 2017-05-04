@@ -31,4 +31,4 @@ script:
   - "docker images -a"
   - $DOCKER_COMPOSE up -d
   - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip3 install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
-  - "docker save $(for image in $(docker images | grep pycroft | awk '{print $3;}'); do docker history -q $image; done | sort  | uniq  | grep -v missing) | gzip > ${DOCKER_CACHE_FILE}"
+  - "docker save $(docker history -q pycroft | sort  | uniq  | grep -v missing) | gzip > ${DOCKER_CACHE_FILE}"

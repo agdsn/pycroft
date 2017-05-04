@@ -3,7 +3,7 @@ services:
   web:
     build:
       context: .
-      # dockerfile: build/Dockerfile
+    image: pycroft  # tag of the built image
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
   # testing variants of `web`
