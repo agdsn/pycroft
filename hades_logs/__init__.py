@@ -80,7 +80,7 @@ class HadesLogs:
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
-    def fetch_logs(self, nasipaddress, nasportid):
+    def fetch_logs(self, nasipaddress, nasportid, limit=100):
         """[WIP] Fetch the logs of the given port
 
         :param ipaddr nasipaddress: The IP address of the NAS
@@ -88,7 +88,8 @@ class HadesLogs:
             NAS port
         """
         task = self.create_task(name='get_port_auth_attempts',
-                                nasipaddress=nasipaddress, nasportid=nasportid)
+                                nasipaddress=nasipaddress, nasportid=nasportid,
+                                limit=limit)
 
         try:
             return task.apply_async().wait(timeout=self.timeout)
