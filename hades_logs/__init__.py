@@ -101,7 +101,7 @@ class HadesLogs:
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
     def fetch_logs(self, nasipaddress, nasportid, limit=100):
-        """[WIP] Fetch the logs of the given port
+        """Fetch the auth logs of the given port
 
         :param ipaddr nasipaddress: The IP address of the NAS
         :param str nasportid: The port identifier (e.g. `C12`) of the
