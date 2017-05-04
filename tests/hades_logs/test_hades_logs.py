@@ -138,7 +138,7 @@ class CorrectURIsConfiguredTestCase(TestCase):
         self.app.config.update({
             'HADES_CELERY_APP_NAME': 'test',
             'HADES_BROKER_URI': 'amqp://localhost:5762/',
-            'HADES_RESULT_BACKEND_URI': 'amqp://localhost:5762/',
+            'HADES_RESULT_BACKEND_URI': 'rpc://localhost:5762/',
         })
         self.hades_logs = HadesLogs(self.app)
 
