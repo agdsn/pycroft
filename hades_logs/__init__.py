@@ -119,10 +119,15 @@ class HadesLogs:
 
         try:
             return task.apply_async().wait(timeout=self.timeout)
-        except (CeleryTimeoutError, OperationalError) as e:
+        except CeleryTimeoutError as e:
+            raise HadesTimeout("The Hades lookup task has timed out") from e
+        except OperationalError as e:
             # The `OperationalError` is thrown when e.g. the broker is
             # down
-            raise HadesTimeout("The Hades lookup task has timed out") from e
+            if "timeout" in str(e).lower():
+                raise HadesTimeout("The Hades lookup task has timed out") from e
+            else:
+                raise
 
 
 hades_logs = LocalProxy(lambda: current_app.extensions['hades_logs'])
