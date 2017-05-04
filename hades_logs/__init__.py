@@ -1,5 +1,6 @@
 from celery import Celery, signature
-from celery.exceptions import TimeoutError
+from celery.exceptions import TimeoutError as CeleryTimeoutError
+from kombu.exceptions import OperationalError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
@@ -15,7 +16,7 @@ A minimal example configuration would look like this:
 """
 
 
-class HadesTimeout(RuntimeError):
+class HadesTimeout(TimeoutError):
     pass
 
 
@@ -76,6 +77,10 @@ class HadesLogs:
 
         :param name: The name of the task without the celery app name.
             Assembling is done using :py:attr:`self.celery.main`.
+
+        :returns: the signature of the task
+
+        :rtype: :py:obj:`celery.Signature`
         """
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
@@ -86,6 +91,12 @@ class HadesLogs:
         :param ipaddr nasipaddress: The IP address of the NAS
         :param str nasportid: The port identifier (e.g. `C12`) of the
             NAS port
+
+        :returns: the result of the task
+
+        :raises HadesTimeout: on timeouts, e.g. when the task takes
+            too long to be executed by a worker or when the broker is
+            down.
         """
         task = self.create_task(name='get_port_auth_attempts',
                                 nasipaddress=nasipaddress, nasportid=nasportid,
@@ -93,7 +104,9 @@ class HadesLogs:
 
         try:
             return task.apply_async().wait(timeout=self.timeout)
-        except TimeoutError as e:
+        except (CeleryTimeoutError, OperationalError) as e:
+            # The `OperationalError` is thrown when e.g. the broker is
+            # down
             raise HadesTimeout("The Hades lookup task has timed out") from e
 
 
