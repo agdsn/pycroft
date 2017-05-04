@@ -1,8 +1,23 @@
+"""
+hades_logs
+----------
+
+This module provides access to Hades' radius logs utilizing its celery
+RPC api.
+"""
+
 from celery import Celery, signature
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from kombu.exceptions import OperationalError
 from flask.globals import current_app
 from werkzeug import LocalProxy
+
+
+__all__ = [
+    'HadesTimeout',
+    'HadesLogs',
+    'hades_logs'
+]
 
 
 _CONFIGURATION_DOCS = """\
