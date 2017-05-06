@@ -9,8 +9,12 @@
 .idea/inspectionProfiles/profiles_settings.xml
 doc/_build
 .vagrant
+# Managed by bower
 web/static/libs/**
 
 *.log
+nosetests.xml
+.noseids
+.pylintrc
 .coverage
 TAGS
