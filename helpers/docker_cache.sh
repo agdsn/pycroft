@@ -33,10 +33,16 @@ load_cache() {  # cache_file
 }
 
 save_cache() {  # cache_file
+    if [[ -z $DOCKER_IMAGE_NAME ]]; then
+        local image=pycroft
+    else
+        local image=$DOCKER_IMAGE_NAME
+    fi
+
     _check_context $@
     local cache_file=$(_env_or_param $@)
 
-    local images=$(docker history -q pycroft | sort  | uniq  | grep -v missing)
+    local images=$(docker history -q $image | sort  | uniq  | grep -v missing)
     echo "Attempting to save $images"
     docker save $images | gzip > $cache_file
 }

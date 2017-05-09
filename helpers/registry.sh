@@ -67,11 +67,11 @@ _build_complete_tag() {  # registry, image, [tag:latest]
     echo $host/$image:$tag
 }
 
-push() {  # [image:pycroft]
-    if [[ -z $1 ]]; then
+push() {
+    if [[ -z $DOCKER_IMAGE_NAME ]]; then
         local image=pycroft
     else
-        local image=$1
+        local image=$DOCKER_IMAGE_NAME
     fi
 
     local tags_to_push=("develop")
