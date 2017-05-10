@@ -67,6 +67,20 @@ _build_complete_tag() {  # registry, image, [tag:latest]
     echo $host/$image:$tag
 }
 
+_tag_and_push() {  # image, tag
+    local image=$1
+    local tag=$2
+    local ref=$(_build_complete_tag $REGISTRY $image $tag)
+
+    echo "Tagging and pushing $ref ..."
+    if [[ $tag != latest ]]; then
+        # retag as desired
+        docker tag $image:latest $ref
+    fi
+    docker push $ref
+    echo "...done."
+}
+
 push() {
     if [[ -z $DOCKER_IMAGE_NAME ]]; then
         local image=pycroft
@@ -74,25 +88,15 @@ push() {
         local image=$DOCKER_IMAGE_NAME
     fi
 
-    local tags_to_push=("develop")
+    echo "PUSH: $image:latest"
+
+    _tag_and_push $image develop
     if [[ $TRAVIS_BRANCH == "master" ]]; then
-        tags_to_push+=latest
+        _tag_and_push $image latest
     fi
     if [[ -n $TRAVIS_TAG ]]; then
-        tags_to_push+=$TRAVIS_TAG
+        _tag_and_push $image $TRAVIS_TAG
     fi
-
-    echo "PUSH: $image:latest. Desired tags: $tags_to_push"
-    for tag in $tags_to_push; do
-        local ref=$(_build_complete_tag $REGISTRY $image $tag)
-        echo "Tagging and pushing $ref ..."
-        if [[ $tag != latest ]]; then
-            # retag as desired
-            docker tag $image:latest $ref
-        fi
-        docker push $ref
-        echo "...done."
-    done
 }
 
 all() {
