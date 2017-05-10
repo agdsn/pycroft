@@ -73,10 +73,8 @@ _tag_and_push() {  # image, tag
     local ref=$(_build_complete_tag $REGISTRY $image $tag)
 
     echo "Tagging and pushing $ref ..."
-    if [[ $tag != latest ]]; then
-        # retag as desired
-        docker tag $image:latest $ref
-    fi
+    echo "Tagging $image:latest as $ref"
+    docker tag $image:latest $ref
     docker push $ref
     echo "...done."
 }
