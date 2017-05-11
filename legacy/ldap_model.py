@@ -38,12 +38,24 @@ class Nutzer(Base):
         else:
             groups = []
 
+        if len(result['userPassword']) > 1:
+            print("WARNING: User {} has more than one password!")
+
+        _pw = result['userPassword'][0]
+        if _pw is not None:
+            # userPassword is given as byte (“Octet
+            # String”). Reference:
+            # https://tools.ietf.org/html/rfc2256#section-5.36
+            pw = _pw.decode('utf-8')
+        else:
+            pw = None
+
         return cls(
             uid=uid,
             mail=mail,
             # we can safely assume users only have exactly one password.
             # I checked this for our production data on 2016-11-03.
-            userPassword=result['userPassword'][0],
+            userPassword=pw,
             homeDirectory=result['homeDirectory'],
             uidNumber=result['uidNumber'],
             gidNumber=result['gidNumber'],

@@ -10,7 +10,7 @@ class LdapNutzerFromRecordTestCase(TestCase):
         self.given_attrs = {
             'uid': ['user'],
             'mail': ['foo@bar.baz'],
-            'userPassword': ['{CRYPT}'],
+            'userPassword': [b'{CRYPT}'],
             'homeDirectory': '/home/user',
             'uidNumber': 10010,
             'gidNumber': 100,
