@@ -107,7 +107,8 @@ class HadesLogs:
         :param str nasportid: The port identifier (e.g. `C12`) of the
             NAS port
 
-        :returns: the result of the task
+        :returns: the result of the task (see
+                  ``get_port_auth_attempts`` in hades)
 
         :raises HadesTimeout: on timeouts, e.g. when the task takes
             too long to be executed by a worker or when the broker is

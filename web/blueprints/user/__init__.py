@@ -17,7 +17,6 @@ from flask import (
 import operator
 from sqlalchemy import Text, and_
 from pycroft import lib, config
-from pycroft.helpers.i18n import Message
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
@@ -42,6 +41,8 @@ from datetime import datetime, timedelta, time
 from flask_login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
+from ..helpers.log import format_user_log_entry, format_room_log_entry, \
+    format_hades_log_entry, test_hades_logs
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -174,34 +175,6 @@ def user_account(user_id):
                             account_id=user.account_id))
 
 
-def format_room_log_entry(entry):
-    return {
-        'created_at': datetime_filter(entry.created_at),
-        'user': {
-            'title': entry.author.name,
-            'href': url_for("user.user_show", user_id=entry.author.id)
-        },
-        'message': Message.from_json(entry.message).localize(),
-        'type': 'room'
-    }
-
-
-def format_user_log_entry(entry):
-    return {
-        'created_at': datetime_filter(entry.created_at),
-        'user': {
-            'title': entry.author.name,
-            'href': url_for("user.user_show", user_id=entry.author.id)
-        },
-        'message': Message.from_json(entry.message).localize(),
-        'type': 'user'
-    }
-
-
-def format_and_reverse(entries, formatter):
-    return (formatter(entry) for entry in reversed(entries))
-
-
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
 def user_show_logs_json(user_id, logtype="all"):
@@ -212,13 +185,18 @@ def user_show_logs_json(user_id, logtype="all"):
     log_sources = []  # list of iterators
 
     if logtype in ["user", "all"]:
-        log_sources.append(format_and_reverse(user.log_entries,
-                                              format_user_log_entry))
+        log_sources.append((format_user_log_entry(e) for e in user.log_entries))
     if logtype in ["room", "all"] and user.room:
-        log_sources.append(format_and_reverse(user.room.log_entries,
-                                              format_room_log_entry))
+        log_sources.append((format_room_log_entry(e) for e in user.room.log_entries))
 
-    return jsonify(items=list(chain(*log_sources)))
+    # TODO: what's a good qualifier for a user to have radius logs?
+    # TODO: Use the actuall radius logs (→ Get nasipaddress, nasportid)
+    if logtype in ["hades", "all"]:
+        log_sources.append((format_hades_log_entry(e) for e in test_hades_logs))
+
+    return jsonify(items=list(sorted(chain(*log_sources),
+                                     key=operator.itemgetter('raw_created_at'),
+                                     reverse=True)))
 
 
 @bp.route("/<int:user_id>/hosts")
