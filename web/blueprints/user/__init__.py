@@ -173,28 +173,9 @@ def user_account(user_id):
     return redirect(url_for("finance.accounts_show",
                             account_id=user.account_id))
 
-@bp.route("/<int:user_id>/logs")
-@bp.route("/<int:user_id>/logs/<logtype>")
-def user_show_logs_json(user_id, logtype="all"):
-    user = User.q.get(user_id)
-    if user is None:
-        abort(404)
-    user_log_list = []
-    room_log_list = []
-    if logtype in ["user", "all"]:
-        user_log_list = reversed(user.log_entries)
-    if logtype in ["room", "all"] and user.room:
-        room_log_list = reversed(user.room.log_entries)
 
-    return jsonify(items=list(chain(({
-        'created_at': datetime_filter(entry.created_at),
-        'user': {
-            'title': entry.author.name,
-            'href': url_for("user.user_show", user_id=entry.author.id)
-        },
-        'message': Message.from_json(entry.message).localize(),
-        'type': 'user'
-    } for entry in user_log_list), ({
+def format_room_log_entry(entry):
+    return {
         'created_at': datetime_filter(entry.created_at),
         'user': {
             'title': entry.author.name,
@@ -202,7 +183,42 @@ def user_show_logs_json(user_id, logtype="all"):
         },
         'message': Message.from_json(entry.message).localize(),
         'type': 'room'
-    } for entry in room_log_list))))
+    }
+
+
+def format_user_log_entry(entry):
+    return {
+        'created_at': datetime_filter(entry.created_at),
+        'user': {
+            'title': entry.author.name,
+            'href': url_for("user.user_show", user_id=entry.author.id)
+        },
+        'message': Message.from_json(entry.message).localize(),
+        'type': 'user'
+    }
+
+
+def format_and_reverse(entries, formatter):
+    return (formatter(entry) for entry in reversed(entries))
+
+
+@bp.route("/<int:user_id>/logs")
+@bp.route("/<int:user_id>/logs/<logtype>")
+def user_show_logs_json(user_id, logtype="all"):
+    user = User.q.get(user_id)
+    if user is None:
+        abort(404)
+
+    log_sources = []  # list of iterators
+
+    if logtype in ["user", "all"]:
+        log_sources.append(format_and_reverse(user.log_entries,
+                                              format_user_log_entry))
+    if logtype in ["room", "all"] and user.room:
+        log_sources.append(format_and_reverse(user.room.log_entries,
+                                              format_room_log_entry))
+
+    return jsonify(items=list(chain(*log_sources)))
 
 
 @bp.route("/<int:user_id>/hosts")
