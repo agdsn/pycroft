@@ -20,7 +20,7 @@ before_install:
   - "docker version"
   - "docker-compose version"
   - env
-  - ./helpers/docker_cache.sh load_cache
+  - ./helpers/docker_cache.sh load_cache || echo "Cache loading failed"
   - "docker images -a"
 
 # skip the builtin pip install
@@ -38,4 +38,4 @@ after_success:
   - sudo ./helpers/registry.sh all
 
 before_cache:
-  - ./helpers/docker_cache.sh save_cache
+  - ./helpers/docker_cache.sh save_cache || echo "Cache saving failed"
