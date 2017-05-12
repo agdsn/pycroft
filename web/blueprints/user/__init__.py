@@ -116,10 +116,6 @@ def user_show(user_id):
         abort(404)
 
     room = user.room
-    if room:
-        room_log_entries = room.log_entries
-    else:
-        room_log_entries = []
 
     form = UserLogEntry()
 
@@ -129,13 +125,6 @@ def user_show(user_id):
                                    user=user)
         session.session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
-
-    log_list = sorted(
-        chain(user.log_entries, room_log_entries),
-        key=operator.attrgetter("created_at"), reverse=True
-    )
-    user_log_list = reversed(user.log_entries)
-    room_log_list = reversed(room_log_entries)
 
     memberships = Membership.q.filter(Membership.user_id == user.id)
     memberships_active = memberships.filter(
@@ -155,9 +144,6 @@ def user_show(user_id):
         balance=user.account.balance,
         splits=user.account.splits,
         typed_splits=typed_splits,
-        all_log=log_list,
-        user_log=user_log_list,
-        room_log=room_log_list,
         room=room,
         form=form,
         memberships=memberships.all(),
