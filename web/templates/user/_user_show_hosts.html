@@ -3,12 +3,4 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% import "macros/table.html" as tbl %}
-{% set cols = [
-    {'name': 'ip', 'title': 'IP-Adresse'},
-    {'name': 'mac', 'title': 'Mac-Adresse'},
-    {'name': 'switch', 'title': 'Switch'},
-    {'name': 'port', 'title': 'Switchport'},
-    {'name': 'action', 'title': 'MAC ändern', 'formatter': 'btnFormatter'}
-] %}
-{{ tbl.item_table("user_hosts", url_for(".user_show_hosts_json", user_id=user.id), cols) }}
+{{ host_table.render("user_hosts") }}

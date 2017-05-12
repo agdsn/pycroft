@@ -4,20 +4,6 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% import "macros/forms.html" as forms %}
-{% import "macros/table.html" as tbl %}
-{# col definitions #}
-{% set log_cols = [
-    {'name': 'created_at', 'title': 'Erstellt um'},
-    {'name': 'user', 'title': 'Nutzer', 'formatter': 'userFormatter'},
-    {'name': 'message', 'title': 'Nachricht'},
-] %}
-{# Parses the type column as well (used for `all` tab) #}
-{% set extended_log_cols = [
-    {'name': 'created_at', 'title': 'Erstellt um', 'width': '2'},
-    {'name': 'type', 'title': 'Logtyp'},
-    {'name': 'user', 'title': 'Nutzer', 'formatter': 'userFormatter'},
-    {'name': 'message', 'title': 'Nachricht'},
-] %}
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#log-entries-all" data-toggle="tab">Alle</a></li>
@@ -28,16 +14,16 @@
 
 <div class="tab-content">
     <div class="tab-pane fade in active" id="log-entries-all">
-        {{ tbl.item_table("merged_log", url_for(".user_show_logs_json", user_id=user.id), extended_log_cols) }}
+        {{ log_table_all.render("merged_log") }}
     </div>
     <div class="tab-pane fade" id="log-entries-user">
-        {{ tbl.item_table("user_log", url_for(".user_show_logs_json", user_id=user.id, logtype="user"), log_cols) }}
+        {{ log_table_user.render("user_log") }}
     </div>
     <div class="tab-pane fade" id="log-entries-room">
-        {{ tbl.item_table("room_log", url_for(".user_show_logs_json", user_id=user.id, logtype="room"), log_cols) }}
+        {{ log_table_room.render("room_log") }}
     </div>
     <div class="tab-pane fade" id="log-entries-hades">
-        {{ tbl.item_table("radius_log", url_for(".user_show_logs_json", user_id=user.id, logtype="hades"), log_cols) }}
+        {{ log_table_hades.render("hades_log") }}
     </div>
 </div>
 

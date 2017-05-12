@@ -11,6 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from itertools import chain
+from functools import partial
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
@@ -43,6 +44,7 @@ from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry, test_hades_logs
+from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -138,12 +140,24 @@ def user_show(user_id):
     )
     typed_splits = get_typed_splits(user.account.splits)
 
+    _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
+    _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
+
     return render_template(
         'user/user_show.html',
         user=user,
         balance=user.account.balance,
         splits=user.account.splits,
         typed_splits=typed_splits,
+        log_table_all=LogTableExtended(data_url=_log_endpoint()),
+        log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
+        log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
+        log_table_hades=LogTableSpecific(data_url=_log_endpoint(logtype="hades")),
+        membership_table_all=MembershipTable(data_url=_membership_endpoint()),
+        membership_table_active=MembershipTable(
+            data_url=_membership_endpoint(group_filter="active")
+        ),
+        host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
         room=room,
         form=form,
         memberships=memberships.all(),
