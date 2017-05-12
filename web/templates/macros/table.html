@@ -11,6 +11,16 @@
 {% endmacro %}
 
 {% macro item_table(table_id, data_url="", display_columns=[], footer=[], row_style="", server_pagination=False, sort_order="asc") %}
+    {# A macro building a html `bootstrap-table`.
+
+    - data_url: The flask endpoint providing the json data
+    - display_columns: The columns to display.
+    - footer: An optional list of columns for `tfoot`.  Should be a
+    dict with the keys 'title' and 'colspan' (optional)
+    - row_style: passed to `data-row-style` of the table.
+    - server_pagination: bool
+    - sort_order: either "asc" or "desc".
+    #}
     <div id="{{ table_id }}-toolbar" class="btn-toolbar" role="toolbar">
         {% if caller is defined %}
             {{ caller() }}
@@ -31,6 +41,9 @@
         <thead>
         <tr>
             {% for col in display_columns %}
+                {# The formatter given as `col.formatter` determines
+                the parsing.  A function of this name must be
+                available in the document the table is built into. #}
                 <th data-sortable="true" data-field="{{ col.name }}"
                     {% if col.formatter is defined %}data-formatter="{{ col.formatter }}"{% endif %}
                     {% if col.width is defined %}class="col-sm-{{ col. width }}"{% endif %}

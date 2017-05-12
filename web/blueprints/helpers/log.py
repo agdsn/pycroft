@@ -7,10 +7,17 @@ from pycroft.helpers.i18n import Message
 from web.template_filters import datetime_filter
 
 def format_log_entry(entry, log_type):
+    """Format a logentry in correct json
+
+    :param LogEntry entry:
+    :param log_type: The logtype to include, currently ``'user'`` or
+        ``'room'``.
+    """
     return {
         'created_at': datetime_filter(entry.created_at),
         'raw_created_at': entry.created_at,
         'user': {
+            'type': 'native',  # parses it as a link
             'title': entry.author.name,
             'href': url_for("user.user_show", user_id=entry.author.id)
         },

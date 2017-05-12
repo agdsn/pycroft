@@ -34,6 +34,19 @@ function linkFormatter(value, row, index) {
     return linkTemplate({'href': value['href'], 'title': value['title']})
 }
 
+function userFormatter(value, row, index) {
+    /* Format an entry as a link or plain, depending on the value of
+     * the 'type' field.  It can either be 'plain' or 'native'. */
+    if (value['type'] == 'plain') {
+        return value['title']
+    } else if (value['type'] == 'native') {
+        return linkFormatter(value, row, index)
+    } else {
+        console.log("ERROR: The following object could not be formatted by a userLogger:", value)
+        return "Invalid format"
+    }
+}
+
 function btnFormatter(value, row, index) {
     if (value['icon']) {
         if (value['icon'] instanceof Array) {
