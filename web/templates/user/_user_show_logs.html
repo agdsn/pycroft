@@ -15,6 +15,7 @@
     <li class="active"><a href="#log-entries-all" data-toggle="tab">Alle</a></li>
     <li><a href="#log-entries-user" data-toggle="tab">Nutzer</a></li>
     <li><a href="#log-entries-room" data-toggle="tab">Raum</a></li>
+    <li><a href="#log-entries-hades" data-toggle="tab">Hades</a></li>
 </ul>
 
 <div class="tab-content">
@@ -26,6 +27,9 @@
     </div>
     <div class="tab-pane fade" id="log-entries-room">
         {{ tbl.item_table("room_log", url_for(".user_show_logs_json", user_id=user.id, logtype="room"), log_cols) }}
+    </div>
+    <div class="tab-pane fade" id="log-entries-hades">
+        {{ tbl.item_table("radius_log", url_for(".user_show_logs_json", user_id=user.id, logtype="hades"), log_cols) }}
     </div>
 </div>
 
