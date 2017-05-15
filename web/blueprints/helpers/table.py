@@ -71,3 +71,37 @@ class BootstrapTable:
         return Markup("\n".join(html))
 
 
+class SplittedTable(BootstrapTable):
+    def __init__(self, *a, splits, **kw):
+        """Initialize a new Splitted Table
+
+        :param splits: Split definitions of the format
+            (('split_1_prefix', "Display_Name"), …).  The format will
+            be checked
+        :param kwargs: Passed to super()
+        """
+        super().__init__(*a, **kw)
+        # each split shall have the format:
+        # ('split_prefix', "Name to be displayed")
+        if any(len(x) != 2 for x in splits):
+            raise ValueError("`splits` must be a tuple of 2-tuples")
+        self.splits = splits
+
+    def generate_table_header(self):
+        yield "<thead>"
+        yield "<tr>"
+        for _, split_name in self.splits:
+            yield ("<th colspan=\"{}\" class=\"text-center\">{}</th>"
+                   .format(len(self.columns), split_name))
+        yield "</tr>"
+
+        yield "<tr>"
+        def prefixed_col(prefix, col_name):
+            return "{prefix}_{col_name}".format(prefix=prefix, col_name=col_name)
+        for split_prefix, _ in self.splits:
+            for col in self.columns:
+                new_name = prefixed_col(split_prefix, col.name)
+                yield "<th {}>{}</th>".format(col.build_col_args(data_field=new_name),
+                                              col.title)
+        yield "</tr>"
+        yield "</thead>"

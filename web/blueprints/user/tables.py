@@ -1,4 +1,4 @@
-from web.blueprints.helpers.table import BootstrapTable, Column
+from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
 
 
 class LogTableExtended(BootstrapTable):
@@ -42,11 +42,12 @@ class HostTable(BootstrapTable):
         ], **kw)
 
 
-class FinanceTable(BootstrapTable):
+class FinanceTableSplitted(SplittedTable):
     def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('posted_at', 'Erstellt um'),
-            Column('valid_on', 'Gültig am'),
-            Column('description', 'Beschreibung', formatter='linkFormatter'),
-            Column('amount', 'Wert'),
+        splits = (('soll', "Soll"), ('haben', "Haben"))
+        super().__init__(*a, splits=splits, columns=[
+            Column(name='posted_at', title='Erstellt um'),
+            Column(name='valid_on', title='Gültig am'),
+            Column(name='description', title='Beschreibung', formatter='linkFormatter'),
+            Column(name='amount', title='Wert'),
         ], **kw)
