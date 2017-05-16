@@ -31,12 +31,14 @@ var multiGlyphBtnTemplate = _.template(
 );
 
 function linkFormatter(value, row, index) {
+    if (!value) {return}
     return linkTemplate({'href': value['href'], 'title': value['title']})
 }
 
 function userFormatter(value, row, index) {
     /* Format an entry as a link or plain, depending on the value of
      * the 'type' field.  It can either be 'plain' or 'native'. */
+    if (!value) {return}
     if (value['type'] == 'plain') {
         return value['title']
     } else if (value['type'] == 'native') {
@@ -48,6 +50,7 @@ function userFormatter(value, row, index) {
 }
 
 function btnFormatter(value, row, index) {
+    if (!value) {return}
     if (value['icon']) {
         if (value['icon'] instanceof Array) {
             return multiGlyphBtnTemplate({
@@ -75,6 +78,7 @@ function btnFormatter(value, row, index) {
 }
 
 function multiBtnFormatter(value, row, index) {
+    if (!value) {return}
     var ret = '';
     for (var i = 0; i < value.length; i++) {
         ret += btnFormatter(value[i], row, index)
@@ -83,6 +87,7 @@ function multiBtnFormatter(value, row, index) {
 }
 
 function listFormatter(value, row, index) {
+    if (!value) {return}
     var ret = '<ul>';
     for (var i = 0; i < value.length; i++) {
         if (value[i].length == 0) {

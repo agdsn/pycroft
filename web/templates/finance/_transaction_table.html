@@ -42,6 +42,9 @@
 </ul>
 <div class="tab-content">
     <div id="report-form"  class="tab-pane active">
+        {% if finance_table_regular is defined %}
+            {{ finance_table_regular.render("report") }}
+        {% else %}
         {{ tbl.item_table(
             'report',
             json_url,
@@ -51,7 +54,14 @@
             True,
             "desc")
         }}
+        {% endif %}
     </div>
+    {% if finance_table_splitted is defined %}
+        <div id="account-form" class="tab-pane">
+            {{ finance_table_splitted.render("splitted") }}
+        </div>
+    {% else %}
+
     {% if typed_splits is not none %}<div id="account-form" class="tab-pane">
         <table class="table table-striped">
             <thead>
@@ -87,4 +97,5 @@
             </tbody>
         </table>
     </div>{% endif %}
+    {% endif %}
 </div>

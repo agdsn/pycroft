@@ -42,12 +42,28 @@ class HostTable(BootstrapTable):
         ], **kw)
 
 
-class FinanceTableSplitted(SplittedTable):
+class FinanceTable(BootstrapTable):
     def __init__(self, *a, **kw):
-        splits = (('soll', "Soll"), ('haben', "Haben"))
-        super().__init__(*a, splits=splits, columns=[
+        table_args = {
+            'data-row-style': 'financeRowFormatter',
+            'data-side-pagination': 'server',
+            # 'data-search': 'true',
+        }
+        original_table_args = kw.pop('table_args', {})
+        table_args.update(original_table_args)
+        super().__init__(*a, columns=[
             Column(name='posted_at', title='Erstellt um'),
             Column(name='valid_on', title='Gültig am'),
             Column(name='description', title='Beschreibung', formatter='linkFormatter'),
             Column(name='amount', title='Wert'),
-        ], **kw)
+        ], table_args=table_args, **kw)
+
+
+class FinanceTableSplitted(FinanceTable, SplittedTable):
+    def __init__(self, *a, **kw):
+        splits = (('soll', "Soll"), ('haben', "Haben"))
+        table_args = {
+            'data-row-style': False,
+        }
+        table_args.update(kw.pop('table_args', {}))
+        super().__init__(*a, splits=splits, table_args=table_args, **kw)

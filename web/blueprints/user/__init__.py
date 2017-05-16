@@ -44,7 +44,8 @@ from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry, test_hades_logs
-from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
+from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable, \
+    FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])
@@ -138,7 +139,6 @@ def user_show(user_id):
         or_(Membership.ends_at == None,
             Membership.ends_at > functions.utcnow())
     )
-    typed_splits = get_typed_splits(user.account.splits)
 
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
@@ -147,8 +147,6 @@ def user_show(user_id):
         'user/user_show.html',
         user=user,
         balance=user.account.balance,
-        splits=user.account.splits,
-        typed_splits=typed_splits,
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
@@ -158,6 +156,13 @@ def user_show(user_id):
             data_url=_membership_endpoint(group_filter="active")
         ),
         host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
+        finance_table_regular=FinanceTable(
+            data_url=url_for("finance.accounts_show_json", account_id=user.account_id)
+        ),
+        finance_table_splitted=FinanceTableSplitted(
+            data_url=url_for("finance.accounts_show_json", account_id=user.account_id,
+                             splitted=True)
+        ),
         room=room,
         form=form,
         memberships=memberships.all(),

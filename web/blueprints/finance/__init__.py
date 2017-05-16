@@ -11,7 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from datetime import timedelta, datetime
-from itertools import groupby
+from itertools import groupby, zip_longest, chain
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
@@ -237,6 +237,36 @@ def accounts_show(account_id):
     )
 
 
+def _format_row(split, style, i, offset, prefix=None):
+    row = {
+        'id': i + offset,
+        'posted_at': datetime_filter(split.transaction.posted_at),
+        #'posted_by': (split.transaction.author.id, split.transaction.author.name),
+        'valid_on': date_filter(split.transaction.valid_on),
+        'description': {
+            'href': url_for(
+                "finance.transactions_show",
+                transaction_id=split.transaction_id
+                ),
+            'title': localized(split.transaction.description)
+        },
+        'amount': money_filter(split.amount),
+        'row_positive': (split.amount > 0) ^ (style == "inverted"),
+    }
+    if prefix is None:
+        return row
+    return {'{}_{}'.format(prefix, key): val for key, val in row.items()}
+
+
+def _prefixed_merge(a, prefix_a, b, prefix_b):
+    result = {}
+    result.update(**{'{}_{}'.format(prefix_a, k): v
+                     for k, v in a.items()})
+    result.update(**{'{}_{}'.format(prefix_b, k): v
+                     for k, v in b.items()})
+    return result
+
+
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id):
     style = request.args.get('style', None)
@@ -244,8 +274,8 @@ def accounts_show_json(account_id):
     offset = request.args.get('offset', 0, type=int)
     sort_by = request.args.get('sort', "valid_on")
     sort_order = request.args.get('order')
-    filter = request.args.get('filter') # for account form / typed_split
     search = request.args.get('search')
+    splitted = request.args.get('splitted', False, type=bool)
 
     account = Account.q.get(account_id) or abort(404)
 
@@ -257,38 +287,42 @@ def accounts_show_json(account_id):
     query = Split.q.join(Transaction).filter(Split.account == account)
     if search:
         query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
-    if filter == "non-negative":
-        query = query.filter(Split.amount >= 0)
-    elif filter == "negative":
-        query = query.filter(Split.amount < 0)
 
-    total = query.count()
-    records = (query.order_by(ordering)
-                    .offset(offset)
-                    .limit(limit))
+
+    def rows_from_query(query, ordering, offset, limit):
+        total = query.count()
+        records = (query.order_by(ordering)
+                   .offset(offset)
+                   .limit(limit))
+        rows = [_format_row(split, style, i, offset)
+                for i, split in enumerate(records)]
+        return total, rows
+
+    if splitted:
+        query_pos = query.filter(Split.amount >= 0)
+        query_neg = query.filter(Split.amount < 0)
+        total_pos, rows_pos = rows_from_query(query_pos, ordering, offset, limit)
+        total_neg, rows_neg = rows_from_query(query_neg, ordering, offset, limit)
+
+        # TODO: take from cols
+        _keys = ['posted_at', 'valid_on', 'description', 'amount']
+        _filler = {key: None for key in chain(('soll_'+key for key in _keys),
+                                              ('haben_'+key for key in _keys))}
+
+        rows = [
+            _prefixed_merge(split_pos, 'soll', split_neg, 'haben')
+            for split_pos, split_neg in zip_longest(rows_pos, rows_neg, fillvalue=_filler)
+        ]
+        items = {'total': total_pos + total_neg,
+                 'rows': rows}
+    else:
+        total, rows = rows_from_query(query, ordering, offset, limit)
+        items = {'total': total, 'rows': rows}
 
     return jsonify(
         name=account.name,
-        items={
-            "total": total,
-            "rows": [
-                {
-                    'id': i+offset,
-                    'posted_at': datetime_filter(split.transaction.posted_at),
-                    #'posted_by': (split.transaction.author.id, split.transaction.author.name),
-                    'valid_on': date_filter(split.transaction.valid_on),
-                    'description': {
-                        'href': url_for(
-                            "finance.transactions_show",
-                            transaction_id=split.transaction_id
-                        ),
-                        'title': localized(split.transaction.description)
-                    },
-                    'amount': money_filter(split.amount),
-                    'row_positive': (split.amount > 0) ^ (style == "inverted")
-                } for i, split in enumerate(records)
-                ]
-        })
+        items=items
+    )
 
 
 @bp.route('/transactions/<int:transaction_id>')

@@ -101,7 +101,9 @@ class SplittedTable(BootstrapTable):
         for split_prefix, _ in self.splits:
             for col in self.columns:
                 new_name = prefixed_col(split_prefix, col.name)
-                yield "<th {}>{}</th>".format(col.build_col_args(data_field=new_name),
-                                              col.title)
+                yield "<th {}>{}</th>".format(
+                    col.build_col_args(**{'data-field': new_name}),
+                    col.title
+                )
         yield "</tr>"
         yield "</thead>"
