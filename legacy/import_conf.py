@@ -16,6 +16,7 @@ org_props = {"user_show": True,
              "infrastructure_show": True,
              "facilities_show": True,
              "groups_show": True,
+             "groups_change_membership": True,
              "groups_traffic_show": True}
 
 finance_admin_props = {"finance_change": True}
