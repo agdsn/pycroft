@@ -11,6 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from datetime import timedelta, datetime
+from functools import partial
 from itertools import groupby, zip_longest, chain
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
@@ -36,6 +37,7 @@ from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 from web.templates import page_resources
 from web.blueprints.helpers.api import json_agg_core
+from web.blueprints.helpers.finance import build_transactions_query
 
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
@@ -237,9 +239,8 @@ def accounts_show(account_id):
     )
 
 
-def _format_row(split, style, i, offset, prefix=None):
+def _format_row(split, style, prefix=None):
     row = {
-        'id': i + offset,
         'posted_at': datetime_filter(split.transaction.posted_at),
         #'posted_by': (split.transaction.author.id, split.transaction.author.name),
         'valid_on': date_filter(split.transaction.valid_on),
@@ -269,42 +270,32 @@ def _prefixed_merge(a, prefix_a, b, prefix_b):
 
 @bp.route('/accounts/<int:account_id>/json')
 def accounts_show_json(account_id):
-    style = request.args.get('style', None)
-    limit = request.args.get('limit', None, type=int)
-    offset = request.args.get('offset', 0, type=int)
-    sort_by = request.args.get('sort', "valid_on")
-    sort_order = request.args.get('order')
+    style = request.args.get('style')
+    limit = request.args.get('limit', type=int)
+    offset = request.args.get('offset', type=int)
+    sort_by = request.args.get('sort', default="valid_on")
+    sort_order = request.args.get('order', default="desc")
     search = request.args.get('search')
-    splitted = request.args.get('splitted', False, type=bool)
+    splitted = request.args.get('splitted', default=False, type=bool)
+    if sort_by.startswith("soll_") or sort_order.startswith("haben_"):
+        sort_by = '_'.join(sort_by.split('_')[1:])
 
     account = Account.q.get(account_id) or abort(404)
 
-    if not (sort_by in Transaction.__table__.columns
-            or sort_by in Split.__table__.columns):
-        sort_by = "valid_on"
-    ordering = sort_by+" desc" if sort_order == "desc" else sort_by
+    total = Split.q.join(Transaction).filter(Split.account == account).count()
 
-    query = Split.q.join(Transaction).filter(Split.account == account)
-    if search:
-        query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
+    build_this_query = partial(build_transactions_query,
+                               account=account, search=search, sort_by=sort_by,
+                               sort_order=sort_order, offset=offset, limit=limit)
 
-
-    def rows_from_query(query, ordering, offset, limit):
-        total = query.count()
-        records = (query.order_by(ordering)
-                   .offset(offset)
-                   .limit(limit))
-        rows = [_format_row(split, style, i, offset)
-                for i, split in enumerate(records)]
-        return total, rows
+    def rows_from_query(query):
+        # iterating over `query` executes it
+        return [_format_row(split, style) for split in query]
 
     if splitted:
-        query_pos = query.filter(Split.amount >= 0)
-        query_neg = query.filter(Split.amount < 0)
-        total_pos, rows_pos = rows_from_query(query_pos, ordering, offset, limit)
-        total_neg, rows_neg = rows_from_query(query_neg, ordering, offset, limit)
+        rows_pos = rows_from_query(build_this_query(positive=True))
+        rows_neg = rows_from_query(build_this_query(positive=False))
 
-        # TODO: take from cols
         _keys = ['posted_at', 'valid_on', 'description', 'amount']
         _filler = {key: None for key in chain(('soll_'+key for key in _keys),
                                               ('haben_'+key for key in _keys))}
@@ -313,11 +304,11 @@ def accounts_show_json(account_id):
             _prefixed_merge(split_pos, 'soll', split_neg, 'haben')
             for split_pos, split_neg in zip_longest(rows_pos, rows_neg, fillvalue=_filler)
         ]
-        items = {'total': total_pos + total_neg,
-                 'rows': rows}
     else:
-        total, rows = rows_from_query(query, ordering, offset, limit)
-        items = {'total': total, 'rows': rows}
+        query = build_this_query()
+        rows = rows_from_query(query)
+
+    items = {'total': total, 'rows': rows}
 
     return jsonify(
         name=account.name,

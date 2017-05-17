@@ -48,6 +48,8 @@ class FinanceTable(BootstrapTable):
             'data-row-style': 'financeRowFormatter',
             'data-side-pagination': 'server',
             # 'data-search': 'true',
+            'data-sort-order': 'desc',
+            'data-sort-name': 'valid_on',
         }
         original_table_args = kw.pop('table_args', {})
         table_args.update(original_table_args)
@@ -64,6 +66,7 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
         splits = (('soll', "Soll"), ('haben', "Haben"))
         table_args = {
             'data-row-style': False,
+            'data-sort-name': False,  # the "valid_on" col doesn't exist here
         }
         table_args.update(kw.pop('table_args', {}))
         super().__init__(*a, splits=splits, table_args=table_args, **kw)
