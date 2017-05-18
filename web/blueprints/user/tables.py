@@ -1,3 +1,6 @@
+from flask import url_for
+from wtforms.widgets.core import html_params
+
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
 
 
@@ -43,7 +46,13 @@ class HostTable(BootstrapTable):
 
 
 class FinanceTable(BootstrapTable):
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, user_id=None, **kw):
+        """Init
+
+        :param int user_id: An optional user_id.  If set, this causes
+            a “details” button to be rendered in the toolbar
+            referencing the user.
+        """
         table_args = {
             'data-row-style': 'financeRowFormatter',
             'data-side-pagination': 'server',
@@ -59,6 +68,24 @@ class FinanceTable(BootstrapTable):
             Column(name='description', title='Beschreibung', formatter='linkFormatter'),
             Column(name='amount', title='Wert'),
         ], table_args=table_args, **kw)
+        self.user_id = user_id
+
+    def generate_toolbar(self):
+        """Generate a toolbar with a details button
+
+        If a user_id was passed in the constructor, this renders a
+        “details” button reaching the finance overview of the user's account.
+        """
+        if self.user_id is None:
+            return
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for("user.user_account", user_id=self.user_id)
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-stats\"></span>"
+        yield "Details"
+        yield "</a>"
 
 
 class FinanceTableSplitted(FinanceTable, SplittedTable):

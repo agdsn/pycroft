@@ -157,11 +157,15 @@ def user_show(user_id):
         ),
         host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
         finance_table_regular=FinanceTable(
-            data_url=url_for("finance.accounts_show_json", account_id=user.account_id)
+            data_url=url_for("finance.accounts_show_json", account_id=user.account_id),
+            user_id=user.id,
+            table_args={'data-page-size': 5},
         ),
         finance_table_splitted=FinanceTableSplitted(
             data_url=url_for("finance.accounts_show_json", account_id=user.account_id,
-                             splitted=True)
+                             splitted=True),
+            user_id=user.id,
+            table_args={'data-page-size': 5},
         ),
         room=room,
         form=form,

@@ -48,6 +48,14 @@ class BootstrapTable:
         yield "</tr>"
         yield "</thead>"
 
+    def generate_toolbar(self):
+        """An empty generator.
+
+        Used to generate the HTML contents of the toolbar.
+        """
+        return
+        yield  # noqa
+
     def render(self, table_id):
         # NB: in html_args, setting an argument to `False` makes it
         # disappear.
@@ -56,7 +64,9 @@ class BootstrapTable:
         toolbar_args = html_params(id="{}-toolbar".format(table_id),
                                    class_="table table_striped",
                                    role="toolbar")
-        html.append("<div {}></div>".format(toolbar_args))
+        html.append("<div {}>".format(toolbar_args))
+        html += list(self.generate_toolbar())
+        html.append("</div>")
 
         table_args = self.table_args
         table_args.update({

@@ -6,7 +6,3 @@
 {% set inverted = true %}
 
 {% include "finance/_transaction_table.html" with context %}
-
-<p>
-    <a class="btn btn-primary" href="{{ url_for("user.user_account", user_id=user.id) }}">Detaillierte Ansicht</a>
-</p>
