@@ -2,10 +2,11 @@ from jinja2 import Markup
 from wtforms.widgets.core import html_params
 
 class Column:
-    def __init__(self, name, title, formatter=None, width=0):
+    def __init__(self, name, title, formatter=None, width=0, cell_style=None):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
+        self.cell_style = cell_style if cell_style is not None else False
         self.width = width
 
     def build_col_args(self, **kwargs):
@@ -14,6 +15,7 @@ class Column:
             'data-sortable': "true",
             'data-field': self.name,
             'data-formatter': self.formatter,
+            'data-cell-style': self.cell_style,
         }
         html_args.update(kwargs)
         return html_params(**html_args)

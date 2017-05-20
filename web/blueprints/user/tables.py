@@ -54,7 +54,6 @@ class FinanceTable(BootstrapTable):
             referencing the user.
         """
         table_args = {
-            'data-row-style': 'financeRowFormatter',
             'data-side-pagination': 'server',
             # 'data-search': 'true',
             'data-sort-order': 'desc',
@@ -66,7 +65,8 @@ class FinanceTable(BootstrapTable):
             Column(name='posted_at', title='Erstellt um'),
             Column(name='valid_on', title='Gültig am'),
             Column(name='description', title='Beschreibung', formatter='linkFormatter'),
-            Column(name='amount', title='Wert'),
+            Column(name='amount', title='Wert', formatter='coloredFormatter',
+                   cell_style='tdRelativeCellStyle'),
         ], table_args=table_args, **kw)
         self.user_id = user_id
 

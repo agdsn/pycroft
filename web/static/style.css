@@ -160,6 +160,25 @@ td.grow {
     text-decoration: none;
 }
 
+/* The right stripe (mostly used in the finance tables) */
+.table-stripe-right {
+    position: absolute;
+    width: 10px;
+    height: 100%;
+    top: 0;
+    right: 0;
+    margin-right: 1px;
+    border-radius: 2px;
+}
+
+.table-stripe-right.positive {
+    background-color: hsl(128, 66%, 53%);
+}
+
+.table-stripe-right.negative {
+    background-color: hsl(0, 66%, 53%);
+}
+
 .sort {
     cursor: pointer;
 }

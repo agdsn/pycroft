@@ -30,6 +30,42 @@ var multiGlyphBtnTemplate = _.template(
     '</a>'
 );
 
+/**
+ * Using the `coloredFormatter` on a column requires
+ * `data-cell-style="tdRelativeCellStyle"` so the color stripe will be
+ * positioned correctly!
+ *
+ * @param value - the JSON content of the current cell. It should be
+ * of the format `{'value': "3,50€", "is_positive": true}`
+ */
+function coloredFormatter(value, row, index) {
+    if (!value) {return}
+
+    if (value['is_positive']) {
+        class_name = 'positive';
+    } else {
+        class_name = 'negative';
+    }
+
+    result = ''
+    result += value['value']
+    result += '<span class="table-stripe-right '+class_name+'"></span>'
+    return result
+}
+
+/**
+ * This function makes the td `relative` and shifts it to `z-index:
+ * -1`to compensate the border that would be hidden otherwise.  It can
+ * be applied to a col (`<th>`) via the `data-cell-style` attribute.
+ *
+ * The parameters are not used.
+ */
+function tdRelativeCellStyle(value, row, index, field) {
+    return {
+        css: {"position": "relative", "z-index": "-1"}
+    };
+}
+
 function linkFormatter(value, row, index) {
     if (!value) {return}
     return linkTemplate({'href': value['href'], 'title': value['title']})
