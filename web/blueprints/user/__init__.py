@@ -44,8 +44,8 @@ from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry, test_hades_logs
-from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable, \
-    FinanceTable, FinanceTableSplitted
+from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
+from ..finance.tables import FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, ['user_show'])

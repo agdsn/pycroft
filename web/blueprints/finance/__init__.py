@@ -32,6 +32,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, SemesterCreateForm, TransactionCreateForm)
+from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -226,6 +227,10 @@ def accounts_show(account_id):
     else:
         typed_splits = None
 
+    _table_kwargs = {
+        'data_url': url_for("finance.accounts_show_json", account_id=account_id),
+    }
+
     page_resources.link_script(
         url_for("static", filename="libs/d3/d3.min.js"))
     return render_template(
@@ -234,6 +239,8 @@ def accounts_show(account_id):
         json_url=url_for('.accounts_show_json', account_id=account_id),
         balance_json_url=url_for('.balance_json', account_id=account_id),
         typed_splits=typed_splits,
+        finance_table_regular=FinanceTable(**_table_kwargs),
+        finance_table_splitted=FinanceTableSplitted(**_table_kwargs),
         footer=[{'title': 'Saldo', 'colspan': 3},
                 {'title': money_filter(account.balance)}]
     )
