@@ -142,6 +142,12 @@ def user_show(user_id):
 
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
+    _finance_table_kwargs = {
+        'data_url': url_for("finance.accounts_show_json", account_id=user.account_id),
+        'user_id': user.id,
+        'table_args': {'data-page-size': 5},
+        'inverted': True,
+    }
 
     return render_template(
         'user/user_show.html',
@@ -156,17 +162,8 @@ def user_show(user_id):
             data_url=_membership_endpoint(group_filter="active")
         ),
         host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
-        finance_table_regular=FinanceTable(
-            data_url=url_for("finance.accounts_show_json", account_id=user.account_id),
-            user_id=user.id,
-            table_args={'data-page-size': 5},
-        ),
-        finance_table_splitted=FinanceTableSplitted(
-            data_url=url_for("finance.accounts_show_json", account_id=user.account_id,
-                             splitted=True),
-            user_id=user.id,
-            table_args={'data-page-size': 5},
-        ),
+        finance_table_regular=FinanceTable(**_finance_table_kwargs),
+        finance_table_splitted=FinanceTableSplitted(**_finance_table_kwargs),
         room=room,
         form=form,
         memberships=memberships.all(),

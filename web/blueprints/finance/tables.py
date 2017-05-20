@@ -1,16 +1,35 @@
+from urllib.parse import urlparse, urlunparse, urlencode, parse_qsl
+
 from flask import url_for
 from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
 
 
+def enforce_url_params(url, params):
+    """Safely enforce query values in an url
+
+    :param str url: The url to patch
+    :param dict params: The parameters to enforce in the URL query
+        part
+    """
+    # we need to use a list because of mutability
+    url_parts = list(urlparse(url))
+    query_parts = dict(parse_qsl(url_parts[4]))
+    query_parts.update(params)
+    url_parts[4] = urlencode(query_parts)
+    return urlunparse(url_parts)
+
+
 class FinanceTable(BootstrapTable):
-    def __init__(self, *a, user_id=None, **kw):
+    def __init__(self, *a, user_id=None, inverted=False, **kw):
         """Init
 
         :param int user_id: An optional user_id.  If set, this causes
             a “details” button to be rendered in the toolbar
             referencing the user.
+        :param bool inverted: An optional switch adding
+            `style=inverted` to the given `data_url`
         """
         table_args = {
             'data-side-pagination': 'server',
@@ -20,6 +39,11 @@ class FinanceTable(BootstrapTable):
         }
         original_table_args = kw.pop('table_args', {})
         table_args.update(original_table_args)
+
+        if 'data_url' in kw and inverted:
+            kw['data_url'] = enforce_url_params(kw['data_url'],
+                                                params={'style': 'inverted'})
+
         super().__init__(*a, columns=[
             Column(name='posted_at', title='Erstellt um'),
             Column(name='valid_on', title='Gültig am'),
@@ -55,4 +79,7 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
             'data-sort-name': False,  # the "valid_on" col doesn't exist here
         }
         table_args.update(kw.pop('table_args', {}))
+        if 'data_url' in kw:
+            kw['data_url'] = enforce_url_params(kw['data_url'],
+                                                params={'splitted': True})
         super().__init__(*a, splits=splits, table_args=table_args, **kw)

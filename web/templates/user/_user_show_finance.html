@@ -3,6 +3,9 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% set inverted = true %}
+
+<div class="box box-info">
+    <strong>Hinweis:</strong> Die Transaktionen werden hier <em>invers</em> dargestellt, d.h. positive Werte werden rot markiert.  Da Nutzerkonten bei uns Forderungen an den Nutzer abbilden, sind zB Beitragsbuchungen im Allgemeinen <em>positiv</em>.
+</div>
 
 {% include "finance/_transaction_table.html" with context %}

@@ -199,3 +199,15 @@ em.dotted{
 input.money-amount {
     text-align: right;
 }
+
+.box {
+    padding: 20px;
+    margin: 20px 0px;
+    border: 1px solid #eee;
+    border-left-width: 8px;
+    border-radius: 3px;
+}
+
+.box-info {
+    border-left-color: #1b809e;
+}
