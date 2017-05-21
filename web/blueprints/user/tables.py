@@ -5,7 +5,21 @@ from wtforms.widgets.core import html_params
 from web.blueprints.helpers.table import BootstrapTable, Column
 
 
-class LogTableExtended(BootstrapTable):
+class RefreshableTableMixin:
+    """A mixin class showing the refresh button by default.
+
+    In :py:meth:`__init__`s ``table_args`` argument, a default of
+    ``{'data-show-refresh': "true"}`` is established.
+    """
+    def __init__(self, *a, **kw):
+        table_args = kw.pop('table_args', {})
+        table_args.setdefault('data-show-refresh', "true")
+        kw['table_args'] = table_args
+        super().__init__(*a, **kw)
+
+
+class LogTableExtended(RefreshableTableMixin, BootstrapTable):
+    """A table for displaying logs, with a ``type`` column"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             Column('created_at', 'Erstellt um', width=2),
@@ -15,7 +29,8 @@ class LogTableExtended(BootstrapTable):
         ], **kw)
 
 
-class LogTableSpecific(BootstrapTable):
+class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
+    """A table for displaying logs"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             # specific tables don't need the `type`
@@ -26,6 +41,11 @@ class LogTableSpecific(BootstrapTable):
 
 
 class MembershipTable(BootstrapTable):
+    """A table for displaying memberships
+
+    In the toolbar, a “new membership” button is inserted if the
+    :py:obj:`current_user` has the ``add_membership`` property.
+    """
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
             Column('group_name', 'Gruppe'),
@@ -51,6 +71,10 @@ class MembershipTable(BootstrapTable):
 
 
 class HostTable(BootstrapTable):
+    """A table for displaying hosts
+
+    It has a “change_mac” column.
+    """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             Column('ip', 'IP-Adresse'),

@@ -2,6 +2,32 @@ from jinja2 import Markup
 from wtforms.widgets.core import html_params
 
 class Column:
+    """A class representing a bootstrap-table column
+
+    This class bundles all the attributes commonly needed to represent
+    a table column as used in a bootstrap-table.  It defines a method
+    :py:meth:`build_col_args` for building the args needed in the
+    corresponding ``<td>`` element for the table header.
+
+    For documentation concerning bootstrap-tables in general, see
+    http://bootstrap-table.wenzhixin.net.cn/documentation/
+
+    :param name: The name of the column.  This must coincide with the
+        key given in the JSON endpoint's response, e.g. if this
+        column's name is ``user_id``, the response JSON has to be of
+        the form ``{"items": [{"user_id": value, …}, …]}``.
+    :param title: The title to be displayed in the column header.
+    :param formatter: An optional formatter to use.  The referenced
+        value must be available as a javascript function for the
+        column's value parsing to work properly.  See the
+        ``data-formatter`` attribute in the bootstrap-table docs for
+        details.
+    :param width: An optional width, being translated to the
+        ``col-sm-{width}`` bootstrap class.
+    :param cell_style: Similar to :param:`formatter`, an optional
+        javascript function's name to be passed to
+        ``data-cell-style``.
+    """
     def __init__(self, name, title, formatter=None, width=0, cell_style=None):
         self.name = name
         self.title = title
@@ -10,6 +36,15 @@ class Column:
         self.width = width
 
     def build_col_args(self, **kwargs):
+        """Build th html-style attribute string for this column.
+
+        This string can be used to add this column to a table in the
+        header: ``"<td {}></td>".format(col.build_col_args())``.
+        Attributes are utilized as described in :meth:`__init__`.
+
+        :param kwargs: Keyword arguments which are merged into the
+            dict of html attributes.
+        """
         html_args = {
             'class': "col-sm-{}".format(self.width) if self.width else False,
             'data-sortable': "true",
@@ -20,8 +55,36 @@ class Column:
         html_args.update(kwargs)
         return html_params(**html_args)
 
+    def render(self):
+        """Render this column as a ``<th>`` html tag.
+
+        This uses the arguments provided by :meth:`build_col_args` and
+        the :attr:`title` for the inner HTML.
+        """
+        return "<th {}>{}</th>".format(self.build_col_args(), self.title)
+
+    __str__ = render
+    __html__ = render
+
 
 class BootstrapTable:
+    """An extendable, HTML-renderable bootstrap-table
+
+    The table's HTML can be rendered using :meth:`render`.  NB:
+    :meth:`__str__` and :meth:`__html__` are NOT provided, since
+    :meth:`render` expects an obligatory `table_id`!
+
+    :param columns: A list of :py:cls:`Column` objects defining the
+        columns.
+    :param data_url: The URL to be used as a JSON endpoint.  The JSON
+        endpoint must provide the table data in the scheme defaulting
+        to ``{"rows": [], "total": …}``.  In this instance, a custom
+        response handler is used, which accesses the table contents on
+        the sub-key ``items``: ``{"items": {"rows": …, "total": …}}``.
+        The endpoint should also support the parameters limit, offset,
+        search, sort, order to make server-side pagination work.
+    :param table_args: Additional things to be passed to table_args.
+    """
     def __init__(self, columns, data_url, table_args=None):
         self.columns = columns
         self.data_url = data_url
@@ -29,6 +92,7 @@ class BootstrapTable:
         self._init_table_args()
 
     def _init_table_args(self):
+        """Set the defaults of :py:attr:`table_args`"""
         default_args = {
             'class': "table table-striped",
             'data-page-size': 20,
@@ -43,10 +107,14 @@ class BootstrapTable:
             self.table_args.setdefault(key, val)
 
     def generate_table_header(self):
+        """Generate the table header from :py:attr:`columns`.
+
+        :rtype: generator
+        """
         yield "<thead>"
         yield "<tr>"
         for col in self.columns:
-            yield "<th {}>{}</th>".format(col.build_col_args(), col.title)
+            yield str(col)
         yield "</tr>"
         yield "</thead>"
 
@@ -54,7 +122,9 @@ class BootstrapTable:
     def generate_toolbar():
         """Return an empty iterator.
 
-        Used to generate the HTML contents of the toolbar.
+        Used to generate the inner HTML contents of the toolbar.
+
+        :rtype: iterator
         """
         return iter(())
 
@@ -62,12 +132,16 @@ class BootstrapTable:
     def generate_table_footer():
         """Return an empty iterator.
 
-        Used to generate the HTML contents of the footer.  Must yield
-        the ``<tfoot>`` tag as well.
+        Used to generate the outer HTML contents of the footer.  Must
+        yield the ``<tfoot>`` tag as well.
+
+        :rtype: iterator
         """
         return iter(())
 
     def render(self, table_id):
+        """Render the table
+        """
         # NB: in html_args, setting an argument to `False` makes it
         # disappear.
         html = []
