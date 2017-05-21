@@ -218,15 +218,6 @@ def accounts_show(account_id):
         flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
               u" verbunden sind!", "warning")
 
-    #TODO: typed_splits/account form does not (yet) use server-side pagination,
-    # which leads to timeouts on large accounts. So here is a workaround
-    # which disables account form for accounts with more than 100 transactions
-
-    if finance.Split.q.filter_by(account=account).count() < 100:
-        typed_splits = get_typed_splits(account.splits)
-    else:
-        typed_splits = None
-
     _table_kwargs = {
         'data_url': url_for("finance.accounts_show_json", account_id=account_id),
         'saldo': account.balance,
@@ -237,13 +228,9 @@ def accounts_show(account_id):
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
-        json_url=url_for('.accounts_show_json', account_id=account_id),
         balance_json_url=url_for('.balance_json', account_id=account_id),
-        typed_splits=typed_splits,
         finance_table_regular=FinanceTable(**_table_kwargs),
         finance_table_splitted=FinanceTableSplitted(**_table_kwargs),
-        footer=[{'title': 'Saldo', 'colspan': 3},
-                {'title': money_filter(account.balance)}]
     )
 
 

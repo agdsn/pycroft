@@ -3,38 +3,6 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% import "macros/table.html" as tbl %}
-{% set cols = [
-    {'name': 'posted_at', 'title': 'Erstellt um'},
-    {'name': 'valid_on', 'title': 'Gültig am'},
-    {'name': 'description', 'title': 'Beschreibung',
-    'formatter': 'linkFormatter'},
-    {'name': 'amount', 'title': 'Wert'}
-] %}
-
-{% if not inverted is defined %}
-  {% set inverted = False %}
-{% elif inverted %}
-  {% set json_url = json_url + "?style=inverted" %}
-{% endif %}
-
-{% macro render_column_headings() -%}
-    <th>Erstellt um</th>
-    <th>Gültig am</th>
-    <th>Beschreibung</th>
-    <th>Wert</th>
-{%- endmacro %}
-
-{% macro render_split(split, cell_class=None, absolute=false) %}
-    {% if split -%}
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.posted_at|datetime }}</td>
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.transaction.valid_on|date }}</td>
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}><a href="{{ url_for("finance.transactions_show", transaction_id=split.transaction_id) }}">{{ split.transaction.description }}</a></td>
-    <td{% if cell_class %} class="{{ cell_class }}"{% endif %}>{{ split.amount|abs|money if absolute else split.amount|money }}</td>
-    {%- else -%}
-    <td colspan="4"></td>
-    {%- endif %}
-{% endmacro %}
 
 <ul class="nav nav-tabs">
     <li class="active"><a href="#report-form" data-toggle="tab">Kontenform</a></li>
@@ -42,60 +10,9 @@
 </ul>
 <div class="tab-content">
     <div id="report-form"  class="tab-pane active">
-        {% if finance_table_regular is defined %}
-            {{ finance_table_regular.render("report") }}
-        {% else %}
-        {{ tbl.item_table(
-            'report',
-            json_url,
-            cols,
-            footer,
-            'financeRowFormatter',
-            True,
-            "desc")
-        }}
-        {% endif %}
+        {{ finance_table_regular.render("report") }}
     </div>
-    {% if finance_table_splitted is defined %}
-        <div id="account-form" class="tab-pane">
-            {{ finance_table_splitted.render("splitted") }}
-        </div>
-    {% else %}
-
-    {% if typed_splits is not none %}<div id="account-form" class="tab-pane">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th colspan="4" class="col-xs-6 text-center nosort">Soll</th>
-                    <th colspan="4" class="col-xs-6 text-center nosort">Haben</th>
-                </tr>
-                <tr>
-                    {% for ignore in range(2) -%}
-                    {{ render_column_headings() }}
-                    {%- endfor %}
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <td colspan="7" class="text-right">Saldo</td>
-                    <td colspan="1">{{ balance|money }}</td>
-                </tr>
-            </tfoot>
-            <tbody>
-                {% for debit_split, credit_split in typed_splits %}
-                <tr>
-                    {{ render_split(debit_split, "danger" if inverted else "success", true) }}
-                    {{ render_split(credit_split, "success" if inverted else "danger", true) }}
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="8" class="info text-center">
-                        Keine Buchungen vorhanden.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>{% endif %}
-    {% endif %}
+    <div id="account-form" class="tab-pane">
+        {{ finance_table_splitted.render("splitted") }}
+    </div>
 </div>
