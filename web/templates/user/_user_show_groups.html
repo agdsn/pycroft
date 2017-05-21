@@ -16,8 +16,3 @@
         {{ membership_table_all.render("memberships")}}
     </div>
 </div>
-{% if current_user is privileged_for('groups_change_membership') -%}
-<p>
-    <a class="btn btn-primary" href="{{ url_for(".add_membership", user_id=user.id) }}">Gruppenmitgliedschaft hinzufügen</a>
-</p>
-{%- endif %}

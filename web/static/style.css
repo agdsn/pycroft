@@ -135,6 +135,16 @@ section > .body {
     background-color: whiteSmoke;
 }
 
+footer.footer{
+    margin-top: 4em;
+    padding: 9px 8px;
+    border-top: lightgrey 1px solid;
+    border-radius: 7px 7px 0 0;
+    color: grey;
+    /* Same as the <tr> stripes */
+    background-color: hsl(0, 0%, 96%);
+}
+
 td.shrink {
     white-space: nowrap;
 }

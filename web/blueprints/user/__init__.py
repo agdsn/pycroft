@@ -158,9 +158,13 @@ def user_show(user_id):
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
         log_table_hades=LogTableSpecific(data_url=_log_endpoint(logtype="hades")),
-        membership_table_all=MembershipTable(data_url=_membership_endpoint()),
+        membership_table_all=MembershipTable(
+            user_id=user.id,
+            data_url=_membership_endpoint(),
+        ),
         membership_table_active=MembershipTable(
-            data_url=_membership_endpoint(group_filter="active")
+            user_id=user.id,
+            data_url=_membership_endpoint(group_filter="active"),
         ),
         host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
         finance_table_regular=FinanceTable(**_finance_table_kwargs),
