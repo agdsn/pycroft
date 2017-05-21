@@ -2,7 +2,7 @@ from flask import url_for
 from flask_login import current_user
 from wtforms.widgets.core import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
+from web.blueprints.helpers.table import BootstrapTable, Column
 
 
 class LogTableExtended(BootstrapTable):
