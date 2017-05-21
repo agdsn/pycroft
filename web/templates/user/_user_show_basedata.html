@@ -52,6 +52,15 @@
                     <strong class="text-danger">Nein</strong>
                 {% endif %}
             {% endcall %}{% endfor %}
+
+            {% call info_row("Saldo") %}
+                {% if balance <= 0 %}
+                    {% set balance_class="text-success" %}
+                {% else %}
+                    {% set balance_class="text-danger" %}
+                {% endif %}
+                <strong class="{{ balance_class }}">{{ balance | money }}</strong>
+            {% endcall %}
         </dl>
     </div>
     {% if current_user is privileged_for('user_change') %}

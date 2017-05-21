@@ -4,6 +4,7 @@ from flask import url_for
 from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
+from web.template_filters import money_filter
 
 
 def enforce_url_params(url, params):
@@ -22,7 +23,7 @@ def enforce_url_params(url, params):
 
 
 class FinanceTable(BootstrapTable):
-    def __init__(self, *a, user_id=None, inverted=False, **kw):
+    def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
         """Init
 
         :param int user_id: An optional user_id.  If set, this causes
@@ -51,6 +52,7 @@ class FinanceTable(BootstrapTable):
             Column(name='amount', title='Wert', formatter='coloredFormatter',
                    cell_style='tdRelativeCellStyle'),
         ], table_args=table_args, **kw)
+        self.saldo = saldo
         self.user_id = user_id
 
     def generate_toolbar(self):
@@ -70,6 +72,22 @@ class FinanceTable(BootstrapTable):
         yield "Details"
         yield "</a>"
 
+    def generate_table_footer(self, offset=3):
+        yield "<tfoot>"
+        yield "<tr>"
+
+        yield "<td colspan=\"{}\" class=\"text-right\">".format(offset)
+        yield "<strong>Saldo:</strong>"
+        yield "</td>"
+
+        yield "<td>"
+        yield "{}".format(money_filter(self.saldo)
+                          if self.saldo is not None else "-")
+        yield "</td>"
+
+        yield "</tr>"
+        yield "</tfoot>"
+
 
 class FinanceTableSplitted(FinanceTable, SplittedTable):
     def __init__(self, *a, **kw):
@@ -83,3 +101,6 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
             kw['data_url'] = enforce_url_params(kw['data_url'],
                                                 params={'splitted': True})
         super().__init__(*a, splits=splits, table_args=table_args, **kw)
+
+    def generate_table_footer(self, offset=7):
+        return super().generate_table_footer(offset=offset)

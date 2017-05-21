@@ -55,6 +55,8 @@
             </a>
         </dd>
         {% endif %}
+        <dt>Saldo</dt>
+        <dd>{{ balance | money }}</dd>
     </dl>
     <div id="balance-graph"></div>
     {% include "finance/_transaction_table.html" with context %}

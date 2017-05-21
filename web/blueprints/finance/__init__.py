@@ -229,6 +229,7 @@ def accounts_show(account_id):
 
     _table_kwargs = {
         'data_url': url_for("finance.accounts_show_json", account_id=account_id),
+        'saldo': account.balance,
     }
 
     page_resources.link_script(

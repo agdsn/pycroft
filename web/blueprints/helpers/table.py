@@ -50,13 +50,22 @@ class BootstrapTable:
         yield "</tr>"
         yield "</thead>"
 
-    def generate_toolbar(self):
-        """An empty generator.
+    @staticmethod
+    def generate_toolbar():
+        """Return an empty iterator.
 
         Used to generate the HTML contents of the toolbar.
         """
-        return
-        yield  # noqa
+        return iter(())
+
+    @staticmethod
+    def generate_table_footer():
+        """Return an empty iterator.
+
+        Used to generate the HTML contents of the footer.  Must yield
+        the ``<tfoot>`` tag as well.
+        """
+        return iter(())
 
     def render(self, table_id):
         # NB: in html_args, setting an argument to `False` makes it
@@ -78,6 +87,7 @@ class BootstrapTable:
 
         html.append("<table {}>".format(html_params(**table_args)))
         html += list(self.generate_table_header())
+        html += list(self.generate_table_footer())
         html.append("</table>")
 
         return Markup("\n".join(html))

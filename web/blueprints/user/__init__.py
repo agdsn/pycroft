@@ -139,7 +139,7 @@ def user_show(user_id):
         or_(Membership.ends_at == None,
             Membership.ends_at > functions.utcnow())
     )
-
+    balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
     _finance_table_kwargs = {
@@ -147,12 +147,13 @@ def user_show(user_id):
         'user_id': user.id,
         'table_args': {'data-page-size': 5},
         'inverted': True,
+        'saldo': balance,
     }
 
     return render_template(
         'user/user_show.html',
         user=user,
-        balance=user.account.balance,
+        balance=balance,
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
