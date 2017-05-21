@@ -5,6 +5,11 @@
 #}
 {% import "macros/forms.html" as forms %}
 
+<div class="box">
+Kurzlink zum Raum:
+<a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
+</div>
+
 <ul class="nav nav-tabs">
     <li class="active"><a href="#log-entries-all" data-toggle="tab">Alle</a></li>
     <li><a href="#log-entries-user" data-toggle="tab">Nutzer</a></li>
