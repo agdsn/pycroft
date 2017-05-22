@@ -24,7 +24,7 @@ before_install:
   - "docker images -a"
 
 # skip the builtin pip install
-install: true
+install:
   - $DOCKER_COMPOSE build
   - "docker images -a"
 
