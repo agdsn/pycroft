@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from web.blueprints.helpers.table import Column
+from web.blueprints.helpers.table import Column, BootstrapTable
 
 class ColumnTestCase(TestCase):
     def test_init_requires_args(self):
@@ -13,6 +13,7 @@ class ColumnTestCase(TestCase):
         self.assertEqual(c.title, "Test Column")
         self.assertEqual(c.width, 0)
         self.assertEqual(c.cell_style, False)
+        self.assertEqual(repr(c), "<Column 'test_col' title='Test Column'>")
 
 class InstantiatedColumnTestCase(TestCase):
     def setUp(self):
@@ -39,3 +40,16 @@ class CustomizedColumnTestCase(TestCase):
                               width=3, cell_style="customCellStyle"))
         self.assertIn('data-cell-style="customCellStyle"', rendered)
         self.assertIn('class="col-sm-3"', rendered)
+
+
+class BootstrapTableTestCase(TestCase):
+    def test_init_requires_args(self):
+        with self.assertRaises(TypeError):
+            BootstrapTable()  # pylint: disable=no-value-for-parameter
+
+
+    def test_minimal_instantiation(self):
+        t = BootstrapTable(columns=[], data_url="http://foobar")
+        self.assertEqual(t.columns, [])
+        self.assertEqual(t.data_url, "http://foobar")
+        self.assertEqual(repr(t), "<BootstrapTable cols=0 data_url='http://foobar'>")

@@ -35,6 +35,13 @@ class Column:
         self.cell_style = cell_style if cell_style is not None else False
         self.width = width
 
+    def __repr__(self):
+        return "<{cls} {name!r} title={title!r}>".format(
+            cls=type(self).__name__,
+            name=self.name,
+            title=self.title,
+        )
+
     def build_col_args(self, **kwargs):
         """Build th html-style attribute string for this column.
 
@@ -90,6 +97,13 @@ class BootstrapTable:
         self.data_url = data_url
         self.table_args = table_args if table_args is not None else {}
         self._init_table_args()
+
+    def __repr__(self):
+        return "<{cls} cols={numcols} data_url={data_url!r}>".format(
+            cls=type(self).__name__,
+            numcols=len(self.columns),
+            data_url=self.data_url,
+        )
 
     def _init_table_args(self):
         """Set the defaults of :py:attr:`table_args`"""
