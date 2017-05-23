@@ -11,7 +11,9 @@
 <div class="row">
     <div class="col-sm-6 col-md-5 col-lg-4">
         <dl class="dl-horizontal">
-            {% call info_row("ID") %}{{ user.id }}{% endcall %}
+            {% call info_row("ID") %}
+                {{ user_id_new }} <em class="text-muted">{{ user_id_old }}</em>
+            {% endcall %}
 
             {% call info_row("Name") %}
                 {% if current_user is privileged_for('user_change') %}

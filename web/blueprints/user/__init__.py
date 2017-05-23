@@ -22,7 +22,7 @@ from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
-from pycroft.lib.user import make_member_of
+from pycroft.lib.user import make_member_of, encode_type1_user_id, encode_type2_user_id
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
@@ -153,6 +153,8 @@ def user_show(user_id):
     return render_template(
         'user/user_show.html',
         user=user,
+        user_id_new=encode_type2_user_id(user.id),
+        user_id_old=encode_type1_user_id(user.id),
         balance=balance,
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
