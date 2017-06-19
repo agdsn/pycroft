@@ -26,6 +26,8 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import datetime_filter
+from sqlalchemy.sql.expression import func
+from sqlalchemy.dialects import postgresql
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, ['facilities_show'])
@@ -39,6 +41,36 @@ def root():
 @bp.route('/sites/')
 def overview():
     return render_template('facilities/site_overview.html')
+
+@bp.route('/overcrowded')
+@nav.navigate(u"Two users one room")
+def overcrowded():
+    return render_template("facilities/room_overcrowded.html")
+
+@bp.route('/overcrowded/json')
+def overcrowded_json():
+    query = session.session.query(User.room_id, func.array_agg(User.id), func.array_agg(User.name))\
+        .filter(User.room_id != None, User.has_property("network_access"))\
+        .group_by(User.room_id)\
+        .having(func.count(User.account_id) > 1)
+
+    rooms = query.all()
+    rooms.sort(key=lambda x: x[0])
+
+    return jsonify(
+        items=[{
+                   'room': {
+                       'title': room[0],
+                       'href': url_for("facilities.room_show",
+                                       room_id=room[0])
+                   },
+                   'users': [{
+                                 'title': room[2][i],
+                                 'href': url_for('user.user_show',
+                                                 user_id=room[1][i])
+                             } for i in range(len(room[1]))]
+               } for room in rooms],
+    )
 
 @bp.route('/sites/json')
 def overview_json():

@@ -1,0 +1,21 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+
+{% extends "layout.html" %}
+{% import "macros/table.html" as tbl %}
+
+{% set cols = [
+    {'name': 'room', 'title': 'Rooms', 'formatter': 'linkFormatter'},
+    {'name': 'users', 'title': 'Users', 'formatter': 'multiBtnFormatter'}]
+    %}
+
+{% block content %}
+    {{ tbl.item_table(
+        'rooms',
+        url_for('facilities.overcrowded_json'),
+        cols
+    ) }}
+{% endblock %}
