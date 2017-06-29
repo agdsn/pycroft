@@ -52,7 +52,7 @@ class Test_010_Building(FrontendDataTestBase):
                 self.building.id, self.room.level),
             "facilities/rooms.html")
 
-    def test_0090_overcrowded_rooms(self):
+    def test_overcrowded_rooms(self):
         self.assert_template_get_request(
             "/facilities/overcrowded",
             "facilities/room_overcrowded.html")
