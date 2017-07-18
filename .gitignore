@@ -7,6 +7,8 @@
 *.orig
 .idea/inspectionProfiles/Project_Default.xml
 .idea/inspectionProfiles/profiles_settings.xml
+.idea/dataSources/
+.idea/sqldialects.xml
 doc/_build
 .vagrant
 # Managed by bower
