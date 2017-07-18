@@ -16,6 +16,7 @@
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/server_run.py" />
     <option name="PARAMETERS" value="--debug --exposed" />
     <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
     <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="PythonRunner" />
     <ConfigurationWrapper RunnerId="PyDebugRunner" />
