@@ -2,10 +2,11 @@ version: '2'
 services:
   web:
     build:
-      context: .
+      context: ..
     image: pycroft  # tag of the built image
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
+    command: "python3 server_run.py --debug --exposed --profile"
   # testing variants of `web`
   web_testing:
     extends:
@@ -21,7 +22,7 @@ services:
       - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
   dummy_worker:  # a dummy worker mocking hades for testing the client
     build:
-      context: .
+      context: ..
     command: "sh -c 'cd helpers && celery -A dummy_celery_worker worker --loglevel=info'"
     environment:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/

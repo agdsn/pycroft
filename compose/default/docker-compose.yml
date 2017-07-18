@@ -2,10 +2,10 @@ version: '2'
 services:
   web:
     extends:
-      file: common-services.yml
+      file: ../common-services.yml
       service: web
     volumes:
-      - ./:/pycroft
+      - "../../:/pycroft"
     # A service being extended may have no links.
     links:
       - db:db
@@ -13,11 +13,11 @@ services:
       - 5001:5000
   db:
     extends:
-      file: common-services.yml
+      file: ../common-services.yml
       service: db
     volumes:
       - "pycroft_postgres:/var/lib/postgresql/data"
-      - "./:/pycroft"
+      - "../../:/pycroft"
 
 volumes:
   pycroft_postgres:
