@@ -22,6 +22,10 @@ import web
 def server_run(args):
     from web import make_app
 
+    print("If you're running in a docker setup, the port may differ"
+          " from what is given below."
+          " It is probably http://0.0.0.0:5001")
+
     app = make_app()
     @app.before_request
     def get_time():
