@@ -18,6 +18,8 @@ services:
     volumes:
       - "pycroft_postgres:/var/lib/postgresql/data"
       - "../../:/pycroft"
+    ports:
+      - 55432:5432
 
 volumes:
   pycroft_postgres:
