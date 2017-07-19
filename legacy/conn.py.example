@@ -38,7 +38,7 @@ _vagrant_conn_opts = {
 # You probably need to edit the things below
 
 # Switch between the vagrant or docker-compose setup
-USE_VAGRANT = True
+USE_VAGRANT = False
 
 # The options below are only necessary if you perform a manual cache.
 conn_opts = {
