@@ -4,10 +4,11 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% import "macros/forms.html" as forms %}
+{% import "macros/misc.html" as misc %}
 
 <div class="box">
-Kurzlink zum Raum:
-<a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
+    Kurzlinks:  Wohnort Mitglied: {{ misc.room_link(user.room) }} –
+    Standorte der Hosts: {% for room in hosts_rooms %}{{ misc.room_link(room) }}{% endfor %}
 </div>
 
 <ul class="nav nav-tabs">

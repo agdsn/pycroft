@@ -211,7 +211,7 @@ input.money-amount {
 }
 
 .box {
-    padding: 20px;
+    padding: 1em 2ex;
     margin: 20px 0px;
     border: 1px solid #eee;
     border-left-width: 8px;

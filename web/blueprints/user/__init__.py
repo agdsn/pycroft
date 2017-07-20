@@ -170,6 +170,7 @@ def user_show(user_id):
         user_id_new=encode_type2_user_id(user.id),
         user_id_old=encode_type1_user_id(user.id),
         balance=balance,
+        hosts_rooms={host.room for host in user.user_hosts},
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),

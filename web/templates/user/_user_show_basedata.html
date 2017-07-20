@@ -3,6 +3,7 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+{% import "macros/misc.html" as misc %}
 {%- macro info_row(name) %}
     <dt>{{ name }}</dt>
     <dd>{{ caller() }}</dd>
@@ -42,7 +43,7 @@
                     {% if user.has_property("away") %}
                     <a style="text-decoration: line-through;" href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
                     {% else %}
-                    <a href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">{{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }} <span class="glyphicon glyphicon-edit"></span></a>
+                    {{ misc.room_link(user.room) }}
                     {% endif %}
                 {% endcall %}
             {% endif %}
