@@ -20,3 +20,5 @@ nosetests.xml
 .pylintrc
 .coverage
 TAGS
+/schema.png
+/schema.svg
