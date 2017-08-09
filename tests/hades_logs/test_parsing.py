@@ -7,12 +7,13 @@ from hades_logs.parsing import RadiusLogEntry, parse_vlan, attrlist_to_dict, Par
 class UnauthTrafficEntryTestCase(TestCase):
     def setUp(self):
         super().setUp()
+        self.timestamp = 1501623826.391414
         self.raw_entry = [
             '00:de:ad:be:ef:00',
             'Access-Accept',
             ['traffic'],
             [['Egress-VLAN-Name', '"2hades-unauth"']],
-            1501623826.391414,
+            self.timestamp,
         ]
         self.entry = RadiusLogEntry(*self.raw_entry)
 
@@ -33,8 +34,17 @@ class UnauthTrafficEntryTestCase(TestCase):
     def test_groups(self):
         self.assertEqual(self.entry.groups, ['traffic'])
 
-    # TODO: test time
-    # TODO: test invalid Values pass the `ParsingError`
+    def test_timestamp_parsing_works(self):
+        self.assertAlmostEqual(self.entry.time.timestamp(), self.timestamp,
+                               places=3)
+
+    def test_invalid_vlan_name_raises(self):
+        invalid_entry = self.raw_entry.copy()
+        invalid_entry[3][0][1] = '3Invalid'
+        entry = RadiusLogEntry(*invalid_entry)
+        with self.assertRaises(ParsingError):
+            entry.vlans  # pylint: disable=pointless-statement
+
 
 class EffectiveEqualityTestCase(TestCase):
     def setUp(self):
