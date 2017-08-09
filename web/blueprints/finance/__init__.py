@@ -117,7 +117,7 @@ def bank_accounts_import():
         except finance.CSVImportError as e:
             session.rollback()
             message = u"Der CSV-Import ist fehlgeschlagen: {0}"
-            flash(message.format(e.message), "error")
+            flash(message.format(e), "error")
 
     return render_template('finance/bank_accounts_import.html', form=form)
 
