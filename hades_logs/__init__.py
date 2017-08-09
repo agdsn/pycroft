@@ -130,5 +130,22 @@ class HadesLogs:
             else:
                 raise
 
+from datetime import datetime
+test_hades_logs = [
+    ("Auth-Reject", "", "00:de:ad:be:ef:00", datetime(2017, 5, 20, 18, 25), None),
+    ("Auth-Access", "Wu5_untagged", "00:de:ad:be:ef:00", datetime(2017, 4, 20, 18, 20), 15),
+    ("Auth-Access", "unknown", "00:de:ad:be:ef:01", datetime(2017, 4, 20, 18, 5), 1001),
+    ("Auth-Access", "traffic", "00:de:ad:be:ef:00", datetime(2017, 4, 20, 18, 0), 1001),
+]
+
+class DummyHadesLogs(HadesLogs):
+    def init_app(self, app):
+        app.extensions['hades_logs'] = self
+
+    def create_task(self):
+        raise NotImplementedError
+
+    def fetch_logs(self, nasipaddress, nasportid, limit=100):
+        return test_hades_logs
 
 hades_logs = LocalProxy(lambda: current_app.extensions['hades_logs'])

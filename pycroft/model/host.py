@@ -135,6 +135,9 @@ class SwitchInterface(Interface):
     subnets = relationship('Subnet', secondary='switch_interface_association',
                            back_populates='switch_interfaces')
 
+    def __str__(self):
+        return "{} {}".format(self.host.name, self.name)
+
 
 class ServerInterface(Interface):
     id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),

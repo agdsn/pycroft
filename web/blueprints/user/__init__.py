@@ -17,6 +17,8 @@ from flask import (
     url_for)
 import operator
 from sqlalchemy import Text, and_
+
+from hades_logs import hades_logs
 from pycroft import lib, config
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
@@ -110,6 +112,17 @@ def infoflags(user):
     ]
 
 
+def get_user_hades_logs(user):
+    # TODO: look how good the performance is
+    for host in user.user_hosts:
+        for patch_port in host.room.switch_patch_ports:
+            interface = patch_port.switch_interface
+            nasportid = interface.name
+            nasipaddress = interface.host.management_ip
+            for logentry in hades_logs.fetch_logs(nasipaddress, nasportid):
+                yield interface, logentry
+
+
 @bp.route('/<int:user_id>/', methods=['GET', 'POST'])
 def user_show(user_id):
 
@@ -152,6 +165,7 @@ def user_show(user_id):
 
     return render_template(
         'user/user_show.html',
+        # Q: Can ports of a room point to different access switches?
         user=user,
         user_id_new=encode_type2_user_id(user.id),
         user_id_old=encode_type1_user_id(user.id),
@@ -201,11 +215,8 @@ def user_show_logs_json(user_id, logtype="all"):
         log_sources.append((format_user_log_entry(e) for e in user.log_entries))
     if logtype in ["room", "all"] and user.room:
         log_sources.append((format_room_log_entry(e) for e in user.room.log_entries))
-
-    # TODO: what's a good qualifier for a user to have radius logs?
-    # TODO: Use the actuall radius logs (→ Get nasipaddress, nasportid)
     if logtype in ["hades", "all"]:
-        log_sources.append((format_hades_log_entry(e) for e in test_hades_logs))
+        log_sources.append((format_hades_log_entry(e) for e in get_user_hades_logs(user)))
 
     return jsonify(items=list(sorted(chain(*log_sources),
                                      key=operator.itemgetter('raw_created_at'),

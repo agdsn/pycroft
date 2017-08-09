@@ -30,9 +30,13 @@ format_user_log_entry = partial(format_log_entry, log_type='user')
 format_room_log_entry = partial(format_log_entry, log_type='room')
 
 
-def _parse_hades_response(response):
+def _parse_hades_response(interface, response):
+    # TODO: Comply with the new response format
+    # TODO: Expect nasipaddress/nasportid as an information
+    # Perhaps we want to add ``SwitchInterface.__str__`` just as for ``Room``?
     auth_date = response[3]
-    msg_parts = ["Authentication of {mac} – ".format(mac=response[2])]
+    msg_parts = ["{port} – {mac} – ".format(port=interface,
+                                            mac=response[2])]
     if response[0].lower() == "auth-reject":
         msg_parts.append(
             "REJECTED – This should never happen!"
@@ -45,12 +49,13 @@ def _parse_hades_response(response):
         # - untagged: "Access granted (untagged)"
         # - traffic: "Denied (Traffic)"
         # - etc.
+        # how is this encoded in the response and/or group?
         msg_parts.append("Resulting group: {}".format(group))
     return auth_date, "".join(msg_parts)
 
 
 def format_hades_log_entry(response):
-    date, desc = _parse_hades_response(response)
+    date, desc = _parse_hades_response(*response)
     return {
         'created_at': datetime_filter(date),
         'raw_created_at': date,

@@ -45,4 +45,3 @@ def ptr_name(network, ip_address):
         reversed_chars = reversed(ip_address.exploded.replace(':', ''))
         return '.'.join(islice(reversed_chars, num_chars))
     raise TypeError()
-

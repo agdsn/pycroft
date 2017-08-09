@@ -3,6 +3,8 @@ from flask_login import current_user, current_app
 from flask_babel import Babel
 from jinja2 import StrictUndefined
 from werkzeug.datastructures import ImmutableDict
+
+from hades_logs import DummyHadesLogs
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
 from . import template_filters
@@ -43,6 +45,7 @@ def make_app():
     template_tests.register_checks(app)
 
     babel = Babel(app)
+    DummyHadesLogs(app)
 
     page_resources.init_app(app)
 

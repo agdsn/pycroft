@@ -201,3 +201,7 @@ class DDLManager(object):
             event.listen(target, 'after_create', create_ddl)
         for target, create_ddl, drop_ddl in reversed(self.objects):
             event.listen(target, 'before_drop', drop_ddl)
+
+
+# TODO: HERE is the location to add other views (radius, user for pmacct)
+# shreyder said „INSTEAD OF would be useful“ (but didn't say for what)
