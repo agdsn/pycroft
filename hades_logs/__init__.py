@@ -29,9 +29,15 @@ A minimal example configuration would look like this:
 > app.config['HADES_BROKER_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'
 > app.config['HADES_RESULT_BACKEND_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'\
 """
+class HadesError(Exception):
+    pass
 
 
-class HadesTimeout(TimeoutError):
+class HadesTimeout(TimeoutError, HadesError):
+    pass
+
+
+class HadesConfigError(RuntimeError, HadesError):
     pass
 
 
@@ -148,4 +154,11 @@ class DummyHadesLogs(HadesLogs):
     def fetch_logs(self, nasipaddress, nasportid, limit=100):
         return test_hades_logs
 
-hades_logs = LocalProxy(lambda: current_app.extensions['hades_logs'])
+
+def _get_extension():
+    try:
+        return current_app.extensions['hades_logs']
+    except KeyError:
+        raise HadesConfigError("No HadesLogs instance registered to current Flask app")
+
+hades_logs = LocalProxy(_get_extension)

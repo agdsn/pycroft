@@ -114,12 +114,17 @@ def infoflags(user):
 
 def get_user_hades_logs(user):
     # TODO: look how good the performance is
+    try:
+        log_fetcher = hades_logs.fetch_logs
+    except RuntimeError:
+        return
+
     for host in user.user_hosts:
         for patch_port in host.room.switch_patch_ports:
             interface = patch_port.switch_interface
             nasportid = interface.name
             nasipaddress = interface.host.management_ip
-            for logentry in hades_logs.fetch_logs(nasipaddress, nasportid):
+            for logentry in log_fetcher(nasipaddress, nasportid):
                 yield interface, logentry
 
 
