@@ -65,7 +65,10 @@ class RadiusLogEntry(_radius_log_entry):
         """Evaluates to :py:prop:`self.accepted`"""
         return self.accepted
 
-    def __eq__(self, other):
-        # TODO: treat the values of `attributes` as *set*-equal, so
-        # the order does not matterr!
-        raise NotImplementedError
+    def effectively_equal(self, other):
+        relevant_attributes = set(_radius_log_entry._fields) - {'timestamp'}
+        try:
+            return all(getattr(self, a) == getattr(other, a)
+                       for a in relevant_attributes)
+        except AttributeError:
+            return False
