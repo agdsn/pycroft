@@ -72,3 +72,27 @@ class RadiusLogEntry(_radius_log_entry):
                        for a in relevant_attributes)
         except AttributeError:
             return False
+
+
+def _eq(a, b):
+    return a == b
+
+
+def reduce_to_first_occurrence(iterable, comparator=_eq):
+    """Reduces equivalent blocks of an iterable to the first occurence
+
+    :param iterable: Any iterable of homogeneous type with respect to
+        the comparator
+    :param comparator: An equivalence relation.  Must be transitive,
+        because the comparison is always run against the first
+        representative of each equivalent block, not the actual
+        previous element.
+    """
+    iterator = iter(iterable)
+    previous = next(iterator)
+    yield previous
+
+    for element in iterator:
+        if not comparator(previous, element):
+            yield element
+            previous = element
