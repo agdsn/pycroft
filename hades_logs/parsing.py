@@ -1,5 +1,6 @@
 from collections import defaultdict, namedtuple
 from datetime import datetime
+from functools import partial
 
 _radius_log_entry = namedtuple(
     'RadiusLogEntry',
@@ -96,3 +97,7 @@ def reduce_to_first_occurrence(iterable, comparator=_eq):
         if not comparator(previous, element):
             yield element
             previous = element
+
+
+reduce_radius_logs = partial(reduce_to_first_occurrence,
+                             comparator=RadiusLogEntry.effectively_equal)

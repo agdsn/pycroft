@@ -12,6 +12,8 @@ from kombu.exceptions import OperationalError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
+from .parsing import RadiusLogEntry, reduce_radius_logs
+from .example import log_entries
 
 __all__ = [
     'HadesTimeout',
@@ -106,7 +108,7 @@ class HadesLogs:
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
-    def fetch_logs(self, nasipaddress, nasportid, limit=100):
+    def fetch_logs(self, nasipaddress, nasportid, limit=100, reduced=True):
         """Fetch the auth logs of the given port
 
         :param ipaddr nasipaddress: The IP address of the NAS
@@ -120,12 +122,18 @@ class HadesLogs:
             too long to be executed by a worker or when the broker is
             down.
         """
+        if reduced:
+            reductor = reduce_radius_logs
+        else:
+            def reductor(x):
+                return x
+
         task = self.create_task(name='get_port_auth_attempts',
                                 nasipaddress=nasipaddress, nasportid=nasportid,
                                 limit=limit)
 
         try:
-            return task.apply_async().wait(timeout=self.timeout)
+            return reductor(task.apply_async().wait(timeout=self.timeout))
         except CeleryTimeoutError as e:
             raise HadesTimeout("The Hades lookup task has timed out") from e
         except OperationalError as e:
@@ -136,13 +144,6 @@ class HadesLogs:
             else:
                 raise
 
-from datetime import datetime
-test_hades_logs = [
-    ("Auth-Reject", "", "00:de:ad:be:ef:00", datetime(2017, 5, 20, 18, 25), None),
-    ("Auth-Access", "Wu5_untagged", "00:de:ad:be:ef:00", datetime(2017, 4, 20, 18, 20), 15),
-    ("Auth-Access", "unknown", "00:de:ad:be:ef:01", datetime(2017, 4, 20, 18, 5), 1001),
-    ("Auth-Access", "traffic", "00:de:ad:be:ef:00", datetime(2017, 4, 20, 18, 0), 1001),
-]
 
 class DummyHadesLogs(HadesLogs):
     def init_app(self, app):
@@ -152,7 +153,7 @@ class DummyHadesLogs(HadesLogs):
         raise NotImplementedError
 
     def fetch_logs(self, nasipaddress, nasportid, limit=100):
-        return test_hades_logs
+        return reduce_radius_logs(RadiusLogEntry(*e) for e in log_entries)
 
 
 def _get_extension():
