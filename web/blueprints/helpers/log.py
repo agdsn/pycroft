@@ -6,6 +6,7 @@ from flask import url_for
 from pycroft.helpers.i18n import Message
 from web.template_filters import datetime_filter
 
+
 def format_log_entry(entry, log_type):
     """Format a logentry in correct json
 
