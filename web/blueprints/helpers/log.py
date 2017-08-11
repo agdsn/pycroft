@@ -30,32 +30,38 @@ format_user_log_entry = partial(format_log_entry, log_type='user')
 format_room_log_entry = partial(format_log_entry, log_type='room')
 
 
-def _parse_hades_response(interface, response):
-    # TODO: Comply with the new response format
-    # TODO: Expect nasipaddress/nasportid as an information
-    # Perhaps we want to add ``SwitchInterface.__str__`` just as for ``Room``?
-    auth_date = response[3]
-    msg_parts = ["{port} – {mac} – ".format(port=interface,
-                                            mac=response[2])]
-    if response[0].lower() == "auth-reject":
-        msg_parts.append(
-            "REJECTED – This should never happen!"
-            " Please contact a root of your choosing!"
-        )
+def radius_description(interface, entry):
+    """Build a readable log message from a radius log entry.
+
+    :param interface: Something whose string representation can be
+        used to inform about the port the radius log happened.  For
+        instance, this can be a :py:cls:`SwitchInterface` object
+        formatting itself to `switch-wu5-00 (D15)` or similar.
+    :param RadiusLogEntry entry: A :py:cls:`RadiusLogEntry` as
+        obtained from a :py:cls:`HadesLogs` lookup.
+    """
+    prefix = "{port} – {mac} – ".format(port=interface, mac=entry.mac)
+    if not entry:
+        msg = ("REJECTED - This should never happen!"
+               " Please contact a root of your choice.")
     else:
-        group = response[1]
-        # TODO: replymessages (resulting auth group)
-        # - tagged: "Access granted (tagged)"
-        # - untagged: "Access granted (untagged)"
-        # - traffic: "Denied (Traffic)"
-        # - etc.
-        # how is this encoded in the response and/or group?
-        msg_parts.append("Resulting group: {}".format(group))
-    return auth_date, "".join(msg_parts)
+        msg = "Groups: {}, VLANs: {}".format(", ".join(entry.groups),
+                                             ", ".join(entry.vlans))
+    return prefix + msg
 
 
-def format_hades_log_entry(response):
-    date, desc = _parse_hades_response(*response)
+def format_hades_log_entry(interface, entry):
+    """Turn Radius Log entry information into a canonical form
+
+    This utilizes :py:func:`radius_description` but returns a dict in
+    a format conforming with other log sources' output (consider user
+    and room logs)
+
+    :param interface: See :py:func:`radius_description`.
+    :param entry: See :py:func:`radius_description`.
+    """
+    date = entry.time
+    desc = radius_description(interface, entry)
     return {
         'created_at': datetime_filter(date),
         'raw_created_at': date,

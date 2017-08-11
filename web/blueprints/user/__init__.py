@@ -18,7 +18,6 @@ from flask import (
 import operator
 from sqlalchemy import Text, and_
 
-from hades_logs import hades_logs
 from pycroft import lib, config
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
@@ -44,8 +43,9 @@ from datetime import datetime, timedelta, time
 from flask_login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
-from ..helpers.log import format_user_log_entry, format_room_log_entry, \
-    format_hades_log_entry, test_hades_logs
+from ..helpers.log import format_user_log_entry, format_room_log_entry
+
+from .log import formatted_user_hades_logs
 from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 
@@ -110,22 +110,6 @@ def infoflags(user):
         {'title': u"Verstoßfrei", 'val': not user_status.violation},
         {'title': u"Mailkonto", 'val': user_status.mail},
     ]
-
-
-def get_user_hades_logs(user):
-    # TODO: look how good the performance is
-    try:
-        log_fetcher = hades_logs.fetch_logs
-    except RuntimeError:
-        return
-
-    for host in user.user_hosts:
-        for patch_port in host.room.switch_patch_ports:
-            interface = patch_port.switch_interface
-            nasportid = interface.name
-            nasipaddress = interface.host.management_ip
-            for logentry in log_fetcher(nasipaddress, nasportid):
-                yield interface, logentry
 
 
 @bp.route('/<int:user_id>/', methods=['GET', 'POST'])
@@ -222,7 +206,7 @@ def user_show_logs_json(user_id, logtype="all"):
     if logtype in ["room", "all"] and user.room:
         log_sources.append((format_room_log_entry(e) for e in user.room.log_entries))
     if logtype in ["hades", "all"]:
-        log_sources.append((format_hades_log_entry(e) for e in get_user_hades_logs(user)))
+        log_sources.append(formatted_user_hades_logs(user))
 
     return jsonify(items=list(sorted(chain(*log_sources),
                                      key=operator.itemgetter('raw_created_at'),
