@@ -75,6 +75,21 @@ def format_hades_log_entry(interface, entry):
     }
 
 
+def format_hades_disabled_log():
+    date = datetime.today()
+    return {
+        'created_at': datetime_filter(date),
+        'raw_created_at': date,
+        'user': {
+            'type': 'plain',
+            'title': "Radius",
+        },
+        'message': ("WARNING: The HadesLogs extension is not configured properly. "
+                    "Logs cannot be displayed."),
+        'type': 'hades'
+    }
+
+
 test_hades_logs = [
     ("Auth-Reject", "", "00:de:ad:be:ef:00", datetime(2017, 5, 20, 18, 25), None),
     ("Auth-Access", "Wu5_untagged", "00:de:ad:be:ef:00", datetime(2017, 4, 20, 18, 20), 15),
