@@ -43,8 +43,8 @@ from datetime import datetime, timedelta, time
 from flask_login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
-from ..helpers.log import format_user_log_entry, format_room_log_entry
-
+from ..helpers.log import format_user_log_entry, format_room_log_entry, \
+    format_hades_log_entry
 from .log import formatted_user_hades_logs
 from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
 from ..finance.tables import FinanceTable, FinanceTableSplitted
