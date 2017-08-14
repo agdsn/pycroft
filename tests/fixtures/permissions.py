@@ -68,6 +68,10 @@ class PropertyData(DataSet):
         name = "finance_change"
         property_group = PropertyGroupData.property_group2_finance
 
+    class property5_user_show(BaseProperty):
+        name = "user_show"
+        property_group = PropertyGroupData.property_group1_admin
+
 
 class MembershipData(DataSet):
     class membership1_user1_admin(BaseMembership):

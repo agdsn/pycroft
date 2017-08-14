@@ -248,3 +248,22 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
 
     def assert_access_forbidden(self, endpoint):
         return self.assert_response_code(endpoint, 403)
+
+    @property
+    def user_id(self):
+        return _all.User.q.filter_by(login=self.login).one().id
+
+
+class InvalidateHadesLogsMixin(testing.TestCase):
+    """Mixin Class forcing a disabled `hades_logs` extensions
+
+    This mixin class hooks into :meth:`create_app` and invalidates a
+    possibly configured `hades_logs` extension.  Useful if the default
+    is :py:cls:`DummyHadesLogs`.
+    """
+    def create_app(self):
+        app = super().create_app()
+        # invalidate already configured hades_logs
+        if 'hades_logs' in app.extensions:
+            app.extensions.pop('hades_logs')
+        return app

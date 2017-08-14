@@ -7,6 +7,11 @@ from flask import url_for, current_app
 
 from tests import FrontendDataTestBase
 from tests.fixtures.permissions import UserData, MembershipData, PropertyData
+from tests.fixtures.config import ConfigData
+
+
+class PermissionsTestBase(FrontendDataTestBase):
+    datasets = [MembershipData, PropertyData, ConfigData]
 
 
 class Test_010_Anonymous(FrontendDataTestBase):
@@ -28,10 +33,9 @@ class Test_010_Anonymous(FrontendDataTestBase):
         self.assert_response_code(url_for('infrastructure.switches'), 302)
 
 
-class Test_020_Permissions_Admin(FrontendDataTestBase):
+class Test_020_Permissions_Admin(PermissionsTestBase):
     """Test permissions for admin usergroup.
     """
-    datasets = [MembershipData, PropertyData]
 
     def setUp(self):
         self.login = UserData.user1_admin.login
@@ -50,7 +54,7 @@ class Test_020_Permissions_Admin(FrontendDataTestBase):
 class Test_030_Permissions_Finance(FrontendDataTestBase):
     """Test permissions for finance usergroup (advanced).
     """
-    datasets = [MembershipData, PropertyData]
+    datasets = [MembershipData, PropertyData, ConfigData]
 
     def setUp(self):
         self.login = UserData.user2_finance.login
@@ -64,10 +68,9 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
         self.assert_response_code(url_for('finance.bank_accounts_list'), 200)
 
 
-class Test_040_Permissions_User(FrontendDataTestBase):
+class Test_040_Permissions_User(PermissionsTestBase):
     """Test permissions as a user without any membership
     """
-    datasets = [UserData, MembershipData, PropertyData]
 
     def setUp(self):
         self.login = UserData.user3_user.login
