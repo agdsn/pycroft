@@ -28,7 +28,7 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import datetime_filter
 
 bp = Blueprint('facilities', __name__)
-access = BlueprintAccess(bp, ['facilities_show'])
+access = BlueprintAccess(bp, required_properties=['facilities_show'])
 nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
 
 @bp.route('/')

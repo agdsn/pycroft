@@ -27,7 +27,7 @@ from web.template_filters import byte_size_filter
 
 
 bp = Blueprint('properties', __name__)
-access = BlueprintAccess(bp, ['groups_show'])
+access = BlueprintAccess(bp, required_properties=['groups_show'])
 nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
 
 

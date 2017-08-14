@@ -21,7 +21,7 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.access import BlueprintAccess
 
 bp = Blueprint('infrastructure', __name__)
-access = BlueprintAccess(bp, ['infrastructure_show'])
+access = BlueprintAccess(bp, required_properties=['infrastructure_show'])
 nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 
 

@@ -50,7 +50,7 @@ from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTab
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
-access = BlueprintAccess(bp, ['user_show'])
+access = BlueprintAccess(bp, required_properties=['user_show'])
 nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 
 
