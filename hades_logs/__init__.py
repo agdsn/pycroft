@@ -117,6 +117,7 @@ class HadesLogs:
 
         :returns: the result of the task (see
                   ``get_port_auth_attempts`` in hades)
+        :rtype: iterable (generator if :param:`reduced`)
 
         :raises HadesTimeout: on timeouts, e.g. when the task takes
             too long to be executed by a worker or when the broker is
