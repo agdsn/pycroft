@@ -1,3 +1,11 @@
+"""
+web.blueprints.helpers.log
+
+This module provides formatter functions that normalize the different
+sources of logs to a dict.  The latter represents a valid table row to
+:py:cls:`LogTableExtended`.
+
+"""
 from datetime import datetime
 from functools import partial
 

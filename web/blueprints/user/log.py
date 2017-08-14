@@ -1,3 +1,9 @@
+"""
+web.blueprints.user.log
+
+This module contains functions that provide certain types of logs for
+a user.
+"""
 from hades_logs import hades_logs
 from pycroft.model import session
 
