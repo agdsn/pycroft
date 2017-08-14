@@ -238,7 +238,7 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
             self.assertStatus(response, code)
         except self.failureException as e:
             exception = self.failureException("While accessing {}: {}"
-                                              .format(endpoint, e.message))
+                                              .format(endpoint, e))
             raise self.failureException(exception).with_traceback(sys.exc_info()[2])
 
         return response

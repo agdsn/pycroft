@@ -130,7 +130,7 @@ class Test_040_Property(FixtureDataTestBase):
         try:
             remove_property(self.group, self.property_name)
         except ValueError as e:
-            self.fail(e.message)
+            self.fail(str(e))
 
     def test_0035_remove_wrong_property(self):
         self.assertRaises(ValueError, remove_property, self.group,

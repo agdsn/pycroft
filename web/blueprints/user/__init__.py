@@ -390,7 +390,7 @@ def create():
         except (MacExistsException,
                 SubnetFullException,
                 InvalidMACAddressException) as error:
-            flash(error.message, 'error')
+            flash(str(error), 'error')
             session.session.rollback()
 
     return render_template('user/user_create.html', form = form)
@@ -658,7 +658,7 @@ def suspend(user_id):
                 during=during)
             session.session.commit()
         except ValueError as e:
-            flash(e.message, 'error')
+            flash(str(e), 'error')
         else:
             flash(u'Nutzer gesperrt', 'success')
             return redirect(url_for('.user_show', user_id=user_id))

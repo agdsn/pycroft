@@ -355,7 +355,7 @@ class Message(object):
             jsonschema.validate(obj, schema)
         except jsonschema.ValidationError as e:
             return ErroneousMessage("Message validation failed: {} for "
-                                    "message {}".format(e.message, json_string))
+                                    "message {}".format(e, json_string))
         args = obj.get(u"args", ())
         kwargs = obj.get(u"kwargs", {})
         try:

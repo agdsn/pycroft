@@ -68,7 +68,7 @@ def make_app():
         else:
             code = e.code
         if code == 500:
-            message = e.message
+            message = str(e)
         elif code == 403:
             message = gettext(u"You are not allowed to access this page.")
         elif code == 404:
