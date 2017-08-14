@@ -38,12 +38,15 @@ def get_user_hades_logs(user):
     :returns: an iterator over duples (interface, logentry).
     :rtype: Iterator[SwitchInterface, RadiusLogEntry]
     """
+    # Accessing the `hades_logs` proxy early ensures the exception is
+    # raised even if there's no SwitchInterface
+    do_fetch = hades_logs.fetch_logs
     for host in user.user_hosts:
         for patch_port in host.room.switch_patch_ports:
             interface = patch_port.switch_interface
             nasportid = interface.name
             nasipaddress = interface.host.management_ip
-            for logentry in hades_logs.fetch_logs(nasipaddress, nasportid):
+            for logentry in do_fetch(nasipaddress, nasportid):
                 yield interface, logentry
 
 

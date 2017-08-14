@@ -41,14 +41,13 @@ class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserShowTestBase):
         return json['items']
 
 
-    def test_warning_log_returned(self):
-        items = self.get_logs(type='hades')
-        self.assertEqual(len(items), 1)
+    def test_only_warning_log_returned(self):
+        # Multiple assertions in one method to avoid useless
+        # setup/teardown which leads to 5s for this class
+        hades_items = self.get_logs(logtype='hades')
+        self.assertEqual(len(hades_items), 1)
+        self.assertIn("logs cannot be displayed", hades_items[0]['message'].lower())
 
-    def test_no_user_logs(self):
-        items = self.get_logs(type='user')
-        self.assertFalse(len(items))
-
-    def test_no_room_logs(self):
-        items = self.get_logs(type='room')
-        self.assertFalse(len(items))
+        self.assertFalse(self.get_logs(logtype='user'))
+        self.assertFalse(self.get_logs(logtype='room'))
+        self.assertEqual(len(self.get_logs()), 1)
