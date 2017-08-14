@@ -1,0 +1,22 @@
+# This file is a workaround for a bug in docker-compose.  Once you use
+# `extends` to extend from another file, you cannot use `extend`
+# referencing to that same file anymore.  You must introduce another
+# file.
+# Also, these services have been suffixed `_base` to avoid name
+# conflicts which trigger another bug.
+# See https://github.com/lukasjuhrich/docker-compose-extends/ for some
+# exploration of the behavior.
+version: '2'
+services:
+  web_base:
+    build:
+      context: ..
+    image: pycroft  # tag of the built image
+    environment:
+      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
+    command: "python3 server_run.py --debug --exposed --profile"
+  db_base:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pycroft

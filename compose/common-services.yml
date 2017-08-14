@@ -1,16 +1,14 @@
 version: '2'
 services:
   web:
-    build:
-      context: ..
-    image: pycroft  # tag of the built image
-    environment:
-      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
-    command: "python3 server_run.py --debug --exposed --profile"
+    extends:
+      file: common-services.2.yml
+      service: web_base
   # testing variants of `web`
   web_testing:
     extends:
-      service: web
+      file: common-services.2.yml
+      service: web_base
     command: "/bin/true"
     environment:
       - HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
@@ -28,13 +26,13 @@ services:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
       - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@rabbitmq:5672/
   db:
-    image: postgres
-    environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=pycroft
+    extends:
+      file: common-services.2.yml
+      service: db_base
   db_optimized:
     extends:
-      service: db
+      file: common-services.2.yml
+      service: db_base
     environment:
       - PGDATA=/postgres
     tmpfs:
