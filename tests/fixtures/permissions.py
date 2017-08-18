@@ -6,6 +6,7 @@ from fixture import DataSet
 from pycroft.helpers.user import hash_password
 from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.finance import AccountData
+from tests.fixtures.config import ConfigData
 
 
 class BaseUser():
@@ -21,7 +22,7 @@ class BaseUser():
 class UserData(DataSet):
     class user1_admin(BaseUser):
         # Normal admin
-        login = "testadmin"  # "admin" is blocked
+        login = "testadmin2"  # "admin" is blocked
 
     class user2_finance(BaseUser):
         # Admin with permission to view Finance
@@ -85,3 +86,8 @@ class MembershipData(DataSet):
     class membership3_user2_finance(BaseMembership):
         group = PropertyGroupData.property_group2_finance
         user = UserData.user2_finance
+
+
+# Provides example Users with adequate permissions plus a config for
+# running frontend tests
+datasets = {MembershipData, PropertyData, ConfigData}
