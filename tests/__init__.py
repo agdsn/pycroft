@@ -12,6 +12,7 @@ from flask import url_for, _request_ctx_stack
 import flask_testing as testing
 from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
+from fixture.util import start_debug, stop_debug
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
@@ -267,3 +268,10 @@ class InvalidateHadesLogsMixin(testing.TestCase):
         if 'hades_logs' in app.extensions:
             app.extensions.pop('hades_logs')
         return app
+
+
+@contextmanager
+def with_debug(channel="fixture.loadable", **kw):
+    start_debug(channel, **kw)
+    yield
+    stop_debug(channel)
