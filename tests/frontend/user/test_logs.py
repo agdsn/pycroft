@@ -105,3 +105,9 @@ class UserWithDummyHadesLogsTestCase(UserLogTestBase):
         for log in logs:
             self.assertIn("– groups: ", log['message'].lower())
             self.assertIn("tagged)", log['message'].lower())
+
+    def test_disconnected_user_emits_warning(self):
+        logs = self.get_logs(logtype='hades')
+        self.assertEqual(len(logs), 1)
+        self.assertIn("are in a connected room", logs[0]['message'].lower())
+        self.assertIn("logs cannot be displayed", logs[0]['message'].lower())

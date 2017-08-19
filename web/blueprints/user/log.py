@@ -7,7 +7,8 @@ a user.
 from hades_logs import hades_logs, HadesConfigError
 from pycroft.model import session
 
-from ..helpers.log import format_hades_log_entry, format_hades_disabled_log
+from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
+    format_user_not_connected
 
 
 def iter_hades_switch_ports(room):
@@ -49,6 +50,15 @@ def get_user_hades_logs(user):
             for logentry in do_fetch(nasipaddress, nasportid):
                 yield interface, logentry
 
+def is_user_connected(user):
+    try:
+        next(patch_port
+             for host in user.user_hosts
+             for patch_port in host.room.switch_patch_ports)
+    except StopIteration:
+        return False
+    return True
+
 
 def formatted_user_hades_logs(user):
     """Iterate over the user's hades logs if configured correctly
@@ -65,5 +75,8 @@ def formatted_user_hades_logs(user):
         for interface, entry in get_user_hades_logs(user):
             yield format_hades_log_entry(interface, entry)
     except HadesConfigError:
-        yield format_hades_disabled_log()
+        yield format_hades_disabled()
         return
+
+    if not is_user_connected(user):
+        yield format_user_not_connected()

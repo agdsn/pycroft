@@ -83,7 +83,7 @@ def format_hades_log_entry(interface, entry):
     }
 
 
-def format_hades_disabled_log():
+def format_custom_hades_message(message):
     date = datetime.today()
     return {
         'created_at': datetime_filter(date),
@@ -92,7 +92,14 @@ def format_hades_disabled_log():
             'type': 'plain',
             'title': "Radius",
         },
-        'message': ("WARNING: The HadesLogs extension is not configured properly. "
-                    "Logs cannot be displayed."),
+        'message': message,
         'type': 'hades'
     }
+
+
+_msg_disabled = ("WARNING: The HadesLogs extension is not configured properly. "
+                       "Logs cannot be displayed.")
+_msg_disconnected = ("None of this user's hosts (if any) are in a connected room. "
+                     "Logs cannot be displayed.")
+format_hades_disabled = partial(format_custom_hades_message, message=_msg_disabled)
+format_user_not_connected = partial(format_custom_hades_message, message=_msg_disconnected)
