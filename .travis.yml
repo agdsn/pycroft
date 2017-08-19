@@ -32,7 +32,7 @@ before_script:
   - $DOCKER_COMPOSE up -d
 
 script:
-  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip3 install coverage && su pycroft -c "nosetests --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
+  - $DOCKER_COMPOSE run --rm -u root web sh -c 'pip3 install coverage && su pycroft -c "nosetests -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy"'
 
 after_success:
   - sudo ./helpers/registry.sh all
