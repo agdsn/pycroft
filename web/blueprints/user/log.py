@@ -4,11 +4,11 @@ web.blueprints.user.log
 This module contains functions that provide certain types of logs for
 a user.
 """
-from hades_logs import hades_logs, HadesConfigError
+from hades_logs import hades_logs, HadesConfigError, HadesOperationalError
 from pycroft.model import session
 
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
-    format_user_not_connected
+    format_user_not_connected, format_hades_error
 
 
 def iter_hades_switch_ports(room):
@@ -77,6 +77,8 @@ def formatted_user_hades_logs(user):
     except HadesConfigError:
         yield format_hades_disabled()
         return
+    except HadesOperationalError:
+        yield format_hades_error()
 
     if not is_user_connected(user):
         yield format_user_not_connected()

@@ -101,5 +101,7 @@ _msg_disabled = ("WARNING: The HadesLogs extension is not configured properly. "
                        "Logs cannot be displayed.")
 _msg_disconnected = ("None of this user's hosts (if any) are in a connected room. "
                      "Logs cannot be displayed.")
+_msg_error = "WARNING: an error occurred when fetching hades logs."
 format_hades_disabled = partial(format_custom_hades_message, message=_msg_disabled)
 format_user_not_connected = partial(format_custom_hades_message, message=_msg_disconnected)
+format_hades_error = partial(format_custom_hades_message, message=_msg_error)

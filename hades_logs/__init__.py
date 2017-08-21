@@ -8,7 +8,6 @@ RPC api.
 
 from celery import Celery, signature
 from celery.exceptions import TimeoutError as CeleryTimeoutError
-from kombu.exceptions import OperationalError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
@@ -40,6 +39,10 @@ class HadesTimeout(TimeoutError, HadesError):
 
 
 class HadesConfigError(RuntimeError, HadesError):
+    pass
+
+
+class HadesOperationalError(RuntimeError, HadesError):
     pass
 
 
@@ -137,13 +140,14 @@ class HadesLogs:
             return reductor(task.apply_async().wait(timeout=self.timeout))
         except CeleryTimeoutError as e:
             raise HadesTimeout("The Hades lookup task has timed out") from e
-        except OperationalError as e:
-            # The `OperationalError` is thrown when e.g. the broker is
-            # down
+        except OSError as e:
+            # In newer versions of celery, this is encapsuled by
+            # `kombu.exc.OperationalError`. It is thrown when e.g. the
+            # broker is down
             if "timeout" in str(e).lower():
                 raise HadesTimeout("The Hades lookup task has timed out") from e
             else:
-                raise
+                raise HadesOperationalError("OSError when fetching hades logs") from e
 
 
 class DummyHadesLogs(HadesLogs):
