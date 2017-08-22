@@ -4,11 +4,12 @@ web.blueprints.user.log
 This module contains functions that provide certain types of logs for
 a user.
 """
-from hades_logs import hades_logs, HadesConfigError, HadesOperationalError
+from hades_logs import hades_logs
+from hades_logs.exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from pycroft.model import session
 
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
-    format_user_not_connected, format_hades_error
+    format_user_not_connected, format_hades_error, format_hades_timeout
 
 
 def iter_hades_switch_ports(room):
@@ -46,7 +47,7 @@ def get_user_hades_logs(user):
         for patch_port in host.room.switch_patch_ports:
             interface = patch_port.switch_interface
             nasportid = interface.name
-            nasipaddress = interface.host.management_ip
+            nasipaddress = str(interface.host.management_ip)
             for logentry in do_fetch(nasipaddress, nasportid):
                 yield interface, logentry
 
@@ -79,6 +80,8 @@ def formatted_user_hades_logs(user):
         return
     except HadesOperationalError:
         yield format_hades_error()
+    except HadesTimeout:
+        yield format_hades_timeout()
 
     if not is_user_connected(user):
         yield format_user_not_connected()

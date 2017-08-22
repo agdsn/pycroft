@@ -10,16 +10,10 @@ from celery.exceptions import TimeoutError as CeleryTimeoutError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
-from .parsing import RadiusLogEntry, reduce_radius_logs
-from .example import log_entries
 from .app import HadesCelery
-
-
-__all__ = [
-    'HadesTimeout',
-    'HadesLogs',
-    'hades_logs'
-]
+from .example import log_entries
+from .exc import HadesConfigError, HadesOperationalError, HadesTimeout
+from .parsing import RadiusLogEntry, reduce_radius_logs
 
 
 _CONFIGURATION_DOCS = """\
@@ -31,20 +25,6 @@ A minimal example configuration would look like this:
 > app.config['HADES_BROKER_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'
 > app.config['HADES_RESULT_BACKEND_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'\
 """
-class HadesError(Exception):
-    pass
-
-
-class HadesTimeout(TimeoutError, HadesError):
-    pass
-
-
-class HadesConfigError(RuntimeError, HadesError):
-    pass
-
-
-class HadesOperationalError(RuntimeError, HadesError):
-    pass
 
 
 class HadesLogs:
