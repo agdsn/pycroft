@@ -2,9 +2,9 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from flask import Flask
-from celery.exceptions import OperationalError
 
 from hades_logs import HadesLogs, hades_logs
+from hades_logs.exc import HadesOperationalError
 
 
 class UnconfiguredInitializationTestCase(TestCase):
@@ -88,7 +88,8 @@ class RegisteredExtensionTestCase(ConfiguredFlaskAppTestBase):
                          self.app.config['HADES_CELERY_APP_NAME'])
 
     def test_celery_broker_url_passed(self):
-        self.assertEqual(self.hades_logs.celery.conf.broker_url,
+        # In celery 4.0, this is `conf.broker_url`
+        self.assertEqual(self.hades_logs.celery.conf['BROKER_URL'],
                          self.app.config['HADES_BROKER_URI'])
 
     def localhost(self):
@@ -121,7 +122,8 @@ class TaskCreatedTestCase(ConfiguredFlaskAppTestBase):
         self.assertTrue(self.task.app is self.hades_logs.celery)
 
     def test_task_name_correct(self):
-        self.assertEqual(self.task.name, 'test.taskname')
+        # In celery 4.0, this is `self.task.name`
+        self.assertEqual(self.task.task, 'test.taskname')
 
     def test_task_args_passed(self):
         self.assertEqual(self.task.args, ('foo',))
@@ -143,11 +145,11 @@ class CorrectURIsConfiguredTestCase(TestCase):
         self.hades_logs = HadesLogs(self.app)
 
     def test_empty_task_raises_operational_error(self):
-        with self.assertRaises(OperationalError) as cm:
+        # This throws an OSError as there is no `HadesLogs` around to
+        # catch it.
+        with self.assertRaises(OSError) as cm:
             self.hades_logs.celery.signature('').apply_async().wait()
-        self.assertIn("connection refused", str(cm.exception).lower())
 
     def test_fetch_logs_raises_connection_refused(self):
-        with self.assertRaises(OperationalError) as cm:
+        with self.assertRaises(HadesOperationalError) as cm:
             self.hades_logs.fetch_logs(None, None)
-        self.assertIn("connection refused", str(cm.exception).lower())

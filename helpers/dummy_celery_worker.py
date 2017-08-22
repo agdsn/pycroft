@@ -9,13 +9,13 @@ app = Celery('dummy_tasks', broker=os.environ['TEST_HADES_BROKER_URI'],
 
 
 @app.task
-def get_port_auth_attempts(nasipaddress, nasportid, limit=100):
-    if nasportid == 'magic_sleep':
+def get_auth_attempts_at_port(nas_ip_address, nas_port_id, limit=100):
+    if nas_port_id == 'magic_sleep':
         # sleep for 10 seconds, which is longer than the default
         sleep(10)
         return []
 
-    if nasipaddress != '141.30.223.206' or nasportid != 'C6':
+    if nas_ip_address != '141.30.223.206' or nas_port_id != 'C6':
         return []
     return [
         # (packettype, replymessage, username, auth_date, egress_vlan)
