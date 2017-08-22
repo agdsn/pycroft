@@ -6,13 +6,14 @@ This module provides access to Hades' radius logs utilizing its celery
 RPC api.
 """
 
-from celery import Celery, signature
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
 from .parsing import RadiusLogEntry, reduce_radius_logs
 from .example import log_entries
+from .app import HadesCelery
+
 
 __all__ = [
     'HadesTimeout',
@@ -64,6 +65,9 @@ class HadesLogs:
         - 'HADES_TIMEOUT' (Optional, default=5): The Timeout to wait
           with each task in seconds.
 
+        - 'HADES_ROUTING_KEY' (Optional, default=None): The routing
+          key to use for the celery messages
+
     Usage:
 
     >>> from flask import Flask
@@ -88,12 +92,14 @@ class HadesLogs:
             app_name = app.config['HADES_CELERY_APP_NAME']
             broker_uri = app.config['HADES_BROKER_URI']
             backend_uri = app.config['HADES_RESULT_BACKEND_URI']
+            routing_key = app.config.get('HADES_ROUTING_KEY')
         except KeyError as e:
             raise KeyError("Missing config key: {}\n{}"
                            .format(e, _CONFIGURATION_DOCS)) from e
         self.timeout = app.config.get('HADES_TIMEOUT', 5)
 
-        self.celery = Celery(app_name, broker=broker_uri, backend=backend_uri)
+        self.celery = HadesCelery(app_name, broker=broker_uri, backend=backend_uri,
+                                  routing_key=routing_key)
 
     def create_task(self, name, *args, **kwargs):
         """Create a Celery task object by name, args and kwargs
@@ -132,12 +138,15 @@ class HadesLogs:
             def reductor(x):
                 return x
 
-        task = self.create_task(name='get_port_auth_attempts',
-                                nasipaddress=nasipaddress, nasportid=nasportid,
+        task = self.create_task(name='get_auth_attempts_at_port',
+                                nas_ip_address=nasipaddress, nas_port_id=nasportid,
                                 limit=limit)
 
+        return reductor(RadiusLogEntry(*e) for e in self.wait_for_task(task))
+
+    def wait_for_task(self, task):
         try:
-            return reductor(task.apply_async().wait(timeout=self.timeout))
+            return task.apply_async().wait(timeout=self.timeout)
         except CeleryTimeoutError as e:
             raise HadesTimeout("The Hades lookup task has timed out") from e
         except OSError as e:
