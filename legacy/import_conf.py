@@ -94,6 +94,7 @@ site_name_map = {
     1: u"Borsbergstraße",
     2: u"Zeunerstraße",
     3: u"Budapester Straße",
+    4: "Fritz-Löffler-Straße"
 }
 
 
@@ -114,6 +115,7 @@ building_site_map = {
     13: 2,  # Zeu1f
     14: 3,  # Bu22
     15: 3,  # Bu24
+    16: 4,  # FL16
 }
 
 building_subnets_map = {
@@ -133,9 +135,11 @@ building_subnets_map = {
     13: [11, 12],  # Zeu1f
     14: [13],  # Bu22
     15: [14],  # Bu24
+    16: [15],  # FL16
 }
 
 vlan_name_vid_map = {
+    # Vlan_name: VLAN ID (on the switches)
     'Wu1': 11,
     'Wu3': 13,
     'Wu5': 15,
@@ -149,4 +153,5 @@ vlan_name_vid_map = {
     'Zeu1f': 234,
     'Bu22': 18,
     'Bu24': 29,
+    'FL16': 35,
 }
