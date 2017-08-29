@@ -5,13 +5,13 @@ hades_logs
 This module provides access to Hades' radius logs utilizing its celery
 RPC api.
 """
+import logging
 
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from flask.globals import current_app
 from werkzeug import LocalProxy
 
 from .app import HadesCelery
-from .example import log_entries
 from .exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from .parsing import RadiusLogEntry, reduce_radius_logs
 
@@ -62,24 +62,26 @@ class HadesLogs:
     """
     def __init__(self, app=None):
         self.app = app
+        self.logger = logging.getLogger('hades_logs')
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app):
-        app.extensions['hades_logs'] = self
-
         try:
             app_name = app.config['HADES_CELERY_APP_NAME']
             broker_uri = app.config['HADES_BROKER_URI']
             backend_uri = app.config['HADES_RESULT_BACKEND_URI']
             routing_key = app.config.get('HADES_ROUTING_KEY')
         except KeyError as e:
-            raise KeyError("Missing config key: {}\n{}"
-                           .format(e, _CONFIGURATION_DOCS)) from e
+            self.logger.warning("Missing config key: %s\n%s", e, _CONFIGURATION_DOCS)
+            raise KeyError("Missing config key: {}".format(e)) from e
         self.timeout = app.config.get('HADES_TIMEOUT', 5)
 
         self.celery = HadesCelery(app_name, broker=broker_uri, backend=backend_uri,
                                   routing_key=routing_key)
+        # Gets run only on success
+        self.logger.info("Initialization complete, registering 'hades_logs' extension")
+        app.extensions['hades_logs'] = self
 
     def create_task(self, name, *args, **kwargs):
         """Create a Celery task object by name, args and kwargs
@@ -125,6 +127,7 @@ class HadesLogs:
         return reductor(RadiusLogEntry(*e) for e in self.wait_for_task(task))
 
     def wait_for_task(self, task):
+        self.logger.info("Waiting for task: %s", task)
         try:
             return task.apply_async().wait(timeout=self.timeout)
         except CeleryTimeoutError as e:
@@ -137,17 +140,6 @@ class HadesLogs:
                 raise HadesTimeout("The Hades lookup task has timed out") from e
             else:
                 raise HadesOperationalError("OSError when fetching hades logs") from e
-
-
-class DummyHadesLogs(HadesLogs):
-    def init_app(self, app):
-        app.extensions['hades_logs'] = self
-
-    def create_task(self):
-        raise NotImplementedError
-
-    def fetch_logs(self, nasipaddress, nasportid, limit=100):
-        return reduce_radius_logs(RadiusLogEntry(*e) for e in log_entries)
 
 
 def _get_extension():

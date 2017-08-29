@@ -9,8 +9,18 @@ services:
     # A service being extended may have no links.
     links:
       - db:db
+      - dummy_worker:dummy_worker
+      - rabbitmq:rabbitmq
     ports:
       - 5001:5000
+  dummy_worker:
+    extends:
+      file: ../common-services.yml
+      service: dummy_worker
+    volumes:
+      - "../../:/pycroft"
+    links:
+      - rabbitmq:rabbitmq
   db:
     extends:
       file: ../common-services.yml
@@ -20,6 +30,10 @@ services:
       - "../../:/pycroft"
     ports:
       - 55432:5432
+  rabbitmq:
+    extends:
+      file: ../common-services.yml
+      service: rabbitmq
 
 volumes:
   pycroft_postgres:

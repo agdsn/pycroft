@@ -1,10 +1,12 @@
+import os
+
 from flask import Flask, redirect, url_for, request, flash, render_template
 from flask_login import current_user, current_app
 from flask_babel import Babel
 from jinja2 import StrictUndefined
 from werkzeug.datastructures import ImmutableDict
 
-from hades_logs import DummyHadesLogs
+from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
 from . import template_filters
@@ -23,6 +25,34 @@ class PycroftFlask(Flask):
         Flask.jinja_options,
         undefined=StrictUndefined
     )
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        # config keys to support:
+        self.maybe_add_config_from_env([
+            'HADES_CELERY_APP_NAME',
+            'HADES_BROKER_URI',
+            'HADES_RESULT_BACKEND_URI',
+            'HADES_TIMEOUT',
+            'HADES_ROUTING_KEY',
+        ])
+
+    def maybe_add_config_from_env(self, keys):
+        """Write keys from the environment to the app's config
+
+        If a key does not exist in the environment, it will just be
+        skipped.
+
+        :param keys: An iterable of strings
+        """
+        for key in keys:
+            try:
+                self.config[key] = os.environ[key]
+            except KeyError:
+                self.logger.debug("Config key %s not present in environment, skipping", key)
+                continue
+            else:
+                self.logger.debug("Config key %s successfuly read from environment", key)
 
 
 def make_app():
@@ -45,7 +75,11 @@ def make_app():
     template_tests.register_checks(app)
 
     babel = Babel(app)
-    DummyHadesLogs(app)
+    try:
+        HadesLogs(app)
+    except KeyError as e:
+        app.logger.info("HadesLogs configuration incomplete, skipping.")
+        app.logger.info("Original error: %s", str(e))
 
     page_resources.init_app(app)
 

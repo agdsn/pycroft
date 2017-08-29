@@ -1,38 +1,9 @@
-import os
-from unittest import TestCase
-
-from flask import Flask
-
 from hades_logs import HadesLogs, HadesTimeout
 from hades_logs.parsing import RadiusLogEntry
+from . import SimpleFlaskWithHadesLogsBase
 
 
-class DummyHadesWorkerBase(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.BROKER_URL = os.environ['HADES_BROKER_URI']
-        cls.BACKEND_URL = os.environ['HADES_RESULT_BACKEND_URI']
-
-    def setUp(self):
-        super().setUp()
-        self.app = Flask('test')
-        self.app.config.update({
-            'HADES_CELERY_APP_NAME': 'dummy_celery_worker',
-            'HADES_BROKER_URI': self.BROKER_URL,
-            'HADES_RESULT_BACKEND_URI': self.BACKEND_URL,
-        })
-        self.hades_logs = HadesLogs(self.app)
-        self.valid_kwargs = {'nasipaddress': '141.30.223.206', 'nasportid': 'C6'}
-
-    def fetch_logs(self, *a, **kw):
-        """Call :py:meth:`hades_logs.fetch_logs` and convert to list
-
-        :rtype: list
-        """
-        return list(self.hades_logs.fetch_logs(*a, **kw))
-
-
-class ConfiguredHadesLogs(DummyHadesWorkerBase):
+class ConfiguredHadesLogs(SimpleFlaskWithHadesLogsBase):
     def test_nonexistent_port_has_no_logs(self):
         logs = self.fetch_logs(nasipaddress='', nasportid='')
         self.assertEqual(logs, [])
@@ -66,7 +37,7 @@ class ConfiguredHadesLogs(DummyHadesWorkerBase):
             self.assertEqual(tasks, [])
 
 
-class SpecificLogsTestCase(DummyHadesWorkerBase):
+class SpecificLogsTestCase(SimpleFlaskWithHadesLogsBase):
     def setUp(self):
         super().setUp()
         self.logs = self.fetch_logs(**self.valid_kwargs)

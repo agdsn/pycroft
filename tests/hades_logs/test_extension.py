@@ -1,3 +1,4 @@
+import logging
 from contextlib import contextmanager
 from unittest import TestCase
 
@@ -16,10 +17,13 @@ class UnconfiguredInitializationTestCase(TestCase):
         self.app = _app
 
     @contextmanager
-    def assert_unconfigured(self):
-        with self.assertRaises(KeyError) as cm:
+    def assert_unconfigured(self, level=logging.WARNING):
+        with self.assertRaises(KeyError) as exc_cm, \
+             self.assertLogs('hades_logs', level=level) as log_cm:
             yield
-        self.assertIn('missing config ', str(cm.exception).lower())
+        self.assertIn('missing config ', str(exc_cm.exception).lower())
+        self.assertEqual(len(log_cm.output), 1)
+        self.assertIn("missing config", log_cm.output.pop().lower())
 
     def test_plain_init_works(self):
         try:
@@ -57,17 +61,22 @@ class ConfiguredFlaskAppTestBase(TestCase):
 
 class ConfiguredInitializationTestCase(ConfiguredFlaskAppTestBase):
     """The flask app is configured, but ``HadesLogs`` not registered"""
-    def assert_extension_registered(self, app):
+    @contextmanager
+    def assert_registers_extension(self, app):
+        with self.assertLogs('hades_logs', level=logging.INFO) as cm:
+            yield
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("initialization complete", cm.output.pop().lower())
         self.assertIn('hades_logs', app.extensions)
 
     def test_init_initializes_app(self):
-        HadesLogs(self.app)
-        self.assert_extension_registered(self.app)
+        with self.assert_registers_extension(self.app):
+            HadesLogs(self.app)
 
     def test_init_app_initializes_app(self):
         l = HadesLogs()
-        l.init_app(self.app)
-        self.assert_extension_registered(self.app)
+        with self.assert_registers_extension(self.app):
+            l.init_app(self.app)
 
     def test_proxy_object_accessible(self):
         try:
@@ -147,9 +156,12 @@ class CorrectURIsConfiguredTestCase(TestCase):
     def test_empty_task_raises_operational_error(self):
         # This throws an OSError as there is no `HadesLogs` around to
         # catch it.
-        with self.assertRaises(OSError) as cm:
+        with self.assertRaises(OSError):
             self.hades_logs.celery.signature('').apply_async().wait()
 
-    def test_fetch_logs_raises_connection_refused(self):
-        with self.assertRaises(HadesOperationalError) as cm:
+    def test_fetch_logs_logs_and_raises_connection_refused(self):
+        with self.assertRaises(HadesOperationalError), \
+             self.assertLogs('hades_logs', level=logging.INFO) as cm:
             self.hades_logs.fetch_logs(None, None)
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("waiting for task", cm.output.pop().lower())

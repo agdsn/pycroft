@@ -1,48 +1,9 @@
-from unittest import TestCase
-
-from flask import url_for
-
 from pycroft.model._all import User
-from tests import FrontendDataTestBase, InvalidateHadesLogsMixin
-from tests.fixtures import permissions
+from tests import InvalidateHadesLogsMixin
 from tests.fixtures import hades_logs, frontend_logs
 
-
-class UserLogTestBase(FrontendDataTestBase):
-    """Test base providing access to `user_show`
-
-    The user being logged in is :py:cls:`UserData.user1_admin`.
-    """
-    datasets = frozenset(permissions.datasets)
-
-    def setUp(self):
-        self.login = permissions.UserData.user1_admin.login
-        self.password = permissions.UserData.user1_admin.password
-        super().setUp()
-
-
-    def get_logs(self, user_id=None, **kw):
-        """Request the logs, assert validity, and return the response.
-
-        By default, the logs are fetched for the user logging in.
-
-        The following assertions are made:
-          * The response code is 200
-          * The response content_type contains ``"json"``
-          * The response's JSON contains an ``"items"`` key
-
-        :returns: ``response.json['items']``
-        """
-        if user_id is None:
-            user_id = self.user_id
-        log_endpoint = url_for('user.user_show_logs_json',
-                               user_id=user_id,
-                               **kw)
-        response = self.assert_response_code(log_endpoint, code=200)
-        self.assertIn("json", response.content_type.lower())
-        json = response.json
-        self.assertIsNotNone(json.get('items'))
-        return json['items']
+from . import UserLogTestBase
+from ...hades_logs import DummyHadesWorkerBase
 
 
 class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
@@ -87,8 +48,17 @@ class RoomAndUserLogTestCase(UserLogTestBase):
         self.assertEqual(item['message'], desired_message)
         self.assertEqual(item['user']['title'], entry.author.name)
 
+    def test_no_hades_log_exists(self):
+        items = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
+        self.assertEqual(len(items), 1)
+        item = items[0]
+        self.assertIn(" cannot be displayed", item['message'].lower())
+        self.assertIn(" connected room", item['message'].lower())
 
-class UserWithDummyHadesLogsTestCase(UserLogTestBase):
+
+class IntegrationTestCase(DummyHadesWorkerBase, UserLogTestBase):
+    """Frontend Tests for the endpoints utilizing live Hades Logs
+    """
     datasets = frozenset(hades_logs.datasets)
 
     def setUp(self):
@@ -99,10 +69,12 @@ class UserWithDummyHadesLogsTestCase(UserLogTestBase):
         login = UserHostData.dummy.owner.login
         self.relevant_user = User.q.filter_by(login=login).one()
 
-    def test_dummy_hades_logs_are_returned(self):
+    def test_hades_logs_are_returned(self):
         logs = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
-        self.assertEqual(len(logs), 2)
+        self.assertEqual(len(logs), 4)
         for log in logs:
+            if "rejected" in log['message'].lower():
+                continue
             self.assertIn("– groups: ", log['message'].lower())
             self.assertIn("tagged)", log['message'].lower())
 

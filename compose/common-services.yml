@@ -11,8 +11,7 @@ services:
       service: web_base
     command: "/bin/true"
     environment:
-      - HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
-      - HADES_RESULT_BACKEND_URI=rpc://celery:celery@rabbitmq:5672/
+      # - routing key?
       - PYCROFT_LDAP_HOST=ldap
       - PYCROFT_LDAP_PORT=389
       - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
@@ -21,7 +20,8 @@ services:
   dummy_worker:  # a dummy worker mocking hades for testing the client
     build:
       context: ..
-    command: "sh -c 'cd helpers && celery -A dummy_celery_worker worker --loglevel=info'"
+    entrypoint: "python3 helpers/dummy_celery_worker.py"  # like `celery`
+    command: "worker --loglevel=info"
     environment:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
       - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@rabbitmq:5672/
