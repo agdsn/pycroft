@@ -53,7 +53,7 @@ group_props = {
     #        ∈ away ∩ member = temporär ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∈ away \ member = permanent ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∉ away ∪ member = permanent ausgezogen, keine mailmitgliedschaft, kein semesterbeitrag
-    "away": ("Ausgezogen", {"network_access": False,
+    "away": ("Ausgezogen (obsolet, ehem. „mail“)", {"network_access": False,
                             "late_fee": False,
                             "semester_fee": True,
                             "reduced_semester_fee": True,
