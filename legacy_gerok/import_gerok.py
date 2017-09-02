@@ -33,9 +33,7 @@ from pycroft import model, property
 from pycroft.model import (traffic, facilities, user, net, port,
                            finance, session, host, config, logging, types)
 
-from . import userman_model
 from . import netusers_model
-from . import ldap_model
 from . import translate
 
 
