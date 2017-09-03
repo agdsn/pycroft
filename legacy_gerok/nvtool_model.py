@@ -1,6 +1,6 @@
 # coding: utf-8
 from sqlalchemy import BigInteger, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Table, Text, UniqueConstraint, text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.dialects.postgresql.base import CIDR, INET, MACADDR
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -259,6 +259,7 @@ class Location(Base):
     room = Column(String(8))
     flat = Column(String(8))
     floor_id = Column(Integer, nullable=False, index=True)
+    floor = relationship(Floor, foreign_keys=[floor_id], primaryjoin='Location.floor_id == Floor.id')
     domain_id = Column(Integer, index=True)
     comment = Column(String(32))
 
@@ -466,32 +467,4 @@ t_traffic = Table(
 t_traffic_warned_accounts = Table(
     'traffic_warned_accounts', metadata,
     Column('account_id', ForeignKey('accounts.id'), nullable=False, unique=True)
-)
-
-
-t_wh17_disabled_ip-mac = Table(
-    'wh17_disabled_ip-mac', metadata,
-    Column('host', Text),
-    Column('macaddr', MACADDR)
-)
-
-
-t_wh17_enabled_ip-mac = Table(
-    'wh17_enabled_ip-mac', metadata,
-    Column('host', Text),
-    Column('macaddr', MACADDR)
-)
-
-
-t_wh9_disabled_ip-mac = Table(
-    'wh9_disabled_ip-mac', metadata,
-    Column('host', Text),
-    Column('macaddr', MACADDR)
-)
-
-
-t_wh9_enabled_ip-mac = Table(
-    'wh9_enabled_ip-mac', metadata,
-    Column('host', Text),
-    Column('macaddr', MACADDR)
 )

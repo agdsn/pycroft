@@ -100,7 +100,7 @@ def main(args):
         connection_string_nu = connection_string_um = connection_string_ldap = conn_opts["legacy"]
 
     engine_nu = create_engine(connection_string_nu, echo=False)
-    session_nu = scoped_session(sessionmaker(bind=engine_nu))h
+    session_nu = scoped_session(sessionmaker(bind=engine_nu))
 
     engine_um = create_engine(connection_string_um, echo=False)
     session_um = scoped_session(sessionmaker(bind=engine_um))

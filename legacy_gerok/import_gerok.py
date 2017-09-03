@@ -9,6 +9,9 @@ import os
 import sys
 from collections import Counter
 import logging as std_logging
+
+from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack
+
 log = std_logging.getLogger('import')
 import random
 
@@ -33,9 +36,7 @@ from pycroft import model, property
 from pycroft.model import (traffic, facilities, user, net, port,
                            finance, session, host, config, logging, types)
 
-from . import netusers_model
-from . import translate
-
+from . import nvtool_model
 
 def exists_db(connection, name):
     """Check whether a database exists.
@@ -50,35 +51,6 @@ def exists_db(connection, name):
 
     return exists is not None
 
-
-def translate_all(data):
-    """Translate legacy data into a list of new objects.
-
-    :param dict data: A dict with keys being the table names and
-        values being lists of the legacy ORM objects.
-
-    :returns: The new ORM objects.
-    :rtype: list
-    """
-    objs = []
-    resources = {}
-
-    log.info("Generating execution order...")
-    for func in translate.reg.sorted_functions():
-        log.info("  {func}...".format(func=func.__name__))
-        o = func(data, resources)
-        log.info("  ...{func} ({details}).".format(
-            func=func.__name__,
-            details=", ".join(["{}: {}".format(k, v)
-                               for k, v in Counter(
-                                   [type(ob).__name__ for ob in o]
-                                ).items()])
-        ))
-        objs.extend(o)
-
-    return objs
-
-
 def main(args):
     """Import the legacy data according to ``args``"""
     engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
@@ -86,152 +58,150 @@ def main(args):
         scoped_session(sessionmaker(bind=engine),
                        scopefunc=lambda: _request_ctx_stack.top))
 
-    if args.from_origin:
-        log.info("Getting legacy data from origin")
-        connection_string_nu = conn_opts["netusers"]
-        connection_string_um = conn_opts["userman"]
-        log.warning("Importing ldap data without caching first is not supported.")
-        ldap_available = False
-    else:
-        log.info("Getting legacy data from cache")
-        ldap_available = True
-        connection_string_nu = connection_string_um = connection_string_ldap = conn_opts["legacy"]
+    connection_string_nvtool = conn_opts["nvtool"]
 
-    engine_nu = create_engine(connection_string_nu, echo=False)
-    session_nu = scoped_session(sessionmaker(bind=engine_nu))h
-
-    engine_um = create_engine(connection_string_um, echo=False)
-    session_um = scoped_session(sessionmaker(bind=engine_um))
-
-    if ldap_available:
-        engine_ldap = create_engine(connection_string_ldap, echo=False)
-        session_ldap = scoped_session(sessionmaker(bind=engine_ldap))
+    engine_nvtool = create_engine(connection_string_nvtool, echo=False)
+    session_nvtool = scoped_session(sessionmaker(bind=engine_nvtool))
 
     master_engine = create_engine(conn_opts['master'])
     master_connection = master_engine.connect()
     master_connection.execute("COMMIT")
 
-    log.info("Dropping pycroft db")
-    master_connection.execute("DROP DATABASE IF EXISTS pycroft")
-    master_connection.execute("COMMIT")
-    log.info("Creating pycroft db")
-    master_connection.execute("CREATE DATABASE pycroft")
-    master_connection.execute("COMMIT")
-    log.info("Creating pycroft model schema")
-    model.create_db_model(engine)
+    if args.delete_old:
+        log.info("Dropping pycroft db")
+        master_connection.execute("DROP DATABASE IF EXISTS pycroft")
+        master_connection.execute("COMMIT")
+        log.info("Creating pycroft db")
+        master_connection.execute("CREATE DATABASE pycroft")
+        master_connection.execute("COMMIT")
+        log.info("Creating pycroft model schema")
+        model.create_db_model(engine)
 
     with timed(log, thing="Translation"):
-        root_computer_cond = or_(netusers_model.Computer.nutzer_id == 0,
-                                 netusers_model.Computer.nutzer_id == 11551)
 
-        zimmer_hp4108 = session_nu.query(
-            netusers_model.Hp4108Port.wheim_id,
-            cast(netusers_model.Hp4108Port.etage, Integer).label('etage'),
-            netusers_model.Hp4108Port.zimmernr).distinct()
+        building = create_site_and_building()
+        ger38subnet, sn = create_subnet(session_nvtool)
+        import_facilities_and_switches(session_nvtool, building, ger38subnet)
+        import_SwitchPatchPorts(session_nvtool, building, sn)
 
-        zimmer_nutzer_zeubor = session_nu.query(
-            netusers_model.Nutzer.wheim_id,
-            netusers_model.Nutzer.etage,
-            netusers_model.Nutzer.zimmernr).filter(or_(
-                netusers_model.Nutzer.wheim_id == 12,
-                netusers_model.Nutzer.wheim_id == 13)).distinct()
-
-        legacy_data = {
-            'wheim': session_nu.query(netusers_model.Wheim).all(),
-            'zimmer': zimmer_hp4108.union(zimmer_nutzer_zeubor).all(),
-            'nutzer': (session_nu.query(netusers_model.Nutzer)
-                       .order_by(netusers_model.Nutzer.nutzer_id).all()),
-            'semester': session_um.query(userman_model.FinanzKonten).filter(
-                userman_model.FinanzKonten.id % 1000 == 0).all(),
-            'finanz_konten': session_um.query(userman_model.FinanzKonten).filter(
-                userman_model.FinanzKonten.id % 1000 != 0).all(),
-            'switch': session_nu.query(netusers_model.Computer).filter(
-                netusers_model.Computer.c_typ == 'Switch').all(),
-            'server': session_nu.query(netusers_model.Computer)\
-                .filter(netusers_model.Computer.c_typ != 'Switch')\
-                .filter(netusers_model.Computer.c_typ != 'Router')\
-                .filter(root_computer_cond).all(),
-            'userhost': session_nu.query(netusers_model.Computer)\
-                .filter(not_(root_computer_cond)).all(),
-            'bank_transaction': session_um.query(userman_model.BankKonto).all(),
-            'accounted_bank_transaction': session_um.query(
-                userman_model.BkBuchung).all(),
-            'finance_transaction': session_um.query(
-                userman_model.FinanzBuchungen).all(),
-            'subnet': session_nu.query(netusers_model.Subnet).all(),
-            'port': session_nu.query(netusers_model.Hp4108Port).all(),
-            # annotate type in the name since differing from rest
-            'ldap_nutzer': (session_ldap.query(ldap_model.Nutzer).all()
-                            if ldap_available else [])
-        }
-
-        if args.anonymize:
-            translate.anonymize_flag = True
-            max_uid = session_nu.query(
-                func.max(netusers_model.Nutzer.nutzer_id)).one()[0]
-            fr = range(max_uid + 1); to = random.sample(fr, len(fr))
-            translate.a_uids.update(zip(fr, to))
-
-            translate.a_rooms.update(zip(
-                fr, [random.choice(legacy_data['zimmer']) for i in fr]))
-
-        objs = translate_all(legacy_data)
-
-    with timed(log, thing="Importing {} records".format(len(objs))):
-        if args.bulk and list(map(int, sqlalchemy.__version__.split("."))) >= [1,0,0]:
-            session.session.bulk_save_objects(objs)
-        else:
-            session.session.add_all(objs)
         session.session.commit()
 
-    # after everything is imported, use a query
-    room_query = (session.session.query(facilities.Room, func.count(net.Subnet.id))
-                  .select_from(facilities.Room)
-                  .join(facilities.Room.switch_patch_ports)
-                  .join(port.SwitchPatchPort.switch_interface)
-                  .join(host.SwitchInterface.subnets)
-                  .group_by(net.Subnet)
-                  .group_by(facilities.Room))
 
-    iter_bad_rooms = (r for r in room_query.all() if not r[0])
-    for bad_room in iter_bad_rooms:
-        log.warning("Room %s isn't connected to any subnets", bad_room)
 
-    log.info("Fixing sequences...")
+def import_SwitchPatchPorts(session_nvtool, building, sn):
+    # As on the last check (2017-09-03) there are no active cables to jacks with other numbers.
+    # After cabeling to gigabit no userport was left and the stystemports are not in use.
+    jacks = session_nvtool.query(Jack).filter(
+        (Jack.number == 1) & (Jack.subnet == sn))
+    for j in jacks:
+        switch = session.session.query(host.Switch).filter(host.Switch.management_ip == j.port.switch.ip).one()
+        interface = next(
+            i for i in switch.switch_interfaces if i.name == str(j.port.number))
 
-    # `id` sequence from various metas
-    cols_to_fix = [
-        (meta, 'id', '{}_id_seq'.format(meta.__tablename__)) for meta in
-        [user.User, facilities.Building, finance.Transaction, finance.BankAccountActivity]
-    ]
-    # `uid` sequence from UnixAccount
-    cols_to_fix.append((user.UnixAccount, 'uid', 'unix_account_uid_seq'))
+        inhabitable, isswitchroom, room_number = GetRoomProperties(j.location)
 
-    for meta, column_name, sequence_name in cols_to_fix:
-        maxid = engine.execute('select max({}) from \"{}\";'
-                               .format(column_name, meta.__tablename__)).fetchone()[0]
-        if maxid:
-            engine.execute("select setval('{}', {})".format(sequence_name, maxid + 1))
-            log.info("  fixing %s(%s)", sequence_name, meta.__tablename__)
+        room = session.session.query(facilities.Room).filter(
+            (facilities.Room.building == building) &
+            (facilities.Room.level == j.location.floor.number) &
+            (facilities.Room.number == room_number)).one()
+        spp = port.SwitchPatchPort(
+            room=room,
+            switch_interface=interface,
+            name="{flat}{room}".format(flat=j.location.flat,
+                                       room=j.location.room, )
+        )
+        session.session.add(spp)
+
+
+def create_site_and_building():
+    site = facilities.Site(
+        name="Gerokstraße"
+    )
+    building = facilities.Building(
+        site=site,
+        short_name="Ger",
+        street="Gerokstraße",
+        number="38")
+    return building
+
+
+def create_subnet(session_nvtool):
+    # Exclude Ger27
+    sn = session_nvtool.query(Subnet).filter(Subnet.id != 1).one()
+    ger38subnet = net.Subnet(
+        address=sn.network,
+        gateway=sn.gateway,
+        vlan=net.VLAN(
+            name="Hausnetz Ger38",
+            vid=38
+        )
+    )
+
+    return ger38subnet, sn
+
+
+def import_facilities_and_switches(session_nvtool, building, ger38subnet):
+    # Only Gerok 38 locations
+    locations = session_nvtool.query(Location).filter(Location.domain_id == 2)
+    for l in locations:
+        inhabitable, isswitchroom, number = GetRoomProperties(l)
+
+        room = facilities.Room(
+            inhabitable=inhabitable,
+            building=building,
+            level=l.floor.number,
+            number=number
+        )
+        building.rooms.append(room)
+
+        if(isswitchroom):
+            switches = session_nvtool.query(Switch).filter(Switch.location == l)
+            for s in switches:
+                switch = host.Switch(
+                    name = s.comment,
+                    management_ip = s.ip,
+                    room = room
+                )
+                ports = session_nvtool.query(Port).filter(Port.switch == s)
+                for p in ports:
+                    port = host.SwitchInterface(
+                        name = p.number,
+                        subnets = [ger38subnet],
+                        mac = "00:00:00:00:00:38" #DGS-3100 are L2 Switches they don't have a mac for interfaces
+                    )
+                    switch.switch_interfaces.append(port)
+
+                session.session.add(switch)
+
+    session.session.add(building)
+    session.session.commit()
+
+
+def GetRoomProperties(l):
+    if l.comment != "Müllraum":
+        number = "0{flat}{room} ({comment})".format(flat=l.flat, room=l.room,
+                                                    comment=l.comment)
+        inhabitable = True
+        isswitchroom = False
+    else:
+        number = "{comment} {floor}.Etage".format(
+            floor=l.floor.number,
+            comment=l.comment)
+        inhabitable = False
+        isswitchroom = True
+    return inhabitable, isswitchroom, number
 
 
 if __name__=="__main__":
     import argparse
     parser = argparse.ArgumentParser(
-        prog='import_legacy', description='fill the hovercraft with eels')
+        prog='import_nvtool', description='fill the hovercraft with more eels')
     parser.add_argument("-l", "--log", dest="log_level",
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         default='INFO')
 
+    parser.add_argument("--delete-old", action='store_true', default=True)
 
-    source = parser.add_mutually_exclusive_group()
-    source.add_argument("--from-cache", action='store_true')
-    source.add_argument("--from-origin", action='store_true')
-
-    parser.add_argument("--bulk", action='store_true', default=False)
-    parser.add_argument("--anonymize", action='store_true', default=False)
-    #parser.add_argument("--tables", metavar="T", action='store', nargs="+",
-    #                choices=cacheable_tables)
     args = parser.parse_args()
 
     import_log_fname = "import.log"
