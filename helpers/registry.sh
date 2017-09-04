@@ -86,12 +86,15 @@ push() {
         local image=$DOCKER_IMAGE_NAME
     fi
 
-    echo "PUSH: $image:latest"
+    echo "PUSH to image: $image"
 
-    _tag_and_push $image develop
     if [[ $TRAVIS_BRANCH == "master" ]]; then
         _tag_and_push $image latest
     fi
+    if [[ $TRAVIS_BRANCH == "develop" ]]; then
+        _tag_and_push $image develop
+    fi
+    _tag_and_push $image "git_$TRAVIS_BRANCH"
     if [[ -n $TRAVIS_TAG ]]; then
         _tag_and_push $image $TRAVIS_TAG
     fi
