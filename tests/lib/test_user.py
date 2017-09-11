@@ -199,60 +199,6 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         self.assertEqual(self.user.email, new_mail)
 
 
-class Test_070_User_Move_Out_Temporarily(FixtureDataTestBase):
-    datasets = (AccountData, ConfigData, IPData, PropertyData,
-                SemesterData, SwitchPatchPortData, TrafficGroupData)
-
-    def setUp(self):
-        super(Test_070_User_Move_Out_Temporarily, self).setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-
-    def test_0010_move_out_temporarily(self):
-        test_name = u"Hans"
-        test_login = u"hans66"
-        test_email = u"hans@hans.de"
-        test_building = facilities.Building.q.first()
-        test_mac = "12:11:11:11:11:11"
-
-        new_user = UserHelper.move_in(
-            test_name,
-            test_login,
-            test_email,
-            test_building,
-            level=1,
-            room_number="1",
-            mac=test_mac,
-            processor=self.processing_user,
-            moved_from_division=False,
-            already_paid_semester_fee=False
-        )
-        session.session.commit()
-
-        during = closedopen(session.utcnow(), None)
-        self.assertFalse(new_user.has_property("reduced_semester_fee"))
-
-        UserHelper.move_out_temporarily(new_user, "", self.processing_user,
-                                        during)
-        session.session.commit()
-
-        # check for tmpAusgezogen group membership
-        self.assertIn(new_user, config.away_group.active_users())
-        self.assertIn(config.away_group, new_user.active_property_groups())
-        self.assertTrue(new_user.has_property("reduced_semester_fee"))
-
-        # check if user has no ips left
-        for user_host in new_user.user_hosts:
-            for interface in user_host.user_interfaces:
-                self.assertEqual(interface.ips, [])
-
-        # check log message
-        log_entry = new_user.log_entries[-1]
-        self.assertAlmostEqual(log_entry.created_at, during.begin,
-                               delta=timedelta(seconds=1))
-        self.assertEqual(log_entry.author, self.processing_user)
-
-
 class Test_080_User_Block(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, PropertyData, RoomData, UserData)
 
@@ -279,32 +225,3 @@ class Test_080_User_Block(FixtureDataTestBase):
         # self.assertTrue(unblocked_user.has_property("network_access"))
         self.assertNotIn(verstoss, unblocked_user.active_property_groups())
         self.assertEqual(unblocked_user.log_entries[0].author, u)
-
-
-class Test_090_User_Is_Back(FixtureDataTestBase):
-    datasets = (ConfigData, IPData, PropertyData, SwitchPatchPortData, UserData)
-
-    def setUp(self):
-        super(Test_090_User_Is_Back, self).setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        UserHelper.move_out_temporarily(user=self.user, comment='',
-                                        processor=self.processing_user)
-        session.session.commit()
-
-    def test_0010_user_is_back(self):
-        self.assertTrue(self.user.has_property("reduced_semester_fee"))
-        UserHelper.is_back(self.user, self.processing_user)
-        session.session.commit()
-
-        # check whether user has at least one ip
-        self.assertNotEqual(self.user.user_hosts[0].user_interfaces[0].ips, [])
-
-        # check log message
-        log_entry = self.user.log_entries[-1]
-        self.assertAlmostEqual(log_entry.created_at, session.utcnow(),
-                               delta=timedelta(seconds=5))
-        self.assertEqual(log_entry.author, self.processing_user)
-
-        self.assertFalse(self.user.has_property("reduced_semester_fee"))

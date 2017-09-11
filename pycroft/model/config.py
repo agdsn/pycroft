@@ -16,9 +16,6 @@ class Config(ModelBase):
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     network_access_group = relationship(
         PropertyGroup, foreign_keys=[network_access_group_id])
-    away_group_id = Column(
-        Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    away_group = relationship(PropertyGroup, foreign_keys=[away_group_id])
     violation_group_id = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     violation_group = relationship(

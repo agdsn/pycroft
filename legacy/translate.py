@@ -594,7 +594,6 @@ def generate_config(data, resources):
         member_group=g_d["member"],
         violation_group=g_d["suspended"],
         network_access_group=g_d["member"],  # todo: actual network_access_group
-        away_group=g_d["away"],
         moved_from_division_group=g_d["moved_from_division"],
         already_paid_semester_fee_group=g_d["already_paid"],
         registration_fee_account=an_d[u"Beiträge"],

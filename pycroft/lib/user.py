@@ -485,60 +485,6 @@ def move_out(user, comment, processor, when):
     return user
 
 
-@with_transaction
-def move_out_temporarily(user, comment, processor, during=None):
-    """
-    This function moves a user temporally. A log message is created.
-    :param User user: The user to move out.
-    :param unicode|None comment: Comment for temp moveout
-    :param User processor: The admin who is going to move out the user.
-    :param Interval[date]|None during: The interval in which the user is away.
-    If None, interval is set from now without an upper bound.
-    :return: The user to move out.
-    """
-    if during is None:
-        during = closedopen(session.utcnow(), None)
-    make_member_of(user, config.away_group, processor, during)
-
-    #TODO: the ip should be deleted just! if the user moves out now!
-    for user_host in user.user_hosts:
-        for interface in user_host.user_interfaces:
-            for ip in interface.ips:
-                session.session.delete(ip)
-
-    if comment:
-        message = deferred_gettext(u"Moved out temporarily during {during}. "
-                                   u"Comment: {comment}").format(
-            during=during, comment=comment)
-    else:
-        message = deferred_gettext(u"Moved out temporarily {during}.").format(
-            during=during)
-
-    log_user_event(message=message.to_json(), author=processor, user=user)
-    return user
-
-
-@with_transaction
-def is_back(user, processor):
-    """
-    After a user moved temporarily out, this function sets group memberships and
-     creates a log message
-    :param user: The User who is back.
-    :param processor: The admin recognizing the users return.
-    :return: The user who returned.
-    """
-    away_group = config.away_group
-    remove_member_of(user, away_group, processor,
-                     closedopen(session.utcnow(), None))
-
-    for user_host in user.user_hosts:
-        setup_ipv4_networking(user_host)
-
-    log_user_event(message=deferred_gettext(u"Moved back in.").to_json(),
-                   author=processor, user=user)
-    return user
-
-
 admin_properties = property.property_categories[u"Nutzerverwaltung"].keys()
 
 

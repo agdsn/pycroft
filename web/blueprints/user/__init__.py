@@ -724,32 +724,3 @@ def change_mac(user_id, user_interface_id):
     return render_template('user/change_mac.html',
                            form=form, user_id=user_id,
                            user_interface_id=user_interface_id)
-
-
-@bp.route('/<int:user_id>/move_out_temporarily', methods=['GET', 'POST'])
-@access.require('user_change')
-def move_out_temporarily(user_id):
-    form = UserMoveOutForm()
-    my_user = User.q.get(user_id)
-    if my_user is None:
-        flash(u"Nutzer mit ID {0} existiert nicht!".format(user_id), 'error')
-        abort(404)
-    if form.validate_on_submit():
-        changed_user = lib.user.move_out_temporarily(
-            my_user, form.comment.data, current_user,
-            closedopen(datetime.combine(form.when.data, time(0)), None))
-        session.session.commit()
-        flash(u'Nutzer zieht am {0} vorübergehend aus'.format(form.when.data),
-              'success')
-        return redirect(url_for('.user_show', user_id=changed_user.id))
-    return render_template('user/user_moveout.html', form=form, user_id=user_id)
-
-
-@bp.route('/<int:user_id>/is_back')
-@access.require('user_change')
-def is_back(user_id):
-    my_user = User.q.get(user_id)
-    changed_user = lib.user.is_back(user=my_user, processor=current_user)
-    session.session.commit()
-    flash(u'Nutzer ist zurück', 'success')
-    return redirect(url_for('.user_show', user_id=changed_user.id))
