@@ -21,14 +21,20 @@ An easy way of doing the setup is by using docker-compose.
 Follow the
 guides [here](https://www.docker.com/community-edition#download)
 and [here](https://docs.docker.com/compose/install/).
+You will need a docker engine of `1.10.0+` and a docker compose
+version of `1.8.0+` (I am not sure which exact version introduced
+version 2 of the config)
 
 Also, note that you might have to add your user to the `docker` group
 for running docker as a non-root:
 
 ```sh
-sudo usermod +aG docker $(whoami)
+sudo usermod -aG docker $(whoami)
 su $(whoami)  # to re-login as yourself to use the new groups
 ```
+
+Note that if you start e.g. pycharm without logging out and in again,
+the docker group will not have been applied yet.
 
 You should now be able to run `docker-compose config` and see the
 current configuration.
@@ -66,10 +72,52 @@ Said default setup provides:
 * db: A postgres database to be used for the pycroft database and the
   legacy cache.
 
-You can now start all of the services (the `-d` stands for
-“detached”).  This pulls the postgres image and builds the one for
-pycroft.  Since a whole production system is going to be set up, this
-may take a few minutes, so grab a cup of tea and relax.
+
+## Pycharm Integration
+
+In order to integrate the setup into pycharm, make sure you updated,
+there were important bugfixes.
+
+### Project interpreters
+
+The source code provides two running configurations, one for running
+the test instance, and one for unittesting.  In order for them to work
+correctly, we need to add two project interpreters, which will
+represent the corresponding docker-compose setup.
+
+Go to “Settings” → “Project interpreters” → Gear icon → “Add remote” →
+“Docker Compose”.
+
+Create a new server (use the default settings for that) if noone
+exists yet.  Add the config file `compose/default/docker-compose.yml`.
+Select service: `web` and python interpreter: `python3`.
+
+Repeat the same thing for `compose/testing/docker-compose.yml`.
+
+Save, and make sure the correct interpreter (`/default/`, not
+`/testing/`) is selected as default for the project (“Project
+settings” → “Project interpreter”).  As a proof of concept, you can
+run a python console.
+
+### Database connections (optional)
+
+Open the database window and open the preferences. Install any missing
+driver files.  Although the password should be set and remembered, for
+some reason pycharm may ask you anyway.  The password is `password`.
+
+### Things left to do
+
+Just as in the manual setup described below, you will need to import
+the legacy dump so the test instance has a data foundation.
+
+
+## The pure docker way
+
+After having installed docker and docker-compose, you can now start
+all of the services (the `-d` stands for “detached”).  This pulls the
+postgres image and builds the one for pycroft.  Since a whole
+production system is going to be set up, this may take a few minutes,
+so grab a cup of tea and relax.
 
 ```sh
 docker-compose up -d
