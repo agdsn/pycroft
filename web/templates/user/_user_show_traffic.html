@@ -162,7 +162,7 @@
         data.forEach(function(d) {
             var ts = parseTimestamp(d.timestamp);
             if (ts === null) {
-                ts = parseTimestamp(d.timestamp.slice(0, -7)); //chop off µs
+                ts = parseTimestamp(d.timestamp.replace(/.\d+$/, "")); //chop off µs
                 if (ts === null) throw "Could not parse timestamp "+d.timestamp;
             }
 
