@@ -337,23 +337,18 @@ def json_trafficdata(user_id, days=7):
     traffic_timespan = (session.utcnow() - timedelta(days=days)).date()
     # get all traffic volumes for the user in the timespan
 
-    traffic_volumes = TrafficVolume.q.filter(
-        TrafficVolume.user_id == user_id,
-        TrafficVolume.timestamp > traffic_timespan).order_by(
-        TrafficVolume.timestamp)
-
-    traffic_volumes = json_agg(traffic_volumes).one()[0]
-
-    traffic_credits = json_agg(
-        TrafficCredit.q.filter_by(user_id=user_id)).one()[0]
-
-    traffic_balance = json_agg(TrafficBalance.q.filter_by(user_id=user_id)).one()[0]
+    def traffic_events_as_json(model):
+        result = model.q.filter(
+            model.user_id == user_id,
+            model.timestamp > traffic_timespan).order_by(
+            model.timestamp)
+        return json_agg(result).one()[0]
 
     return jsonify(
         items={
-            'debits': traffic_volumes,
-            'credits': traffic_credits,
-            'balance': traffic_balance,
+            'debits': traffic_events_as_json(TrafficVolume),
+            'credits': traffic_events_as_json(TrafficCredit),
+            'balance': traffic_events_as_json(TrafficBalance),
         }
     )
 
