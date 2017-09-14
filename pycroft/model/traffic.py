@@ -35,12 +35,11 @@ class TrafficVolume(TrafficEvent, ModelBase):
                    nullable=False)
     ip = relationship(IP, backref=backref("traffic_volumes",
                                           cascade="all, delete-orphan"))
-
+    user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
+                     nullable=True)
     user = relationship(User,
-                        secondary="join(Host, Interface,"
-                                  "Interface.host_id == Host.id).join(IP)",
-                        backref="traffic_volumes",
-                        viewonly=True,  # cascade via ip
+                        backref=backref("traffic_volumes",
+                                        cascade="all, delete-orphan"),
                         uselist=False)
 
 

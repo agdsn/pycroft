@@ -10,30 +10,35 @@ from tests.fixtures.dummy.user import UserData
 
 class TrafficVolumeData(DataSet):
     class dummy_volume:
+        user = UserData.dummy
         amount = int(7.6 * 2**20)
         timestamp = datetime.utcnow()
         type = "IN"
         ip = IPData.dummy_user_ipv4
 
     class dummy_volume_before_balance:
+        user = UserData.dummy
         amount = int(3.72 * 2**30)
         timestamp = datetime.utcnow() - timedelta(hours=2)
         type = "IN"
         ip = IPData.dummy_user_ipv4
 
     class dummy_volume_ipv6:
+        user = UserData.dummy
         amount = int(56.1 * 2**20)
         timestamp = datetime.utcnow() - timedelta(minutes=25)
         type = "OUT"
         ip = IPData.dummy_user_ipv6
 
     class dummy_volume_server:
+        user = UserData.dummy
         amount = int(12.22 * 2**20)
         timestamp = datetime.utcnow() - timedelta(minutes=25)
         type = "IN"
         ip = IPData.dummy_server_ip
 
     class dummy_volume_switch:
+        user = UserData.privileged
         amount = int(51.258 * 2**40)
         timestamp = datetime.utcnow() - timedelta(hours=6)
         type = "IN"
