@@ -364,19 +364,13 @@ def traffic_events_expr():
         literal("credit").label('type')]),
 
         select([(-TrafficVolume.amount).label('amount'),
-                Host.owner_id.label('user_id'),
+                TrafficVolume.user_id,
                 TrafficVolume.timestamp,
                 literal("debit").label('type')]
-               ).select_from(
-            TrafficVolume.__table__.join(
-                IP.__table__
-            ).join(
-                Interface.__table__
-            ).join(
-                Host.__table__)),
+               ),
 
         select([TrafficBalance.amount,
-                TrafficBalance.user_id.label('user_id'),
+                TrafficBalance.user_id,
                 TrafficBalance.timestamp,
                 literal("balance").label('type')]  # ).select_from(
                # .__table__.outerjoin(TrafficBalance)

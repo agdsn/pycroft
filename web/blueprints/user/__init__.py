@@ -337,12 +337,10 @@ def json_trafficdata(user_id, days=7):
     traffic_timespan = (session.utcnow() - timedelta(days=days)).date()
     # get all traffic volumes for the user in the timespan
 
-    traffic_volumes = TrafficVolume.q.join(IP).join(Interface).join(Host
-        ).filter(
-            and_(TrafficVolume.timestamp > traffic_timespan,
-                 Host.owner_id == user_id)
-        ).order_by(
-            TrafficVolume.timestamp)
+    traffic_volumes = TrafficVolume.q.filter(
+        TrafficVolume.user_id == user_id,
+        TrafficVolume.timestamp > traffic_timespan).order_by(
+        TrafficVolume.timestamp)
 
     traffic_volumes = json_agg(traffic_volumes).one()[0]
 
