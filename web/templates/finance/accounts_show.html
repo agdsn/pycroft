@@ -71,8 +71,6 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = _width - margin.left - margin.right,
     height = 150 - margin.top - margin.bottom;
 
-var parseDate = de.timeFormat("%Y-%m-%d").parse;
-
 var x = d3.time.scale()
     .range([0, width]);
 
@@ -119,7 +117,7 @@ d3.json("{{ balance_json_url }}", function(error, resp) {
 
   data = resp.items;
   data.forEach(function(d) {
-    d.valid_on = parseDate(d.valid_on);
+    d.valid_on = d3.isoParse(d.valid_on);
     d.balance = +d.balance/100.; //converts string to number
   });
 

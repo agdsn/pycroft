@@ -74,8 +74,6 @@
       width = _width - margin.left - margin.right,
       height = 200 - margin.top - margin.bottom;
 
-  var parseTimestamp = de.timeFormat("%Y-%m-%dT%H:%M:%S").parse;
-
   var x = d3.time.scale()
       .range([0, width]);
 
@@ -160,13 +158,7 @@
         if (data === null) return;
 
         data.forEach(function(d) {
-            var ts = parseTimestamp(d.timestamp);
-            if (ts === null) {
-                ts = parseTimestamp(d.timestamp.replace(/.\d+$/, "")); //chop off µs
-                if (ts === null) throw "Could not parse timestamp "+d.timestamp;
-            }
-
-            d.timestamp = ts
+            d.timestamp = d3.isoParse(d.timestamp);
         });
 
         // Determine the first and last dates in the data set
