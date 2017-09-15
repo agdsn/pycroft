@@ -146,7 +146,7 @@
         if (data === null) return;
 
         data.forEach(function(d) {
-            d.timestamp = d3.isoParse(d.timestamp);
+            d.timestamp = d3.time.format.iso.parse(d.timestamp);
         });
 
         // Determine the first and last dates in the data set
