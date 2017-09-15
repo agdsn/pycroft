@@ -22,15 +22,7 @@ class TrafficBalance(ModelBase):
     timestamp = Column(DateTime, default=utcnow(), nullable=False)
 
 
-class TrafficEvent(object):
-    timestamp = Column(DateTime, default=utcnow(), nullable=False)
-    amount = Column(BigInteger, CheckConstraint('amount >= 0'),
-                    nullable=False)
-
-
-class TrafficVolume(TrafficEvent, ModelBase):
-    type = Column(Enum("IN", "OUT", name="traffic_types"),
-                  nullable=False)
+class TrafficVolume(ModelBase):
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
                    nullable=False)
     ip = relationship(IP, backref=backref("traffic_volumes",
@@ -41,12 +33,22 @@ class TrafficVolume(TrafficEvent, ModelBase):
                         backref=backref("traffic_volumes",
                                         cascade="all, delete-orphan"),
                         uselist=False)
+    type = Column(Enum("IN", "OUT", name="traffic_types"),
+                  nullable=False)
+    amount = Column(BigInteger, CheckConstraint('amount >= 0'),
+                    nullable=False)
+    packets = Column(Integer, CheckConstraint('amount >= 0'),
+                     nullable=False)
+    timestamp = Column(DateTime, default=utcnow(), nullable=False)
 
 
-class TrafficCredit(TrafficEvent, ModelBase):
+class TrafficCredit(ModelBase):
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
                      nullable=False)
     user = relationship(User,
                         backref=backref("traffic_credits",
                                         cascade="all, delete-orphan"),
                         uselist=False)
+    amount = Column(BigInteger, CheckConstraint('amount >= 0'),
+                    nullable=False)
+    timestamp = Column(DateTime, default=utcnow(), nullable=False)
