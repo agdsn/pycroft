@@ -40,6 +40,8 @@ class TrafficVolume(TrafficEvent, IntegerIdModel):
                         backref=backref("traffic_volumes",
                                         cascade="all, delete-orphan"),
                         uselist=False)
+    packets = Column(Integer, CheckConstraint('amount >= 0'),
+                     nullable=False)
 
 
 class TrafficCredit(TrafficEvent, IntegerIdModel):

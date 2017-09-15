@@ -10,25 +10,28 @@ from tests.fixtures.dummy.user import UserData
 
 class TrafficVolumeData(DataSet):
     class dummy_volume:
-        user = UserData.dummy
-        amount = int(7.6 * 2**20)
-        timestamp = datetime.utcnow()
-        type = "IN"
         ip = IPData.dummy_user_ipv4
+        user = UserData.dummy
+        type = "IN"
+        amount = int(7.6 * 2**20)
+        packets = int(7600)
+        timestamp = datetime.utcnow()
 
     class dummy_volume_before_balance:
-        user = UserData.dummy
-        amount = int(3.72 * 2**30)
-        timestamp = datetime.utcnow() - timedelta(hours=2)
-        type = "IN"
         ip = IPData.dummy_user_ipv4
+        user = UserData.dummy
+        type = "IN"
+        amount = int(3.72 * 2**30)
+        packets = int(3720)
+        timestamp = datetime.utcnow() - timedelta(hours=2)
 
     class dummy_volume_ipv6:
-        user = UserData.dummy
-        amount = int(56.1 * 2**20)
-        timestamp = datetime.utcnow() - timedelta(minutes=25)
-        type = "OUT"
         ip = IPData.dummy_user_ipv6
+        user = UserData.dummy
+        type = "OUT"
+        amount = int(56.1 * 2**20)
+        packets = int(5610)
+        timestamp = datetime.utcnow() - timedelta(minutes=25)
 
 
 class TrafficCreditData(DataSet):
