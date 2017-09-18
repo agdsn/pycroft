@@ -114,6 +114,7 @@ def property_group_create():
     form = PropertyGroupForm()
     if form.validate_on_submit():
         group = PropertyGroup(name=form.name.data)
+        session.session.add(group)
         session.session.commit()
         message = u'Eigenschaften Gruppe {0} angelegt.'
         flash(message.format(group.name), 'success')
