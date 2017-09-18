@@ -233,13 +233,26 @@ class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
             self.assertTemplateUsed(name=template)
         return response
 
-    def assert_response_code(self, endpoint, code):
-        response = self.client.get(endpoint)
+    def assert_response_code(self, endpoint, code, method='get', **kwargs):
+        callback_map = {
+            'get': self.client.get,
+            'post': self.client.post
+        }
+        try:
+            callback = callback_map[method]
+        except KeyError:
+            raise ValueError("{} is not a valid method. choose from {}"
+                             .format(method, list(callback_map.keys())))
+        return self._assert_response_code(response=callback(endpoint, **kwargs),
+                                          code=code)
+
+    def _assert_response_code(self, response, code):
         try:
             self.assertStatus(response, code)
         except self.failureException as e:
+            # raise self.failureException("{}".format(type(response).__mro__))
             exception = self.failureException("While accessing {}: {}"
-                                              .format(endpoint, e))
+                                              .format(response.location, e))
             raise self.failureException(exception).with_traceback(sys.exc_info()[2])
 
         return response

@@ -53,25 +53,37 @@ class PropertyGroupData(DataSet):
 
 
 class PropertyData(DataSet):
-    class property1_facilities_show(BaseProperty):
+    class _AdminProperty(BaseProperty):
+        # Property granted to admin
+        property_group = PropertyGroupData.property_group1_admin
+
+    class _FinanceProperty(BaseProperty):
+        # Property granted to admin
+        property_group = PropertyGroupData.property_group2_finance
+
+    class property1_facilities_show(_AdminProperty):
         name = "facilities_show"
-        property_group = PropertyGroupData.property_group1_admin
 
-    class property2_facilities_change(BaseProperty):
+    class property2_facilities_change(_AdminProperty):
         name = "facilities_change"
-        property_group = PropertyGroupData.property_group1_admin
 
-    class property3_finance_show(BaseProperty):
+    class property3_finance_show(_FinanceProperty):
         name = "finance_show"
-        property_group = PropertyGroupData.property_group2_finance
 
-    class property4_finance_change(BaseProperty):
+    class property4_finance_change(_FinanceProperty):
         name = "finance_change"
-        property_group = PropertyGroupData.property_group2_finance
 
-    class property5_user_show(BaseProperty):
+    class property5_user_show(_AdminProperty):
         name = "user_show"
-        property_group = PropertyGroupData.property_group1_admin
+
+    class property_groups_change(_AdminProperty):
+        name = "groups_change"
+
+    class property_groups_change_membership(_AdminProperty):
+        name = "groups_change_membership"
+
+    class property_groups_show(_AdminProperty):
+        name = "groups_show"
 
 
 class MembershipData(DataSet):
