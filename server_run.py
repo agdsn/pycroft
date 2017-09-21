@@ -26,7 +26,7 @@ def server_run(args):
           " from what is given below."
           " It is probably http://0.0.0.0:5001")
 
-    app = make_app()
+    app = make_app(args.debug)
     @app.before_request
     def get_time():
         g.request_time = time()

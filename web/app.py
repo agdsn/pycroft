@@ -55,12 +55,13 @@ class PycroftFlask(Flask):
                 self.logger.debug("Config key %s successfuly read from environment", key)
 
 
-def make_app():
+def make_app(debug=False):
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
     """
     app = PycroftFlask(__name__)
+    app.debug = debug
 
     #initialization code
     login_manager.init_app(app)
