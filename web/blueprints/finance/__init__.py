@@ -348,7 +348,7 @@ def transactions_all():
     page_resources.link_script(
         url_for("static", filename="libs/d3/d3.min.js"))
     page_resources.link_script(
-        url_for("static", filename="libs/crossfilter/crossfilter.min.js"))
+        url_for("static", filename="libs/crossfilter2/crossfilter.min.js"))
     page_resources.link_script(
         url_for("static", filename="libs/dcjs/dc.min.js"))
     return render_template('finance/transactions_overview.html',
