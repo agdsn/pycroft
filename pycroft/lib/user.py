@@ -330,7 +330,7 @@ def traffic_events_expr():
     return events
 
 
-def traffic_balance_expr():
+def traffic_balance_expr(until=func.now()):
     # not a hybrid attribute expression due to circular import dependencies
 
     balance = select(
@@ -340,7 +340,7 @@ def traffic_balance_expr():
     ).where(
         and_(
             literal_column('traffic_events.user_id') == User.id,
-            literal_column('traffic_events.timestamp') <= func.now(),
+            literal_column('traffic_events.timestamp') <= until,
             literal_column('traffic_events.timestamp') >=
             func.coalesce(
                 select([TrafficBalance.timestamp]

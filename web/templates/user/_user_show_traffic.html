@@ -34,303 +34,234 @@
 }
 
 </style>
+<link href="{{ url_for("static", filename="libs/nvd3/build/nv.d3.min.css") }}" rel="stylesheet">
 {% endblock %}
 
 <div class="row">
     <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
         <label for="select-days">Zeitraum</label>
-        <select id="select-days" class="form-control" onchange="load_trafficchart(this)">
+        <select id="select-days" class="form-control" onchange="loadTrafficData(this)">
             <option value="7" selected>7 Tage</option>
             <option value="14">14 Tage</option>
             <option value="21">21 Tage</option>
         </select>
     </div>
-    <div id="traffic-graph" class="col-sm-10" data-src="{{ traffic_json_url }}"></div>
+    <div id="traffic-graph" class="col-sm-10"></div>
+    <div id="credit-graph" class="col-sm-offset-2 col-sm-10"></div>
 </div>
 
 
 {% block page_script %}
   <script type="text/javascript" src="{{ url_for("static", filename="libs/d3/d3.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="libs/nvd3/build/nv.d3.min.js") }}"></script>
   <script type="text/javascript" src="{{ url_for("static", filename="custom/js/d3locale.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/binary_prefix.js") }}"></script>
 
   <script>
-  var parent = d3.select("#traffic-graph");
-  var days_select = document.getElementById("select-days");
+      function setChartSize(graph) {
+          var width = graph.parent.node().getBoundingClientRect().width;
+          var height = 200;
 
-  var _width = parent.node().getBoundingClientRect().width;
-  var margin = {top: 25, right: 20, bottom: 50, left: 50},
-      width = _width - margin.left - margin.right,
-      height = 200 - margin.top - margin.bottom;
+          graph.chart.width(width)
+              .height(height);
 
-  var x = d3.time.scale()
-      .range([0, width]);
-
-  var y = d3.scale.linear()
-      .range([height, 0]);
-
-  var y1 = d3.scale.linear()
-      .range([height, 0]);
-
-  var color = d3.scale.ordinal()
-  .domain(["IN", "OUT"])
-  .range(["lightsteelblue", "#deb0c4"]);
-
-  var xAxis = d3.svg.axis()
-      .scale(x)
-      .orient("bottom")
-      .tickFormat(timeFormat);
-
-  var yAxis = d3.svg.axis()
-      .scale(y)
-      .orient("left")
-      .tickFormat(de.numberFormat("s"));
-
-  var yAxisRight = d3.svg.axis()
-      .scale(y1)
-      .orient("right")
-      .tickFormat(de.numberFormat("s"));
-
-  //var valueline2 = d3.svg.line()
-  //    .x(function(d) { return x(d.date); })
-  //    .y(function(d) { return y1(d.open); });
-
-  var stack = d3.layout.stack()
-      .values(function(d) {
-          return d.values;
-      });
-
-  // round to 'n' significant digits
-  // I know rounding, I have the best rounding
-  function round(value, n) {
-      if(value == 0) {
-          return 0;
+          graph.data.attr('width', width)
+              .attr('height', height);
       }
 
-      var d = Math.ceil(Math.log10(value < 0 ? -value: value));
-      var power = n - parseInt(d);
+      var trafficGraph = {
+          parent: d3.select("#traffic-graph")
+      };
 
-      var magnitude = Math.pow(10, power);
-      var shifted = Math.round(value*magnitude);
-      return shifted/magnitude;
-  }
+      var creditGraph = {
+          parent: d3.select("#credit-graph")
+      };
 
-  var svg = parent.append("svg")
-      .attr("viewBox", "0 0 " +
-            (width + margin.left + margin.right) + " " +
-            (height+ margin.top + margin.bottom))
-      .classed("svg-content-responsive", true)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      nv.addGraph({
+          generate: function () {
+              trafficGraph.chart = nv.models.multiBarChart()
+                  .margin({top: 25, right: 75, bottom: 30, left: 60})
+                  .stacked(true)
+                  .groupSpacing(0.4)
+                  .color(["#b55d1f", "#1f77b4"]);
+              trafficGraph.chart.yScale(binaryPrefix.linearScale());
+              trafficGraph.chart.yAxis.tickFormat(binaryPrefix.format);
 
-  //x axis
-  svg.append("g")
-      .attr("class", "xaxis axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
+              trafficGraph.data = trafficGraph.parent.append("svg");
 
-  // y axis
-  svg.append("g")
-      .attr("class", "yaxis axis")
-      .call(yAxis)
-    .append("text")
-      .text("Traffic");
+              setChartSize(trafficGraph);
 
-  var data_src = parent.attr("data-src");
+              return trafficGraph.chart;
+          },
+          callback: function (graph) {
+              nv.utils.windowResize(function () {
+                  setChartSize(trafficGraph);
 
-  function load_trafficchart(sel) {
-      var days = sel.value;
-      d3.json(data_src + '/' + days, function(error, resp) {
-        if (error) throw error;
-        var data = resp.items.debits;
+                  trafficGraph.data
+                      .transition().duration(0)
+                      .call(graph);
+              });
+          }
+      });
 
-        if (data === null) return;
+      nv.addGraph({
+          generate: function () {
+              creditGraph.chart = nv.models.lineChart()
+                  .margin({top: 25, right: 75, bottom: 30, left: 60})
+                  .xScale(d3.time.scale())
+                  .yScale(d3.scale.linear());
+              creditGraph.chart.xAxis.tickFormat(timeFormat);
+              creditGraph.chart.yScale(binaryPrefix.linearScale());
+              creditGraph.chart.yAxis.tickFormat(binaryPrefix.format).ticks(5);
 
-        data.forEach(function(d) {
-            d.timestamp = d3.time.format.iso.parse(d.timestamp);
-        });
+              creditGraph.data = creditGraph.parent.append("svg");
 
-        // Determine the first and last dates in the data set
-        var dayExtent = d3.extent(data, function(d) { return d.timestamp; });
+              setChartSize(creditGraph);
 
-        // Bin by day
-        var dayBins = d3.time.days(d3.time.day.offset(dayExtent[0],-1),
-                                       d3.time.day.offset(dayExtent[1],1));
-        var bin_traffic = function(data, traffic_type) {
-            var hist = d3.layout.histogram()
-                    .bins(dayBins)
-                    .value(function(d) {return d.timestamp});
-            var binned_data = hist(data);
-            binned_data.forEach(
-                    function(bin) {
-                        bin.traffic_type = traffic_type;
-                        bin.y = d3.sum(bin, function(d) {return d.amount;})
-                    });
-            return binned_data
-            };
-        var traffic_by_type = d3.nest()
-                .key(function(d) {
-                    return d.type
-                })
-                .map(data, d3.map);
-        var binned_traffic_by_type = [];
-        traffic_by_type.forEach(function(key, value) {
-            // bin data for each singular data point by day
-            var binned_values = bin_traffic(value, key);
-            binned_traffic_by_type.push({
-                traffic_type: key,
-                values: binned_values
-            });
-        });
-        var stacked_traffic = stack(binned_traffic_by_type).sort(
-                function(a, b) {return a.traffic_type < b.traffic_type});
+              return creditGraph.chart;
+          },
+          callback: function (graph) {
+              nv.utils.windowResize(function () {
+                  setChartSize(creditGraph);
 
-        today = new Date();
-        x.domain(d3.extent(dayBins));
-        y.domain([0, d3.max(stacked_traffic[stacked_traffic.length - 1].values, function(d) {
-                return d.y + d.y0;
-            })]);
-
-        var traffic_type = svg.selectAll(".traffic_type")
-            .data(stacked_traffic, function(d) {return d.traffic_type;});
-
-        // BUG: type box color not being updated
-          traffic_type.enter().append("g")
-            .attr("class", "traffic_type")
-            .style("fill", function(d, i) {
-                return color(d.traffic_type);
-            })
-            .style("stroke", function(d, i) {
-                return d3.rgb(color(d.traffic_type)).darker();
-            });
-
-        var bars = traffic_type.selectAll(".bar")
-              .data(function(d) { //data
-                  return d.values;
-              }, function(d) {return d.x}); //key for object constancy
-
-            bars.exit()
-              .transition()
-                .duration(300)
-              .attr("x", function(d) {return x(d.x) - width})
-              .style('fill-opacity', 1e-6)
-              .remove();
-
-
-          bars.enter().append("rect")
-                  .attr("class", "bar")
-                  .attr("x", function(d) {return x(d.x) - width})
-                  //.attr("height", height - y(0))
-                  .on("mouseover", function() {
-                              // tooltip
-                      var tooltip = svg.append("g")
-                              .attr("class", "tooltip")
-                              .style("opacity", 1);
-                      tooltip.append("text")
-                              .attr("x", 15)
-                              .attr("dy", "1.2em")
-                              .style("text-anchor", "middle")
-                              .attr("font-size", "12px");
-                      })
-                  .on("mouseout", function() {
-                      tooltip = svg.selectAll(".tooltip");
-                      tooltip.remove();})
-                  .on("mousemove", function(d) {
-                    tooltip = svg.selectAll(".tooltip");
-                    var xPosition = d3.mouse(this)[0] - 15;
-                    var yPosition = d3.mouse(this)[1] - 25;
-                    tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
-                    tooltip.select("text").text(de.numberFormat("s")(round(d.y, 3))+"\n"+d.traffic_type);
-                  });
-
-          bars.transition().duration(300)
-              .attr("x", function(d) {
-                  return x(d.x);
-              })
-              .attr("width", function(d) {
-                  return x(new Date(d.x.getTime() + d.dx)) - x(d.x) - 2;
-              })
-              .attr("y", function(d) {
-                  return y(d.y0 + d.y);
-              })
-              .attr("height", function(d) {
-                  return y(d.y0) - y(d.y0 + d.y);
+                  creditGraph.data
+                      .transition().duration(0)
+                      .call(graph);
               });
 
+              loadTrafficData(document.getElementById("select-days"));
+          }
+      });
 
-            traffic_type.exit()
-                    .transition().duration(300)
-                .remove();
+      function sumByType(data, type) {
+          return d3.sum(data.filter(function (e) {
+                  return e.type === type;
+              }),
+              function (e) {
+                  return e.amount;
+              });
+      }
 
-          //update axes
-          svg.selectAll(".xaxis").call(xAxis);
-          svg.selectAll(".yaxis").call(yAxis);
+      function sumUntil(items, timestamp) {
+          return d3.sum(items
+              .filter(function (d) {
+                  return d.timestamp < timestamp;
+              }), function (d) {
+              return d.amount;
+          });
+      }
 
-          // rotate x axis tick labels
-          svg.selectAll(".xaxis text")  // select all the text elements for the xaxis
-                .attr("transform", function(d) {
-                   return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-30)";
-               });
+      function loadTrafficData(sel) {
+          var days = sel.value;
+          d3.json('{{ traffic_json_url }}/' + days, function (error, resp) {
+              if (error) throw error;
 
+              // Normalize data
+              var debits = resp.items.debits || [];
+              var credits = resp.items.credits || [];
 
+              debits.forEach(function (d) {
+                  d.timestamp = d3.time.format.iso.parse(d.timestamp);
+              });
 
-        // legend
-        var maxLegendWidth = 110;
-        var xStart = (width - maxLegendWidth * color.domain().length) / 2;
-        var leg = {y: -13, width: 18, height: 18};
+              credits.forEach(function (d) {
+                  d.timestamp = d3.time.format.iso.parse(d.timestamp);
+              });
 
-        var legend = svg.selectAll(".legend")
-            .data(color.domain().slice());
+              // Determine the first and last day to be plotted
+              var now = d3.time.day.ceil(new Date());
+              var dayExtent = [d3.time.day.offset(now, -days), d3.time.day.offset(now, 1)];
 
-        legend.exit().remove();
-
-        var leg_enter = legend.enter().append("g")
-                .attr("class", "legend")
-                .attr("transform", function(d, i) {
-                    return "translate(" + i * maxLegendWidth + ",0)";
-                });
-
-        leg_enter.append("rect")
-                .attr("x", xStart)
-                .attr("y", leg.y-leg.height/2)
-                .attr("width", leg.width)
-                .attr("height", leg.height)
-                .style("fill", function(d) {return color(d)})
-                .style("stroke", function(d, i) {return d3.rgb(color(d)).darker();})
-
-        leg_enter.append("text")
-                .attr("x", xStart + 24)
-                .attr("y", leg.y)
-                .attr("dy", ".35em")
-                .style("text-anchor", "start")
-                .text(function(d) {return d;});
-
-        // line at current time
-        var todayline = svg.selectAll(".vline-now")
-                .data([today]);
-
-        todayline.exit()
-              .remove();
-
-        todayline.enter().append("line")
-                .attr("class", "vline-now")
-                .attr("x1", function(d) {return x(d)})
-                .attr("y1", 0)
-                .attr("x2", function(d) {return x(d)})
-                .attr("y2", height)
-                .style("stroke-width", 1)
-                .style("stroke", "red")
-                .style("fill", "none");
-
-        todayline.transition()
-                .duration(300)
-              .attr("x1", function(d) {return x(d)})
-              .attr("x2", function(d) {return x(d)})
-    });
+              // Bin by day
+              var dayBins = d3.time.days(dayExtent[0], dayExtent[1]);
 
 
+              // Traffic graph
+              var binnedDebits = d3.layout.histogram()
+                  .range(dayExtent)
+                  .bins(dayBins)
+                  .value(function (d) {
+                      return d.timestamp
+                  })(debits)
+                  .map(function (d) {
+                      return {
+                          in: sumByType(d, "IN"),
+                          out: sumByType(d, "OUT")
+                      };
+                  });
 
-  }
-  load_trafficchart(days_select);
+              var data = [{
+                  key: "OUT",
+                  nonStackable: false,
+                  values: binnedDebits.map(function (e, i) {
+                      return {
+                          x: i,
+                          y: e.out
+                      }
+                  })
+              },
+                  {
+                      key: "IN",
+                      nonStackable: false,
+                      values: binnedDebits.map(function (e, i) {
+                          return {
+                              x: i,
+                              y: e.in
+                          }
+                      })
+                  }];
+
+              trafficGraph.chart.xAxis.tickFormat(function (d) {
+                  return timeFormat(dayBins[d]);
+              });
+
+              if (debits.length === 0)
+                  trafficGraph.chart.forceY([0, 1000]);
+
+              trafficGraph.data.datum(data).transition().duration(250).call(trafficGraph.chart);
+
+
+              // Credit graph
+              var binnedCredits = d3.layout.histogram()
+                  .range(dayExtent)
+                  .bins(dayBins)
+                  .value(function (d) {
+                      return d.timestamp
+                  })(credits)
+                  .map(function (d, i) {
+                      return {
+                          x: dayBins[i],
+                          y: d3.sum(d, function (e) {
+                              return e.amount;
+                          })
+                      };
+                  });
+
+              var balance = resp.items.balance
+                  - sumUntil(debits, dayExtent[0])
+                  + sumUntil(credits, dayExtent[0]);
+
+              binnedCredits.forEach(function (d, i, a) {
+                  d.y += i === 0 ? balance : a[i - 1].y;
+                  d.y -= binnedDebits[i].in + binnedDebits[i].out;
+              });
+
+              var forced = d3.extent(binnedCredits, function (d) {
+                  return d.y;
+              }).map(binaryPrefix.ceil);
+              if (resp.items.credit_limit !== null)
+                  forced.push(resp.items.credit_limit);
+              creditGraph.chart.forceY(forced);
+
+              creditGraph.data.datum([{
+                  key: "Credits",
+                  area: true,
+                  strokeWidth: 3,
+                  color: "#16b520",
+                  values: binnedCredits
+              }]).transition().duration(250).call(creditGraph.chart);
+          });
+      }
   </script>
 
 {% endblock %}
