@@ -3,10 +3,12 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen") -%}
+{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen", show_cancel=true) -%}
     <div class="form-actions">
         <button type="submit" class="btn btn-default btn-primary">{{ submit_text }}</button>
-        <a href="{{ cancel_to }}" class="btn btn-default">{{ cancel_text }}</a>
+        {% if show_cancel %}
+            <a href="{{ cancel_to }}" class="btn btn-default">{{ cancel_text }}</a>
+        {% endif %}
     </div>
 {%- endmacro %}
 
@@ -24,14 +26,14 @@
     </div>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to, cancel_to, form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST") -%}
+{% macro simple_form(form, submit_to, cancel_to, form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true) -%}
     <form method="{{ method }}" action="{{ submit_to }}" enctype="{{ enctype }}" class="form-{{ form_render_mode }}" role="form">
         <div class="col-sm-6">
             {% for field in form %}
                 {{ field(render_mode=field_render_mode) }}
             {% endfor %}
             <div class="form-group">
-                <div class="col-sm-offset-5 col-sm-7">{{ form_actions(cancel_to, submit_text) }}</div>
+                <div class="col-sm-offset-5 col-sm-7">{{ form_actions(cancel_to, submit_text, show_cancel=show_cancel) }}</div>
             </div>
         </div>
     </form>

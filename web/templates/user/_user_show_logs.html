@@ -37,5 +37,5 @@
 <h3>User-Log erstellen</h3>
 
 <div class="row">
-    {{ forms.simple_form(form, '', '') }}
+    {{ forms.simple_form(form, url_for('.user_show',user_id=user.id,_anchor='logs'), '', show_cancel=false) }}
 </div>
