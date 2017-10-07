@@ -8,6 +8,15 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy import schema
 
 
+def _join_tokens(*tokens) -> str:
+    """
+    Join all elements that are not None
+    :param tokens:
+    :return:
+    """
+    return ' '.join(token for token in tokens if token is not None)
+
+
 class DropConstraint(schema.DropConstraint):
     """
     Extends SQLALchemy's DropConstraint with support for IF EXISTS
@@ -23,13 +32,11 @@ class DropConstraint(schema.DropConstraint):
 @compiles(DropConstraint, 'postgresql')
 def visit_drop_constraint(drop_constraint, compiler, **kw):
     constraint = drop_constraint.element
-    return (
-        "ALTER TABLE {table} DROP CONSTRAINT {if_exists} {name} {cascade}"
-    ).format(
-        table=constraint.table.name, name=constraint.name,
-        if_exists='IF EXISTS' if drop_constraint.if_exists else '',
-        cascade='CASCADE' if drop_constraint.cascade else '',
-    )
+    opt_if_exists = 'IF EXISTS' if drop_constraint.if_exists else None
+    opt_drop_behavior = 'CASCADE' if drop_constraint.cascade else None
+    return _join_tokens(
+        "ALTER TABLE", constraint.table.name, "DROP CONSTRAINT", opt_if_exists,
+        constraint.name, opt_drop_behavior)
 
 
 class Function(schema.DDLElement):
@@ -90,18 +97,14 @@ def visit_create_function(element, compiler, **kw):
     Compile a CREATE FUNCTION DDL statement for PostgreSQL
     """
     func = element.function
-    return (
-        "CREATE OR REPLACE FUNCTION {name} RETURNS {rtype} {volatility} "
-        "{strict} {leakproof} LANGUAGE {language} AS "
-        "${quote_tag}$\n{definition}\n${quote_tag}$"
-    ).format(
-        name=func.name, rtype=func.rtype,
-        volatility=func.volatility,
-        strict='STRICT' if func.strict else 'CALLED ON NULL INPUT',
-        language=function.language, definition=func.definition,
-        leakproof='LEAKPROOF' if func.leakproof else '',
-        quote_tag=func.quote_tag,
-    )
+    strictness = "STRICT" if func.strict else "CALLED ON NULL INPUT"
+    leakproof = "LEAKPROOF" if func.leakproof else None
+    quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
+        quote_tag=func.quote_tag, definition=func.definition)
+    return _join_tokens(
+        "CREATE OR REPLACE FUNCTION", func.name, "RETURNS",
+        func.rtype, func.volatility, strictness, leakproof,
+        quoted_definition)
 
 
 # noinspection PyUnusedLocal
@@ -110,7 +113,7 @@ def visit_drop_function(element, compiler, **kw):
     """
     Compile a DROP FUNCTION DDL statement for PostgreSQL
     """
-    return "DROP FUNCTION IF EXISTS {name}".format(name=element.function.name)
+    return _join_tokens("DROP FUNCTION IF EXISTS", element.function.name)
 
 
 class ConstraintTrigger(schema.DDLElement):
@@ -155,11 +158,11 @@ def create_add_constraint_trigger(element, compiler, **kw):
     Compile a CREATE CONSTRAINT TRIGGER DDL statement for PostgreSQL
     """
     trigger = element.constraint_trigger
-    return "CREATE CONSTRAINT TRIGGER {name} AFTER {events} ON {table} " \
-           "DEFERRABLE INITIALLY DEFERRED " \
-           "FOR EACH ROW EXECUTE PROCEDURE {function}".format(
-        name=trigger.name, events=' OR '.join(trigger.events),
-        table=trigger.table.name, function=trigger.function_call)
+    events = ' OR '.join(trigger.events)
+    return _join_tokens(
+        "CREATE CONSTRAINT TRIGGER", trigger.name, 'AFTER', events, 'ON',
+        trigger.table.name, "DEFERRABLE INITIALLY DEFERRED",
+        "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
 
 # noinspection PyUnusedLocal
@@ -168,10 +171,9 @@ def visit_drop_trigger(element, compiler, **kw):
     """
     Compile a DROP TRIGGER DDL statement for PostgreSQL
     """
-    return "DROP TRIGGER IF EXISTS {name} ON {table}".format(
-        name=element.trigger.name,
-        table=element.trigger.table.name
-    )
+    trigger = element.trigger
+    return _join_tokens(
+        "DROP TRIGGER IF EXISTS", trigger.name, "ON", trigger.table.name)
 
 
 class DDLManager(object):
