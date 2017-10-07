@@ -117,8 +117,9 @@ def visit_drop_function(element, compiler, **kw):
     Compile a DROP FUNCTION DDL statement for PostgreSQL
     """
     opt_if_exists = "IF EXISTS" if element.if_exists else None
+    opt_drop_behavior = "CASCADE" if element.cascade else None
     return _join_tokens("DROP FUNCTION", opt_if_exists,
-                        element.function.name)
+                        element.function.name, opt_drop_behavior)
 
 
 class ConstraintTrigger(schema.DDLElement):
@@ -179,9 +180,10 @@ def visit_drop_trigger(element, compiler, **kw):
     """
     trigger = element.trigger
     opt_if_exists = "IF EXISTS" if element.if_exists else None
+    opt_drop_behavior = "CASCADE" if element.cascade else None
     return _join_tokens(
-        "DROP TRIGGER", opt_if_exists, trigger.name, "ON", trigger.table.name)
-    )
+        "DROP TRIGGER", opt_if_exists, trigger.name, "ON", trigger.table.name,
+        opt_drop_behavior)
 
 
 class DDLManager(object):
