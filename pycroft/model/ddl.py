@@ -19,6 +19,7 @@ class DropConstraint(schema.DropConstraint):
         self.cascade = cascade
 
 
+# noinspection PyUnusedLocal
 @compiles(DropConstraint, 'postgresql')
 def visit_drop_constraint(drop_constraint, compiler, **kw):
     constraint = drop_constraint.element
@@ -82,6 +83,7 @@ class DropFunction(schema.DDLElement):
         self.function = func
 
 
+# noinspection PyUnusedLocal
 @compiles(CreateFunction, 'postgresql')
 def visit_create_function(element, compiler, **kw):
     """
@@ -102,6 +104,7 @@ def visit_create_function(element, compiler, **kw):
     )
 
 
+# noinspection PyUnusedLocal
 @compiles(DropFunction, 'postgresql')
 def visit_drop_function(element, compiler, **kw):
     """
@@ -145,6 +148,7 @@ class DropTrigger(schema.DDLElement):
         self.trigger = trigger
 
 
+# noinspection PyUnusedLocal
 @compiles(CreateConstraintTrigger, 'postgresql')
 def create_add_constraint_trigger(element, compiler, **kw):
     """
@@ -158,6 +162,7 @@ def create_add_constraint_trigger(element, compiler, **kw):
         table=trigger.table.name, function=trigger.function_call)
 
 
+# noinspection PyUnusedLocal
 @compiles(DropTrigger, 'postgresql')
 def visit_drop_trigger(element, compiler, **kw):
     """
