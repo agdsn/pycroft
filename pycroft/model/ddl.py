@@ -123,18 +123,23 @@ def visit_drop_function(element, compiler, **kw):
 
 
 class ConstraintTrigger(schema.DDLElement):
-    def __init__(self, name, table, events, function_call):
+    def __init__(self, name, table, events, function_call,
+                 deferrable=False, initially_deferred=False):
         """
         Construct a constraint trigger
         :param str name: Name of the trigger
         :param table: Table the trigger is for
         :param iterable[str] events: list of events (INSERT, UPDATE, DELETE)
         :param str function_call: call of the trigger function
+        :param deferrable: Constraint can be deferred
+        :param initially_deferred: Constraint is set to deferred
         """
         self.name = name
         self.table = table
         self.events = events
         self.function_call = function_call
+        self.deferrable = deferrable
+        self.initially_deferred = initially_deferred
 
 
 class CreateConstraintTrigger(schema.DDLElement):
@@ -166,9 +171,12 @@ def create_add_constraint_trigger(element, compiler, **kw):
     """
     trigger = element.constraint_trigger
     events = ' OR '.join(trigger.events)
+    opt_deferrable = 'DEFERRABLE' if trigger.deferrable else None
+    opt_initially_deferred = ('INITIALLY DEFERRED' if trigger.initially_deferred
+                              else None)
     return _join_tokens(
         "CREATE CONSTRAINT TRIGGER", trigger.name, 'AFTER', events, 'ON',
-        trigger.table.name, "DEFERRABLE INITIALLY DEFERRED",
+        trigger.table.name, opt_deferrable, opt_initially_deferred,
         "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
 
