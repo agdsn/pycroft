@@ -76,8 +76,9 @@ class CreateFunction(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, func):
+    def __init__(self, func, or_replace=False):
         self.function = func
+        self.or_replace = or_replace
 
 
 class DropFunction(schema.DDLElement):
@@ -86,8 +87,9 @@ class DropFunction(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, func):
+    def __init__(self, func, if_exists=False):
         self.function = func
+        self.if_exists = if_exists
 
 
 # noinspection PyUnusedLocal
@@ -97,12 +99,13 @@ def visit_create_function(element, compiler, **kw):
     Compile a CREATE FUNCTION DDL statement for PostgreSQL
     """
     func = element.function
+    opt_or_replace = 'OR REPLACE' if element.or_replace else None
     strictness = "STRICT" if func.strict else "CALLED ON NULL INPUT"
     leakproof = "LEAKPROOF" if func.leakproof else None
     quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
         quote_tag=func.quote_tag, definition=func.definition)
     return _join_tokens(
-        "CREATE OR REPLACE FUNCTION", func.name, "RETURNS",
+        "CREATE", opt_or_replace, "FUNCTION", func.name, "RETURNS",
         func.rtype, func.volatility, strictness, leakproof,
         quoted_definition)
 
@@ -113,7 +116,9 @@ def visit_drop_function(element, compiler, **kw):
     """
     Compile a DROP FUNCTION DDL statement for PostgreSQL
     """
-    return _join_tokens("DROP FUNCTION IF EXISTS", element.function.name)
+    opt_if_exists = "IF EXISTS" if element.if_exists else None
+    return _join_tokens("DROP FUNCTION", opt_if_exists,
+                        element.function.name)
 
 
 class ConstraintTrigger(schema.DDLElement):
@@ -147,8 +152,9 @@ class DropTrigger(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, trigger):
+    def __init__(self, trigger, if_exists=False):
         self.trigger = trigger
+        self.if_exists = if_exists
 
 
 # noinspection PyUnusedLocal
@@ -172,8 +178,10 @@ def visit_drop_trigger(element, compiler, **kw):
     Compile a DROP TRIGGER DDL statement for PostgreSQL
     """
     trigger = element.trigger
+    opt_if_exists = "IF EXISTS" if element.if_exists else None
     return _join_tokens(
-        "DROP TRIGGER IF EXISTS", trigger.name, "ON", trigger.table.name)
+        "DROP TRIGGER", opt_if_exists, trigger.name, "ON", trigger.table.name)
+    )
 
 
 class DDLManager(object):
@@ -196,8 +204,8 @@ class DDLManager(object):
                  DropConstraint(constraint, if_exists=True), dialect=dialect)
 
     def add_function(self, table, func, dialect=None):
-        self.add(table, CreateFunction(func), DropFunction(func),
-                 dialect=dialect)
+        self.add(table, CreateFunction(func, or_replace=True),
+                 DropFunction(func, if_exists=True), dialect=dialect)
 
     def add_constraint_trigger(self, table, constraint_trigger, dialect=None):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
