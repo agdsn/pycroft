@@ -3,9 +3,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import inspect
 
-from sqlalchemy import event
+from sqlalchemy import event as sqla_event, schema
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy import schema
 
 
 def _join_tokens(*tokens) -> str:
@@ -223,9 +222,9 @@ class DDLManager(object):
 
     def register(self):
         for target, create_ddl, drop_ddl in self.objects:
-            event.listen(target, 'after_create', create_ddl)
+            sqla_event.listen(target, 'after_create', create_ddl)
         for target, create_ddl, drop_ddl in reversed(self.objects):
-            event.listen(target, 'before_drop', drop_ddl)
+            sqla_event.listen(target, 'before_drop', drop_ddl)
 
 
 # TODO: HERE is the location to add other views (radius, user for pmacct)
