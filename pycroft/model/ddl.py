@@ -68,8 +68,8 @@ class CreateFunction(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, function):
-        self.function = function
+    def __init__(self, func):
+        self.function = func
 
 
 class DropFunction(schema.DDLElement):
@@ -78,8 +78,8 @@ class DropFunction(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, function):
-        self.function = function
+    def __init__(self, func):
+        self.function = func
 
 
 @compiles(CreateFunction, 'postgresql')
@@ -87,18 +87,18 @@ def visit_create_function(element, compiler, **kw):
     """
     Compile a CREATE FUNCTION DDL statement for PostgreSQL
     """
-    function = element.function
+    func = element.function
     return (
         "CREATE OR REPLACE FUNCTION {name} RETURNS {rtype} {volatility} "
         "{strict} {leakproof} LANGUAGE {language} AS "
         "${quote_tag}$\n{definition}\n${quote_tag}$"
     ).format(
-        name=function.name, rtype=function.rtype,
-        volatility=function.volatility,
-        strict='STRICT' if function.strict else 'CALLED ON NULL INPUT',
-        language=function.language, definition=function.definition,
-        leakproof='LEAKPROOF' if function.leakproof else '',
-        quote_tag=function.quote_tag,
+        name=func.name, rtype=func.rtype,
+        volatility=func.volatility,
+        strict='STRICT' if func.strict else 'CALLED ON NULL INPUT',
+        language=function.language, definition=func.definition,
+        leakproof='LEAKPROOF' if func.leakproof else '',
+        quote_tag=func.quote_tag,
     )
 
 
@@ -188,8 +188,8 @@ class DDLManager(object):
         self.add(table, schema.AddConstraint(constraint),
                  DropConstraint(constraint, if_exists=True), dialect=dialect)
 
-    def add_function(self, table, function, dialect=None):
-        self.add(table, CreateFunction(function), DropFunction(function),
+    def add_function(self, table, func, dialect=None):
+        self.add(table, CreateFunction(func), DropFunction(func),
                  dialect=dialect)
 
     def add_constraint_trigger(self, table, constraint_trigger, dialect=None):
