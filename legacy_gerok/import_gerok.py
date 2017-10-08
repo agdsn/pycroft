@@ -5,26 +5,22 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from __future__ import print_function
 
+import logging as std_logging
 import os
 import sys
-import ipaddr
-from collections import Counter
-import logging as std_logging
 from datetime import timedelta
 
-import legacy_gerok
+import ipaddr
+
 from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack, \
     Account, Active
 
 log = std_logging.getLogger('import')
-import random
 
 from .tools import timed
 
-import sqlalchemy
-from sqlalchemy import create_engine, or_, not_, Integer, func, null
+from sqlalchemy import create_engine, null
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.sql.expression import cast, exists
 from flask import _request_ctx_stack
 
 try:
@@ -36,12 +32,11 @@ except ImportError:
     exit()
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pycroft import model, property
-from pycroft.model import (traffic, facilities, user, net, port,
-                           finance, session, host, config, logging, types)
+from pycroft import model
+from pycroft.model import (facilities, user, net, port,
+                           finance, session, host, config, logging)
 from pycroft.helpers import user as usertools
 
-from . import nvtool_model
 from legacy.import_conf import group_props
 
 ROOT_NAME = "agdsn"
@@ -56,10 +51,12 @@ def exists_db(connection, name):
     :returns: Whether the db exists
     :rtype: bool
     """
-    exists = connection.execute("SELECT 1 FROM pg_database WHERE datname = {}".format(name)).first()
+    exists = connection.execute(
+        "SELECT 1 FROM pg_database WHERE datname = {}".format(name)).first()
     connection.execute("COMMIT")
 
     return exists is not None
+
 
 def main(args):
     """Import the legacy data according to ``args``"""
@@ -88,31 +85,38 @@ def main(args):
         model.create_db_model(engine)
 
     with timed(log, thing="Translation"):
-        bank_financeAccount = finance.Account(name="Bankkonto Ger", type="BANK_ASSET")
-        session.session.add(bank_financeAccount)
-
-        bank_account = finance.BankAccount(
-            name="Bankkonto 3120230811",
-            bank="Ostsächsische Sparkasse Dresden",
-            account_number="3120230811",
-            routing_number="85050300",
-            iban="DE33850503003120230811",
-            bic="OSDDDE81XXX",
-            account=bank_financeAccount)
-
-        session.session.add(bank_account)
-
+        bank_account = create_bankAccount()
         building = create_site_and_building()
         ger38subnet, sn = create_subnet(session_nvtool)
         import_facilities_and_switches(session_nvtool, building, ger38subnet)
         import_SwitchPatchPorts(session_nvtool, building, sn)
         groups = get_or_create_groups()
-        fee_account = ensure_config(groups)
-        import_users(session_nvtool, building, groups, ger38subnet, fee_account, bank_account)
+        fee_account = get_or_create_config(groups)
+        import_users(session_nvtool, building, groups, ger38subnet, fee_account,
+                     bank_account)
 
         session.session.commit()
 
-def ensure_config(g_d):
+
+def create_bankAccount():
+    bank_financeAccount = finance.Account(name="Bankkonto Ger",
+                                          type="BANK_ASSET")
+    session.session.add(bank_financeAccount)
+    bank_account = finance.BankAccount(
+        name="Bankkonto 3120230811",
+        bank="Ostsächsische Sparkasse Dresden",
+        account_number="3120230811",
+        routing_number="85050300",
+        iban="DE33850503003120230811",
+        bic="OSDDDE81XXX",
+        account=bank_financeAccount)
+    session.session.add(bank_account)
+    log.info("Created Bank Account")
+    return bank_account
+
+
+def get_or_create_config(g_d):
+    log.info("Get or create basic configuration")
 
     conf = session.session.query(config.Config).first()
     if conf is None:
@@ -122,7 +126,8 @@ def ensure_config(g_d):
         con = config.Config(
             member_group=g_d["member"],
             violation_group=g_d["suspended"],
-            network_access_group=g_d["member"],  # todo: actual network_access_group
+            network_access_group=g_d["member"],
+            # todo: actual network_access_group
             away_group=g_d["away"],
             moved_from_division_group=g_d["moved_from_division"],
             already_paid_semester_fee_group=g_d["already_paid"],
@@ -140,16 +145,19 @@ def ensure_config(g_d):
 
 
 def import_SwitchPatchPorts(session_nvtool, building, sn):
+    log.info("fill switches with ports and pull cabels through the house")
+
     # As on the last check (2017-09-03) there are no active cables to jacks with other numbers.
     # After cabeling to gigabit no userport was left and the stystemports are not in use.
     jacks = session_nvtool.query(Jack).filter(
         (Jack.number == 1) & (Jack.subnet == sn))
     for j in jacks:
-        switch = session.session.query(host.Switch).filter(host.Switch.management_ip == j.port.switch.ip).one()
+        switch = session.session.query(host.Switch).filter(
+            host.Switch.management_ip == j.port.switch.ip).one()
         interface = next(
             i for i in switch.switch_interfaces if i.name == str(j.port.number))
 
-        inhabitable, isswitchroom, room_number = GetRoomProperties(j.location)
+        inhabitable, isswitchroom, room_number = get_room_properties(j.location)
 
         room = session.session.query(facilities.Room).filter(
             (facilities.Room.building == building) &
@@ -173,6 +181,8 @@ def create_site_and_building():
         short_name="Ger",
         street="Gerokstraße",
         number="38")
+
+    log.info("Created Site and Building")
     return building
 
 
@@ -188,14 +198,18 @@ def create_subnet(session_nvtool):
         )
     )
 
+    log.info("Created Subnet with Vlan")
+
     return ger38subnet, sn
 
 
 def import_facilities_and_switches(session_nvtool, building, ger38subnet):
+    log.info("Importing Rooms and Switches")
+
     # Only Gerok 38 locations
     locations = session_nvtool.query(Location).filter(Location.domain_id == 2)
     for l in locations:
-        inhabitable, isswitchroom, number = GetRoomProperties(l)
+        inhabitable, isswitchroom, number = get_room_properties(l)
 
         room = facilities.Room(
             inhabitable=inhabitable,
@@ -205,20 +219,21 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
         )
         building.rooms.append(room)
 
-        if(isswitchroom):
+        if (isswitchroom):
             switches = session_nvtool.query(Switch).filter(Switch.location == l)
             for s in switches:
                 switch = host.Switch(
-                    name = s.comment,
-                    management_ip = s.ip,
-                    room = room
+                    name=s.comment,
+                    management_ip=s.ip,
+                    room=room
                 )
                 ports = session_nvtool.query(Port).filter(Port.switch == s)
                 for p in ports:
                     port = host.SwitchInterface(
-                        name = p.number,
-                        subnets = [ger38subnet],
-                        mac = "00:00:00:00:00:38" #DGS-3100 are L2 Switches they don't have a mac for interfaces
+                        name=p.number,
+                        subnets=[ger38subnet],
+                        mac="00:00:00:00:00:38"
+                        # DGS-3100 are L2 Switches they don't have a mac for interfaces
                     )
                     switch.switch_interfaces.append(port)
 
@@ -228,161 +243,218 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
     session.session.commit()
 
 
-def import_users(session_nvtool, building, groups, ger38subnet, fee_account, bank_account):
+def import_users(session_nvtool, building, groups, ger38subnet, fee_account,
+                 bank_account):
 
-    root = session.session.query(user.Membership).filter(user.Membership.id == 0)
+    log.info("Import User")
+
+    ru = get_or_create_root_user(groups)
+
+    ger38locations = session_nvtool.query(Location.id).filter(
+        Location.domain_id == 2)
+    legacy_accounts = session_nvtool.query(Account).filter(
+        Account.location_id.in_(ger38locations))
+
+    importcount = 0
+    for account in legacy_accounts:
+        create_user_with_all_data(account, bank_account, building,
+                                  fee_account, ger38subnet, groups, ru,
+                                  session_nvtool)
+        importcount +=1
+
+    log.info("Imported {} Users".format(importcount))
+
+
+def create_user_with_all_data(account, bank_account, building, fee_account,
+                              ger38subnet, groups, ru, session_nvtool):
+    log.debug("Importing User {}".format(account.name))
+    room = get_room_for_location(account, building)
+    financeAccount = get_finance_account_for_user(account)
+    u = create_user(account, financeAccount, room, ru)
+    create_finance_transactions_for_user(account, bank_account, fee_account,
+                                         financeAccount, ru)
+    setup_groups_for_user(account, groups, session_nvtool, u)
+    add_user_hosts(account, building, ger38subnet, room, u)
+
+
+def add_user_hosts(account, building, ger38subnet, room, u):
+    for legacy_host in account.hosts:
+        mac = legacy_host.mac
+        hostLocation = mac.jack.location
+        inhabitable, isswitchroom, room_number = get_room_properties(hostLocation)
+        hostroom = session.session.query(facilities.Room).filter(
+            (facilities.Room.building == building) &
+            (facilities.Room.level == hostLocation.floor.number) &
+            (facilities.Room.number == room_number)).one()
+
+        if room != hostroom and "Müllraum" in hostroom.number:
+            h = host.ServerHost(owner=u, room=hostroom,
+                                name="Server of {}".format(u.name))
+            interface = host.ServerInterface(host=h, mac=mac.macaddr)
+        else:
+            h = host.UserHost(owner=u, room=room)
+            interface = host.UserInterface(host=h, mac=mac.macaddr)
+
+        address = ipaddr.IPv4Network(mac.ip.ip).ip
+        ip = host.IP(interface=interface,
+                     address=address,
+                     subnet=ger38subnet)
+        session.session.add(ip)
+
+
+def setup_groups_for_user(account, groups, session_nvtool, u):
+    if "Hausmeister" not in account.name:
+        usergroupmember = user.Membership(user=u, group=groups["member"],
+                                          begins_at=account.entrydate)
+    else:
+        usergroupmember = user.Membership(user=u, group=groups["caretaker"],
+                                          begins_at=account.entrydate)
+    session.session.add(usergroupmember)
+    active = session_nvtool.query(Active).filter(
+        Active.account == account).one_or_none()
+    if not active is None:
+        if active.activegroup_id == 10:  # oldstaff
+            oldstaff = user.Membership(user=u, group=groups["org"],
+                                       begins_at=account.entrydate,
+                                       ends_at=account.entrydate + timedelta(
+                                           days=1))
+            session.session.add(oldstaff)
+        else:
+            staff = user.Membership(user=u, group=groups["org"],
+                                    begins_at=account.entrydate)
+            session.session.add(staff)
+
+
+def create_finance_transactions_for_user(account, bank_account, fee_account,
+                                         finance_account, ru):
+    for trans in account.financetransactions:
+        # Mitgliedsbeitrag
+        if trans.banktransfer is not None:
+            create_bank_transfer_transaction(bank_account, finance_account, ru, trans)
+
+        # Semesterbeitrag
+        if trans.fee is not None:
+            create_userfee_transaction(fee_account, finance_account, ru, trans)
+
+
+def create_userfee_transaction(fee_account, finance_account, ru, trans):
+    transaction = finance.Transaction(
+        description=trans.fee.description,
+        author=ru,
+        valid_on=trans.fee.duedate,
+        posted_at=trans.fee.duedate)
+    credit_split = finance.Split(
+        amount=trans.amount,
+        account=fee_account,
+        transaction=transaction,
+    )
+    debit_split = finance.Split(
+        amount=-trans.amount,
+        account=finance_account,
+        transaction=transaction
+    )
+    session.session.add(transaction)
+    session.session.add(credit_split)
+    session.session.add(debit_split)
+
+
+def create_bank_transfer_transaction(bank_account, finance_account, ru, trans):
+    back_account_activity = finance.BankAccountActivity(
+        bank_account=bank_account,
+        amount=trans.banktransfer.amount,
+        reference=trans.banktransfer.purpose,
+        original_reference=trans.banktransfer.purpose,
+        other_account_number=trans.banktransfer.iban,
+        other_routing_number=trans.banktransfer.bic,
+        other_name=trans.banktransfer.name,
+        imported_at=trans.banktransfer.date,
+        posted_on=trans.banktransfer.date,
+        valid_on=trans.banktransfer.date,
+        split=None)
+    transaction = finance.Transaction(
+        description=trans.banktransfer.purpose or "NO DESCRIPTION GIVEN",
+        author=ru,
+        valid_on=trans.banktransfer.date,
+        posted_at=trans.banktransfer.date)
+    credit_split = finance.Split(
+        amount=trans.amount,
+        account=bank_account.account,
+        bank_account_activity=back_account_activity,
+        transaction=transaction,
+    )
+    debit_split = finance.Split(
+        amount=-trans.amount,
+        account=finance_account,
+        transaction=transaction
+    )
+    session.session.add(transaction)
+    session.session.add(credit_split)
+    session.session.add(debit_split)
+
+
+def create_user(account, financeAccount, room, ru):
+    login = account.login
+    if not user.User.login_regex.match(account.login):
+        login = "user_{}".format(account.id)
+        log.warning("Rename login '%s' to '%s'", account.login, login)
+
+    u = user.User(
+        login=login,
+        name=account.name,
+        room=room,
+        registered_at=account.entrydate,
+        account=financeAccount,
+        email="{}@wh17.tu-dresden.de".format(account.login),
+    )
+    session.session.add(u)
+
+    logentry = logging.UserLogEntry(
+        author=ru,
+        message="User imported from legacy nvtool",
+        user=u
+    )
+    session.session.add(logentry)
+
+    return u
+
+
+def get_finance_account_for_user(account):
+    account_name = "Nutzerkonto von {}".format(account.name)
+    financeAccount = finance.Account(name=account_name, type="USER_ASSET")
+    return financeAccount
+
+
+def get_room_for_location(account, building):
+    inhabitable, isswitchroom, room_number = get_room_properties(account.location)
+    room = session.session.query(facilities.Room).filter(
+        (facilities.Room.building == building) &
+        (facilities.Room.level == account.location.floor.number) &
+        (facilities.Room.number == room_number)).one()
+    return room
+
+
+def get_or_create_root_user(groups):
+    root = session.session.query(user.Membership).filter(
+        user.Membership.id == 0)
     if not session.session.query(root.exists()).scalar():
         ru = user.User(
             login=ROOT_NAME,
             name="root-User",
             room=None,
             registered_at="2000-01-01",
-            account=finance.Account(name="Nutzerkonto von {}".format(ROOT_NAME), type="USER_ASSET"),
+            account=finance.Account(name="Nutzerkonto von {}".format(ROOT_NAME),
+                                    type="USER_ASSET"),
             email="{}@wh17.tu-dresden.de".format(ROOT_NAME),
         )
 
         ru.passwd_hash = usertools.hash_password(ROOT_PASSWD)
         session.session.add(ru)
-        session.session.add(user.Membership(user=ru, group=groups["root"], begins_at=null()))
-
-    ger38locations = session_nvtool.query(Location.id).filter(Location.domain_id == 2)
-    legacy_accounts = session_nvtool.query(Account).filter(Account.location_id.in_(ger38locations))
-    for account in legacy_accounts:
-        login = account.login
-        if not user.User.login_regex.match(account.login):
-            login = "user_{}".format(account.id)
-            log.warning("Rename login '%s' to '%s'", account.login, login)
-
-        inhabitable, isswitchroom, room_number = GetRoomProperties(account.location)
-        room = session.session.query(facilities.Room).filter(
-                (facilities.Room.building == building) &
-                (facilities.Room.level == account.location.floor.number) &
-                (facilities.Room.number == room_number)).one()
-
-        account_name = "Nutzerkonto von {}".format(account.name)
-
-        financeAccount = finance.Account(name=account_name, type="USER_ASSET")
-        u = user.User(
-            login=login,
-            name=account.name,
-            room=room,
-            registered_at= account.entrydate,
-            account=financeAccount,
-            email="{}@wh17.tu-dresden.de".format(account.login),
-        )
-
-        session.session.add(u)
-
-        logentry = logging.UserLogEntry(
-            author=ru,
-            message="User imported from legacy nvtool",
-            user=u
-        )
-
-        session.session.add(logentry)
-
-        for trans in account.financetransactions:
-            # Mitgliesbeitrag
-            if trans.banktransfer is not None:
-                back_account_activity = finance.BankAccountActivity(
-                    bank_account=bank_account,
-                    amount=trans.banktransfer.amount,
-                    reference=trans.banktransfer.purpose,
-                    original_reference=trans.banktransfer.purpose,
-                    other_account_number=trans.banktransfer.iban,
-                    other_routing_number=trans.banktransfer.bic,
-                    other_name=trans.banktransfer.name,
-                    imported_at=trans.banktransfer.date,
-                    posted_on=trans.banktransfer.date,
-                    valid_on=trans.banktransfer.date,
-                    split=None)
-
-                transaction = finance.Transaction(
-                    description=trans.banktransfer.purpose or "NO DESCRIPTION GIVEN",
-                    author=ru,
-                    valid_on=trans.banktransfer.date,
-                    posted_at=trans.banktransfer.date)
-                credit_split = finance.Split(
-                    amount=trans.amount,
-                    account=bank_account.account,
-                    bank_account_activity=back_account_activity,
-                    transaction=transaction,
-                )
-                debit_split = finance.Split(
-                    amount=-trans.amount,
-                    account=financeAccount,
-                    transaction=transaction
-                )
-            if trans.fee is not None:
-                transaction = finance.Transaction(
-                    description=trans.fee.description,
-                    author=ru,
-                    valid_on=trans.fee.duedate,
-                    posted_at=trans.fee.duedate)
-                credit_split = finance.Split(
-                    amount=trans.amount,
-                    account=fee_account,
-                    transaction=transaction,
-                )
-                debit_split = finance.Split(
-                    amount=-trans.amount,
-                    account=financeAccount,
-                    transaction=transaction
-                )
-
-            session.session.add(transaction)
-            session.session.add(credit_split)
-            session.session.add(debit_split)
+        session.session.add(
+            user.Membership(user=ru, group=groups["root"], begins_at=null()))
+    return ru
 
 
-        if "Hausmeister" not in account.name:
-            usergroupmember = user.Membership(user=u, group=groups["member"], begins_at=account.entrydate)
-        else:
-            usergroupmember = user.Membership(user=u, group=groups["caretaker"], begins_at=account.entrydate)
-        session.session.add(usergroupmember)
-
-        active = session_nvtool.query(Active).filter(Active.account == account).one_or_none()
-
-        if not active is None:
-            if active.activegroup_id == 10: #oldstaff
-                oldstaff = user.Membership(user=u, group=groups["org"], begins_at=account.entrydate, ends_at=account.entrydate+timedelta(days=1))
-                session.session.add(oldstaff)
-            else:
-                staff = user.Membership(user=u, group=groups["org"],
-                                           begins_at=account.entrydate)
-                session.session.add(staff)
-
-        for legacy_host in account.hosts:
-            mac = legacy_host.mac
-            hostLocation=mac.jack.location
-            inhabitable, isswitchroom, room_number = GetRoomProperties(hostLocation)
-            hostroom = session.session.query(facilities.Room).filter(
-                (facilities.Room.building == building) &
-                (facilities.Room.level == hostLocation.floor.number) &
-                (facilities.Room.number == room_number)).one()
-
-            if room != hostroom and "Müllraum" in hostroom.number:
-                h = host.ServerHost(owner=u, room=hostroom, name="Server of {}".format(u.name))
-                interface = host.ServerInterface(host=h, mac=mac.macaddr)
-            else:
-                h = host.UserHost(owner=u, room=room)
-                interface = host.UserInterface(host=h, mac=mac.macaddr)
-
-
-            address = ipaddr.IPv4Network(mac.ip.ip).ip
-            ip = host.IP(interface=interface,
-                         address=address,
-                         subnet=ger38subnet)
-            session.session.add(ip)
-
-
-
-
-
-
-
-
-def GetRoomProperties(l):
+def get_room_properties(l):
     if l.comment != "Müllraum":
         number = "0{flat}{room} ({comment})".format(flat=l.flat, room=l.room,
                                                     comment=l.comment)
@@ -401,7 +473,7 @@ def get_or_create_groups():
     properties_l = []
     resources = {}
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
-    # TODO: create other groups
+    log.info("Get or create groups")
 
     configgroups = group_props.items()
     for role, (group_name, properties) in configgroups:
@@ -410,6 +482,7 @@ def get_or_create_groups():
         groupexists = session.session.query(q.exists()).scalar()
 
         if (not groupexists):
+            log.debug("Create Group {}".format(group_name))
             g = user.PropertyGroup(name=group_name)
             g_d[role] = g
             for prop_name, modifier in properties.items():
@@ -430,13 +503,16 @@ def get_or_create_groups():
     session.session.add_all(groups)
     return g_d
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(
         prog='import_nvtool', description='fill the hovercraft with more eels')
     parser.add_argument("-l", "--log", dest="log_level",
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-        default='INFO')
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
+                                 'CRITICAL'],
+                        default='INFO')
 
     parser.add_argument("--delete-old", action='store_true', default=True)
 
@@ -445,7 +521,7 @@ if __name__=="__main__":
     import_log_fname = "import.log"
     sqlalchemy_log_fname = "import.sqlalchemy.log"
 
-    log.info("Logging to %s and %s"%(import_log_fname, sqlalchemy_log_fname))
+    log.info("Logging to %s and %s" % (import_log_fname, sqlalchemy_log_fname))
 
     log_fmt = '[%(levelname).4s] %(name)s:%(funcName)s:%(message)s'
     formatter = std_logging.Formatter(log_fmt)
