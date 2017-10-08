@@ -88,15 +88,27 @@ def main(args):
         model.create_db_model(engine)
 
     with timed(log, thing="Translation"):
+        bank_financeAccount = finance.Account(name="Bankkonto Ger", type="BANK_ASSET")
+        session.session.add(bank_financeAccount)
+
+        bank_account = finance.BankAccount(
+            name="Bankkonto 3120230811",
+            bank="Ostsächsische Sparkasse Dresden",
+            account_number="3120230811",
+            routing_number="85050300",
+            iban="DE33850503003120230811",
+            bic="OSDDDE81XXX",
+            account=bank_financeAccount)
+
+        session.session.add(bank_account)
 
         building = create_site_and_building()
         ger38subnet, sn = create_subnet(session_nvtool)
         import_facilities_and_switches(session_nvtool, building, ger38subnet)
         import_SwitchPatchPorts(session_nvtool, building, sn)
         groups = get_or_create_groups()
-        import_users(session_nvtool, building, groups, ger38subnet)
-
-        ensure_config(groups)
+        fee_account = ensure_config(groups)
+        import_users(session_nvtool, building, groups, ger38subnet, fee_account, bank_account)
 
         session.session.commit()
 
@@ -121,6 +133,10 @@ def ensure_config(g_d):
         )
 
         session.session.add(con)
+    else:
+        fee_account = conf.semester_fee_account
+
+    return fee_account
 
 
 def import_SwitchPatchPorts(session_nvtool, building, sn):
@@ -212,7 +228,7 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
     session.session.commit()
 
 
-def import_users(session_nvtool, building, groups, ger38subnet):
+def import_users(session_nvtool, building, groups, ger38subnet, fee_account, bank_account):
 
     root = session.session.query(user.Membership).filter(user.Membership.id == 0)
     if not session.session.query(root.exists()).scalar():
@@ -245,14 +261,17 @@ def import_users(session_nvtool, building, groups, ger38subnet):
 
         account_name = "Nutzerkonto von {}".format(account.name)
 
+        financeAccount = finance.Account(name=account_name, type="USER_ASSET")
         u = user.User(
             login=login,
             name=account.name,
             room=room,
             registered_at= account.entrydate,
-            account=finance.Account(name=account_name, type="USER_ASSET"),
+            account=financeAccount,
             email="{}@wh17.tu-dresden.de".format(account.login),
         )
+
+        session.session.add(u)
 
         logentry = logging.UserLogEntry(
             author=ru,
@@ -260,8 +279,61 @@ def import_users(session_nvtool, building, groups, ger38subnet):
             user=u
         )
 
-        session.session.add(u)
         session.session.add(logentry)
+
+        for trans in account.financetransactions:
+            # Mitgliesbeitrag
+            if trans.banktransfer is not None:
+                back_account_activity = finance.BankAccountActivity(
+                    bank_account=bank_account,
+                    amount=trans.banktransfer.amount,
+                    reference=trans.banktransfer.purpose,
+                    original_reference=trans.banktransfer.purpose,
+                    other_account_number=trans.banktransfer.iban,
+                    other_routing_number=trans.banktransfer.bic,
+                    other_name=trans.banktransfer.name,
+                    imported_at=trans.banktransfer.date,
+                    posted_on=trans.banktransfer.date,
+                    valid_on=trans.banktransfer.date,
+                    split=None)
+
+                transaction = finance.Transaction(
+                    description=trans.banktransfer.purpose or "NO DESCRIPTION GIVEN",
+                    author=ru,
+                    valid_on=trans.banktransfer.date,
+                    posted_at=trans.banktransfer.date)
+                credit_split = finance.Split(
+                    amount=trans.amount,
+                    account=bank_account.account,
+                    bank_account_activity=back_account_activity,
+                    transaction=transaction,
+                )
+                debit_split = finance.Split(
+                    amount=-trans.amount,
+                    account=financeAccount,
+                    transaction=transaction
+                )
+            if trans.fee is not None:
+                transaction = finance.Transaction(
+                    description=trans.fee.description,
+                    author=ru,
+                    valid_on=trans.fee.duedate,
+                    posted_at=trans.fee.duedate)
+                credit_split = finance.Split(
+                    amount=trans.amount,
+                    account=fee_account,
+                    transaction=transaction,
+                )
+                debit_split = finance.Split(
+                    amount=-trans.amount,
+                    account=financeAccount,
+                    transaction=transaction
+                )
+
+            session.session.add(transaction)
+            session.session.add(credit_split)
+            session.session.add(debit_split)
+
 
         if "Hausmeister" not in account.name:
             usergroupmember = user.Membership(user=u, group=groups["member"], begins_at=account.entrydate)
@@ -281,7 +353,7 @@ def import_users(session_nvtool, building, groups, ger38subnet):
                 session.session.add(staff)
 
         for legacy_host in account.hosts:
-            mac = legacy_host.mac[0]
+            mac = legacy_host.mac
             hostLocation=mac.jack.location
             inhabitable, isswitchroom, room_number = GetRoomProperties(hostLocation)
             hostroom = session.session.query(facilities.Room).filter(
@@ -297,11 +369,14 @@ def import_users(session_nvtool, building, groups, ger38subnet):
                 interface = host.UserInterface(host=h, mac=mac.macaddr)
 
 
-            address = ipaddr.IPv4Network(mac.ip[0].ip).ip
+            address = ipaddr.IPv4Network(mac.ip.ip).ip
             ip = host.IP(interface=interface,
                          address=address,
                          subnet=ger38subnet)
             session.session.add(ip)
+
+
+
 
 
 

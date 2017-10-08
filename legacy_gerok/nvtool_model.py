@@ -19,8 +19,6 @@ class Account(Base):
     entrydate = Column(Date, nullable=False)
 
     location = relationship('Location')
-    hosts = relationship("Host")
-
 
 t_active_blockages = Table(
     'active_blockages', metadata,
@@ -158,7 +156,7 @@ class Financetransaction(Base):
     banktransfer_id = Column(ForeignKey('banktransfers.id'))
     fee_id = Column(ForeignKey('fees.id'))
 
-    account = relationship('Account')
+    account = relationship('Account', backref=backref('financetransactions'))
     banktransfer = relationship('Banktransfer')
     fee = relationship('Fee')
 
@@ -204,8 +202,7 @@ class Host(Base):
     systemhost = Column(Boolean, nullable=False)
     account_id = Column(ForeignKey('accounts.id'), index=True)
 
-    account = relationship('Account')
-    mac = relationship('Mac')
+    account = relationship('Account', backref=backref('hosts', uselist=True))
 
 
 class Ip(Base):
@@ -215,7 +212,7 @@ class Ip(Base):
     ip = Column(CIDR, nullable=False, unique=True)
     mac_id = Column(ForeignKey('macs.id'), nullable=False, index=True)
 
-    mac = relationship('Mac')
+    mac = relationship('Mac', backref=backref('ip', uselist=False))
 
 
 class Jack(Base):
@@ -274,9 +271,8 @@ class Mac(Base):
     jack_id = Column(ForeignKey('jacks.id'), index=True)
     host_id = Column(ForeignKey('hosts.id'), nullable=False, index=True)
 
-    host = relationship('Host')
+    host = relationship('Host', backref=backref('mac', uselist=False))
     jack = relationship('Jack')
-    ip = relationship('Ip')
 
 
 class Message(Base):
