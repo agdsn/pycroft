@@ -19,6 +19,7 @@ class Account(Base):
     entrydate = Column(Date, nullable=False)
 
     location = relationship('Location')
+    hosts = relationship("Host")
 
 
 t_active_blockages = Table(
@@ -204,6 +205,7 @@ class Host(Base):
     account_id = Column(ForeignKey('accounts.id'), index=True)
 
     account = relationship('Account')
+    mac = relationship('Mac')
 
 
 class Ip(Base):
@@ -274,6 +276,7 @@ class Mac(Base):
 
     host = relationship('Host')
     jack = relationship('Jack')
+    ip = relationship('Ip')
 
 
 class Message(Base):

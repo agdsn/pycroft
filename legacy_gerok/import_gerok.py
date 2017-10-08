@@ -7,13 +7,14 @@ from __future__ import print_function
 
 import os
 import sys
+import ipaddr
 from collections import Counter
 import logging as std_logging
 from datetime import timedelta
 
 import legacy_gerok
 from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack, \
-    Account
+    Account, Active
 
 log = std_logging.getLogger('import')
 import random
@@ -93,7 +94,7 @@ def main(args):
         import_facilities_and_switches(session_nvtool, building, ger38subnet)
         import_SwitchPatchPorts(session_nvtool, building, sn)
         groups = get_or_create_groups()
-        import_users(session_nvtool, building, groups)
+        import_users(session_nvtool, building, groups, ger38subnet)
 
         ensure_config(groups)
 
@@ -211,7 +212,7 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
     session.session.commit()
 
 
-def import_users(session_nvtool, building, groups):
+def import_users(session_nvtool, building, groups, ger38subnet):
 
     root = session.session.query(user.Membership).filter(user.Membership.id == 0)
     if not session.session.query(root.exists()).scalar():
@@ -254,19 +255,56 @@ def import_users(session_nvtool, building, groups):
         )
 
         logentry = logging.UserLogEntry(
-            author=None,
+            author=ru,
             message="User imported from legacy nvtool",
             user=u
         )
+
+        session.session.add(u)
+        session.session.add(logentry)
 
         if "Hausmeister" not in account.name:
             usergroupmember = user.Membership(user=u, group=groups["member"], begins_at=account.entrydate)
         else:
             usergroupmember = user.Membership(user=u, group=groups["caretaker"], begins_at=account.entrydate)
-
-        session.session.add(u)
         session.session.add(usergroupmember)
-        session.session.add(logentry)
+
+        active = session_nvtool.query(Active).filter(Active.account == account).one_or_none()
+
+        if not active is None:
+            if active.activegroup_id == 10: #oldstaff
+                oldstaff = user.Membership(user=u, group=groups["org"], begins_at=account.entrydate, ends_at=account.entrydate+timedelta(days=1))
+                session.session.add(oldstaff)
+            else:
+                staff = user.Membership(user=u, group=groups["org"],
+                                           begins_at=account.entrydate)
+                session.session.add(staff)
+
+        for legacy_host in account.hosts:
+            mac = legacy_host.mac[0]
+            hostLocation=mac.jack.location
+            inhabitable, isswitchroom, room_number = GetRoomProperties(hostLocation)
+            hostroom = session.session.query(facilities.Room).filter(
+                (facilities.Room.building == building) &
+                (facilities.Room.level == hostLocation.floor.number) &
+                (facilities.Room.number == room_number)).one()
+
+            if room != hostroom and "Müllraum" in hostroom.number:
+                h = host.ServerHost(owner=u, room=hostroom, name="Server of {}".format(u.name))
+                interface = host.ServerInterface(host=h, mac=mac.macaddr)
+            else:
+                h = host.UserHost(owner=u, room=room)
+                interface = host.UserInterface(host=h, mac=mac.macaddr)
+
+
+            address = ipaddr.IPv4Network(mac.ip[0].ip).ip
+            ip = host.IP(interface=interface,
+                         address=address,
+                         subnet=ger38subnet)
+            session.session.add(ip)
+
+
+
 
 
 def GetRoomProperties(l):
