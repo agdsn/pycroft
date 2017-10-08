@@ -99,7 +99,7 @@ def visit_create_function(element, compiler, **kw):
     """
     func = element.function
     opt_or_replace = 'OR REPLACE' if element.or_replace else None
-    strictness = "STRICT" if func.strict else "CALLED ON NULL INPUT"
+    strictness = "STRICT" if func.strict else None
     leakproof = "LEAKPROOF" if func.leakproof else None
     quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
         quote_tag=func.quote_tag, definition=func.definition)
