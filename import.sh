@@ -1,8 +1,8 @@
 #!/bin/bash
-set -x
 
+#set -x
 
-SQL_PATH=data/legacy.sql
+: ${SQL_PATH:=data/legacy.sql}
 
 if [[ ! -f ${SQL_PATH} ]]; then
     echo please provide legacy sql unter ${SQL_PATH}
@@ -16,7 +16,7 @@ ${COMPOSE} stop web
 
 
 echo importing sql dump
-${COMPOSE} exec --user=postgres db file "/pycroft/${SQL_PATH}"
+${COMPOSE} exec --user=postgres db psql -v ON_ERROR_STOP=1 --single-transaction --file "/pycroft/${SQL_PATH}"
 
 echo importing to pycroft database
 ${COMPOSE} run --rm web python3 -m legacy.import_legacy
