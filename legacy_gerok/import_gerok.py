@@ -9,8 +9,11 @@ import os
 import sys
 from collections import Counter
 import logging as std_logging
+from datetime import timedelta
 
-from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack
+import legacy_gerok
+from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack, \
+    Account
 
 log = std_logging.getLogger('import')
 import random
@@ -18,9 +21,9 @@ import random
 from .tools import timed
 
 import sqlalchemy
-from sqlalchemy import create_engine, or_, not_, Integer, func
+from sqlalchemy import create_engine, or_, not_, Integer, func, null
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.sql.expression import cast
+from sqlalchemy.sql.expression import cast, exists
 from flask import _request_ctx_stack
 
 try:
@@ -35,8 +38,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model, property
 from pycroft.model import (traffic, facilities, user, net, port,
                            finance, session, host, config, logging, types)
+from pycroft.helpers import user as usertools
 
 from . import nvtool_model
+from legacy.import_conf import group_props
+
+ROOT_NAME = "agdsn"
+ROOT_PASSWD = "test"
+
 
 def exists_db(connection, name):
     """Check whether a database exists.
@@ -83,9 +92,34 @@ def main(args):
         ger38subnet, sn = create_subnet(session_nvtool)
         import_facilities_and_switches(session_nvtool, building, ger38subnet)
         import_SwitchPatchPorts(session_nvtool, building, sn)
+        groups = get_or_create_groups()
+        import_users(session_nvtool, building, groups)
+
+        ensure_config(groups)
 
         session.session.commit()
 
+def ensure_config(g_d):
+
+    conf = session.session.query(config.Config).first()
+    if conf is None:
+        fee_account = finance.Account(name="Beiträge", type="REVENUE")
+        session.session.add(fee_account)
+
+        con = config.Config(
+            member_group=g_d["member"],
+            violation_group=g_d["suspended"],
+            network_access_group=g_d["member"],  # todo: actual network_access_group
+            away_group=g_d["away"],
+            moved_from_division_group=g_d["moved_from_division"],
+            already_paid_semester_fee_group=g_d["already_paid"],
+            registration_fee_account=fee_account,
+            semester_fee_account=fee_account,
+            late_fee_account=fee_account,
+            additional_fee_account=fee_account,
+        )
+
+        session.session.add(con)
 
 
 def import_SwitchPatchPorts(session_nvtool, building, sn):
@@ -177,6 +211,64 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
     session.session.commit()
 
 
+def import_users(session_nvtool, building, groups):
+
+    root = session.session.query(user.Membership).filter(user.Membership.id == 0)
+    if not session.session.query(root.exists()).scalar():
+        ru = user.User(
+            login=ROOT_NAME,
+            name="root-User",
+            room=None,
+            registered_at="2000-01-01",
+            account=finance.Account(name="Nutzerkonto von {}".format(ROOT_NAME), type="USER_ASSET"),
+            email="{}@wh17.tu-dresden.de".format(ROOT_NAME),
+        )
+
+        ru.passwd_hash = usertools.hash_password(ROOT_PASSWD)
+        session.session.add(ru)
+        session.session.add(user.Membership(user=ru, group=groups["root"], begins_at=null()))
+
+    ger38locations = session_nvtool.query(Location.id).filter(Location.domain_id == 2)
+    legacy_accounts = session_nvtool.query(Account).filter(Account.location_id.in_(ger38locations))
+    for account in legacy_accounts:
+        login = account.login
+        if not user.User.login_regex.match(account.login):
+            login = "user_{}".format(account.id)
+            log.warning("Rename login '%s' to '%s'", account.login, login)
+
+        inhabitable, isswitchroom, room_number = GetRoomProperties(account.location)
+        room = session.session.query(facilities.Room).filter(
+                (facilities.Room.building == building) &
+                (facilities.Room.level == account.location.floor.number) &
+                (facilities.Room.number == room_number)).one()
+
+        account_name = "Nutzerkonto von {}".format(account.name)
+
+        u = user.User(
+            login=login,
+            name=account.name,
+            room=room,
+            registered_at= account.entrydate,
+            account=finance.Account(name=account_name, type="USER_ASSET"),
+            email="{}@wh17.tu-dresden.de".format(account.login),
+        )
+
+        logentry = logging.UserLogEntry(
+            author=None,
+            message="User imported from legacy nvtool",
+            user=u
+        )
+
+        if "Hausmeister" not in account.name:
+            usergroupmember = user.Membership(user=u, group=groups["member"], begins_at=account.entrydate)
+        else:
+            usergroupmember = user.Membership(user=u, group=groups["caretaker"], begins_at=account.entrydate)
+
+        session.session.add(u)
+        session.session.add(usergroupmember)
+        session.session.add(logentry)
+
+
 def GetRoomProperties(l):
     if l.comment != "Müllraum":
         number = "0{flat}{room} ({comment})".format(flat=l.flat, room=l.room,
@@ -191,6 +283,39 @@ def GetRoomProperties(l):
         isswitchroom = True
     return inhabitable, isswitchroom, number
 
+
+def get_or_create_groups():
+    properties_l = []
+    resources = {}
+    g_d = resources['group'] = {}  # role -> PropertyGroup obj
+    # TODO: create other groups
+
+    configgroups = group_props.items()
+    for role, (group_name, properties) in configgroups:
+        q = session.session.query(model.user.Group.id).filter(
+            model.user.Group.name == group_name)
+        groupexists = session.session.query(q.exists()).scalar()
+
+        if (not groupexists):
+            g = user.PropertyGroup(name=group_name)
+            g_d[role] = g
+            for prop_name, modifier in properties.items():
+                properties_l.append(user.Property(
+                    name=prop_name, property_group=g, granted=modifier))
+        else:
+            g = session.session.query(model.user.Group).filter(
+                model.user.Group.name == group_name)
+            g_d[role] = g
+
+    g_d['usertraffic'] = user.TrafficGroup(
+        name="Nutzer-Trafficgruppe",
+        credit_amount=3 * 2 ** 30,
+        credit_interval=timedelta(days=1),
+        credit_limit=21 * 3 * 2 ** 30)
+
+    groups = list(g_d.values()) + properties_l
+    session.session.add_all(groups)
+    return g_d
 
 if __name__=="__main__":
     import argparse
