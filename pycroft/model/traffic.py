@@ -28,7 +28,7 @@ class TrafficEvent(object):
 
 
 class TrafficVolume(TrafficEvent, IntegerIdModel):
-    type = Column(Enum("IN", "OUT", name="traffic_types"),
+    type = Column(Enum("IN", "OUT", name="traffic_direction"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
                    nullable=False)
