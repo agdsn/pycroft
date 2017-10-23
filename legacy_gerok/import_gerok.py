@@ -475,14 +475,13 @@ def get_or_create_groups():
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
     log.info("Get or create groups")
 
-    configgroups = group_props.items()
-    for role, (group_name, properties) in configgroups:
+    for role, (group_name, properties) in group_props.items():
         q = session.session.query(model.user.Group.id).filter(
             model.user.Group.name == group_name)
         groupexists = session.session.query(q.exists()).scalar()
 
-        if (not groupexists):
-            log.debug("Create Group {}".format(group_name))
+        if not groupexists:
+            log.debug("Create Group %s", group_name)
             g = user.PropertyGroup(name=group_name)
             g_d[role] = g
             for prop_name, modifier in properties.items():
