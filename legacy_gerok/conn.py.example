@@ -1,0 +1,16 @@
+# -*- mode: python; coding: utf-8 -*-
+"""
+example conn.py
+
+For additional documentation and tooling, refer to
+`../legacy/conn.py.example`.
+"""
+
+conn_opts = {
+    # The “Input” database
+    'nvtool': "postgresql://postgres:password@db/nvtool",
+    # The “Output” database
+    'pycroft': "postgresql://postgres:password@db/pycroft",
+    # The master database (for creating / dropping tables)
+    'master': "postgresql://postgres:password@db/postgres",
+}

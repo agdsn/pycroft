@@ -26,7 +26,7 @@ from flask import _request_ctx_stack
 try:
     from .conn import conn_opts
 except ImportError:
-    print("Please provide configuration in the legacy/conn.py module.\n"
+    print("Please provide configuration in the legacy_gerok/conn.py module.\n"
           "See conn.py.example for the required variables"
           " and further documentation.")
     exit()
