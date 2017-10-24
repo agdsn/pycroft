@@ -487,6 +487,7 @@ def generate_subnets_vlans(data, resources):
                        gateway=ipaddr.IPv4Address(_s.default_gateway),
                        description=_s.vlan_name,
                        vlan=vlan)
+        log.debug("Adding Subnet {}, id {}".format(_s.vlan_name, _s.subnet_id))
         s_d[_s.subnet_id] = s
 
     # TODO: note, missing transit, server and eduroam subnets

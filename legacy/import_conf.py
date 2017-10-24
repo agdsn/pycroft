@@ -94,7 +94,8 @@ site_name_map = {
     1: u"Borsbergstraße",
     2: u"Zeunerstraße",
     3: u"Budapester Straße",
-    4: "Fritz-Löffler-Straße"
+    4: "Fritz-Löffler-Straße",
+    5: "Gret-Palucca-Straße",
 }
 
 
@@ -116,6 +117,7 @@ building_site_map = {
     14: 3,  # Bu22
     15: 3,  # Bu24
     16: 4,  # FL16
+    17: 5,  # GPS11
 }
 
 building_subnets_map = {
@@ -136,6 +138,7 @@ building_subnets_map = {
     14: [13],  # Bu22
     15: [14],  # Bu24
     16: [15],  # FL16
+    17: [16],  # GPS11
 }
 
 vlan_name_vid_map = {
@@ -154,4 +157,5 @@ vlan_name_vid_map = {
     'Bu22': 18,
     'Bu24': 29,
     'FL16': 35,
+    'GPS11': 32,
 }
