@@ -15,6 +15,8 @@ import ipaddr
 from legacy_gerok.nvtool_model import Location, Switch, Port, Subnet, Jack, \
     Account, Active
 
+BANKKONTO_GER = "Bankkonto Ger"
+
 log = std_logging.getLogger('import')
 
 from .tools import timed
@@ -84,22 +86,33 @@ def main(args):
         log.info("Creating pycroft model schema")
         model.create_db_model(engine)
 
-    with timed(log, thing="Translation"):
-        bank_account = create_bankAccount()
-        building = create_site_and_building()
-        ger38subnet, sn = create_subnet(session_nvtool)
-        import_facilities_and_switches(session_nvtool, building, ger38subnet)
-        import_SwitchPatchPorts(session_nvtool, building, sn)
-        groups = get_or_create_groups()
-        fee_account = get_or_create_config(groups)
-        import_users(session_nvtool, building, groups, ger38subnet, fee_account,
-                     bank_account)
+    try:
+
+        with timed(log, thing="Translation"):
+            bank_account = create_bankAccount()
+            building = create_site_and_building()
+            ger38subnet, sn = create_subnet(session_nvtool)
+            import_facilities_and_switches(session_nvtool, building, ger38subnet)
+            import_SwitchPatchPorts(session_nvtool, building, sn)
+            groups = get_or_create_groups()
+            fee_account = get_or_create_config(groups)
+            import_users(session_nvtool, building, groups, ger38subnet, fee_account,
+                         bank_account)
 
         session.session.commit()
-
+    except:
+        session.session.rollback()
+    finally:
+        session.session.close()
 
 def create_bankAccount():
-    bank_financeAccount = finance.Account(name="Bankkonto Ger",
+
+    existing_account = session.session.query(finance.BankAccount).filter(finance.BankAccount.account_number == "3120230811").scalar()
+
+    if existing_account is not None:
+        return existing_account
+
+    bank_financeAccount = finance.Account(name=BANKKONTO_GER,
                                           type="BANK_ASSET")
     session.session.add(bank_financeAccount)
     bank_account = finance.BankAccount(
@@ -154,8 +167,7 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
     for j in jacks:
         switch = session.session.query(host.Switch).filter(
             host.Switch.management_ip == j.port.switch.ip).one()
-        interface = next(
-            i for i in switch.switch_interfaces if i.name == str(j.port.number))
+        interface = next(i for i in switch.switch_interfaces if str(i.name) == str(j.port.number))
 
         inhabitable, isswitchroom, room_number = get_room_properties(j.location)
 
@@ -163,6 +175,13 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
             (facilities.Room.building == building) &
             (facilities.Room.level == j.location.floor.number) &
             (facilities.Room.number == room_number)).one()
+
+        existing_ports = session.session.query(port.SwitchPatchPort).filter(port.SwitchPatchPort.room == room).all()
+        # already imported
+        if existing_ports:
+            log.info("Ports already existing")
+            return
+
         spp = port.SwitchPatchPort(
             room=room,
             switch_interface=interface,
@@ -173,6 +192,11 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
 
 
 def create_site_and_building():
+
+    existing_building = session.session.query(facilities.Building).filter(facilities.Building.short_name == "Ger").scalar()
+    if existing_building is not None:
+        return existing_building
+
     site = facilities.Site(
         name="Gerokstraße"
     )
@@ -189,9 +213,10 @@ def create_site_and_building():
 def create_subnet(session_nvtool):
     # Exclude Ger27
     sn = session_nvtool.query(Subnet).filter(Subnet.id != 1).one()
+
     ger38subnet = net.Subnet(
-        address=sn.network,
-        gateway=sn.gateway,
+        address=ipaddr.IPNetwork(sn.network),
+        gateway=ipaddr.IPAddress(sn.gateway),
         vlan=net.VLAN(
             name="Hausnetz Ger38",
             vid=38
@@ -205,6 +230,11 @@ def create_subnet(session_nvtool):
 
 def import_facilities_and_switches(session_nvtool, building, ger38subnet):
     log.info("Importing Rooms and Switches")
+
+    oldRooms = session.session.query(facilities.Room).filter(facilities.Room.building == building).all()
+    if oldRooms:
+        log.info("Rooms already imported")
+        return
 
     # Only Gerok 38 locations
     locations = session_nvtool.query(Location).filter(Location.domain_id == 2)
@@ -398,6 +428,11 @@ def create_user(account, financeAccount, room, ru):
         login = "user_{}".format(account.id)
         log.warning("Rename login '%s' to '%s'", account.login, login)
 
+    existing_user = session.session.query(user.User).filter(user.User.login == login).scalar()
+    if (existing_user is not None):
+        login = login + "_gerok"
+        log.warning("Rename login '%s' to '%s'", account.login, login)
+
     u = user.User(
         login=login,
         name=account.name,
@@ -434,9 +469,10 @@ def get_room_for_location(account, building):
 
 
 def get_or_create_root_user(groups):
-    root = session.session.query(user.Membership).filter(
-        user.Membership.id == 0)
-    if not session.session.query(root.exists()).scalar():
+    root = session.session.query(user.User).filter(user.User.id == 0).scalar()
+    if not root is None:
+        return root
+    else:
         ru = user.User(
             login=ROOT_NAME,
             name="root-User",
