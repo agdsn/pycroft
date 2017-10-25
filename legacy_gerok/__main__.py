@@ -9,7 +9,9 @@ parser.add_argument("-l", "--log", dest="log_level",
     choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
     default='INFO')
 
-parser.add_argument("--delete-old", action='store_true', default=True)
+parser.add_argument('--delete-old', dest='delete_old', action='store_true')
+parser.add_argument('--no-delete-old', dest='delete_old', action='store_false')
+parser.set_defaults(delete_old=True)
 
 args = parser.parse_args()
 

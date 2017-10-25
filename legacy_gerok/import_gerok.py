@@ -489,7 +489,7 @@ def get_or_create_groups():
                     name=prop_name, property_group=g, granted=modifier))
         else:
             g = session.session.query(model.user.Group).filter(
-                model.user.Group.name == group_name)
+                model.user.Group.name == group_name).one()
             g_d[role] = g
 
     g_d['usertraffic'] = user.TrafficGroup(
