@@ -10,34 +10,44 @@ from tests.fixtures.dummy.user import UserData
 
 class TrafficVolumeData(DataSet):
     class dummy_volume:
-        amount = int(7.6 * 2**20)
-        timestamp = datetime.utcnow()
-        type = "IN"
         ip = IPData.dummy_user_ipv4
+        user = UserData.dummy
+        type = "IN"
+        amount = int(7.6 * 2**20)
+        packets = int(7600)
+        timestamp = datetime.utcnow()
 
     class dummy_volume_before_balance:
-        amount = int(3.72 * 2**30)
-        timestamp = datetime.utcnow() - timedelta(hours=2)
-        type = "IN"
         ip = IPData.dummy_user_ipv4
+        user = UserData.dummy
+        type = "IN"
+        amount = int(3.72 * 2**30)
+        packets = int(3720)
+        timestamp = datetime.utcnow() - timedelta(hours=2)
 
     class dummy_volume_ipv6:
-        amount = int(56.1 * 2**20)
-        timestamp = datetime.utcnow() - timedelta(minutes=25)
-        type = "OUT"
         ip = IPData.dummy_user_ipv6
+        user = UserData.dummy
+        type = "OUT"
+        amount = int(56.1 * 2**20)
+        packets = int(5610)
+        timestamp = datetime.utcnow() - timedelta(minutes=25)
 
     class dummy_volume_server:
-        amount = int(12.22 * 2**20)
-        timestamp = datetime.utcnow() - timedelta(minutes=25)
-        type = "IN"
         ip = IPData.dummy_server_ip
+        user = UserData.dummy
+        type = "IN"
+        amount = int(12.22 * 2**20)
+        packets = int(1222)
+        timestamp = datetime.utcnow() - timedelta(minutes=25)
 
     class dummy_volume_switch:
-        amount = int(51.258 * 2**40)
-        timestamp = datetime.utcnow() - timedelta(hours=6)
-        type = "IN"
         ip = IPData.dummy_switch_ip
+        user = UserData.privileged
+        type = "IN"
+        amount = int(51.258 * 2**40)
+        packets = int(51258)
+        timestamp = datetime.utcnow() - timedelta(hours=6)
 
 
 class TrafficCreditData(DataSet):

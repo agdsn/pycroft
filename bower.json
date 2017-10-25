@@ -12,6 +12,7 @@
     "bootstrap-table": "~1.11.1",
     "underscore": "~1.7.0",
     "d3": "3.x",
-    "dcjs": "~2.0"
+    "dcjs": "~2.0",
+    "nvd3": "~1.8.6"
   }
 }

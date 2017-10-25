@@ -314,19 +314,13 @@ def traffic_events_expr():
         literal("credit").label('type')]),
 
         select([(-TrafficVolume.amount).label('amount'),
-                Host.owner_id.label('user_id'),
+                TrafficVolume.user_id,
                 TrafficVolume.timestamp,
                 literal("debit").label('type')]
-               ).select_from(
-            TrafficVolume.__table__.join(
-                IP.__table__
-            ).join(
-                Interface.__table__
-            ).join(
-                Host.__table__)),
+               ),
 
         select([TrafficBalance.amount,
-                TrafficBalance.user_id.label('user_id'),
+                TrafficBalance.user_id,
                 TrafficBalance.timestamp,
                 literal("balance").label('type')]  # ).select_from(
                # .__table__.outerjoin(TrafficBalance)
@@ -336,7 +330,7 @@ def traffic_events_expr():
     return events
 
 
-def traffic_balance_expr():
+def traffic_balance_expr(until=func.now()):
     # not a hybrid attribute expression due to circular import dependencies
 
     balance = select(
@@ -346,7 +340,7 @@ def traffic_balance_expr():
     ).where(
         and_(
             literal_column('traffic_events.user_id') == User.id,
-            literal_column('traffic_events.timestamp') <= func.now(),
+            literal_column('traffic_events.timestamp') <= until,
             literal_column('traffic_events.timestamp') >=
             func.coalesce(
                 select([TrafficBalance.timestamp]

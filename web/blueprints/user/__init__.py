@@ -23,7 +23,8 @@ from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
-from pycroft.lib.user import make_member_of, encode_type1_user_id, encode_type2_user_id
+from pycroft.lib.user import make_member_of, encode_type1_user_id, \
+    encode_type2_user_id, traffic_balance_expr
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
@@ -340,27 +341,31 @@ def json_trafficdata(user_id, days=7):
     :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
     """
     traffic_timespan = (session.utcnow() - timedelta(days=days)).date()
+
     # get all traffic volumes for the user in the timespan
+    def traffic_events_as_json(model):
+        result = model.q.filter(
+            model.user_id == user_id,
+            model.timestamp > traffic_timespan).order_by(
+            model.timestamp)
+        result = json_agg(result).one()[0]
+        return result if result is not None else []
 
-    traffic_volumes = TrafficVolume.q.join(IP).join(Interface).join(Host
-        ).filter(
-            and_(TrafficVolume.timestamp > traffic_timespan,
-                 Host.owner_id == user_id)
-        ).order_by(
-            TrafficVolume.timestamp)
+    # sum traffic balance up until the beginning of traffic_timespan
+    traffic_balance = session.session.query(traffic_balance_expr(
+        datetime.combine(traffic_timespan, time()) - timedelta(
+            microseconds=1))).filter(User.id == user_id).scalar()
 
-    traffic_volumes = json_agg(traffic_volumes).one()[0]
-
-    traffic_credits = json_agg(
-        TrafficCredit.q.filter_by(user_id=user_id)).one()[0]
-
-    traffic_balance = json_agg(TrafficBalance.q.filter_by(user_id=user_id)).one()[0]
+    credit_limit = session.session.execute(User.active_traffic_groups().where(
+        User.id == user_id).with_only_columns(
+        [func.max(TrafficGroup.credit_limit)])).scalar()
 
     return jsonify(
         items={
-            'debits': traffic_volumes,
-            'credits': traffic_credits,
+            'debits': traffic_events_as_json(TrafficVolume),
+            'credits': traffic_events_as_json(TrafficCredit),
             'balance': traffic_balance,
+            'credit_limit': credit_limit
         }
     )
 
