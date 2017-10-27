@@ -151,6 +151,11 @@ def user_show(user_id):
         'inverted': True,
         'saldo': balance,
     }
+    lock_unlock="lock" # lock_unlock is "lock" if user isn't locked --> show button to lock user | if user is locked, lock_unlock is the membership-ID
+    for membership in memberships_active.all():
+        if membership.group.name == "Gesperrt":
+            lock_unlock=membership.id
+            break
 
     return render_template(
         'user/user_show.html',
@@ -182,7 +187,8 @@ def user_show(user_id):
         flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.account_id),
-        traffic_json_url=url_for('.json_trafficdata', user_id=user_id)
+        traffic_json_url=url_for('.json_trafficdata', user_id=user_id),
+        lock_unlock=lock_unlock
     )
 
 @bp.route("/<int:user_id>/account")
