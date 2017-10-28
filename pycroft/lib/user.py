@@ -431,6 +431,21 @@ def suspend(user, reason, processor, during=None):
                    .to_json(), author=processor, user=user)
     return user
 
+@with_transaction
+def unblock(user, processor):
+    """
+    This function unblocks a user by removing his membership of
+    the violation group.
+    :param User user: The user to be unblocked.
+    :param User processor: The admin who unblocked the user.
+    :return: The unblocked user.
+    """
+    remove_member_of(user=user, group=config.violation_group,
+                     processor=processor)
+    message = deferred_gettext(u"User has been unblocked.")
+    log_user_event(message=message.to_json(), author=processor, user=user)
+    return user
+
 
 @with_transaction
 def move_out(user, comment, processor, when):

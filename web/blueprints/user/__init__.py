@@ -151,11 +151,7 @@ def user_show(user_id):
         'inverted': True,
         'saldo': balance,
     }
-    lock_unlock="lock" # lock_unlock is "lock" if user isn't locked --> show button to lock user | if user is locked, lock_unlock is the membership-ID
-    for membership in memberships_active.all():
-        if membership.group.name == "Gesperrt":
-            lock_unlock=membership.id
-            break
+    is_blocked = user.member_of(config.violation_group)
 
     return render_template(
         'user/user_show.html',
@@ -188,7 +184,7 @@ def user_show(user_id):
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.account_id),
         traffic_json_url=url_for('.json_trafficdata', user_id=user_id),
-        lock_unlock=lock_unlock
+        is_blocked = is_blocked
     )
 
 @bp.route("/<int:user_id>/account")
@@ -669,6 +665,28 @@ def suspend(user_id):
             flash(u'Nutzer gesperrt', 'success')
             return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_block.html', form=form, user_id=user_id)
+
+
+@bp.route('/<int:user_id>/unblock', methods=['GET', 'POST'])
+@access.require('user_change')
+def unblock(user_id):
+    user = User.q.get(user_id)
+
+    if user.member_of(config.violation_group) == False:
+        flash(u"Nutzer {} ist nicht gesperrt!".format(
+            user_id), 'error')
+        return abort(404)
+
+    try:
+        unblocked_user = lib.user.unblock(
+            user=user,
+            processor=current_user)
+        session.session.commit()
+    except ValueError as e:
+        flash(str(e), 'error')
+    else:
+        flash(u'Nutzer entsperrt', 'success')
+        return redirect(url_for('.user_show', user_id=user_id))
 
 
 @bp.route('/<int:user_id>/move_out', methods=['GET', 'POST'])
