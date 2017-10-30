@@ -395,16 +395,17 @@ def has_positive_balance(user):
 
     :param user: The user we are interested in.
     :return: True if and only if the user's balance is at least zero.
-
     """
     return has_balance_of_at_least(user, 0)
 
 
 def has_network_access(user):
-    """
-    The function evaluates if the user is allowed to connect to the network.
+    """Check if the user is allowed to connect to the network.
+
     :param user: The user object.
-    :return: True if he is allowed to use the network, false if he is not.
+
+    :return: True if he is allowed to use the network, false if he is
+             not.
     """
     return (user.has_property("network_access") and
             not has_exceeded_traffic(user) and
@@ -413,14 +414,18 @@ def has_network_access(user):
 
 @with_transaction
 def suspend(user, reason, processor, during=None):
-    """
-    This function suspends a user in a given interval by making him a member of
-    the violation group in the given interval. A reason should be provided.
+    """Suspend a user during a given interval.
+
+    The user is added to ``config.violation_group`` in a given
+    interval.  A reason needs to be provided.
+
     :param User user: The user to be suspended.
     :param unicode reason: The reason for suspending.
     :param User processor: The admin who suspended the user.
-    :param Interval|None during: The interval in which the user is suspended.
-    If None the user will be suspendeded from now on without an upper bound.
+    :param Interval|None during: The interval in which the user is
+        suspended.  If None the user will be suspendeded from now on
+        without an upper bound.
+
     :return: The suspended user.
     """
     if during is None:
@@ -431,13 +436,16 @@ def suspend(user, reason, processor, during=None):
                    .to_json(), author=processor, user=user)
     return user
 
+
 @with_transaction
 def unblock(user, processor):
-    """
-    This function unblocks a user by removing his membership of
-    the violation group.
+    """Unblocks a user.
+
+    This removes his membership of the ``config.violation`` group.
+
     :param User user: The user to be unblocked.
     :param User processor: The admin who unblocked the user.
+
     :return: The unblocked user.
     """
     remove_member_of(user=user, group=config.violation_group,
