@@ -258,19 +258,27 @@ class Test_080_User_Block(FixtureDataTestBase):
 
     def test_0010_user_has_no_network_access(self):
         u = user.User.q.filter_by(login=UserData.dummy.login).one()
+        # We can't test for `has_property("network_access")`, because
+        # that isn't granted to `dummy` in the fixtures
+        # TODO: create custom fixtures
+        # self.assertTrue(blocked_user.has_property("network_access"))
         verstoss = PropertyGroup.q.filter(
             PropertyGroup.name == u"Verstoß").first()
-#       Ich weiß nicht, ob dieser Test noch gebraucht wird!
-#       self.assertTrue(u.has_property("network_access"))
         self.assertNotIn(verstoss, u.active_property_groups())
 
-        blocked_user = UserHelper.suspend(u, u"test", u)
+        blocked_user = UserHelper.suspend(u, reason=u"test", processor=u)
         session.session.commit()
 
-        self.assertFalse(blocked_user.has_property("network_access"))
+        # passes, but is self-fulfilling
+        # self.assertFalse(blocked_user.has_property("network_access"))
         self.assertIn(verstoss, blocked_user.active_property_groups())
-
         self.assertEqual(blocked_user.log_entries[0].author, u)
+
+        unblocked_user = UserHelper.unblock(blocked_user, processor=u)
+        session.session.commit()
+        # self.assertTrue(unblocked_user.has_property("network_access"))
+        self.assertNotIn(verstoss, unblocked_user.active_property_groups())
+        self.assertEqual(unblocked_user.log_entries[0].author, u)
 
 
 class Test_090_User_Is_Back(FixtureDataTestBase):

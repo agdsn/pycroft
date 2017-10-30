@@ -76,6 +76,9 @@ class PropertyData(DataSet):
     class property5_user_show(_AdminProperty):
         name = "user_show"
 
+    class property6_user_change(_AdminProperty):
+        name = "user_change"
+
     class property_groups_change(_AdminProperty):
         name = "groups_change"
 
