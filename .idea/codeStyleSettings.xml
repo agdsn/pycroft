@@ -7,6 +7,9 @@
         <option name="IGNORE_SAME_INDENTS_FOR_LANGUAGES" value="true" />
         <option name="LINE_SEPARATOR" value="&#10;" />
         <option name="RIGHT_MARGIN" value="80" />
+        <MarkdownNavigatorCodeStyleSettings>
+          <option name="RIGHT_MARGIN" value="72" />
+        </MarkdownNavigatorCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
@@ -44,4 +47,3 @@
     <option name="USE_PER_PROJECT_SETTINGS" value="true" />
   </component>
 </project>
-
