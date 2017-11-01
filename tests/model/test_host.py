@@ -181,7 +181,7 @@ class Test_060_Cascades(FixtureDataTestBase):
         tv_of_test_ip = test_ip.traffic_volumes
         session.session.delete(test_ip)
         session.session.commit()
-        self.assertTrue(all(inspect(o).deleted
+        self.assertTrue(all(inspect(o).was_deleted
                             for o in tv_of_test_ip))
 
     def test_0010_cascade_on_delete_interface(self):
@@ -191,7 +191,7 @@ class Test_060_Cascades(FixtureDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_interface)
         session.session.commit()
-        self.assertTrue(all(inspect(o).deleted
+        self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(ips, traffic_volumes)))
 
     def test_0010_cascade_on_delete_host(self):
@@ -201,8 +201,8 @@ class Test_060_Cascades(FixtureDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_host)
         session.session.commit()
-        self.assertTrue(all(inspect(o).deleted)
-                        for o in chain(interfaces, ips, traffic_volumes))
+        self.assertTrue(all(inspect(o).was_deleted
+                            for o in chain(interfaces, ips, traffic_volumes)))
 
     def test_0010_cascade_on_delete_user(self):
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
@@ -212,8 +212,8 @@ class Test_060_Cascades(FixtureDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_user)
         session.session.commit()
-        self.assertTrue(all(inspect(o).deleted)
-                        for o in chain(hosts, interfaces, ips, traffic_volumes))
+        self.assertTrue(all(inspect(o).was_deleted
+                            for o in chain(hosts, interfaces, ips, traffic_volumes)))
 
     def test_cascade_on_delete_subnet(self):
         subnet = Subnet.q.filter_by(address=SubnetData.dummy_subnet4.address).one()
