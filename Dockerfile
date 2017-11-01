@@ -15,6 +15,7 @@ RUN apt-get update \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Install Debian packages
+# Build-essential is needed For compiling things in pip
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
@@ -26,7 +27,6 @@ RUN apt-get update \
         npm \
         python3-dev \
         python3-pip \
-        # For compiling things in pip
         build-essential \
         sqlite3 \
         vim \
