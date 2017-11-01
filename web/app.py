@@ -1,7 +1,7 @@
 import os
 
-from flask import Flask, redirect, url_for, request, flash, render_template
-from flask_login import current_user, current_app
+from flask import Flask, redirect, url_for, request, flash, render_template, current_app
+from flask_login import current_user
 from flask_babel import Babel
 from jinja2 import StrictUndefined
 from werkzeug.datastructures import ImmutableDict

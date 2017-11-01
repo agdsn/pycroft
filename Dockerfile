@@ -35,7 +35,14 @@ RUN apt-get update \
 
 # Install Python packages
 COPY vagrant/requirements.txt /
-RUN pip3 install -r /requirements.txt
+
+# pip3 install -U pip installs an additional pip3 binary to
+# `/usr/local/bin/pip3` as opposed to the OS-owned `/usr/bin/pip3`.
+# Removal of the hash table with `hash -r` is thus necessary to tell
+# the bash that the new, up-to-date binary exists.
+RUN pip3 install -U pip \
+    && hash -r \
+    && pip3 install -r /requirements.txt
 
 RUN adduser --disabled-password --gecos "Application" pycroft
 RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
