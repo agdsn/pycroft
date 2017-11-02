@@ -6,7 +6,8 @@ Flask-WTF~=0.14.2
 Flask~=0.12.1
 Jinja2~=2.9
 MarkupSafe~=1.0
-#PyMySQL>=0.7.3,<0.8
+# Needed for the gerok importer
+PyMySQL~=0.7.3
 SQLAlchemy~=1.1.14
 WTForms~=2.1
 Werkzeug~=0.12.2
