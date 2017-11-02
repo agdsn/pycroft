@@ -16,7 +16,7 @@ ${COMPOSE} stop web
 
 
 echo importing sql dump
-${COMPOSE} exec --user=postgres db psql -v ON_ERROR_STOP=1 --single-transaction --file "/pycroft/${SQL_PATH}"
+${COMPOSE} exec --user=postgres db psql -v ON_ERROR_STOP=1 --file "/pycroft/${SQL_PATH}"
 
 echo importing to pycroft database
 ${COMPOSE} run --rm web python3 -m legacy.import_legacy
