@@ -482,18 +482,28 @@ def suspend(user, reason, processor, during=None):
 
 
 @with_transaction
-def unblock(user, processor):
+def unblock(user, processor, when=None):
     """Unblocks a user.
 
     This removes his membership of the ``config.violation`` group.
 
+    Note that for unblocking, no further asynchronous action has to be
+    triggered, as opposed to e.g. membership termination.
+
     :param User user: The user to be unblocked.
     :param User processor: The admin who unblocked the user.
+    :param datetime when: The time of membership termination.  Note
+        that in comparison to :py:func:`suspend`, you don't provide an
+        _interval_, but a point in time, defaulting to the current
+        time.  Will be converted to ``closedopen(when, None)``.
 
     :return: The unblocked user.
     """
+    if when is None:
+        when = session.utcnow()
+
     remove_member_of(user=user, group=config.violation_group,
-                     processor=processor)
+                     processor=processor, during=closedopen(when, None))
     message = deferred_gettext(u"User has been unblocked.")
     log_user_event(message=message.to_json(), author=processor, user=user)
     return user

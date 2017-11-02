@@ -231,26 +231,63 @@ class UserWithNetworkAccessTestCase(FixtureDataTestBase):
     # config with properties and a dummy user with network access
     datasets = (ConfigData, PropertyData, network_access.MembershipData)
 
-    def test_user_blocking_and_unblocking(self):
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.assertTrue(u.has_property("network_access"))
+    def setUp(self):
+        super().setUp()
+        self.user_to_block = user.User.q.filter_by(login=UserData.dummy.login).one()
+        # these asserts verify correct initial state of the fixtures
+        self.assertTrue(self.user_to_block.has_property("network_access"))
+        verstoss = config.violation_group
+        self.assertNotIn(verstoss, self.user_to_block.active_property_groups())
 
-        verstoss = PropertyGroup.q.filter(
-            PropertyGroup.name == u"Verstoß").first()
-        self.assertNotIn(verstoss, u.active_property_groups())
+    def assert_violation_membership(self, user, subinterval=None):
+        if subinterval is None:
+            self.assertFalse(user.has_property("network_access"))
+            self.assertTrue(user.member_of(config.violation_group))
+            return
+
+        self.assertTrue(user.member_of(config.violation_group, when=subinterval))
+
+    def assert_no_violation_membership(self, user, subinterval=None):
+        if subinterval is None:
+            self.assertTrue(user.has_property("network_access"))
+            self.assertFalse(user.member_of(config.violation_group))
+            return
+
+        self.assertFalse(user.member_of(config.violation_group, when=subinterval))
+
+    def test_instant_user_blocking_and_unblocking(self):
+        # TODO: test for log entries
+        u = self.user_to_block
 
         blocked_user = UserHelper.suspend(u, reason=u"test", processor=u)
         session.session.commit()
-        blockage_subinterval = single(session.utcnow())
+        blocked_during = single(session.utcnow())
 
-        self.assertFalse(blocked_user.has_property("network_access"))
-        self.assertTrue(blocked_user.member_of(verstoss))
-        self.assertTrue(blocked_user.member_of(verstoss, when=blockage_subinterval))
-        self.assertEqual(blocked_user.log_entries[0].author, u)
+        self.assertEqual(u.log_entries[0].author, blocked_user)
+        self.assert_violation_membership(blocked_user)
+        self.assert_violation_membership(blocked_user, subinterval=blocked_during)
 
         unblocked_user = UserHelper.unblock(blocked_user, processor=u)
         session.session.commit()
-        self.assertTrue(unblocked_user.has_property("network_access"))
-        self.assertFalse(unblocked_user.member_of(verstoss))
-        self.assertTrue(unblocked_user.member_of(verstoss, when=blockage_subinterval))
-        self.assertEqual(unblocked_user.log_entries[0].author, u)
+
+        self.assertEqual(u.log_entries[0].author, unblocked_user)
+        self.assert_violation_membership(unblocked_user, subinterval=blocked_during)
+
+    def test_deferred_blocking_and_unblocking_works(self):
+        u = self.user_to_block
+
+        blockage = session.utcnow() + timedelta(days=1)
+        unblockage = blockage + timedelta(days=2)
+        blocked_user = UserHelper.suspend(u, reason=u"test", processor=u,
+                                          during=closedopen(blockage, None))
+        session.session.commit()
+
+        blocked_during = closedopen(blockage, unblockage)
+        self.assertEqual(u.log_entries[0].author, blocked_user)
+        self.assert_violation_membership(blocked_user, subinterval=blocked_during)
+
+        unblocked_user = UserHelper.unblock(blocked_user, processor=u, when=unblockage)
+        session.session.commit()
+
+        self.assertEqual(unblocked_user.log_entries[0].author, unblocked_user)
+        self.assert_violation_membership(unblocked_user, subinterval=blocked_during)
