@@ -8,10 +8,11 @@ from pycroft.model.port import PatchPort
 from pycroft.model.user import Membership, PropertyGroup
 from tests import FixtureDataTestBase
 from pycroft import config
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import closedopen, single
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, session, logging, finance, host)
+from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import AccountData, SemesterData
@@ -226,29 +227,30 @@ class Test_050_User_Edit_Email(FixtureDataTestBase):
         self.assertEqual(self.user.email, new_mail)
 
 
-class Test_080_User_Block(FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, PropertyData, RoomData, UserData)
+class UserWithNetworkAccessTestCase(FixtureDataTestBase):
+    # config with properties and a dummy user with network access
+    datasets = (ConfigData, PropertyData, network_access.MembershipData)
 
-    def test_0010_user_has_no_network_access(self):
+    def test_user_blocking_and_unblocking(self):
         u = user.User.q.filter_by(login=UserData.dummy.login).one()
-        # We can't test for `has_property("network_access")`, because
-        # that isn't granted to `dummy` in the fixtures
-        # TODO: create custom fixtures
-        # self.assertTrue(blocked_user.has_property("network_access"))
+        self.assertTrue(u.has_property("network_access"))
+
         verstoss = PropertyGroup.q.filter(
             PropertyGroup.name == u"Verstoß").first()
         self.assertNotIn(verstoss, u.active_property_groups())
 
         blocked_user = UserHelper.suspend(u, reason=u"test", processor=u)
         session.session.commit()
+        blockage_subinterval = single(session.utcnow())
 
-        # passes, but is self-fulfilling
-        # self.assertFalse(blocked_user.has_property("network_access"))
-        self.assertIn(verstoss, blocked_user.active_property_groups())
+        self.assertFalse(blocked_user.has_property("network_access"))
+        self.assertTrue(blocked_user.member_of(verstoss))
+        self.assertTrue(blocked_user.member_of(verstoss, when=blockage_subinterval))
         self.assertEqual(blocked_user.log_entries[0].author, u)
 
         unblocked_user = UserHelper.unblock(blocked_user, processor=u)
         session.session.commit()
-        # self.assertTrue(unblocked_user.has_property("network_access"))
-        self.assertNotIn(verstoss, unblocked_user.active_property_groups())
+        self.assertTrue(unblocked_user.has_property("network_access"))
+        self.assertFalse(unblocked_user.member_of(verstoss))
+        self.assertTrue(unblocked_user.member_of(verstoss, when=blockage_subinterval))
         self.assertEqual(unblocked_user.log_entries[0].author, u)
