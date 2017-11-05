@@ -110,7 +110,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         # checks the initial group memberships
         active_user_groups = (new_user.active_property_groups() +
                               new_user.active_traffic_groups())
-        for group in (config.member_group, config.network_access_group):
+        for group in {config.member_group, config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
         self.assertTrue(UserHelper.has_network_access(new_user))

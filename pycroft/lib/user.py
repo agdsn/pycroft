@@ -147,7 +147,7 @@ def move_in(name, login, email, building, level, room_number, mac,
     session.session.add(UserInterface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
 
-    for group in (config.member_group, config.network_access_group):
+    for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
 
     if moved_from_division:
@@ -471,7 +471,7 @@ def move_out(user, comment, processor, when):
     if when > datetime.now():
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
-    for group in (config.member_group, config.network_access_group):
+    for group in {config.member_group, config.network_access_group}:
         remove_member_of(user, group, processor, closedopen(when, None))
 
     num_hosts = 0  # In case the chain is empty
