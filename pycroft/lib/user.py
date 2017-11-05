@@ -100,19 +100,25 @@ def setup_ipv4_networking(host):
 @with_transaction
 def move_in(name, login, email, building, level, room_number, mac,
             processor, moved_from_division, already_paid_semester_fee):
-    """
-    This function creates a new user, assign him to a room and creates some
-    initial groups and transactions.
-    :param name: The full name of the user. (Max Mustermann)
+    """Create a new user in a given room and do some initialization.
+
+    The user is given a new Host with an interface of the given mac, a
+    UnixAccount, a finance Account, and is made member of important
+    groups.  Finances are initialized and networking is set up.
+
+    :param name: The full name of the user.  (Max Mustermann)
     :param login: The unix login for the user.
     :param email: E-Mail address of the user.
     :param building: The building the user moves in.
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
-    :param moved_from_division: User was already member of another division
-    :param already_paid_semester_fee: User paid at other division for current semester
+    :param moved_from_division: User was already member of another
+        division
+    :param already_paid_semester_fee: User paid at other division for
+        current semester
     :param host_name: An optional Hostname for the users pc.
+
     :return: The new user object.
     """
 
@@ -402,11 +408,12 @@ def traffic_balance_expr():
 
 
 def has_exceeded_traffic(user):
-    """
-    The function calculates the balance of the users traffic.
+    """Calculate the balance of the users traffic.
+
     :param user: The user object which has to be checked.
-    :return: True if the user has more traffic than allowed and false if he
-    did not exceed the limit.
+
+    :return: True if the user has more traffic than allowed and false
+             if he did not exceed the limit.
     """
     return traffic_balance(user) < 0
 
@@ -494,14 +501,20 @@ def unblock(user, processor):
 
 @with_transaction
 def move_out(user, comment, processor, when):
-    """
-    This function moves out a user and finishes all move_in memberships.
-    move_in memberships are parsed from config.
-    A log message is created.
+    """Move out a user and terminate relevant memberships.
+
+    The user's room is set to ``None`` and all hosts
+    (:py:cls:`UserHost`s as well as :py:cls:`ServerHost`s) are
+    deleted.  Memberships in :py:obj:`config.member_group` and
+    :py:obj:`config.member_group` are terminated.  A log message is
+    created including the number of deleted hosts.
+
     :param User user: The user to move out.
     :param unicode|None comment: An optional comment
-    :param User processor: The admin who is going to move out the user.
+    :param User processor: The admin who is going to move out the
+        user.
     :param datetime when: The time the user is going to move out.
+
     :return: The user that moved out.
     """
     if when > datetime.now():
@@ -644,10 +657,14 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
 
 @with_transaction
 def remove_member_of(user, group, processor, during=UnboundedInterval):
-    """
-    Removes a user from a group in a given interval. The interval defaults to
-    the unbounded interval, so that the user will be removed from the group at
-    any point in time.
+    """Remove a user from a group in a given interval.
+
+    The interval defaults to the unbounded interval, so that the user
+    will be removed from the group at any point in time, **removing
+    all memberships** in this group retroactively.
+
+    However, a common use case is terminating a membership by setting
+    ``during=closedopen(now, None)``.
 
     :param User user: the user
     :param Group group: the group
