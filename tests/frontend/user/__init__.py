@@ -2,14 +2,16 @@ from flask import url_for
 
 from tests import FrontendDataTestBase
 from tests.fixtures import permissions
+from tests.fixtures.dummy import net
+from tests.fixtures.dummy import port
 
 
-class UserLogTestBase(FrontendDataTestBase):
+class UserFrontendTestBase(FrontendDataTestBase):
     """Test base providing access to `user_show`
 
     The user being logged in is :py:cls:`UserData.user1_admin`.
     """
-    datasets = frozenset(permissions.datasets)
+    datasets = frozenset(permissions.datasets | {net.SubnetData, port.SwitchPatchPortData})
 
     def setUp(self):
         self.login = permissions.UserData.user1_admin.login
@@ -17,6 +19,7 @@ class UserLogTestBase(FrontendDataTestBase):
         super().setUp()
 
 
+class UserLogTestBase(UserFrontendTestBase):
     def get_logs(self, user_id=None, **kw):
         """Request the logs, assert validity, and return the response.
 

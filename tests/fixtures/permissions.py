@@ -45,6 +45,8 @@ class BaseProperty():
 
 
 class PropertyGroupData(DataSet):
+    # note that This is additional to the `PropertyGroupData` used by
+    # the config.
     class property_group1_admin:
         name = "Admin"
 
@@ -102,7 +104,11 @@ class MembershipData(DataSet):
         group = PropertyGroupData.property_group2_finance
         user = UserData.user2_finance
 
+    class user3_is_member(BaseMembership):
+        group = ConfigData.config.member_group
+        user = UserData.user3_user
+
 
 # Provides example Users with adequate permissions plus a config for
-# running frontend tests
+# running frontend tests plus a user who is a member
 datasets = {MembershipData, PropertyData, ConfigData}

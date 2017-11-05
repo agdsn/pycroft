@@ -681,6 +681,11 @@ def move_out(user_id):
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
 
+    if not user.member_of(config.member_group):
+        flash("Nutzer {} ist aktuell nirgends eingezogen!".
+              format(user_id), 'error')
+        abort(404)
+
     if form.validate_on_submit():
         lib.user.move_out(user=user, comment=form.comment.data,
                           processor=current_user,
@@ -697,6 +702,10 @@ def move_out(user_id):
 def move_back_in(user_id):
     form = UserMoveBackInForm()
     user = get_user_or_404(user_id)
+
+    if user.member_of(config.member_group):
+        flash("Nutzer {} ist nicht ausgezogen!".format(user_id), 'error')
+        abort(404)
 
     if form.validate_on_submit():
         lib.user.move_back_in(
