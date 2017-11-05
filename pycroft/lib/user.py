@@ -12,6 +12,7 @@ This module contains.
 """
 from __future__ import print_function
 from datetime import datetime, time
+from itertools import chain
 import re
 
 from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
@@ -470,11 +471,20 @@ def move_out(user, comment, processor, when):
     for group in (config.member_group, config.network_access_group):
         remove_member_of(user, group, processor, closedopen(when, None))
 
+    num_hosts = 0  # In case the chain is empty
+    for num_hosts, h in enumerate(chain(user.user_hosts, user.server_hosts), 1):
+        session.session.delete(h)
+
+    user.room = None
+
     if comment:
-        message = deferred_gettext(u"Moved out on {}. Comment: {}").format(
-            when, comment)
+        message = deferred_gettext(
+            u"Moved out on {} ({} hosts deleted). Comment: {}"
+        ).format(when, num_hosts, comment)
     else:
-        message = deferred_gettext(u"Moved out on {}.").format(when)
+        message = deferred_gettext(
+            u"Moved out on {} ({} hosts deleted)."
+        ).format(when, num_hosts)
 
     log_user_event(
         message=message.to_json(),

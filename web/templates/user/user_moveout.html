@@ -10,5 +10,10 @@
 {% block page_css %}{{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}{% endblock %}
 
 {% block single_row_content %}
+    <div class="box box-info">
+        <strong>Hinweis:</strong> hiermit wird die Mitgliedschaft
+        komlett beendet und die IP freigegeben.  Bei einem
+        Wiedereinzug müssen Wohnort und MAC erneut angegeben werden.
+    </div>
     {{ forms.simple_form(form, '', url_for('.user_show',user_id=user_id)  ) }}
 {% endblock %}
