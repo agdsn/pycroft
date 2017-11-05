@@ -112,17 +112,18 @@ def infoflags(user):
         {'title': u"Mailkonto", 'val': user_status.mail},
     ]
 
-
-@bp.route('/<int:user_id>/', methods=['GET', 'POST'])
-def user_show(user_id):
-
+def get_user_or_404(user_id):
     user = User.q.get(user_id)
     if user is None:
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
+    return user
 
+
+@bp.route('/<int:user_id>/', methods=['GET', 'POST'])
+def user_show(user_id):
+    user = get_user_or_404(user_id)
     room = user.room
-
     form = UserLogEntry()
 
     if form.validate_on_submit():
@@ -192,7 +193,7 @@ def user_show(user_id):
 
 @bp.route("/<int:user_id>/account")
 def user_account(user_id):
-    user = User.q.get(user_id) or abort(404)
+    user = get_user_or_404(user_id)
     return redirect(url_for("finance.accounts_show",
                             account_id=user.account_id))
 
@@ -200,9 +201,7 @@ def user_account(user_id):
 @bp.route("/<int:user_id>/logs")
 @bp.route("/<int:user_id>/logs/<logtype>")
 def user_show_logs_json(user_id, logtype="all"):
-    user = User.q.get(user_id)
-    if user is None:
-        abort(404)
+    user = get_user_or_404(user_id)
 
     log_sources = []  # list of iterators
 
@@ -282,13 +281,9 @@ def user_show_groups_json(user_id, group_filter="all"):
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
 @access.require('groups_change_membership')
 def add_membership(user_id):
-
-    user = User.q.get(user_id)
-    if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
-
+    user = get_user_or_404(user_id)
     form = UserAddGroupMembership()
+
     if form.validate_on_submit():
         if form.begins_at.data is not None:
             begins_at = datetime.combine(form.begins_at.data, time(0))
@@ -404,11 +399,7 @@ def create():
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
 @access.require('user_change')
 def move(user_id):
-    user = User.q.get(user_id)
-    if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
-
+    user = get_user_or_404(user_id)
     form = UserMoveForm()
 
     refill_form_data = False
@@ -500,11 +491,7 @@ def edit_membership(user_id, membership_id):
 @bp.route('/<int:user_id>/edit_name', methods=['GET', 'POST'])
 @access.require('user_change')
 def edit_name(user_id):
-    user = User.q.get(user_id)
-    if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
-
+    user = get_user_or_404(user_id)
     form = UserEditNameForm()
 
     if not form.is_submitted():
@@ -524,11 +511,7 @@ def edit_name(user_id):
 @bp.route('/<int:user_id>/edit_email', methods=['GET', 'POST'])
 @access.require('user_change')
 def edit_email(user_id):
-    user = User.q.get(user_id)
-    if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
-
+    user = get_user_or_404(user_id)
     form = UserEditEMailForm()
 
     if not form.is_submitted():
@@ -696,18 +679,16 @@ def unblock(user_id):
 @access.require('user_change')
 def move_out(user_id):
     form = UserMoveOutForm()
-    myUser = User.q.get(user_id)
-    if myUser is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
+    user = get_user_or_404(user_id)
+
     if form.validate_on_submit():
-        lib.user.move_out(user=myUser, comment=form.comment.data,
+        lib.user.move_out(user=user, comment=form.comment.data,
                           processor=current_user,
                           # when=datetime.combine(form.when.data, time(0))
                           when=datetime.now())
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
-        return redirect(url_for('.user_show', user_id=myUser.id))
+        return redirect(url_for('.user_show', user_id=user.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
 
 
@@ -715,10 +696,7 @@ def move_out(user_id):
 @access.require('user_change')
 def move_back_in(user_id):
     form = UserMoveBackInForm()
-    user = User.q.get(user_id)
-    if user is None:
-        flash("Nutzer mit ID {} existiert nicht!".format(user_id), 'error')
-        abort(404)
+    user = get_user_or_404(user_id)
 
     if form.validate_on_submit():
         lib.user.move_back_in(
