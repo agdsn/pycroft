@@ -700,7 +700,8 @@ def move_out(user_id):
     if form.validate_on_submit():
         lib.user.move_out(user=myUser, comment=form.comment.data,
                           processor=current_user,
-                          when=datetime.combine(form.when.data, time(0)))
+                          # when=datetime.combine(form.when.data, time(0))
+                          when=datetime.now())
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))

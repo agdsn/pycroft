@@ -116,7 +116,7 @@ class UserSuspendForm(Form):
 
 
 class UserMoveOutForm(Form):
-    when = DateField(u"Auszug am", [DataRequired()])
+    # when = DateField(u"Auszug am", [DataRequired()])
     comment = TextAreaField(u"Kommentar")
 
 

@@ -468,6 +468,9 @@ def move_out(user, comment, processor, when):
     :param datetime when: The time the user is going to move out.
     :return: The user that moved out.
     """
+    if when > datetime.now():
+        raise NotImplementedError("Moving out in the future is not supported yet.")
+
     for group in (config.member_group, config.network_access_group):
         remove_member_of(user, group, processor, closedopen(when, None))
 
