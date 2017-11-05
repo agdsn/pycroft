@@ -36,7 +36,8 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
     UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
-    InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm
+    InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm, \
+    UserMoveBackInForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta, time
@@ -152,11 +153,13 @@ def user_show(user_id):
         'saldo': balance,
     }
     is_blocked = user.member_of(config.violation_group)
+    user_not_there = not user.member_of(config.member_group)
 
     return render_template(
         'user/user_show.html',
         # Q: Can ports of a room point to different access switches?
         user=user,
+        user_not_there=user_not_there,
         user_id_new=encode_type2_user_id(user.id),
         user_id_old=encode_type1_user_id(user.id),
         balance=balance,
@@ -706,6 +709,31 @@ def move_out(user_id):
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=myUser.id))
     return render_template('user/user_moveout.html', form=form, user_id=user_id)
+
+
+@bp.route('/<int:user_id>/move_back_in', methods=['GET', 'POST'])
+@access.require('user_change')
+def move_back_in(user_id):
+    form = UserMoveBackInForm()
+    user = User.q.get(user_id)
+    if user is None:
+        flash("Nutzer mit ID {} existiert nicht!".format(user_id), 'error')
+        abort(404)
+
+    if form.validate_on_submit():
+        lib.user.move_back_in(
+            user=user,
+            building=form.building.data,
+            level=form.level.data,
+            room_number=form.room_number.data,
+            mac=form.mac.data,
+            processor=current_user,
+        )
+        session.session.commit()
+        flash("Nutzer wurde wieder eingezogen", 'success')
+        return redirect(url_for('.user_show', user_id=user_id))
+
+    return render_template('user/user_move_back_in.html', form=form, user_id=user_id)
 
 
 @bp.route('/<int:user_id>/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])

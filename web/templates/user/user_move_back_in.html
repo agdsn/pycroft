@@ -1,0 +1,20 @@
+{#
+ Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% set page_title = "Umzug" %}
+{% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
+{% block page_css %}{{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}{% endblock %}
+
+{% block single_row_content %}
+    {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript">
+        $('[data-role=lazyloadselect]').lazyLoadSelect()
+    </script>
+{% endblock %}

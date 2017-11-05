@@ -177,6 +177,42 @@ def move_in(name, login, email, building, level, room_number, mac,
     return new_user
 
 
+@with_transaction
+def move_back_in(user, building, level, room_number, mac, processor):
+    """Move a user back in to a given room.
+
+    This function sets `user.room` accordingly, adds a new
+    :py:cls:`Host` with an interface with the given MAC, and adds the
+    user to :py:obj:`config.member_group` and
+    :py:obj:`config.network_access_group`.
+
+    :param User user: The user in question.
+    :param building: The building the user moves in.
+    :param level: The level the user moves in.
+    :param room_number: The room number the user moves in.
+    :param mac: The mac address of the users pc.
+    :param User processor: User issuing the removal
+    """
+
+    room = Room.q.filter_by(number=room_number, level=level, building=building).one()
+    now = session.utcnow()
+
+    user.room = room
+
+    new_host = UserHost(owner=user, room=room)
+    session.session.add(new_host)
+    session.session.add(UserInterface(mac=mac, host=new_host))
+    setup_ipv4_networking(new_host)
+
+    # Use a set to avoid double log entries
+    for group in {config.member_group, config.network_access_group}:
+        make_member_of(user, group, processor, closed(now, None))
+
+    log_user_event(author=processor,
+                   message=deferred_gettext(u"Moved back in.").to_json(),
+                   user=user)
+
+
 def migrate_user_host(host, new_room, processor):
     """
     Migrate a UserHost to a new room and if necessary to a new subnet.

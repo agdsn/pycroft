@@ -85,6 +85,11 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         (u"Hat dort bereits für das aktuelle Semester Beitrag bezahlt")
 
 
+class UserMoveBackInForm(UserMoveForm):
+    mac = TextField(u"MAC", [
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+
+
 class HostCreateForm(Form):
     name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
 
