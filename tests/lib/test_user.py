@@ -125,12 +125,12 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertTrue(account.home_directory.startswith('/home/'))
 
 
-class Test_030_User_Move_Out(FixtureDataTestBase):
+class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
     datasets = (AccountData, ConfigData, IPData, SemesterData,
                 SwitchPatchPortData, TrafficGroupData)
 
     def setUp(self):
-        super(Test_030_User_Move_Out, self).setUp()
+        super().setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
 
@@ -160,13 +160,40 @@ class Test_030_User_Move_Out(FixtureDataTestBase):
         UserHelper.move_out(user=new_user, comment="",
                             processor=self.processing_user, when=out_time)
 
+        session.session.refresh(new_user)
         # check ends_at of moved out user
         for membership in new_user.memberships:
             self.assertIsNotNone(membership.ends_at)
             self.assertLessEqual(membership.ends_at, out_time)
 
+        self.assertFalse(new_user.user_hosts)
+        self.assertIsNone(new_user.room)
+
         # check if users finance account still exists
         self.assertIsNotNone(new_user.account)
+
+        UserHelper.move_back_in(
+            user=new_user,
+            building=test_building,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+            processor=self.processing_user,
+        )
+
+        session.session.refresh(new_user)
+        self.assertEqual(new_user.room.building, test_building)
+        self.assertEqual(new_user.room.level, 1)
+        self.assertEqual(new_user.room.number, "1")
+
+        self.assertEqual(len(new_user.user_hosts), 1)
+        user_host = new_user.user_hosts[0]
+        self.assertEqual(len(user_host.user_interfaces), 1)
+        self.assertEqual(user_host.user_interfaces[0].mac, test_mac)
+        self.assertEqual(len(user_host.ips), 1)
+
+        self.assertTrue(new_user.member_of(config.member_group))
+        self.assertTrue(new_user.member_of(config.network_access_group))
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
