@@ -40,11 +40,7 @@
 
             {% if user.room_id is not none %}
                 {% call info_row("Wohnort") %}
-                    {% if user.has_property("away") %}
-                    <a style="text-decoration: line-through;" href="{{ url_for("facilities.room_show", room_id=user.room_id) }}">Ehemals {{ user.room.building.short_name }}/{{ user.room.level }}-{{ user.room.number }}</a>
-                    {% else %}
                     {{ misc.room_link(user.room) }}
-                    {% endif %}
                 {% endcall %}
             {% endif %}
 

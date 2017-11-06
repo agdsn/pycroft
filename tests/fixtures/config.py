@@ -31,6 +31,10 @@ class PropertyGroupData(DataSet):
         name = u"Netzwerkanschluss"
 
     class away:
+        # Although there is no `away` group known to the pycroft model
+        # anymore, it is needed to test the `reduced_semester_fee`
+        # logic.  The whole thing is to be removed in the future,
+        # anyway.  See #28 on github.
         name = u"Ausgezogen, Mail"
 
     class violation:
@@ -48,7 +52,6 @@ class ConfigData(DataSet):
         id = 1
         member_group = PropertyGroupData.member
         network_access_group = PropertyGroupData.network_access
-        away_group = PropertyGroupData.away
         violation_group = PropertyGroupData.violation
         moved_from_division_group = PropertyGroupData.moved_from_division
         already_paid_semester_fee_group = PropertyGroupData.already_paid_semester_fee
