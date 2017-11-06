@@ -583,7 +583,7 @@ def status_query():
         User.member_of(config.member_group, now).label('member'),
         # traffic ignored due to pending traffic rework
         literal_column("false").label('traffic_exceeded'),
-        (Account.balance < 0).label('account_balanced'),
+        (Account.balance <= 0).label('account_balanced'),
 
         # a User.properties hybrid attribute would be preferrable
         (User.has_property('network_access', now)).label('network_access'),
