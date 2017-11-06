@@ -10,7 +10,7 @@
     </th>
 {% endmacro %}
 
-{% macro item_table(table_id, data_url="", display_columns=[], footer=[], row_style="", server_pagination=False, sort_order="asc") %}
+{% macro item_table(table_id, data_url="", display_columns=[], footer=[], row_style="", server_pagination=False, sort_order="asc", query_params="") %}
     {# A macro building a html `bootstrap-table`.
 
     - data_url: The flask endpoint providing the json data
@@ -37,6 +37,7 @@
            {% if server_pagination %}data-side-pagination="server"{% endif %}
            data-pagination="true"
            {% if row_style %}data-row-style="{{ row_style }}"{% endif %}
+           {% if query_params %}data-query-params="{{ query_params }}"{% endif %}
            data-toolbar="#{{ table_id }}-toolbar">
         <thead>
         <tr>

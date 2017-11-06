@@ -110,13 +110,16 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
+    all_users = bool(request.args.get('all_users', 0, type=int))
+
     rooms = session.session.query(Room).filter(
         Room.building==building, Room.level==level
     ).order_by(Room.number).all()
 
     status_q = status_query().join(Room).filter(
         Room.building == building, Room.level == level,
-        User.member_of(config.member_group)
+        # `True` acts idempotently on `filter()`
+        True if all_users else User.member_of(config.member_group),
     )
 
     statuses = {r.id: [] for r in rooms}

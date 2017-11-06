@@ -161,7 +161,7 @@ class BootstrapTable:
         html = []
 
         toolbar_args = html_params(id="{}-toolbar".format(table_id),
-                                   class_="table table_striped",
+                                   class_="btn-toolbar",
                                    role="toolbar")
         html.append("<div {}>".format(toolbar_args))
         html += list(self.generate_toolbar())
