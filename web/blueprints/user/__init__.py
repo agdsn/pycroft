@@ -690,7 +690,7 @@ def move_out(user_id):
         lib.user.move_out(user=user, comment=form.comment.data,
                           processor=current_user,
                           # when=datetime.combine(form.when.data, time(0))
-                          when=datetime.now())
+                          when=session.utcnow())
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=user.id))

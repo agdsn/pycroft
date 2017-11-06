@@ -527,7 +527,7 @@ def move_out(user, comment, processor, when):
 
     :return: The user that moved out.
     """
-    if when > datetime.now():
+    if when > session.utcnow():
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
     for group in {config.member_group, config.network_access_group}:
