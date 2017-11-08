@@ -30,7 +30,7 @@ from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password
 from pycroft.model import session, functions
-from pycroft.model.base import ModelBase
+from pycroft.model.base import ModelBase, IntegerIdModel
 
 
 class IllegalLoginError(ValueError):
@@ -41,7 +41,7 @@ class IllegalEmailError(ValueError):
     pass
 
 
-class User(ModelBase, UserMixin):
+class User(IntegerIdModel, UserMixin):
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTime, nullable=False)
@@ -328,7 +328,7 @@ class User(ModelBase, UserMixin):
         return (granted_intervals - denied_intervals).intersect(when)
 
 
-class Group(ModelBase):
+class Group(IntegerIdModel):
     name = Column(String(255), nullable=False)
     discriminator = Column('type', String(17), nullable=False)
     __mapper_args__ = {'polymorphic_on': discriminator}
@@ -358,7 +358,7 @@ class Group(ModelBase):
         )
 
 
-class Membership(ModelBase):
+class Membership(IntegerIdModel):
     begins_at = Column(DateTime, nullable=True, default=functions.utcnow())
     ends_at = Column(DateTime, nullable=True)
 
@@ -450,7 +450,7 @@ class PropertyGroup(Group):
     )
 
 
-class Property(ModelBase):
+class Property(IntegerIdModel):
     name = Column(String(255), nullable=False)
     granted = Column(Boolean, nullable=False)
 
@@ -479,7 +479,7 @@ class TrafficGroup(Group):
 unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000, metadata=ModelBase.metadata)
 
 
-class UnixAccount(ModelBase):
+class UnixAccount(IntegerIdModel):
     uid = Column(Integer, nullable=False, unique=True,
                         server_default=unix_account_uid_seq.next_value())
     gid = Column(Integer, nullable=False, default=100)

@@ -3,12 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from pycroft.model.base import ModelBase
+from pycroft.model.base import IntegerIdModel
 from pycroft.model.finance import Account
 from pycroft.model.user import PropertyGroup
 
 
-class Config(ModelBase):
+class Config(IntegerIdModel):
     member_group_id = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     member_group = relationship(PropertyGroup, foreign_keys=[member_group_id])

@@ -13,11 +13,11 @@
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer, DateTime, Text, String
-from pycroft.model.base import ModelBase
+from pycroft.model.base import IntegerIdModel
 from pycroft.model.functions import utcnow
 
 
-class LogEntry(ModelBase):
+class LogEntry(IntegerIdModel):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 

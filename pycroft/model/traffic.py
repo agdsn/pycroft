@@ -6,14 +6,13 @@ from sqlalchemy import Column, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 
-from pycroft.model.base import ModelBase
+from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
 from pycroft.model.host import IP
 
 
 class TrafficBalance(ModelBase):
-    id = None
     user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                      primary_key=True)
     user = relationship(User,
@@ -28,7 +27,7 @@ class TrafficEvent(object):
                     nullable=False)
 
 
-class TrafficVolume(TrafficEvent, ModelBase):
+class TrafficVolume(TrafficEvent, IntegerIdModel):
     type = Column(Enum("IN", "OUT", name="traffic_types"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
@@ -44,7 +43,7 @@ class TrafficVolume(TrafficEvent, ModelBase):
                         uselist=False)
 
 
-class TrafficCredit(TrafficEvent, ModelBase):
+class TrafficCredit(TrafficEvent, IntegerIdModel):
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
                      nullable=False)
     user = relationship(User,

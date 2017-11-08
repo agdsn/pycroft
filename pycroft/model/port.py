@@ -3,12 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from pycroft.model.base import ModelBase
+from pycroft.model.base import IntegerIdModel
 from pycroft.model.facilities import Room
 from pycroft.model.host import SwitchPort
 
 
-class PatchPort(ModelBase):
+class PatchPort(IntegerIdModel):
     """A patch panel port that's not connected"""
     id = Column(Integer, primary_key=True)
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)

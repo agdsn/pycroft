@@ -16,13 +16,13 @@ from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
 from pycroft.model.types import Money
-from .base import ModelBase
+from .base import IntegerIdModel
 from .functions import utcnow
 
 manager = ddl.DDLManager()
 
 
-class Semester(ModelBase):
+class Semester(IntegerIdModel):
     name = Column(String, nullable=False)
     registration_fee = Column(Money, CheckConstraint('registration_fee >= 0'),
                               nullable=False)
@@ -58,7 +58,7 @@ class Semester(ModelBase):
     )
 
 
-class Account(ModelBase):
+class Account(IntegerIdModel):
     name = Column(String(127), nullable=False)
     type = Column(Enum("ASSET",       # Aktivkonto
                        "USER_ASSET",  # Aktivkonto for users
@@ -92,7 +92,7 @@ manager.add_function(
 )
 
 
-class Transaction(ModelBase):
+class Transaction(IntegerIdModel):
     description = Column(Text(), nullable=False)
     author_id = Column(Integer, ForeignKey("user.id", ondelete='SET NULL',
                                            onupdate='CASCADE'),
@@ -112,7 +112,7 @@ class Transaction(ModelBase):
         return len(self.splits) == 2
 
 
-class Split(ModelBase):
+class Split(IntegerIdModel):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
     amount = Column(Money, nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
@@ -205,7 +205,7 @@ event.listen(Transaction, "before_insert", check_transaction_on_save)
 event.listen(Transaction, "before_update", check_transaction_on_save)
 
 
-class BankAccount(ModelBase):
+class BankAccount(IntegerIdModel):
     name = Column(String(255), nullable=False)
     bank = Column(String(255), nullable=False)
     account_number = Column(String(10), nullable=False)
@@ -234,7 +234,7 @@ class BankAccount(ModelBase):
         )
 
 
-class BankAccountActivity(ModelBase):
+class BankAccountActivity(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
                              nullable=False)
     bank_account = relationship(BankAccount, backref=backref("activities"))

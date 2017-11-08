@@ -34,8 +34,7 @@ class _ModelMeta(DeclarativeMeta):
 
 @as_declarative(metaclass=_ModelMeta)
 class ModelBase(object):
-    """Baseclass for all database models."""
-    id = Column(Integer, primary_key=True)
+    """Base class for all database models."""
 
     @declared_attr
     def __tablename__(cls):
@@ -53,3 +52,14 @@ class ModelBase(object):
             self.__module__, self.__class__.__name__,
             ", ".join("{0}={1!r}".format(key, getattr(self, key, "<unknown>"))
                       for key in self.__mapper__.columns.keys()))
+
+
+class IntegerIdModel(ModelBase):
+    """
+    Abstract base class for database models with an Integer primary column,
+    named ``id``.
+    """
+
+    __abstract__ = True
+
+    id = Column(Integer, primary_key=True)

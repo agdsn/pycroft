@@ -5,11 +5,11 @@ from sqlalchemy import (
     CheckConstraint, Column, Integer, ForeignKey, String, between, event)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import AddConstraint
-from pycroft.model.base import ModelBase
+from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import IPAddress, IPNetwork
 
 
-class VLAN(ModelBase):
+class VLAN(IntegerIdModel):
     name = Column(String(127), nullable=False)
     vid = Column(Integer, nullable=False)
 
@@ -18,7 +18,7 @@ class VLAN(ModelBase):
     )
 
 
-class Subnet(ModelBase):
+class Subnet(IntegerIdModel):
     address = Column(IPNetwork, nullable=False)
     gateway = Column(IPAddress)
     reserved_addresses = Column(Integer, default=0, nullable=True)
