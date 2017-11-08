@@ -302,6 +302,86 @@ def visit_drop_trigger(element, compiler, **kw):
         opt_drop_behavior)
 
 
+class View(schema.DDLElement):
+    def __init__(self, name, query,
+                 column_names: Optional[Sequence[str]] = None,
+                 temporary: bool = False,
+                 view_options: Optional[Dict[str, str]] = None,
+                 check_option=None):
+        self.name = name
+        self.query = query
+        self.temporary = temporary
+        self.column_names = column_names
+        if view_options is None:
+            view_options = {}
+        else:
+            view_options = dict(view_options)
+        self.view_options = view_options
+        if check_option not in (None, 'local', 'cascaded'):
+            raise ValueError("check_option must be either None, 'local', or "
+                             "'cascaded'")
+        if check_option is not None and 'check_option' in view_options:
+            raise ValueError('Parameter "check_option" specified more than '
+                             'once')
+        self.check_option = check_option
+
+
+class CreateView(schema.DDLElement):
+    def __init__(self, view, or_replace: bool = False):
+        self.view = view
+        self.or_replace = or_replace
+
+
+class DropView(schema.DDLElement):
+    def __init__(self, view, if_exists: bool = False, cascade: bool = False):
+        self.view = view
+        self.if_exists = if_exists
+        self.cascade = cascade
+
+
+# noinspection PyUnusedLocal
+@compiles(CreateView, 'postgresql')
+def visit_create_view(element, compiler, **kw):
+    view = element.view
+    opt_or_replace = "OR REPLACE" if element.or_replace else None
+    opt_temporary = "TEMPORARY" if view.temporary else None
+    if view.column_names is not None:
+        quoted_column_names = map(compiler.preparer.quote, view.column_names)
+        opt_column_names = "({})".format(', '.join(quoted_column_names))
+    else:
+        opt_column_names = None
+    view_name = compiler.preparer.quote(view.name)
+    if view.view_options:
+        opt_view_options = "WITH ({})".format(
+            ', '.join("{} = {}".format(name, value)
+                      for name, value in view.view_options.items()))
+    else:
+        opt_view_options = None
+    compiled_query = compiler.sql_compiler.process(view.query,
+                                                   literal_binds=True)
+    if view.check_option is not None:
+        opt_check_option = 'WITH {} CHECK OPTION'.format(
+            view.check_option.upper())
+    else:
+        opt_check_option = None
+    return _join_tokens(
+        "CREATE", opt_or_replace, opt_temporary, "VIEW", view_name,
+        opt_column_names, opt_view_options, "AS", compiled_query,
+        opt_check_option)
+
+
+# noinspection PyUnusedLocal
+@compiles(DropView, 'postgresql')
+def visit_drop_view(element, compiler, **kw):
+    view = element.view
+    opt_if_exists = "IF EXISTS" if element.if_exists else None
+    opt_drop_behavior = "CASCADE" if element.cascade else None
+    view_name = compiler.preparer.quote(view.name)
+    return _join_tokens(
+        "DROP VIEW", opt_if_exists, view_name, opt_drop_behavior
+    )
+
+
 class DDLManager(object):
     """
     Ensures that create DDL statements are registered with SQLAlchemy in the
@@ -333,12 +413,12 @@ class DDLManager(object):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
                  DropTrigger(constraint_trigger), dialect=dialect)
 
+    def add_view(self, table, view, dialect=None):
+        self.add(table, CreateView(view, or_replace=True),
+                 DropView(view, if_exists=True), dialect=dialect)
+
     def register(self):
         for target, create_ddl, drop_ddl in self.objects:
             sqla_event.listen(target, 'after_create', create_ddl)
         for target, create_ddl, drop_ddl in reversed(self.objects):
             sqla_event.listen(target, 'before_drop', drop_ddl)
-
-
-# TODO: HERE is the location to add other views (radius, user for pmacct)
-# shreyder said „INSTEAD OF would be useful“ (but didn't say for what)
