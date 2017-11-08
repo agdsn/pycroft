@@ -2,9 +2,12 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import inspect
+from functools import partial
+from typing import Dict, Iterable, Optional, Sequence
 
 from sqlalchemy import event as sqla_event, schema
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql import ClauseElement
 
 
 def _join_tokens(*tokens) -> str:
@@ -14,6 +17,14 @@ def _join_tokens(*tokens) -> str:
     :return:
     """
     return ' '.join(token for token in tokens if token is not None)
+
+
+def compile_if_clause(compiler, clause):
+    if isinstance(clause, ClauseElement):
+        return str(clause.compile(compile_kwargs={'literal_binds': True},
+                                  dialect=compiler.dialect))
+        return compiler.sql_compiler.process(clause, literal_binds=True)
+    return clause
 
 
 class DropConstraint(schema.DropConstraint):
@@ -126,6 +137,92 @@ def visit_drop_function(element, compiler, **kw):
                         function_name, opt_drop_behavior)
 
 
+class Rule(schema.DDLElement):
+    on = 'postgresql'
+
+    def __init__(self, name, table, event, command_or_commands,
+                 condition=None, do_instead=False):
+        self.name = name
+        self.table = table
+        self.event = event
+        self.condition = condition
+        self.do_instead = do_instead
+        if (isinstance(command_or_commands, Iterable) and
+                not isinstance(command_or_commands, str)):
+            self.commands = tuple(command_or_commands)
+        else:
+            self.commands = (command_or_commands,)
+
+
+class CreateRule(schema.DDLElement):
+    """
+    Represents a CREATE RULE DDL statement
+    """
+    on = 'postgresql'
+
+    def __init__(self, rule: Rule, or_replace: bool = False):
+        self.rule = rule
+        self.or_replace = or_replace
+
+
+class DropRule(schema.DDLElement):
+    """
+    Represents a DROP RULE DDL statement
+    """
+    on = 'postgresql'
+
+    def __init__(self, rule: Rule, if_exists: bool = False,
+                 cascade: bool = False):
+        """
+        :param rule:
+        :param if_exists:
+        :param cascade:
+        """
+        self.rule = rule
+        self.if_exists = if_exists
+        self.cascade = cascade
+
+
+# noinspection PyUnusedLocal
+@compiles(CreateRule, 'postgresql')
+def visit_create_rule(element, compiler, **kw):
+    """
+    Compile a CREATE RULE DDL statement for PostgreSQL.
+    """
+    rule = element.rule
+    opt_or_replace = "OR REPLACE" if element.or_replace else None
+    where_clause = ("WHERE " + rule.condition if rule.condition is not None
+                    else None)
+    opt_instead = "INSTEAD" if rule.do_instead else None
+    compiled_commands = tuple(map(partial(compile_if_clause, compiler),
+                                  rule.commands))
+    if len(compiled_commands) == 1:
+        commands = compiled_commands[0]
+    else:
+        commands = "({})".format("; ".join(compiled_commands))
+    rule_name = compiler.preparer.quote(rule.name)
+    table_name = compiler.preparer.format_table(rule.table)
+    return _join_tokens(
+        "CREATE", opt_or_replace, "RULE", rule_name, "AS ON", rule.event, "TO",
+        table_name, where_clause, "DO", opt_instead, commands)
+
+
+# noinspection PyUnusedLocal
+@compiles(DropRule, 'postgresql')
+def visit_drop_rule(element, compiler, **kw):
+    """
+    Compile a DROP RULE DDL statement for PostgreSQL
+    """
+    rule = element.rule
+    opt_if_exists = "IF EXISTS" if element.if_exists else None
+    opt_drop_behavior = "CASCADE" if element.cascade else None
+    rule_name = compiler.preparer.quote(rule.name)
+    table_name = compiler.preparer.format_table(rule.table)
+    return _join_tokens(
+        "DROP RULE", opt_if_exists, rule_name, "ON", table_name,
+        opt_drop_behavior)
+
+
 class ConstraintTrigger(schema.DDLElement):
     def __init__(self, name, table, events, function_call,
                  deferrable: bool = False, initially_deferred: bool = False):
@@ -227,6 +324,10 @@ class DDLManager(object):
     def add_function(self, table, func, dialect=None):
         self.add(table, CreateFunction(func, or_replace=True),
                  DropFunction(func, if_exists=True), dialect=dialect)
+
+    def add_rule(self, table, rule, dialect=None):
+        self.add(table, CreateRule(rule, or_replace=True),
+                 DropRule(rule, if_exists=True), dialect=dialect)
 
     def add_constraint_trigger(self, table, constraint_trigger, dialect=None):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
