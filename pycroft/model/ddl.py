@@ -143,6 +143,9 @@ class ConstraintTrigger(schema.DDLElement):
         self.events = events
         self.function_call = function_call
         self.deferrable = deferrable
+        if not deferrable and initially_deferred:
+            raise ValueError("Constraint declared INITIALLY DEFERRED must be "
+                             "DEFERRABLE.")
         self.initially_deferred = initially_deferred
 
 
