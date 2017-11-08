@@ -221,3 +221,10 @@ input.money-amount {
 .box-info {
     border-left-color: #1b809e;
 }
+
+.button-list li {
+    margin-bottom: 5px;
+}
+.button-list li:last-child {
+    margin-bottom: 0px;
+}

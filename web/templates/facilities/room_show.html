@@ -41,7 +41,7 @@
             <p>In diesem Zimmer wohnt niemand, oder derjenige bekommt von uns kein Netz.</p>
             {%- else %}
             <h3>Bewohner</h3>
-            <ul>
+            <ul class="list-unstyled button-list">
                 {% for button in user_buttons -%}
                 <li>{{ btn.multiGlyphBtnMacro(button) }}</li>
                 {%- endfor %}
