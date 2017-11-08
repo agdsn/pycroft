@@ -33,9 +33,11 @@ def visit_drop_constraint(drop_constraint, compiler, **kw):
     constraint = drop_constraint.element
     opt_if_exists = 'IF EXISTS' if drop_constraint.if_exists else None
     opt_drop_behavior = 'CASCADE' if drop_constraint.cascade else None
+    table_name = compiler.preparer.format_table(constraint.table)
+    constraint_name = compiler.preparer.quote(constraint.name)
     return _join_tokens(
-        "ALTER TABLE", constraint.table.name, "DROP CONSTRAINT", opt_if_exists,
-        constraint.name, opt_drop_behavior)
+        "ALTER TABLE", table_name, "DROP CONSTRAINT", opt_if_exists,
+        constraint_name, opt_drop_behavior)
 
 
 class Function(schema.DDLElement):
@@ -104,8 +106,9 @@ def visit_create_function(element, compiler, **kw):
     leakproof = "LEAKPROOF" if func.leakproof else None
     quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
         quote_tag=func.quote_tag, definition=func.definition)
+    function_name = compiler.preparer.quote(func.name)
     return _join_tokens(
-        "CREATE", opt_or_replace, "FUNCTION", func.name, "RETURNS",
+        "CREATE", opt_or_replace, "FUNCTION", function_name, "RETURNS",
         func.rtype, volatility, strictness, leakproof,
         quoted_definition)
 
@@ -118,8 +121,9 @@ def visit_drop_function(element, compiler, **kw):
     """
     opt_if_exists = "IF EXISTS" if element.if_exists else None
     opt_drop_behavior = "CASCADE" if element.cascade else None
+    function_name = compiler.preparer.quote(element.function.name)
     return _join_tokens("DROP FUNCTION", opt_if_exists,
-                        element.function.name, opt_drop_behavior)
+                        function_name, opt_drop_behavior)
 
 
 class ConstraintTrigger(schema.DDLElement):
@@ -174,9 +178,11 @@ def create_add_constraint_trigger(element, compiler, **kw):
     opt_deferrable = 'DEFERRABLE' if trigger.deferrable else None
     opt_initially_deferred = ('INITIALLY DEFERRED' if trigger.initially_deferred
                               else None)
+    trigger_name = compiler.preparer.quote(trigger.name)
+    table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "CREATE CONSTRAINT TRIGGER", trigger.name, 'AFTER', events, 'ON',
-        trigger.table.name, opt_deferrable, opt_initially_deferred,
+        "CREATE CONSTRAINT TRIGGER", trigger_name, 'AFTER', events, 'ON',
+        table_name, opt_deferrable, opt_initially_deferred,
         "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
 
@@ -189,8 +195,10 @@ def visit_drop_trigger(element, compiler, **kw):
     trigger = element.trigger
     opt_if_exists = "IF EXISTS" if element.if_exists else None
     opt_drop_behavior = "CASCADE" if element.cascade else None
+    trigger_name = compiler.preparer.quote(trigger.name)
+    table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "DROP TRIGGER", opt_if_exists, trigger.name, "ON", trigger.table.name,
+        "DROP TRIGGER", opt_if_exists, trigger_name, "ON", table_name,
         opt_drop_behavior)
 
 
