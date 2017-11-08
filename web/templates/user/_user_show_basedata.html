@@ -64,16 +64,21 @@
     </div>
     {% if current_user is privileged_for('user_change') %}
     <div class="col-sm-6 col-md-5 col-lg-4">
-        <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">Umziehen</a></div>
-        {% if is_blocked %}
-          <div class="user"><a class="btn btn-info" href="{{ url_for(".unblock", user_id=user.id) }}">Entsperren</a></div>
-        {% else %}
-          <div class="user"><a class="btn btn-info" href="{{ url_for(".suspend", user_id=user.id) }}">Sperren</a></div>
-        {% endif %}
+        <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">
+            <span class="badge"><span class="glyphicon glyphicon-home"></span><span class="glyphicon glyphicon-resize-horizontal"></span><span class="glyphicon glyphicon-home"></span></span> Umziehen</a></div>
         {% if not user_not_there %}
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">Ausziehen</a></div>
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_out", user_id=user.id) }}">
+                <span class="badge"><span class="glyphicon glyphicon-chevron-left"></span><span class="glyphicon glyphicon-home"></span></span> Ausziehen</a></div>
         {% else %}
-            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_back_in", user_id=user.id) }}">Wieder einziehen</a></div>
+            <div class="user"><a class="btn btn-info" href="{{ url_for(".move_back_in", user_id=user.id) }}">
+                <span class="badge"><span class="glyphicon glyphicon-chevron-right"></span><span class="glyphicon glyphicon-home"></span></span> Wieder einziehen</a></div>
+        {% endif %}
+        {% if is_blocked %}
+          <div class="user"><a class="btn btn-info" href="{{ url_for(".unblock", user_id=user.id) }}">
+              <span class="badge"><span class="glyphicon glyphicon-ok"></span><span class="glyphicon"></span></span> Entsperren</a></div>
+        {% else %}
+          <div class="user"><a class="btn btn-info" href="{{ url_for(".suspend", user_id=user.id) }}">
+              <span class="badge"><span class="glyphicon glyphicon-remove"></span><span class="glyphicon"></span></span> Sperren (wegen Abuse)</a></div>
         {% endif %}
     </div>
     {% endif %}
