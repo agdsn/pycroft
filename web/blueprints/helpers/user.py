@@ -21,42 +21,53 @@ def userstatus_btn_style(s):
     """
     glyphicons = []
     btn_class = None
+    tooltips = []
 
     if not s.account_balanced:
         glyphicons.append('glyphicon-euro')
         btn_class = 'btn-warning'
+        tooltips.append('nicht bezahlt')
 
     if s.member:
         if s.traffic_exceeded:
             glyphicons.append('glyphicon-stats')
             btn_class = 'btn-warning'
+            tooltips.append('Traffic')
         if not s.network_access:
             glyphicons.append('glyphicon-remove')
             btn_class = 'btn-danger'
+            tooltips.append('Zugang gesperrt')
         if s.violation:
             glyphicons.append('glyphicon-alert')
             btn_class = 'btn-danger'
+            tooltips.append('Verstoß')
     else:
         btn_class = 'btn-info'
+        tooltips.append('Kein Mitglied')
 
     glyphicons = glyphicons or ['glyphicon-ok']
     btn_class = btn_class or 'btn-success'
 
     if s.admin:
         glyphicons.append('glyphicon-wrench')
+        tooltips.append('Admin')
 
     if not s.member and s.mail:
         glyphicons.append('glyphicon-envelope')
+        tooltips.append('Mail')
 
-    return btn_class, glyphicons
+    tooltip = ', '.join(tooltips)
+
+    return btn_class, glyphicons, tooltip
 
 
 def user_button(user, user_status=None):
     user_status = user_status or status(user)
-    btn_class, glyphicons = userstatus_btn_style(user_status)
+    btn_class, glyphicons, tooltip = userstatus_btn_style(user_status)
     return {
         'href': url_for("user.user_show", user_id=user.id),
         'title': user.name,
         'icon': glyphicons,
-        'btn_class': btn_class
+        'btn_class': btn_class,
+        'tooltip': tooltip
     }

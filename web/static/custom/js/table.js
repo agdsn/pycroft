@@ -20,7 +20,7 @@ var glyphBtnTemplate = _.template(
 );
 
 var multiGlyphBtnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>">' +
+    '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= tooltip %>">' +
         '<span class="badge">' +
         '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
             '<span class="glyphicon <%= glyphicons[i] %>"></span>' +
@@ -93,21 +93,24 @@ function btnFormatter(value, row, index) {
                 'href': value['href'],
                 'title': value['title'],
                 'btn_class': value['btn_class'],
-                'glyphicons': value['icon']
+                'glyphicons': value['icon'],
+                'tooltip': value['tooltip']
             })
         } else {
             return glyphBtnTemplate({
                 'href': value['href'],
                 'title': value['title'],
                 'btn_class': value['btn_class'],
-                'glyphicon': value['icon']
+                'glyphicon': value['icon'],
+                'tooltip': value['tooltip']
             })
         }
     } else {
         return btnTemplate({
             'href': value['href'],
             'title': value['title'],
-            'btn_class': value['btn_class']
+            'btn_class': value['btn_class'],
+            'tooltip': value['tooltip']
         })
     }
 
