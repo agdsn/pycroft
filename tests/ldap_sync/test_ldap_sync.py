@@ -73,7 +73,7 @@ class MultipleUsersFilterTestCase(FixtureDataTestBase):
     datasets = complex_fixtures.datasets
 
     def test_correct_users_fetched(self):
-        users = fetch_users_to_sync(session)
+        users = fetch_users_to_sync(session, required_property='mail')
         expected_logins = {
             complex_fixtures.UserData.active_user1.login,
             complex_fixtures.UserData.active_user2.login,
@@ -86,7 +86,7 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
     def setUpClass(cls):
         super(LdapTestBase, cls).setUpClass()
         try:
-            cls.config = get_config()
+            cls.config = get_config(required_property='mail')
         except KeyError as e:
             raise RuntimeError("Environment variable {} must be set".format(e.args[0]))
         cls.base_dn = cls.config.base_dn
@@ -141,7 +141,7 @@ class LdapSyncerTestBase(LdapTestBase, FixtureDataTestBase):
 
     def setUp(self):
         super(LdapSyncerTestBase, self).setUp()
-        self.users_to_sync = fetch_users_to_sync(session)
+        self.users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         self.initial_ldap_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
 
     def build_exporter(self, current=None, desired=None):
@@ -237,7 +237,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         session.add(modified_user)
         session.commit()
 
-        self.users_to_sync = fetch_users_to_sync(session)
+        self.users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         self.sync_all()
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
@@ -254,7 +254,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         session.add(mod_user)
         session.commit()
 
-        users_to_sync = fetch_users_to_sync(session)
+        users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         exporter = self.build_exporter(current=self.new_ldap_users,
                                        desired=users_to_sync)
         exporter.compile_actions()

@@ -78,7 +78,7 @@ def establish_and_return_session(connection_string):
     return global_session  # from pycroft.model.session
 
 
-def fetch_users_to_sync(session):
+def fetch_users_to_sync(session, required_property=None):
     """Fetch the users who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -86,16 +86,22 @@ def fetch_users_to_sync(session):
     :returns: A list of :py:cls:`User` objects having the property
               'mail' having a unix_account.
     """
+    property_filter = True  # idempotent on `.filter()`
+    if required_property is not None:
+        property_filter = User.has_property(required_property)
     count_mail_but_not_account = (
         session.query(func.count(User.id))
-        .filter(User.has_property('mail'),
-                User.unix_account == None)
+        .filter(property_filter, User.unix_account == None)
         .scalar()
     )
-    logger.warning("%s users have the 'mail' property but not a unix_account",
-                   count_mail_but_not_account)
+    if required_property:
+        logger.warning("%s users have the '%s' property but not a unix_account",
+                       count_mail_but_not_account, required_property)
+    else:
+        logger.warning("%s users applicable to exporting don't have a unix_account",
+                       count_mail_but_not_account)
 
-    return User.q.filter(User.has_property('mail'), User.unix_account != None).all()
+    return User.q.filter(property_filter, User.unix_account != None).all()
 
 
 def establish_and_return_ldap_connection(host, port, bind_dn, bind_pw):
@@ -130,6 +136,15 @@ def add_stdout_logging(logger, level=logging.INFO):
 
 
 def sync_all(db_users, ldap_users, connection, base_dn):
+    """Execute the LDAP sync given a connection and state data.
+
+    :param db_users: A list of ORM objects corresponding to the users
+        to be synced
+    :param ldap_users: An LDAP search result representing the current
+        set of users
+    :param connection: An LDAP connection
+    :param base_dn: The LDAP base_dn
+    """
     exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
                                                              desired=db_users,
                                                              base_dn=base_dn)
@@ -150,14 +165,24 @@ def sync_all(db_users, ldap_users, connection, base_dn):
 
 _sync_config = namedtuple(
     'LdapSyncConfig',
-    ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn', 'db_uri']
+    ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn', 'db_uri', 'required_property']
 )
 
 
-def get_config():
+def _from_environ_or_defaults(key, defaults):
+    try:
+        return os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
+    except KeyError as e:
+        if key not in defaults:
+            print("defaults:", defaults)
+            raise ValueError("Missing configuration key {}".format(key)) from e
+        return defaults[key]
+
+
+def get_config(**defaults):
     config_dict = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
-        key: os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
+        key: _from_environ_or_defaults(key, defaults)
         for key in _sync_config._fields if key != 'db_uri'
     }
     config_dict['port'] = int(config_dict['port'])
@@ -167,9 +192,9 @@ def get_config():
     return config
 
 
-def get_config_or_exit():
+def get_config_or_exit(**defaults):
     try:
-        return get_config()
+        return get_config(**defaults)
     except KeyError as exc:
         logger.critical("%s not set, quitting", exc.args[0])
         exit()

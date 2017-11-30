@@ -12,10 +12,11 @@ logger = logging.getLogger('ldap_sync')
 
 def main():
     logger.info("Starting the production sync. See --help for other options.")
-    config = get_config_or_exit()
+    config = get_config_or_exit(required_property='mail')
 
     db_users = fetch_users_to_sync(
-        session=establish_and_return_session(config.db_uri)
+        session=establish_and_return_session(config.db_uri),
+        required_property=config.required_property,
     )
     logger.info("Fetched %s database users", len(db_users))
 
@@ -82,7 +83,12 @@ if args.debug:
 add_stdout_logging(logger, level=NAME_LEVEL_MAPPING[args.loglevel])
 
 
-if args.fake:
-    main_fake_ldap()
-else:
-    main()
+try:
+    if args.fake:
+        main_fake_ldap()
+    else:
+        main()
+except KeyboardInterrupt:
+    logger.fatal("SIGINT received, stopping.")
+    logger.info("Re-run the syncer to retain a consistent state.")
+    exit()
