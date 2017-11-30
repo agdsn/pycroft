@@ -7,7 +7,10 @@ member_props = {"network_access": True,
                 "semester_fee": True,
                 "late_fee": True,
                 "registration_fee": True,
-                "mail": True}
+                "ldap": True,
+                "mail": True,
+                "userdb": True,
+                "userwww": True}
 
 org_props = {"user_show": True,
              "user_change": True,
@@ -54,10 +57,13 @@ group_props = {
     #        ∈ away \ member = permanent ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∉ away ∪ member = permanent ausgezogen, keine mailmitgliedschaft, kein semesterbeitrag
     "away": ("Ausgezogen (obsolet, ehem. „mail“)", {"network_access": False,
-                            "late_fee": False,
-                            "semester_fee": True,
-                            "reduced_semester_fee": True,
-                            "mail": True}),
+                                                    "late_fee": False,
+                                                    "semester_fee": True,
+                                                    "reduced_semester_fee": True,
+                                                    "mail": True,
+                                                    'ldap': True,
+                                                    'userdb': True,
+                                                    'userwww': True}),
 
     "moved_from_division": ("Umzug aus anderer Sektion", {"registration_fee": False}),
 
@@ -67,7 +73,10 @@ group_props = {
                                                            finance_admin_props,
                                                            group_admin_props,
                                                            infra_admin_props,
-                                                           {'mail': True}
+                                                           {'mail': True,
+                                                            'ldap': True,
+                                                            'userdb': True,
+                                                            'userwww': True}
                                                            ]))
 }
 

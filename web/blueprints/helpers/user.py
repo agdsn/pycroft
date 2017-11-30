@@ -7,8 +7,9 @@ def userstatus_btn_style(s):
     """Determine the icons and style of the button to a users page.
 
     First, add glyphicons concerning status warnings (finance,
-    traffic, no network access, abuse), or an ok icon.  Append admin
-    and mail-only icons.
+    traffic, no network access, abuse), or an ok icon.  Append the
+    admin icon (always) and the “has an LDAP-account” icon (only if
+    not a member anymore).
 
     The button class is ``info`` for non-members, ``success`` for
     members, ``warning`` for traffic, and ``danger`` for other
@@ -52,9 +53,9 @@ def userstatus_btn_style(s):
         glyphicons.append('glyphicon-wrench')
         tooltips.append('Admin')
 
-    if not s.member and s.mail:
-        glyphicons.append('glyphicon-envelope')
-        tooltips.append('Mail')
+    if not s.member and s.ldap:
+        glyphicons.append('glyphicon-cloud')
+        tooltips.append('Eintrag im LDAP')
 
     tooltip = ', '.join(tooltips)
 

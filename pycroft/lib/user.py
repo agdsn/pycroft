@@ -571,7 +571,7 @@ def status(user):
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
-        'mail': user.has_property('mail'),
+        'ldap': user.has_property('ldap'),
         'admin': any(user.has_property(prop) for prop in admin_properties),
     })
 
@@ -588,7 +588,7 @@ def status_query():
         # a User.properties hybrid attribute would be preferrable
         (User.has_property('network_access', now)).label('network_access'),
         (User.has_property('violation', now)).label('violation'),
-        (User.has_property('mail', now)).label('mail'),
+        (User.has_property('ldap', now)).label('ldap'),
         or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
     ).join(Account)
 

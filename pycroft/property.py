@@ -8,11 +8,16 @@ from collections import OrderedDict
 property_categories = OrderedDict((
     (u"Mitglieder", OrderedDict((
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
-        (u"mail", u"hat Zugriff auf Mailkonto"),
         (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
         (u"reduced_semester_fee", u"muss nur reduzierten Semesterbeitrag bezahlen"),
         (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
+    ))),
+    ("System / Dienste", OrderedDict((
+        ('ldap', "hat einen Directory-Eintrag im LDAP"),
+        ('mail', u"hat Zugriff auf Mailkonto"),
+        ('userdb', u"kann sich eine MySQL-Datenbank erstellen"),
+        ('userwww', u"hat Zugriff auf das Userhosting"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),

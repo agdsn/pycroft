@@ -109,7 +109,7 @@ def infoflags(user):
         {'title': u"Traffic übrig", 'val': not user_status.traffic_exceeded},
         {'title': u"Bezahlt", 'val': user_status.account_balanced},
         {'title': u"Verstoßfrei", 'val': not user_status.violation},
-        {'title': u"Mailkonto", 'val': user_status.mail},
+        {'title': u"Mailkonto", 'val': user_status.ldap},
     ]
 
 def get_user_or_404(user_id):
