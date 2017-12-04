@@ -6,18 +6,11 @@
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
 
-{% block content %}
-    <section class="row">
-        {{ forms.simple_form(form, url_for(".login", next=next), url_for('facilities.overview'), submit_text="Login"  ) }}
-    </section>
-
-    <section class="row">
-        <h2>Testbenutzer</h2>
-        <dl>
-          <dt>Benutzer</dt>
-          <dd>agdsn</dd>
-          <dt>Passwort</dt>
-          <dd>test</dd>
-        </dl>
-    </section>
+{% block page_header %}
+    <div class="page-header">
+        <h1>Anmelden</h1>
+    </div>
+{% endblock %}
+{% block single_row_content %}
+    {{ forms.simple_form(form, url_for(".login", next=next), url_for('facilities.overview'), submit_text="Login"  ) }}
 {% endblock %}
