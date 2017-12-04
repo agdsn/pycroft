@@ -166,13 +166,6 @@ def move_in(name, login, email, building, level, room_number, mac,
             get_current_semester().ends_on, time.max))
         make_member_of(new_user, group, processor, during)
 
-    fees = [
-        RegistrationFee(config.registration_fee_account),
-        SemesterFee(config.semester_fee_account),
-    ]
-    # Post initial fees
-    post_fees([new_user], fees, processor)
-
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
                    user=new_user)

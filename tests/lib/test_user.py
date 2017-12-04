@@ -116,9 +116,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.account)
-        self.assertEqual(new_user.account.balance,
-                         (SemesterData.dummy_semester1.registration_fee +
-                          SemesterData.dummy_semester1.regular_semester_fee))
+        self.assertEqual(new_user.account.balance, 0)
         self.assertFalse(new_user.has_property("reduced_semester_fee"))
         self.assertTrue(new_user.unix_account is not None)
         account = new_user.unix_account
