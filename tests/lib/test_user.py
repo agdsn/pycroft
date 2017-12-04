@@ -90,8 +90,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            moved_from_division=False,
-            already_paid_semester_fee=False
         )
 
         self.assertEqual(new_user.name, test_name)
@@ -149,8 +147,6 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            moved_from_division=False,
-            already_paid_semester_fee=False
         )
         session.session.commit()
 

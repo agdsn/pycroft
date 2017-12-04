@@ -79,10 +79,6 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
-    moved_from_division = BooleanField(u"Umzug aus anderer Sektion")
-
-    already_paid_semester_fee = BooleanField\
-        (u"Hat dort bereits für das aktuelle Semester Beitrag bezahlt")
 
 
 class UserMoveBackInForm(UserMoveForm):

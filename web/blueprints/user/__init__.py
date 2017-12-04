@@ -379,8 +379,6 @@ def create():
                 mac=form.mac.data,
                 processor=current_user,
                 email=form.email.data,
-                moved_from_division=form.moved_from_division.data,
-                already_paid_semester_fee=form.already_paid_semester_fee.data
             )
             session.session.commit()
 

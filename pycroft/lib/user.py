@@ -98,13 +98,12 @@ def setup_ipv4_networking(host):
 
 
 @with_transaction
-def move_in(name, login, email, building, level, room_number, mac,
-            processor, moved_from_division, already_paid_semester_fee):
+def move_in(name, login, email, building, level, room_number, mac, processor):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
     UnixAccount, a finance Account, and is made member of important
-    groups.  Finances are initialized and networking is set up.
+    groups.  Networking is set up.
 
     :param name: The full name of the user.  (Max Mustermann)
     :param login: The unix login for the user.
@@ -113,11 +112,6 @@ def move_in(name, login, email, building, level, room_number, mac,
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
-    :param moved_from_division: User was already member of another
-        division
-    :param already_paid_semester_fee: User paid at other division for
-        current semester
-    :param host_name: An optional Hostname for the users pc.
 
     :return: The new user object.
     """
@@ -155,16 +149,6 @@ def move_in(name, login, email, building, level, room_number, mac,
 
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
-
-    if moved_from_division:
-        group = config.moved_from_division_group
-        make_member_of(new_user, group, processor, closedopen(now, None))
-
-    if already_paid_semester_fee:
-        group = config.already_paid_semester_fee_group
-        during = closed(now, datetime.combine(
-            get_current_semester().ends_on, time.max))
-        make_member_of(new_user, group, processor, during)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
