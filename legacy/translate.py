@@ -175,12 +175,21 @@ def translate_users(data, resources):
             )
             objs.append(extern_membership)
 
+        message_parts = [
+            "User imported from legacy database netusers.",
+            "Legacy status: {}.".format(_u.status.short_str),
+            "Internet by rental: {}.".format("yes" if _u.internet_by_rental else "no"),
+        ]
+        if not room:
+            message_parts.append(
+                "The user's room has been ignored due to missing switch port."
+                " Old room was wheim_id={}, level={}, room number={}."
+                .format(*_r)
+            )
+
         objs.append(logging.UserLogEntry(
             author=u_d.get(0, None),
-            message=("User imported from legacy database netusers. "
-                     "Legacy status: {}. Internet by rental: {}"
-                     .format(_u.status.short_str,
-                             "YES" if _u.internet_by_rental else "NO")),
+            message=" ".join(message_parts),
             user=u
         ))
 
@@ -527,11 +536,17 @@ def translate_hosts(data, resources):
 
     for _c in data['userhost']:
         owner = u_d[_c.nutzer_id]
+        if not owner.room:
+            # Ignore the host if its owner has no room
+            continue
+
         h = host.UserHost(owner=owner, room=owner.room)
         interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
 
         if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
-            ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+            ip = host.IP(interface=interface,
+                         address=ipaddr.IPv4Address(_c.c_ip),
+                         subnet=s_d[_c.c_subnet_id])
             objs.append(ip)
         else:
             objs.append(interface)

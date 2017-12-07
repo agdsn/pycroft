@@ -28,8 +28,9 @@ class Host(ModelBase):
 
     # many to one from Host to Room
     room = relationship(Room, backref=backref("hosts"))
-    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
-                     nullable=True)
+    # We don't want to `ONDELETE CASCADE` because deleting a room
+    # should not delete e.g. a switch assigned there
+    room_id = Column(Integer, ForeignKey(Room.id))
 
 
 class UserHost(Host):
