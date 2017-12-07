@@ -25,7 +25,6 @@ from pycroft.helpers.interval import (open, closedopen, closed, IntervalSet,
 from .import_conf import *
 from .tools import TranslationRegistry
 from .reconstruct_memberships import membership_from_fees
-# TODO: missing or incomplete translations for status/groups/permissions, patchport, traffic, incidents/log, vlans, dns, ...
 
 ROOT_NAME = "agdsn"
 ROOT_PASSWD = "test"
@@ -92,7 +91,6 @@ def translate_rooms(data, resources):
 def generate_groups(data, resources):
     properties_l = []
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
-    #TODO: create other groups
 
     for role, (group_name, properties) in group_props.items():
         g = user.PropertyGroup(name=group_name)
@@ -110,9 +108,6 @@ def generate_groups(data, resources):
 
 @reg.provides(logging.UserLogEntry)
 def translate_logs(data, resources):
-    # todo import userman.log
-    # todo think of best way to import zih_incidents
-
     return []
 
 
@@ -276,7 +271,6 @@ def translate_semesters(data, resources):
 
 @reg.provides(finance.Account)
 def translate_finance_accounts(data, resources):
-    # TODO: look over this
     facc_types = {
         u"Startguthaben": "REVENUE",
         u"Bankkonto": "BANK_ASSET",
@@ -307,9 +301,6 @@ def translate_finance_accounts(data, resources):
         objs.append(a)
         an_d[name] = a
 
-    # TODO: Think about this, this is a pretty unstable/volatile way to do things,
-    #  maybe just save the generated dict to a file to allow for manual changes and
-    #  oversight
     for _a in data['finanz_konten']:
         acc_name = (difflib.get_close_matches(_a.name,
                                           facc_types.keys(),
@@ -402,9 +393,9 @@ def translate_bank_transactions(data, resources):
             amount=_bt.wert,
             reference=a(_bt.bes, "[redacted]"),
             original_reference=a(_bt.bes, "[redacted]"),
-            other_account_number="NO NUMBER GIVEN", #TODO fill these properly, somehow
-            other_routing_number="NO NUMBER GIVEN", #TODO
-            other_name="NO NAME GIVEN", #TODO
+            other_account_number="NO NUMBER GIVEN",
+            other_routing_number="NO NUMBER GIVEN",
+            other_name="NO NAME GIVEN",
             imported_at=_bt.valid_on,
             posted_on=_bt.valid_on,
             valid_on=_bt.valid_on,
@@ -423,11 +414,6 @@ def translate_finance_transactions(data, resources):
     bt_d = resources['bank_transaction']
 
     objs = []
-
-    #  § 199 Abs. 1 BGB
-    # TODO write-offs? write off mail memberships, but not full fees
-    # TODO reconstruct past memberships based on fees incurred
-    # TODO inspect 4000 transaction on 10538
 
     for _bu in data['finance_transaction']:
         if _bu.wert == 0 and _bu.haben == _bu.soll:
@@ -489,8 +475,6 @@ def generate_subnets_vlans(data, resources):
                        vlan=vlan)
         log.debug("Adding Subnet {}, id {}".format(_s.vlan_name, _s.subnet_id))
         s_d[_s.subnet_id] = s
-
-    # TODO: note, missing transit, server and eduroam subnets
 
     return list(s_d.values())
 
@@ -577,7 +561,6 @@ def translate_ports(data, resources):
             host=switch, name=port_name,
             mac="00:00:00:00:00:01",
             subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
-        # TODO insert proper patch_port names
         pp = port.SwitchPatchPort(
             switch_interface=sp, name="?? ({})".format(port_name), room=room)
         objs.append(pp)
@@ -593,7 +576,7 @@ def generate_config(data, resources):
     return [config.Config(
         member_group=g_d["member"],
         violation_group=g_d["suspended"],
-        network_access_group=g_d["member"],  # todo: actual network_access_group
+        network_access_group=g_d["member"],
         moved_from_division_group=g_d["moved_from_division"],
         already_paid_semester_fee_group=g_d["already_paid"],
         registration_fee_account=an_d[u"Beiträge"],
