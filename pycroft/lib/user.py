@@ -13,6 +13,7 @@ This module contains.
 from __future__ import print_function
 from datetime import datetime, time
 from itertools import chain
+from operator import attrgetter
 import re
 
 from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
@@ -696,3 +697,62 @@ def setup_traffic_groups(user, processor, keep_old=False):
 
     group = user.room.building.default_traffic_group
     make_member_of(user, group, processor, closed(now, None))
+
+
+def determine_traffic_group(user):
+    """Determine the relevant traffic_group for a user.
+
+    This picks the group from ``user.traffic_groups`` with the highest
+    credit amount.
+
+    :param User user:
+    """
+    # TODO: How should this case be handled?  An alternative would be
+    # to just _require_ a traffic group for every user
+    groups = user.traffic_groups
+    if not groups:
+        raise NotImplementedError
+
+    return sorted(groups, key=attrgetter('credit_amount'), reverse=True)
+
+
+def grant_initial_credit(user):
+    """Grant the maximum initial credit of all the user's groups
+
+    The relevant :py:cls:`TrafficGroup` is the one with the largest
+    ``credit_amount``.
+
+    The credit granted amounts to one week with respect to the
+    ``credit_interval``.  It is independent of any existing
+    :py:cls:`TrafficCredit` or :py:cls:`TrafficVolume` entries and
+    will not exceed the ``credit_limit``.
+
+    :param User user: the user to grant credit to
+    """
+    now = session.utcnow()
+    group = determine_traffic_group(user)
+
+    # TODO: calculate initial credit
+    # amount/interval=initial_amount/period
+    period = 7  # TODO: use timedelta
+    initial_amount = group.credit_amount / group.credit_interval * period
+
+    credit = TrafficCredit(timestamp=now, amount=initial_amount, user_id=user.id)
+    session.session.add(credit)
+    session.session.commit()
+
+
+def grant_regular_credit(user):
+    """Grant a user's regular credit
+
+    The relevant :py:cls:`TrafficGroup` is the one with the largest
+    ``credit_amount``.
+
+    :param User user: the user to grant credit to
+
+    """
+    now = session.utcnow()
+    group = determine_traffic_group(user)
+    credit = TrafficCredit(timestamp=now, amount=group.credit_amount, user_id=user.id)
+    session.session.add(credit)
+    session.session.commit()
