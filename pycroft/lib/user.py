@@ -13,6 +13,7 @@ This module contains.
 from __future__ import print_function
 from datetime import datetime, time
 from itertools import chain
+from operator import attrgetter
 import re
 
 from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
@@ -150,6 +151,8 @@ def move_in(name, login, email, building, level, room_number, mac, processor):
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
 
+    setup_traffic_groups(user, processor)
+
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
                    user=new_user)
@@ -191,6 +194,7 @@ def move_back_in(user, building, level, room_number, mac, processor):
     for group in {config.member_group, config.network_access_group}:
         make_member_of(user, group, processor, closed(now, None))
 
+    # TODO: fix traffic group
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved back in.").to_json(),
                    user=user)
@@ -259,6 +263,7 @@ def move(user, building, level, room_number, processor):
         message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
+    # TODO: fix traffic group
 
     for user_host in user.user_hosts:
         migrate_user_host(user_host, new_room, processor)
@@ -509,6 +514,7 @@ def move_out(user, comment, processor, when):
 
     for group in {config.member_group, config.network_access_group}:
         remove_member_of(user, group, processor, closedopen(when, None))
+        # TODO: remove traffic groups
 
     num_hosts = 0  # In case the chain is empty
     for num_hosts, h in enumerate(chain(user.user_hosts, user.server_hosts), 1):
@@ -673,3 +679,80 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
+
+
+def setup_traffic_groups(user, processor, keep_old=False):
+    """Add a user to the building's default traffic group
+
+    :param User user: the user
+    :param User processor: the processor
+    :param bool keep_old: whether to keep the user's current traffic
+        groups
+    """
+    now = session.utcnow()
+
+    if not keep_old:
+        for group in user.traffic_groups:
+            remove_member_of(user, group, processor, open(now, None))
+
+    group = user.room.building.default_traffic_group
+    make_member_of(user, group, processor, closed(now, None))
+
+
+def determine_traffic_group(user):
+    """Determine the relevant traffic_group for a user.
+
+    This picks the group from ``user.traffic_groups`` with the highest
+    credit amount.
+
+    :param User user:
+    """
+    # TODO: How should this case be handled?  An alternative would be
+    # to just _require_ a traffic group for every user
+    groups = user.traffic_groups
+    if not groups:
+        raise NotImplementedError
+
+    return sorted(groups, key=attrgetter('credit_amount'), reverse=True)
+
+
+def grant_initial_credit(user):
+    """Grant the maximum initial credit of all the user's groups
+
+    The relevant :py:cls:`TrafficGroup` is the one with the largest
+    ``credit_amount``.
+
+    The credit granted amounts to one week with respect to the
+    ``credit_interval``.  It is independent of any existing
+    :py:cls:`TrafficCredit` or :py:cls:`TrafficVolume` entries and
+    will not exceed the ``credit_limit``.
+
+    :param User user: the user to grant credit to
+    """
+    now = session.utcnow()
+    group = determine_traffic_group(user)
+
+    # TODO: calculate initial credit
+    # amount/interval=initial_amount/period
+    period = 7  # TODO: use timedelta
+    initial_amount = group.credit_amount / group.credit_interval * period
+
+    credit = TrafficCredit(timestamp=now, amount=initial_amount, user_id=user.id)
+    session.session.add(credit)
+    session.session.commit()
+
+
+def grant_regular_credit(user):
+    """Grant a user's regular credit
+
+    The relevant :py:cls:`TrafficGroup` is the one with the largest
+    ``credit_amount``.
+
+    :param User user: the user to grant credit to
+
+    """
+    now = session.utcnow()
+    group = determine_traffic_group(user)
+    credit = TrafficCredit(timestamp=now, amount=group.credit_amount, user_id=user.id)
+    session.session.add(credit)
+    session.session.commit()
