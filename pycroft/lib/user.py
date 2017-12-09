@@ -193,6 +193,7 @@ def move_back_in(user, building, level, room_number, mac, processor):
     for group in {config.member_group, config.network_access_group}:
         make_member_of(user, group, processor, closed(now, None))
 
+    # TODO: fix traffic group
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved back in.").to_json(),
                    user=user)
@@ -261,6 +262,7 @@ def move(user, building, level, room_number, processor):
         message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
+    # TODO: fix traffic group
 
     for user_host in user.user_hosts:
         migrate_user_host(user_host, new_room, processor)
@@ -511,6 +513,7 @@ def move_out(user, comment, processor, when):
 
     for group in {config.member_group, config.network_access_group}:
         remove_member_of(user, group, processor, closedopen(when, None))
+        # TODO: remove traffic groups
 
     num_hosts = 0  # In case the chain is empty
     for num_hosts, h in enumerate(chain(user.user_hosts, user.server_hosts), 1):
