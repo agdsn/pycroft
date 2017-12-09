@@ -150,6 +150,8 @@ def move_in(name, login, email, building, level, room_number, mac, processor):
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
 
+    setup_traffic_groups(user, processor)
+
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
                    user=new_user)
@@ -673,3 +675,21 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
+
+
+def setup_traffic_groups(user, processor, keep_old=False):
+    """Add a user to the building's default traffic group
+
+    :param User user: the user
+    :param User processor: the processor
+    :param bool keep_old: whether to keep the user's current traffic
+        groups
+    """
+    now = session.utcnow()
+
+    if not keep_old:
+        for group in user.traffic_groups:
+            remove_member_of(user, group, processor, open(now, None))
+
+    group = user.room.building.default_traffic_group
+    make_member_of(user, group, processor, closed(now, None))

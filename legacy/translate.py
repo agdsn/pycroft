@@ -57,6 +57,7 @@ def generate_sites(data, resources):
 def translate_buildings(data, resources):
     site_d = resources['site']
 
+    g_d = resources['group']
     b_d = resources['wheim'] = {}  # netusers.Wheim.id -> obj
     for _b in data['wheim']:
         b = facilities.Building(
@@ -64,7 +65,8 @@ def translate_buildings(data, resources):
             site=site_d[building_site_map[_b.wheim_id]],
             short_name=_b.kuerzel,
             street=_b.str.replace(u'strasse', u'straße'),
-            number=_b.hausnr)
+            number=_b.hausnr,
+            default_traffic_group=g_d['usertraffic'].id)
         b_d[_b.wheim_id] = b
     return list(b_d.values())
 
@@ -87,7 +89,8 @@ def translate_rooms(data, resources):
     return list(r_d.values())
 
 
-@reg.provides(user.Property, user.PropertyGroup, user.TrafficGroup, user.Group)
+@reg.provides(user.Property, user.PropertyGroup, user.TrafficGroup, user.Group,
+              satisfies=(facilities.Building.default_traffic_group,))
 def generate_groups(data, resources):
     properties_l = []
     g_d = resources['group'] = {}  # role -> PropertyGroup obj
