@@ -11,21 +11,20 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 from __future__ import print_function
-from datetime import datetime, time
+from datetime import datetime
 from itertools import chain
 from operator import attrgetter
 import re
 
-from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
+from sqlalchemy import and_, or_, func, literal, literal_column, union_all, select
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import (
-    Interval, IntervalSet, UnboundedInterval, closed, closedopen, single)
-from pycroft.lib.host import generate_hostname
-from pycroft.lib.net import get_free_ip, ptr_name
+from pycroft.helpers.interval import IntervalSet, UnboundedInterval, \
+    closed, closedopen, single
+from pycroft.lib.net import get_free_ip
 from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
@@ -34,7 +33,7 @@ from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User, Membership, TrafficGroup, UnixAccount
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.finance import get_current_semester, user_has_paid
+from pycroft.lib.finance import user_has_paid
 
 
 def encode_type1_user_id(user_id):
@@ -75,10 +74,6 @@ def decode_type2_user_id(string):
     """
     match = type2_user_id_pattern.match(string)
     return match.groups() if match else None
-
-
-# Move down here to solve cyclic import
-from pycroft.lib.finance import RegistrationFee, SemesterFee, post_fees
 
 
 class HostAliasExists(ValueError):
