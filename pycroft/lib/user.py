@@ -98,7 +98,8 @@ def setup_ipv4_networking(host):
 
 
 @with_transaction
-def move_in(name, login, email, building, level, room_number, mac, processor):
+def move_in(name, login, email, building, level, room_number, mac, processor,
+            traffic_group_id=None):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -112,6 +113,8 @@ def move_in(name, login, email, building, level, room_number, mac, processor):
     :param level: The level the user moves in.
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
+    :param int traffic_group_id: the id of the chosen traffic group to
+        be used instead of the building's default one.
 
     :return: The new user object.
     """
@@ -149,6 +152,11 @@ def move_in(name, login, email, building, level, room_number, mac, processor):
 
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
+
+    traffic_group = (TrafficGroup.q.get(traffic_group_id)
+                     if traffic_group_id is not None
+                     else None)
+    setup_traffic_groups(user, processor, traffic_group)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
@@ -673,3 +681,20 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
+
+
+def setup_traffic_groups(user, processor, traffic_group=None):
+    """Add a user to a default or custom traffic group
+
+    :param User user: the user
+    :param User processor: the processor
+    :param TrafficGroup traffic_group: the traffic group.  if ``None``,
+        the traffic group of the building is used.
+    """
+    now = session.utcnow()
+
+    if traffic_group is None:
+        traffic_group = user.room.building.default_traffic_group
+    make_member_of(user, traffic_group, processor, closed(now, None))
+
+

@@ -7,6 +7,7 @@ from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
 from pycroft.model.base import ModelBase
+from pycroft.model.user import TrafficGroup
 
 
 class Site(ModelBase):
@@ -19,6 +20,7 @@ class Building(ModelBase):
     number = Column(String(3), nullable=False)
     short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(40), nullable=False)
+    default_traffic_group = Column(Integer, ForeignKey(TrafficGroup.id))
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
 
