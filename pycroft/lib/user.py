@@ -172,7 +172,8 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
 
 
 @with_transaction
-def move_back_in(user, building, level, room_number, mac, processor):
+def move_back_in(user, building, level, room_number, mac, processor,
+                 traffic_group_id=None):
     """Move a user back in to a given room.
 
     This function sets `user.room` accordingly, adds a new
@@ -186,6 +187,8 @@ def move_back_in(user, building, level, room_number, mac, processor):
     :param room_number: The room number the user moves in.
     :param mac: The mac address of the users pc.
     :param User processor: User issuing the removal
+    :param int traffic_group_id: the id of the traffic group.  If not
+        set, use the building's default one.
     """
 
     room = Room.q.filter_by(number=room_number, level=level, building=building).one()
@@ -201,6 +204,11 @@ def move_back_in(user, building, level, room_number, mac, processor):
     # Use a set to avoid double log entries
     for group in {config.member_group, config.network_access_group}:
         make_member_of(user, group, processor, closed(now, None))
+
+    traffic_group = (TrafficGroup.q.get(traffic_group_id)
+                     if traffic_group_id is not None
+                     else None)
+    setup_traffic_groups(user, processor, traffic_group)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved back in.").to_json(),
