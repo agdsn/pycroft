@@ -107,13 +107,15 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     UnixAccount, a finance Account, and is made member of important
     groups.  Networking is set up.
 
-    :param name: The full name of the user.  (Max Mustermann)
-    :param login: The unix login for the user.
-    :param email: E-Mail address of the user.
-    :param building: The building the user moves in.
-    :param level: The level the user moves in.
-    :param room_number: The room number the user moves in.
-    :param mac: The mac address of the users pc.
+    :param str name: The full name of the user.  (Max Mustermann)
+    :param str login: The unix login for the user.
+    :param str email: E-Mail address of the user.
+    :param str building: The shortname of the building the user moves
+        in.
+    :param int level: The level the user moves in.
+    :param str room_number: The room number the user moves in.
+    :param str mac: The mac address of the users pc.
+    :param User processor:
     :param int traffic_group_id: the id of the chosen traffic group to
         be used instead of the building's default one.
 
