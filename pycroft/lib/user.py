@@ -19,7 +19,7 @@ import re
 from sqlalchemy import and_, or_, exists, func, literal, literal_column, union_all, select
 
 from pycroft import config, property
-from pycroft.helpers import user, AttrDict
+from pycroft.helpers import user as user_helper, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import (
@@ -126,7 +126,7 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
         level=level, building=building).one()
 
     now = session.utcnow()
-    plain_password = user.generate_password(12)
+    plain_password = user_helper.generate_password(12)
     # create a new user
     new_user = User(
         login=login,
