@@ -156,10 +156,7 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))
 
-    traffic_group = (TrafficGroup.q.get(traffic_group_id)
-                     if traffic_group_id is not None
-                     else None)
-    setup_traffic_groups(user, processor, traffic_group)
+    setup_traffic_group(new_user, processor, traffic_group_id)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
@@ -205,10 +202,7 @@ def move_back_in(user, building, level, room_number, mac, processor,
     for group in {config.member_group, config.network_access_group}:
         make_member_of(user, group, processor, closed(now, None))
 
-    traffic_group = (TrafficGroup.q.get(traffic_group_id)
-                     if traffic_group_id is not None
-                     else None)
-    setup_traffic_groups(user, processor, traffic_group)
+    setup_traffic_group(user, processor, traffic_group_id)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved back in.").to_json(),
@@ -695,19 +689,39 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
                    user=user, author=processor)
 
 
-def setup_traffic_groups(user, processor, traffic_group=None):
+def determine_traffic_group(user, custom_group_id=None):
+    """Determine the traffic group for a user by his room or a custom
+    choice.
+
+    :param User user: the user in question
+    :param int custom_group_id: the optional id of a custom traffic
+        group
+
+    :returns: the traffic group
+
+    :rtype: TrafficGroup
+    """
+    if custom_group_id is not None:
+        return TrafficGroup.q.get(custom_group_id)
+    return user.room.building.default_traffic_group
+
+
+def setup_traffic_group(user, processor, custom_group_id=None, remove_old=False):
     """Add a user to a default or custom traffic group
 
     :param User user: the user
     :param User processor: the processor
-    :param TrafficGroup traffic_group: the traffic group.  if ``None``,
-        the traffic group of the building is used.
+    :param int custom_group_id: the id of a custom traffic group.  if
+        ``None``, the traffic group of the building is used.
+    :param bool remove_old: Whether to terminate old
+        :py:cls:`TrafficGroup` memberships.  Defaults to ``False``
     """
     now = session.utcnow()
-
-    if traffic_group is None:
-        traffic_group = user.room.building.default_traffic_group
-    make_member_of(user, traffic_group, processor, closed(now, None))
+    if remove_old:
+        for group in user.traffic_groups:
+            remove_member_of(user, group, processor, closedopen(now, None))
+    traffic_group = determine_traffic_group(user, custom_group_id)
+    make_member_of(user, traffic_group, processor, closedopen(now, None))
 
 
 def effective_traffic_group(user):
