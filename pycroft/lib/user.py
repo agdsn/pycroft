@@ -518,7 +518,8 @@ def move_out(user, comment, processor, when):
     if when > session.utcnow():
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
-    for group in {config.member_group, config.network_access_group}:
+    for group in ({config.member_group, config.network_access_group}
+                  | set(user.traffic_groups)):
         remove_member_of(user, group, processor, closedopen(when, None))
 
     num_hosts = 0  # In case the chain is empty
