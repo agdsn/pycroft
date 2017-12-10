@@ -698,13 +698,16 @@ def determine_traffic_group(user, custom_group_id=None):
     """Determine the traffic group for a user by his room or a custom
     choice.
 
+    If the building does not have a ``default_traffic_group``,
+    ``None`` is returned.
+
     :param User user: the user in question
     :param int custom_group_id: the optional id of a custom traffic
         group
 
     :returns: the traffic group
 
-    :rtype: TrafficGroup
+    :rtype: TrafficGroup | None
     """
     if custom_group_id is not None:
         return TrafficGroup.q.get(custom_group_id)
@@ -713,6 +716,10 @@ def determine_traffic_group(user, custom_group_id=None):
 
 def setup_traffic_group(user, processor, custom_group_id=None, remove_old=False):
     """Add a user to a default or custom traffic group
+
+    If neither a custom group is given, nor the corresponding building
+    has a default traffic group, no membership is added.  Group
+    removal is executed independent of the latter.
 
     :param User user: the user
     :param User processor: the processor
@@ -726,7 +733,8 @@ def setup_traffic_group(user, processor, custom_group_id=None, remove_old=False)
         for group in user.traffic_groups:
             remove_member_of(user, group, processor, closedopen(now, None))
     traffic_group = determine_traffic_group(user, custom_group_id)
-    make_member_of(user, traffic_group, processor, closedopen(now, None))
+    if traffic_group is not None:
+        make_member_of(user, traffic_group, processor, closedopen(now, None))
 
 
 def effective_traffic_group(user):
