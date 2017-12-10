@@ -243,15 +243,18 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, building, level, room_number, processor):
-    """
-    Moves the user into another room.
+def move(user, building, level, room_number, processor, traffic_group_id=None):
+    """Moves the user into another room.
+
     :param user: The user to be moved.
     :param building: The new building.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
     :param processor: The user who is currently logged in.
+    :param int traffic_group_id: a custom traffic group to use.
+
     :return: The user object of the moved user.
+    :rtype: User
     """
 
     old_room = user.room
@@ -272,6 +275,8 @@ def move(user, building, level, room_number, processor):
         message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
+
+    setup_traffic_group(user, processor, traffic_group_id, remove_old=True)
 
     for user_host in user.user_hosts:
         migrate_user_host(user_host, new_room, processor)
