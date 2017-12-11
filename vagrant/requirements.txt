@@ -25,3 +25,4 @@ wrapt~=1.10.11
 ldap3~=2.1.0
 celery~=3.1.25
 factory-boy~=2.9.2
+alembic~=0.9.6
