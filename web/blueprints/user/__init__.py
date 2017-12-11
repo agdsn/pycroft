@@ -133,16 +133,6 @@ def user_show(user_id):
         session.session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
 
-    memberships = Membership.q.filter(Membership.user_id == user.id)
-    memberships_active = memberships.filter(
-        # it is important to use == here, "is" does NOT work
-        or_(Membership.begins_at == None,
-            Membership.begins_at <= functions.utcnow())
-    ).filter(
-        # it is important to use == here, "is" does NOT work
-        or_(Membership.ends_at == None,
-            Membership.ends_at > functions.utcnow())
-    )
     balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
@@ -182,8 +172,6 @@ def user_show(user_id):
         finance_table_splitted=FinanceTableSplitted(**_finance_table_kwargs),
         room=room,
         form=form,
-        memberships=memberships.all(),
-        memberships_active=memberships_active.all(),
         flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.account_id),
