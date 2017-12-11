@@ -26,7 +26,7 @@ from tests.fixtures.dummy.user import UserData
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
                 SwitchPatchPortData, UserData, UserInterfaceData, UserHostData,
-                VLANData)
+                VLANData, TrafficGroupData)
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -55,11 +55,20 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.old_room.level, self.old_room.number, self.processing_user)
 
     def test_0020_moves_into_other_building(self):
-        UserHelper.move(self.user, self.new_room_other_building.building,
+        # whether old traffic groups get deleted is untested,
+        # because adding a `default_traffic_group` is hard with our
+        # fixture setup
+
+        traffic_group = user.TrafficGroup.q.first()
+        UserHelper.move(
+            self.user, self.new_room_other_building.building,
             self.new_room_other_building.level,
-            self.new_room_other_building.number, self.processing_user)
+            self.new_room_other_building.number, self.processing_user,
+            traffic_group_id=traffic_group.id,
+        )
         self.assertEqual(self.user.room, self.new_room_other_building)
         self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_building)
+        self.assertIn(traffic_group, self.user.active_traffic_groups())
         #TODO test for changing ip
 
 
@@ -112,6 +121,11 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         for group in {config.member_group, config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
+        # our fixtures don't have a default traffic group for our
+        # building, so we test that separately
+        traffic_group = user.TrafficGroup.q.one()
+        self.assertNotIn(traffic_group, active_user_groups)
+
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.account)
         self.assertEqual(new_user.account.balance, 0)
@@ -120,6 +134,28 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account = new_user.unix_account
         self.assertTrue(account.home_directory.endswith(new_user.login))
         self.assertTrue(account.home_directory.startswith('/home/'))
+
+    def test_move_in_custom_traffic_group(self):
+        test_name = u"Hans"
+        test_login = u"hans66"
+        test_email = u"hans@hans.de"
+        test_building = facilities.Building.q.first()
+        test_mac = "12:11:11:11:11:11"
+
+        traffic_group = user.TrafficGroup.q.first()
+        new_user = UserHelper.move_in(
+            test_name,
+            test_login,
+            test_email,
+            test_building,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+            processor=self.processing_user,
+            traffic_group_id=traffic_group.id,
+        )
+        self.assertIn(traffic_group, new_user.active_traffic_groups())
+
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
@@ -137,6 +173,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         test_email = u"hans@hans.de"
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
+        traffic_group = user.TrafficGroup.q.first()
 
         new_user = UserHelper.move_in(
             test_name,
@@ -147,6 +184,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
+            traffic_group_id=traffic_group.id,
         )
         session.session.commit()
 
@@ -174,6 +212,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
+            traffic_group_id=traffic_group.id,
         )
 
         session.session.refresh(new_user)
@@ -189,6 +228,8 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         self.assertTrue(new_user.member_of(config.member_group))
         self.assertTrue(new_user.member_of(config.network_access_group))
+        # `member_of` only concerns `PropertyGroup`s!
+        self.assertIn(traffic_group, new_user.active_traffic_groups())
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
