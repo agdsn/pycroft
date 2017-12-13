@@ -81,7 +81,7 @@ def translate_all(data):
     return objs
 
 
-def main(args):
+def import_legacy(args):
     """Import the legacy data according to ``args``"""
     engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
     session.set_scoped_session(
@@ -217,7 +217,7 @@ def main(args):
             log.info("  fixing %s(%s)", sequence_name, meta.__tablename__)
 
 
-if __name__=="__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser(
         prog='import_legacy', description='fill the hovercraft with eels')
@@ -256,5 +256,9 @@ if __name__=="__main__":
     std_logging.getLogger('sqlalchemy').addHandler(sqlalchemy_loghandler)
     sqlalchemy_loghandler.setLevel(std_logging.DEBUG)
 
-    main(args)
+    import_legacy(args)
     log.info("Import finished.")
+
+
+if __name__ == "__main__":
+    main()

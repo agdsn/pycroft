@@ -59,11 +59,13 @@ RUN export BOWER_DIR=$PROJECT_DIR/web/static/libs/ \
 
 COPY . $PROJECT_DIR
 
-RUN chown -R pycroft:pycroft $PROJECT_DIR
+RUN chown -R pycroft:pycroft $PROJECT_DIR \
+    && pip install -e $PROJECT_DIR
+# the latter installs pycroft in “develop” mode following `setup.py`.
 
 USER pycroft
 WORKDIR $PROJECT_DIR
 
 EXPOSE 5000
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["./server_run.py", "--debug", "--exposed"]
+CMD ["pycroft", "--debug", "--exposed"]

@@ -69,7 +69,7 @@ def server_run(args):
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
     app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
                         help="run in debug mode")
@@ -81,3 +81,7 @@ if __name__ == "__main__":
                         help="port to run Pycroft on", type=int, default=5000)
 
     server_run(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()
