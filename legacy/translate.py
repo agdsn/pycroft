@@ -66,7 +66,7 @@ def translate_buildings(data, resources):
             short_name=_b.kuerzel,
             street=_b.str.replace(u'strasse', u'straße'),
             number=_b.hausnr,
-            default_traffic_group=g_d['usertraffic'].id)
+            default_traffic_group=g_d['usertraffic'])
         b_d[_b.wheim_id] = b
     return list(b_d.values())
 

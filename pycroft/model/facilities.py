@@ -20,7 +20,8 @@ class Building(ModelBase):
     number = Column(String(3), nullable=False)
     short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(40), nullable=False)
-    default_traffic_group = Column(Integer, ForeignKey(TrafficGroup.id))
+    default_traffic_group_id = Column(Integer, ForeignKey(TrafficGroup.id))
+    default_traffic_group = relationship(TrafficGroup)
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
 
