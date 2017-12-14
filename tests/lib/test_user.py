@@ -10,7 +10,7 @@ from pycroft.model.user import Membership, PropertyGroup
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen, single
-from pycroft.lib import user as UserHelper
+from pycroft.lib import user as UserHelper, traffic
 from pycroft.model import (
     user, facilities, session, logging, finance, host)
 from tests.fixtures import network_access
@@ -341,23 +341,23 @@ class TrafficGroupTestCase(FixtureDataTestBase):
         self.traffic_group2 = user.TrafficGroup.q.filter_by(name='non_default').one()
 
     def test_determine_traffic_group_default(self):
-        self.assertEqual(UserHelper.determine_traffic_group(self.user),
+        self.assertEqual(traffic.determine_traffic_group(self.user),
                          self.traffic_group)
 
     def test_determine_traffic_group_building_has_no_default(self):
-        group = UserHelper.determine_traffic_group(self.user2)
+        group = traffic.determine_traffic_group(self.user2)
         self.assertEqual(group, None)
 
     def test_determine_traffic_group_uses_explicit_group(self):
-        group = UserHelper.determine_traffic_group(self.user2, self.traffic_group2.id)
+        group = traffic.determine_traffic_group(self.user2, self.traffic_group2.id)
         self.assertEqual(group, self.traffic_group2)
 
     def test_determine_traffic_group_prefers_explicit_group(self):
-        group = UserHelper.determine_traffic_group(self.user, self.traffic_group2.id)
+        group = traffic.determine_traffic_group(self.user, self.traffic_group2.id)
         self.assertEqual(group, self.traffic_group2)
 
     def test_setup_traffic_group(self):
-        setup = partial(UserHelper.setup_traffic_group, processor=self.user2)
+        setup = partial(traffic.setup_traffic_group, processor=self.user2)
 
         setup(self.user)
         session.session.refresh(self.user)
@@ -378,7 +378,7 @@ class TrafficGroupTestCase(FixtureDataTestBase):
         self.assertIn(self.traffic_group2, groups)
 
     def test_setup_traffic_group_no_group(self):
-        UserHelper.setup_traffic_group(self.user2, processor=self.user2)
+        traffic.setup_traffic_group(self.user2, processor=self.user2)
         session.session.refresh(self.user2)
         # expect an empty list
         self.assertFalse(self.user.active_traffic_groups())
