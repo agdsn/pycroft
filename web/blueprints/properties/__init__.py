@@ -19,7 +19,8 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
 from pycroft.model import session
 from pycroft.property import property_categories
 from pycroft.model.user import Property, PropertyGroup, TrafficGroup
-from pycroft.lib.user import grant_property, deny_property, remove_property
+from pycroft.lib.membership import grant_property, deny_property, \
+    remove_property
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm

@@ -23,7 +23,8 @@ from pycroft.helpers.interval import closed, closedopen
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
-from pycroft.lib.user import make_member_of, encode_type1_user_id, encode_type2_user_id
+from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id
+from pycroft.lib.membership import make_member_of
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room

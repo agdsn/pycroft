@@ -4,9 +4,8 @@
 from datetime import timedelta
 
 from pycroft.helpers.interval import IntervalSet ,UnboundedInterval, closed
-from pycroft.lib.user import (
-    grant_property, deny_property, remove_property, make_member_of,
-    remove_member_of)
+from pycroft.lib.membership import grant_property, deny_property, \
+    remove_property, make_member_of, remove_member_of
 from pycroft.model.user import Membership, Property, PropertyGroup, User
 from pycroft.model import session
 from tests import FixtureDataTestBase

@@ -11,29 +11,31 @@ This module contains.
 :copyright: (c) 2012 by AG DSN.
 """
 from __future__ import print_function
+
+import re
 from datetime import datetime
 from itertools import chain
 from operator import attrgetter
-import re
 
-from sqlalchemy import and_, or_, func, literal, literal_column, union_all, select
+from sqlalchemy import and_, or_, func, literal, literal_column, union_all, \
+    select
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import IntervalSet, UnboundedInterval, \
-    closed, closedopen, single
+from pycroft.helpers.interval import closed, closedopen, single
+from pycroft.lib.finance import user_has_paid
+from pycroft.lib.logging import log_user_event
+from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip
-from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
+from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import Host, IP, UserHost, UserInterface, Interface
-from pycroft.model import session
 from pycroft.model.session import with_transaction
-from pycroft.model.user import User, Membership, TrafficGroup, UnixAccount
-from pycroft.lib.logging import log_user_event
-from pycroft.lib.finance import user_has_paid
+from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
+from pycroft.model.user import User, TrafficGroup, UnixAccount
 
 
 def encode_type1_user_id(user_id):
@@ -582,111 +584,6 @@ def status_query():
         (User.has_property('ldap', now)).label('ldap'),
         or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
     ).join(Account)
-
-
-@with_transaction
-def grant_property(group, name):
-    """
-    Grants a property to a group.
-
-    :param PropertyGroup group: a group
-    :param str name: the name of the property
-    :return: created or changed property object
-    :rtype: Property
-    """
-    group.property_grants[name] = True
-    return group.properties[name]
-
-
-@with_transaction
-def deny_property(group, name):
-    """
-    Denies a property to a group.
-
-    :param PropertyGroup group: a group
-    :param str name: the name of the property
-    :return: created or changed property object
-    :rtype: Property
-    """
-    group.property_grants[name] = False
-    return group.properties[name]
-
-
-@with_transaction
-def remove_property(group, name):
-    """
-    Removes a property association (grant or denial) with a given group.
-
-    :param PropertyGroup group: a group
-    :param str name: the name of the property
-    :raises ValueError: if group doesn't have a property with the given name
-    """
-    if not group.properties.pop(name, None):
-        raise ValueError("Group {0} doesn't have property {1}"
-                         .format(group.name, name))
-
-
-@with_transaction
-def make_member_of(user, group, processor, during=UnboundedInterval):
-    """
-    Makes a user member of a group in a given interval. If the given interval
-    overlaps with an existing membership, this method will join the overlapping
-    intervals together, so that there will be at most one membership for
-    particular user in particular group at any given point in time.
-
-    :param User user: the user
-    :param Group group: the group
-    :param User processor: User issuing the addition
-    :param Interval during:
-    """
-    memberships = session.session.query(Membership).filter(
-        Membership.user == user, Membership.group == group,
-        Membership.active(during)).all()
-    intervals = IntervalSet(
-        closed(m.begins_at, m.ends_at) for m in memberships
-    ).union(during)
-    for m in memberships:
-        session.session.delete(m)
-    session.session.add_all(
-        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
-        for i in intervals)
-    message = deferred_gettext(u"Added to group {group} during {during}.")
-    log_user_event(message=message.format(group=group.name,
-                                          during=during).to_json(),
-                   user=user, author=processor)
-
-
-@with_transaction
-def remove_member_of(user, group, processor, during=UnboundedInterval):
-    """Remove a user from a group in a given interval.
-
-    The interval defaults to the unbounded interval, so that the user
-    will be removed from the group at any point in time, **removing
-    all memberships** in this group retroactively.
-
-    However, a common use case is terminating a membership by setting
-    ``during=closedopen(now, None)``.
-
-    :param User user: the user
-    :param Group group: the group
-    :param User processor: User issuing the removal
-    :param Interval during:
-    """
-    memberships = session.session.query(Membership).filter(
-        Membership.user == user, Membership.group == group,
-        Membership.active(during)).all()
-    intervals = IntervalSet(
-        closed(m.begins_at, m.ends_at) for m in memberships
-    ).difference(during)
-    for m in memberships:
-        session.session.delete(m)
-    session.session.add_all(
-        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
-        for i in intervals)
-    message = deferred_gettext(u"Removed from group {group} during {during}.")
-    log_user_event(message=message.format(group=group.name,
-                                          during=during).to_json(),
-                   user=user, author=processor)
 
 
 def determine_traffic_group(user, custom_group_id=None):

@@ -17,7 +17,7 @@ from pycroft.lib.finance import (
     import_bank_account_activities_csv, post_fees, simple_transaction,
     transferred_amount,
     is_ordered)
-from pycroft.lib.user import make_member_of
+from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction)
