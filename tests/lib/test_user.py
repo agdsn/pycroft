@@ -3,6 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
+from functools import partial
 
 from pycroft.model.port import PatchPort
 from pycroft.model.user import Membership, PropertyGroup
@@ -21,6 +22,7 @@ from tests.fixtures.dummy.host import (
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
+from tests.fixtures import user_with_trafficgroups
 
 
 class Test_010_User_Move(FixtureDataTestBase):
@@ -326,3 +328,57 @@ class UserWithNetworkAccessTestCase(FixtureDataTestBase):
 
         self.assertEqual(unblocked_user.log_entries[0].author, unblocked_user)
         self.assert_violation_membership(unblocked_user, subinterval=blocked_during)
+
+
+class TrafficGroupTestCase(FixtureDataTestBase):
+    datasets = frozenset(user_with_trafficgroups.datasets)
+
+    def setUp(self):
+        super().setUp()
+        self.user = user.User.q.filter_by(login='test').one()
+        self.user2 = user.User.q.filter_by(login='test2').one()
+        self.traffic_group = user.TrafficGroup.q.first()
+        self.traffic_group2 = user.TrafficGroup.q.filter_by(name='non_default').one()
+
+    def test_determine_traffic_group_default(self):
+        self.assertEqual(UserHelper.determine_traffic_group(self.user),
+                         self.traffic_group)
+
+    def test_determine_traffic_group_building_has_no_default(self):
+        group = UserHelper.determine_traffic_group(self.user2)
+        self.assertEqual(group, None)
+
+    def test_determine_traffic_group_uses_explicit_group(self):
+        group = UserHelper.determine_traffic_group(self.user2, self.traffic_group2.id)
+        self.assertEqual(group, self.traffic_group2)
+
+    def test_determine_traffic_group_prefers_explicit_group(self):
+        group = UserHelper.determine_traffic_group(self.user, self.traffic_group2.id)
+        self.assertEqual(group, self.traffic_group2)
+
+    def test_setup_traffic_group(self):
+        setup = partial(UserHelper.setup_traffic_group, processor=self.user2)
+
+        setup(self.user)
+        session.session.refresh(self.user)
+        groups = self.user.active_traffic_groups()
+        self.assertIn(self.traffic_group, groups)
+        self.assertNotIn(self.traffic_group2, groups)
+
+        setup(self.user, custom_group_id=self.traffic_group2.id)
+        session.session.refresh(self.user)
+        groups = self.user.active_traffic_groups()
+        self.assertIn(self.traffic_group, groups)
+        self.assertIn(self.traffic_group2, groups)
+
+        setup(self.user, custom_group_id=self.traffic_group2.id, terminate_other=True)
+        session.session.refresh(self.user)
+        groups = self.user.active_traffic_groups()
+        self.assertNotIn(self.traffic_group, groups)
+        self.assertIn(self.traffic_group2, groups)
+
+    def test_setup_traffic_group_no_group(self):
+        UserHelper.setup_traffic_group(self.user2, processor=self.user2)
+        session.session.refresh(self.user2)
+        # expect an empty list
+        self.assertFalse(self.user.active_traffic_groups())

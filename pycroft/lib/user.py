@@ -271,7 +271,7 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
         user=user
     )
 
-    setup_traffic_group(user, processor, traffic_group_id, remove_old=True)
+    setup_traffic_group(user, processor, traffic_group_id, terminate_other=True)
 
     for user_host in user.user_hosts:
         migrate_user_host(user_host, new_room, processor)
@@ -709,7 +709,7 @@ def determine_traffic_group(user, custom_group_id=None):
     return user.room.building.default_traffic_group
 
 
-def setup_traffic_group(user, processor, custom_group_id=None, remove_old=False):
+def setup_traffic_group(user, processor, custom_group_id=None, terminate_other=False):
     """Add a user to a default or custom traffic group
 
     If neither a custom group is given, nor the corresponding building
@@ -720,11 +720,11 @@ def setup_traffic_group(user, processor, custom_group_id=None, remove_old=False)
     :param User processor: the processor
     :param int custom_group_id: the id of a custom traffic group.  if
         ``None``, the traffic group of the building is used.
-    :param bool remove_old: Whether to terminate old
+    :param bool terminate_other: Whether to terminate current
         :py:cls:`TrafficGroup` memberships.  Defaults to ``False``
     """
     now = session.utcnow()
-    if remove_old:
+    if terminate_other:
         for group in user.traffic_groups:
             remove_member_of(user, group, processor, closedopen(now, None))
     traffic_group = determine_traffic_group(user, custom_group_id)
