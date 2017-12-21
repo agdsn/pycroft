@@ -17,6 +17,12 @@ from pycroft.lib.membership import remove_member_of, make_member_of
 from pycroft.model import session
 from pycroft.model.traffic import TrafficCredit
 from pycroft.model.user import TrafficGroup
+from pycroft.model.session import with_transaction
+
+
+class NoTrafficGroup(ValueError):
+    def __init__(self, message="User has no traffic group"):
+        super().__init__(message)
 
 
 def determine_traffic_group(user, custom_group_id=None):
@@ -69,42 +75,42 @@ def effective_traffic_group(user):
     credit amount.
 
     :param User user:
+
+    :raises: NoTrafficGroup
     """
-    # TODO: How should this case be handled?  An alternative would be
-    # to just _require_ a traffic group for every user
     groups = user.traffic_groups
     if not groups:
-        raise NotImplementedError
+        raise NoTrafficGroup
+    # since python sorts are stable, sorting by two keys can be
+    # achieved by first applying the secondary and then the primary
+    # order
+    secondary_sorted = sorted(groups, key=attrgetter('initial_credit_amount'), reverse=True)
+    primary_sorted = sorted(secondary_sorted, key=attrgetter('credit_amount'), reverse=True)
+    return primary_sorted[0]
 
-    return sorted(groups, key=attrgetter('credit_amount'), reverse=True)
 
-
+@with_transaction
 def grant_initial_credit(user):
     """Grant the maximum initial credit of all the user's groups
 
     The relevant :py:cls:`TrafficGroup` is the one with the largest
     ``credit_amount``.
 
-    The credit granted amounts to one week with respect to the
-    ``credit_interval``.  It is independent of any existing
-    :py:cls:`TrafficCredit` or :py:cls:`TrafficVolume` entries and
-    will not exceed the ``credit_limit``.
+    The credit granted amounts to ``initial_credit_amount``.  It is
+    currently **independent** of any existing :py:cls:`TrafficCredit`
+    or :py:cls:`TrafficVolume` entries, although that feature may be
+    added in the future.
 
     :param User user: the user to grant credit to
     """
     now = session.utcnow()
     group = effective_traffic_group(user)
-
-    # TODO: calculate initial credit
-    # amount/interval=initial_amount/period
-    period = 7  # TODO: use timedelta
-    initial_amount = group.credit_amount / group.credit_interval * period
-
-    credit = TrafficCredit(timestamp=now, amount=initial_amount, user_id=user.id)
+    credit = TrafficCredit(timestamp=now, amount=group.initial_credit_amount,
+                           user_id=user.id)
     session.session.add(credit)
-    session.session.commit()
 
 
+@with_transaction
 def grant_regular_credit(user):
     """Grant a user's regular credit
 
@@ -112,10 +118,10 @@ def grant_regular_credit(user):
     ``credit_amount``.
 
     :param User user: the user to grant credit to
-
     """
     now = session.utcnow()
     group = effective_traffic_group(user)
-    credit = TrafficCredit(timestamp=now, amount=group.credit_amount, user_id=user.id)
+    credit = TrafficCredit(timestamp=now, amount=group.credit_amount,
+                           user_id=user.id)
     session.session.add(credit)
     session.session.commit()

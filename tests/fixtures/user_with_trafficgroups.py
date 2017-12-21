@@ -12,12 +12,14 @@ class TrafficGroupData(DataSet):
         credit_limit = 7000
         credit_amount = 2000
         credit_interval = timedelta(days=1)
+        initial_credit_amount = 3*2**30
 
     class non_default:
         name = "non_default"
         credit_limit = 7000
         credit_amount = 2000
         credit_interval = timedelta(days=1)
+        initial_credit_amount = 3*2**30
 
 
 class BaseHouse:

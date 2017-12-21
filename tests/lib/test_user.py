@@ -84,6 +84,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
+        self.traffic_group = user.TrafficGroup.q.first()
+        self.traffic_group_id = self.traffic_group.id
 
     def test_0010_move_in(self):
         test_name = u"Hans"
@@ -101,6 +103,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
+            traffic_group_id=self.traffic_group_id,
         )
 
         self.assertEqual(new_user.name, test_name)
@@ -114,7 +117,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(len(user_host.user_interfaces), 1)
         user_interface = user_host.user_interfaces[0]
         self.assertEqual(len(user_interface.ips), 1)
-        user_ip = user_interface.ips[0]
         self.assertEqual(user_interface.mac, test_mac)
 
         # checks the initial group memberships
@@ -122,11 +124,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
                               new_user.active_traffic_groups())
         for group in {config.member_group, config.network_access_group}:
             self.assertIn(group, active_user_groups)
-
-        # our fixtures don't have a default traffic group for our
-        # building, so we test that separately
-        traffic_group = user.TrafficGroup.q.one()
-        self.assertNotIn(traffic_group, active_user_groups)
 
         self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.account)
@@ -136,6 +133,9 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account = new_user.unix_account
         self.assertTrue(account.home_directory.endswith(new_user.login))
         self.assertTrue(account.home_directory.startswith('/home/'))
+        credits = new_user.traffic_credits
+        self.assertEqual(len(credits), 1)
+        self.assertEqual(credits[0].amount, self.traffic_group.initial_credit_amount)
 
     def test_move_in_custom_traffic_group(self):
         test_name = u"Hans"

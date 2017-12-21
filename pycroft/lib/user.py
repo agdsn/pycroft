@@ -28,7 +28,8 @@ from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip
-from pycroft.lib.traffic import setup_traffic_group
+from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
+    NoTrafficGroup
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
@@ -154,6 +155,12 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
         make_member_of(new_user, group, processor, closed(now, None))
 
     setup_traffic_group(new_user, processor, traffic_group_id)
+    try:
+        grant_initial_credit(new_user)
+    except NoTrafficGroup as e:
+        raise ValueError("User {} could not be assigned a traffic group. "
+                         "Please specify one manually."
+                         .format(new_user)) from e
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved in.").to_json(),
@@ -200,6 +207,15 @@ def move_back_in(user, building, level, room_number, mac, processor,
         make_member_of(user, group, processor, closed(now, None))
 
     setup_traffic_group(user, processor, traffic_group_id)
+    # if something goes wrong, direct access to `user.login` wouldn't
+    # work due to rollback
+    login = user.login
+    try:
+        grant_initial_credit(user)
+    except NoTrafficGroup as e:
+        raise ValueError("User {} could not be assigned a traffic group. "
+                         "Please specify one manually."
+                         .format(login)) from e
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"Moved back in.").to_json(),
@@ -584,5 +600,3 @@ def status_query():
         (User.has_property('ldap', now)).label('ldap'),
         or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
     ).join(Account)
-
-

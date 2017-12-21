@@ -105,7 +105,8 @@ def generate_groups(data, resources):
         name="Nutzer-Trafficgruppe",
         credit_amount=3*2**30,
         credit_interval=timedelta(days=1),
-        credit_limit=21*3*2**30)
+        credit_limit=21*3*2**30,
+        initial_credit_amount=21*2**30)
     return list(g_d.values())+properties_l
 
 

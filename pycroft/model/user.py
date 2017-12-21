@@ -473,6 +473,7 @@ class TrafficGroup(Group):
     credit_limit = Column(BigInteger, nullable=False)
     credit_interval = Column(Interval, nullable=False)
     credit_amount = Column(BigInteger, nullable=False)
+    initial_credit_amount = Column(BigInteger, nullable=False)
 
 
 unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000, metadata=ModelBase.metadata)

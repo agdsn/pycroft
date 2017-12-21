@@ -19,12 +19,14 @@ class TrafficGroupData(DataSet):
         credit_limit = 1000
         credit_amount = 500
         credit_interval = timedelta(days=1)
+        initial_credit_amount = 3*2**30
 
     class group2:
         name = "traffic group2"
         credit_limit = 2000
         credit_amount = 50
         credit_interval = timedelta(hours=3)
+        initial_credit_amount = 3*2**30
 
 
 class PropertyData(DataSet):
