@@ -37,6 +37,18 @@
 {% endblock %}
 
 <div class="row">
+    <div class="box">
+        {% if effective_traffic_group_name %}
+            Effektive Traffic-Gruppe:
+            <a href="{{ url_for('properties.traffic_groups') }}">
+                {{ effective_traffic_group_name }}
+                <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+            </a>
+        {% else %}
+            Nutzer ist aktuell nicht Mitglied einer Trafficgruppe
+        {% endif %}
+    </div>
+
     <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
         <label for="select-days">Zeitraum</label>
         <select id="select-days" class="form-control" onchange="load_trafficchart(this)">

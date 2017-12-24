@@ -25,6 +25,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id
 from pycroft.lib.membership import make_member_of
+from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
@@ -146,6 +147,10 @@ def user_show(user_id):
     }
     is_blocked = user.member_of(config.violation_group)
     user_not_there = not user.member_of(config.member_group)
+    try:
+        traffic_group_name = effective_traffic_group(user).name
+    except NoTrafficGroup:
+        traffic_group_name = None
 
     return render_template(
         'user/user_show.html',
@@ -177,6 +182,7 @@ def user_show(user_id):
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.account_id),
         traffic_json_url=url_for('.json_trafficdata', user_id=user_id),
+        effective_traffic_group_name=traffic_group_name,
         is_blocked = is_blocked
     )
 
