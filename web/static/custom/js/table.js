@@ -152,3 +152,7 @@ function financeRowFormatter(row, index) {
         return {classes: 'danger'};
     }
 }
+
+$('table').on('load-error.bs.table', function (e, status, res) {
+    $("tr.no-records-found > td", this).html("Error: Server returned HTTP " + status + ".");
+});
