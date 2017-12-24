@@ -10,7 +10,7 @@ from pycroft.model.user import Membership, PropertyGroup
 from tests import FixtureDataTestBase
 from pycroft import config
 from pycroft.helpers.interval import closedopen, single
-from pycroft.lib import user as UserHelper, traffic
+from pycroft.lib import user as UserHelper, traffic, membership
 from pycroft.model import (
     user, facilities, session, logging, finance, host)
 from tests.fixtures import network_access
@@ -382,3 +382,47 @@ class TrafficGroupTestCase(FixtureDataTestBase):
         session.session.refresh(self.user2)
         # expect an empty list
         self.assertFalse(self.user.active_traffic_groups())
+
+
+class GrantingTestCase(FixtureDataTestBase):
+    datasets = frozenset(user_with_trafficgroups.datasets)
+
+    def setUp(self):
+        super().setUp()
+        self.user = user.User.q.filter_by(login='test').one()
+        self.user2 = user.User.q.filter_by(login='test2').one()
+        query = user.TrafficGroup.q
+        self.traffic_group = user.TrafficGroup.q.first()
+        self.traffic_group2 = user.TrafficGroup.q.filter_by(name='non_default').one()
+        self.traffic_groups = [
+            # TODO: use “interesting” amounts (here, they are all equal)
+            query.filter_by(name='highest_precedence').one(),
+            query.filter_by(name='default').one(),
+            query.filter_by(name='non_default').one(),
+        ]
+        for group in self.traffic_groups:
+            membership.make_member_of(self.user, processor=self.user2, group=group)
+        # raise NotImplementedError
+
+    def test_user_credit_granting(self):
+        # TODO: test that traffic_groups[0] applies
+        user = self.user
+        traffic.grant_regular_credit(user=user)
+        session.session.refresh(user)
+        credits = user.traffic_credits
+        self.assertEqual(len(credits), 1)
+        self.assertEqual(credits[0].amount,
+                         self.traffic_groups[0].credit_amount)
+
+    def test_effective_traffic_group(self):
+        group = traffic.effective_traffic_group(self.user)
+        self.assertEqual(group.name, 'highest_precedence')
+
+    def test_user_initial_credit_granting(self):
+        user = self.user
+        traffic.grant_initial_credit(user=user)
+        session.session.refresh(user)
+        credits = user.traffic_credits
+        self.assertEqual(len(credits), 1)
+        self.assertEqual(credits[0].amount,
+                         self.traffic_groups[0].initial_credit_amount)

@@ -124,4 +124,3 @@ def grant_regular_credit(user):
     credit = TrafficCredit(timestamp=now, amount=group.credit_amount,
                            user_id=user.id)
     session.session.add(credit)
-    session.session.commit()

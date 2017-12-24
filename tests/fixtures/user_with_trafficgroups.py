@@ -9,17 +9,24 @@ from tests.fixtures.dummy.facilities import SiteData
 class TrafficGroupData(DataSet):
     class default:
         name = "default"
-        credit_limit = 7000
-        credit_amount = 2000
+        credit_limit = 63*2**30
+        credit_amount = 3*2**30
         credit_interval = timedelta(days=1)
-        initial_credit_amount = 3*2**30
+        initial_credit_amount = 21*2**30
 
     class non_default:
         name = "non_default"
-        credit_limit = 7000
-        credit_amount = 2000
+        credit_limit = 63*2**30
+        credit_amount = 1*2**30  # less credit than default
         credit_interval = timedelta(days=1)
-        initial_credit_amount = 3*2**30
+        initial_credit_amount = 21*2**30
+
+    class highest_precedence:
+        name = "highest_precedence"
+        credit_limit = 63*2**30
+        credit_amount = 3*2**30
+        credit_interval = timedelta(days=1)
+        initial_credit_amount = 42*2**30  # more initial_credit than default
 
 
 class BaseHouse:
