@@ -13,6 +13,10 @@ from pycroft.helpers.interval import closedopen, single
 from pycroft.lib import user as UserHelper, traffic, membership
 from pycroft.model import (
     user, facilities, session, logging, finance, host)
+from tests import FactoryDataTestBase
+from tests.factories.traffic import TrafficGroupFactory
+from tests.factories.property import MembershipFactory
+from tests.factories.user import UserFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
@@ -384,45 +388,59 @@ class TrafficGroupTestCase(FixtureDataTestBase):
         self.assertFalse(self.user.active_traffic_groups())
 
 
-class GrantingTestCase(FixtureDataTestBase):
-    datasets = frozenset(user_with_trafficgroups.datasets)
-
-    def setUp(self):
-        super().setUp()
-        self.user = user.User.q.filter_by(login='test').one()
-        self.user2 = user.User.q.filter_by(login='test2').one()
-        query = user.TrafficGroup.q
-        self.traffic_group = user.TrafficGroup.q.first()
-        self.traffic_group2 = user.TrafficGroup.q.filter_by(name='non_default').one()
+class GrantingTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        # ordered by expected precedence
         self.traffic_groups = [
-            # TODO: use “interesting” amounts (here, they are all equal)
-            query.filter_by(name='highest_precedence').one(),
-            query.filter_by(name='default').one(),
-            query.filter_by(name='non_default').one(),
+            TrafficGroupFactory(
+                credit_limit=63*2**30,
+                # higher initial_credit_amount
+                credit_amount=6*2**30,
+                initial_credit_amount=21*2**30,
+            ),
+            TrafficGroupFactory(
+                credit_limit=63*2**30,
+                credit_amount=3*2**30,
+                initial_credit_amount=21*2**30,
+            ),
+            TrafficGroupFactory(
+                credit_limit=63*2**30,
+                credit_amount=3*2**30,
+                # smaller initial_credit_amount
+                initial_credit_amount=14*2**30,
+            ),
         ]
-        for group in self.traffic_groups:
-            membership.make_member_of(self.user, processor=self.user2, group=group)
-        # raise NotImplementedError
 
-    def test_user_credit_granting(self):
-        # TODO: test that traffic_groups[0] applies
-        user = self.user
-        traffic.grant_regular_credit(user=user)
-        session.session.refresh(user)
-        credits = user.traffic_credits
-        self.assertEqual(len(credits), 1)
-        self.assertEqual(credits[0].amount,
-                         self.traffic_groups[0].credit_amount)
+    def create_user(self, traffic_groups):
+        with self.session.begin(subtransactions=True):
+            user = UserFactory()
+            if traffic_groups is None:
+                traffic_groups = tuple()
+            for group in traffic_groups:
+                print("group:", group)
+                MembershipFactory.create(group=group, user=user)
+        return user
 
-    def test_effective_traffic_group(self):
-        group = traffic.effective_traffic_group(self.user)
-        self.assertEqual(group.name, 'highest_precedence')
+    def test_traffic_group_precedence(self):
+        for i in range(len(self.traffic_groups)):
+            groups = self.traffic_groups[i:]
+            with self.subTest(groups=groups):
+                user = self.create_user(groups)
 
-    def test_user_initial_credit_granting(self):
-        user = self.user
+                self.assertEqual(len(user.memberships), len(groups))
+                g = traffic.effective_traffic_group(user)
+                self.assertEqual(g, groups[0])
+
+    def test_initial_credit_granting(self):
+        user = self.create_user(self.traffic_groups)
         traffic.grant_initial_credit(user=user)
-        session.session.refresh(user)
-        credits = user.traffic_credits
-        self.assertEqual(len(credits), 1)
-        self.assertEqual(credits[0].amount,
-                         self.traffic_groups[0].initial_credit_amount)
+        self.assertEqual(len(user.traffic_credits), 1)
+        credit = user.traffic_credits[0]
+        self.assertEqual(credit.amount, self.traffic_groups[0].initial_credit_amount)
+
+    def test_regular_credit_granting(self):
+        user = self.create_user(self.traffic_groups)
+        traffic.grant_regular_credit(user=user)
+        self.assertEqual(len(user.traffic_credits), 1)
+        credit = user.traffic_credits[0]
+        self.assertEqual(credit.amount, self.traffic_groups[0].credit_amount)
