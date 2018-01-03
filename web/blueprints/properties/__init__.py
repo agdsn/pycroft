@@ -68,7 +68,10 @@ def traffic_group_create():
             name=form.name.data,
             credit_limit=int(form.credit_limit.data)*1024*1024*1024,
             credit_amount=int(form.credit_amount.data)*1024*1024*1024,
-            credit_interval=form.credit_interval.data-date.fromtimestamp(0))
+            credit_interval=form.credit_interval.data,
+            initial_credit_amount=0, # In Formular abfragen?
+            #credit_interval=form.credit_interval.data-date.fromtimestamp(0)
+        )
         session.session.add(group)
         session.session.commit()
         message = u'Trafficgruppe {0} angelegt'
