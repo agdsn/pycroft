@@ -48,6 +48,7 @@ def traffic_groups_json():
             'credit_limit': byte_size_filter(group.credit_limit),
             'credit_interval': str(group.credit_interval),
             'credit_amount': byte_size_filter(group.credit_amount),
+            'initial_credit': byte_size_filter(group.initial_credit_amount),
             'delete': {
                 'href': url_for(".traffic_group_delete", group_id=group.id),
                 'title': 'Löschen',
@@ -68,7 +69,7 @@ def traffic_group_create():
             credit_limit=int(form.credit_limit.data)*1024*1024*1024,
             credit_amount=int(form.credit_amount.data)*1024*1024*1024,
             credit_interval=' '.join(map(str,form.credit_interval.data)),
-            initial_credit_amount=form.initial_credit.data,
+            initial_credit_amount=(form.initial_credit.data)*1024*1024*1024,
         )
         session.session.add(group)
         session.session.commit()
