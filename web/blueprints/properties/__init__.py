@@ -12,7 +12,6 @@
 """
 from itertools import chain
 import operator
-from datetime import date
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
 

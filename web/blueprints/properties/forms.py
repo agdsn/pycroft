@@ -3,11 +3,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from datetime import date
-
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import DataRequired, Regexp, NumberRange, ValidationError
-from web.form.fields.core import TextField, IntegerField, DateField, DateTimeField
+from web.form.fields.core import TextField, IntegerField
 from web.form.fields.custom import IntervalField
 
 class TrafficGroupForm(Form):

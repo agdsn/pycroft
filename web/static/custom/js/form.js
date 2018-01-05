@@ -176,7 +176,7 @@ $(function(){
  *
  * This Function is used by the IntervalField from web.form.fields.custom.
  * It shows some input-fields to create a well formatted interval.
- * 
+ *
  * IntervalField is the id of the input-field representing the interval
  */
 function pycroftIntervalPicker(IntervalField){
