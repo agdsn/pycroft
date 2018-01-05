@@ -7,6 +7,7 @@ from web.form.widgets import LazyLoadSelectWidget,\
     decorators, decorate_field, Disabler
 from wtforms import TextField, StringField
 from wtforms import fields
+from wtforms.validators import ValidationError
 
 
 def static(field):
@@ -96,3 +97,60 @@ class TypeaheadField(StringField):
 class ReadonlyTextField(TextField):
     def __call__(self, **kwargs):
         return self.widget(self, disabled=True)
+
+class IntervalField(TextField):
+    """A IntervalField """
+
+    widget = decorate_field(
+        StringField,
+        BootstrapFormControlDecorator,
+        BootstrapStandardDecorator,
+        BootstrapFormGroupDecorator
+    )
+
+    def __init__(self, validators=None, *args, **kwargs):
+        super(IntervalField, self).__init__(*args, **kwargs)
+
+    def __call__(self, **kwargs):
+        return super(IntervalField, self).__call__(
+            class_='pycroftInterval',
+             autocomplete='off',
+             onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
+        )
+
+    def _value(self):
+        if self.data:
+            for i in range(0,11)[::2]:
+                self.data[i] = int(self.data[i])
+            return u'%d years %d mons %d days %d hours %d mins %d secs' % (self.data[0],
+             self.data[2], self.data[4], self.data[6],
+             self.data[8], self.data[10])
+        else:
+            return u'0 years 0 mons 0 days 0 hours 0 mins 0 secs'
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(' ')]
+        else:
+            self.data = []
+
+    def pre_validate(self, form):
+        # check and correct units
+        if not (self.data[1] == "years" and self.data[3] == "mons" \
+          and self.data[5] == "days" and self.data[7] == "hours" \
+          and self.data[9] == "mins" and self.data[11] == "secs"):
+            self.data[1] = "years"
+            self.data[3] = "mons"
+            self.data[5] = "days"
+            self.data[7] = "hours"
+            self.data[9] = "mins"
+            self.data[11] = "secs"
+            raise ValidationError(u'Format der Eingabe wurde korrigiert. Bitte prüfen.')
+
+        # check if values are integers
+        for i in range(0, 11)[::2]:
+            try:
+                self.data[i] = int(self.data[i])
+            except (TypeError, ValueError):
+                self.data[i] = 0
+                raise ValidationError(u'Die Werte müssen als natürliche Zahlen angegeben werden.')

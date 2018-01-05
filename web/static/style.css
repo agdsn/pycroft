@@ -228,3 +228,26 @@ input.money-amount {
 .button-list li:last-child {
     margin-bottom: 0px;
 }
+
+/* Popup (Picker) for IntervalFields */
+.pycroftIntervalPicker {
+    display: block;
+    position: absolute;
+    z-index: 100;
+    background-color: #fff;
+    border: #00b3ee 1px solid;
+    border-radius: 4px;
+    padding: 5px;
+    width: 350px;
+}
+.pycroftIntervalPicker input {
+    width: 60px;
+}
+.pycroftIntervalPicker .closeBtn {
+    font-size: 8pt;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    text-decoration: none;
+    color: #000000;
+}

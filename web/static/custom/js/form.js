@@ -171,4 +171,56 @@ $(function(){
 
 }(window.jQuery);
 
+/**
+ * IntervalPicker
+ *
+ * This Function is used by the IntervalField from web.form.fields.custom.
+ * It shows some input-fields to create a well formatted interval.
+ * 
+ * IntervalField is the id of the input-field representing the interval
+ */
+function pycroftIntervalPicker(IntervalField){
+    if(!$('#'+IntervalField).next().is('.pycroftIntervalPicker')){
+        // initial view of form --> create
+        $('#'+IntervalField).after("<div id=\""+IntervalField+"Picker\" class=\"pycroftIntervalPicker\">" +
+            '<a id="'+IntervalField+'CloseBtn" href="javascript:void(0)" class="closeBtn">X</a>' +
+            '<input id="'+IntervalField+'PickerY" type="number" min="0" value="0"> Jahre ' +
+            '<input id="'+IntervalField+'PickerM" type="number" min="0" max="12" value="0"> Monate ' +
+            '<input id="'+IntervalField+'PickerD" type="number" min="0" max="31" value="0"> Tage<br>' +
+            '<input id="'+IntervalField+'PickerH" type="number" min="0" max="23" value="0"> Std. ' +
+            '<input id="'+IntervalField+'PickerI" type="number" min="0" max="59" value="0"> Min. ' +
+            '<input id="'+IntervalField+'PickerS" type="number" min="0" max="59" value="0"> Sek.<br>' +
+            '<button type="button" id="'+IntervalField+'PickerBtn">OK</button>' +
+            "</div>");
+        $('#'+IntervalField+'PickerBtn').click(function(){
+            // close form
+            $('#'+IntervalField+'Picker').css('display','none');
+            // write current values to input-field
+            // format:  0 years 0 mons 0 days 0 hours 0 mins 0 secs
+            $('#'+IntervalField).val(
+                $('#'+IntervalField+'PickerY').val() + ' years ' +
+                $('#'+IntervalField+'PickerM').val() + ' mons ' +
+                $('#'+IntervalField+'PickerD').val() + ' days ' +
+                $('#'+IntervalField+'PickerH').val() + ' hours ' +
+                $('#'+IntervalField+'PickerI').val() + ' mins ' +
+                $('#'+IntervalField+'PickerS').val() + ' secs'
+            );
+        });
+        $('#'+IntervalField+'CloseBtn').click(function(){
+            // close form without applying any changes
+            $('#'+IntervalField+'Picker').css('display','none');
+        });
+    }else{
+       // show form again
+       $('#'+IntervalField+'Picker').css('display','block');
+    }
 
+    // Fill form with current values
+    data = $('#'+IntervalField).val().split(' ');
+    $('#'+IntervalField+'PickerY').val(data[0]);
+    $('#'+IntervalField+'PickerM').val(data[2]);
+    $('#'+IntervalField+'PickerD').val(data[4]);
+    $('#'+IntervalField+'PickerH').val(data[6]);
+    $('#'+IntervalField+'PickerI').val(data[8]);
+    $('#'+IntervalField+'PickerS').val(data[10]);
+}
