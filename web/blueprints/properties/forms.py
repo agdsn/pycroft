@@ -16,10 +16,15 @@ class TrafficGroupForm(Form):
                        u" eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
     ])
     credit_interval = IntervalField(u"Gutschritintervall")
-    credit_amount = TextField(u"Gutschriftmenge (GiB)")
+    credit_amount = IntegerField(u"Gutschriftmenge (GiB)", [
+        NumberRange(0, None, u"Muss positiv sein!")
+    ])
     credit_limit = IntegerField(u"Anspargrenze (GiB)", [
         DataRequired(u"Wie viel GB?"),
         NumberRange(0, None, u"Muss eine natürliche Zahl sein!")
+    ])
+    initial_credit = IntegerField(u"Initialer Credit (GiB)", [
+        NumberRange(0, None, u"Muss positiv sein!")
     ])
 
 
