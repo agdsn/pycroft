@@ -1,15 +1,20 @@
 from flask import url_for
 
-from tests import FrontendDataTestBase
+from tests import FrontendDataTestBase, FixtureDataTestBase, FactoryDataTestBase
 from tests.fixtures import permissions
 from tests.fixtures.dummy import net
 from tests.fixtures.dummy import port
 
+from tests.factories.user import UserFactory
+from tests.factories.property import MembershipFactory, AdminPropertyGroupFactory
 
-class UserFrontendTestBase(FrontendDataTestBase):
+
+class LegacyUserFrontendTestBase(FrontendDataTestBase, FixtureDataTestBase):
     """Test base providing access to `user_show`
 
     The user being logged in is :py:cls:`UserData.user1_admin`.
+
+    Legacy, because using the `fixture` package.
     """
     datasets = frozenset(permissions.datasets | {net.SubnetData, port.SwitchPatchPortData})
 
@@ -19,7 +24,7 @@ class UserFrontendTestBase(FrontendDataTestBase):
         super().setUp()
 
 
-class UserLogTestBase(UserFrontendTestBase):
+class UserLogTestBase(LegacyUserFrontendTestBase):
     def get_logs(self, user_id=None, **kw):
         """Request the logs, assert validity, and return the response.
 

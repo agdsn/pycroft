@@ -6,10 +6,10 @@ from pycroft.model.user import User
 from pycroft.model.facilities import Room
 from tests.fixtures import permissions
 from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
-from . import UserFrontendTestBase
+from . import UserFrontendTestBase, LegacyUserFrontendTestBase
 
 
-class UserBlockingTestCase(UserFrontendTestBase):
+class UserBlockingTestCase(LegacyUserFrontendTestBase):
     def setUp(self):
         super().setUp()
         username = permissions.UserData.user3_user.login
@@ -36,7 +36,7 @@ class UserBlockingTestCase(UserFrontendTestBase):
         self.assert_message_substr_flashed("ist nicht gesperrt!", category='error')
 
 
-class UserMovingOutTestCase(UserFrontendTestBase):
+class UserMovingOutTestCase(LegacyUserFrontendTestBase):
     def setUp(self):
         super().setUp()
         username = permissions.UserData.user3_user.login
@@ -64,7 +64,7 @@ class UserMovingOutTestCase(UserFrontendTestBase):
         # TODO: Test whether everything has been done on the library side!
 
 
-class UserMovedOutTestCase(UserFrontendTestBase):
+class UserMovedOutTestCase(LegacyUserFrontendTestBase):
     def setUp(self):
         super().setUp()
         # Taking the dummy user because the one from the `permission`

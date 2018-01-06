@@ -1,10 +1,10 @@
 from flask import url_for
 
 from pycroft.model._all import PropertyGroup
-from tests import FrontendDataTestBase
+from tests import FrontendDataTestBase, FixtureDataTestBase
 from tests.fixtures import permissions
 
-class PropertyTestCase(FrontendDataTestBase):
+class PropertyTestCase(FrontendDataTestBase, FixtureDataTestBase):
     datasets = frozenset(permissions.datasets)
 
     def setUp(self):

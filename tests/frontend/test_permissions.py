@@ -5,16 +5,16 @@
 
 from flask import url_for, current_app
 
-from tests import FrontendDataTestBase
+from tests import FrontendDataTestBase, FixtureDataTestBase
 from tests.fixtures.permissions import UserData, MembershipData, PropertyData
 from tests.fixtures.config import ConfigData
 
 
-class PermissionsTestBase(FrontendDataTestBase):
+class PermissionsTestBase(FrontendDataTestBase, FixtureDataTestBase):
     datasets = [MembershipData, PropertyData, ConfigData]
 
 
-class Test_010_Anonymous(FrontendDataTestBase):
+class Test_010_Anonymous(FrontendDataTestBase, FixtureDataTestBase):
     """First test as anonymous user.
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
@@ -40,7 +40,7 @@ class Test_020_Permissions_Admin(PermissionsTestBase):
     def setUp(self):
         self.login = UserData.user1_admin.login
         self.password = UserData.user1_admin.password
-        FrontendDataTestBase.setUp(self)
+        super().setUp()
 
     def test_0010_access_buildings(self):
         # Admin has access to view the facilities overview
@@ -51,7 +51,7 @@ class Test_020_Permissions_Admin(PermissionsTestBase):
         self.assert_access_forbidden(url_for('finance.bank_accounts_list'))
 
 
-class Test_030_Permissions_Finance(FrontendDataTestBase):
+class Test_030_Permissions_Finance(FrontendDataTestBase, FixtureDataTestBase):
     """Test permissions for finance usergroup (advanced).
     """
     datasets = [MembershipData, PropertyData, ConfigData]
@@ -59,7 +59,7 @@ class Test_030_Permissions_Finance(FrontendDataTestBase):
     def setUp(self):
         self.login = UserData.user2_finance.login
         self.password = UserData.user2_finance.password
-        FrontendDataTestBase.setUp(self)
+        super().setUp()
 
     def test_0010_access_buildings(self):
         self.assert_response_code(url_for('facilities.overview'), 200)
@@ -75,7 +75,7 @@ class Test_040_Permissions_User(PermissionsTestBase):
     def setUp(self):
         self.login = UserData.user3_user.login
         self.password = UserData.user3_user.password
-        FrontendDataTestBase.setUp(self)
+        super().setUp()
 
     def test_0010_access_user(self):
         for url in self.blueprint_urls(current_app, 'user'):

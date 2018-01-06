@@ -189,7 +189,7 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
         pass
 
 
-class FrontendDataTestBase(FixtureDataTestBase, testing.TestCase):
+class FrontendDataTestBase(testing.TestCase):
     """A TestCase baseclass that handles frontend tests.
 
     Like the FixtureDataTestBase you have to define a data set.
