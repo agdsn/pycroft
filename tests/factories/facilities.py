@@ -2,7 +2,7 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from factory import SubFactory, LazyAttribute, Sequence
+from factory import SubFactory, LazyAttribute, Sequence, Trait
 from factory.faker import Faker
 
 from pycroft.model.facilities import Site, Building, Room
@@ -25,6 +25,11 @@ class BuildingFactory(BaseFactory):
     number = Sequence(lambda n: n)
     street = LazyAttribute(lambda b: b.site.name)
     short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
+    default_traffic_group = None
+    class Params:
+        with_traffic_group = Trait(
+            default_traffic_group=SubFactory('tests.factories.traffic.TrafficGroupFactory')
+        )
 
 
 class RoomFactory(BaseFactory):
