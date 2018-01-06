@@ -9,6 +9,21 @@ from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
 from . import UserFrontendTestBase, LegacyUserFrontendTestBase
 
 
+class UserViewingPagesTestCase(UserFrontendTestBase):
+    def test_user_overview_access(self):
+        self.assert200(self.client.get(url_for('user.overview')))
+
+    def test_user_viewing_himself(self):
+        user_id = self.admin.id
+        self.assert200(self.client.get(url_for('user.user_show', user_id=user_id)))
+
+    def test_user_search_access(self):
+        self.assert200(self.client.get(url_for('user.search')))
+
+    def test_user_by_group_access(self):
+        self.assert200(self.client.get(url_for('user.show_by_group')))
+
+
 class UserBlockingTestCase(LegacyUserFrontendTestBase):
     def setUp(self):
         super().setUp()
