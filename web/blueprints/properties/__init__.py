@@ -66,10 +66,10 @@ def traffic_group_create():
         # traffic limit in byte per seven days
         group = TrafficGroup(
             name=form.name.data,
-            credit_limit=int(form.credit_limit.data)*1024*1024*1024,
-            credit_amount=int(form.credit_amount.data)*1024*1024*1024,
+            credit_limit=form.credit_limit.data*1024*1024*1024,
+            credit_amount=form.credit_amount.data*1024*1024*1024,
             credit_interval=' '.join(map(str,form.credit_interval.data)),
-            initial_credit_amount=(form.initial_credit.data)*1024*1024*1024,
+            initial_credit_amount=form.initial_credit.data*1024*1024*1024,
         )
         session.session.add(group)
         session.session.commit()
