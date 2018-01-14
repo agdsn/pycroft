@@ -17,6 +17,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
 import sys
+
+from tests.factories.config import ConfigFactory
+from tests.factories.property import AdminPropertyGroupFactory, \
+    MembershipFactory
+from tests.factories.user import UserFactory
 from werkzeug.routing import IntegerConverter, UnicodeConverter
 from pycroft.model import session
 from pycroft.model import _all, drop_db_model, create_db_model
@@ -307,6 +312,16 @@ class FrontendDataTestBase(testing.TestCase):
     @property
     def user_id(self):
         return _all.User.q.filter_by(login=self.login).one().id
+
+
+class FrontendWithAdminTestBase(FrontendDataTestBase, FactoryDataTestBase):
+    def create_factories(self):
+        self.login = 'hans_der_nette_admin'
+        self.password = 'This is 1 strong testpassword!!'
+        self.admin = UserFactory(login=self.login, password=self.password)
+        admin_group = AdminPropertyGroupFactory()
+        MembershipFactory.create(user=self.admin, group=admin_group)
+        self.config = ConfigFactory()
 
 
 class InvalidateHadesLogsMixin(testing.TestCase):

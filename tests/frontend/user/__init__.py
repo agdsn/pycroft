@@ -1,13 +1,10 @@
 from flask import url_for
 
-from tests import FrontendDataTestBase, FixtureDataTestBase, FactoryDataTestBase
+from tests import FrontendDataTestBase, FixtureDataTestBase, \
+    FrontendWithAdminTestBase as UserFrontendTestBase
 from tests.fixtures import permissions
 from tests.fixtures.dummy import net
 from tests.fixtures.dummy import port
-
-from tests.factories.user import UserFactory
-from tests.factories.config import ConfigFactory
-from tests.factories.property import MembershipFactory, AdminPropertyGroupFactory
 
 
 class LegacyUserFrontendTestBase(FrontendDataTestBase, FixtureDataTestBase):
@@ -23,16 +20,6 @@ class LegacyUserFrontendTestBase(FrontendDataTestBase, FixtureDataTestBase):
         self.login = permissions.UserData.user1_admin.login
         self.password = permissions.UserData.user1_admin.password
         super().setUp()
-
-
-class UserFrontendTestBase(FrontendDataTestBase, FactoryDataTestBase):
-    def create_factories(self):
-        self.login = 'hans_der_nette_admin'
-        self.password = 'This is 1 strong testpassword!!'
-        self.admin = UserFactory(login=self.login, password=self.password)
-        admin_group = AdminPropertyGroupFactory()
-        MembershipFactory.create(user=self.admin, group=admin_group)
-        self.config = ConfigFactory()
 
 
 class UserLogTestBase(LegacyUserFrontendTestBase):

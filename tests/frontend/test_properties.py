@@ -1,17 +1,10 @@
 from flask import url_for
 
 from pycroft.model._all import PropertyGroup
-from tests import FrontendDataTestBase, FixtureDataTestBase
-from tests.fixtures import permissions
+from tests import FrontendWithAdminTestBase
 
-class PropertyTestCase(FrontendDataTestBase, FixtureDataTestBase):
-    datasets = frozenset(permissions.datasets)
 
-    def setUp(self):
-        self.login = permissions.UserData.user1_admin.login
-        self.password = permissions.UserData.user1_admin.password
-        super().setUp()
-
+class PropertiesFrontendTestCase(FrontendWithAdminTestBase):
     def test_property_gets_added(self):
         url = url_for('properties.property_group_create')
         group_name = "This is my first property group"
