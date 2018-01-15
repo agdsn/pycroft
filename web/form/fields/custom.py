@@ -98,6 +98,15 @@ class ReadonlyTextField(TextField):
     def __call__(self, **kwargs):
         return self.widget(self, disabled=True)
 
+
+def expected_interval_format(units):
+    return ' '.join("{{}} {unit}".format(unit=unit) for unit in units)
+
+
+def rebuild_string(values, units):
+    return ' '.join("{} {}".format(v, u) for v, u in zip(values, units))
+
+
 class IntervalField(TextField):
     """A IntervalField """
 
@@ -108,8 +117,10 @@ class IntervalField(TextField):
         BootstrapFormGroupDecorator
     )
 
-    def __init__(self, validators=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(IntervalField, self).__init__(*args, **kwargs)
+        kwargs.setdefault('validators', None)
+        self.expected_units = ['years', 'mons', 'days', 'hours', 'mins', 'secs']
 
     def __call__(self, **kwargs):
         return super(IntervalField, self).__call__(
@@ -118,39 +129,25 @@ class IntervalField(TextField):
              onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
         )
 
-    def _value(self):
-        if self.data:
-            for i in range(0,11)[::2]:
-                self.data[i] = int(self.data[i])
-            return u'%d years %d mons %d days %d hours %d mins %d secs' % (self.data[0],
-             self.data[2], self.data[4], self.data[6],
-             self.data[8], self.data[10])
-        else:
-            return u'0 years 0 mons 0 days 0 hours 0 mins 0 secs'
-
-    def process_formdata(self, valuelist):
-        if valuelist:
-            self.data = [x.strip() for x in valuelist[0].split(' ')]
-        else:
-            self.data = []
-
     def pre_validate(self, form):
-        # check and correct units
-        if not (self.data[1] == "years" and self.data[3] == "mons" \
-          and self.data[5] == "days" and self.data[7] == "hours" \
-          and self.data[9] == "mins" and self.data[11] == "secs"):
-            self.data[1] = "years"
-            self.data[3] = "mons"
-            self.data[5] = "days"
-            self.data[7] = "hours"
-            self.data[9] = "mins"
-            self.data[11] = "secs"
+        expected_format = expected_interval_format(self.expected_units)
+        generic_error = ValidationError("Expected format: {}".format(expected_format))
+
+        tokens = [x for x in self.data.split(' ') if x]
+        values = tokens[::2]
+        units = tokens[1::2]
+        if not len(values) == len(units) == len(self.expected_units):
+            raise generic_error
+
+        if units != self.expected_units:
+            units = self.expected_units
+            self.data = rebuild_string(values, units)
             raise ValidationError(u'Format der Eingabe wurde korrigiert. Bitte prüfen.')
 
-        # check if values are integers
-        for i in range(0, 11)[::2]:
-            try:
-                self.data[i] = int(self.data[i])
-            except (TypeError, ValueError):
-                self.data[i] = 0
-                raise ValidationError(u'Die Werte müssen als natürliche Zahlen angegeben werden.')
+        try:
+            decoded_values = [int(val) for val in values]
+        except ValueError:
+            raise ValidationError(u'Die Werte müssen als natürliche Zahlen angegeben werden.')
+
+        if all(val == 0 for val in decoded_values):
+            raise ValidationError("Intervalle müssen nichtleer sein.")
