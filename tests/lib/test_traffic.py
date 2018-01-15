@@ -5,8 +5,7 @@
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.traffic import (TrafficVolumeData, TrafficBalanceData,
                                           TrafficCreditData)
-from tests.fixtures.dummy.host import (IPData, UserHostData, UserInterfaceData,
-                                       ServerHostData, ServerInterfaceData)
+from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData
 from tests.fixtures.dummy.user import UserData
 
 from pycroft.model import session
@@ -16,7 +15,6 @@ from pycroft.lib.user import traffic_balance_expr, traffic_balance
 
 class Test_010_BalanceCalculation(FixtureDataTestBase):
     datasets = [UserData, IPData, UserInterfaceData, UserHostData,
-                ServerHostData, ServerInterfaceData,
                 TrafficVolumeData, TrafficBalanceData, TrafficCreditData]
 
     def setUp(self):
@@ -34,7 +32,6 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
                 TrafficBalanceData.dummy_balance.amount +
                 TrafficCreditData.dummy_credit.amount -
                 TrafficVolumeData.dummy_volume_ipv6.amount -
-                TrafficVolumeData.dummy_volume_server.amount -
                 TrafficVolumeData.dummy_volume.amount),
             self.users[1]: (-TrafficVolumeData.dummy_volume_switch.amount),
             self.users[2]: None,

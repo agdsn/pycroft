@@ -14,7 +14,6 @@ from __future__ import print_function
 
 import re
 from datetime import datetime
-from itertools import chain
 
 from sqlalchemy import and_, or_, func, literal, literal_column, union_all, \
     select
@@ -521,9 +520,8 @@ def unblock(user, processor, when=None):
 def move_out(user, comment, processor, when):
     """Move out a user and terminate relevant memberships.
 
-    The user's room is set to ``None`` and all hosts
-    (:py:cls:`UserHost`s as well as :py:cls:`ServerHost`s) are
-    deleted.  Memberships in :py:obj:`config.member_group` and
+    The user's room is set to ``None`` and all hosts are deleted.
+    Memberships in :py:obj:`config.member_group` and
     :py:obj:`config.member_group` are terminated.  A log message is
     created including the number of deleted hosts.
 
@@ -543,7 +541,7 @@ def move_out(user, comment, processor, when):
         remove_member_of(user, group, processor, closedopen(when, None))
 
     num_hosts = 0  # In case the chain is empty
-    for num_hosts, h in enumerate(chain(user.user_hosts, user.server_hosts), 1):
+    for num_hosts, h in enumerate(user.user_hosts, 1):
         session.session.delete(h)
 
     user.room = None

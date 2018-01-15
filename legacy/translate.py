@@ -493,8 +493,8 @@ def generate_subnets_vlans(data, resources):
 
 
 @reg.provides(host.Host, host.Interface,
-                host.ServerHost, host.UserHost, host.Switch,
-                host.ServerInterface, host.UserInterface, host.SwitchInterface,
+                host.UserHost, host.Switch,
+                host.UserInterface, host.SwitchInterface,
                 host.IP,
               satisfies=(host.IP.interface_id,))
 def translate_hosts(data, resources):
@@ -532,9 +532,8 @@ def translate_hosts(data, resources):
         sw_d[mgmt_ip] = h
 
     for _c in data['server']:
+        # `Server`s don't exist anymore, but let's keep room and IP
         room = get_or_create_room(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)
-        h = host.ServerHost(owner=u_d[0], name=_c.c_alias, room=room)
-        interface = host.ServerInterface(host=h, mac=_c.c_etheraddr)
         ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
         objs.append(ip)
 

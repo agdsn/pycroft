@@ -42,17 +42,6 @@ class UserHost(Host):
         "user_hosts", cascade="all, delete-orphan"))
 
 
-class ServerHost(Host):
-    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
-                primary_key=True)
-    __mapper_args__ = {'polymorphic_identity': 'server_host'}
-
-    name = Column(String(255))
-
-    owner = relationship(User, backref=backref(
-        "server_hosts", cascade="all, delete-orphan"))
-
-
 class Switch(Host):
     __mapper_args__ = {'polymorphic_identity': 'switch'}
     id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
@@ -138,23 +127,6 @@ class SwitchInterface(Interface):
 
     def __str__(self):
         return "{} {}".format(self.host.name, self.name)
-
-
-class ServerInterface(Interface):
-    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
-                primary_key=True)
-
-    __mapper_args__ = {'polymorphic_identity': "server_interface"}
-
-    host = relationship(ServerHost,
-                        backref=backref("server_interfaces",
-                                        cascade="all, delete-orphan"))
-
-    #TODO switch_interface_id nicht Nullable machen: CLash mit Importscript
-    switch_interface_id = Column(Integer, ForeignKey(SwitchInterface.id),
-                                 nullable=True)
-    switch_interface = relationship(SwitchInterface,
-                                    foreign_keys=[switch_interface_id])
 
 
 class IP(ModelBase):

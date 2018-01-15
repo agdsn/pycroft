@@ -318,9 +318,7 @@ def add_user_hosts(account, building, ger38subnet, room, u):
             (facilities.Room.number == room_number)).one()
 
         if room != hostroom and "Müllraum" in hostroom.number:
-            h = host.ServerHost(owner=u, room=hostroom,
-                                name="Server of {}".format(u.name))
-            interface = host.ServerInterface(host=h, mac=mac.macaddr)
+            continue
         else:
             h = host.UserHost(owner=u, room=room)
             interface = host.UserInterface(host=h, mac=mac.macaddr)

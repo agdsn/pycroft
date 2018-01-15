@@ -75,19 +75,6 @@ class SwitchPatchPortData(DataSet):
         switch_interface = SwitchInterfaceData.dummy_port3
 
 
-class ServerHostData(DataSet):
-    class dummy:
-        owner = UserData.dummy
-        room = RoomData.dummy_room1
-
-
-class ServerInterfaceData(DataSet):
-    class dummy:
-        mac = "00:00:00:00:00:03"
-        host = ServerHostData.dummy
-        switch_interface = SwitchInterfaceData.dummy_port3
-
-
 class IPData(DataSet):
     class dummy_user_ipv4:
         address = IPv4Address("192.168.0.42")
@@ -104,7 +91,3 @@ class IPData(DataSet):
         interface = SwitchInterfaceData.vlan
         subnet = SubnetData.user_ipv4
 
-    class dummy_server_ip:
-        address = IPv4Address("192.168.0.2")
-        interface = ServerInterfaceData.dummy
-        subnet = SubnetData.user_ipv4
