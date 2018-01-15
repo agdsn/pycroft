@@ -105,6 +105,7 @@ site_name_map = {
     3: u"Budapester Straße",
     4: "Fritz-Löffler-Straße",
     5: "Gret-Palucca-Straße",
+    6: "Hoyerswerdaer Straße",
 }
 
 
@@ -127,6 +128,7 @@ building_site_map = {
     15: 3,  # Bu24
     16: 4,  # FL16
     17: 5,  # GPS11
+    18: 6,  # Neu15
 }
 
 building_subnets_map = {
@@ -148,6 +150,7 @@ building_subnets_map = {
     15: [14],  # Bu24
     16: [15],  # FL16
     17: [16],  # GPS11
+    18: [17],  # Neu15
 }
 
 vlan_name_vid_map = {
@@ -167,4 +170,5 @@ vlan_name_vid_map = {
     'Bu24': 29,
     'FL16': 35,
     'GPS11': 32,
+    'Neu15': 666,  # WARNING: BOGUS VALUE
 }
