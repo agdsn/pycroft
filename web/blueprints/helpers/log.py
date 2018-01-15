@@ -44,7 +44,7 @@ def radius_description(interface, entry):
 
     :param interface: Something whose string representation can be
         used to inform about the port the radius log happened.  For
-        instance, this can be a :py:cls:`SwitchInterface` object
+        instance, this can be a :py:cls:`SwitchPort` object
         formatting itself to `switch-wu5-00 (D15)` or similar.
     :param RadiusLogEntry entry: A :py:cls:`RadiusLogEntry` as
         obtained from a :py:cls:`HadesLogs` lookup.

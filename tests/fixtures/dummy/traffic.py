@@ -27,12 +27,6 @@ class TrafficVolumeData(DataSet):
         type = "OUT"
         ip = IPData.dummy_user_ipv6
 
-    class dummy_volume_switch:
-        amount = int(51.258 * 2**40)
-        timestamp = datetime.utcnow() - timedelta(hours=6)
-        type = "IN"
-        ip = IPData.dummy_switch_ip
-
 
 class TrafficCreditData(DataSet):
     class dummy_credit:

@@ -29,7 +29,7 @@ class SwitchData(DataSet):
         management_ip = "141.30.216.15"
 
 
-class SwitchInterfaceData(DataSet):
+class SwitchPortData(DataSet):
     class dummy_port1:
         name = "A20"
         mac = "00:00:00:00:00:14"
@@ -62,17 +62,17 @@ class SwitchPatchPortData(DataSet):
     class dummy_patch_port1:
         room = RoomData.dummy_room1
         name = "D1"
-        switch_interface = SwitchInterfaceData.dummy_port1
+        switch_port = SwitchPortData.dummy_port1
 
     class dummy_patch_port2:
         room = RoomData.dummy_room2
         name = "D2"
-        switch_interface = SwitchInterfaceData.dummy_port2
+        switch_port = SwitchPortData.dummy_port2
 
     class dummy_patch_port3:
         room = RoomData.dummy_room3
         name = "D3"
-        switch_interface = SwitchInterfaceData.dummy_port3
+        switch_port = SwitchPortData.dummy_port3
 
 
 class IPData(DataSet):
@@ -85,9 +85,3 @@ class IPData(DataSet):
         subnet = SubnetData.user_ipv6
         interface = UserInterfaceData.dummy
         address = IPv6Address("2001:db8::42")
-
-    class dummy_switch_ip:
-        address = IPv4Address("192.168.0.1")
-        interface = SwitchInterfaceData.vlan
-        subnet = SubnetData.user_ipv4
-

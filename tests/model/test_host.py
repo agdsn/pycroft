@@ -16,7 +16,7 @@ from tests import FixtureDataTestBase
 from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData, \
-     SwitchInterfaceData
+     SwitchPortData
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
@@ -173,7 +173,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 class Test_060_Cascades(FixtureDataTestBase):
     datasets = (SubnetData, UserData, UserHostData, UserInterfaceData, IPData,
-                TrafficVolumeData)
+                TrafficVolumeData, SwitchPortData)
 
     def test_0010_cascade_on_delete_ip(self):
         test_ip = host.IP.q.filter_by(
@@ -217,7 +217,7 @@ class Test_060_Cascades(FixtureDataTestBase):
 
     def test_cascade_on_delete_subnet(self):
         subnet = Subnet.q.filter_by(address=SubnetData.dummy_subnet4.address).one()
-        associations_query = session.session.query(host.switch_interface_association_table)\
+        associations_query = session.session.query(host.switch_port_association_table)\
             .filter_by(subnet_id=subnet.id)
 
         self.assertEqual(associations_query.count(), 2)
@@ -225,23 +225,23 @@ class Test_060_Cascades(FixtureDataTestBase):
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
-    def test_cascade_on_delete_switch_interface(self):
-        port_name = SwitchInterfaceData.dummy_port4.name
-        interface = host.SwitchInterface.q.filter_by(name=port_name).one()
-        associations_query = session.session.query(host.switch_interface_association_table)\
-            .filter_by(switch_interface_id=interface.id)
+    def test_cascade_on_delete_switch_port(self):
+        port_name = SwitchPortData.dummy_port4.name
+        port = host.SwitchPort.q.filter_by(name=port_name).one()
+        associations_query = session.session.query(host.switch_port_association_table)\
+            .filter_by(switch_port_id=port.id)
 
         self.assertEqual(associations_query.count(), 2)
-        session.session.delete(interface)
+        session.session.delete(port)
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
 
 class TestSubnetAssociations(FixtureDataTestBase):
-    datasets = (SwitchInterfaceData,)
+    datasets = (SwitchPortData,)
 
     def test_secondary_relationship_works(self):
-        port = host.SwitchInterface.q.filter_by(name=SwitchInterfaceData.dummy_port1.name).one()
+        port = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port1.name).one()
         self.assertEqual(len(port.subnets), 1)
-        port4 = host.SwitchInterface.q.filter_by(name=SwitchInterfaceData.dummy_port4.name).one()
+        port4 = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port4.name).one()
         self.assertEqual(len(port4.subnets), 2)

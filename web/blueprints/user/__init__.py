@@ -218,8 +218,8 @@ def user_show_hosts_json(user_id):
     for user_host in User.q.get(user_id).user_hosts:
         if user_host.room:
             patch_ports = user_host.room.switch_patch_ports
-            switches = ', '.join(p.switch_interface.host.name for p in patch_ports)
-            ports = ', '.join(p.switch_interface.name for p in patch_ports)
+            switches = ', '.join(p.switch_port.host.name for p in patch_ports)
+            ports = ', '.join(p.switch_port.name for p in patch_ports)
         else:
             switches = None
             ports = None

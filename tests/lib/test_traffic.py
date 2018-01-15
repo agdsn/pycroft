@@ -33,7 +33,7 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
                 TrafficCreditData.dummy_credit.amount -
                 TrafficVolumeData.dummy_volume_ipv6.amount -
                 TrafficVolumeData.dummy_volume.amount),
-            self.users[1]: (-TrafficVolumeData.dummy_volume_switch.amount),
+            self.users[1]: 0,  # used to be switch traffic before the refactoring
             self.users[2]: None,
         }
 

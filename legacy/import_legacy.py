@@ -190,8 +190,8 @@ def import_legacy(args):
     room_query = (session.session.query(facilities.Room, func.count(net.Subnet.id))
                   .select_from(facilities.Room)
                   .join(facilities.Room.switch_patch_ports)
-                  .join(port.SwitchPatchPort.switch_interface)
-                  .join(host.SwitchInterface.subnets)
+                  .join(port.SwitchPatchPort.switch_port)
+                  .join(host.SwitchPort.subnets)
                   .group_by(net.Subnet)
                   .group_by(facilities.Room))
 

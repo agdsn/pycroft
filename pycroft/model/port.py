@@ -5,7 +5,7 @@ from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from pycroft.model.base import ModelBase
 from pycroft.model.facilities import Room
-from pycroft.model.host import SwitchInterface
+from pycroft.model.host import SwitchPort
 
 
 class PatchPort(ModelBase):
@@ -25,11 +25,10 @@ class SwitchPatchPort(PatchPort):
     """A patch panel port connected to a switch port"""
     id = Column(Integer, ForeignKey(PatchPort.id), primary_key=True)
 
-    switch_interface_id = Column(Integer, ForeignKey(SwitchInterface.id),
-                                 nullable=False, unique=True)
-    switch_interface = relationship(SwitchInterface,
-                                    backref=backref("patch_port",
-                                                    uselist=False))
+    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id),
+                            nullable=False, unique=True)
+    switch_port = relationship(SwitchPort,
+                               backref=backref("patch_port", uselist=False))
     room = relationship(Room, backref=backref("switch_patch_ports"))
 
     __mapper_args__ = {'polymorphic_identity': 'switch_patch_port'}

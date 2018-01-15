@@ -75,8 +75,8 @@ def switch_show_json(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
         abort(404)
-    switch_interface_list = switch.switch_interfaces
-    switch_interface_list = net.sort_ports(switch_interface_list)
+    switch_port_list = switch.switch_ports
+    switch_port_list = net.sort_ports(switch_port_list)
     return jsonify(items=[{
             "portname": port.name,
             "room": {
@@ -89,7 +89,7 @@ def switch_show_json(switch_id):
                     port.patch_port.room.number
                 )
             } if port.patch_port else None
-        } for port in switch_interface_list])
+        } for port in switch_port_list])
 
 
 @bp.route('/vlans')

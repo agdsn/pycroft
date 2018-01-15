@@ -494,7 +494,7 @@ def generate_subnets_vlans(data, resources):
 
 @reg.provides(host.Host, host.Interface,
                 host.UserHost, host.Switch,
-                host.UserInterface, host.SwitchInterface,
+                host.UserInterface, host.SwitchPort,
                 host.IP,
               satisfies=(host.IP.interface_id,))
 def translate_hosts(data, resources):
@@ -527,8 +527,8 @@ def translate_hosts(data, resources):
             continue
         mgmt_ip = ipaddr.IPv4Address(_c.mgmt_ip)
         h = host.Switch(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
-        interface = host.SwitchInterface(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01",
-                                         name="switch management interface")
+        interface = host.SwitchPort(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01",
+                                    name="switch management interface")
         sw_d[mgmt_ip] = h
 
     for _c in data['server']:
@@ -575,12 +575,12 @@ def translate_ports(data, resources):
         port_name = _sp.port
         room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
         subnet_ids = building_subnets_map[room.building.id]
-        sp = host.SwitchInterface(
+        sp = host.SwitchPort(
             host=switch, name=port_name,
             mac="00:00:00:00:00:01",
             subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
         pp = port.SwitchPatchPort(
-            switch_interface=sp, name="?? ({})".format(port_name), room=room)
+            switch_port=sp, name="?? ({})".format(port_name), room=room)
         objs.append(pp)
 
     return objs

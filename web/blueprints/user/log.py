@@ -20,13 +20,13 @@ def iter_hades_switch_ports(room):
     :returns: An iterator of (nasportid, nasipaddress) usable as
               arguments in ``HadesLogs.fetch_logs()``
     """
-    from pycroft.model._all import Room, SwitchPatchPort, SwitchInterface, Switch
+    from pycroft.model._all import Room, SwitchPatchPort, SwitchPort, Switch
     query = (
         session.session
-        .query(SwitchInterface.name, Switch.management_ip)
+        .query(SwitchPort.name, Switch.management_ip)
         .join(SwitchPatchPort.room)
-        .join(SwitchPatchPort.switch_interface)
-        .join(SwitchInterface.host)
+        .join(SwitchPatchPort.switch_port)
+        .join(SwitchPort.host)
         .filter(Room.id == room.id)
     )
     return query.all()
@@ -38,14 +38,14 @@ def get_user_hades_logs(user):
     :param User user: the user whose logs to display
 
     :returns: an iterator over duples (interface, logentry).
-    :rtype: Iterator[SwitchInterface, RadiusLogEntry]
+    :rtype: Iterator[SwitchPort, RadiusLogEntry]
     """
     # Accessing the `hades_logs` proxy early ensures the exception is
-    # raised even if there's no SwitchInterface
+    # raised even if there's no SwitchPort
     do_fetch = hades_logs.fetch_logs
     for host in user.user_hosts:
         for patch_port in host.room.switch_patch_ports:
-            interface = patch_port.switch_interface
+            interface = patch_port.switch_port
             nasportid = interface.name
             nasipaddress = str(interface.host.management_ip)
             for logentry in do_fetch(nasipaddress, nasportid):

@@ -167,7 +167,7 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
     for j in jacks:
         switch = session.session.query(host.Switch).filter(
             host.Switch.management_ip == j.port.switch.ip).one()
-        interface = next(i for i in switch.switch_interfaces if str(i.name) == str(j.port.number))
+        port = next(i for i in switch.switch_ports if str(i.name) == str(j.port.number))
 
         inhabitable, isswitchroom, room_number = get_room_properties(j.location)
 
@@ -184,7 +184,7 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
 
         spp = port.SwitchPatchPort(
             room=room,
-            switch_interface=interface,
+            switch_port=port,
             name="{flat}{room}".format(flat=j.location.flat,
                                        room=j.location.room, )
         )
@@ -259,13 +259,13 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
                 )
                 ports = session_nvtool.query(Port).filter(Port.switch == s)
                 for p in ports:
-                    port = host.SwitchInterface(
+                    port = host.SwitchPort(
                         name=p.number,
                         subnets=[ger38subnet],
                         mac="00:00:00:00:00:38"
                         # DGS-3100 are L2 Switches they don't have a mac for interfaces
                     )
-                    switch.switch_interfaces.append(port)
+                    switch.switch_ports.append(port)
 
                 session.session.add(switch)
 

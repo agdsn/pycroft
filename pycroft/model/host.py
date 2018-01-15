@@ -105,25 +105,22 @@ class UserInterface(Interface):
                                         cascade="all, delete-orphan"))
 
 
-switch_interface_association_table = Table(
-    'switch_interface_association', ModelBase.metadata,
-    Column('switch_interface_id', Integer, ForeignKey('switch_interface.id', ondelete='CASCADE')),
+switch_port_association_table = Table(
+    'switch_port_association', ModelBase.metadata,
+    Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE')),
     Column('subnet_id', Integer, ForeignKey('subnet.id', ondelete='CASCADE')),
 )
 
 
-class SwitchInterface(Interface):
-    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
-                primary_key=True)
-
-    __mapper_args__ = {'polymorphic_identity': "switch_interface"}
-
+class SwitchPort(ModelBase):
+    host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
+                     nullable=False)
     host = relationship(Switch,
-                        backref=backref("switch_interfaces",
+                        backref=backref("switch_ports",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
-    subnets = relationship('Subnet', secondary='switch_interface_association',
-                           back_populates='switch_interfaces')
+    subnets = relationship('Subnet', secondary='switch_port_association',
+                           back_populates='switch_ports')
 
     def __str__(self):
         return "{} {}".format(self.host.name, self.name)

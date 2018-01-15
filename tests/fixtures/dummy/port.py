@@ -4,10 +4,10 @@
 from fixture import DataSet
 
 from tests.fixtures.dummy.facilities import RoomData
-from .host import SwitchInterfaceData
+from .host import SwitchPortData
 
 class SwitchPatchPortData(DataSet):
     class dummy_port1:
         name = "??"
-        switch_interface = SwitchInterfaceData.dummy_port1
+        switch_port = SwitchPortData.dummy_port1
         room = RoomData.dummy_room1
