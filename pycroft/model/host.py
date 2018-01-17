@@ -87,7 +87,7 @@ class Interface(ModelBase):
         return mac_address
 
     host = relationship(Host,
-                        backref=backref("user_interfaces",
+                        backref=backref("interfaces",
                                         cascade="all, delete-orphan"))
 
 
@@ -102,7 +102,7 @@ class SwitchPort(ModelBase):
     switch_id = Column(Integer, ForeignKey(Switch.id, ondelete="CASCADE"),
                        nullable=False)
     switch = relationship(Switch,
-                          backref=backref("switch_ports",
+                          backref=backref("ports",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
     subnets = relationship('Subnet', secondary='switch_port_association',

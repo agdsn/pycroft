@@ -196,7 +196,7 @@ class Test_060_Cascades(FixtureDataTestBase):
 
     def test_0010_cascade_on_delete_host(self):
         test_host = host.Host.q.first()
-        interfaces = test_host.user_interfaces
+        interfaces = test_host.interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_host)
@@ -207,7 +207,7 @@ class Test_060_Cascades(FixtureDataTestBase):
     def test_0010_cascade_on_delete_user(self):
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
         hosts = test_user.hosts
-        interfaces = tuple(chain(*(h.user_interfaces for h in hosts)))
+        interfaces = tuple(chain(*(h.interfaces for h in hosts)))
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_user)

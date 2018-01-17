@@ -88,7 +88,7 @@ def setup_ipv4_networking(host):
                for s in p.switch_port.subnets
                if s.address.version == 4
                if p.switch_port is not None]
-    for interface in host.user_interfaces:
+    for interface in host.interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
@@ -236,7 +236,7 @@ def migrate_user_host(host, new_room, processor):
                for subnet in p.switch_port.subnets]
     if old_room.building_id == new_room.building_id:
         return
-    for interface in host.user_interfaces:
+    for interface in host.interfaces:
         old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
             ip_address, subnet = get_free_ip(subnets)

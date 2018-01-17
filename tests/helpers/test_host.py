@@ -81,7 +81,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
         owner = User.q.filter_by(login=HostData.dummy.owner.login).one()
         host = Host.q.filter_by(owner=owner).one()
 
-        interface = host.user_interfaces[0]
+        interface = host.interfaces[0]
         self.fill_net(first_net, interface)
         session.session.refresh(first_net)
         self.assertRaises(SubnetFullException, get_free_ip, (first_net,))

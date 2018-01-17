@@ -75,7 +75,7 @@ def switch_show_json(switch_id):
     switch = Switch.q.get(switch_id)
     if not switch:
         abort(404)
-    switch_port_list = switch.switch_ports
+    switch_port_list = switch.ports
     switch_port_list = net.sort_ports(switch_port_list)
     return jsonify(items=[{
             "portname": port.name,

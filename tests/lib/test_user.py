@@ -118,8 +118,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.level, 1)
 
         user_host = host.Host.q.filter_by(owner=new_user).one()
-        self.assertEqual(len(user_host.user_interfaces), 1)
-        user_interface = user_host.user_interfaces[0]
+        self.assertEqual(len(user_host.interfaces), 1)
+        user_interface = user_host.interfaces[0]
         self.assertEqual(len(user_interface.ips), 1)
         self.assertEqual(user_interface.mac, test_mac)
 
@@ -228,8 +228,8 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         self.assertEqual(len(new_user.hosts), 1)
         user_host = new_user.hosts[0]
-        self.assertEqual(len(user_host.user_interfaces), 1)
-        self.assertEqual(user_host.user_interfaces[0].mac, test_mac)
+        self.assertEqual(len(user_host.interfaces), 1)
+        self.assertEqual(user_host.interfaces[0].mac, test_mac)
         self.assertEqual(len(user_host.ips), 1)
 
         self.assertTrue(new_user.member_of(config.member_group))

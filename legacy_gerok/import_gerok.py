@@ -167,7 +167,7 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
     for j in jacks:
         switch = session.session.query(host.Switch).filter(
             host.Switch.management_ip == j.port.switch.ip).one()
-        port = next(i for i in switch.switch_ports if str(i.name) == str(j.port.number))
+        port = next(i for i in switch.ports if str(i.name) == str(j.port.number))
 
         inhabitable, isswitchroom, room_number = get_room_properties(j.location)
 
