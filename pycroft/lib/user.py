@@ -32,7 +32,7 @@ from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, IP, UserHost, UserInterface, Interface
+from pycroft.model.host import Host, IP, UserHost, Interface, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
 from pycroft.model.user import User, UnixAccount
@@ -147,7 +147,7 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     # create one new host (including interface) for the new user
     new_host = UserHost(owner=new_user, room=room)
     session.session.add(new_host)
-    session.session.add(UserInterface(mac=mac, host=new_host))
+    session.session.add(Interface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
 
     for group in {config.member_group, config.network_access_group}:
@@ -198,7 +198,7 @@ def move_back_in(user, building, level, room_number, mac, processor,
 
     new_host = UserHost(owner=user, room=room)
     session.session.add(new_host)
-    session.session.add(UserInterface(mac=mac, host=new_host))
+    session.session.add(Interface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
 
     # Use a set to avoid double log entries

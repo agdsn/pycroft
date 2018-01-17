@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.lib.host import change_mac
 from pycroft.model import session
-from pycroft.model.host import UserInterface
+from pycroft.model.host import Interface
 from pycroft.model.user import User
 from pycroft.model.logging import LogEntry
 from tests import FixtureDataTestBase
@@ -20,7 +20,7 @@ class Test_005_change_mac_interface(FixtureDataTestBase):
 
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"
-        interface = UserInterface.q.filter_by(
+        interface = Interface.q.filter_by(
             mac=UserInterfaceData.dummy.mac).one()
         change_mac(interface, new_mac, self.user)
         self.assertEqual(interface.mac, new_mac)

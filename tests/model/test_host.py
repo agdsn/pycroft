@@ -43,7 +43,7 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
 
     def test_0010_mac_validate(self):
 
-        interface = host.UserInterface(host=host.UserHost.q.first())
+        interface = host.Interface(host=host.UserHost.q.first())
 
         # Try some bad macs
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff")

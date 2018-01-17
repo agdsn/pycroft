@@ -12,7 +12,7 @@ from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model import session, user, logging
-from pycroft.model.host import UserInterface, IP, UserHost
+from pycroft.model.host import Interface, IP, UserHost
 from pycroft.model.net import Subnet
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import (
@@ -101,7 +101,7 @@ class Test_030_change_mac_interface(FixtureDataTestBase):
         super(Test_030_change_mac_interface, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy.login).one()
-        self.interface = UserInterface.q.filter_by(
+        self.interface = Interface.q.filter_by(
             mac=UserInterfaceData.dummy.mac).one()
 
     def test_0010_change_mac(self):

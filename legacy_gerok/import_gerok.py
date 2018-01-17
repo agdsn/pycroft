@@ -321,7 +321,7 @@ def add_user_hosts(account, building, ger38subnet, room, u):
             continue
         else:
             h = host.UserHost(owner=u, room=room)
-            interface = host.UserInterface(host=h, mac=mac.macaddr)
+            interface = host.Interface(host=h, mac=mac.macaddr)
 
         address = ipaddr.IPv4Network(mac.ip.ip).ip
         ip = host.IP(interface=interface,

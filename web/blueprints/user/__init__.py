@@ -29,7 +29,7 @@ from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import functions, session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, UserInterface, IP, Interface
+from pycroft.model.host import Host, Interface, IP, Interface
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
@@ -720,7 +720,7 @@ def move_back_in(user_id):
 @access.require('user_mac_change')
 def change_mac(user_id, user_interface_id):
     form = InterfaceChangeMacForm()
-    my_interface = UserInterface.q.get(user_interface_id)
+    my_interface = Interface.q.get(user_interface_id)
     if not form.is_submitted():
         form.mac.data = my_interface.mac
     if form.validate_on_submit():

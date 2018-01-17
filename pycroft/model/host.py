@@ -72,16 +72,15 @@ class TypeMismatch(Exception):
 
 
 class Interface(ModelBase):
-    """A logical network interface (hence the single MAC address), which means
-    many net interfaces can be connected to the same switch port"""
+    """A logical network interface (hence the single MAC address).
 
-    #foreign key discriminator
-    discriminator = Column('type', String(50))
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    This means many net interfaces can be connected to the same switch port.
 
+    It has to be bound to a `UserHost`, not another kind of host (like `Switch`)
+    """
     mac = Column(MACAddress, nullable=False)
 
-    host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
+    host_id = Column(Integer, ForeignKey(UserHost.id, ondelete="CASCADE"),
                      nullable=False)
 
     @validates('mac')
@@ -92,13 +91,6 @@ class Interface(ModelBase):
         if int(mac_address[0:2], base=16) & 1:
             raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
-
-
-class UserInterface(Interface):
-    id = Column(Integer, ForeignKey(Interface.id, ondelete="CASCADE"),
-                primary_key=True)
-
-    __mapper_args__ = {'polymorphic_identity': "user_interface"}
 
     host = relationship(UserHost,
                         backref=backref("user_interfaces",
@@ -135,7 +127,7 @@ class IP(ModelBase):
                              backref=backref("ips",
                                              cascade="all, delete-orphan"))
 
-    host = relationship(Host, secondary=Interface.__table__,
+    host = relationship(UserHost, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),

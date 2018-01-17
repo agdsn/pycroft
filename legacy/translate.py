@@ -493,9 +493,9 @@ def generate_subnets_vlans(data, resources):
 
 
 @reg.provides(host.Host, host.Interface,
-                host.UserHost, host.Switch,
-                host.UserInterface, host.SwitchPort,
-                host.IP,
+              host.UserHost, host.Switch,
+              host.Interface, host.SwitchPort,
+              host.IP,
               satisfies=(host.IP.interface_id,))
 def translate_hosts(data, resources):
     legacy_hostname_map = {}
@@ -544,7 +544,7 @@ def translate_hosts(data, resources):
             continue
 
         h = host.UserHost(owner=owner, room=owner.room)
-        interface = host.UserInterface(host=h, mac=_c.c_etheraddr)
+        interface = host.Interface(host=h, mac=_c.c_etheraddr)
 
         if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
             ip = host.IP(interface=interface,
