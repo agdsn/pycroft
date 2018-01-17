@@ -160,7 +160,7 @@ def user_show(user_id):
         user_id_new=encode_type2_user_id(user.id),
         user_id_old=encode_type1_user_id(user.id),
         balance=balance,
-        hosts_rooms={host.room for host in user.user_hosts},
+        hosts_rooms={host.room for host in user.hosts},
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
@@ -215,7 +215,7 @@ def user_show_logs_json(user_id, logtype="all"):
 @bp.route("/<int:user_id>/hosts")
 def user_show_hosts_json(user_id):
     list_items = []
-    for user_host in User.q.get(user_id).user_hosts:
+    for user_host in User.q.get(user_id).hosts:
         if user_host.room:
             patch_ports = user_host.room.switch_patch_ports
             switches = ', '.join(p.switch_port.host.name for p in patch_ports)
@@ -559,7 +559,7 @@ def search_results():
             'hosts': ", ".join("{} ({})".format(
                 host_cname_filter(user_host),
                 host_name_filter(user_host)
-            ) for user_host in found_user.user_hosts)
+            ) for user_host in found_user.hosts)
         } for found_user in result.all()] if user_id or name or login else [])
 
 

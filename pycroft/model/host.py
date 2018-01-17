@@ -19,48 +19,42 @@ from pycroft.model.types import (
 
 
 class Host(ModelBase):
-    discriminator = Column('type', String(50), nullable=False)
-    __mapper_args__ = {'polymorphic_on': discriminator}
-
     # many to one from Host to User
     owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                       nullable=True)
+    owner = relationship(User, backref=backref("hosts",
+                                               cascade="all, delete-orphan"))
 
     # many to one from Host to Room
     room = relationship(Room, backref=backref("hosts"))
     # We don't want to `ONDELETE CASCADE` because deleting a room
-    # should not delete e.g. a switch assigned there
+    # should not delete a host being there
     room_id = Column(Integer, ForeignKey(Room.id))
 
 
-class UserHost(Host):
-    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
+class Switch(ModelBase):
+    """A switch with a name and mgmt-ip
+
+    A `Switch` is directly tied to a `Host` because the `id` column is not an
+    auto-incremented isolated value, but instead a foreign key on a `Host`.
+    """
+    id = Column(Integer, ForeignKey(Host.id),
                 primary_key=True)
-    __mapper_args__ = {'polymorphic_identity': 'user_host'}
-
-    owner = relationship(User, backref=backref(
-        "user_hosts", cascade="all, delete-orphan"))
-
-
-class Switch(Host):
-    __mapper_args__ = {'polymorphic_identity': 'switch'}
-    id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
-                primary_key=True)
+    host = relationship(Host, backref=backref("switch", uselist=False))
 
     name = Column(String(127), nullable=False)
 
     management_ip = Column(IPAddress, nullable=False)
 
-    owner = relationship(User, backref=backref(
-        "switches", cascade="all, delete-orphan"))
 
-
+# TODO: properly remove this, do a separate commit
+# and explain why it does not work (switches → owner=root w/o room)
 def _check_user_host_in_user_room(mapper, connection, userhost):
     if userhost.room is not userhost.owner.room:
         raise Exception("UserHost can only be in user's room")
 
-event.listen(UserHost, "before_insert", _check_user_host_in_user_room)
-event.listen(UserHost, "before_update", _check_user_host_in_user_room)
+#event.listen(Host, "before_insert", _check_user_host_in_user_room)
+#event.listen(Host, "before_update", _check_user_host_in_user_room)
 
 
 class MulticastFlagException(InvalidMACAddressException):
@@ -80,7 +74,7 @@ class Interface(ModelBase):
     """
     mac = Column(MACAddress, nullable=False)
 
-    host_id = Column(Integer, ForeignKey(UserHost.id, ondelete="CASCADE"),
+    host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
                      nullable=False)
 
     @validates('mac')
@@ -92,7 +86,7 @@ class Interface(ModelBase):
             raise MulticastFlagException("Multicast bit set in MAC address")
         return mac_address
 
-    host = relationship(UserHost,
+    host = relationship(Host,
                         backref=backref("user_interfaces",
                                         cascade="all, delete-orphan"))
 
@@ -105,17 +99,17 @@ switch_port_association_table = Table(
 
 
 class SwitchPort(ModelBase):
-    host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
-                     nullable=False)
-    host = relationship(Switch,
-                        backref=backref("switch_ports",
+    switch_id = Column(Integer, ForeignKey(Switch.id, ondelete="CASCADE"),
+                       nullable=False)
+    switch = relationship(Switch,
+                          backref=backref("switch_ports",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
     subnets = relationship('Subnet', secondary='switch_port_association',
                            back_populates='switch_ports')
 
     def __str__(self):
-        return "{} {}".format(self.host.name, self.name)
+        return "{} {}".format(self.switch.name, self.name)
 
 
 class IP(ModelBase):
@@ -127,7 +121,7 @@ class IP(ModelBase):
                              backref=backref("ips",
                                              cascade="all, delete-orphan"))
 
-    host = relationship(UserHost, secondary=Interface.__table__,
+    host = relationship(Host, secondary=Interface.__table__,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),

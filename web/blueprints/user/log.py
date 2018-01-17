@@ -26,7 +26,7 @@ def iter_hades_switch_ports(room):
         .query(SwitchPort.name, Switch.management_ip)
         .join(SwitchPatchPort.room)
         .join(SwitchPatchPort.switch_port)
-        .join(SwitchPort.host)
+        .join(SwitchPort.switch)
         .filter(Room.id == room.id)
     )
     return query.all()
@@ -43,18 +43,18 @@ def get_user_hades_logs(user):
     # Accessing the `hades_logs` proxy early ensures the exception is
     # raised even if there's no SwitchPort
     do_fetch = hades_logs.fetch_logs
-    for host in user.user_hosts:
+    for host in user.hosts:
         for patch_port in host.room.switch_patch_ports:
-            interface = patch_port.switch_port
-            nasportid = interface.name
-            nasipaddress = str(interface.host.management_ip)
+            port = patch_port.switch_port
+            nasportid = port.name
+            nasipaddress = str(port.switch.management_ip)
             for logentry in do_fetch(nasipaddress, nasportid):
-                yield interface, logentry
+                yield port, logentry
 
 def is_user_connected(user):
     try:
         next(patch_port
-             for host in user.user_hosts
+             for host in user.hosts
              for patch_port in host.room.switch_patch_ports)
     except StopIteration:
         return False

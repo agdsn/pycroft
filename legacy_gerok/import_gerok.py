@@ -320,7 +320,7 @@ def add_user_hosts(account, building, ger38subnet, room, u):
         if room != hostroom and "Müllraum" in hostroom.number:
             continue
         else:
-            h = host.UserHost(owner=u, room=room)
+            h = host.Host(owner=u, room=room)
             interface = host.Interface(host=h, mac=mac.macaddr)
 
         address = ipaddr.IPv4Network(mac.ip.ip).ip

@@ -6,7 +6,7 @@ import unittest
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.traffic import (TrafficVolumeData, TrafficBalanceData,
                                           TrafficCreditData)
-from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData
+from tests.fixtures.dummy.host import IPData, HostData, InterfaceData
 from tests.fixtures.dummy.user import UserData
 
 from pycroft.model import session
@@ -17,7 +17,7 @@ from pycroft.lib.user import traffic_balance_expr, traffic_balance
 # this test is broken. Skipping, because the balance logic needs to be changed anyway.
 @unittest.skip
 class Test_010_BalanceCalculation(FixtureDataTestBase):
-    datasets = [UserData, IPData, UserInterfaceData, UserHostData,
+    datasets = [UserData, IPData, InterfaceData, HostData,
                 TrafficVolumeData, TrafficBalanceData, TrafficCreditData]
 
     def setUp(self):

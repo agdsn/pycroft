@@ -7,16 +7,17 @@ from random import randint
 
 import ipaddr
 
+from pycroft.model.user import User
 from tests import FixtureDataTestBase
 from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model import session, user, logging
-from pycroft.model.host import Interface, IP, UserHost
+from pycroft.model.host import Interface, IP, Host
 from pycroft.model.net import Subnet
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import (
-    UserHostData, UserInterfaceData)
+    HostData, InterfaceData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
@@ -52,7 +53,7 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
 
 class Test_020_IpHelper(FixtureDataTestBase):
     datasets = [BuildingData, VLANData, SubnetData, RoomData, UserData,
-                UserHostData, UserInterfaceData]
+                HostData, InterfaceData]
 
     def calculate_usable_ips(self, net):
         ips = ipaddr.IPNetwork(net.address).numhosts
@@ -77,7 +78,8 @@ class Test_020_IpHelper(FixtureDataTestBase):
         second_net = Subnet.q.filter_by(
             address=SubnetData.dummy_subnet2.address).one()
         subnets = (first_net, second_net)
-        host = UserHost.q.one()
+        owner = User.q.filter_by(login=HostData.dummy.owner.login).one()
+        host = Host.q.filter_by(owner=owner).one()
 
         interface = host.user_interfaces[0]
         self.fill_net(first_net, interface)
@@ -95,14 +97,14 @@ class Test_020_IpHelper(FixtureDataTestBase):
 
 
 class Test_030_change_mac_interface(FixtureDataTestBase):
-    datasets = [UserInterfaceData, UserData]
+    datasets = [InterfaceData, UserData]
 
     def setUp(self):
         super(Test_030_change_mac_interface, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.dummy.login).one()
         self.interface = Interface.q.filter_by(
-            mac=UserInterfaceData.dummy.mac).one()
+            mac=InterfaceData.dummy.mac).one()
 
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"

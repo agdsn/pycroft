@@ -22,7 +22,7 @@ from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import AccountData, SemesterData
 from tests.fixtures.dummy.host import (
-    IPData, SwitchPatchPortData,UserInterfaceData, UserHostData)
+    IPData, SwitchPatchPortData, InterfaceData, HostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
@@ -31,7 +31,7 @@ from tests.fixtures import user_with_trafficgroups
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
-                SwitchPatchPortData, UserData, UserInterfaceData, UserHostData,
+                SwitchPatchPortData, UserData, InterfaceData, HostData,
                 VLANData, TrafficGroupData)
 
     def setUp(self):
@@ -73,7 +73,7 @@ class Test_010_User_Move(FixtureDataTestBase):
             traffic_group_id=traffic_group.id,
         )
         self.assertEqual(self.user.room, self.new_room_other_building)
-        self.assertEqual(self.user.user_hosts[0].room, self.new_room_other_building)
+        self.assertEqual(self.user.hosts[0].room, self.new_room_other_building)
         self.assertIn(traffic_group, self.user.active_traffic_groups())
         #TODO test for changing ip
 
@@ -81,7 +81,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
                 RoomData, SemesterData, SubnetData, SwitchPatchPortData,
-                TrafficGroupData, UserData, UserHostData, UserInterfaceData,
+                TrafficGroupData, UserData, HostData, InterfaceData,
                 VLANData)
 
     def setUp(self):
@@ -117,7 +117,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
 
-        user_host = host.UserHost.q.filter_by(owner=new_user).one()
+        user_host = host.Host.q.filter_by(owner=new_user).one()
         self.assertEqual(len(user_host.user_interfaces), 1)
         user_interface = user_host.user_interfaces[0]
         self.assertEqual(len(user_interface.ips), 1)
@@ -205,7 +205,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             self.assertIsNotNone(membership.ends_at)
             self.assertLessEqual(membership.ends_at, out_time)
 
-        self.assertFalse(new_user.user_hosts)
+        self.assertFalse(new_user.hosts)
         self.assertIsNone(new_user.room)
 
         # check if users finance account still exists
@@ -226,8 +226,8 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.room.number, "1")
 
-        self.assertEqual(len(new_user.user_hosts), 1)
-        user_host = new_user.user_hosts[0]
+        self.assertEqual(len(new_user.hosts), 1)
+        user_host = new_user.hosts[0]
         self.assertEqual(len(user_host.user_interfaces), 1)
         self.assertEqual(user_host.user_interfaces[0].mac, test_mac)
         self.assertEqual(len(user_host.ips), 1)

@@ -8,11 +8,11 @@ from pycroft.model.user import User
 from pycroft.model.logging import LogEntry
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.user import UserData
-from tests.fixtures.dummy.host import UserInterfaceData
+from tests.fixtures.dummy.host import InterfaceData
 
 
 class Test_005_change_mac_interface(FixtureDataTestBase):
-    datasets = [UserInterfaceData, UserData]
+    datasets = [InterfaceData, UserData]
 
     def setUp(self):
         super(Test_005_change_mac_interface, self).setUp()
@@ -21,6 +21,6 @@ class Test_005_change_mac_interface(FixtureDataTestBase):
     def test_0010_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         interface = Interface.q.filter_by(
-            mac=UserInterfaceData.dummy.mac).one()
+            mac=InterfaceData.dummy.mac).one()
         change_mac(interface, new_mac, self.user)
         self.assertEqual(interface.mac, new_mac)

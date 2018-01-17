@@ -15,14 +15,14 @@ from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.host import IPData, UserHostData, UserInterfaceData, \
+from tests.fixtures.dummy.host import IPData, HostData, InterfaceData, \
      SwitchPortData
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_InterfaceValidators(FixtureDataTestBase):
-    datasets = [UserData, UserInterfaceData, UserHostData]
+    datasets = [UserData, InterfaceData, HostData]
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
 
     def assertSetMAC(self, interface, mac):
@@ -43,7 +43,7 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
 
     def test_0010_mac_validate(self):
 
-        interface = host.Interface(host=host.UserHost.q.first())
+        interface = host.Interface(host=host.Host.q.first())
 
         # Try some bad macs
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff")
@@ -70,8 +70,8 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
 
 
 class Test_030_IpModel(FixtureDataTestBase):
-    datasets = (BuildingData, RoomData, SubnetData, UserData, UserHostData,
-                UserInterfaceData, VLANData)
+    datasets = (BuildingData, RoomData, SubnetData, UserData, HostData,
+                InterfaceData, VLANData)
 
     def test_0030_delete_address(self):
         subnet = Subnet.q.first()
@@ -104,7 +104,7 @@ class Test_030_IpModel(FixtureDataTestBase):
 
 class Test_040_IpEvents(FixtureDataTestBase):
     datasets = (BuildingData, VLANData, SubnetData, RoomData, UserData,
-                UserHostData, UserInterfaceData)
+                HostData, InterfaceData)
 
     def test_0010_correct_subnet_and_ip(self):
         subnet = Subnet.q.first()
@@ -172,7 +172,7 @@ class Test_040_IpEvents(FixtureDataTestBase):
 
 
 class Test_060_Cascades(FixtureDataTestBase):
-    datasets = (SubnetData, UserData, UserHostData, UserInterfaceData, IPData,
+    datasets = (SubnetData, UserData, HostData, InterfaceData, IPData,
                 TrafficVolumeData, SwitchPortData)
 
     def test_0010_cascade_on_delete_ip(self):
@@ -186,7 +186,7 @@ class Test_060_Cascades(FixtureDataTestBase):
 
     def test_0010_cascade_on_delete_interface(self):
         test_interface = host.Interface.q.filter_by(
-            mac=UserInterfaceData.dummy.mac).one()
+            mac=InterfaceData.dummy.mac).one()
         ips = test_interface.ips
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_interface)
@@ -195,7 +195,7 @@ class Test_060_Cascades(FixtureDataTestBase):
                             for o in chain(ips, traffic_volumes)))
 
     def test_0010_cascade_on_delete_host(self):
-        test_host = host.UserHost.q.first()
+        test_host = host.Host.q.first()
         interfaces = test_host.user_interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
@@ -206,7 +206,7 @@ class Test_060_Cascades(FixtureDataTestBase):
 
     def test_0010_cascade_on_delete_user(self):
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        hosts = test_user.user_hosts
+        hosts = test_user.hosts
         interfaces = tuple(chain(*(h.user_interfaces for h in hosts)))
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))

@@ -32,7 +32,7 @@ from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, IP, UserHost, Interface, Interface
+from pycroft.model.host import Host, IP, Host, Interface, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
 from pycroft.model.user import User, UnixAccount
@@ -145,7 +145,7 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
         id=new_user.id).to_json()
 
     # create one new host (including interface) for the new user
-    new_host = UserHost(owner=new_user, room=room)
+    new_host = Host(owner=new_user, room=room)
     session.session.add(new_host)
     session.session.add(Interface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
@@ -196,7 +196,7 @@ def move_back_in(user, building, level, room_number, mac, processor,
 
     user.room = room
 
-    new_host = UserHost(owner=user, room=room)
+    new_host = Host(owner=user, room=room)
     session.session.add(new_host)
     session.session.add(Interface(mac=mac, host=new_host))
     setup_ipv4_networking(new_host)
@@ -225,7 +225,7 @@ def migrate_user_host(host, new_room, processor):
     """
     Migrate a UserHost to a new room and if necessary to a new subnet.
     If the host changes subnet, it will get a new IP address.
-    :param UserHost host: Host to be migrated
+    :param Host host: Host to be migrated
     :param Room new_room: new room of the host
     :param User processor: User processing the migration
     :return:
@@ -290,7 +290,7 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
 
     setup_traffic_group(user, processor, traffic_group_id, terminate_other=True)
 
-    for user_host in user.user_hosts:
+    for user_host in user.hosts:
         migrate_user_host(user_host, new_room, processor)
 
     return user
@@ -541,7 +541,7 @@ def move_out(user, comment, processor, when):
         remove_member_of(user, group, processor, closedopen(when, None))
 
     num_hosts = 0  # In case the chain is empty
-    for num_hosts, h in enumerate(user.user_hosts, 1):
+    for num_hosts, h in enumerate(user.hosts, 1):
         session.session.delete(h)
 
     user.room = None

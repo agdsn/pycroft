@@ -65,8 +65,8 @@ class IntegrationTestCase(DummyHadesWorkerBase, UserLogTestBase):
         super().setUp()
         # We want the user from the UserHostData, not the dummy user
         # (which has no hosts)
-        from tests.fixtures.dummy.host import UserHostData
-        login = UserHostData.dummy.owner.login
+        from tests.fixtures.dummy.host import HostData
+        login = HostData.dummy.owner.login
         self.relevant_user = User.q.filter_by(login=login).one()
 
     def test_hades_logs_are_returned(self):

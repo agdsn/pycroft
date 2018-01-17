@@ -493,7 +493,7 @@ def generate_subnets_vlans(data, resources):
 
 
 @reg.provides(host.Host, host.Interface,
-              host.UserHost, host.Switch,
+              host.Host, host.Switch,
               host.Interface, host.SwitchPort,
               host.IP,
               satisfies=(host.IP.interface_id,))
@@ -543,7 +543,7 @@ def translate_hosts(data, resources):
             # Ignore the host if its owner has no room
             continue
 
-        h = host.UserHost(owner=owner, room=owner.room)
+        h = host.Host(owner=owner, room=owner.room)
         interface = host.Interface(host=h, mac=_c.c_etheraddr)
 
         if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
