@@ -109,17 +109,15 @@ def import_legacy(args):
         engine_ldap = create_engine(connection_string_ldap, echo=False)
         session_ldap = scoped_session(sessionmaker(bind=engine_ldap))
 
-    master_engine = create_engine(conn_opts['master'])
-    master_connection = master_engine.connect()
-    master_connection.execute("COMMIT")
-
-    log.info("Dropping pycroft db")
-    master_connection.execute("DROP DATABASE IF EXISTS pycroft")
-    master_connection.execute("COMMIT")
-    log.info("Creating pycroft db")
-    master_connection.execute("CREATE DATABASE pycroft")
-    master_connection.execute("COMMIT")
-    log.info("Creating pycroft model schema")
+    connection = engine.connect()
+    connection.execute("COMMIT")
+    log.info("Dropping schema `public`")
+    connection.execute("DROP SCHEMA public CASCADE")
+    connection.execute("COMMIT")
+    log.info("Recreating schema `public`")
+    connection.execute("CREATE SCHEMA public")
+    connection.execute("COMMIT")
+    log.info("Creating DB model")
     model.create_db_model(engine)
 
     with timed(log, thing="Translation"):
