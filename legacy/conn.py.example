@@ -25,13 +25,11 @@ _docker_conn_opts = {
     "legacy": "postgresql://postgres:password@db/legacy",
     "pycroft": "postgresql://postgres:password@db/pycroft",
     # pycroft target db – not used when caching, only on import
-    "master": "postgresql://postgres:password@db/postgres",
 }
 
 _vagrant_conn_opts = {
     "legacy": "postgresql:///legacy",
     "pycroft": "postgresql:///pycroft",
-    "master": "postgresql:///postgres",
 }
 
 ################################################################################
