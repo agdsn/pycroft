@@ -33,7 +33,7 @@
         <h2>Ports</h2>
         {{ tbl.item_table(
             'switches',
-             url_for('infrastructure.switch_show_json', switch_id=switch.id),
+             url_for('infrastructure.switch_show_json', switch_id=switch.host_id),
              cols
         ) }}
 {% endblock %}

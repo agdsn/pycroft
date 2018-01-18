@@ -35,11 +35,10 @@ class Host(IntegerIdModel):
 class Switch(ModelBase):
     """A switch with a name and mgmt-ip
 
-    A `Switch` is directly tied to a `Host` because the `id` column is not an
-    auto-incremented isolated value, but instead a foreign key on a `Host`.
+    A `Switch` is directly tied to a `Host` because instead of having an `id`
+    column, the primary key is `host_id`, a foreign key on a `Host`.
     """
-    id = Column(Integer, ForeignKey(Host.id),
-                primary_key=True)
+    host_id = Column(Integer, ForeignKey(Host.id), primary_key=True)
     host = relationship(Host, backref=backref("switch", uselist=False))
 
     name = Column(String(127), nullable=False)
@@ -99,7 +98,7 @@ switch_port_association_table = Table(
 
 
 class SwitchPort(IntegerIdModel):
-    switch_id = Column(Integer, ForeignKey(Switch.id, ondelete="CASCADE"),
+    switch_id = Column(Integer, ForeignKey(Switch.host_id, ondelete="CASCADE"),
                        nullable=False)
     switch = relationship(Switch,
                           backref=backref("ports",

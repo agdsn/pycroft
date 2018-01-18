@@ -50,10 +50,10 @@ def switches():
 @bp.route('/switches/json')
 def switches_json():
     return jsonify(items=[{
-            'id': switch.id,
+            'id': switch.host_id,
             'name': {
                 'title': switch.name,
-                'href': url_for(".switch_show", switch_id=switch.id)
+                'href': url_for(".switch_show", switch_id=switch.host_id)
             },
             'ip': str(switch.management_ip)
         } for switch in Switch.q.all()])
