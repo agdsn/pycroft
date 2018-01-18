@@ -152,7 +152,7 @@ def room_show(room_id):
         page_title=u"Raum " + str(room.building.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number),
         room=room,
-        ports=room.all_patch_ports,
+        ports=room.patch_ports,
         room_log=room_log_list,
         user_buttons=list(map(user_button, room.users)),
         form=form)

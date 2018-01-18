@@ -22,7 +22,7 @@ from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.finance import AccountData, SemesterData
 from tests.fixtures.dummy.host import (
-    IPData, SwitchPatchPortData, InterfaceData, HostData)
+    IPData, PatchPortData, InterfaceData, HostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
@@ -31,7 +31,7 @@ from tests.fixtures import user_with_trafficgroups
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
-                SwitchPatchPortData, UserData, InterfaceData, HostData,
+                PatchPortData, UserData, InterfaceData, HostData,
                 VLANData, TrafficGroupData)
 
     def setUp(self):
@@ -53,7 +53,7 @@ class Test_010_User_Move(FixtureDataTestBase):
             building=self.same_building, number=RoomData.dummy_room3.number,
             level=RoomData.dummy_room3.level, inhabitable=True).one()
         self.new_switch_patch_port = PatchPort.q.filter_by(
-            name=SwitchPatchPortData.dummy_patch_port2.name).one()
+            name=PatchPortData.dummy_patch_port2.name).one()
 
     def test_0010_moves_into_same_room(self):
         self.assertRaises(
@@ -80,7 +80,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
-                RoomData, SemesterData, SubnetData, SwitchPatchPortData,
+                RoomData, SemesterData, SubnetData, PatchPortData,
                 TrafficGroupData, UserData, HostData, InterfaceData,
                 VLANData)
 
@@ -166,7 +166,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
     datasets = (AccountData, ConfigData, IPData, SemesterData,
-                SwitchPatchPortData, TrafficGroupData)
+                PatchPortData, TrafficGroupData)
 
     def setUp(self):
         super().setUp()

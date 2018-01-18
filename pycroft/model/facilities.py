@@ -35,7 +35,11 @@ class Room(IntegerIdModel):
     building_id = Column(Integer, ForeignKey(Building.id), nullable=False)
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
-    all_patch_ports = relationship('PatchPort')
+    patch_ports = relationship('PatchPort')
+    connected_patch_ports = relationship(
+        'PatchPort',
+        primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
+    )
 
     def __str__(self):
         return "{} {} {}".format(self.building.short_name, self.level,

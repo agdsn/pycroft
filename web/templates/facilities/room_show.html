@@ -58,10 +58,8 @@
         <li><dl class="dl-horizontal">
             <dt>Patchpanel-Port</dt>
             <dd>{{ port.name }}</dd>
-            <dt>Typ</dt>
-            <dd>{{ port.type }}</dd>
 
-            {% if port.type == 'switch_patch_port' %}
+            {% if port.switch_port %}
             <dt>Gepatched zu</dt>
             <dd><a href={{ url_for('infrastructure.switch_show',
                                    switch_id=port.switch_port.switch.host_id) }}>

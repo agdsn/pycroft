@@ -14,7 +14,7 @@ class LegacyUserFrontendTestBase(FrontendDataTestBase, FixtureDataTestBase):
 
     Legacy, because using the `fixture` package.
     """
-    datasets = frozenset(permissions.datasets | {net.SubnetData, port.SwitchPatchPortData})
+    datasets = frozenset(permissions.datasets | {net.SubnetData, port.PatchPortData})
 
     def setUp(self):
         self.login = permissions.UserData.user1_admin.login

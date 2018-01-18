@@ -84,7 +84,7 @@ class HostAliasExists(ValueError):
 
 def setup_ipv4_networking(host):
     """Add suitable ips for every interface of a host"""
-    subnets = [s for p in host.room.switch_patch_ports
+    subnets = [s for p in host.room.connected_patch_ports
                for s in p.switch_port.subnets
                if s.address.version == 4
                if p.switch_port is not None]
@@ -232,7 +232,7 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
-    subnets = [subnet for p in new_room.switch_patch_ports
+    subnets = [subnet for p in new_room.connected_patch_ports
                for subnet in p.switch_port.subnets]
     if old_room.building_id == new_room.building_id:
         return
