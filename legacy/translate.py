@@ -526,15 +526,20 @@ def translate_hosts(data, resources):
             log.warning("Ignoring Switch %s without `mgmt_ip`", _c.c_hname)
             continue
         mgmt_ip = ipaddr.IPv4Address(_c.mgmt_ip)
-        h = host.Switch(owner=u_d[0], name=_c.c_hname, management_ip=mgmt_ip, room=room)
-        interface = host.SwitchPort(host=h, mac=_c.c_etheraddr or "00:00:00:00:00:01",
-                                    name="switch management interface")
-        sw_d[mgmt_ip] = h
+        h = host.Host(owner=u_d[0], room=room)
+        s = host.Switch(host=h, name=_c.c_hname, management_ip=mgmt_ip)
+        # Q: Why do we need the mgmt-Interface?
+        interface = host.SwitchPort(switch=s, name="switch management interface")
+        sw_d[mgmt_ip] = s
 
     for _c in data['server']:
-        # `Server`s don't exist anymore, but let's keep room and IP
+        # In order to keep the IPs of the servers (such as maxwell) reserved,
+        # we need to create them as `Host`s belonging to root.
         room = get_or_create_room(_c.c_wheim_id, _c.c_etage, _c.c_zimmernr)
-        ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip), subnet=s_d[_c.c_subnet_id])
+        h = host.Host(owner=u_d[0], room=room)
+        interface = host.Interface(host=h, mac=_c.c_etheraddr)
+        ip = host.IP(interface=interface, address=ipaddr.IPv4Address(_c.c_ip),
+                     subnet=s_d[_c.c_subnet_id])
         objs.append(ip)
 
     for _c in data['userhost']:
@@ -575,10 +580,8 @@ def translate_ports(data, resources):
         port_name = _sp.port
         room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
         subnet_ids = building_subnets_map[room.building.id]
-        sp = host.SwitchPort(
-            host=switch, name=port_name,
-            mac="00:00:00:00:00:01",
-            subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
+        sp = host.SwitchPort(switch=switch, name=port_name,
+                             subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
         pp = port.SwitchPatchPort(
             switch_port=sp, name="?? ({})".format(port_name), room=room)
         objs.append(pp)
