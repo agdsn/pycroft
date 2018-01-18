@@ -9,35 +9,13 @@ from pycroft.model.host import SwitchPort
 
 
 class PatchPort(IntegerIdModel):
-    """A patch panel port that's not connected"""
+    """A patch panel port that may or not be connected to a switch"""
     id = Column(Integer, primary_key=True)
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
-    type = Column(String(20))
     name = Column(String(8), nullable=False)
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'unwired_patch_port',
-        'polymorphic_on': type
-    }
-
-
-class SwitchPatchPort(PatchPort):
-    """A patch panel port connected to a switch port"""
-    id = Column(Integer, ForeignKey(PatchPort.id), primary_key=True)
-
-    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id),
-                            nullable=False, unique=True)
+    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id), unique=True)
     switch_port = relationship(SwitchPort,
                                backref=backref("patch_port", uselist=False))
-    room = relationship(Room, backref=backref("switch_patch_ports"))
 
-    __mapper_args__ = {'polymorphic_identity': 'switch_patch_port'}
-
-
-class PhonePort(PatchPort):
-    """A patch panel port that's connected to a third party"""
-    id = Column(Integer, ForeignKey(PatchPort.id), primary_key=True,
-                nullable=False)
-    room = relationship(Room, backref=backref("phone_patch_ports"))
-
-    __mapper_args__ = {'polymorphic_identity': 'phone_patch_port'}
+    room = relationship(Room, back_populates="patch_ports")

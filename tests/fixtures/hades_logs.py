@@ -8,5 +8,5 @@ from .dummy import host, port
 # logs.
 datasets = (
     permissions.datasets
-    | {host.HostData, port.SwitchPortData, port.SwitchPatchPortData}
+    | {host.HostData, port.SwitchPortData, port.PatchPortData}
 )

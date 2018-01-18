@@ -6,7 +6,7 @@ from fixture import DataSet
 from tests.fixtures.dummy.facilities import RoomData
 from .host import SwitchPortData
 
-class SwitchPatchPortData(DataSet):
+class PatchPortData(DataSet):
     class dummy_port1:
         name = "??"
         switch_port = SwitchPortData.dummy_port1

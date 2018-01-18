@@ -20,12 +20,12 @@ def iter_hades_switch_ports(room):
     :returns: An iterator of (nasportid, nasipaddress) usable as
               arguments in ``HadesLogs.fetch_logs()``
     """
-    from pycroft.model._all import Room, SwitchPatchPort, SwitchPort, Switch
+    from pycroft.model._all import Room, PatchPort, SwitchPort, Switch
     query = (
         session.session
         .query(SwitchPort.name, Switch.management_ip)
-        .join(SwitchPatchPort.room)
-        .join(SwitchPatchPort.switch_port)
+        .join(PatchPort.room)
+        .join(PatchPort.switch_port)
         .join(SwitchPort.switch)
         .filter(Room.id == room.id)
     )
@@ -44,7 +44,7 @@ def get_user_hades_logs(user):
     # raised even if there's no SwitchPort
     do_fetch = hades_logs.fetch_logs
     for host in user.hosts:
-        for patch_port in host.room.switch_patch_ports:
+        for patch_port in host.room.connected_patch_ports:
             port = patch_port.switch_port
             nasportid = port.name
             nasipaddress = str(port.switch.management_ip)
@@ -55,7 +55,7 @@ def is_user_connected(user):
     try:
         next(patch_port
              for host in user.hosts
-             for patch_port in host.room.switch_patch_ports)
+             for patch_port in host.room.connected_patch_ports)
     except StopIteration:
         return False
     return True

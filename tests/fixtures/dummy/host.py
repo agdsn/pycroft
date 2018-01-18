@@ -60,7 +60,7 @@ class SwitchPortData(DataSet):
         switch = SwitchData.dummy
 
 
-class SwitchPatchPortData(DataSet):
+class PatchPortData(DataSet):
     class dummy_patch_port1:
         room = RoomData.dummy_room1
         name = "D1"

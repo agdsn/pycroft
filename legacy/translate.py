@@ -561,7 +561,7 @@ def translate_hosts(data, resources):
     return objs
 
 
-@reg.provides(port.SwitchPatchPort)
+@reg.provides(port.PatchPort)
 def translate_ports(data, resources):
     sw_d = resources['switch']
     s_d = resources['subnet']
@@ -582,7 +582,7 @@ def translate_ports(data, resources):
         subnet_ids = building_subnets_map[room.building.id]
         sp = host.SwitchPort(switch=switch, name=port_name,
                              subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
-        pp = port.SwitchPatchPort(
+        pp = port.PatchPort(
             switch_port=sp, name="?? ({})".format(port_name), room=room)
         objs.append(pp)
 
