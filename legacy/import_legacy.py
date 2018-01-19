@@ -112,7 +112,7 @@ def import_legacy(args):
     connection = engine.connect()
     connection.execute("COMMIT")
     log.info("Dropping schema `public`")
-    connection.execute("DROP SCHEMA public CASCADE")
+    connection.execute("DROP SCHEMA IF EXISTS public CASCADE")
     connection.execute("COMMIT")
     log.info("Recreating schema `public`")
     connection.execute("CREATE SCHEMA public")
