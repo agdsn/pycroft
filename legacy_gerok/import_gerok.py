@@ -72,11 +72,11 @@ def main(args):
     engine_nvtool = create_engine(connection_string_nvtool, echo=False)
     session_nvtool = scoped_session(sessionmaker(bind=engine_nvtool))
 
-    master_engine = create_engine(conn_opts['master'])
-    master_connection = master_engine.connect()
-    master_connection.execute("COMMIT")
-
     if args.delete_old:
+        master_engine = create_engine(conn_opts['master'])
+        master_connection = master_engine.connect()
+        master_connection.execute("COMMIT")
+
         log.info("Dropping pycroft db")
         master_connection.execute("DROP DATABASE IF EXISTS pycroft")
         master_connection.execute("COMMIT")
