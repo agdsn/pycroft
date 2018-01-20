@@ -11,6 +11,6 @@ conn_opts = {
     'nvtool': "postgresql://postgres:password@db/nvtool",
     # The “Output” database
     'pycroft': "postgresql://postgres:password@db/pycroft",
-    # The master database (for creating / dropping tables)
+    # The master database (only needed for --delete-old)
     'master': "postgresql://postgres:password@db/postgres",
 }
