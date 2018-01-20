@@ -225,7 +225,7 @@ def visit_drop_rule(element, compiler, **kw):
 
 class ConstraintTrigger(schema.DDLElement):
     def __init__(self, name, table, events, function_call,
-                 deferrable: bool = False, initially_deferred: bool = False):
+                 deferrable=False, initially_deferred=False):
         """
         Construct a constraint trigger
         :param str name: Name of the trigger
@@ -252,7 +252,7 @@ class CreateConstraintTrigger(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, constraint_trigger: ConstraintTrigger):
+    def __init__(self, constraint_trigger):
         self.constraint_trigger = constraint_trigger
 
 
@@ -262,7 +262,7 @@ class DropTrigger(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, trigger: ConstraintTrigger, if_exists: bool = False):
+    def __init__(self, trigger, if_exists=False):
         self.trigger = trigger
         self.if_exists = if_exists
 
