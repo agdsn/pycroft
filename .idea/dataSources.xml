@@ -13,14 +13,5 @@
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:55432/pycroft</jdbc-url>
     </data-source>
-    <data-source source="LOCAL" name="alembic_test@localhost" uuid="d5e29669-0dcf-4855-9bb3-daa0c8637237">
-      <driver-ref>postgresql</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:55432/alembic_test</jdbc-url>
-      <driver-properties>
-        <property name="ApplicationName" value="DataGrip" />
-      </driver-properties>
-    </data-source>
   </component>
 </project>
