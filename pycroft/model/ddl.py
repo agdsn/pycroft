@@ -2,15 +2,15 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import inspect
+from collections import Iterable
 from functools import partial
-from typing import Dict, Iterable, Optional, Sequence
 
 from sqlalchemy import event as sqla_event, schema
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ClauseElement
 
 
-def _join_tokens(*tokens) -> str:
+def _join_tokens(*tokens):
     """
     Join all elements that are not None
     :param tokens:
@@ -160,7 +160,7 @@ class CreateRule(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, rule: Rule, or_replace: bool = False):
+    def __init__(self, rule, or_replace=False):
         self.rule = rule
         self.or_replace = or_replace
 
@@ -171,8 +171,7 @@ class DropRule(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, rule: Rule, if_exists: bool = False,
-                 cascade: bool = False):
+    def __init__(self, rule, if_exists=False, cascade=False):
         """
         :param rule:
         :param if_exists:
@@ -304,9 +303,9 @@ def visit_drop_trigger(element, compiler, **kw):
 
 class View(schema.DDLElement):
     def __init__(self, name, query,
-                 column_names: Optional[Sequence[str]] = None,
-                 temporary: bool = False,
-                 view_options: Optional[Dict[str, str]] = None,
+                 column_names=None,
+                 temporary=False,
+                 view_options=None,
                  check_option=None):
         self.name = name
         self.query = query
@@ -327,13 +326,13 @@ class View(schema.DDLElement):
 
 
 class CreateView(schema.DDLElement):
-    def __init__(self, view, or_replace: bool = False):
+    def __init__(self, view, or_replace=False):
         self.view = view
         self.or_replace = or_replace
 
 
 class DropView(schema.DDLElement):
-    def __init__(self, view, if_exists: bool = False, cascade: bool = False):
+    def __init__(self, view, if_exists=False, cascade=False):
         self.view = view
         self.if_exists = if_exists
         self.cascade = cascade
