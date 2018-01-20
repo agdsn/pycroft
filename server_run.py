@@ -17,9 +17,22 @@ import pycroft
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model.session import set_scoped_session
 import web
+from scripts.alembic import AlembicHelper, SchemaStrategist
 
 
 def server_run(args):
+    try:
+        connection_string = os.environ['PYCROFT_DB_URI']
+    except KeyError:
+        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
+                           "set to an SQLAlchemy connection string.")
+
+    engine = create_engine(connection_string)
+    connection = engine.connect()
+    state = AlembicHelper(connection)
+    strategy = SchemaStrategist(state).determine_schema_strategy()
+    strategy()
+
     from web import make_app
 
     print("If you're running in a docker setup, the port may differ"
@@ -39,11 +52,6 @@ def server_run(args):
                 "Response took {duration} seconds for request {path}".format(
                 path=request.full_path, duration=time_taken))
 
-    try:
-        connection_string = os.environ['PYCROFT_DB_URI']
-    except KeyError:
-        raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
-                           "set to an SQLAlchemy connection string.")
     engine = create_engine(connection_string, echo=args.profile)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
