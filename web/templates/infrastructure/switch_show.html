@@ -26,7 +26,7 @@
             <dt>Management IP</dt>
             <dd>{{ switch.management_ip }}</dd>
             <dt>Standort</dt>
-            <dd>{% if switch.room != None %}{{ switch.room.building.short_name }} / {{ switch.room.level }}-{{ switch.room.number }}{% else %}unbekannt{% endif %}</dd>
+            <dd>{% if switch.host.room != None %}{{ switch.host.room.building.short_name }} / {{ switch.host.room.level }}-{{ switch.host.room.number }}{% else %}unbekannt{% endif %}</dd>
         </dl>
     </section>
     <section>

@@ -64,8 +64,8 @@
             {% if port.type == 'switch_patch_port' %}
             <dt>Gepatched zu</dt>
             <dd><a href={{ url_for('infrastructure.switch_show',
-                                   switch_id=port.switch_port.host.id) }}>
-                    {{ port.switch_port.host.name }}/{{ port.switch_port.name }}
+                                   switch_id=port.switch_port.switch.host_id) }}>
+                    {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
             </a></dd>
             <dt>Anliegende <a href="{{ url_for('infrastructure.subnets') }}">Subnets</a></dt>
             <dd>
