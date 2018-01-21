@@ -99,10 +99,10 @@ class DropFunction(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, func, if_exists=False):
+    def __init__(self, func, if_exists=False, cascade=False):
         self.function = func
         self.if_exists = if_exists
-
+        self.cascade = cascade
 
 # noinspection PyUnusedLocal
 @compiles(CreateFunction, 'postgresql')
