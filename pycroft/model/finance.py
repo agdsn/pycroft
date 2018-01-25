@@ -167,7 +167,8 @@ manager.add_constraint_trigger(
     ddl.ConstraintTrigger(
         'split_check_transaction_balanced_trigger',
         Split.__table__, ('INSERT', 'UPDATE', 'DELETE'),
-        'split_check_transaction_balanced()'
+        'split_check_transaction_balanced()',
+        deferrable=True, initially_deferred=True,
     )
 )
 
@@ -319,7 +320,8 @@ manager.add_constraint_trigger(
         'bank_account_activity_matches_referenced_split_trigger',
         BankAccountActivity.__table__,
         ('INSERT', 'UPDATE', 'DELETE'),
-        'bank_account_activity_matches_referenced_split()'
+        'bank_account_activity_matches_referenced_split()',
+        deferrable=True, initially_deferred=True,
     )
 )
 
