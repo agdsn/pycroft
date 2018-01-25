@@ -160,10 +160,10 @@ class ViewTest(DDLTest):
 
     def test_create_view_with_view_options(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]), view_options={
-            'check_option': 'cascaded',
-            'security_barrier': 't',
-        })
+        view = View("view", select([table.c.id]), view_options=[
+            ('check_option', 'cascaded'),
+            ('security_barrier', 't'),
+        ])
         stmt = CreateView(view)
         self.assertEqual('CREATE VIEW view '
                          'WITH (check_option = cascaded, security_barrier = t) '

@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import inspect
-from collections import Iterable
+from collections import Iterable, OrderedDict
 from functools import partial
 
 from sqlalchemy import event as sqla_event, schema
@@ -329,14 +329,25 @@ class View(schema.DDLElement):
                  temporary=False,
                  view_options=None,
                  check_option=None):
+        """DDL Element representing a VIEW
+
+        :param name: The name of the view
+        :param query: the query it represents
+        :param column_names:
+        :param temporary:
+        :param view_options: Must be something that can be passed to
+            OrderedDict, so a simple dict suffices.
+        :param check_option: Must be one of ``None``, ``'local'``,
+            ``'cascaded'``.
+        """
         self.name = name
         self.query = query
         self.temporary = temporary
         self.column_names = column_names
         if view_options is None:
-            view_options = {}
+            view_options = OrderedDict()
         else:
-            view_options = dict(view_options)
+            view_options = OrderedDict(view_options)
         self.view_options = view_options
         if check_option not in (None, 'local', 'cascaded'):
             raise ValueError("check_option must be either None, 'local', or "
