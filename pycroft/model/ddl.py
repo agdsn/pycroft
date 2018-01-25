@@ -283,9 +283,10 @@ class DropTrigger(schema.DDLElement):
     """
     on = 'postgresql'
 
-    def __init__(self, trigger, if_exists=False):
+    def __init__(self, trigger, if_exists=False, cascade=False):
         self.trigger = trigger
         self.if_exists = if_exists
+        self.cascade = cascade
 
 
 # noinspection PyUnusedLocal
