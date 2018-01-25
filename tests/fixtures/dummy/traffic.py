@@ -12,7 +12,7 @@ class TrafficVolumeData(DataSet):
     class dummy_volume:
         ip = IPData.dummy_user_ipv4
         user = UserData.dummy
-        type = "IN"
+        type = "Ingress"
         amount = int(7.6 * 2**20)
         packets = int(7600)
         timestamp = datetime.utcnow()
@@ -20,7 +20,7 @@ class TrafficVolumeData(DataSet):
     class dummy_volume_before_balance:
         ip = IPData.dummy_user_ipv4
         user = UserData.dummy
-        type = "IN"
+        type = "Ingress"
         amount = int(3.72 * 2**30)
         packets = int(3720)
         timestamp = datetime.utcnow() - timedelta(hours=2)
@@ -28,7 +28,7 @@ class TrafficVolumeData(DataSet):
     class dummy_volume_ipv6:
         ip = IPData.dummy_user_ipv6
         user = UserData.dummy
-        type = "OUT"
+        type = "Egress"
         amount = int(56.1 * 2**20)
         packets = int(5610)
         timestamp = datetime.utcnow() - timedelta(minutes=25)

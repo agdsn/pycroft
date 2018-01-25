@@ -43,8 +43,17 @@ class FunctionTest(DDLTest):
     def test_create_function(self):
         func = Function("do_foo", [], "INTEGER", "BEGIN; RETURN NULL; END;")
         stmt = CreateFunction(func)
-        self.assertEqual('CREATE FUNCTION "do_foo()" '
-                         'RETURNS INTEGER VOLATILE $$\n'
+        self.assertEqual('CREATE FUNCTION do_foo() '
+                         'RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n'
+                         'BEGIN; RETURN NULL; END;\n'
+                         '$$',
+                         literal_compile(stmt))
+
+    def test_create_function_with_quoting(self):
+        func = Function("do foo", [], "INTEGER", "BEGIN; RETURN NULL; END;")
+        stmt = CreateFunction(func)
+        self.assertEqual('CREATE FUNCTION "do foo"() '
+                         'RETURNS INTEGER VOLATILE LANGUAGE sql AS $$\n'
                          'BEGIN; RETURN NULL; END;\n'
                          '$$',
                          literal_compile(stmt))
@@ -55,10 +64,10 @@ class ConstraintTriggerTest(DDLTest):
         table = create_table("test")
         trigger = ConstraintTrigger("test_trigger", table, "INSERT", "do_foo()")
         stmt = CreateConstraintTrigger(trigger)
-        self.assertEqual('CREATE FUNCTION "do_foo()" '
-                         'RETURNS INTEGER VOLATILE $$\n'
-                         'BEGIN; RETURN NULL; END;\n'
-                         '$$',
+        self.assertEqual('CREATE CONSTRAINT TRIGGER test_trigger '
+                         'AFTER I OR N OR S OR E OR R OR T '
+                         'ON test FOR EACH ROW EXECUTE PROCEDURE '
+                         'do_foo()',
                          literal_compile(stmt))
 
 
