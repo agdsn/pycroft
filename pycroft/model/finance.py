@@ -85,7 +85,7 @@ class Account(IntegerIdModel):
 manager.add_function(
     Account.__table__,
     ddl.Function(
-        'account_is_type(integer, account_type)', 'boolean',
+        'account_is_type', ['integer', 'account_type'], 'boolean',
         "SELECT type = $2 FROM account WHERE id = $1 ",
         volatility='stable', strict=True,
     )
@@ -135,7 +135,7 @@ class Split(IntegerIdModel):
 manager.add_function(
     Split.__table__,
     ddl.Function(
-        'split_check_transaction_balanced()', 'trigger',
+        'split_check_transaction_balanced', [], 'trigger',
         """
         DECLARE
           s split;
@@ -281,7 +281,7 @@ manager.add_constraint(
 manager.add_function(
     BankAccountActivity.__table__,
     ddl.Function(
-        'bank_account_activity_matches_referenced_split()',
+        'bank_account_activity_matches_referenced_split', [],
         'trigger',
         """
         DECLARE

@@ -41,7 +41,7 @@ class ConstraintTest(DDLTest):
 
 class FunctionTest(DDLTest):
     def test_create_function(self):
-        func = Function("do_foo()", "INTEGER", "BEGIN; RETURN NULL; END;")
+        func = Function("do_foo", [], "INTEGER", "BEGIN; RETURN NULL; END;")
         stmt = CreateFunction(func)
         self.assertEqual('CREATE FUNCTION "do_foo()" '
                          'RETURNS INTEGER VOLATILE $$\n'

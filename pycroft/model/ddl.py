@@ -54,25 +54,30 @@ def visit_drop_constraint(drop_constraint, compiler, **kw):
 class Function(schema.DDLElement):
     on = 'postgresql'
 
-    def __init__(self, name, rtype, definition, volatility='volatile',
+    def __init__(self, name, arguments, rtype, definition, volatility='volatile',
                  strict=False, leakproof=False, language='sql', quote_tag=''):
         """
         Represents PostgreSQL function
 
-        :param str name: Name of the function (including arguments)
+        :param str name: Name of the function (excluding arguments).
+        :param list arguments: Arguments of the function.  A function
+            identifier of ``new_function(integer, integer)`` would
+            result in ``arguments=['integer', 'integer']``.
         :param str rtype: Return type
         :param str definition: Definition
-        :param str volatility: Either 'volatile', 'stable', or 'immutable'
+        :param str volatility: Either 'volatile', 'stable', or
+            'immutable'
         :param bool strict: Function should be declared STRICT
         :param bool leakproof: Function should be declared LEAKPROOF
         :param str language: Language the function is defined in
         :param str quote_tag: Dollar quote tag to enclose the function
-        definition
+            definition
         """
         if volatility not in ('volatile', 'stable', 'immutable'):
             raise ValueError("volatility must be 'volatile', 'stable', or "
                              "'immutable'")
         self.name = name
+        self.arguments = arguments
         self.definition = inspect.cleandoc(definition)
         self.volatility = volatility
         self.strict = strict
@@ -80,6 +85,21 @@ class Function(schema.DDLElement):
         self.language = language
         self.leakproof = leakproof
         self.quote_tag = quote_tag
+
+    def build_quoted_identifier(self, quoter):
+        """Compile the function identifier from name and arguments.
+
+        :param quoter: A callable that quotes the function name
+
+        :returns: The compiled string, like
+                  ``"my_function_name"(integer, account_type)``
+        :rtype: str
+        """
+        return "{name}({args})".format(
+            name=quoter(self.name),
+            args=", ".join(self.arguments),
+        )
+
 
 
 class CreateFunction(schema.DDLElement):
@@ -117,11 +137,13 @@ def visit_create_function(element, compiler, **kw):
     leakproof = "LEAKPROOF" if func.leakproof else None
     quoted_definition = "${quote_tag}$\n{definition}\n${quote_tag}$".format(
         quote_tag=func.quote_tag, definition=func.definition)
-    function_name = compiler.preparer.quote(func.name)
+
+    function_name = func.build_quoted_identifier(quoter=compiler.preparer.quote)
     return _join_tokens(
         "CREATE", opt_or_replace, "FUNCTION", function_name, "RETURNS",
-        func.rtype, volatility, strictness, leakproof,
-        quoted_definition)
+        func.rtype, volatility, strictness, leakproof, "LANGUAGE", func.language,
+        "AS", quoted_definition,
+    )
 
 
 # noinspection PyUnusedLocal
@@ -132,7 +154,7 @@ def visit_drop_function(element, compiler, **kw):
     """
     opt_if_exists = "IF EXISTS" if element.if_exists else None
     opt_drop_behavior = "CASCADE" if element.cascade else None
-    function_name = compiler.preparer.quote(element.function.name)
+    function_name = element.function.build_quoted_identifier(quoter=compiler.preparer.quote)
     return _join_tokens("DROP FUNCTION", opt_if_exists,
                         function_name, opt_drop_behavior)
 
