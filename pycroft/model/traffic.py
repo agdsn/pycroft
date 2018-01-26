@@ -65,22 +65,26 @@ class PmacctTrafficEgress(PmacctTable):
     )
 
 
-"""
-INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, user_id)  SELECT 'IN',
-            ip.id,
-            new.stamp_inserted,
-            new.bytes,
-            host.owner_id
-           FROM ip
-             JOIN interface ON ip.interface_id = interface.id
-             JOIN host ON interface.host_id = host.id
-          WHERE new.ip_dst = ip.address
-"""
-
 ddl.add_rule(
-    PmacctTrafficEgress,
-    Rule("pmacct_traffic_egress_insert", PmacctTrafficEgress, "INSERT",
-         Insert(TrafficVolume.__table__, {}), do_instead=True))
+    PmacctTrafficEgress.__table__,
+    Rule("pmacct_traffic_egress_insert", PmacctTrafficEgress.__table__, "INSERT",
+         """
+         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, user_id)
+         SELECT 'Egress',
+             ip.id,
+             new.stamp_inserted,
+             new.bytes,
+             host.owner_id
+            FROM ip
+              JOIN interface ON ip.interface_id = interface.id
+              JOIN host ON interface.host_id = host.id
+         WHERE new.ip_src = ip.address
+         """,
+         do_instead=True)
+)
+
+# The rule demands that `traffic_volume` already has been added
+PmacctTrafficEgress.__table__.add_is_dependent_on(TrafficVolume.__table__)
 
 
 class PmacctTrafficIngress(PmacctTable):
@@ -90,6 +94,28 @@ class PmacctTrafficIngress(PmacctTable):
     )
 
 
+ddl.add_rule(
+    PmacctTrafficIngress.__table__,
+    Rule("pmacct_traffic_ingress_insert", PmacctTrafficIngress.__table__, "INSERT",
+         """
+         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, user_id)
+         SELECT 'Ingress',
+             ip.id,
+             new.stamp_inserted,
+             new.bytes,
+             host.owner_id
+            FROM ip
+              JOIN interface ON ip.interface_id = interface.id
+              JOIN host ON interface.host_id = host.id
+         WHERE new.ip_dst = ip.address
+         """,
+         do_instead=True)
+)
+
+# The rule demands that `traffic_volume` already has been added
+PmacctTrafficIngress.__table__.add_is_dependent_on(TrafficVolume.__table__)
+
+
 class TrafficCredit(TrafficEvent, IntegerIdModel):
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
                      nullable=False)
@@ -97,3 +123,5 @@ class TrafficCredit(TrafficEvent, IntegerIdModel):
                         backref=backref("traffic_credits",
                                         cascade="all, delete-orphan"),
                         uselist=False)
+
+ddl.register()
