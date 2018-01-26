@@ -69,11 +69,12 @@ ddl.add_rule(
     PmacctTrafficEgress.__table__,
     Rule("pmacct_traffic_egress_insert", PmacctTrafficEgress.__table__, "INSERT",
          """
-         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, user_id)
+         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
          SELECT 'Egress',
              ip.id,
              new.stamp_inserted,
              new.bytes,
+             new.packets,
              host.owner_id
             FROM ip
               JOIN interface ON ip.interface_id = interface.id
@@ -98,11 +99,12 @@ ddl.add_rule(
     PmacctTrafficIngress.__table__,
     Rule("pmacct_traffic_ingress_insert", PmacctTrafficIngress.__table__, "INSERT",
          """
-         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, user_id)
+         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
          SELECT 'Ingress',
              ip.id,
              new.stamp_inserted,
              new.bytes,
+             new.packets,
              host.owner_id
             FROM ip
               JOIN interface ON ip.interface_id = interface.id
