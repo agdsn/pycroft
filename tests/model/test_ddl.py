@@ -210,5 +210,3 @@ class ViewTest(DDLTest):
         stmt = DropView(view, cascade=True)
         self.assertEqual('DROP VIEW view CASCADE',
                          literal_compile(stmt))
-
-
