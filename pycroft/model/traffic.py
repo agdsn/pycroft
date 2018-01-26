@@ -12,8 +12,7 @@ from pycroft.model.ddl import DDLManager, Rule
 from pycroft.model.types import IPAddress
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
-from pycroft.model.host import IP
-
+from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
 
@@ -68,19 +67,42 @@ class PmacctTrafficEgress(PmacctTable):
 ddl.add_rule(
     PmacctTrafficEgress.__table__,
     Rule("pmacct_traffic_egress_insert", PmacctTrafficEgress.__table__, "INSERT",
+         # We use an ugly-ass format string to have an additional
+         # safety net when refactoring e.g. column names
          """
-         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+         INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
          SELECT 'Egress',
-             ip.id,
-             new.stamp_inserted,
-             new.bytes,
-             new.packets,
-             host.owner_id
+             {ip_id},
+             new.{pm_stamp_inserted},
+             new.{pm_bytes},
+             new.{pm_packets},
+             {host_owner_id}
             FROM ip
-              JOIN interface ON ip.interface_id = interface.id
-              JOIN host ON interface.host_id = host.id
-         WHERE new.ip_src = ip.address
-         """,
+              JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
+              JOIN {host_tname} ON {interface_host_id} = {host_id}
+         WHERE new.{pm_ip_src} = {ip_address}
+         """.format(
+             tv_type=TrafficVolume.type.key,
+             tv_ip_id=TrafficVolume.ip_id.key,
+             tv_timestamp=TrafficVolume.timestamp.key,
+             tv_amount=TrafficVolume.amount.key,
+             tv_packets=TrafficVolume.packets.key,
+             tv_user_id=TrafficVolume.user_id.key,
+             pm_stamp_inserted=PmacctTrafficEgress.stamp_inserted.key,
+             pm_bytes=PmacctTrafficEgress.bytes.key,
+             pm_packets=PmacctTrafficEgress.packets.key,
+             pm_ip_src=PmacctTrafficEgress.ip_src.key,
+             ip_tname=IP.__tablename__,
+             ip_id=str(IP.id.expression),
+             ip_interface_id=str(IP.interface_id.expression),
+             ip_address=str(IP.address.expression),
+             host_tname=Host.__tablename__,
+             host_id=str(Host.id.expression),
+             host_owner_id=str(Host.owner_id.expression),
+             interface_tname=Interface.__tablename__,
+             interface_id=str(Interface.id.expression),
+             interface_host_id=str(Interface.host_id.expression),
+         ),
          do_instead=True)
 )
 
@@ -98,19 +120,41 @@ class PmacctTrafficIngress(PmacctTable):
 ddl.add_rule(
     PmacctTrafficIngress.__table__,
     Rule("pmacct_traffic_ingress_insert", PmacctTrafficIngress.__table__, "INSERT",
+         # concerning the format string, see above comment
          """
-         INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+         INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
          SELECT 'Ingress',
-             ip.id,
-             new.stamp_inserted,
-             new.bytes,
-             new.packets,
-             host.owner_id
+             {ip_id},
+             new.{pm_stamp_inserted},
+             new.{pm_bytes},
+             new.{pm_packets},
+             {host_owner_id}
             FROM ip
-              JOIN interface ON ip.interface_id = interface.id
-              JOIN host ON interface.host_id = host.id
-         WHERE new.ip_dst = ip.address
-         """,
+              JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
+              JOIN {host_tname} ON {interface_host_id} = {host_id}
+         WHERE new.{pm_ip_dst} = {ip_address}
+         """.format(
+             tv_type=TrafficVolume.type.key,
+             tv_ip_id=TrafficVolume.ip_id.key,
+             tv_timestamp=TrafficVolume.timestamp.key,
+             tv_amount=TrafficVolume.amount.key,
+             tv_packets=TrafficVolume.packets.key,
+             tv_user_id=TrafficVolume.user_id.key,
+             pm_stamp_inserted=PmacctTrafficIngress.stamp_inserted.key,
+             pm_bytes=PmacctTrafficIngress.bytes.key,
+             pm_packets=PmacctTrafficIngress.packets.key,
+             pm_ip_dst=PmacctTrafficIngress.ip_dst.key,
+             ip_tname=IP.__tablename__,
+             ip_id=str(IP.id.expression),
+             ip_interface_id=str(IP.interface_id.expression),
+             ip_address=str(IP.address.expression),
+             host_tname=Host.__tablename__,
+             host_id=str(Host.id.expression),
+             host_owner_id=str(Host.owner_id.expression),
+             interface_tname=Interface.__tablename__,
+             interface_id=str(Interface.id.expression),
+             interface_host_id=str(Interface.host_id.expression),
+         ),
          do_instead=True)
 )
 
