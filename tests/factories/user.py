@@ -2,7 +2,7 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from factory import SubFactory
+import factory
 from factory.faker import Faker
 
 from pycroft.model.user import User
@@ -19,8 +19,9 @@ class UserFactory(BaseFactory):
     registered_at = Faker('date_time')
     password = Faker('password')
     email = Faker('email')
-    account = SubFactory(AccountFactory, type="USER_ASSET")
-    room = SubFactory(RoomFactory)
-    # TODO: create subclasses for `dummy` and `privileged` user
-    # Q: How can we add memberships on the factory level?
-    # A: By using `RelatedFactory, although that can only do one`
+    account = factory.SubFactory(AccountFactory, type="USER_ASSET")
+    room = factory.SubFactory(RoomFactory)
+
+
+class UserWithHostFactory(UserFactory):
+    host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner')

@@ -5,6 +5,8 @@
 from datetime import timedelta
 import factory
 
+from pycroft.model.traffic import PmacctTrafficEgress, \
+    PmacctTrafficIngress
 from pycroft.model.user import TrafficGroup
 
 from .base import BaseFactory
@@ -20,3 +22,26 @@ class TrafficGroupFactory(BaseFactory):
     credit_amount = 3*2**30
     credit_interval = timedelta(days=1)
     initial_credit_amount = 21*2**30
+
+
+class PMAcctTrafficFactoryBase(BaseFactory):
+    class Meta:
+        abstract = True
+
+    packets = factory.Faker('pyint')
+    bytes = factory.Faker('pyint')
+    stamp_inserted = factory.Faker('date_time_this_year')
+
+
+class PMAcctTrafficEgressFactory(PMAcctTrafficFactoryBase):
+    class Meta:
+        model = PmacctTrafficEgress
+
+    ip_src = None
+
+
+class PMAcctTrafficIngressFactory(PMAcctTrafficFactoryBase):
+    class Meta:
+        model = PmacctTrafficIngress
+
+    ip_dst = None
