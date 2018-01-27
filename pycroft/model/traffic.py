@@ -45,7 +45,7 @@ class TrafficVolume(TrafficEvent, IntegerIdModel):
                         backref=backref("traffic_volumes",
                                         cascade="all, delete-orphan"),
                         uselist=False)
-    packets = Column(Integer, CheckConstraint('amount >= 0'),
+    packets = Column(Integer, CheckConstraint('packets >= 0'),
                      nullable=False)
 
 
