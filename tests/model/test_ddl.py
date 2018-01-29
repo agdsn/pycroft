@@ -6,7 +6,7 @@ from sqlalchemy.dialects import postgresql
 
 from pycroft.model.ddl import DropConstraint, CreateFunction, DropFunction, \
     Function, View, CreateView, DropView, Rule, CreateRule, ConstraintTrigger, \
-    CreateConstraintTrigger
+    CreateConstraintTrigger, Trigger, CreateTrigger
 
 
 def literal_compile(stmt):
@@ -59,12 +59,22 @@ class FunctionTest(DDLTest):
                          literal_compile(stmt))
 
 
-class ConstraintTriggerTest(DDLTest):
+class TriggerTest(DDLTest):
     def test_create_constraint_trigger(self):
         table = create_table("test")
         trigger = ConstraintTrigger("test_trigger", table, "INSERT", "do_foo()")
         stmt = CreateConstraintTrigger(trigger)
         self.assertEqual('CREATE CONSTRAINT TRIGGER test_trigger '
+                         'AFTER I OR N OR S OR E OR R OR T '
+                         'ON test FOR EACH ROW EXECUTE PROCEDURE '
+                         'do_foo()',
+                         literal_compile(stmt))
+
+    def test_create_trigger(self):
+        table = create_table("test")
+        trigger = Trigger("test_trigger", table, "INSERT", "do_foo()")
+        stmt = CreateTrigger(trigger)
+        self.assertEqual('CREATE TRIGGER test_trigger '
                          'AFTER I OR N OR S OR E OR R OR T '
                          'ON test FOR EACH ROW EXECUTE PROCEDURE '
                          'do_foo()',
