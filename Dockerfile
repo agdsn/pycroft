@@ -2,17 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 FROM debian:jessie
-ENV PROJECT_DIR=/pycroft LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive
+ENV PROJECT_DIR=/pycroft LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY vagrant/etc/apt/sources.list /etc/apt/sources.list
-
-# Setup locale
-RUN apt-get update \
-    && apt-get install -y locales \
-    && sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
-    && locale-gen \
-    && dpkg-reconfigure locales \
-    && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
