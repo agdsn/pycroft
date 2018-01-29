@@ -16,12 +16,10 @@ RUN apt-key add /etc/nodesource.gpg.key && apt-get update \
         curl \
         git \
         libpq-dev \
-        libsqlite3-dev \
         nodejs \
         python3-dev \
         python3-pip \
         build-essential \
-        sqlite3 \
         vim \
     && apt-get clean \
     && npm install -g bower
