@@ -509,12 +509,13 @@ class TrafficGroup(Group):
     initial_credit_amount = Column(BigInteger, nullable=False)
 
 
-unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000, metadata=ModelBase.metadata)
+unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,
+                                metadata=ModelBase.metadata)
 
 
 class UnixAccount(IntegerIdModel):
     uid = Column(Integer, nullable=False, unique=True,
-                        server_default=unix_account_uid_seq.next_value())
+                 server_default=unix_account_uid_seq.next_value())
     gid = Column(Integer, nullable=False, default=100)
     login_shell = Column(String, nullable=False, default="/bin/bash")
     home_directory = Column(String, nullable=False, unique=True)
