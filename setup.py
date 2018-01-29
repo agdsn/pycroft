@@ -33,6 +33,6 @@ setup(
     author="AG DSN",
     description="AG DSN user management software",
     long_description=__doc__,
-    license="MIT",
+    license="Apache Software License",
     url="http://github.com/agdsn/pycroft/",   # project home page, if any
 )
