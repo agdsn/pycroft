@@ -23,6 +23,7 @@ RUN apt-key add /etc/nodesource.gpg.key && apt-get update \
         build-essential \
         sqlite3 \
         vim \
+    && apt-get clean \
     && npm install -g bower
 
 # pip3 install -U pip installs an additional pip3 binary to
