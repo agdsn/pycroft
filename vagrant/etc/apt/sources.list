@@ -9,3 +9,6 @@ deb-src http://ftp.agdsn.de/debian jessie-updates main
 
 deb http://ftp.agdsn.de/pub/mirrors/debian-security jessie/updates main
 deb-src http://ftp.agdsn.de/pub/mirrors/debian-security jessie/updates main
+
+deb http://deb.nodesource.com/node_9.x/ jessie main
+deb-src http://deb.nodesource.com/node_9.x/ jessie main

@@ -4,11 +4,11 @@
 FROM debian:jessie
 ENV PROJECT_DIR=/pycroft LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
-COPY vagrant/etc/apt/sources.list /etc/apt/sources.list
+COPY vagrant/ /
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
-RUN apt-get update \
+RUN apt-key add /etc/nodesource.gpg.key && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         curl \
@@ -16,17 +16,12 @@ RUN apt-get update \
         libpq-dev \
         libsqlite3-dev \
         nodejs \
-        npm \
         python3-dev \
         python3-pip \
         build-essential \
         sqlite3 \
         vim \
-    && ln -s /usr/bin/nodejs /usr/bin/node \
     && npm install -g bower
-
-# Install Python packages
-COPY vagrant/requirements.txt /
 
 # pip3 install -U pip installs an additional pip3 binary to
 # `/usr/local/bin/pip3` as opposed to the OS-owned `/usr/bin/pip3`.
