@@ -20,7 +20,7 @@ services:
   dummy_worker:  # a dummy worker mocking hades for testing the client
     build:
       context: ..
-    entrypoint: "python3 helpers/dummy_celery_worker.py"  # like `celery`
+    entrypoint: "/opt/venv/bin/python helpers/dummy_celery_worker.py"  # like `celery`
     command: "worker --loglevel=info"
     environment:
       - TEST_HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/

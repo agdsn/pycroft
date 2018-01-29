@@ -18,41 +18,30 @@ RUN apt-key add /etc/nodesource.gpg.key && apt-get update \
         libpq-dev \
         nodejs \
         python3-dev \
-        python3-pip \
+        python3-venv \
         build-essential \
         vim \
     && apt-get clean \
     && npm install -g bower
 
-# pip3 install -U pip installs an additional pip3 binary to
-# `/usr/local/bin/pip3` as opposed to the OS-owned `/usr/bin/pip3`.
-# Removal of the hash table with `hash -r` is thus necessary to tell
-# the bash that the new, up-to-date binary exists.
-RUN pip3 install -U pip \
-    && hash -r \
-    && pip3 install -r /requirements.txt
-
 RUN groupadd --force --gid $GID pycroft \
-    && useradd --non-unique --home-dir $PROJECT_DIR --create-home --uid $UID --gid $GID --comment "Application" pycroft
-
-# Installing the js dependencies via bower cannot be done as root
-COPY bower.json .bowerrc $PROJECT_DIR/
-RUN export BOWER_DIR=$PROJECT_DIR/web/static/libs/ \
-    && mkdir -p $BOWER_DIR \
-    && chown pycroft:pycroft $BOWER_DIR \
-    && cd $PROJECT_DIR/ \
-    && echo "Installing js dependencies." \
-    && bower --allow-root install -F \
-    && bower --allow-root update -F
-
-COPY . $PROJECT_DIR
-
-RUN chown -R pycroft:pycroft $PROJECT_DIR \
-    && pip install -e $PROJECT_DIR
-# the latter installs pycroft in “develop” mode following `setup.py`.
+    && useradd --non-unique --home-dir $PROJECT_DIR --create-home --uid $UID --gid $GID --comment "Application" pycroft \
+    && mkdir -p /opt/venv && chown pycroft:pycroft /opt/venv
 
 USER pycroft
 WORKDIR $PROJECT_DIR
+
+COPY --chown=pycroft:pycroft . .
+
+# - Create a virtual environment
+# - Upgrade pip, setuptools and wheel
+# - Install requirements and pycroft in editable mode
+# - Install JavaScript/CSS/HTML requirements with Bower
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install -U pip setuptools wheel \
+    && /opt/venv/bin/pip install -r /requirements.txt -e . \
+    && bower install -F \
+    && bower update -F
 
 EXPOSE 5000
 ENTRYPOINT ["./entrypoint.sh"]

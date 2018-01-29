@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash -l
+# Execute a login shell to prime the environment
 
 # This entrypoint installs the javascript libraries if necessary.
 # Although the dockerfile takes care off setting them up in the

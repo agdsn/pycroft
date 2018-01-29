@@ -16,6 +16,7 @@ fixture~=1.5.11
 git+git://github.com/google/ipaddr-py.git@master#egg=ipaddr
 jsonschema~=2.6.0
 nose~=1.3.7
+coverage~=4.4.2
 passlib~=1.7.1
 pydot~=1.2.3
 git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
