@@ -14,9 +14,10 @@ changes to take effect.  On a running system, you can just execute
 """
 
 from setuptools import setup, find_packages
+
 setup(
     name="pycroft",
-    version="0.1",
+    version="0.1.0",
     packages=find_packages(exclude=["tests", "tests.*"]),
     entry_points={
         'console_scripts': [
@@ -29,10 +30,22 @@ setup(
         ]
     },
 
-    # metadata for upload to PyPI
-    author="AG DSN",
+    author="The Pycroft Authors",
     description="AG DSN user management software",
     long_description=__doc__,
     license="Apache Software License",
-    url="http://github.com/agdsn/pycroft/",   # project home page, if any
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Flask',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Topic :: Internet',
+    ],
+    url="http://github.com/agdsn/pycroft/",
 )
