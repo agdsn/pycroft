@@ -232,6 +232,7 @@ class IllegalTransactionError(Exception):
     pass
 
 
+# noinspection PyUnusedLocal
 @event.listens_for(Transaction, "before_insert")
 @event.listens_for(Transaction, "before_update")
 def check_transaction_on_save(mapper, connection, target):
@@ -249,6 +250,7 @@ def check_transaction_on_save(mapper, connection, target):
                                               u"of at least two splits."))
 
 
+# noinspection PyUnusedLocal
 @event.listens_for(Split, "before_update")
 @event.listens_for(Split, "after_delete")
 def check_split_on_update(mapper, connection, target):
