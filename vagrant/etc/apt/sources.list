@@ -1,11 +1,11 @@
-deb http://ftp.wh2.tu-dresden.de/debian jessie main
-deb-src http://ftp.wh2.tu-dresden.de/debian jessie main
+deb http://ftp.agdsn.de/debian jessie main
+deb-src http://ftp.agdsn.de/debian jessie main
 
-deb http://ftp.wh2.tu-dresden.de/debian jessie-backports main
-deb-src http://ftp.wh2.tu-dresden.de/debian jessie-backports main
+deb http://ftp.agdsn.de/debian jessie-backports main
+deb-src http://ftp.agdsn.de/debian jessie-backports main
 
-deb http://ftp.wh2.tu-dresden.de/debian jessie-updates main
-deb-src http://ftp.wh2.tu-dresden.de/debian jessie-updates main
+deb http://ftp.agdsn.de/debian jessie-updates main
+deb-src http://ftp.agdsn.de/debian jessie-updates main
 
-deb http://ftp.wh2.tu-dresden.de/pub/mirrors/debian-security jessie/updates main
-deb-src http://ftp.wh2.tu-dresden.de/pub/mirrors/debian-security jessie/updates main
+deb http://ftp.agdsn.de/pub/mirrors/debian-security jessie/updates main
+deb-src http://ftp.agdsn.de/pub/mirrors/debian-security jessie/updates main
