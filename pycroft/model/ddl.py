@@ -244,27 +244,41 @@ def visit_drop_rule(element, compiler, **kw):
         opt_drop_behavior)
 
 
-class ConstraintTrigger(schema.DDLElement):
-    def __init__(self, name, table, events, function_call,
-                 deferrable=False, initially_deferred=False):
-        """
-        Construct a constraint trigger
+class Trigger(schema.DDLElement):
+    def __init__(self, name, table, events, function_call):
+        """Construct a trigger
+
         :param str name: Name of the trigger
         :param table: Table the trigger is for
         :param iterable[str] events: list of events (INSERT, UPDATE, DELETE)
         :param str function_call: call of the trigger function
-        :param deferrable: Constraint can be deferred
-        :param initially_deferred: Constraint is set to deferred
         """
         self.name = name
         self.table = table
         self.events = events
         self.function_call = function_call
+
+
+class ConstraintTrigger(Trigger):
+    def __init__(self, *args, deferrable=False, initially_deferred=False, **kwargs):
+        """Construct a Constraint Trigger
+
+        :param deferrable: Constraint can be deferred
+        :param initially_deferred: Constraint is set to deferred
+        """
+        super().__init__(*args, **kwargs)
         self.deferrable = deferrable
         if not deferrable and initially_deferred:
             raise ValueError("Constraint declared INITIALLY DEFERRED must be "
                              "DEFERRABLE.")
         self.initially_deferred = initially_deferred
+
+
+class CreateTrigger(schema.DDLElement):
+    on = 'postgresql'
+
+    def __init__(self, trigger):
+        self.trigger = trigger
 
 
 class CreateConstraintTrigger(schema.DDLElement):
@@ -305,6 +319,21 @@ def create_add_constraint_trigger(element, compiler, **kw):
     return _join_tokens(
         "CREATE CONSTRAINT TRIGGER", trigger_name, 'AFTER', events, 'ON',
         table_name, opt_deferrable, opt_initially_deferred,
+        "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
+
+
+# noinspection PyUnusedLocal
+@compiles(CreateTrigger, 'postgresql')
+def create_add_trigger(element, compiler, **kw):
+    """
+    Compile a CREATE CONSTRAINT TRIGGER DDL statement for PostgreSQL
+    """
+    trigger = element.trigger
+    events = ' OR '.join(trigger.events)
+    trigger_name = compiler.preparer.quote(trigger.name)
+    table_name = compiler.preparer.format_table(trigger.table)
+    return _join_tokens(
+        "CREATE TRIGGER", trigger_name, 'AFTER', events, 'ON', table_name,
         "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
 
@@ -442,9 +471,13 @@ class DDLManager(object):
         self.add(table, CreateRule(rule, or_replace=True),
                  DropRule(rule, if_exists=True), dialect=dialect)
 
+    def add_trigger(self, table, trigger, dialect=None):
+        self.add(table, CreateTrigger(trigger),
+                 DropTrigger(trigger, if_exists=True), dialect=dialect)
+
     def add_constraint_trigger(self, table, constraint_trigger, dialect=None):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
-                 DropTrigger(constraint_trigger), dialect=dialect)
+                 DropTrigger(constraint_trigger, if_exists=True), dialect=dialect)
 
     def add_view(self, table, view, dialect=None):
         self.add(table, CreateView(view, or_replace=True),
