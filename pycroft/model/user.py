@@ -10,7 +10,6 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from datetime import datetime
 import re
 
 from flask_login import UserMixin
