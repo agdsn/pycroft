@@ -4,6 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
 import operator
+
 from math import fabs
 
 from sqlalchemy import Column, ForeignKey, event, func, select
@@ -11,7 +12,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import (
     CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
-from sqlalchemy.types import Date, Enum, Integer, Interval, String, Text
+from sqlalchemy.types import (
+    Date, DateTime, Enum, Integer, Interval, String, Text)
 
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
