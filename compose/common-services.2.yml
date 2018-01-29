@@ -6,11 +6,19 @@
 # conflicts which trigger another bug.
 # See https://github.com/lukasjuhrich/docker-compose-extends/ for some
 # exploration of the behavior.
-version: '2'
+version: '2.1'
 services:
   web_base:
     build:
       context: ..
+      # docker-compose can automatically use variables from the environment.
+      # UID is set by bash, but not exported. Zsh also sets GID, but doesn't
+      # export them either.
+      # Add export UID; export GID; to your zsh config
+      # Add export UID; export GID="$(id -g)" to your bash config
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
     image: pycroft  # tag of the built image
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft

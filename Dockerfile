@@ -2,6 +2,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 FROM debian:jessie
+ARG UID=1000
+ARG GID=1000
 ENV PROJECT_DIR=/pycroft LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 COPY vagrant/ /
@@ -31,8 +33,8 @@ RUN pip3 install -U pip \
     && hash -r \
     && pip3 install -r /requirements.txt
 
-RUN adduser --disabled-password --gecos "Application" pycroft
-RUN mkdir -p $PROJECT_DIR/ && chown pycroft:pycroft $PROJECT_DIR
+RUN groupadd --force --gid $GID pycroft \
+    && useradd --non-unique --home-dir $PROJECT_DIR --create-home --uid $UID --gid $GID --comment "Application" pycroft
 
 # Installing the js dependencies via bower cannot be done as root
 COPY bower.json .bowerrc $PROJECT_DIR/

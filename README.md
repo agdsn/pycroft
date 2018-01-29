@@ -72,6 +72,46 @@ Said default setup provides:
 * db: A postgres database to be used for the pycroft database and the
   legacy cache.
 
+Because the web container mounts the project directory on your machine,
+you want to ensure that the user id (UID) and group id (GID) on your
+machine matches with the UID/GID of the `pycroft` user inside the container,
+otherwise the user inside the container might not be able to read/write files
+or you might not be able to read/write files created by the container.
+
+The web container has build arguments for the UID and GID of the user inside
+the container. The defaults for these arguments is 1000/1000. You can specify
+the these build arguments manually on the command-line, when you create the
+container with `docker build` or `docker-compose build`. The compose file will
+however automatically use the environment variables `UID` and `GID` if set and
+not empty.
+
+Don't be fooled by your shell however by executing the following command and
+feeling safe, if it outputs your UID:
+
+```bash
+echo $UID
+```
+
+Bash and zsh automatically define this variable, but do not export it:
+
+```bash
+python3 -c 'import os; print(os.getenv("UID"))'
+```
+
+The easiest thing therefore is to set `UID` in your shell, by setting
+
+```bash
+export UID
+# Bash does not set GID, zsh does, so you can omit the assignment with zsh:
+export GID=$(id -g)
+```
+
+You should put these lines somewhere in your shell's startup script (e.g.
+`.profile`), so that it is always defined.
+
+Alternatively you can use `docker-compose`'s override mechanism and create
+your own `docker-compose.override.yml` and set the UID/GID build argument
+there.
 
 ## Pycharm Integration
 

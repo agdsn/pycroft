@@ -1,5 +1,5 @@
 # Travis version of the test infrastructure without mounts
-version: '2'
+version: '2.1'
 services:
   web:
     extends:
