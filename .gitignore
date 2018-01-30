@@ -1,5 +1,4 @@
 *~
-*.pyc
 .idea/workspace.xml
 .idea/misc.xml
 .idea/Pycroft.iml
@@ -43,7 +42,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-/lib/
+lib/
 lib64/
 parts/
 sdist/
@@ -102,7 +101,7 @@ target/
 .python-version
 
 # celery beat schedule file
-celerybeat-schedule
+celerybeat-schedule.*
 
 # SageMath parsed files
 *.sage.py
@@ -128,5 +127,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
 
 # End of https://www.gitignore.io/api/python
