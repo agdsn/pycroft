@@ -3,13 +3,7 @@
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
-/**
- * Created with PyCharm.
- * User: jan
- * Date: 01.07.12
- * Time: 03:45
- * To change this template use File | Settings | File Templates.
- */
+
 !function ($) {
     var SubNavBar = function (element, options) {
         this.options = $.extend({
