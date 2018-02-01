@@ -17,22 +17,66 @@ from setuptools import setup, find_packages
 
 setup(
     name="pycroft",
+    author="The Pycroft Authors",
+    description="AG DSN user management software",
+    long_description=__doc__,
     version="0.1.0",
+    url="http://github.com/agdsn/pycroft/",
     packages=find_packages(exclude=["tests", "tests.*"]),
+    include_package_data=True,
+    zip_safe=False,
+    python_requires=">= 3.4",
+    install_requires=[
+        'alembic',
+        'celery ~= 3.1.25',
+        'Flask',
+        'Flask-Babel',
+        'Flask-Login',
+        'Jinja2',
+        'MarkupSafe',
+        'SQLAlchemy >= 1.1',
+        'WTForms',
+        'Werkzeug',
+        'jsonschema',
+        'ipaddr',
+        'passlib',
+        'psycopg2',
+        'wrapt',
+    ],
+    dependency_links=[
+        'git+git://github.com/google/ipaddr-py.git@master#egg=ipaddr',
+        'git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git'
+        '@master#egg=sqlalchemy-schemadisplay',
+    ],
+    extras_require={
+        'Import-Cache': [
+            'ldap3',
+        ],
+        'Import-Gerok': [
+            'PyMySQL',
+        ],
+        'Display-Schema': [
+            'sqlalchemy-schemadisplay',
+        ]
+    },
+    tests_require=[
+        'factory-boy',
+        'Flask-Testing',
+        'fixture',
+        'nose',
+        'pydot',
+    ],
     entry_points={
         'console_scripts': [
             'pycroft = scripts.server_run:main',
             'pycroft_legacy_import = legacy.import_legacy:main',
-            'pycroft_legacy_cache = legacy.cache_legacy:main',
-            'pycroft_legacy_gerok_import = legacy_gerok.__main__',
+            'pycroft_legacy_cache = legacy.cache_legacy:main [Import-Cache]',
+            'pycroft_legacy_gerok_import = legacy_gerok.__main__ '
+            '[Import-Gerok]',
             'pycroft_ldap_sync = ldap_sync.__main__',
             'pycroft_sync_exceeded_traffic_limits = scripts.sync_exceeded_traffic_limits:main',
         ]
     },
-
-    author="The Pycroft Authors",
-    description="AG DSN user management software",
-    long_description=__doc__,
     license="Apache Software License",
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -47,5 +91,4 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Internet',
     ],
-    url="http://github.com/agdsn/pycroft/",
 )
