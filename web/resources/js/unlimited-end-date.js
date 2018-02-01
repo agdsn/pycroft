@@ -4,6 +4,7 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 // disables the DatePicker field if the block is marked as unlimited
+
 $(function() {
     var end = $(".form-field");
     var unlimited = end.find("[name='end-unlimited']");

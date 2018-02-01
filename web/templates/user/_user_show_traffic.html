@@ -3,6 +3,9 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
+
+{% import "macros/resources.html" as resources %}
+
 {% block page_css %}
 <style>
 
@@ -77,11 +80,10 @@
 
 
 {% block page_script %}
-  <script type="text/javascript" src="{{ url_for("static", filename="libs/d3/d3.min.js") }}"></script>
-  <script type="text/javascript" src="{{ url_for("static", filename="libs/nvd3/build/nv.d3.min.js") }}"></script>
-  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/d3locale.js") }}"></script>
-  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/binary_prefix.js") }}"></script>
-
+  {{ resources.link_script_file('libs/d3/d3.min.js') }}
+  {{ resources.link_script_file('libs/nvd3/build/nv.d3.min.js') }}
+  {{ resources.link_script_file('js/d3locale.js') }}
+  {{ resources.link_script_file('js/binary_prefix.js') }}
   <script>
       var dateFormat = d3.time.format('%Y-%m-%d');
 

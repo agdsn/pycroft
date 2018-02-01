@@ -52,7 +52,7 @@ class LazyLoadSelectField(fields.SelectField):
 
     As widget the LazyLoadSelectWidget is used. It renders everything
     automatically. You need only the form.js and the initializing js code:
-        <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
+        {{ resources.link_script_file('js/form.js') }}
         <script type="text/javascript">
             $('[data-role=lazyloadselect]').lazyLoadSelect()
         </script>

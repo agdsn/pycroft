@@ -15,8 +15,8 @@
 {% endblock %}
 
 {% block page_script -%}
-    {{ resources.link_script_file('custom/js/account-typeahead.js') }}
-    <script type="application/javascript">
+    {{ resources.link_script_file('js/account-typeahead.js') }}
+    <script type="text/javascript">
         $(function () {
             account_typeahead($('#account_id'), $('#account'));
         });

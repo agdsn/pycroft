@@ -6,6 +6,8 @@
 {% extends "layout.html" %}
 {% set page_title = "Konto: " + account.name|localized %}
 
+{% import "macros/resources.html" as resources %}
+
 {% block page_css %}
 <style>
 .axis path,
@@ -63,7 +65,7 @@
 {% endblock %}
 
 {% block page_script %}
-  <script type="text/javascript" src="{{ url_for("static", filename="custom/js/d3locale.js") }}"></script>
+    {{ resources.link_script_file("js/d3locale.js") }}
 <script>
 var parent = d3.select("#balance-graph");
 var _width = parent.node().getBoundingClientRect().width;

@@ -14,6 +14,7 @@
 /**
  * This is a today-button to use with the datepicker.
  */
+
 !function ( $ ) {
 
     // Today Button object
@@ -64,7 +65,7 @@
     $.fn.todayButton.defaults = {};
 	$.fn.todayButton.Constructor = TodayButton;
 
-}(window.jQuery);
+}(jQuery);
 
 /**
  * AutoLoadFocus
@@ -88,7 +89,6 @@ $(function(){
 
     var LazyLoadSelect= function(element, options) {
         this.element = $(element);
-        this.oldvalue_loaded = false;
         this.options = $.extend({
             field_ids: [],
             item_attr: "items"
@@ -175,7 +175,7 @@ $(function(){
     $.fn.lazyLoadSelect.defaults = {};
 	$.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
 
-}(window.jQuery);
+}(jQuery);
 
 /**
  * IntervalPicker

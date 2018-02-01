@@ -61,7 +61,7 @@
 
     $.fn.subNavBar = function (options) {
         return this.each(function () {
-            if (undefined == $(this).data('subNavBar')) {
+            if (undefined === $(this).data('subNavBar')) {
                 var plugin = new SubNavBar(this, options);
                 $(this).data('subNavBar', plugin);
             }
@@ -77,4 +77,4 @@
         }, 500);
     }
 
-}(window.jQuery);
+}(jQuery);

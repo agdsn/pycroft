@@ -5,7 +5,9 @@
 #}
 {% extends "layout.html" %}
 {% set page_title = "Nutzer anzeigen" %}
+
 {% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
 
 {% block content %}
     <div class="subnav">
@@ -75,7 +77,7 @@
 
 
 {% block page_script %}
-    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/navigation.js") }}"></script>
+    {{ resources.link_script_file("js/navigation.js") }}
     <script type="text/javascript">
         $(".subnav").subNavBar();
     </script>

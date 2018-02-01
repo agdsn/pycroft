@@ -15,6 +15,6 @@
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
-    <script type="text/javascript" src="{{ url_for("static", filename="custom/js/unlimited_end_date.js") }}"></script>
+    {{ resources.link_script_file("js/form.js") }}
+    {{ resources.link_script_file("js/unlimited-end-date.js") }}
 {% endblock %}
