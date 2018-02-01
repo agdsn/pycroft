@@ -2,7 +2,7 @@
 
 Pycroft is the future user management system of the AG DSN student
 network.  It is based on [Flask](http://flask.pocoo.org) and expects a
-postgres database making use of the
+[Postgres](https://www.postgresql.org/) database making use of the
 [SQLAlchemy ORM](http://www.sqlalchemy.org/).
 
 # Cloning this directory #
