@@ -38,13 +38,12 @@ setup(
         'WTForms',
         'Werkzeug',
         'jsonschema',
-        'ipaddr',
+        'ipaddr >= 2.2.0',
         'passlib',
         'psycopg2',
         'wrapt',
     ],
     dependency_links=[
-        'git+git://github.com/google/ipaddr-py.git@master#egg=ipaddr',
         'git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git'
         '@master#egg=sqlalchemy-schemadisplay',
     ],
