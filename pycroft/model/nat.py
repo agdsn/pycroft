@@ -20,6 +20,7 @@ class Translation(ModelBase):
     public_ip = Column(PublicIP,ForeignKey(PublicIP.address),primary_key=True)
     private_ip = Column(PrivateNet, backref("translation"),
                         primary_key=True, unique=True)
+    vlan = Column(Integer)
 
 
 class Forwarding(IntegerIdModel):
