@@ -17,7 +17,7 @@ services:
       - HADES_CELERY_APP_NAME=dummy_tasks
       - HADES_BROKER_URI=amqp://celery:celery@rabbitmq:5672/
       - HADES_RESULT_BACKEND_URI=rpc://celery:celery@rabbitmq:5672/
-    command: "python3 server_run.py --debug --exposed --profile"
+    command: "pycroft --debug --exposed --profile"
   db_base:
     image: postgres
     environment:
