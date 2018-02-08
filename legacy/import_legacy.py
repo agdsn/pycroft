@@ -9,6 +9,9 @@ import os
 import sys
 from collections import Counter
 import logging as std_logging
+
+from scripts.schema import AlembicHelper
+
 log = std_logging.getLogger('import')
 import random
 
@@ -213,6 +216,9 @@ def import_legacy(args):
         if maxid:
             engine.execute("select setval('{}', {})".format(sequence_name, maxid + 1))
             log.info("  fixing %s(%s)", sequence_name, meta.__tablename__)
+
+    # Stamp this schema with the latest revision
+    AlembicHelper(connection).stamp()
 
 
 def main():
