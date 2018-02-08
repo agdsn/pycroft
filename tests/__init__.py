@@ -48,6 +48,11 @@ def setup():
     create_db_model(connection)
 
 
+def get_engine_and_connection():
+    global engine, connection
+    return engine, connection
+
+
 def teardown():
     global engine, connection, _setup_stack
     _setup_stack -= 1
