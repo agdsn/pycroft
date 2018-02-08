@@ -11,11 +11,10 @@
       <introspection-schemas>legacy:public</introspection-schemas>
     </data-source>
     <data-source name="pycroft@localhost" uuid="e455b627-0a7e-432f-9d69-cafb01bc5879">
-      <database-info product="PostgreSQL" version="9.6.1" jdbc-version="4.0" driver-name="PostgreSQL Native Driver" driver-version="PostgreSQL 9.4 JDBC4 (build 1201)">
+      <database-info product="PostgreSQL" version="9.6.1" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>
       <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact" />
-      <secret-storage>master_key</secret-storage>
       <user-name>postgres</user-name>
       <introspection-schemas>pycroft:public</introspection-schemas>
     </data-source>
