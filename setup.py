@@ -20,7 +20,7 @@ setup(
     packages=find_packages(exclude=["tests", "tests.*"]),
     entry_points={
         'console_scripts': [
-            'pycroft = server_run:main',
+            'pycroft = scripts.server_run:main',
             'pycroft_legacy_import = legacy.import_legacy:main',
             'pycroft_legacy_cache = legacy.cache_legacy:main',
             'pycroft_legacy_gerok_import = legacy_gerok.__main__',

@@ -19,10 +19,11 @@
         </list>
       </option>
     </PathMappingSettings>
-    <option name="SCRIPT_NAME" value="server_run.py" />
+    <option name="SCRIPT_NAME" value="scripts.server_run" />
     <option name="PARAMETERS" value="--debug --exposed --profile" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="true" />
     <method />
   </configuration>
 </component>
