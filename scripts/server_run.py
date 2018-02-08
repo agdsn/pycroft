@@ -17,7 +17,7 @@ import pycroft
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model.session import set_scoped_session
 import web
-from scripts.alembic import AlembicHelper, SchemaStrategist
+from scripts.schema import AlembicHelper, SchemaStrategist
 
 
 def server_run(args):
