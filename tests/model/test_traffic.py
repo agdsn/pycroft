@@ -25,6 +25,26 @@ class PMAcctPseudoTableTest(FactoryDataTestBase):
         self.assertEqual(PmacctTrafficEgress.q.count(), 0)
         self.assertEqual(TrafficVolume.q.count(), 0)
 
+    def test_egress_update_successive_entries(self):
+        data = [
+            # timestamp, packets, amount
+            ('2018-03-15 00:15:00', 200, 1024),
+            ('2018-03-15 10:15:00', 324, 500),
+            ('2018-03-15 23:59:00', 12, 7055),
+        ]
+        for stamp, packets, bytes in data:
+            PMAcctTrafficEgressFactory.create(
+                ip_src=self.ip,
+                stamp_inserted=stamp,
+                bytes=bytes,
+                packets=packets,
+            )
+        self.assertEqual(PmacctTrafficEgress.q.count(), 0)
+        self.assertEqual(TrafficVolume.q.count(), 1)
+        vol = TrafficVolume.q.one()
+        self.assertEqual(vol.timestamp, '2018-03-15 00:00:00')
+
+
     def test_ingress_insert(self):
         ingress_traffic = PMAcctTrafficIngressFactory.create(ip_dst=self.ip)
         self.assertEqual(PmacctTrafficIngress.q.count(), 0)
