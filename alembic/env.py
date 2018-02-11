@@ -1,11 +1,17 @@
 from __future__ import with_statement
+import os
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, create_engine
 from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+try:
+    uri = os.environ['PYCROFT_DB_URI']
+except KeyError:
+    raise ValueError("Please Provide a valid uri in `PYCROFT_DB_URI`.")
+engine = create_engine(uri)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -34,9 +40,9 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    # url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+        url=uri, target_metadata=target_metadata, literal_binds=True)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -49,12 +55,12 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+    # connectable = engine_from_config(
+    #     config.get_section(config.config_ini_section),
+    #     prefix='sqlalchemy.',
+    #     poolclass=pool.NullPool)
 
-    with connectable.connect() as connection:
+    with engine.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata
