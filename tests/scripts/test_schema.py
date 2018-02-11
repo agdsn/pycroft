@@ -106,7 +106,7 @@ class TestUpgrade(SQLAlchemyTestCase):
         initial_version = self.helper.running_version
 
         out = self.create_revision("Testrevision")
-        self.assertIn(b" Generating /", out)
+        self.assertIn(b"Generating /", out)
         self.assertIn(b"_testrevision.py", out)
 
         new_created_version = self.helper.desired_version
