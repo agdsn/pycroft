@@ -2,7 +2,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import Column, ForeignKey, CheckConstraint, PrimaryKeyConstraint
+from sqlalchemy import Column, ForeignKey, CheckConstraint, \
+    PrimaryKeyConstraint, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import Insert
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
@@ -32,7 +33,11 @@ class TrafficEvent(object):
                     nullable=False)
 
 
-class TrafficVolume(TrafficEvent, IntegerIdModel):
+class TrafficVolume(TrafficEvent, ModelBase):
+    __table_args__ = (
+        PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
+        Index('user_id', 'timestamp'),
+    )
     type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
@@ -47,7 +52,7 @@ class TrafficVolume(TrafficEvent, IntegerIdModel):
                         uselist=False)
     packets = Column(Integer, CheckConstraint('packets >= 0'),
                      nullable=False)
-
+TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
 
 class PmacctTable(ModelBase):
     __abstract__ = True
