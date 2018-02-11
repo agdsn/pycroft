@@ -1,3 +1,9 @@
+import os
+import re
+import subprocess
+from functools import partial
+from tempfile import mkdtemp
+
 from scripts.schema import AlembicHelper, SchemaStrategist
 from tests import SQLAlchemyTestCase, get_engine_and_connection
 
@@ -53,3 +59,59 @@ class TestSchemaStrategy(AlembicTest):
         strategist = MockedStrategist(helper)
         self.assertEqual(strategist.determine_schema_strategy(),
                          strategist.upgrade)
+
+
+class TestUpgrade(SQLAlchemyTestCase):
+    def setUp(self):
+        super().setUp()
+        _, self.connection = get_engine_and_connection()
+
+        # Patch AlembicHelper so it will use another location directory
+        self.tmpdir = mkdtemp()
+
+    def tearDown(self):
+        os.rmdir(self.tmpdir)
+
+    @property
+    def helper(self):
+        """Building a fresh helper every time
+
+        This is convenient because every time e.g. a revision is added
+        to our version directory, `helper.scr` does not know that.
+        """
+        return AlembicHelper(self.connection)
+
+    def create_revision(self, msg):
+        """Create an empty alembic revision with a given message
+
+        The created revision files will be removed afterwards.
+        Although it would be cleaner to use a separate directory for
+        the version locations, the `alembic` CLI requires a separate
+        config file for that, so this is the more pragmatic approach.
+        """
+        try:
+            out = subprocess.check_output(["alembic", "revision", "-m", msg])
+        except subprocess.CalledProcessError:
+            self.fail("`alembic revision` returned a nonzero exit code.", )
+
+        created_files = re.findall(r"Generating (.*?\.py)", out.decode('utf-8'))
+        for created_file in created_files:
+            self.addCleanup(partial(os.remove, created_file))
+        return out
+
+
+    def test_schema_upgrade(self):
+        self.create_revision("Initial Testrevision")
+        self.helper.stamp()
+        initial_version = self.helper.running_version
+
+        out = self.create_revision("Testrevision")
+        self.assertIn(b" Generating /", out)
+        self.assertIn(b"_testrevision.py", out)
+
+        new_created_version = self.helper.desired_version
+        self.assertNotEqual(new_created_version, initial_version)
+
+        self.helper.upgrade()
+        new_running_version = self.helper.running_version
+        self.assertEqual(new_running_version, new_created_version)
