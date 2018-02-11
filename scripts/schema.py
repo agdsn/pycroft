@@ -10,9 +10,12 @@ class AlembicHelper:
         self.connection = connection
         config = Config(config_file)
         self.scr = ScriptDirectory.from_config(config)
-        self.context = MigrationContext.configure(self.connection)
+        self.context = self._new_context()
         self.running_version = self._get_running_version()
         self.desired_version = self._get_desired_version()
+
+    def _new_context(self, **kwargs):
+        return MigrationContext.configure(connection=self.connection, **kwargs)
 
     def _get_running_version(self):
         return self.context.get_current_revision()
@@ -22,6 +25,14 @@ class AlembicHelper:
 
     def stamp(self, revision='head'):
         self.context.stamp(self.scr, revision)
+
+    def upgrade(self, revision='head', **kwargs):
+        def upgrade(rev, context):
+            return self.scr._upgrade_revs(destination=revision, current_rev=rev)
+        # early binding of the upgrade function (i.e., in self.ctx) is not possible because it is
+        # bound to the target revision.
+        upgrade_bound_ctx = self._new_context(opts={'fn': upgrade})
+        upgrade_bound_ctx.run_migrations(**kwargs)
 
 
 def db_has_nontrivial_objects(connection):
@@ -71,9 +82,9 @@ class SchemaStrategist:
         print("Schema is up to date (revision: {})".format(self.helper.running_version))
 
     def upgrade(self):
-        print("Schema is not up to date (current/desired: {}/{}). Please run an upgrade."
-            .format(self.helper.running_version, self.helper.desired_version))
-        exit(1)
+        print("Running upgrade from {} to {}...".format(self.helper.running_version,
+                                                        self.helper.desired_version))
+        self.helper.upgrade()
 
     @staticmethod
     def manual_intervention():
