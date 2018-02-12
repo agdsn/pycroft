@@ -53,17 +53,17 @@ class TrafficVolume(TrafficEvent, ModelBase):
                      nullable=False)
 TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
 
-class PmacctTable(ModelBase):
-    __abstract__ = True
-    packets = Column(BigInteger, nullable=False)
-    bytes = Column(BigInteger, nullable=False)
-    stamp_inserted = Column(DateTime(timezone=True), nullable=False)
-    stamp_updated = Column(DateTime(timezone=True))
-
 
 pmacct_traffic_egress = View(
     name='pmacct_traffic_egress',
     metadata=ModelBase.metadata,
+    table_args=(
+        Column('packets', BigInteger),
+        Column('bytes', BigInteger),
+        Column('stamp_inserted', DateTime(timezone=True)),
+        Column('stamp_updated', DateTime(timezone=True)),
+        Column('ip_src', IPAddress)
+    ),
     query=(
         Query([])
             .add_columns(TrafficVolume.packets.label('packets'),
@@ -131,6 +131,13 @@ ddl.add_trigger(TrafficVolume.__table__, pmacct_egress_upsert_trigger)
 pmacct_traffic_ingress = View(
     name='pmacct_traffic_ingress',
     metadata=ModelBase.metadata,
+    table_args=(
+        Column('packets', BigInteger),
+        Column('bytes', BigInteger),
+        Column('stamp_inserted', DateTime(timezone=True)),
+        Column('stamp_updated', DateTime(timezone=True)),
+        Column('ip_dst', IPAddress)
+    ),
     query=(
         Query([])
             .add_columns(TrafficVolume.packets.label('packets'),
