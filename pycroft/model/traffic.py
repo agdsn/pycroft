@@ -12,7 +12,7 @@ from pycroft.model.ddl import DDLManager, Function, Trigger, View
 from pycroft.model.types import IPAddress
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
-from pycroft.model.host import IP
+from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
 
@@ -79,26 +79,45 @@ pmacct_traffic_egress = View(
 )
 ddl.add_view(TrafficVolume.__table__, pmacct_traffic_egress)
 
+pmacct_expression_replacements = dict(
+    tv_tname=TrafficVolume.__tablename__,
+    tv_type=TrafficVolume.type.key,
+    tv_ip_id=TrafficVolume.ip_id.key,
+    tv_timestamp=TrafficVolume.timestamp.key,
+    tv_amount=TrafficVolume.amount.key,
+    tv_packets=TrafficVolume.packets.key,
+    tv_user_id=TrafficVolume.user_id.key,
+    ip_tname=IP.__tablename__,
+    ip_id=str(IP.id.expression),
+    ip_interface_id=str(IP.interface_id.expression),
+    ip_address=str(IP.address.expression),
+    host_tname=Host.__tablename__,
+    host_id=str(Host.id.expression),
+    host_owner_id=str(Host.owner_id.expression),
+    interface_tname=Interface.__tablename__,
+    interface_id=str(Interface.id.expression),
+    interface_host_id=str(Interface.host_id.expression),
+)
 pmacct_egress_upsert = Function(
     name="pmacct_traffic_egress_insert", arguments=[], language="plpgsql", rtype="trigger",
     definition="""BEGIN
-        INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+        INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
         SELECT
             'Egress',
-            ip.id,
+            {ip_id},
             date_trunc('day', NEW.stamp_inserted),
             NEW.bytes,
             NEW.packets,
-            host.owner_id
-        FROM ip
-        JOIN interface ON ip.interface_id = interface.id
-        JOIN host ON interface.host_id = host.id
-        WHERE NEW.ip_src = ip.address
-        ON CONFLICT (ip_id, type, "timestamp")
-        DO UPDATE SET (amount, packets) = (traffic_volume.amount + NEW.bytes,
-                                           traffic_volume.packets + NEW.packets);
+            {host_owner_id}
+        FROM {ip_tname}
+        JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
+        JOIN {host_tname} ON {interface_host_id} = {host_id}
+        WHERE NEW.ip_src = {ip_address}
+        ON CONFLICT ({tv_ip_id}, {tv_type}, "{tv_timestamp}")
+        DO UPDATE SET ({tv_amount}, {tv_packets}) = ({tv_tname}.{tv_amount} + NEW.bytes,
+                                                     {tv_tname}.{tv_packets} + NEW.packets);
     RETURN NULL;
-    END;"""
+    END;""".format(**pmacct_expression_replacements),
 )
 pmacct_egress_upsert_trigger = Trigger(
     name='pmacct_traffic_egress_insert_trigger', table=pmacct_traffic_egress.table,
@@ -131,23 +150,23 @@ ddl.add_view(TrafficVolume.__table__, pmacct_traffic_ingress)
 pmacct_ingress_upsert = Function(
     name="pmacct_traffic_ingress_insert", arguments=[], language="plpgsql", rtype="trigger",
     definition="""BEGIN
-        INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+        INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
         SELECT
             'Ingress',
-            ip.id,
+            {ip_id},
             date_trunc('day', NEW.stamp_inserted),
             NEW.bytes,
             NEW.packets,
-            host.owner_id
-        FROM ip
-        JOIN interface ON ip.interface_id = interface.id
-        JOIN host ON interface.host_id = host.id
-        WHERE NEW.ip_dst = ip.address
-        ON CONFLICT (ip_id, type, "timestamp")
-        DO UPDATE SET (amount, packets) = (traffic_volume.amount + NEW.bytes,
-                                           traffic_volume.packets + NEW.packets);
+            {host_owner_id}
+        FROM {ip_tname}
+        JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
+        JOIN {host_tname} ON {interface_host_id} = {host_id}
+        WHERE NEW.ip_dst = {ip_address}
+        ON CONFLICT ({tv_ip_id}, {tv_type}, "{tv_timestamp}")
+        DO UPDATE SET ({tv_amount}, {tv_packets}) = ({tv_tname}.{tv_amount} + NEW.bytes,
+                                                     {tv_tname}.{tv_packets} + NEW.packets);
     RETURN NULL;
-    END;"""
+    END;""".format(**pmacct_expression_replacements),
 )
 pmacct_ingress_upsert_trigger = Trigger(
     name='pmacct_traffic_ingress_insert_trigger', table=pmacct_traffic_ingress.table,
