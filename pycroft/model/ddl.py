@@ -5,7 +5,7 @@ import inspect
 from collections import Iterable, OrderedDict
 from functools import partial
 
-from sqlalchemy import event as sqla_event, schema
+from sqlalchemy import event as sqla_event, schema, Table
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ClauseElement
 
@@ -357,7 +357,7 @@ def visit_drop_trigger(element, compiler, **kw):
         opt_drop_behavior)
 
 
-class View(schema.DDLElement):
+class CompilableView(schema.DDLElement):
     def __init__(self, name, query,
                  column_names=None,
                  temporary=False,
@@ -390,6 +390,26 @@ class View(schema.DDLElement):
             raise ValueError('Parameter "check_option" specified more than '
                              'once')
         self.check_option = check_option
+
+
+class UncompiledTable(Table):
+    __visit_name__ = None
+
+    def _no_compiler_dispatch(self, *a, **kw):
+        raise ValueError("disp called:", a, kw)
+        def dont_visit_me(*a, **kw):
+            return
+        return dont_visit_me
+
+
+class View(CompilableView):
+    def __init__(self, name, metadata, *args, table_args=None, table_kwargs=None, **kwargs):
+        super().__init__(name, *args, **kwargs)
+        if table_args is None:
+            table_args = tuple()
+        if table_kwargs is None:
+            table_kwargs = {}
+        self.table = UncompiledTable(name, metadata, *table_args, **table_kwargs)
 
 
 class CreateView(schema.DDLElement):
