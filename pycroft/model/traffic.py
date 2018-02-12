@@ -3,17 +3,16 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, Index
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.sql import Insert
+    PrimaryKeyConstraint, Index, DDL
+from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 
 from pycroft.model.base import ModelBase, IntegerIdModel
-from pycroft.model.ddl import DDLManager, Rule
+from pycroft.model.ddl import DDLManager, Function, Trigger, View
 from pycroft.model.types import IPAddress
 from pycroft.model.user import User
 from pycroft.model.functions import utcnow
-from pycroft.model.host import IP, Host, Interface
+from pycroft.model.host import IP
 
 ddl = DDLManager()
 
@@ -62,109 +61,101 @@ class PmacctTable(ModelBase):
     stamp_updated = Column(DateTime(timezone=True))
 
 
-class PmacctTrafficEgress(PmacctTable):
-    ip_src = Column(IPAddress, nullable=False)
-    __table_args__ = (
-        PrimaryKeyConstraint('ip_src', 'stamp_inserted'),
-    )
+pmacct_traffic_egress = View(
+    name='pmacct_traffic_egress',
+    metadata=ModelBase.metadata,
+    query=(
+        Query([])
+            .add_columns(TrafficVolume.packets.label('packets'),
+                         TrafficVolume.amount.label('bytes'),
+                         TrafficVolume.timestamp.label('stamp_inserted'),
+                         TrafficVolume.timestamp.label('stamp_updated'),
+                         IP.address.label('ip_src'))
+            .select_from(TrafficVolume)
+            .filter_by(type='Egress')
+            .join(IP)
+            .statement  # turns our `Selectable` into something compilable
+    ),
+)
+ddl.add_view(TrafficVolume.__table__, pmacct_traffic_egress)
 
-
-ddl.add_rule(
-    PmacctTrafficEgress.__table__,
-    Rule("pmacct_traffic_egress_insert", PmacctTrafficEgress.__table__, "INSERT",
-         # We use an ugly-ass format string to have an additional
-         # safety net when refactoring e.g. column names
-         """
-         INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
-         SELECT 'Egress',
-             {ip_id},
-             new.{pm_stamp_inserted},
-             new.{pm_bytes},
-             new.{pm_packets},
-             {host_owner_id}
-            FROM ip
-              JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
-              JOIN {host_tname} ON {interface_host_id} = {host_id}
-         WHERE new.{pm_ip_src} = {ip_address}
-         """.format(
-             tv_type=TrafficVolume.type.key,
-             tv_ip_id=TrafficVolume.ip_id.key,
-             tv_timestamp=TrafficVolume.timestamp.key,
-             tv_amount=TrafficVolume.amount.key,
-             tv_packets=TrafficVolume.packets.key,
-             tv_user_id=TrafficVolume.user_id.key,
-             pm_stamp_inserted=PmacctTrafficEgress.stamp_inserted.key,
-             pm_bytes=PmacctTrafficEgress.bytes.key,
-             pm_packets=PmacctTrafficEgress.packets.key,
-             pm_ip_src=PmacctTrafficEgress.ip_src.key,
-             ip_tname=IP.__tablename__,
-             ip_id=str(IP.id.expression),
-             ip_interface_id=str(IP.interface_id.expression),
-             ip_address=str(IP.address.expression),
-             host_tname=Host.__tablename__,
-             host_id=str(Host.id.expression),
-             host_owner_id=str(Host.owner_id.expression),
-             interface_tname=Interface.__tablename__,
-             interface_id=str(Interface.id.expression),
-             interface_host_id=str(Interface.host_id.expression),
-         ),
-         do_instead=True)
+pmacct_egress_upsert = Function(
+    name="pmacct_traffic_egress_insert", arguments=[], language="plpgsql", rtype="trigger",
+    definition="""BEGIN
+        INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+        SELECT
+            'Egress',
+            ip.id,
+            date_trunc('day', NEW.stamp_inserted),
+            NEW.bytes,
+            NEW.packets,
+            host.owner_id
+        FROM ip
+        JOIN interface ON ip.interface_id = interface.id
+        JOIN host ON interface.host_id = host.id
+        WHERE NEW.ip_src = ip.address
+        ON CONFLICT (ip_id, type, "timestamp")
+        DO UPDATE SET (amount, packets) = (traffic_volume.amount + NEW.bytes,
+                                           traffic_volume.packets + NEW.packets);
+    RETURN NULL;
+    END;"""
+)
+pmacct_egress_upsert_trigger = Trigger(
+    name='pmacct_traffic_egress_insert_trigger', table=pmacct_traffic_egress.table,
+    events=["INSERT"], function_call="pmacct_traffic_egress_insert()", when="INSTEAD OF"
 )
 
-# The rule demands that `traffic_volume` already has been added
-PmacctTrafficEgress.__table__.add_is_dependent_on(TrafficVolume.__table__)
+ddl.add_function(TrafficVolume.__table__, pmacct_egress_upsert)
+ddl.add_trigger(TrafficVolume.__table__, pmacct_egress_upsert_trigger)
 
 
-class PmacctTrafficIngress(PmacctTable):
-    ip_dst = Column(IPAddress, nullable=False)
-    __table_args__ = (
-        PrimaryKeyConstraint('ip_dst', 'stamp_inserted'),
-    )
+pmacct_traffic_ingress = View(
+    name='pmacct_traffic_ingress',
+    metadata=ModelBase.metadata,
+    query=(
+        Query([])
+            .add_columns(TrafficVolume.packets.label('packets'),
+                         TrafficVolume.amount.label('bytes'),
+                         TrafficVolume.timestamp.label('stamp_inserted'),
+                         TrafficVolume.timestamp.label('stamp_updated'),
+                         IP.address.label('ip_dst'))
+            .select_from(TrafficVolume)
+            .filter_by(type='Ingress')
+            .join(IP)
+            .statement  # turns our `Selectable` into something compilable
+    ),
+)
+ddl.add_view(TrafficVolume.__table__, pmacct_traffic_ingress)
 
 
-ddl.add_rule(
-    PmacctTrafficIngress.__table__,
-    Rule("pmacct_traffic_ingress_insert", PmacctTrafficIngress.__table__, "INSERT",
-         # concerning the format string, see above comment
-         """
-         INSERT INTO traffic_volume ({tv_type}, {tv_ip_id}, "{tv_timestamp}", {tv_amount}, {tv_packets}, {tv_user_id})
-         SELECT 'Ingress',
-             {ip_id},
-             new.{pm_stamp_inserted},
-             new.{pm_bytes},
-             new.{pm_packets},
-             {host_owner_id}
-            FROM ip
-              JOIN {interface_tname} ON {ip_interface_id} = {interface_id}
-              JOIN {host_tname} ON {interface_host_id} = {host_id}
-         WHERE new.{pm_ip_dst} = {ip_address}
-         """.format(
-             tv_type=TrafficVolume.type.key,
-             tv_ip_id=TrafficVolume.ip_id.key,
-             tv_timestamp=TrafficVolume.timestamp.key,
-             tv_amount=TrafficVolume.amount.key,
-             tv_packets=TrafficVolume.packets.key,
-             tv_user_id=TrafficVolume.user_id.key,
-             pm_stamp_inserted=PmacctTrafficIngress.stamp_inserted.key,
-             pm_bytes=PmacctTrafficIngress.bytes.key,
-             pm_packets=PmacctTrafficIngress.packets.key,
-             pm_ip_dst=PmacctTrafficIngress.ip_dst.key,
-             ip_tname=IP.__tablename__,
-             ip_id=str(IP.id.expression),
-             ip_interface_id=str(IP.interface_id.expression),
-             ip_address=str(IP.address.expression),
-             host_tname=Host.__tablename__,
-             host_id=str(Host.id.expression),
-             host_owner_id=str(Host.owner_id.expression),
-             interface_tname=Interface.__tablename__,
-             interface_id=str(Interface.id.expression),
-             interface_host_id=str(Interface.host_id.expression),
-         ),
-         do_instead=True)
+pmacct_ingress_upsert = Function(
+    name="pmacct_traffic_ingress_insert", arguments=[], language="plpgsql", rtype="trigger",
+    definition="""BEGIN
+        INSERT INTO traffic_volume (type, ip_id, "timestamp", amount, packets, user_id)
+        SELECT
+            'Ingress',
+            ip.id,
+            date_trunc('day', NEW.stamp_inserted),
+            NEW.bytes,
+            NEW.packets,
+            host.owner_id
+        FROM ip
+        JOIN interface ON ip.interface_id = interface.id
+        JOIN host ON interface.host_id = host.id
+        WHERE NEW.ip_dst = ip.address
+        ON CONFLICT (ip_id, type, "timestamp")
+        DO UPDATE SET (amount, packets) = (traffic_volume.amount + NEW.bytes,
+                                           traffic_volume.packets + NEW.packets);
+    RETURN NULL;
+    END;"""
+)
+pmacct_ingress_upsert_trigger = Trigger(
+    name='pmacct_traffic_ingress_insert_trigger', table=pmacct_traffic_ingress.table,
+    events=["INSERT"], function_call="pmacct_traffic_ingress_insert()", when="INSTEAD OF"
 )
 
-# The rule demands that `traffic_volume` already has been added
-PmacctTrafficIngress.__table__.add_is_dependent_on(TrafficVolume.__table__)
+ddl.add_function(TrafficVolume.__table__, pmacct_ingress_upsert)
+ddl.add_trigger(TrafficVolume.__table__, pmacct_ingress_upsert_trigger)
 
 
 class TrafficCredit(TrafficEvent, IntegerIdModel):
