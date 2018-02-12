@@ -105,7 +105,9 @@ site_name_map = {
     3: u"Budapester Straße",
     4: "Fritz-Löffler-Straße",
     5: "Gret-Palucca-Straße",
-    6: "Hoyerswerdaer Straße",
+    6: "Neuberinstraße",
+    7: "Wachwitzer Bergstraße",
+    8: "August-Bebel-Straße",
 }
 
 
@@ -129,6 +131,8 @@ building_site_map = {
     16: 4,  # FL16
     17: 5,  # GPS11
     18: 6,  # Neu15
+    19: 7,  # WBS21
+    20: 8,  # Tus
 }
 
 building_subnets_map = {
@@ -151,6 +155,8 @@ building_subnets_map = {
     16: [15],  # FL16
     17: [16],  # GPS11
     18: [17],  # Neu15
+    19: [18],  # WBS21
+    20: [19],  # WBS21
 }
 
 vlan_name_vid_map = {
@@ -171,4 +177,6 @@ vlan_name_vid_map = {
     'FL16': 35,
     'GPS11': 32,
     'Neu15': 666,  # WARNING: BOGUS VALUE
+    'WBS21': 667,
+    'Tus': 667,
 }
