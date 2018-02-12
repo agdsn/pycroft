@@ -26,6 +26,7 @@ class AlembicTest(SQLAlchemyTestCase):
     def setUp(self):
         super().setUp()
         _, self.connection = get_engine_and_connection()
+        self.connection.execute("DROP TABLE alembic_version")
         self.helper = AlembicHelper(self.connection)
 
 
