@@ -245,18 +245,22 @@ def visit_drop_rule(element, compiler, **kw):
 
 
 class Trigger(schema.DDLElement):
-    def __init__(self, name, table, events, function_call):
+    def __init__(self, name, table, events, function_call, when="AFTER"):
         """Construct a trigger
 
         :param str name: Name of the trigger
         :param table: Table the trigger is for
         :param iterable[str] events: list of events (INSERT, UPDATE, DELETE)
         :param str function_call: call of the trigger function
+        :param str when: Mode of execution. Must be one of ``BEFORE``, ``AFTER``, ``INSTEAD OF``
         """
         self.name = name
         self.table = table
         self.events = events
         self.function_call = function_call
+        if when not in {"BEFORE", "AFTER", "INSTEAD OF"}:
+            raise ValueError("`when` must be one of BEFORE, AFTER, INSTEAD OF")
+        self.when = when
 
 
 class ConstraintTrigger(Trigger):
@@ -317,7 +321,7 @@ def create_add_constraint_trigger(element, compiler, **kw):
     trigger_name = compiler.preparer.quote(trigger.name)
     table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "CREATE CONSTRAINT TRIGGER", trigger_name, 'AFTER', events, 'ON',
+        "CREATE CONSTRAINT TRIGGER", trigger_name, trigger.when, events, 'ON',
         table_name, opt_deferrable, opt_initially_deferred,
         "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
@@ -333,7 +337,7 @@ def create_add_trigger(element, compiler, **kw):
     trigger_name = compiler.preparer.quote(trigger.name)
     table_name = compiler.preparer.format_table(trigger.table)
     return _join_tokens(
-        "CREATE TRIGGER", trigger_name, 'AFTER', events, 'ON', table_name,
+        "CREATE TRIGGER", trigger_name, trigger.when, events, 'ON', table_name,
         "FOR EACH ROW EXECUTE PROCEDURE", trigger.function_call)
 
 
