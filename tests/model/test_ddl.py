@@ -5,8 +5,8 @@ from sqlalchemy import PrimaryKeyConstraint, Table, Column, Integer, MetaData, \
 from sqlalchemy.dialects import postgresql
 
 from pycroft.model.ddl import DropConstraint, CreateFunction, DropFunction, \
-    Function, View, CreateView, DropView, Rule, CreateRule, ConstraintTrigger, \
-    CreateConstraintTrigger, Trigger, CreateTrigger
+    Function, CompilableView, CreateView, DropView, Rule, CreateRule, ConstraintTrigger, \
+    CreateConstraintTrigger, Trigger, CreateTrigger, View
 
 
 def literal_compile(stmt):
@@ -155,7 +155,7 @@ class RuleTest(DDLTest):
 class ViewTest(DDLTest):
     def test_plain_create_view(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]))
+        view = CompilableView("view", select([table.c.id]))
         stmt = CreateView(view)
         self.assertEqual('CREATE VIEW view AS SELECT "table".id \n'
                          'FROM "table"',
@@ -163,7 +163,7 @@ class ViewTest(DDLTest):
 
     def test_create_or_replace_view(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]))
+        view = CompilableView("view", select([table.c.id]))
         stmt = CreateView(view, or_replace=True)
         self.assertEqual('CREATE OR REPLACE VIEW view AS SELECT "table".id \n'
                          'FROM "table"',
@@ -171,7 +171,7 @@ class ViewTest(DDLTest):
 
     def test_create_temporary_view(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]), temporary=True)
+        view = CompilableView("view", select([table.c.id]), temporary=True)
         stmt = CreateView(view)
         self.assertEqual('CREATE TEMPORARY VIEW view AS SELECT "table".id \n'
                          'FROM "table"',
@@ -179,7 +179,7 @@ class ViewTest(DDLTest):
 
     def test_create_view_with_view_options(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]), view_options=[
+        view = CompilableView("view", select([table.c.id]), view_options=[
             ('check_option', 'cascaded'),
             ('security_barrier', 't'),
         ])
@@ -192,7 +192,7 @@ class ViewTest(DDLTest):
 
     def test_create_view_with_check_option(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]), check_option='cascaded')
+        view = CompilableView("view", select([table.c.id]), check_option='cascaded')
         stmt = CreateView(view)
         self.assertEqual('CREATE VIEW view '
                          'AS SELECT "table".id \n'
@@ -202,21 +202,33 @@ class ViewTest(DDLTest):
 
     def test_drop_view(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]))
+        view = CompilableView("view", select([table.c.id]))
         stmt = DropView(view)
         self.assertEqual('DROP VIEW view',
                          literal_compile(stmt))
 
     def test_drop_view_if_exists(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]))
+        view = CompilableView("view", select([table.c.id]))
         stmt = DropView(view, if_exists=True)
         self.assertEqual('DROP VIEW IF EXISTS view',
                          literal_compile(stmt))
 
     def test_drop_view_cascade(self):
         table = create_table("table")
-        view = View("view", select([table.c.id]))
+        view = CompilableView("view", select([table.c.id]))
         stmt = DropView(view, cascade=True)
         self.assertEqual('DROP VIEW view CASCADE',
                          literal_compile(stmt))
+
+
+class QualifiedViewTest(DDLTest):
+    def setUp(self):
+        self.table = create_table('table')
+        self.view = View('view', metadata=MetaData(bind=None),
+                         table_args=(Column("id", Integer),),
+                         query=select([self.table.c.id]))
+
+    def test_view_has_working_table(self):
+        self.assertIsInstance(self.view.table.c.id, Column)
+        self.assertIsInstance(self.view.table.metadata, MetaData)
