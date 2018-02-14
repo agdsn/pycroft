@@ -42,6 +42,10 @@
                 {% call info_row("Wohnort") %}
                     {{ misc.room_link(user.room) }}
                 {% endcall %}
+            {% else %}
+                {% call info_row("Wohnort") %}
+                    <span class="text-muted">{{ _("Nicht gesetzt") }}</span>
+                {% endcall %}
             {% endif %}
 
             {% for flag in flags %}{% call info_row(flag['title']) %}
