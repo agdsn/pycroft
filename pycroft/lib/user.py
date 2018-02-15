@@ -10,7 +10,6 @@ This module contains.
 
 :copyright: (c) 2012 by AG DSN.
 """
-from __future__ import print_function
 
 import re
 from datetime import datetime

@@ -11,7 +11,6 @@ database schema.
 
 :copyright: (c) 2011 by AG DSN.
 """
-from __future__ import print_function
 from pycroft.model import _all
 import sqlalchemy.exc
 from sqlalchemy_schemadisplay import create_uml_graph
