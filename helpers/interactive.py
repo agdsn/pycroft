@@ -27,8 +27,10 @@ from pycroft import config
 
 connection_string = os.environ['PYCROFT_DB_URI']
 
+engine = create_engine(connection_string, echo=True)
+
+
 def setup():
-    engine = create_engine(connection_string, echo=True)
     # TODO: don't set a scoped session, just a regular one
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
