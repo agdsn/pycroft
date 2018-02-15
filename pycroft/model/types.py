@@ -64,8 +64,6 @@ class MACAddress(TypeDecorator):
             return value
         m = mac_regex.match(value)
         if m is None:
-            print(repr(value))
-            print(mac_regex.pattern)
             raise ValueError('"{}" is not a valid MAC address.'.format(value))
         groups = m.groupdict()
         return "".join((groups["byte1"], groups["byte2"], groups["byte3"],

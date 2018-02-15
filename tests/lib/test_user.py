@@ -417,7 +417,6 @@ class GrantingTestCase(FactoryDataTestBase):
             if traffic_groups is None:
                 traffic_groups = tuple()
             for group in traffic_groups:
-                print("group:", group)
                 MembershipFactory.create(group=group, user=user)
         return user
 
