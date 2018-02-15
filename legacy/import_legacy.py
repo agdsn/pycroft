@@ -191,7 +191,8 @@ def import_legacy(args):
                   .select_from(facilities.Room)
                   .join(facilities.Room.connected_patch_ports)
                   .join(port.PatchPort.switch_port)
-                  .join(host.SwitchPort.subnets)
+                  .join(host.SwitchPort.vlans)
+                  .join(net.VLAN.subnets)
                   .group_by(net.Subnet)
                   .group_by(facilities.Room))
 

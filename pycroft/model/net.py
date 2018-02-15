@@ -16,6 +16,9 @@ class VLAN(IntegerIdModel):
     __table_args = (
         CheckConstraint(between(vid, 1, 4094)),
     )
+    switch_ports = relationship('SwitchPort', secondary='switch_port_vlan_association',
+                                back_populates='vlans')
+    subnets = relationship('Subnet', back_populates='vlan')
 
 
 class Subnet(IntegerIdModel):
@@ -25,9 +28,7 @@ class Subnet(IntegerIdModel):
     description = Column(String(50))
 
     vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False)
-    vlan = relationship(VLAN, backref=backref("subnets"))
-    switch_ports = relationship('SwitchPort', secondary='switch_port_association',
-                                back_populates='subnets')
+    vlan = relationship(VLAN, back_populates="subnets")
 
 
 # Ensure that the gateway is contained in the subnet

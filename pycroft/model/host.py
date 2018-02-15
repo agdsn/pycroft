@@ -90,10 +90,10 @@ class Interface(IntegerIdModel):
                                         cascade="all, delete-orphan"))
 
 
-switch_port_association_table = Table(
-    'switch_port_association', ModelBase.metadata,
+switch_port_vlan_association_table = Table(
+    'switch_port_vlan_association', ModelBase.metadata,
     Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE')),
-    Column('subnet_id', Integer, ForeignKey('subnet.id', ondelete='CASCADE')),
+    Column('vlan_id', Integer, ForeignKey('vlan.id', ondelete='CASCADE')),
 )
 
 
@@ -104,8 +104,8 @@ class SwitchPort(IntegerIdModel):
                           backref=backref("ports",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
-    subnets = relationship('Subnet', secondary='switch_port_association',
-                           back_populates='switch_ports')
+    vlans = relationship('VLAN', secondary='switch_port_vlan_association',
+                         back_populates='switch_ports')
 
     def __str__(self):
         return "{} {}".format(self.switch.name, self.name)

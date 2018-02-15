@@ -5,7 +5,7 @@ from fixture import DataSet
 from ipaddr import IPv4Address, IPv6Address
 
 from tests.fixtures.dummy.facilities import RoomData
-from tests.fixtures.dummy.net import SubnetData
+from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
 
@@ -36,13 +36,13 @@ class SwitchPortData(DataSet):
         name = "A20"
         mac = "00:00:00:00:00:14"
         switch = SwitchData.dummy
-        subnets = [SubnetData.dummy_subnet3]
+        vlans = [VLANData.vlan_dummy1]
 
     class dummy_port2:
         name = "A21"
         mac = "00:00:00:00:00:15"
         switch = SwitchData.dummy
-        subnets = [SubnetData.dummy_subnet4]
+        vlans = [VLANData.vlan_dummy2]
 
     class dummy_port3:
         name = "A23"
@@ -52,7 +52,7 @@ class SwitchPortData(DataSet):
     class dummy_port4(dummy_port3):
         name = "A24"
         mac = "00:00:00:00:00:fe"
-        subnets = [SubnetData.dummy_subnet3, SubnetData.dummy_subnet4]
+        vlans = [VLANData.vlan_dummy1, VLANData.vlan_dummy2]
 
     class vlan:
         name = "VLAN-42"

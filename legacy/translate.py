@@ -580,8 +580,9 @@ def translate_ports(data, resources):
         port_name = _sp.port
         room = r_d[(_sp.wheim_id, int(_sp.etage), _sp.zimmernr)]
         subnet_ids = building_subnets_map[room.building.id]
+        subnets = [s_d[subnet_id] for subnet_id in subnet_ids]
         sp = host.SwitchPort(switch=switch, name=port_name,
-                             subnets=[s_d[subnet_id] for subnet_id in subnet_ids])
+                             vlans=list({s.vlan for s in subnets}))
         pp = port.PatchPort(
             switch_port=sp, name="?? ({})".format(port_name), room=room)
         objs.append(pp)

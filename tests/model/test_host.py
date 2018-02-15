@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import MacExistsException, get_free_ip
 from pycroft.model import session, host, user
-from pycroft.model.net import Subnet
+from pycroft.model.net import Subnet, VLAN
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.traffic import TrafficVolumeData
@@ -215,20 +215,23 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(hosts, interfaces, ips, traffic_volumes)))
 
-    def test_cascade_on_delete_subnet(self):
-        subnet = Subnet.q.filter_by(address=SubnetData.dummy_subnet4.address).one()
-        associations_query = session.session.query(host.switch_port_association_table)\
-            .filter_by(subnet_id=subnet.id)
+    def test_cascade_on_delete_vlan(self):
+        # TODO: delete a vlan
+        vlan = VLAN.q.filter_by(vid=VLANData.vlan_dummy1.vid).one()
+        associations_query = session.session.query(host.switch_port_vlan_association_table)\
+            .filter_by(vlan_id=vlan.id)
 
         self.assertEqual(associations_query.count(), 2)
-        session.session.delete(subnet)
+        for subnet in vlan.subnets:
+            session.session.delete(subnet)
+        session.session.delete(vlan)
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
     def test_cascade_on_delete_switch_port(self):
         port_name = SwitchPortData.dummy_port4.name
         port = host.SwitchPort.q.filter_by(name=port_name).one()
-        associations_query = session.session.query(host.switch_port_association_table)\
+        associations_query = session.session.query(host.switch_port_vlan_association_table)\
             .filter_by(switch_port_id=port.id)
 
         self.assertEqual(associations_query.count(), 2)
@@ -237,11 +240,11 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertEqual(associations_query.count(), 0)
 
 
-class TestSubnetAssociations(FixtureDataTestBase):
+class TestVLANAssociations(FixtureDataTestBase):
     datasets = (SwitchPortData,)
 
     def test_secondary_relationship_works(self):
         port = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port1.name).one()
-        self.assertEqual(len(port.subnets), 1)
+        self.assertEqual(len(port.vlans), 1)
         port4 = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port4.name).one()
-        self.assertEqual(len(port4.subnets), 2)
+        self.assertEqual(len(port4.vlans), 2)

@@ -65,14 +65,19 @@
                                    switch_id=port.switch_port.switch.host_id) }}>
                     {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
             </a></dd>
-            <dt>Anliegende <a href="{{ url_for('infrastructure.subnets') }}">Subnets</a></dt>
+
+            {% for vlan in port.switch_port.vlans %}
+            <dt><a href="{{ url_for('infrastructure.subnets') }}">Subnets</a>
+                (VLAN <code>{{ vlan.name }}</code>)</dt>
             <dd>
-                {% for net in port.switch_port.subnets %}
-                    {{ net.address | string }}
+                {% for subnet in vlan.subnets %}
+                    {{ subnet.address | string }}
                 {% endfor %}
             </dd>
+            {% endfor %}
+
             {% else %}
-                <dt>Gepatched zu</dt><dd>Ungepatched</dd>
+                <dt>Gepatched zu</dt><dd><span class="text-muted">Ungepatched</span></dd>
             {% endif %}
         </dl></li>
         {% endfor %}
