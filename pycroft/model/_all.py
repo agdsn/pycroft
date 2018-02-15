@@ -22,4 +22,5 @@ from .port import *
 from .net import *
 from .user import *
 from .property import *
+from .hades import *
 from .webstorage import *
