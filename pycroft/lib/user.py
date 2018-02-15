@@ -85,8 +85,7 @@ def setup_ipv4_networking(host):
     """Add suitable ips for every interface of a host"""
     subnets = [s for p in host.room.connected_patch_ports
                for s in p.switch_port.subnets
-               if s.address.version == 4
-               if p.switch_port is not None]
+               if s.address.version == 4]
     for interface in host.interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,
