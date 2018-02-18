@@ -1,10 +1,11 @@
-from sqlalchemy import literal, Column, String, BigInteger, func
+from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table
 from sqlalchemy.orm import Query
 
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, Switch, SwitchPort, Host
+from pycroft.model.net import VLAN
 
 hades_view_ddl = DDLManager()
 
@@ -51,5 +52,57 @@ radcheck = View(
          .join(SwitchPort)
          .join(Switch)
          .statement
+    ),
+)
+
+radgroupreply_base = Table(
+    'radgroupreply_base',
+    ModelBase.metadata,
+    Column('id', BigInteger),
+    Column('groupname', String),
+    Column('attribute', String),
+    Column('op', String),
+    Column('value', String),
+)
+
+radgroupreply = View(
+    name='radgroupreply',
+    metadata=ModelBase.metadata,
+    query=union_all(
+        Query([
+            radgroupreply_base.c.id.label('id'),
+            radgroupreply_base.c.groupname.label('groupname'),
+            radgroupreply_base.c.attribute.label('attribute'),
+            radgroupreply_base.c.op.label('op'),
+            radgroupreply_base.c.value.label('value'),
+        ]),
+        Query([
+            VLAN.id.label('id'),
+            (VLAN.name + '_untagged').label('groupname'),
+            literal("Egress-VLAN-Name").label('attribute'),
+            literal('+=').label('op'),
+            (literal('2') + VLAN.name).label('value'),
+        ]),
+        Query([
+            VLAN.id.label('id'),
+            (VLAN.name + '_tagged').label('groupname'),
+            literal("Egress-VLAN-Name").label('attribute'),
+            literal('+=').label('op'),
+            (literal('1') + VLAN.name).label('value'),
+        ]),
+        Query([
+            VLAN.id.label('id'),
+            (VLAN.name + '_untagged').label('groupname'),
+            literal("Reply-Message").label('attribute'),
+            literal('+=').label('op'),
+            (VLAN.name + '_untagged').label('value'),
+        ]),
+        Query([
+            VLAN.id.label('id'),
+            (VLAN.name + '_tagged').label('groupname'),
+            literal("Reply-Message").label('attribute'),
+            literal('+=').label('op'),
+            (VLAN.name + '_tagged').label('value'),
+        ]),
     ),
 )
