@@ -1,4 +1,4 @@
-from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table
+from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer
 from sqlalchemy.orm import Query
 
 from pycroft.model.base import ModelBase
@@ -55,6 +55,19 @@ radcheck = View(
     ),
 )
 
+radreply = Table(
+    'radreply',
+    ModelBase.metadata,
+    Column('id', Integer, primary_key=True),
+    Column('username', String(64), nullable=False),
+    # non-standard columns, not sure if needed
+    # Column('nasipaddress', String(15), nullable=False),
+    # Column('nasportid', String(50), nullable=False),
+    Column('attribute', String(64), nullable=False),
+    Column('op', String(2), nullable=False),
+    Column('value', String(253), nullable=False),
+)
+
 radgroupreply_base = Table(
     'radgroupreply_base',
     ModelBase.metadata,
@@ -105,4 +118,18 @@ radgroupreply = View(
             (VLAN.name + '_tagged').label('value'),
         ]),
     ),
+)
+
+nas = Table(
+    'nas',
+    ModelBase.metadata,
+    Column('id', Integer, primary_key=True),
+    Column('nasname', String(128), nullable=False),
+    Column('shortname', String(32), nullable=False),
+    Column('type', String(30), nullable=False, default='other'),
+    Column('ports', Integer),
+    Column('secret', String(60), nullable=False),
+    Column('server', String(64)),
+    Column('community', String(50)),
+    Column('description', String(200)),
 )
