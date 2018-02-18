@@ -5,22 +5,22 @@ from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, Switch, SwitchPort, Host
-from pycroft.model.net import VLAN
+from pycroft.model.net import VLAN, Subnet
 
 hades_view_ddl = DDLManager()
 
 radusergroup = View(
     name='radusergroup',
     metadata=ModelBase.metadata,
-    query=(
-        # This adds all existing interfaces.
+    query=union_all(
+        # Priority 0: valid case (interface's mac w/ vlan at correct ports)
         Query([]).add_columns(
             Interface.mac.label('username'),
             # `host()` does not print the `/32` like `text` would
             func.host(Switch.management_ip).label('nasipaddress'),
             SwitchPort.name.label('nasportid'),
-            # testgroup and priority have dummy values atm
-            literal("testgroup").label('groupname'),
+            # TODO: add `_tagged` instead if interface needs that
+            (VLAN.name + '_untagged').label('groupname'),
             literal(0).label('priority'),
         ).select_from(Interface)
          .join(Host)
@@ -28,7 +28,9 @@ radusergroup = View(
          .join(Room.connected_patch_ports)
          .join(SwitchPort)
          .join(Switch)
-         .statement
+         .join(Interface.ips)
+         .join(Subnet)
+         .join(VLAN),
     ),
 )
 
