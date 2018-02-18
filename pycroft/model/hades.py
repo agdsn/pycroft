@@ -55,6 +55,18 @@ radcheck = View(
     ),
 )
 
+radgroupcheck = View(
+    name='radgroupcheck',
+    metadata=ModelBase.metadata,
+    query=Query([
+        literal(1).label('id'),
+        literal("unknown").label('groupname'),
+        literal("Auth-Type").label('attribute'),
+        literal(":=").label('op'),
+        literal("Accept").label('value'),
+    ]).statement,
+)
+
 radreply = Table(
     'radreply',
     ModelBase.metadata,
