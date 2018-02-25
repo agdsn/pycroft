@@ -38,24 +38,6 @@ cacheable_tables = reduce(operator.xor,
                          [{t.__tablename__ for t in old_db.relevant_tables}
                           for old_db in old_dbs])
 
-def drop_cache_db(connection):
-    print("Dropping DB 'legacy'")
-    connection.execute("DROP DATABASE IF EXISTS legacy")
-    connection.execute("COMMIT")
-
-
-def exists_cache_db(connection):
-    exists = connection.execute("SELECT 1 FROM pg_database "
-                                "WHERE datname = 'legacy'").first()
-    connection.execute("COMMIT")
-    return exists is not None
-
-
-def create_cache_db(connection):
-    print("Creating DB 'legacy'")
-    connection.execute("CREATE DATABASE legacy")
-    connection.execute("COMMIT")
-
 
 def make_session():
     engine = create_engine(conn_opts['legacy'])
@@ -135,17 +117,18 @@ def cache_relevant_tables(old_db, _, engine, tables=None):
 
 def cache_legacy(tables=None, sql_only=True, ldap_only=False):
     # if 'tables' is None, we cache the full range of tables
-    master_engine = create_engine(conn_opts['master'])
-    master_connection = master_engine.connect()
-    master_connection.execute("COMMIT")
+    engine = create_engine(conn_opts['legacy'])
+    connection = engine.connect()
+    connection.execute("COMMIT")
     if tables is None:
-        drop_cache_db(master_connection)
-    if not exists_cache_db(master_connection):
-        if tables:
-            print("No cache yet, ignoring tables argument.")
-            tables = None
-        create_cache_db(master_connection)
-    master_connection.close()
+        print("Dropping schema public")
+        connection.execute("DROP SCHEMA IF EXISTS public CASCADE")
+        connection.execute("COMMIT")
+        print("Recreating schema public")
+        connection.execute("CREATE SCHEMA public")
+        connection.execute("COMMIT")
+    connection.close()
+
     session, meta, engine = make_session()
 
     for old_db in old_dbs if not ldap_only else []:
