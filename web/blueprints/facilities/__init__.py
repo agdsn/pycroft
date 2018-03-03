@@ -11,7 +11,7 @@
 """
 
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
-                   redirect, request)
+                   redirect, request, abort)
 from flask_login import current_user
 
 from pycroft import lib, config
@@ -67,6 +67,11 @@ def site_show(site_id):
 @bp.route('/buildings/<building_shortname>/')
 def building_show(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
+
+    if building is None:
+        flash(u"Gebäude existiert nicht!", 'error')
+        abort(404)
+
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
         page_title=u"Wohnheim " + building.short_name, rooms=rooms_list)
@@ -77,6 +82,11 @@ def building_show(building_id=None, building_shortname=None):
 @bp.route('/buildings/<building_shortname>/levels/')
 def building_levels(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
+
+    if building is None:
+        flash(u"Gebäude existiert nicht!", 'error')
+        abort(404)
+
     rooms_list = building.rooms
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
@@ -91,6 +101,11 @@ def building_levels(building_id=None, building_shortname=None):
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/')
 def building_level_rooms(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(building_shortname, building_id)
+
+    if building is None:
+        flash(u"Gebäude existiert nicht!", 'error')
+        abort(404)
+
     level_l0 = "{:02d}".format(level)
 
     #TODO depending on, whether a user is living in the room, the room is
@@ -110,6 +125,11 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 @bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
+
+    if building is None:
+        flash(u"Gebäude existiert nicht!", 'error')
+        abort(404)
+
     all_users = bool(request.args.get('all_users', 0, type=int))
 
     rooms = session.session.query(Room).filter(
@@ -139,6 +159,11 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
 @bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])
 def room_show(room_id):
     room = Room.q.get(room_id)
+
+    if room is None:
+        flash(u"Zimmer existiert nicht!", 'error')
+        abort(404)
+
     form = RoomLogEntry()
 
     if form.validate_on_submit():

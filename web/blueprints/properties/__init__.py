@@ -13,7 +13,7 @@
 from itertools import chain
 import operator
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, abort
 
 from pycroft.model import session
 from pycroft.property import property_categories
@@ -84,6 +84,11 @@ def traffic_group_create():
 @access.require('groups_traffic_change')
 def traffic_group_delete(group_id):
     group = TrafficGroup.q.get(group_id)
+
+    if group is None:
+        flash(u"Trafficgruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
     session.session.delete(group)
     session.session.commit()
     message = u'Trafficgruppe {0} gelöscht'
@@ -119,17 +124,22 @@ def property_group_create():
         group = PropertyGroup(name=form.name.data)
         session.session.add(group)
         session.session.commit()
-        message = u'Eigenschaften Gruppe {0} angelegt.'
+        message = u'Eigenschaftengruppe {0} angelegt.'
         flash(message.format(group.name), 'success')
         return redirect(url_for('.property_groups'))
     return render_template('properties/property_group_create.html', form=form,
-        page_title = u"Neue Eigenschaften Gruppe")
+        page_title = u"Neue Eigenschaftengruppe")
 
 
 @bp.route('/property_group/<group_id>/grant/<property_name>')
 @access.require('groups_change')
 def property_group_grant_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
+
+    if property_group is None:
+        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
     grant_property(property_group, property_name)
     session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} gewährt.'
@@ -141,6 +151,11 @@ def property_group_grant_property(group_id, property_name):
 @access.require('groups_change')
 def property_group_deny_property(group_id, property_name):
     property_group = PropertyGroup.q.get(group_id)
+
+    if property_group is None:
+        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
     deny_property(property_group, property_name)
     session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} verboten.'
@@ -152,6 +167,11 @@ def property_group_deny_property(group_id, property_name):
 @access.require('groups_change')
 def property_group_remove_property(group_id, property_name):
     group = PropertyGroup.q.get(group_id)
+
+    if group is None:
+        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
     remove_property(group, property_name)
     session.session.commit()
     message = u'Eigenschaft {0} der Gruppe {1} entfernt.'
@@ -163,8 +183,13 @@ def property_group_remove_property(group_id, property_name):
 @access.require('groups_change')
 def property_group_delete(group_id):
     group = PropertyGroup.q.get(group_id)
+
+    if group is None:
+        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
     session.session.delete(group)
     session.session.commit()
-    message = u'Eigenschaften Gruppe {0} gelöscht'
+    message = u'Eigenschaftengruppe {0} gelöscht'
     flash(message.format(group.name), 'success')
     return redirect(url_for('.property_groups'))

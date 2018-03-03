@@ -150,7 +150,11 @@ def bank_accounts_create():
 @access.require('finance_change')
 def bank_account_activities_edit(activity_id):
     activity = BankAccountActivity.q.get(activity_id)
-    print(activity_id)
+
+    if activity is None:
+        flash(u"Bankbewegung mit ID {} existiert nicht!".format(activity_id), 'error')
+        abort(404)
+
     form = BankAccountActivityEditForm(
         obj=activity, bank_account_name=activity.bank_account.name)
 
@@ -209,6 +213,11 @@ def balance_json(account_id):
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
     account = Account.q.get(account_id)
+
+    if account is None:
+        flash(u"Konto mit ID {} existiert nicht!".format(account_id), 'error')
+        abort(404)
+
     try:
         user = User.q.filter_by(account_id=account.id).one()
     except NoResultFound:
@@ -317,6 +326,7 @@ def accounts_show_json(account_id):
 @bp.route('/transactions/<int:transaction_id>')
 def transactions_show(transaction_id):
     transaction = Transaction.q.get(transaction_id)
+
     if transaction is None:
         abort(404)
     return render_template(

@@ -309,10 +309,15 @@ def add_membership(user_id):
 @access.require('groups_change_membership')
 def end_membership(user_id, membership_id):
     membership = Membership.q.get(membership_id)
+
+    if membership is None:
+        flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(membership.id), 'error')
+        abort(404)
+
     membership.disable()
 
     if membership.user.id != user_id:
-        flash(u"Mitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
+        flash(u"Gruppenmitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
         return abort(404)
 
     # ToDo: Make the log messages not Frontend specific (a helper?)
@@ -628,7 +633,7 @@ def list_users_by_traffic_group(traffic_group_id):
 @access.require('user_change')
 def suspend(user_id):
     form = UserSuspendForm()
-    myUser = User.q.get(user_id)
+    myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
         if form.ends_at.unlimited.data:
             ends_at = None
@@ -654,7 +659,7 @@ def suspend(user_id):
 @bp.route('/<int:user_id>/unblock', methods=['GET', 'POST'])
 @access.require('user_change')
 def unblock(user_id):
-    user = User.q.get(user_id)
+    user = get_user_or_404(user_id)
 
     if user.member_of(config.violation_group) == False:
         flash(u"Nutzer {} ist nicht gesperrt!".format(
@@ -724,8 +729,19 @@ def move_back_in(user_id):
 @bp.route('/<int:user_id>/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
 @access.require('user_mac_change')
 def change_mac(user_id, user_interface_id):
+    user = get_user_or_404(user_id)
+
     form = InterfaceChangeMacForm()
     my_interface = Interface.q.get(user_interface_id)
+
+    if my_interface is None:
+        flash(u"Interface mit ID {} existiert nicht!".format(user_interface_id), 'error')
+        abort(404)
+
+    if my_interface.host.owner.id != user_id:
+        flash(u"Interface {} gehört nicht zu Nutzer {}!".format(my_interface.id, user.id), 'error')
+        return abort(404)
+
     if not form.is_submitted():
         form.mac.data = my_interface.mac
     if form.validate_on_submit():
@@ -736,5 +752,5 @@ def change_mac(user_id, user_interface_id):
         session.session.commit()
         return redirect(url_for('.user_show', user_id=changed_interface.host.owner.id))
     return render_template('user/change_mac.html',
-                           form=form, user_id=user_id,
-                           user_interface_id=user_interface_id)
+                           form=form, user_id=user.id,
+                           user_interface_id=my_interface.id)
