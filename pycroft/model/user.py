@@ -434,7 +434,7 @@ class Membership(IntegerIdModel):
 
     def disable(self):
         now = session.utcnow()
-        if self.begins_at > now:
+        if self.begins_at is not None and self.begins_at > now:
             self.ends_at = self.begins_at
         else:
             self.ends_at = now

@@ -456,7 +456,7 @@ def edit_membership(user_id, membership_id):
     membership_data = {}
     if request.method == 'GET':
         membership_data = {
-            "begins_at": membership.begins_at.date(),
+            "begins_at": None if membership.begins_at is None else membership.begins_at.date(),
             "ends_at": {"unlimited": membership.ends_at is None,
                         "date": membership.ends_at and membership.ends_at.date()}
         }
