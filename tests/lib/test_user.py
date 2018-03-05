@@ -98,7 +98,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
 
-        new_user = UserHelper.move_in(
+        new_user, plain_password = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
@@ -149,7 +149,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
 
         traffic_group = user.TrafficGroup.q.first()
-        new_user = UserHelper.move_in(
+        new_user, plain_password = UserHelper.move_in(
             test_name,
             test_login,
             test_email,
@@ -181,7 +181,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
         traffic_group = user.TrafficGroup.q.first()
 
-        new_user = UserHelper.move_in(
+        new_user, plain_password = UserHelper.move_in(
             test_name,
             test_login,
             test_email,

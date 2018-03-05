@@ -665,7 +665,7 @@ def reset_password(user_id):
         session.session.add(pdf_storage)
         session.session.commit()
 
-        flask.session['user_sheet'] = pdf_storage.id
+        flasksession['user_sheet'] = pdf_storage.id
         flash(Markup(u'Passwort erfolgreich zurückgesetzt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
