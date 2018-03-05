@@ -3,12 +3,12 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from pycroft.model.base import ModelBase
+from pycroft.model.base import IntegerIdModel
 from sqlalchemy import Column, DateTime, Text
 from datetime import datetime
 from pycroft.model.session import session
 
-class WebStorage(ModelBase):
+class WebStorage(IntegerIdModel):
     data = Column(Text, nullable=False)
     expiry = Column(DateTime, nullable=False)
 

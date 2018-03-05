@@ -28,3 +28,5 @@ factory-boy~=2.9.2
 alembic~=0.9.6
 # decimal serialization
 simplejson~=3.11.1
+#usersheet generation
+reportlab~=3.4.0

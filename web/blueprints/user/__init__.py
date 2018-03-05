@@ -12,9 +12,10 @@
 """
 from itertools import chain
 from functools import partial
+
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
-    request, url_for)
+    request, url_for, session as flasksession, make_response)
 import operator
 from sqlalchemy import Text
 import uuid
@@ -100,11 +101,11 @@ def overview():
 @bp.route('/user_sheet')
 def user_sheet():
     WebStorage.auto_expire()
-    web_storage_id = flask.session['user_sheet']
+    web_storage_id = flasksession['user_sheet']
     storage = WebStorage.q.get(web_storage_id) or abort(404)
 
     pdf_data = b64decode(storage.data)
-    response = flask.make_response(pdf_data)
+    response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Dispositon'] = 'inline; filename=user_sheet.pdf'
     return response
@@ -403,12 +404,12 @@ def create():
                 email=form.email.data,
             )
 
-            pdf_data = b64encode(generate_user_sheet(new_user, plain_password))
-            pdf_storage = WebStorage(data=pdf_data, expiry=datetime.utcnow() + timedelta(minutes=5))
+            pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
+            pdf_storage = WebStorage(data=pdf_data, expiry=datetime.utcnow() + timedelta(minutes=15))
             session.session.add(pdf_storage)
             session.session.commit()
 
-            flask.session['user_sheet'] = pdf_storage.id
+            flasksession['user_sheet'] = pdf_storage.id
             flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 

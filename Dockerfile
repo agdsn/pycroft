@@ -27,7 +27,6 @@ RUN apt-get update \
         npm \
         python3-dev \
         python3-pip \
-        python3-cairo \
         build-essential \
         sqlite3 \
         vim \
