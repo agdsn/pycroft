@@ -15,7 +15,7 @@ from functools import partial
 
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
-    request, url_for, session as flasksession, make_response)
+    request, url_for, session as flask_session, make_response)
 import operator
 from sqlalchemy import Text
 import uuid
@@ -38,7 +38,6 @@ from pycroft.model.host import Host, Interface, IP, Interface
 from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
-from pycroft.model.webstorage import WebStorage
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
@@ -52,7 +51,6 @@ from datetime import datetime, timedelta, time
 from flask_login import current_user
 from web.template_filters import (
     datetime_filter, host_cname_filter, host_name_filter)
-from base64 import b64encode, b64decode
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry
 from .log import formatted_user_hades_logs
@@ -100,11 +98,9 @@ def overview():
 
 @bp.route('/user_sheet')
 def user_sheet():
-    WebStorage.auto_expire()
-    web_storage_id = flasksession['user_sheet']
-    storage = WebStorage.q.get(web_storage_id) or abort(404)
+    sheet_id = flask_session['user_sheet']
+    pdf_data = lib.user.get_user_sheet(sheet_id) or abort(404)
 
-    pdf_data = b64decode(storage.data)
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Dispositon'] = 'inline; filename=user_sheet.pdf'
@@ -404,12 +400,10 @@ def create():
                 email=form.email.data,
             )
 
-            pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
-            pdf_storage = WebStorage(data=pdf_data, expiry=datetime.utcnow() + timedelta(minutes=15))
-            session.session.add(pdf_storage)
+            sheet_id = lib.user.generate_user_sheet(new_user, plain_password)
             session.session.commit()
 
-            flasksession['user_sheet'] = pdf_storage.id
+            flask_session['user_sheet'] = sheet_id
             flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 
@@ -660,12 +654,10 @@ def reset_password(user_id):
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
         plain_password = lib.user.reset_password(myUser)
-        pdf_data = b64encode(generate_user_sheet(myUser, plain_password))
-        pdf_storage = WebStorage(data=pdf_data, expiry=datetime.utcnow() + timedelta(minutes=5))
-        session.session.add(pdf_storage)
+        sheet_id = lib.user.generate_user_sheet(myUser, plain_password)
         session.session.commit()
 
-        flasksession['user_sheet'] = pdf_storage.id
+        flask_session['user_sheet'] = sheet_id
         flash(Markup(u'Passwort erfolgreich zurückgesetzt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)

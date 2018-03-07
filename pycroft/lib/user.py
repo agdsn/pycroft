@@ -12,7 +12,10 @@ This module contains.
 """
 
 import re
-from datetime import datetime
+
+from base64 import b64encode, b64decode
+
+from datetime import datetime, timedelta
 
 from sqlalchemy import and_, or_, func, literal, literal_column, union_all, \
     select
@@ -35,6 +38,7 @@ from pycroft.model.host import Host, IP, Host, Interface, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
 from pycroft.model.user import User, UnixAccount
+from pycroft.model.webstorage import WebStorage
 
 
 def encode_type1_user_id(user_id):
@@ -92,6 +96,24 @@ def setup_ipv4_networking(host):
         new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
         session.session.add(new_ip)
+
+
+def generate_user_sheet(new_user, plain_password):
+    pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
+    pdf_storage = WebStorage(data=pdf_data,
+                             expiry=datetime.utcnow() + timedelta(minutes=15))
+    session.session.add(pdf_storage)
+
+    return pdf_storage.id
+
+def get_user_sheet(id):
+    WebStorage.auto_expire()
+    storage = WebStorage.q.get(id)
+
+    if (storage is None):
+        return None
+
+    return b64decode(storage.data)
 
 @with_transaction
 def reset_password(myUser):

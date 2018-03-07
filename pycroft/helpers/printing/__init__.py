@@ -16,10 +16,10 @@ from reportlab.platypus.flowables import HRFlowable
 ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
 
+
 def generate_user_sheet(user, plain_password):
     # Anlegen des PDF Dokuments, Seitengröße DIN A4 Hochformat)
     buf = BytesIO()
-    #pdf = canvas.Canvas(buf, pagesize=A4)
     pdf = SimpleDocTemplate(buf, pagesize=A4,
                             rightMargin=2 * cm,
                             leftMargin=2 * cm,
@@ -30,13 +30,36 @@ def generate_user_sheet(user, plain_password):
 
     im = Image(ASSETS_LOGO_FILENAME, 5 * cm, 5 * cm)
     story.append(im)
-    story.append(HRFlowable(width="100%", thickness=3, color=black, spaceBefore = 0.8*cm, spaceAfter=0.8*cm))
-    story.append(Paragraph('''Welcome as a member of the AG DSN, {}!'''.format(user.name),style['BodyText']))
-    story.append(Paragraph('''We are proud to announce that your network access has been activated. If you encounter any problems, drop us a mail or visit us during our office hours. You can find contact information at the bottom of this page.''', style['BodyText']))
-    story.append(Paragraph('''Please make sure to pay your membership contribution in time. You can find further details on our web page.''', style['Bold']))
-    story.append(Paragraph('''Wishing you all the best,''', style['BodyText']))
-    story.append(Paragraph('''Your AG DSN''', style['BodyText']))
-    story.append(HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.8*cm, spaceAfter=0.8*cm))
+    story.append(HRFlowable(width="100%",
+                            thickness=3,
+                            color=black,
+                            spaceBefore=0.8 * cm,
+                            spaceAfter=0.8 * cm))
+
+    story.append(
+        Paragraph('Welcome as a member of the AG DSN, {}!'
+                  .format(user.name),
+                  style['BodyText']))
+
+    story.append(
+        Paragraph('We are proud to announce that your network access has been '
+                  'activated. If you encounter any problems, drop us a mail or '
+                  'visit us during our office hours. You can find contact '
+                  'information at the bottom of this page.',
+                  style['BodyText']))
+
+    story.append(
+        Paragraph('Please make sure to pay your membership contribution in time.'
+                  ' You can find further details on our web page.',
+                  style['Bold']))
+
+    story.append(Paragraph('Wishing you all the best,', style['BodyText']))
+    story.append(Paragraph('Your AG DSN', style['BodyText']))
+    story.append(HRFlowable(width="100%",
+                            thickness=3,
+                            color=black,
+                            spaceBefore=0.8 * cm,
+                            spaceAfter=0.8 * cm))
 
     ips = []
     macs = []
@@ -46,18 +69,20 @@ def generate_user_sheet(user, plain_password):
             macs.append(ip.interface.mac)
 
     data = [['Name:', user.name, 'IPv4-Address:', ', '.join(ips)],
-            ['Username:', user.login, 'MAC-Address:', ', '.join(macs) ],
+            ['Username:', user.login, 'MAC-Address:', ', '.join(macs)],
             ['Password:', plain_password, 'Location:', str(user.room)],
             ['E-Mail:', user.email, '', '']]
-    t = Table(data, colWidths=[pdf.width*0.15,pdf.width*0.34]*2)
+    t = Table(data, colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2)
 
     story.append(t)
-    story.append(HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.8*cm, spaceAfter=0.8*cm))
+    story.append(HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.8 * cm,
+                            spaceAfter=0.8 * cm))
 
     # PDF generieren und speichern
     pdf.build(story)
 
     return buf.getvalue()
+
 
 def getStyleSheet():
     """Returns a stylesheet object"""
@@ -66,16 +91,14 @@ def getStyleSheet():
     stylesheet.add(ParagraphStyle(name='Normal',
                                   fontName="Helvetica",
                                   fontSize=10,
-                                  leading=12)
-                   )
+                                  leading=12))
 
     stylesheet.add(ParagraphStyle(name='BodyText',
                                   parent=stylesheet['Normal'],
-                                  spaceBefore=14)
-                   )
+                                  spaceBefore=14))
+
     stylesheet.add(ParagraphStyle(name='Bold',
                                   parent=stylesheet['BodyText'],
-                                  fontName = "Helvetica-Bold")
-                   )
+                                  fontName="Helvetica-Bold"))
 
     return stylesheet
