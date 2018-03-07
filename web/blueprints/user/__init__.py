@@ -400,10 +400,10 @@ def create():
                 email=form.email.data,
             )
 
-            sheet_id = lib.user.generate_user_sheet(new_user, plain_password)
+            sheet = lib.user.generate_user_sheet(new_user, plain_password)
             session.session.commit()
 
-            flask_session['user_sheet'] = sheet_id
+            flask_session['user_sheet'] = sheet.id
             flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
             return redirect(url_for('.user_show', user_id = new_user.id))
 

@@ -25,6 +25,7 @@ from pycroft.helpers import user as user_helper, AttrDict
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
+from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -99,15 +100,19 @@ def setup_ipv4_networking(host):
 
 
 def generate_user_sheet(new_user, plain_password):
-    pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
+    pdf_data = b64encode(generate_pdf(new_user, plain_password)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=datetime.utcnow() + timedelta(minutes=15))
     session.session.add(pdf_storage)
 
-    return pdf_storage.id
+    return pdf_storage
 
 def get_user_sheet(id):
     WebStorage.auto_expire()
+
+    if (id) is None:
+        return None
+
     storage = WebStorage.q.get(id)
 
     if (storage is None):
