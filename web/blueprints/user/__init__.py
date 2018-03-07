@@ -653,7 +653,7 @@ def reset_password(user_id):
     form = UserResetPasswordForm()
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
-        plain_password = lib.user.reset_password(myUser)
+        plain_password = lib.user.reset_password(myUser, current_user)
         sheet_id = lib.user.generate_user_sheet(myUser, plain_password)
         session.session.commit()
 

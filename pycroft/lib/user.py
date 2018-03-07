@@ -116,9 +116,15 @@ def get_user_sheet(id):
     return b64decode(storage.data)
 
 @with_transaction
-def reset_password(myUser):
+def reset_password(user, processor):
     plain_password = user_helper.generate_password(12)
-    myUser.password = plain_password
+    user.password = plain_password
+
+    message = deferred_gettext(u"Password was reset")
+    log_user_event(author=processor,
+                   user=user,
+                   message=message.format(user).to_json())
+
     return plain_password
 
 
