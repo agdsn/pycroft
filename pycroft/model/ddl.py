@@ -5,7 +5,7 @@ import inspect
 from collections import Iterable, OrderedDict
 from functools import partial
 
-from sqlalchemy import event as sqla_event, schema
+from sqlalchemy import event as sqla_event, schema, table
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ClauseElement
 
@@ -376,8 +376,10 @@ class View(schema.DDLElement):
         """
         self.name = name
         self.query = query
+        self.table = table(name)
         self.temporary = temporary
         self.column_names = column_names
+        self._init_table_columns()
         if view_options is None:
             view_options = OrderedDict()
         else:
@@ -390,6 +392,16 @@ class View(schema.DDLElement):
             raise ValueError('Parameter "check_option" specified more than '
                              'once')
         self.check_option = check_option
+
+    def _init_table_columns(self):
+        if self.column_names is not None:
+            query_column_names = set(self.query.c.keys())
+            if set(self.column_names) != query_column_names:
+                raise ValueError("The given column_names must coincide with"
+                                 " the implicit columns of the query: {!r} != {!r}"
+                                 .format(set(self.column_names), query_column_names))
+        for c in self.query.c:
+            c._make_proxy(self.table)
 
 
 class CreateView(schema.DDLElement):
