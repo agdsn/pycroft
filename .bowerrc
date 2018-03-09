@@ -1,4 +1,5 @@
 {
   "directory": "./web/static/libs/",
+  "registry": "https://registry.bower.io",
   "analytics": false
 }
