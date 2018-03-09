@@ -1,11 +1,14 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from pycroft.model.user import Group, Membership, PropertyGroup, TrafficGroup
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, FactoryDataTestBase
 from pycroft.model import session, user
+from pycroft.model.property import current_property
+from tests.factories.property import MembershipFactory, PropertyGroupFactory
+from tests.factories.user import UserFactory
 from tests.fixtures.dummy.facilities import (BuildingData, RoomData)
 from tests.fixtures.dummy.user import UserData
 from tests.model.property_fixtures import (
@@ -478,3 +481,63 @@ class TestGroup(PropertyDataTestBase):
         self.add_membership()
         query = self.create_active_users_query()
         self.assertEqual(query.all(), [self.user])
+
+
+class CurrentPropertyViewTest(FactoryDataTestBase):
+    def setUp(self):
+        super().setUp()
+        property_group_data = {
+            # name, granted, denied
+            'active': ({'login', 'mail'}, set()),
+            'mail_only': ({'mail'}, set()),
+            'violation': (set(), {'login'}),
+        }
+        self.groups = {}
+        for name, (granted, denied) in property_group_data.items():
+            self.groups[name] = PropertyGroupFactory.create(name=name,
+                                                            granted=granted,
+                                                            denied=denied)
+
+        self.users = dict(zip(['active', 'mail', 'violator', 'former'],
+                              UserFactory.create_batch(4)))
+
+        memberships = [
+            # user, group, delta_days_start, delta_days_end
+            ('active', 'active', -1, None),
+            ('mail', 'mail_only', -1, +1),
+            ('mail', 'active', +2, None),
+            ('violator', 'active', -1, None),
+            ('violator', 'violation', -1, None),
+            ('former', 'active', -10, -1),
+            ('former', 'violation', -9, -5),
+        ]
+        for username, groupname, delta_days_start, delta_days_end in memberships:
+            start = (datetime.now() + timedelta(delta_days_start)
+                     if delta_days_start is not None else None)
+            end = (datetime.now() + timedelta(delta_days_end)
+                   if delta_days_end is not None else None)
+
+            MembershipFactory.create(user=self.users[username],
+                                     group=self.groups[groupname],
+                                     begins_at=start, ends_at=end)
+        session.session.commit()
+
+    def test_current_properties_of_user(self):
+        rows = (session.session.query(current_property.table.c.property_name)
+                .add_columns(user.User.login.label('login'))
+                .join(user.User, user.User.id == current_property.table.c.user_id)
+                .all())
+        login = self.users['active'].login
+        expected_results = [
+            # name, granted, denied
+            ('active', ['mail', 'login'], []),
+            ('mail', ['mail'], ['login']),
+            ('former', [], ['mail', 'login']),
+        ]
+        for user_key, granted, denied in expected_results:
+            login = self.users[user_key].login
+            with self.subTest(login=login):
+                for granted_prop in granted:
+                    self.assertIn((granted_prop, login), rows)
+                for denied_prop in denied:
+                    self.assertNotIn((denied_prop, login), rows)
