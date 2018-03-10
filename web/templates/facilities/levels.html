@@ -11,8 +11,10 @@
         <li class="active">{{ building.short_name }}</li>
     </ul>
     <div class="row">
-        {% for level in levels -%}
-        <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-default btn-large">{{ level }}</a></div>
-        {%- endfor %}
+        <div class="col-xs-12 text-center">
+            {% for level in levels -%}
+            <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-default btn-large">{{ level }}</a></div>
+            {%- endfor %}
+        </div>
     </div>
 {% endblock %}

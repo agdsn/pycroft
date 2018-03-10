@@ -38,28 +38,30 @@
 {% endblock %}
 
 <div class="row">
-    <div class="box">
-        {% if effective_traffic_group_name %}
-            Effektive Traffic-Gruppe:
-            <a href="{{ url_for('properties.traffic_groups') }}">
-                {{ effective_traffic_group_name }}
-                <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-            </a>
-        {% else %}
-            Nutzer ist aktuell nicht Mitglied einer Trafficgruppe
-        {% endif %}
-    </div>
+    <div class="col-xs-12">
+        <div class="box">
+            {% if effective_traffic_group_name %}
+                Effektive Traffic-Gruppe:
+                <a href="{{ url_for('properties.traffic_groups') }}">
+                    {{ effective_traffic_group_name }}
+                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                </a>
+            {% else %}
+                Nutzer ist aktuell nicht Mitglied einer Trafficgruppe
+            {% endif %}
+        </div>
 
-    <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
-        <label for="select-days">Zeitraum</label>
-        <select id="select-days" class="form-control" onchange="loadTrafficData(this)">
-            <option value="7" selected>7 Tage</option>
-            <option value="14">14 Tage</option>
-            <option value="21">21 Tage</option>
-        </select>
+        <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
+            <label for="select-days">Zeitraum</label>
+            <select id="select-days" class="form-control" onchange="loadTrafficData(this)">
+                <option value="7" selected>7 Tage</option>
+                <option value="14">14 Tage</option>
+                <option value="21">21 Tage</option>
+            </select>
+        </div>
+        <div id="traffic-graph" class="col-sm-10"></div>
+        <div id="credit-graph" class="col-sm-offset-2 col-sm-10"></div>
     </div>
-    <div id="traffic-graph" class="col-sm-10"></div>
-    <div id="credit-graph" class="col-sm-offset-2 col-sm-10"></div>
 </div>
 
 
