@@ -30,19 +30,23 @@
 
 {% block content %}
     <section id="tbl_bank_accounts">
-        <h2>Übersicht</h2>
-        {{ tbl.item_table(
+        <h2 class="page-header">{{ _("Übersicht") }}</h2>
+        {% call tbl.item_table(
             'bank_accounts',
             url_for('.bank_accounts_list_json'),
             bank_accounts_columns
-        ) }}
-        {% if current_user is privileged_for('finance_change') -%}
-        <a class="btn btn-primary" href="{{ url_for('.bank_accounts_create') }}">Neues Bankkonto anlegen</a>
-        {%- endif %}
+        ) %}
+            {% if current_user is privileged_for('finance_change') -%}
+            <a class="btn btn-primary" href="{{ url_for('.bank_accounts_create') }}">
+                <span class="glyphicon glyphicon-plus"></span>
+                {{ _("Neues Bankkonto anlegen") }}
+            </a>
+            {%- endif %}
+        {% endcall %}
     </section>
 
     <section>
-        <h2>Unzugeordnete Bankkontobewegungen</h2>
+        <h2 class="page-header">{{ _("Unzugeordnete Kontobewegungen") }}</h2>
         {{ tbl.item_table(
             'bank_accounts_activities',
             url_for('.bank_accounts_activities_json'),
