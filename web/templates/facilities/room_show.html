@@ -20,78 +20,91 @@
         <li><a href="{{ url_for('.building_level_rooms', building_id=room.building_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
         <li class="active">Zimmer {{ room.number }}</li>
     </ul>
-    <h2>Überblick</h2>
-    <div class="row">
-        <div class="col-sm-6 col-md-5 col-lg-4">
-            <h3>Stammdaten</h3>
-            <dl class="dl-horizontal">
-                <dt>Wohnheim</dt>
-                <dd>{{ room.building.street }} {{ room.building.number }}</dd>
-                <dt>Nummer</dt>
-                <dd>{{ room.number }}</dd>
-                <dt>Etage</dt>
-                <dd>{{ room.level }}</dd>
-                <dt>Bewohnbar</dt>
-                <dd>{{ room.inhabitable }}</dd>
-            </dl>
-        </div>
-        {% if room.inhabitable -%}
-        <div class="col-sm-6 col-md-5 col-lg-4">
-            {% if not room.users -%}
-            <p>In diesem Zimmer wohnt niemand, oder derjenige bekommt von uns kein Netz.</p>
-            {%- else %}
-            <h3>Bewohner</h3>
-            <ul class="list-unstyled button-list">
-                {% for button in user_buttons -%}
-                <li>{{ btn.multiGlyphBtnMacro(button) }}</li>
-                {%- endfor %}
-            </ul>
+
+    <section id="overview">
+        <h2 class="page-header">Überblick</h2>
+        <div class="row">
+            <div class="col-sm-6 col-md-5 col-lg-4">
+                <h3>Stammdaten</h3>
+                <dl class="dl-horizontal">
+                    <dt>Wohnheim</dt>
+                    <dd>{{ room.building.street }} {{ room.building.number }}</dd>
+                    <dt>Nummer</dt>
+                    <dd>{{ room.number }}</dd>
+                    <dt>Etage</dt>
+                    <dd>{{ room.level }}</dd>
+                    <dt>Bewohnbar</dt>
+                    <dd>{{ room.inhabitable }}</dd>
+                </dl>
+            </div>
+            {% if room.inhabitable -%}
+            <div class="col-sm-6 col-md-5 col-lg-4">
+                {% if not room.users -%}
+                <p>In diesem Zimmer wohnt niemand, oder derjenige bekommt von uns kein Netz.</p>
+                {%- else %}
+                <h3>Bewohner</h3>
+                <ul class="list-unstyled button-list">
+                    {% for button in user_buttons -%}
+                    <li>{{ btn.multiGlyphBtnMacro(button) }}</li>
+                    {%- endfor %}
+                </ul>
+                {%- endif %}
+            </div>
             {%- endif %}
         </div>
-        {%- endif %}
-    </div>
+    </section>
 
-    <h2>Patchports</h2>
-    {% if ports %}
-    <ul class="list-unstyled">
-        {% for port in ports %}
-        <li><dl class="dl-horizontal">
-            <dt>Patchpanel-Port</dt>
-            <dd>{{ port.name }}</dd>
+    <section id="patchports">
+        <h2 class="page-header">Patchports</h2>
+        {% if ports %}
+        <ul class="list-unstyled">
+            {% for port in ports %}
+            <li><dl class="dl-horizontal">
+                <dt>Patchpanel-Port</dt>
+                <dd>{{ port.name }}</dd>
 
-            {% if port.switch_port %}
-            <dt>Gepatched zu</dt>
-            <dd><a href={{ url_for('infrastructure.switch_show',
-                                   switch_id=port.switch_port.switch.host_id) }}>
-                    {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
-            </a></dd>
+                {% if port.switch_port %}
+                <dt>Gepatched zu</dt>
+                <dd><a href={{ url_for('infrastructure.switch_show',
+                                       switch_id=port.switch_port.switch.host_id) }}>
+                        {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
+                </a></dd>
 
-            {% for vlan in port.switch_port.vlans %}
-            <dt><a href="{{ url_for('infrastructure.subnets') }}">Subnets</a>
-                (VLAN <code>{{ vlan.name }}</code>)</dt>
-            <dd>
-                {% for subnet in vlan.subnets %}
-                    {{ subnet.address | string }}
+                {% for vlan in port.switch_port.vlans %}
+                <dt><a href="{{ url_for('infrastructure.subnets') }}">Subnets</a>
+                    (VLAN <code>{{ vlan.name }}</code>)</dt>
+                <dd>
+                    {% for subnet in vlan.subnets %}
+                        {{ subnet.address | string }}
+                    {% endfor %}
+                </dd>
                 {% endfor %}
-            </dd>
+
+                {% else %}
+                    <dt>Gepatched zu</dt><dd><span class="text-muted">Ungepatched</span></dd>
+                {% endif %}
+            </dl></li>
             {% endfor %}
+        </ul>
+        {% else %}
+            <span class="text-muted">Dieser Raum ist mit keinem Patchport verbunden.</span>
+        {% endif %}
+    </section>
 
-            {% else %}
-                <dt>Gepatched zu</dt><dd><span class="text-muted">Ungepatched</span></dd>
-            {% endif %}
-        </dl></li>
-        {% endfor %}
-    </ul>
-    {% else %}
-        <span class="text-muted">Dieser Raum ist mit keinem Patchport verbunden.</span>
-    {% endif %}
+    <section id="logs">
+        <h2 class="page-header">Logs</h2>
+        <div class="row">
+            <div class="col-xs-12">
+                {{ tbl.item_table("logs", url_for(".room_logs_json", room_id=room.id), cols) }}
+            </div>
+        </div>
 
-    <h2>Log</h2>
-    <div class="row">
-    {{ tbl.item_table("logs", url_for(".room_logs_json", room_id=room.id), cols) }}
-    </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <h3>Raum-Log erstellen</h3>
 
-    <div class="row">
-        {{ forms.simple_form(form, '', '#') }}
-    </div>
+                {{ forms.simple_form(form, '', '#') }}
+            </div>
+        </div>
+    </section>
 {% endblock %}

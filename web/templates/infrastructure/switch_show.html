@@ -21,7 +21,7 @@
 
 {% block content %}
     <section>
-        <h2>Überblick</h2>
+        <h2 class="page-header">Überblick</h2>
         <dl>
             <dt>Management IP</dt>
             <dd>{{ switch.management_ip }}</dd>
@@ -30,10 +30,11 @@
         </dl>
     </section>
     <section>
-        <h2>Ports</h2>
+        <h2 class="page-header">Ports</h2>
         {{ tbl.item_table(
             'switches',
              url_for('infrastructure.switch_show_json', switch_id=switch.host_id),
              cols
         ) }}
+    </section>
 {% endblock %}
