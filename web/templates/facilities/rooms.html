@@ -38,11 +38,12 @@
                 $("#rooms").bootstrapTable('refresh');
             });
             $("rooms").bootstrapTable()
-        })
+        });
+
         function perhaps_all_users_query_params(params) {
             if ($('#rooms-toggle-all-users').hasClass("active")) {
                 params['all_users'] = '1';
-            };
+            }
             return params;
         }
     </script>
