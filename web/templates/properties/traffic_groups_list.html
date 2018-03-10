@@ -15,9 +15,14 @@
 ] %}
 
 {% block content %}
-    {{ tbl.item_table("traffic_groups", url_for(".traffic_groups_json"), cols) }}
-
-    <p>
-        <a class="btn btn-primary" href="{{ url_for(".traffic_group_create") }}">Neue Trafficgruppe</a>
-    </p>
+    {% call tbl.item_table(
+        'traffic_groups',
+        url_for('.traffic_groups_json'),
+        cols
+    ) %}
+        <a href="{{ url_for(".traffic_group_create") }}" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span>
+            {{ _("Neue Trafficgruppe") }}
+        </a>
+    {% endcall %}
 {% endblock %}

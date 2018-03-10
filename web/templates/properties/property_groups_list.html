@@ -17,7 +17,10 @@
 
 {% block content %}
     <p>
-        <a class="btn btn-primary" href="{{ url_for(".property_group_create") }}">Neue Eigenschaftsgruppe</a>
+        <a class="btn btn-primary" href="{{ url_for(".property_group_create") }}">
+            <span class="glyphicon glyphicon-plus"></span>
+            {{ _("Neue Eigenschaftsgruppe") }}
+        </a>
     </p>
     {% if property_groups -%}
     <table class="table table-fat table-fixed-header">
