@@ -18,7 +18,7 @@
         this.window = $(window);
         this.doc = $(document);
         this.element = $(element);
-        this.navTop = this.element.length && this.element.offset().top - 35;
+        this.navTop = this.element.length && this.element.offset().top;
         this.isFixed = 1;
 
         if (this.element.length) {
@@ -36,7 +36,7 @@
             var scrollTop = this.window.scrollTop();
 
             if (!this.isFixed) {
-                this.navTop = this.element.length && this.element.offset().top - 35;
+                this.navTop = this.element.length && this.element.offset().top;
             }
 
             if (scrollTop >= this.navTop && !this.isFixed) {
@@ -54,9 +54,9 @@
                 offset = $target.offset().top;
             ev.preventDefault();
 
-            var scrollback = 60;
-            //if (!this.isFixed)
-            //    scrollback = 60;
+            var scrollback = 0;
+            if (!this.isFixed)
+                scrollback = 35;
 
             if (this.doc.height() >= this.window.height() + offset + scrollback)
                 this.window.scrollTop(offset - scrollback);
