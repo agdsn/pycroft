@@ -99,26 +99,40 @@ def setup_ipv4_networking(host):
         session.session.add(new_ip)
 
 
-def generate_user_sheet(new_user, plain_password):
+def store_user_sheet(new_user, plain_password, timeout=15):
+    """Generate a user sheet and store it in the WebStorage.
+
+    Returns the generated `WebStorage` object holding the pdf.
+
+    :param User new_user:
+    :param str plain_password:
+    :param int timeout: The lifetime in minutes
+    """
     pdf_data = b64encode(generate_pdf(new_user, plain_password)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
-                             expiry=datetime.utcnow() + timedelta(minutes=15))
+                             expiry=datetime.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
 
     return pdf_storage
 
-def get_user_sheet(id):
+
+def get_user_sheet(sheet_id):
+    """Fetch the storage object given an id.
+
+    If not existent, return None.
+    """
     WebStorage.auto_expire()
 
-    if (id) is None:
+    if sheet_id is None:
         return None
 
-    storage = WebStorage.q.get(id)
+    storage = WebStorage.q.get(sheet_id)
 
-    if (storage is None):
+    if storage is None:
         return None
 
     return b64decode(storage.data)
+
 
 @with_transaction
 def reset_password(user, processor):

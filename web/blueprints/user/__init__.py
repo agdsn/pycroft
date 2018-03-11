@@ -435,7 +435,7 @@ def create():
                 email=form.email.data,
             )
 
-            sheet = lib.user.generate_user_sheet(new_user, plain_password)
+            sheet = lib.user.store_user_sheet(new_user, plain_password)
             session.session.commit()
 
             flask_session['user_sheet'] = sheet.id
@@ -689,7 +689,7 @@ def reset_password(user_id):
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
         plain_password = lib.user.reset_password(myUser, processor=current_user)
-        sheet_id = lib.user.generate_user_sheet(myUser, plain_password)
+        sheet_id = lib.user.store_user_sheet(myUser, plain_password)
         session.session.commit()
 
         flask_session['user_sheet'] = sheet_id
