@@ -41,8 +41,8 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     width: 270px;
 }
 
-.user a {
-    width: 75%;
+.user>* {
+    width: 85%;
     margin: 0.5em;
 }
 
