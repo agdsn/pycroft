@@ -142,7 +142,7 @@ def reset_password(user, processor):
     message = deferred_gettext(u"Password was reset")
     log_user_event(author=processor,
                    user=user,
-                   message=message.format(user).to_json())
+                   message=message.to_json())
 
     return plain_password
 

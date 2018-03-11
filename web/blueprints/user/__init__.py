@@ -689,11 +689,14 @@ def reset_password(user_id):
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
         plain_password = lib.user.reset_password(myUser, processor=current_user)
-        sheet_id = lib.user.store_user_sheet(myUser, plain_password)
+        sheet = lib.user.store_user_sheet(myUser, plain_password)
         session.session.commit()
 
-        flask_session['user_sheet'] = sheet_id
-        flash(Markup(u'Passwort erfolgreich zurückgesetzt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
+        flask_session['user_sheet'] = sheet.id
+        flash(Markup(u'Passwort erfolgreich zurückgesetzt.'
+                     ' <a href="{}">Nutzerdatenblatt</a> verfügbar!'
+                     .format(url_for('.user_sheet'))),
+              'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
 
