@@ -96,8 +96,23 @@ def overview():
     return render_template("user/user_overview.html", entries=entries)
 
 
+def make_pdf_response(pdf_data, filename, inline=True):
+    """Turn pdf data into a response with appropriate headers.
+
+    Content-Type: application/pdf
+    Content-Disposition: (inline|attachment); filename="<filename>"
+    """
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    disposition = "{}; filename={}".format('inline' if inline else 'attachment',
+                                           filename)
+    response.headers['Content-Disposition'] = disposition
+    return response
+
+
 @bp.route('/user_sheet')
 def user_sheet():
+    """Deliver the datasheet stored in the session"""
     try:
         sheet_id = flask_session['user_sheet']
     except KeyError:
@@ -109,10 +124,22 @@ def user_sheet():
               " Perhaps it has already expired?", 'error')
         abort(404)
 
-    response = make_response(pdf_data)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Dispositon'] = 'inline; filename=user_sheet.pdf'
-    return response
+    return make_pdf_response(pdf_data, filename='user_sheet.pdf')
+
+
+@bp.route('/<int:user_id>/datasheet')
+def static_datasheet(user_id):
+    """Deliver an on-the-fly datasheet without the password.
+
+    Useful for testing the layout itself.
+    """
+    user = User.q.get(user_id)
+    if user is None:
+        abort(404)
+
+    return make_pdf_response(generate_user_sheet(user, plain_password="********"),
+                             filename='user_sheet_plain_{}.pdf'.format(user_id))
+
 
 @bp.route('/json/search')
 def json_search():
