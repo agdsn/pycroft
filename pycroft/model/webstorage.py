@@ -14,5 +14,6 @@ class WebStorage(IntegerIdModel):
 
     @staticmethod
     def auto_expire():
+        """Delete all expired items from the database"""
         WebStorage.q.filter(WebStorage.expiry <= datetime.utcnow()).delete(False)
         session.commit()

@@ -98,8 +98,16 @@ def overview():
 
 @bp.route('/user_sheet')
 def user_sheet():
-    sheet_id = flask_session['user_sheet']
-    pdf_data = lib.user.get_user_sheet(sheet_id) or abort(404)
+    try:
+        sheet_id = flask_session['user_sheet']
+    except KeyError:
+        flash("No user sheet referenced in your session", 'warning')
+        abort(404)
+    pdf_data = lib.user.get_user_sheet(sheet_id)
+    if not pdf_data:
+        flash("The referenced user sheet does not exist."
+              " Perhaps it has already expired?", 'error')
+        abort(404)
 
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
