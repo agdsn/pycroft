@@ -4,6 +4,7 @@ from pycroft import config
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.facilities import Room
+from pycroft.model.webstorage import WebStorage
 from tests.fixtures import permissions
 from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
 from . import UserFrontendTestBase, LegacyUserFrontendTestBase
@@ -125,3 +126,17 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
         self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
         self.assertEqual(response.headers.get('Content-Disposition'),
                          "inline; filename=user_sheet_plain_{}.pdf".format(self.user.id))
+
+    def test_password_reset(self):
+        endpoint = url_for('user.reset_password', user_id=self.user.id)
+        response = self.client.post(endpoint)
+        self.assert_message_substr_flashed("Passwort erfolgreich zurückgesetzt.",
+                                           category='success')
+        # access user_sheet
+        response = self.client.get(url_for('user.user_sheet'))
+        self.assertEqual(WebStorage.q.count(), 1)
+        self.assert200(response)
+        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
+        self.assertEqual(response.headers.get('Content-Disposition'),
+                         "inline; filename=user_sheet.pdf")
+        self.assertTrue(response.data.startswith(b"%PDF"))
