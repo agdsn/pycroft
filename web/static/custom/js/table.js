@@ -54,15 +54,14 @@ function coloredFormatter(value, row, index) {
 }
 
 /**
- * This function makes the td `relative` and shifts it to `z-index:
- * -1`to compensate the border that would be hidden otherwise.  It can
- * be applied to a col (`<th>`) via the `data-cell-style` attribute.
+ * This function makes the td `relative`.  It can be applied to a col
+ * (`<th>`) via the `data-cell-style` attribute.
  *
  * The parameters are not used.
  */
 function tdRelativeCellStyle(value, row, index, field) {
     return {
-        css: {"position": "relative", "z-index": "-1"}
+        css: {"position": "relative"}
     };
 }
 
