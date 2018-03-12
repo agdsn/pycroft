@@ -17,7 +17,15 @@ ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
 
 
-def generate_user_sheet(user, plain_password):
+def generate_user_sheet(user, user_id, plain_password):
+    """Create a „new member“ datasheet for the given user
+
+    :param User user: A pycroft user
+    :param str user_id: The user's ID.  It has to be given extra,
+        because the user_id is not appearent given the ORM object
+        itself; encoding is done in the library.
+    :param str plain_password: The password
+    """
     # Anlegen des PDF Dokuments, Seitengröße DIN A4 Hochformat)
     buf = BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4,
@@ -68,10 +76,10 @@ def generate_user_sheet(user, plain_password):
             ips.append(str(ip.address))
             macs.append(ip.interface.mac)
 
-    data = [['Name:', user.name, 'IPv4-Address:', ', '.join(ips)],
-            ['Username:', user.login, 'MAC-Address:', ', '.join(macs)],
-            ['Password:', plain_password, 'Location:', str(user.room)],
-            ['E-Mail:', user.email, '', '']]
+    data = [['Name:', user.name, 'User-ID:', user_id],
+            ['Username:', user.login, 'IPv4-Address:', ', '.join(ips)],
+            ['Password:', plain_password, 'MAC-Address:', ', '.join(macs)],
+            ['E-Mail:', user.email, 'Location:', str(user.room)]]
     t = Table(data, colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2)
 
     story.append(t)

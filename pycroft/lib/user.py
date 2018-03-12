@@ -108,7 +108,7 @@ def store_user_sheet(new_user, plain_password, timeout=15):
     :param str plain_password:
     :param int timeout: The lifetime in minutes
     """
-    pdf_data = b64encode(generate_pdf(new_user, plain_password)).decode('ascii')
+    pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=datetime.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
@@ -642,3 +642,20 @@ def status_query():
         (User.has_property('ldap', now)).label('ldap'),
         or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
     ).join(Account)
+
+
+def generate_user_sheet(user, plain_password):
+    """Create a „new member“ datasheet for the given user
+
+    This is a wrapper for
+    :py:func:`pycroft.helpers.printing.generate_user_sheet` equipping
+    it with the correct user id.
+
+    This function cannot be exported to a `wrappers` module because it
+    depends on `encode_type2_user_id` and is required by
+    `(store|get)_user_sheet`, both in this module.
+
+    :param User user: A pycroft user
+    :param str plain_password: The password
+    """
+    return generate_pdf(user, encode_type2_user_id(user.id), plain_password)
