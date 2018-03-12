@@ -5,7 +5,7 @@ from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.facilities import Room
 from pycroft.model.webstorage import WebStorage
-from tests.factories.facilities import RoomFactory, PatchPortFactory
+from tests.factories import RoomFactory, PatchPortFactory
 from tests.factories.net import SubnetFactory
 from tests.fixtures import permissions
 from tests.fixtures.dummy import user as dummy_user_fixtures, facilities

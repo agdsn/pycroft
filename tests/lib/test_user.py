@@ -14,9 +14,7 @@ from pycroft.lib import user as UserHelper, traffic, membership
 from pycroft.model import (
     user, facilities, session, logging, finance, host)
 from tests import FactoryDataTestBase
-from tests.factories.traffic import TrafficGroupFactory
-from tests.factories.property import MembershipFactory
-from tests.factories.user import UserFactory
+from tests.factories import UserFactory, MembershipFactory, TrafficGroupFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData

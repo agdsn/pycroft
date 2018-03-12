@@ -3,10 +3,10 @@ from faker.providers import BaseProvider
 from ipaddr import IPv4Network, IPv4Address
 
 from pycroft.model.host import Host, Switch, Interface, IP, SwitchPort
-from tests import UserFactory
 from tests.factories.base import BaseFactory
 from tests.factories.facilities import RoomFactory
 from tests.factories.net import SubnetFactory, VLANFactory
+from tests.factories.user import UserFactory
 
 
 class UnicastMacProvider(BaseProvider):

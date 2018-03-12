@@ -18,10 +18,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
 import sys
 
-from tests.factories.config import ConfigFactory
-from tests.factories.property import AdminPropertyGroupFactory, \
-    MembershipFactory
-from tests.factories.user import UserFactory
+from tests.factories import ConfigFactory, UserFactory, AdminPropertyGroupFactory, MembershipFactory
 from werkzeug.routing import IntegerConverter, UnicodeConverter
 from pycroft.model import session
 from pycroft.model import _all, drop_db_model, create_db_model
