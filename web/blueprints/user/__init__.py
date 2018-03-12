@@ -425,7 +425,8 @@ def create():
     form = UserCreateForm()
     if form.validate_on_submit():
         try:
-            new_user, plain_password = lib.user.move_in(name=form.name.data,
+            new_user, plain_password = lib.user.move_in(
+                name=form.name.data,
                 login=form.login.data,
                 building=form.building.data, level=form.level.data,
                 room_number=form.room_number.data,
@@ -438,8 +439,9 @@ def create():
             session.session.commit()
 
             flask_session['user_sheet'] = sheet.id
-            flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(url_for('.user_sheet'))), 'success')
-            return redirect(url_for('.user_show', user_id = new_user.id))
+            flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'
+                         .format(url_for('.user_sheet'))), 'success')
+            return redirect(url_for('.user_show', user_id=new_user.id))
 
         except (MacExistsException,
                 SubnetFullException,
@@ -447,7 +449,7 @@ def create():
             flash(str(error), 'error')
             session.session.rollback()
 
-    return render_template('user/user_create.html', form = form)
+    return render_template('user/user_create.html', form=form)
 
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
