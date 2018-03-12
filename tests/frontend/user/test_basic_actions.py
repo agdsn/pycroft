@@ -116,3 +116,12 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
         # self.assert_redirects(response, url_for('user.user_show', user_id=user_id))
         # self.assert_message_flashed("Nutzer wurde wieder eingezogen", category='success')
         pass
+
+    def test_static_datasheet(self):
+        endpoint = url_for('user.static_datasheet', user_id=self.user.id)
+        response = self.client.get(endpoint)
+        self.assertTrue(response.data.startswith(b"%PDF"))
+        self.assert200(response)
+        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
+        self.assertEqual(response.headers.get('Content-Disposition'),
+                         "inline; filename=user_sheet_plain_{}.pdf".format(self.user.id))
