@@ -222,6 +222,11 @@ input.money-amount {
     border-left-color: #1b809e;
 }
 
+.box-warning {
+    /* A bit less saturated and lighter */
+    border-color: hsl(35, 65%, 80%);
+    border-left-color: hsl(35, 84%, 57%);
+}
 .button-list li {
     margin-bottom: 5px;
 }
