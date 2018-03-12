@@ -5,6 +5,8 @@ from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.facilities import Room
 from pycroft.model.webstorage import WebStorage
+from tests.factories.facilities import RoomFactory, PatchPortFactory
+from tests.factories.net import SubnetFactory
 from tests.fixtures import permissions
 from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
 from . import UserFrontendTestBase, LegacyUserFrontendTestBase
@@ -133,6 +135,40 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
         self.assert_message_substr_flashed("Passwort erfolgreich zurückgesetzt.",
                                            category='success')
         # access user_sheet
+        response = self.client.get(url_for('user.user_sheet'))
+        self.assertEqual(WebStorage.q.count(), 1)
+        self.assert200(response)
+        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
+        self.assertEqual(response.headers.get('Content-Disposition'),
+                         "inline; filename=user_sheet.pdf")
+        self.assertTrue(response.data.startswith(b"%PDF"))
+
+
+class NewUserDatasheetTest(UserFrontendTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.room = RoomFactory(building__with_traffic_group=True)
+        self.subnet = SubnetFactory()
+        self.patch_port = PatchPortFactory(room=self.room, patched=True,
+                                           switch_port__switch__host__owner=self.admin)
+        self.patch_port.switch_port.vlans.append(self.subnet.vlan)
+
+    def test_user_create_data_sheet(self):
+        response = self.client.post(url_for('user.create'), data={
+            'name': "Test User",
+            'building': self.room.building.id,
+            'level': self.room.level,
+            'room_number': self.room.number,
+            'login': "testuser",
+            'mac': "70:de:ad:be:ef:07",
+            'email': "",
+        })
+        # I know it's really ugly to trust the id sequence and the
+        # existence of only one user objects, but it should do the job
+        user_show_endpoint = url_for('user.user_show', user_id=2)
+        self.assertRedirects(response, user_show_endpoint)
+        self.assert_message_substr_flashed("Benutzer angelegt.", category='success')
+
         response = self.client.get(url_for('user.user_sheet'))
         self.assertEqual(WebStorage.q.count(), 1)
         self.assert200(response)

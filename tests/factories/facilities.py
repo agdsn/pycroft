@@ -6,6 +6,7 @@ from factory import SubFactory, LazyAttribute, Sequence, Trait
 from factory.faker import Faker
 
 from pycroft.model.facilities import Site, Building, Room
+from pycroft.model.port import PatchPort
 from .base import BaseFactory
 
 
@@ -41,3 +42,16 @@ class RoomFactory(BaseFactory):
     inhabitable = Faker('boolean')
 
     building = SubFactory(BuildingFactory)
+
+
+class PatchPortFactory(BaseFactory):
+    class Meta:
+        model = PatchPort
+
+    room = SubFactory(RoomFactory)
+    name = "??"
+    switch_port = None
+    class Params:
+        patched = Trait(
+            switch_port=SubFactory('tests.factories.host.SwitchPortFactory')
+        )
