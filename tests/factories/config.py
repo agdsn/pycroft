@@ -25,6 +25,7 @@ class ConfigFactory(BaseFactory):
     violation_group = SubFactory(PropertyGroupFactory)
     moved_from_division_group = SubFactory(PropertyGroupFactory)
     already_paid_semester_fee_group = SubFactory(PropertyGroupFactory)
+    cache_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s
     registration_fee_account = SubFactory(AccountFactory)

@@ -47,6 +47,7 @@ class Nutzer(Base):
     icq_uin = Column(String(255))
     bezahlt = Column(SmallInteger, nullable=False, server_default=text("'1'"))
     internet_by_rental = Column(SmallInteger, nullable=False, server_default=text("'0'"))
+    use_cache = Column(SmallInteger, nullable=False, server_default=text("'0'"))
 
     computer = relationship("Computer", backref="nutzer")
     status = relationship(Status, lazy='joined')

@@ -599,6 +599,7 @@ def generate_config(data, resources):
         member_group=g_d["member"],
         violation_group=g_d["suspended"],
         network_access_group=g_d["member"],
+        cache_group=g_d["cache_user"],
         moved_from_division_group=g_d["moved_from_division"],
         already_paid_semester_fee_group=g_d["already_paid"],
         registration_fee_account=an_d[u"Beiträge"],
@@ -692,6 +693,14 @@ def reconstruct_memberships(data, resources):
                                     group=g_d['away'],
                                     begins_at=date.today())
                 )
+
+        # PHASE 6 - Add cache membership according to flag on netuser
+
+        if _u.use_cache:
+            objs.append(user.Membership(user=u,
+                                        group=g_d["cache_user"],
+                                        begins_at=u.registered_at)
+                        )
 
     log.info("#fees {}".format((" ".join("{0}:{{{0}}}".format(key) for key in n.__dict__.keys())).format(**n.__dict__)))
 

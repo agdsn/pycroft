@@ -52,6 +52,8 @@ group_props = {
     "violator": ("Verstoß gegen Netzordnung", {"network_access": False,
                                               "violation": True}),
 
+    "cache_user": ("Cache Nutzer", {"cache_access": True}),
+
     # nutzer ∈ member \ away = normales mitglied, mailmitgliedschaft, semesterbeitrag
     #        ∈ away ∩ member = temporär ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∈ away \ member = permanent ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag

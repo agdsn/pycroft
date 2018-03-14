@@ -40,6 +40,9 @@ class PropertyGroupData(DataSet):
     class violation:
         name = u"Verstoß"
 
+    class cache:
+        name = "Cache"
+
     class moved_from_division:
         name = u"Umzug aus anderer Sektion"
 
@@ -53,6 +56,7 @@ class ConfigData(DataSet):
         member_group = PropertyGroupData.member
         network_access_group = PropertyGroupData.network_access
         violation_group = PropertyGroupData.violation
+        cache_group = PropertyGroupData.cache
         moved_from_division_group = PropertyGroupData.moved_from_division
         already_paid_semester_fee_group = PropertyGroupData.already_paid_semester_fee
         registration_fee_account = AccountData.registration_fee
@@ -105,4 +109,9 @@ class PropertyData(DataSet):
     class violation_network_access_deny:
         property_group = PropertyGroupData.violation
         name = "network_access"
+        granted = False
+
+    class cache:
+        property_group = PropertyGroupData.cache
+        name = "cache_access"
         granted = False
