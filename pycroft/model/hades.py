@@ -11,7 +11,6 @@ hades_view_ddl = DDLManager()
 
 radusergroup = View(
     name='radusergroup',
-    metadata=ModelBase.metadata,
     query=union_all(
         # Priority 0: valid case (interface's mac w/ vlan at correct ports)
         Query([]).add_columns(
@@ -36,7 +35,6 @@ radusergroup = View(
 
 radcheck = View(
     name='radcheck',
-    metadata=ModelBase.metadata,
     query=(
         # This adds all existing interfaces.
         Query([]).add_columns(
@@ -59,7 +57,6 @@ radcheck = View(
 
 radgroupcheck = View(
     name='radgroupcheck',
-    metadata=ModelBase.metadata,
     query=Query([
         literal(1).label('id'),
         literal("unknown").label('groupname'),
@@ -94,7 +91,6 @@ radgroupreply_base = Table(
 
 radgroupreply = View(
     name='radgroupreply',
-    metadata=ModelBase.metadata,
     query=union_all(
         Query([
             radgroupreply_base.c.id.label('id'),
