@@ -159,16 +159,17 @@ def bank_account_activities_edit(activity_id):
         obj=activity, bank_account_name=activity.bank_account.name)
 
     if form.validate():
-        debit_account = activity.bank_account.account
-        credit_account = Account.q.filter(
+        debit_account = Account.q.filter(
             Account.id == form.account_id.data
         ).one()
+        credit_account = activity.bank_account.account
+
         transaction = finance.simple_transaction(
             description=form.description.data, debit_account=debit_account,
             credit_account=credit_account, amount=activity.amount,
             author=current_user, valid_on=activity.valid_on)
         activity.split = next(split for split in transaction.splits
-                              if split.account_id == debit_account.id)
+                              if split.account_id == credit_account.id)
         session.add(activity)
         session.commit()
 
