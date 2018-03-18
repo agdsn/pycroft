@@ -29,7 +29,7 @@ from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.net import get_free_ip
+from pycroft.lib.net import get_free_ip, MacExistsException
 from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
     NoTrafficGroup
 from pycroft.model import session
@@ -149,7 +149,7 @@ def reset_password(user, processor):
 
 @with_transaction
 def move_in(name, login, email, building, level, room_number, mac, processor,
-            traffic_group_id=None):
+            traffic_group_id=None, host_annex=False):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -167,6 +167,8 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     :param User processor:
     :param int traffic_group_id: the id of the chosen traffic group to
         be used instead of the building's default one.
+    :param bool host_annex: when true: if MAC already in use,
+        annex host to new user
 
     :return: The new user object.
     """
@@ -196,11 +198,26 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    # create one new host (including interface) for the new user
-    new_host = Host(owner=new_user, room=room)
-    session.session.add(new_host)
-    session.session.add(Interface(mac=mac, host=new_host))
-    setup_ipv4_networking(new_host)
+    interface_existing = Interface.q.filter_by(mac=mac).first()
+    if interface_existing is not None:
+        if host_annex:
+            # annex existing host
+
+            host_existing = interface_existing.host
+            host_existing.owner_id = new_user.id
+
+            session.session.add(host_existing)
+
+            migrate_user_host(host_existing, new_user.room, processor)
+        else:
+            raise MacExistsException
+    else:
+        # create one new host (including interface) for the new user
+
+        new_host = Host(owner=new_user, room=room)
+        session.session.add(new_host)
+        session.session.add(Interface(mac=mac, host=new_host))
+        setup_ipv4_networking(new_host)
 
     for group in {config.member_group, config.network_access_group}:
         make_member_of(new_user, group, processor, closed(now, None))

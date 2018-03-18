@@ -14,8 +14,16 @@
 
 {% block page_script %}
     <script type="text/javascript">
-        $('[data-role=lazyloadselect]').lazyLoadSelect()
+        $('[data-role=lazyloadselect]').lazyLoadSelect();
 
-        inputMacMask('#mac');
+        var mac = $('#mac');
+        var annex = $('#annex');
+
+        inputMacMask(mac);
+
+        if(!mac.parent().parent().hasClass('has-error') || mac.val().length != 17){
+            annex.parent().parent().parent().hide();
+            annex.prop('checked', false);
+        }
     </script>
 {% endblock %}

@@ -2,15 +2,20 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import re
+
+from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import (
     Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
+from wtforms.widgets import HTMLString
+
 from pycroft.helpers.net import mac_regex
 from pycroft.model.finance import Semester
-from pycroft.model.host import Host
+from pycroft.model.host import Host, Interface
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query
-from web.form.fields.core import TextField, TextAreaField, BooleanField,\
+from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
 from web.form.fields.validators import OptionalIf
@@ -33,8 +38,21 @@ def semester_query():
 
 
 def validate_unique_login(form, field):
-        if User.q.filter_by(login=field.data).first():
-            raise ValidationError(u"Nutzerlogin schon vergeben!")
+    if User.q.filter_by(login=field.data).first():
+        raise ValidationError(u"Nutzerlogin schon vergeben!")
+
+
+def validate_unique_mac(form, field):
+    if re.match(mac_regex, field.data):
+        interface_existing = Interface.q.filter_by(mac=field.data).first()
+
+        if interface_existing is not None and not form.annex.data:
+            owner = interface_existing.host.owner
+
+            raise ValidationError(HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
+                                  "<a target=\"_blank\" href=\"" +
+                                  url_for("user.user_show", user_id=owner.id) +
+                                  "#hosts\">" + owner.name + "</a>"))
 
 
 class UserSearchForm(Form):
@@ -80,9 +98,11 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
     mac = TextField(u"MAC", [
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!"),
+        validate_unique_mac])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
+    annex = BooleanField(u"Host Annketieren", [Optional()])
 
 
 class UserMoveBackInForm(UserMoveForm):

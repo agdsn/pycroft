@@ -433,6 +433,7 @@ def create():
                 mac=form.mac.data,
                 processor=current_user,
                 email=form.email.data,
+                host_annex=form.annex.data
             )
 
             sheet = lib.user.store_user_sheet(new_user, plain_password)
