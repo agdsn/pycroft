@@ -56,7 +56,7 @@ def validate_unique_mac(form, field):
 
 
 class UserSearchForm(Form):
-    userid = TextField(u"Nutzerid")
+    userid = TextField(u"NutzerID")
     name = TextField(u"Name")
     login = TextField(u"Unix-Login")
 
@@ -75,26 +75,27 @@ class UserEditEMailForm(Form):
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",
-        [DataRequired(message=u"Wohnheim?")],
-        get_label='short_name',
-        query_factory=building_query)
+                                [DataRequired(message=u"Wohnheim?")],
+                                get_label='short_name',
+                                query_factory=building_query)
     level = LazyLoadSelectField(u"Etage",
-        validators=[NumberRange(message=u"Etage?")],
-        coerce=int,
-        choices=[],
-        conditions=["building"],
-        data_endpoint="facilities.json_levels")
+                                validators=[NumberRange(message=u"Etage?")],
+                                coerce=int,
+                                choices=[],
+                                conditions=["building"],
+                                data_endpoint="facilities.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
-        validators=[DataRequired(message=u"Raum?")],
-        coerce=str,
-        choices=[],
-        conditions=["building", "level"],
-        data_endpoint="facilities.json_rooms")
+                                      validators=[
+                                          DataRequired(message=u"Raum?")],
+                                      coerce=str,
+                                      choices=[],
+                                      conditions=["building", "level"],
+                                      data_endpoint="facilities.json_rooms")
 
 
 class UserCreateForm(UserEditNameForm, UserMoveForm):
     login = TextField(u"Login", [
-        DataRequired(message=u"Login?"),
+        DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
     mac = TextField(u"MAC", [
@@ -152,12 +153,13 @@ class InterfaceChangeMacForm(Form):
 
 class UserSelectGroupForm(Form):
     group_type = SelectField(u"Typ",
-        [DataRequired(message=u"Typ?")],
-        coerce=str,
-        choices=[('prop', u"Eigenschaft"), ('traff', u"Traffic")])
+                             [DataRequired(message=u"Typ?")],
+                             coerce=str,
+                             choices=[('prop', u"Eigenschaft"),
+                                      ('traff', u"Traffic")])
     group = LazyLoadSelectField(u"Gruppe",
-        [DataRequired(message=u"Gruppe angeben!")],
-        coerce=str,
-        choices=[],
-        conditions=["group_type"],
-        data_endpoint="user.json_groups")
+                                [DataRequired(message=u"Gruppe angeben!")],
+                                coerce=str,
+                                choices=[],
+                                conditions=["group_type"],
+                                data_endpoint="user.json_groups")
