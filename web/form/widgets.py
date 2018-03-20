@@ -274,6 +274,7 @@ class LazyLoadSelectWidget(wtforms.widgets.Select):
             kwargs["data-fieldids"] = ",".join(conditions)
         kwargs['data-role'] = u'lazyloadselect'
         kwargs['data-url'] = url_for(field.data_endpoint)
+        kwargs['value'] = str(field.data)
 
         return super(LazyLoadSelectWidget, self).__call__(field, **kwargs)
 

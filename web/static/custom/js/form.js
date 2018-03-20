@@ -88,6 +88,7 @@ $(function(){
 
     var LazyLoadSelect= function(element, options) {
         this.element = $(element);
+        this.oldvalue_loaded = false;
         this.options = $.extend({
             field_ids: [],
             item_attr: "items"
@@ -142,6 +143,11 @@ $(function(){
                     this.element.append('<option value="' + items[i][0] + '">' + items[i][1] + '</option>');
                 else
                     this.element.append('<option value="' + items[i] + '">' + items[i] + '</option>');
+            }
+            
+            if(!this.oldvalue_loaded){
+                this.oldvalue_loaded = true;
+                this.element.val(this.element.attr("value"));
             }
         }
     };
