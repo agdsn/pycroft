@@ -39,7 +39,8 @@ class RoomFactory(BaseFactory):
 
     number = Faker('numerify', text='## #')
     level = Faker('random_int', min=0, max=16)
-    inhabitable = Faker('boolean')
+    # This fix value makes more sense than a random one in most cases
+    inhabitable = True
 
     building = SubFactory(BuildingFactory)
 
