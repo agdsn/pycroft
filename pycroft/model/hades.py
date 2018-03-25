@@ -1,4 +1,5 @@
-from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer
+from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer, \
+    PrimaryKeyConstraint
 from sqlalchemy.orm import Query
 
 from pycroft.model.base import ModelBase
@@ -97,91 +98,86 @@ radcheck = View(
     name='radcheck',
     query=(
         # This adds all existing interfaces.
-        Query([]).add_columns(
-            Interface.id.label('id'),
+        Query([
             func.text(Interface.mac).label('username'),
             func.host(Switch.management_ip).label('nasipaddress'),
             SwitchPort.name.label('nasportid'),
             literal("Cleartext-Password").label('attribute'),
             literal(":=").label('op'),
             func.text(Interface.mac).label('value'),
-        ).select_from(Interface)
-         .join(Host)
-         .join(Room)
-         .join(Room.connected_patch_ports)
-         .join(SwitchPort)
-         .join(Switch)
-         .statement
+            literal(10).label('priority'),
+        ]).select_from(Interface)
+        .join(Host)
+        .join(Room)
+        .join(Room.connected_patch_ports)
+        .join(SwitchPort)
+        .join(Switch)
+        .statement
     ),
 )
 
 radgroupcheck = View(
     name='radgroupcheck',
     query=Query([
-        literal(1).label('id'),
         literal("unknown").label('groupname'),
         literal("Auth-Type").label('attribute'),
         literal(":=").label('op'),
         literal("Accept").label('value'),
+        literal(10).label('priority'),
     ]).statement,
 )
 
 radreply = Table(
     'radreply',
     ModelBase.metadata,
-    Column('id', Integer, primary_key=True),
+    Column('priority', Integer),
     Column('username', String(64), nullable=False),
-    # non-standard columns, not sure if needed
-    # Column('nasipaddress', String(15), nullable=False),
-    # Column('nasportid', String(50), nullable=False),
+    Column('nasipaddress', String(15), nullable=False),
+    Column('nasportid', String(50), nullable=False),
     Column('attribute', String(64), nullable=False),
     Column('op', String(2), nullable=False),
     Column('value', String(253), nullable=False),
+    PrimaryKeyConstraint('username', 'nasipaddress', 'nasportid', 'priority'),
 )
 
 radgroupreply_base = Table(
     'radgroupreply_base',
     ModelBase.metadata,
-    Column('id', BigInteger),
     Column('groupname', String),
     Column('attribute', String),
     Column('op', String),
     Column('value', String),
+    PrimaryKeyConstraint('groupname', 'attribute', 'op', 'value'),
 )
 
 radgroupreply = View(
     name='radgroupreply',
     query=union_all(
         Query([
-            radgroupreply_base.c.id.label('id'),
             radgroupreply_base.c.groupname.label('groupname'),
             radgroupreply_base.c.attribute.label('attribute'),
             radgroupreply_base.c.op.label('op'),
             radgroupreply_base.c.value.label('value'),
         ]),
         Query([
-            VLAN.id.label('id'),
             (VLAN.name + '_untagged').label('groupname'),
             literal("Egress-VLAN-Name").label('attribute'),
             literal('+=').label('op'),
             (literal('2') + VLAN.name).label('value'),
         ]),
         Query([
-            VLAN.id.label('id'),
             (VLAN.name + '_tagged').label('groupname'),
             literal("Egress-VLAN-Name").label('attribute'),
             literal('+=').label('op'),
             (literal('1') + VLAN.name).label('value'),
         ]),
         Query([
-            VLAN.id.label('id'),
             (VLAN.name + '_untagged').label('groupname'),
             literal("Reply-Message").label('attribute'),
             literal('+=').label('op'),
             (VLAN.name + '_untagged').label('value'),
         ]),
         Query([
-            VLAN.id.label('id'),
             (VLAN.name + '_tagged').label('groupname'),
             literal("Reply-Message").label('attribute'),
             literal('+=').label('op'),
@@ -194,7 +190,7 @@ nas = Table(
     'nas',
     ModelBase.metadata,
     Column('id', Integer, primary_key=True),
-    Column('nasname', String(128), nullable=False),
+    Column('nasname', String(128), nullable=False, unique=True),
     Column('shortname', String(32), nullable=False),
     Column('type', String(30), nullable=False, default='other'),
     Column('ports', Integer),
