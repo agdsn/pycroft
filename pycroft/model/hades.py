@@ -7,6 +7,7 @@ from pycroft.model.ddl import DDLManager, View
 from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, Switch, SwitchPort, Host
 from pycroft.model.net import VLAN, Subnet
+from pycroft.model.port import PatchPort
 from pycroft.model.user import User
 from pycroft.model.property import current_property
 
@@ -26,6 +27,19 @@ radgroup_property_mappings = Table(
     Column('property', String, primary_key=True),
     Column('radgroup', String(128), nullable=False),
 )
+# This is a hack to enforce that Views are created after _all_ their
+# depenencies.  The Views' creation is then targeted after
+# `radgroup_property_mappings`.  This would be obsolete if the
+# DDLManager created Views after tables in general.
+radgroup_property_mappings.add_is_dependent_on(Room.__table__)
+radgroup_property_mappings.add_is_dependent_on(Interface.__table__)
+radgroup_property_mappings.add_is_dependent_on(Switch.__table__)
+radgroup_property_mappings.add_is_dependent_on(SwitchPort.__table__)
+radgroup_property_mappings.add_is_dependent_on(PatchPort.__table__)
+radgroup_property_mappings.add_is_dependent_on(Host.__table__)
+radgroup_property_mappings.add_is_dependent_on(VLAN.__table__)
+radgroup_property_mappings.add_is_dependent_on(Subnet.__table__)
+radgroup_property_mappings.add_is_dependent_on(User.__table__)
 
 radusergroup = View(
     name='radusergroup',
@@ -93,6 +107,7 @@ radusergroup = View(
         .statement,
     ),
 )
+hades_view_ddl.add_view(radgroup_property_mappings, radusergroup)
 
 radcheck = View(
     name='radcheck',
@@ -115,6 +130,7 @@ radcheck = View(
         .statement
     ),
 )
+hades_view_ddl.add_view(radgroup_property_mappings, radcheck)
 
 radgroupcheck = View(
     name='radgroupcheck',
@@ -126,6 +142,7 @@ radgroupcheck = View(
         literal(10).label('priority'),
     ]).statement,
 )
+hades_view_ddl.add_view(radgroup_property_mappings, radgroupcheck)
 
 radreply = Table(
     'radreply',
@@ -185,6 +202,7 @@ radgroupreply = View(
         ]),
     ),
 )
+hades_view_ddl.add_view(radgroup_property_mappings, radgroupreply)
 
 nas = Table(
     'nas',
@@ -199,3 +217,5 @@ nas = Table(
     Column('community', String(50)),
     Column('description', String(200)),
 )
+
+hades_view_ddl.register()
