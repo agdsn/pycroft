@@ -144,7 +144,7 @@ $(function(){
                 else
                     this.element.append('<option value="' + items[i] + '">' + items[i] + '</option>');
             }
-            
+
             if(!this.oldvalue_loaded){
                 this.oldvalue_loaded = true;
                 this.element.val(this.element.attr("value"));
