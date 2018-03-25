@@ -151,7 +151,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
         self.subnet = SubnetFactory()
         self.patch_port = PatchPortFactory(room=self.room, patched=True,
                                            switch_port__switch__host__owner=self.admin)
-        self.patch_port.switch_port.vlans.append(self.subnet.vlan)
+        self.patch_port.switch_port.default_vlans.append(self.subnet.vlan)
 
     def test_user_create_data_sheet(self):
         response = self.client.post(url_for('user.create'), data={

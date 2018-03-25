@@ -70,7 +70,7 @@
                         {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
                 </a></dd>
 
-                {% for vlan in port.switch_port.vlans %}
+                {% for vlan in port.switch_port.default_vlans %}
                 <dt><a href="{{ url_for('infrastructure.subnets') }}">Subnets</a>
                     (VLAN <code>{{ vlan.name }}</code>)</dt>
                 <dd>

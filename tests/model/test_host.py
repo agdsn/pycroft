@@ -218,7 +218,7 @@ class Test_060_Cascades(FixtureDataTestBase):
     def test_cascade_on_delete_vlan(self):
         # TODO: delete a vlan
         vlan = VLAN.q.filter_by(vid=VLANData.vlan_dummy1.vid).one()
-        associations_query = session.session.query(host.switch_port_vlan_association_table)\
+        associations_query = session.session.query(host.switch_port_default_vlans)\
             .filter_by(vlan_id=vlan.id)
 
         self.assertEqual(associations_query.count(), 2)
@@ -231,7 +231,7 @@ class Test_060_Cascades(FixtureDataTestBase):
     def test_cascade_on_delete_switch_port(self):
         port_name = SwitchPortData.dummy_port4.name
         port = host.SwitchPort.q.filter_by(name=port_name).one()
-        associations_query = session.session.query(host.switch_port_vlan_association_table)\
+        associations_query = session.session.query(host.switch_port_default_vlans)\
             .filter_by(switch_port_id=port.id)
 
         self.assertEqual(associations_query.count(), 2)
@@ -245,6 +245,6 @@ class TestVLANAssociations(FixtureDataTestBase):
 
     def test_secondary_relationship_works(self):
         port = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port1.name).one()
-        self.assertEqual(len(port.vlans), 1)
+        self.assertEqual(len(port.default_vlans), 1)
         port4 = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port4.name).one()
-        self.assertEqual(len(port4.vlans), 2)
+        self.assertEqual(len(port4.default_vlans), 2)

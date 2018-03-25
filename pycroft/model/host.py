@@ -90,8 +90,9 @@ class Interface(IntegerIdModel):
                                         cascade="all, delete-orphan"))
 
 
-switch_port_vlan_association_table = Table(
-    'switch_port_vlan_association', ModelBase.metadata,
+# See the `SwitchPort.default_vlans` relationship
+switch_port_default_vlans = Table(
+    'switch_port_default_vlans', ModelBase.metadata,
     Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE')),
     Column('vlan_id', Integer, ForeignKey('vlan.id', ondelete='CASCADE')),
 )
@@ -104,8 +105,12 @@ class SwitchPort(IntegerIdModel):
                           backref=backref("ports",
                                         cascade="all, delete-orphan"))
     name = Column(String(64), nullable=False)
-    vlans = relationship('VLAN', secondary='switch_port_vlan_association',
-                         back_populates='switch_ports')
+    #: These are the VLANs that should theoretically be available at
+    #: this switch port.  It is only used to calculate the pool of IPs
+    #: to choose from e.g. when adding a user or migrating a host, and
+    #: does not influence any functionality beyond that.
+    default_vlans = relationship('VLAN', secondary='switch_port_default_vlans',
+                                 back_populates='switch_ports')
 
     def __str__(self):
         return "{} {}".format(self.switch.name, self.name)

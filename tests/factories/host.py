@@ -64,7 +64,7 @@ class SwitchPortFactory(BaseFactory):
     name = factory.Sequence(lambda n: "SwitchPort {}".format(n))
 
     @factory.post_generation
-    def vlans(self, create, extracted, **kwargs):
+    def default_vlans(self, create, extracted, **kwargs):
         if not create:
             # Simple build, do nothing.
             return
@@ -72,7 +72,7 @@ class SwitchPortFactory(BaseFactory):
         if extracted:
             # A list of groups were passed in, use them
             for vlan in extracted:
-                self.vlans.append(vlan)
+                self.default_vlans.append(vlan)
         else:
             # Create a default vlan
-            self.vlans.append(VLANFactory())
+            self.default_vlans.append(VLANFactory())

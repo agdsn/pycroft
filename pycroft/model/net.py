@@ -16,8 +16,8 @@ class VLAN(IntegerIdModel):
     __table_args = (
         CheckConstraint(between(vid, 1, 4094)),
     )
-    switch_ports = relationship('SwitchPort', secondary='switch_port_vlan_association',
-                                back_populates='vlans')
+    switch_ports = relationship('SwitchPort', secondary='switch_port_default_vlans',
+                                back_populates='default_vlans')
     subnets = relationship('Subnet', back_populates='vlan')
 
 

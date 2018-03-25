@@ -36,13 +36,13 @@ class SwitchPortData(DataSet):
         name = "A20"
         mac = "00:00:00:00:00:14"
         switch = SwitchData.dummy
-        vlans = [VLANData.vlan_dummy1]
+        default_vlans = [VLANData.vlan_dummy1]
 
     class dummy_port2:
         name = "A21"
         mac = "00:00:00:00:00:15"
         switch = SwitchData.dummy
-        vlans = [VLANData.vlan_dummy2]
+        default_vlans = [VLANData.vlan_dummy2]
 
     class dummy_port3:
         name = "A23"
@@ -52,7 +52,7 @@ class SwitchPortData(DataSet):
     class dummy_port4(dummy_port3):
         name = "A24"
         mac = "00:00:00:00:00:fe"
-        vlans = [VLANData.vlan_dummy1, VLANData.vlan_dummy2]
+        default_vlans = [VLANData.vlan_dummy1, VLANData.vlan_dummy2]
 
     class vlan:
         name = "VLAN-42"
