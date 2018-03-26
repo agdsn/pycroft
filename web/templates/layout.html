@@ -48,7 +48,9 @@
                         {% if current_user.is_authenticated %}
                             <li>
                                 <form class="navbar-form" method="get">
-                                  <input type="text" class="typeahead form-control" id="nav_search" name="nav_search" autocomplete="on" placeholder="Nutzer suchen…">
+                                    <input type="text" class="typeahead form-control" id="nav_search" name="nav_search"
+                                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                           placeholder="Nutzer suchen…">
                                 </form>
                             </li>
                             <li>
