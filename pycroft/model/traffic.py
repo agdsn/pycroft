@@ -35,7 +35,6 @@ class TrafficEvent(object):
 class TrafficVolume(TrafficEvent, ModelBase):
     __table_args__ = (
         PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
-        Index('user_id', 'timestamp'),
     )
     type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
                   nullable=False)
