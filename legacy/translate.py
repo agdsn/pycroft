@@ -138,7 +138,9 @@ def translate_users(data, resources):
             room = r_d[a_room(_u.nutzer_id, _r)]
         except KeyError:
             ignored_rooms.append(a_room(_u.nutzer_id, _r))
-            log.warning("Ignoring room %s not present in hp4108_ports", _r)
+            log.warning("Ignoring room %s/%s/%s not present in hp4108_ports",
+                        data.get('wheim', 'id={}'.format(_r[0]))[_r[0]].kuerzel,
+                                 _r[1], _r[2])
             room = None
 
         account_name = "Nutzerkonto von {}".format(a_uid(_u.nutzer_id))
