@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, Index, DDL
+    PrimaryKeyConstraint, Index, DDL, union_all, func, literal_column, or_
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 
@@ -52,6 +52,7 @@ class TrafficVolume(TrafficEvent, ModelBase):
     packets = Column(Integer, CheckConstraint('packets >= 0'),
                      nullable=False)
 TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
+TrafficBalance.__table__.add_is_dependent_on(TrafficVolume.__table__)
 
 
 pmacct_traffic_egress = View(
@@ -175,5 +176,38 @@ class TrafficCredit(TrafficEvent, IntegerIdModel):
                         backref=backref("traffic_credits",
                                         cascade="all, delete-orphan"),
                         uselist=False)
+TrafficBalance.__table__.add_is_dependent_on(TrafficCredit.__table__)
+
+
+current_traffic_balance_view = View(
+    name='current_traffic_balance',
+    query=(
+        Query([literal_column('fragments.user_id').label('user_id'),
+               func.sum(literal_column('fragments.amount')).label('amount')])
+        .select_from(union_all(
+            # -sum(volumes)
+            Query([User.id.label('user_id'), (-func.sum(TrafficVolume.amount)).label('amount')])
+            .select_from(User)
+            .outerjoin(TrafficBalance)
+            .join(TrafficVolume)
+            .filter(or_(TrafficBalance.user_id.is_(None),
+                        TrafficBalance.timestamp <= TrafficVolume.timestamp))
+            .group_by(User.id),
+            # +sum(credits)
+            Query([User.id.label('user_id'), func.sum(TrafficCredit.amount).label('amount')])
+            .select_from(User)
+            .outerjoin(TrafficBalance)
+            .join(TrafficCredit)
+            .filter(or_(TrafficBalance.user_id.is_(None),
+                        TrafficBalance.timestamp <= TrafficCredit.timestamp))
+            .group_by(User.id),
+            # +balance
+            Query([TrafficBalance.user_id.label('user_id'), TrafficBalance.amount.label('amount')]),
+        ).alias('fragments'))
+        .group_by('user_id')
+        .statement
+    )
+)
+ddl.add_view(TrafficBalance.__table__, current_traffic_balance_view)
 
 ddl.register()
