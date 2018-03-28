@@ -209,4 +209,12 @@ current_traffic_balance_view = View(
 )
 ddl.add_view(TrafficBalance.__table__, current_traffic_balance_view)
 
+
+class CurrentTrafficBalance(ModelBase):
+    __table__ = current_traffic_balance_view.table
+    __mapper_args__ = {
+        'primary_key': current_traffic_balance_view.table.c.user_id,
+    }
+
+
 ddl.register()

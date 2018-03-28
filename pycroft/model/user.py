@@ -70,6 +70,16 @@ class User(IntegerIdModel, UserMixin):
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)
 
+    _current_traffic_balance = relationship(
+        'CurrentTrafficBalance',
+        primaryjoin='User.id == foreign(CurrentTrafficBalance.user_id)',
+        viewonly=True, uselist=False
+    )
+
+    @property
+    def current_credit(self):
+        return self._current_traffic_balance.amount
+
     login_regex = re.compile(r"""
         ^
         # Must begin with a lowercase character
