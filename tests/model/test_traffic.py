@@ -126,3 +126,8 @@ class CurrentBalanceTest(FactoryDataTestBase):
         # 2GiB yesterday
         # +3GiB-1GiB yesterday and today
         self.assertEqual(self.user.current_credit, 6*1024**3)
+
+    def test_user_without_entries_has_zero_credit(self):
+        user = UserWithHostFactory()
+        session.session.commit()
+        self.assertEqual(user.current_credit, 0)

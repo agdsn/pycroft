@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, Index, DDL, union_all, func, literal_column, or_
+    PrimaryKeyConstraint, Index, DDL, union_all, func, literal_column, or_, literal
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 
@@ -202,6 +202,8 @@ current_traffic_balance_view = View(
             .group_by(User.id),
             # +balance
             Query([TrafficBalance.user_id.label('user_id'), TrafficBalance.amount.label('amount')]),
+            # +0 for all users, if neither balance nor credits nor volumes should exist
+            Query([User.id.label('user_id'), literal(0).label('amount')]),
         ).alias('fragments'))
         .group_by('user_id')
         .statement
