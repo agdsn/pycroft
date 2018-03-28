@@ -1,7 +1,11 @@
+from datetime import timedelta, datetime
+
 from pycroft.model import session
 from pycroft.model.traffic import TrafficVolume, pmacct_traffic_egress, pmacct_traffic_ingress
 from tests import FactoryDataTestBase
-from tests.factories import UserWithHostFactory
+from tests.factories import UserWithHostFactory, IPFactory
+from tests.factories.traffic import TrafficCreditFactory, TrafficVolumeFactory, \
+    TrafficBalanceFactory
 
 
 class PMAcctViewTest(FactoryDataTestBase):
@@ -91,3 +95,34 @@ class PMAcctViewTest(FactoryDataTestBase):
         self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00')
         self.assertEqual(vol.packets, sum(x[1] for x in data))
         self.assertEqual(vol.amount, sum(x[2] for x in data))
+
+
+class CurrentBalanceTest(FactoryDataTestBase):
+    def setUp(self, *a, **kw):
+        self.now = datetime.now()
+        super().setUp(*a, **kw)
+
+    def create_factories(self):
+        self.user = UserWithHostFactory()
+        self.ip = self.user.hosts[0].interfaces[0].ips[0]
+        for delta in range(14):
+            TrafficCreditFactory.create(timestamp=self.now + timedelta(-delta),
+                                        amount=3*1024**3, user=self.user)
+            TrafficVolumeFactory.create(timestamp=self.now + timedelta(-delta),
+                                        amount=1*1024**3, user=self.user, ip=self.ip)
+
+        # Unrelated events should not be included in the sum
+        other_user = UserWithHostFactory()
+        other_ip = other_user.hosts[0].interfaces[0].ips[0]
+        TrafficCreditFactory.create_batch(20, user=other_user)
+        TrafficVolumeFactory.create_batch(20, user=other_user, ip=other_ip)
+
+    def test_sum_without_balance_entry(self):
+        self.assertEqual(self.user.current_credit, 28*1024**3)
+
+    def test_sum_with_balance_entry(self):
+        TrafficBalanceFactory(timestamp=self.now + timedelta(-1),
+                              user=self.user, amount=2*1024**3)
+        # 2GiB yesterday
+        # +3GiB-1GiB yesterday and today
+        self.assertEqual(self.user.current_credit, 6*1024**3)
