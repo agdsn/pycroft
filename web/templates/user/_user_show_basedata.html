@@ -48,6 +48,10 @@
                 {% endcall %}
             {% endif %}
 
+            {% call info_row("Aktueller Credit") %}
+                {{ user.current_credit | filesizeformat(binary=True) }}
+            {% endcall %}
+
             {% for flag in flags %}{% call info_row(flag['title']) %}
                 {% if flag['val'] %}
                     <strong class="text-success">Ja</strong>

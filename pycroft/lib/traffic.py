@@ -12,9 +12,12 @@ granting, etc.
 """
 from operator import attrgetter
 
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closedopen
+from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import remove_member_of, make_member_of
 from pycroft.model import session
+from pycroft.model.logging import UserLogEntry
 from pycroft.model.traffic import TrafficCredit
 from pycroft.model.user import TrafficGroup
 from pycroft.model.session import with_transaction
@@ -124,3 +127,27 @@ def grant_regular_credit(user):
     credit = TrafficCredit(timestamp=now, amount=group.credit_amount,
                            user_id=user.id)
     session.session.add(credit)
+
+
+@with_transaction
+def reset_credit(user, processor, target_amount=1*1024**3):
+    """Compensate a user's traffic credit to a target amount
+
+    :param User user:
+    :param User processor:
+    :param int target_amount: The target amount to reach, in bytes.
+        Defaults to 1GiB.
+
+    :raises ValueError: if the user's current credit is greater than
+        or equal to the given target amount.
+    """
+    now = session.utcnow()
+    difference = target_amount - user.current_credit
+    if difference <= 0:
+        raise ValueError("The current credit surpasses the target amount."
+                         " Only an upwards correction is possible.")
+
+    session.session.add(TrafficCredit(user=user, timestamp=now, amount=difference))
+    log_user_event(deferred_gettext("Traffic has ben compensated to 1GiB").to_json(),
+                   author=processor,
+                   user=user)

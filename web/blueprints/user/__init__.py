@@ -828,3 +828,18 @@ def change_mac(user_id, user_interface_id):
     return render_template('user/change_mac.html',
                            form=form, user_id=user.id,
                            user_interface_id=my_interface.id)
+
+
+@bp.route('/<int:user_id>/reset_credit')
+@access.require('user_change')
+def reset_credit(user_id):
+    user = get_user_or_404(user_id)
+    try:
+        lib.traffic.reset_credit(user, processor=current_user)
+    except ValueError as e:
+        flash(str(e), 'error')
+    else:
+        session.session.commit()
+        flash("Traffic erfolgreich resetted", 'success')
+
+    return redirect(url_for('user.user_show', user_id=user_id))
