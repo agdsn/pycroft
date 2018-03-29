@@ -47,13 +47,13 @@ radusergroup = View(
         # Priority 20: valid case (interface's mac w/ vlan at correct ports)
         # <mac> @ <switch>/<port> → <vlan>_[un]tagged (Prio 20)
         Query([
-            Interface.mac.label('username'),
+            Interface.mac.label('UserName'),
             # `host()` does not print the `/32` like `text` would
-            func.host(Switch.management_ip).label('nasipaddress'),
-            SwitchPort.name.label('nasportid'),
+            func.host(Switch.management_ip).label('NASIPAddress'),
+            SwitchPort.name.label('NASPortId'),
             # TODO: add `_tagged` instead if interface needs that
-            (VLAN.name + '_untagged').label('groupname'),
-            literal(20).label('priority'),
+            (VLAN.name + '_untagged').label('GroupName'),
+            literal(20).label('Priority'),
         ]).select_from(User)
         .join(Host)
         .join(Interface)
@@ -71,11 +71,11 @@ radusergroup = View(
         # Priority 10: Blocking reason exists
         # <mac> @ <switch>/<port> → finance (Prio 10)
         Query([
-            Interface.mac.label('username'),
-            func.host(Switch.management_ip).label('nasipaddress'),
-            SwitchPort.name.label('nasportid'),
-            radgroup_property_mappings.c.radgroup.label('groupname'),
-            literal(10).label('priority'),
+            Interface.mac.label('UserName'),
+            func.host(Switch.management_ip).label('NASIPAddress'),
+            SwitchPort.name.label('NASPortId'),
+            radgroup_property_mappings.c.radgroup.label('GroupName'),
+            literal(10).label('Priority'),
         ]).select_from(User)
         .join(Host)
         .join(Host.interfaces)
@@ -90,11 +90,11 @@ radusergroup = View(
 
         # Priority 0: No blocking reason exists → assume no member (yet/anymore)
         Query([
-            Interface.mac.label('username'),
-            func.host(Switch.management_ip).label('nasipaddress'),
-            SwitchPort.name.label('nasportid'),
-            literal('no_member').label('groupname'),
-            literal(0).label('priority'),
+            Interface.mac.label('UserName'),
+            func.host(Switch.management_ip).label('NASIPAddress'),
+            SwitchPort.name.label('NASPortId'),
+            literal('no_member').label('GroupName'),
+            literal(0).label('Priority'),
         ]).select_from(User)
         .outerjoin(network_access_subq, User.id == network_access_subq.c.user_id)
         .filter(network_access_subq.c.network_access == None)
@@ -114,13 +114,13 @@ radcheck = View(
     query=(
         # This adds all existing interfaces.
         Query([
-            func.text(Interface.mac).label('username'),
-            func.host(Switch.management_ip).label('nasipaddress'),
-            SwitchPort.name.label('nasportid'),
-            literal("Cleartext-Password").label('attribute'),
-            literal(":=").label('op'),
-            func.text(Interface.mac).label('value'),
-            literal(10).label('priority'),
+            func.text(Interface.mac).label('UserName'),
+            func.host(Switch.management_ip).label('NASIPAddress'),
+            SwitchPort.name.label('NASPortId'),
+            literal("Cleartext-Password").label('Attribute'),
+            literal(":=").label('Op'),
+            func.text(Interface.mac).label('Value'),
+            literal(10).label('Priority'),
         ]).select_from(Interface)
         .join(Host)
         .join(Room)
@@ -135,11 +135,11 @@ hades_view_ddl.add_view(radgroup_property_mappings, radcheck)
 radgroupcheck = View(
     name='radgroupcheck',
     query=Query([
-        literal("unknown").label('groupname'),
-        literal("Auth-Type").label('attribute'),
-        literal(":=").label('op'),
-        literal("Accept").label('value'),
-        literal(10).label('priority'),
+        literal("unknown").label('GroupName'),
+        literal("Auth-Type").label('Attribute'),
+        literal(":=").label('Op'),
+        literal("Accept").label('Value'),
+        literal(10).label('Priority'),
     ]).statement,
 )
 hades_view_ddl.add_view(radgroup_property_mappings, radgroupcheck)
@@ -147,58 +147,58 @@ hades_view_ddl.add_view(radgroup_property_mappings, radgroupcheck)
 radreply = Table(
     'radreply',
     ModelBase.metadata,
-    Column('priority', Integer),
-    Column('username', String(64), nullable=False),
-    Column('nasipaddress', String(15), nullable=False),
-    Column('nasportid', String(50), nullable=False),
-    Column('attribute', String(64), nullable=False),
-    Column('op', String(2), nullable=False),
-    Column('value', String(253), nullable=False),
-    PrimaryKeyConstraint('username', 'nasipaddress', 'nasportid', 'priority'),
+    Column('Priority', Integer),
+    Column('UserName', String(64), nullable=False),
+    Column('NASIPAddress', String(15), nullable=False),
+    Column('NASPortId', String(50), nullable=False),
+    Column('Attribute', String(64), nullable=False),
+    Column('Op', String(2), nullable=False),
+    Column('Value', String(253), nullable=False),
+    PrimaryKeyConstraint('UserName', 'NASIPAddress', 'NASPortId', 'Priority'),
 )
 
 radgroupreply_base = Table(
     'radgroupreply_base',
     ModelBase.metadata,
-    Column('groupname', String),
-    Column('attribute', String),
-    Column('op', String),
-    Column('value', String),
-    PrimaryKeyConstraint('groupname', 'attribute', 'op', 'value'),
+    Column('GroupName', String),
+    Column('Attribute', String),
+    Column('Op', String),
+    Column('Value', String),
+    PrimaryKeyConstraint('GroupName', 'Attribute', 'Op', 'Value'),
 )
 
 radgroupreply = View(
     name='radgroupreply',
     query=union_all(
         Query([
-            radgroupreply_base.c.groupname.label('groupname'),
-            radgroupreply_base.c.attribute.label('attribute'),
-            radgroupreply_base.c.op.label('op'),
-            radgroupreply_base.c.value.label('value'),
+            radgroupreply_base.c.GroupName.label('GroupName'),
+            radgroupreply_base.c.Attribute.label('Attribute'),
+            radgroupreply_base.c.Op.label('Op'),
+            radgroupreply_base.c.Value.label('Value'),
         ]),
         Query([
-            (VLAN.name + '_untagged').label('groupname'),
-            literal("Egress-VLAN-Name").label('attribute'),
-            literal('+=').label('op'),
-            (literal('2') + VLAN.name).label('value'),
+            (VLAN.name + '_untagged').label('GroupName'),
+            literal("Egress-VLAN-Name").label('Attribute'),
+            literal('+=').label('Op'),
+            (literal('2') + VLAN.name).label('Value'),
         ]),
         Query([
-            (VLAN.name + '_tagged').label('groupname'),
-            literal("Egress-VLAN-Name").label('attribute'),
-            literal('+=').label('op'),
-            (literal('1') + VLAN.name).label('value'),
+            (VLAN.name + '_tagged').label('GroupName'),
+            literal("Egress-VLAN-Name").label('Attribute'),
+            literal('+=').label('Op'),
+            (literal('1') + VLAN.name).label('Value'),
         ]),
         Query([
-            (VLAN.name + '_untagged').label('groupname'),
-            literal("Reply-Message").label('attribute'),
-            literal('+=').label('op'),
-            (VLAN.name + '_untagged').label('value'),
+            (VLAN.name + '_untagged').label('GroupName'),
+            literal("Reply-Message").label('Attribute'),
+            literal('+=').label('Op'),
+            (VLAN.name + '_untagged').label('Value'),
         ]),
         Query([
-            (VLAN.name + '_tagged').label('groupname'),
-            literal("Reply-Message").label('attribute'),
-            literal('+=').label('op'),
-            (VLAN.name + '_tagged').label('value'),
+            (VLAN.name + '_tagged').label('GroupName'),
+            literal("Reply-Message").label('Attribute'),
+            literal('+=').label('Op'),
+            (VLAN.name + '_tagged').label('Value'),
         ]),
     ),
 )
@@ -207,15 +207,15 @@ hades_view_ddl.add_view(radgroup_property_mappings, radgroupreply)
 nas = Table(
     'nas',
     ModelBase.metadata,
-    Column('id', Integer, primary_key=True),
-    Column('nasname', String(128), nullable=False, unique=True),
-    Column('shortname', String(32), nullable=False),
-    Column('type', String(30), nullable=False, default='other'),
-    Column('ports', Integer),
-    Column('secret', String(60), nullable=False),
-    Column('server', String(64)),
-    Column('community', String(50)),
-    Column('description', String(200)),
+    Column('Id', Integer, primary_key=True),
+    Column('NASName', String(128), nullable=False, unique=True),
+    Column('ShortName', String(32), nullable=False),
+    Column('Type', String(30), nullable=False, default='other'),
+    Column('Ports', Integer),
+    Column('Secret', String(60), nullable=False),
+    Column('Server', String(64)),
+    Column('Community', String(50)),
+    Column('Description', String(200)),
 )
 
 hades_view_ddl.register()

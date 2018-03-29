@@ -52,14 +52,14 @@ class HadesViewTest(FactoryDataTestBase):
         host = self.user.hosts[0]
         mac = host.interfaces[0].mac
         for row in rows:
-            self.assertEqual(row.username, mac)
-            self.assertEqual(row.nasipaddress, self.switch.management_ip)
-            self.assertEqual(row.attribute, "Cleartext-Password")
-            self.assertEqual(row.op, ":=")
-            self.assertEqual(row.value, mac)
-            self.assertEqual(row.priority, 10)
+            self.assertEqual(row.UserName, mac)
+            self.assertEqual(row.NASIPAddress, self.switch.management_ip)
+            self.assertEqual(row.Attribute, "Cleartext-Password")
+            self.assertEqual(row.Op, ":=")
+            self.assertEqual(row.Value, mac)
+            self.assertEqual(row.Priority, 10)
 
-        self.assertEqual({row.nasportid for row in rows},
+        self.assertEqual({row.NASPortId for row in rows},
                          {port.switch_port.name for port in host.room.patch_ports})
 
     # TODO: Put Entries in some basetable to test tagged vlans (separate test)
