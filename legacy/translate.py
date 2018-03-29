@@ -546,18 +546,16 @@ def translate_hosts(data, resources):
 
     for _c in data['userhost']:
         owner = u_d[_c.nutzer_id]
-        if not owner.room:
+        if not owner.room or _c.nutzer.status_id not in (1, 2, 4, 5, 7, 12):
             # Ignore the host if its owner has no room
             continue
 
         h = host.Host(owner=owner, room=owner.room)
         interface = host.Interface(host=h, mac=_c.c_etheraddr)
-
-        if _c.nutzer.status_id in (1, 2, 4, 5, 7, 12):
-            ip = host.IP(interface=interface,
-                         address=ipaddr.IPv4Address(_c.c_ip),
-                         subnet=s_d[_c.c_subnet_id])
-            objs.append(ip)  # indirectly adds interface + host
+        ip = host.IP(interface=interface,
+                     address=ipaddr.IPv4Address(_c.c_ip),
+                     subnet=s_d[_c.c_subnet_id])
+        objs.append(ip)  # indirectly adds interface + host
     return objs
 
 
