@@ -557,9 +557,7 @@ def translate_hosts(data, resources):
             ip = host.IP(interface=interface,
                          address=ipaddr.IPv4Address(_c.c_ip),
                          subnet=s_d[_c.c_subnet_id])
-            objs.append(ip)
-        else:
-            objs.append(interface)
+            objs.append(ip)  # indirectly adds interface + host
     return objs
 
 
