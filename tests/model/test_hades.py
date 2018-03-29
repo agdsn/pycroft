@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from pycroft.model import session
-from pycroft.model.hades import radgroup_property_mappings, radcheck
+from pycroft.model.hades import radius_property, radcheck
 from tests import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, MembershipFactory, UserWithHostFactory, \
     SwitchFactory, PatchPortFactory
@@ -14,14 +14,14 @@ class HadesViewTest(FactoryDataTestBase):
             name="Member",
             granted={'network_access'},
         )
-        self.blocked_by_finance_group = PropertyGroupFactory.create(
+        self.payment_in_default_group = PropertyGroupFactory.create(
             name="Blocked (finance)",
-            granted={'blocked_by_finance'},
+            granted={'payment_in_default'},
             denied={'network_access'},
         )
-        self.blocked_by_traffic_group = PropertyGroupFactory.create(
+        self.traffic_limit_exceeded_group = PropertyGroupFactory.create(
             name="Blocked (traffic)",
-            granted={'blocked_by_traffic'},
+            granted={'traffic_limit_exceeded'},
             denied={'network_access'},
         )
 
@@ -36,13 +36,13 @@ class HadesViewTest(FactoryDataTestBase):
         MembershipFactory.create(user=self.user, group=self.network_access_group,
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
-        MembershipFactory.create(user=self.user, group=self.blocked_by_finance_group,
+        MembershipFactory.create(user=self.user, group=self.payment_in_default_group,
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
 
-        session.session.execute(radgroup_property_mappings.insert(values=[
-            {'property': 'blocked_by_finance', 'radgroup': 'finance'},
-            {'property': 'blocked_by_traffic', 'radgroup': 'traffic'},
+        session.session.execute(radius_property.insert(values=[
+            ('payment_in_default',),
+            ('traffic_limit_exceeded',),
         ]))
 
     def test_radcheck(self):

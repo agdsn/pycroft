@@ -21,25 +21,24 @@ network_access_subq = (
     .subquery('users_with_network_access')
 )
 
-radgroup_property_mappings = Table(
-    'radgroup_property_mappings',
+radius_property = Table(
+    'radius_property',
     ModelBase.metadata,
     Column('property', String, primary_key=True),
-    Column('radgroup', String(128), nullable=False),
 )
 # This is a hack to enforce that Views are created after _all_ their
 # depenencies.  The Views' creation is then targeted after
 # `radgroup_property_mappings`.  This would be obsolete if the
 # DDLManager created Views after tables in general.
-radgroup_property_mappings.add_is_dependent_on(Room.__table__)
-radgroup_property_mappings.add_is_dependent_on(Interface.__table__)
-radgroup_property_mappings.add_is_dependent_on(Switch.__table__)
-radgroup_property_mappings.add_is_dependent_on(SwitchPort.__table__)
-radgroup_property_mappings.add_is_dependent_on(PatchPort.__table__)
-radgroup_property_mappings.add_is_dependent_on(Host.__table__)
-radgroup_property_mappings.add_is_dependent_on(VLAN.__table__)
-radgroup_property_mappings.add_is_dependent_on(Subnet.__table__)
-radgroup_property_mappings.add_is_dependent_on(User.__table__)
+radius_property.add_is_dependent_on(Room.__table__)
+radius_property.add_is_dependent_on(Interface.__table__)
+radius_property.add_is_dependent_on(Switch.__table__)
+radius_property.add_is_dependent_on(SwitchPort.__table__)
+radius_property.add_is_dependent_on(PatchPort.__table__)
+radius_property.add_is_dependent_on(Host.__table__)
+radius_property.add_is_dependent_on(VLAN.__table__)
+radius_property.add_is_dependent_on(Subnet.__table__)
+radius_property.add_is_dependent_on(User.__table__)
 
 radusergroup = View(
     name='radusergroup',
@@ -74,7 +73,7 @@ radusergroup = View(
             Interface.mac.label('UserName'),
             func.host(Switch.management_ip).label('NASIPAddress'),
             SwitchPort.name.label('NASPortId'),
-            radgroup_property_mappings.c.radgroup.label('GroupName'),
+            radius_property.c.property.label('GroupName'),
             literal(10).label('Priority'),
         ]).select_from(User)
         .join(Host)
@@ -84,8 +83,8 @@ radusergroup = View(
         .join(SwitchPort)
         .join(Switch)
         .join(current_property.table, current_property.table.c.user_id == User.id)
-        .join(radgroup_property_mappings,
-              radgroup_property_mappings.c.property == current_property.table.c.property_name)
+        .join(radius_property,
+              radius_property.c.property == current_property.table.c.property_name)
         .statement,
 
         # Priority 0: No blocking reason exists → assume no member (yet/anymore)
@@ -107,7 +106,7 @@ radusergroup = View(
         .statement,
     ),
 )
-hades_view_ddl.add_view(radgroup_property_mappings, radusergroup)
+hades_view_ddl.add_view(radius_property, radusergroup)
 
 radcheck = View(
     name='radcheck',
@@ -130,7 +129,7 @@ radcheck = View(
         .statement
     ),
 )
-hades_view_ddl.add_view(radgroup_property_mappings, radcheck)
+hades_view_ddl.add_view(radius_property, radcheck)
 
 radgroupcheck = View(
     name='radgroupcheck',
@@ -142,7 +141,7 @@ radgroupcheck = View(
         literal(10).label('Priority'),
     ]).statement,
 )
-hades_view_ddl.add_view(radgroup_property_mappings, radgroupcheck)
+hades_view_ddl.add_view(radius_property, radgroupcheck)
 
 radreply = Table(
     'radreply',
@@ -190,7 +189,7 @@ radgroupreply = View(
         ]),
     ),
 )
-hades_view_ddl.add_view(radgroup_property_mappings, radgroupreply)
+hades_view_ddl.add_view(radius_property, radgroupreply)
 
 nas = Table(
     'nas',
