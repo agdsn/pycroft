@@ -229,19 +229,14 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     interface_existing = Interface.q.filter_by(mac=mac).first()
     if interface_existing is not None:
         if host_annex:
-            # annex existing host
-
             host_existing = interface_existing.host
             host_existing.owner_id = new_user.id
 
             session.session.add(host_existing)
-
             migrate_user_host(host_existing, new_user.room, processor)
         else:
             raise MacExistsException
     else:
-        # create one new host (including interface) for the new user
-
         new_host = Host(owner=new_user, room=room)
         session.session.add(new_host)
         session.session.add(Interface(mac=mac, host=new_host))
