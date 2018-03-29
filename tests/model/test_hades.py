@@ -54,9 +54,9 @@ class HadesViewTest(FactoryDataTestBase):
         for row in rows:
             self.assertEqual(row.UserName, mac)
             self.assertEqual(row.NASIPAddress, self.switch.management_ip)
-            self.assertEqual(row.Attribute, "Cleartext-Password")
-            self.assertEqual(row.Op, ":=")
-            self.assertEqual(row.Value, mac)
+            self.assertEqual(row.Attribute, "User-Name")
+            self.assertEqual(row.Op, "=*")
+            self.assertEqual(row.Value, None)
             self.assertEqual(row.Priority, 10)
 
         self.assertEqual({row.NASPortId for row in rows},

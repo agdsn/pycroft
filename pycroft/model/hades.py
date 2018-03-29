@@ -1,5 +1,5 @@
 from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer, \
-    PrimaryKeyConstraint
+    PrimaryKeyConstraint, null
 from sqlalchemy.orm import Query
 
 from pycroft.model.base import ModelBase
@@ -117,9 +117,9 @@ radcheck = View(
             func.text(Interface.mac).label('UserName'),
             func.host(Switch.management_ip).label('NASIPAddress'),
             SwitchPort.name.label('NASPortId'),
-            literal("Cleartext-Password").label('Attribute'),
-            literal(":=").label('Op'),
-            func.text(Interface.mac).label('Value'),
+            literal("User-Name").label('Attribute'),
+            literal("=*").label('Op'),
+            null().label('Value'),
             literal(10).label('Priority'),
         ]).select_from(Interface)
         .join(Host)
