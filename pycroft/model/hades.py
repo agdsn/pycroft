@@ -188,18 +188,6 @@ radgroupreply = View(
             literal('+=').label('Op'),
             (literal('1') + VLAN.name).label('Value'),
         ]),
-        Query([
-            (VLAN.name + '_untagged').label('GroupName'),
-            literal("Reply-Message").label('Attribute'),
-            literal('+=').label('Op'),
-            (VLAN.name + '_untagged').label('Value'),
-        ]),
-        Query([
-            (VLAN.name + '_tagged').label('GroupName'),
-            literal("Reply-Message").label('Attribute'),
-            literal('+=').label('Op'),
-            (VLAN.name + '_tagged').label('Value'),
-        ]),
     ),
 )
 hades_view_ddl.add_view(radgroup_property_mappings, radgroupreply)
