@@ -5,8 +5,7 @@ from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.facilities import Room
 from pycroft.model.webstorage import WebStorage
-from tests.factories import RoomFactory, PatchPortFactory
-from tests.factories.net import SubnetFactory
+from tests.factories import UserWithHostFactory
 from tests.fixtures import permissions
 from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
 from . import UserFrontendTestBase, LegacyUserFrontendTestBase
@@ -145,13 +144,10 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
 
 
 class NewUserDatasheetTest(UserFrontendTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.room = RoomFactory(building__with_traffic_group=True)
-        self.subnet = SubnetFactory()
-        self.patch_port = PatchPortFactory(room=self.room, patched=True,
-                                           switch_port__switch__host__owner=self.admin)
-        self.patch_port.switch_port.default_vlans.append(self.subnet.vlan)
+    def assert_user_moved_in(self, response):
+        newest_user = User.q.order_by(User.id.desc()).first()
+        self.assertRedirects(response, url_for('user.user_show', user_id=newest_user.id))
+        self.assert_message_substr_flashed("Benutzer angelegt.", category='success')
 
     def test_user_create_data_sheet(self):
         response = self.client.post(url_for('user.create'), data={
@@ -163,12 +159,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'mac': "70:de:ad:be:ef:07",
             'email': "",
         })
-        # I know it's really ugly to trust the id sequence and the
-        # existence of only one user objects, but it should do the job
-        user_show_endpoint = url_for('user.user_show', user_id=2)
-        self.assertRedirects(response, user_show_endpoint)
-        self.assert_message_substr_flashed("Benutzer angelegt.", category='success')
-
+        self.assert_user_moved_in(response)
         response = self.client.get(url_for('user.user_sheet'))
         self.assertEqual(WebStorage.q.count(), 1)
         self.assert200(response)
@@ -176,3 +167,26 @@ class NewUserDatasheetTest(UserFrontendTestBase):
         self.assertEqual(response.headers.get('Content-Disposition'),
                          "inline; filename=user_sheet.pdf")
         self.assertTrue(response.data.startswith(b"%PDF"))
+
+    def test_user_host_annexation(self):
+        mac = "00:de:ad:be:ef:00"
+        other_user = UserWithHostFactory(host__interface__mac=mac)
+        session.session.commit()
+        self.assertEqual(len(other_user.hosts), 1)
+
+        move_in_formdata = {
+            'name': "Test User",
+            'building': str(self.room.building.id),
+            'level': str(self.room.level),
+            'room_number': self.room.number,
+            'login': "testuser",
+            'mac': mac,
+            'email': "",
+        }
+        response = self.client.post(url_for('user.create'), data=move_in_formdata)
+        self.assert200(response)
+        self.assertIsNone(response.location)
+
+        move_in_formdata.update(annex="y")
+        response = self.client.post(url_for('user.create'), data=move_in_formdata)
+        self.assert_user_moved_in(response)

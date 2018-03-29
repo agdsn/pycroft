@@ -1,7 +1,8 @@
 from flask import url_for
 
 from tests import FrontendDataTestBase, FixtureDataTestBase, \
-    FrontendWithAdminTestBase as UserFrontendTestBase
+    FrontendWithAdminTestBase
+from tests.factories import RoomFactory, SubnetFactory, PatchPortFactory
 from tests.fixtures import permissions
 from tests.fixtures.dummy import net
 from tests.fixtures.dummy import port
@@ -45,3 +46,16 @@ class UserLogTestBase(LegacyUserFrontendTestBase):
         json = response.json
         self.assertIsNotNone(json.get('items'))
         return json['items']
+
+
+class UserFrontendTestBase(FrontendWithAdminTestBase):
+    def create_factories(self):
+        super().create_factories()
+        # To move in a user we need to ensure:
+        # 1. default traffic groups for a building
+        self.room = RoomFactory(building__with_traffic_group=True)
+        self.subnet = SubnetFactory()
+        self.patch_port = PatchPortFactory(room=self.room, patched=True,
+                                           switch_port__switch__host__owner=self.admin)
+        # 2. A pool of default vlans so an IP can be found
+        self.patch_port.switch_port.default_vlans.append(self.subnet.vlan)
