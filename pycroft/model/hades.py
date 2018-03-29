@@ -187,6 +187,12 @@ radgroupreply = View(
             literal('+=').label('Op'),
             (literal('1') + VLAN.name).label('Value'),
         ]),
+        Query([
+            radius_property.c.property.label('GroupName'),
+            literal("Egress-VLAN-Name").label('Attribute'),
+            literal(":=").label('Op'),
+            literal("2hades-unauth").label('Value'),
+        ])
     ),
 )
 hades_view_ddl.add_view(radius_property, radgroupreply)
