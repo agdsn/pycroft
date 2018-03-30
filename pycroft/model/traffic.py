@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, Index, DDL, union_all, func, literal_column, or_, literal
+    PrimaryKeyConstraint, func, or_, and_, true
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
 
@@ -43,7 +43,7 @@ class TrafficVolume(TrafficEvent, ModelBase):
     ip = relationship(IP, backref=backref("traffic_volumes",
                                           cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
-                     nullable=True)
+                     nullable=True, index=True)
     user = relationship(User,
                         backref=backref("traffic_volumes",
                                         cascade="all, delete-orphan"),
@@ -170,7 +170,7 @@ ddl.add_trigger(TrafficVolume.__table__, pmacct_ingress_upsert_trigger)
 
 class TrafficCredit(TrafficEvent, IntegerIdModel):
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
-                     nullable=False)
+                     nullable=False, index=True)
     user = relationship(User,
                         backref=backref("traffic_credits",
                                         cascade="all, delete-orphan"),
@@ -178,34 +178,39 @@ class TrafficCredit(TrafficEvent, IntegerIdModel):
 TrafficBalance.__table__.add_is_dependent_on(TrafficCredit.__table__)
 
 
+recent_volume_q = (
+    Query([func.sum(TrafficVolume.amount).label('amount')])
+    .select_from(TrafficVolume)
+    .filter(and_(User.id==TrafficVolume.user_id,
+                 or_(TrafficBalance.user_id.is_(None),
+                     TrafficBalance.timestamp <= TrafficVolume.timestamp)))
+    .subquery()
+    .lateral('recent_volume')
+)
+
+recent_credit_q = (
+    Query([func.sum(TrafficCredit.amount).label('amount')])
+    .select_from(TrafficCredit)
+    .filter(and_(User.id==TrafficCredit.user_id,
+                 or_(TrafficBalance.user_id.is_(None),
+                     TrafficBalance.timestamp <= TrafficCredit.timestamp)))
+    .subquery()
+    .lateral('recent_credit')
+)
+
 current_traffic_balance_view = View(
     name='current_traffic_balance',
     query=(
-        Query([literal_column('fragments.user_id').label('user_id'),
-               func.sum(literal_column('fragments.amount')).label('amount')])
-        .select_from(union_all(
-            # -sum(volumes)
-            Query([User.id.label('user_id'), (-func.sum(TrafficVolume.amount)).label('amount')])
-            .select_from(User)
-            .outerjoin(TrafficBalance)
-            .join(TrafficVolume)
-            .filter(or_(TrafficBalance.user_id.is_(None),
-                        TrafficBalance.timestamp <= TrafficVolume.timestamp))
-            .group_by(User.id),
-            # +sum(credits)
-            Query([User.id.label('user_id'), func.sum(TrafficCredit.amount).label('amount')])
-            .select_from(User)
-            .outerjoin(TrafficBalance)
-            .join(TrafficCredit)
-            .filter(or_(TrafficBalance.user_id.is_(None),
-                        TrafficBalance.timestamp <= TrafficCredit.timestamp))
-            .group_by(User.id),
-            # +balance
-            Query([TrafficBalance.user_id.label('user_id'), TrafficBalance.amount.label('amount')]),
-            # +0 for all users, if neither balance nor credits nor volumes should exist
-            Query([User.id.label('user_id'), literal(0).label('amount')]),
-        ).alias('fragments'))
-        .group_by('user_id')
+        Query([
+            User.id.label('user_id'),
+            (func.coalesce(TrafficBalance.amount, 0) +
+             func.coalesce(recent_credit_q.c.amount, 0) -
+             func.coalesce(recent_volume_q.c.amount, 0)).label('amount'),
+        ])
+        .select_from(User)
+        .outerjoin(TrafficBalance)
+        .outerjoin(recent_credit_q, true())
+        .outerjoin(recent_volume_q, true())
         .statement
     )
 )
