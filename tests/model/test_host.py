@@ -58,7 +58,7 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
         session.session.rollback()
 
         # Assert a correct mac
-        self.assertSetMAC(interface, "00:00:00:00:00:00")
+        self.assertSetMAC(interface, "00:00:00:01:00:00")
 
         # Assert that we have the mac assigned
         session.session.add(interface)
