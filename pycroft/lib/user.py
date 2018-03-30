@@ -416,29 +416,6 @@ def edit_email(user, email, processor):
     return user
 
 
-def traffic_balance(user):
-    try:
-        bal = user._traffic_balance
-        balance = bal.amount
-        balance_ts = bal.timestamp
-    except AttributeError:
-        balance = 0
-        balance_ts = datetime.fromtimestamp(0)
-
-    now = session.utcnow()
-    if balance_ts > now:
-        return None
-
-    # NOTE: if balance timestamp is in future, balance is always None
-    #       because consistency cannot be guaranteed
-
-    balance += sum(-event.amount for event in user.traffic_volumes
-                   if (balance_ts <= event.timestamp <= now))
-    balance += sum(event.amount for event in user.traffic_credits
-                   if (balance_ts <= event.timestamp <= now))
-    return balance
-
-
 def traffic_events_expr():
     events = union_all(select([
         TrafficCredit.amount,

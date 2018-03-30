@@ -41,7 +41,7 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
         }
 
     def test_0010_orm(self):
-        orm_values = [(u.id, traffic_balance(u)) for u in self.users]
+        orm_values = [(u.id, u.current_credit) for u in self.users]
         correct_values = [(u.id, b) for u, b in self.correct_balance.items()]
         self.assertEqual(set(orm_values), set(correct_values))
 
@@ -58,4 +58,3 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
         res = session.session.query(User.id, traffic_balance_expr()>0).all()
 
         self.assertEqual(set(correct_values), set(res))
-
