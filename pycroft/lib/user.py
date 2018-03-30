@@ -491,17 +491,6 @@ def traffic_balance_expr(until=func.now()):
     return balance.label('traffic_balance')
 
 
-def has_exceeded_traffic(user):
-    """Calculate the balance of the users traffic.
-
-    :param user: The user object which has to be checked.
-
-    :return: True if the user has more traffic than allowed and false
-             if he did not exceed the limit.
-    """
-    return traffic_balance(user) < 0
-
-
 def has_balance_of_at_least(user, amount):
     """Check whether the given user's balance is at least the given
     amount.
@@ -525,19 +514,6 @@ def has_positive_balance(user):
     :return: True if and only if the user's balance is at least zero.
     """
     return has_balance_of_at_least(user, 0)
-
-
-def has_network_access(user):
-    """Check if the user is allowed to connect to the network.
-
-    :param user: The user object.
-
-    :return: True if he is allowed to use the network, false if he is
-             not.
-    """
-    return (user.has_property("network_access") and
-            not has_exceeded_traffic(user) and
-            has_positive_balance(user))
 
 
 @with_transaction
@@ -651,7 +627,7 @@ def status(user):
     """
     return AttrDict({
         'member': user.member_of(config.member_group),
-        'traffic_exceeded': has_exceeded_traffic(user),
+        'traffic_exceeded': user.current_credit < 0,
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),

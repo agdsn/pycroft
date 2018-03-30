@@ -127,7 +127,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         for group in {config.member_group, config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
-        self.assertTrue(UserHelper.has_network_access(new_user))
         self.assertIsNotNone(new_user.account)
         self.assertEqual(new_user.account.balance, 0)
         self.assertFalse(new_user.has_property("reduced_semester_fee"))
