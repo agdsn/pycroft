@@ -45,6 +45,7 @@ radusergroup = View(
     query=union_all(
         # Priority 20: valid case (interface's mac w/ vlan at correct ports)
         # <mac> @ <switch>/<port> → <vlan>_[un]tagged (Prio 20)
+        # Parsing continues because of Fall-Through:=Yes
         Query([
             Interface.mac.label('UserName'),
             # `host()` does not print the `/32` like `text` would
@@ -67,14 +68,15 @@ radusergroup = View(
         .filter(current_property.table.c.property_name == 'network_access')
         .statement,
 
-        # Priority 10: Blocking reason exists
-        # <mac> @ <switch>/<port> → finance (Prio 10)
+        # Priority -10: Blocking reason exists
+        # <mac> @ <switch>/<port> → <blocking_group> (Prio -10)
+        # Note that Fall-Through:=No for blocking groups, so first match terminates
         Query([
             Interface.mac.label('UserName'),
             func.host(Switch.management_ip).label('NASIPAddress'),
             SwitchPort.name.label('NASPortId'),
             radius_property.c.property.label('GroupName'),
-            literal(10).label('Priority'),
+            literal(-10).label('Priority'),
         ]).select_from(User)
         .join(Host)
         .join(Host.interfaces)
@@ -175,6 +177,7 @@ radgroupreply = View(
             radgroupreply_base.c.Op.label('Op'),
             radgroupreply_base.c.Value.label('Value'),
         ]),
+        # Egress-VLAN-Name += <vlan>, non-blocking groups
         Query([
             (VLAN.name + '_untagged').label('GroupName'),
             literal("Egress-VLAN-Name").label('Attribute'),
