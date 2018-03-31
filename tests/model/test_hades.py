@@ -27,17 +27,12 @@ class HadesViewTest(FactoryDataTestBase):
         )
 
         # the user's room needs to be connected to provide `nasipaddress` and `nasportid`
-        # TODO: remove owner and see if things still work
         self.switch = SwitchFactory.create(host__owner=self.user)
         PatchPortFactory.create_batch(2, patched=True, switch_port__switch=self.switch,
                                       # This needs to be the HOSTS room!
                                       room=self.user.hosts[0].room)
 
-        # TODO: create this membership in each test, not here
         MembershipFactory.create(user=self.user, group=self.network_access_group,
-                                 begins_at=datetime.now() + timedelta(-1),
-                                 ends_at=datetime.now() + timedelta(1))
-        MembershipFactory.create(user=self.user, group=self.payment_in_default_group,
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
 
@@ -99,5 +94,34 @@ class HadesViewTest(FactoryDataTestBase):
             self.assertIn((prop, "Egress-VLAN-Name", ":=", "2hades-unauth"), rows)
             self.assertIn((prop, "Fall-Through", ":=", "No"), rows)
 
-    # TODO: test radusergroup mapping for regular user
-    # TODO: test radusergroup mapping for user with `payment_in_default`
+    def test_radusergroup_access(self):
+        host = self.user.hosts[0]
+        switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
+        self.assertEqual(len(host.ips), 1)
+        self.assertEqual(len(host.interfaces), 1)
+        mac = host.interfaces[0].mac
+        group = "{}_untagged".format(host.ips[0].subnet.vlan.name)
+
+        rows = session.session.query(hades.radusergroup.table).all()
+        for switch_port in switch_ports:
+            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name, group, 20),
+                          rows)
+
+    def test_radusergroup_blocked(self):
+        MembershipFactory.create(user=self.user, group=self.payment_in_default_group,
+                                 begins_at=datetime.now() + timedelta(-1),
+                                 ends_at=datetime.now() + timedelta(1))
+        host = self.user.hosts[0]
+        switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
+        self.assertEqual(len(host.ips), 1)
+        self.assertEqual(len(host.interfaces), 1)
+        mac = host.interfaces[0].mac
+
+        rows = session.session.query(hades.radusergroup.table).all()
+        for switch_port in switch_ports:
+            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name,
+                           'payment_in_default', -10),
+                          rows)
+            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name,
+                           'no_network_access', 0),
+                          rows)
