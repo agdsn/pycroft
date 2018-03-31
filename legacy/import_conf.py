@@ -87,18 +87,19 @@ group_props = {
 
 # Memberships being added due to the current status
 status_groups_map = {
+    # `usertraffic` is a traffic group, so not given in `import_conf`
     1: ("member", "usertraffic"),  # bezahlt, ok
-    2: ("member", "usertraffic"),  # angemeldet, aber nicht bezahlt
+    2: ("member", "finance", "usertraffic"),  # angemeldet, aber nicht bezahlt
     3: ("away",),    # nicht bezahlt, hat nur Mail
-    4: ("member", "usertraffic"),  # angemeldet, nicht bezahlt, 2. Warnung
+    4: ("member", "finance", "usertraffic"),  # angemeldet, nicht bezahlt, 2. Warnung
     5: ("member", "suspended", "usertraffic"),  # angemeldet, nicht bezahlt, gesperrt
     6: ("away",),  # angemeldet, gesperrt (ruhend)
-    7: ("member", "violator"),  # angemeldet, gesperrt (Verstoss gegen Netzordnung)
+    7: ("member", "violator", "usertraffic"),  # angemeldet, gesperrt (Verstoss gegen Netzordnung)
     8: (),  # ausgezogen, gesperrt
     9: (),  # Ex-Aktiver
     10: ("away",), # E-Mail, ehemals IP
     11: (),  # uebrig in Wu die in Renovierung
-    12: ("member", "usertraffic")  # gesperrt wegen Trafficueberschreitung
+    12: ("member", "traffic", "usertraffic")  # gesperrt wegen Trafficueberschreitung
 }
 
 
