@@ -87,12 +87,12 @@ radusergroup = View(
               radius_property.c.property == current_property.table.c.property_name)
         .statement,
 
-        # Priority 0: No blocking reason exists → assume no member (yet/anymore)
+        # Priority 0: No blocking reason exists → generic error group `no_network_access`
         Query([
             Interface.mac.label('UserName'),
             func.host(Switch.management_ip).label('NASIPAddress'),
             SwitchPort.name.label('NASPortId'),
-            literal('no_member').label('GroupName'),
+            literal('no_network_access').label('GroupName'),
             literal(0).label('Priority'),
         ]).select_from(User)
         .outerjoin(network_access_subq, User.id == network_access_subq.c.user_id)
@@ -187,14 +187,50 @@ radgroupreply = View(
             literal('+=').label('Op'),
             (literal('1') + VLAN.name).label('Value'),
         ]),
+        # Fall-Through := Yes, non-blocking groups
+        Query([
+            (VLAN.name + '_untagged').label('GroupName'),
+            literal("Fall-Through").label('Attribute'),
+            literal(':=').label('Op'),
+            literal('Yes').label('Value'),
+        ]),
+        Query([
+            (VLAN.name + '_tagged').label('GroupName'),
+            literal("Fall-Through").label('Attribute'),
+            literal(':=').label('Op'),
+            literal('Yes').label('Value'),
+        ]),
+        # Egress-VLAN-Name := 2hades-unauth, blocking groups
         Query([
             radius_property.c.property.label('GroupName'),
             literal("Egress-VLAN-Name").label('Attribute'),
             literal(":=").label('Op'),
             literal("2hades-unauth").label('Value'),
-        ])
+        ]),
+        # Fall-Through := No, blocking groups
+        Query([
+            radius_property.c.property.label('GroupName'),
+            literal("Fall-Through").label('Attribute'),
+            literal(":=").label('Op'),
+            literal("No").label('Value'),
+        ]),
+        # Generic error group `no_network_access`
+        # Same semantics as a specific error group
+        Query([
+            literal("no_network_access").label('GroupName'),
+            literal("Egress-VLAN-Name").label('Attribute'),
+            literal(":=").label('Op'),
+            literal("2hades-unauth").label('Value'),
+        ]),
+        Query([
+            literal("no_network_access").label('GroupName'),
+            literal("Fall-Through").label('Attribute'),
+            literal(":=").label('Op'),
+            literal("No").label('Value'),
+        ]),
     ),
 )
+
 hades_view_ddl.add_view(radius_property, radgroupreply)
 
 nas = Table(
