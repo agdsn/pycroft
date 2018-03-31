@@ -9,6 +9,7 @@ import sys
 from collections import Counter
 import logging as std_logging
 
+from pycroft.model.hades import radius_property
 from scripts.schema import AlembicHelper
 
 log = std_logging.getLogger('import')
@@ -199,6 +200,12 @@ def import_legacy(args):
     iter_bad_rooms = (r for r in room_query.all() if not r[0])
     for bad_room in iter_bad_rooms:
         log.warning("Room %s isn't connected to any subnets", bad_room)
+
+    log.info('Inserting radius properties...')
+    session.session.execute(radius_property.insert([('violation',),
+                                                    ('payment_in_default',),
+                                                    ('traffic_limit_exceeded',)]))
+    session.session.commit()
 
     log.info("Fixing sequences...")
 
