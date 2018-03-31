@@ -11,7 +11,7 @@ from tests.fixtures.dummy.user import UserData
 
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.lib.user import traffic_balance_expr, traffic_balance
+from pycroft.lib.user import traffic_balance_expr
 
 
 # this test is broken. Skipping, because the balance logic needs to be changed anyway.
