@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
 from pycroft.model import session
-from pycroft.model.hades import radius_property, radcheck
+from pycroft.model import hades
+from pycroft.model.net import VLAN
 from tests import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, MembershipFactory, UserWithHostFactory, \
     SwitchFactory, PatchPortFactory
@@ -40,7 +41,7 @@ class HadesViewTest(FactoryDataTestBase):
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
 
-        session.session.execute(radius_property.insert(values=[
+        session.session.execute(hades.radius_property.insert(values=[
             ('payment_in_default',),
             ('traffic_limit_exceeded',),
         ]))
@@ -48,7 +49,7 @@ class HadesViewTest(FactoryDataTestBase):
     def test_radcheck(self):
         # <mac> - <nasip> - <nasport> - "Cleartext-Password" - := - <mac> - 10
         # We have one interface with a MAC whose room has two ports on the same switch
-        rows = session.session.query(radcheck.table).all()
+        rows = session.session.query(hades.radcheck.table).all()
         host = self.user.hosts[0]
         mac = host.interfaces[0].mac
         for row in rows:
@@ -62,5 +63,41 @@ class HadesViewTest(FactoryDataTestBase):
         self.assertEqual({row.NASPortId for row in rows},
                          {port.switch_port.name for port in host.room.patch_ports})
 
-    # TODO: Put Entries in some basetable to test tagged vlans (separate test)
-    # TODO: test radreply, radgroupreply (with base, see above), radgroupcheck
+    def test_radgroupcheck(self):
+        rows = session.session.query(hades.radgroupcheck.table).all()
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row, ("unknown", "Auth-Type", ":=", "Accept", 10))
+
+    # Radreply is empty by default...
+
+    def test_radgroupreply_custom_entries(self):
+        radgroupreply_q = session.session.query(hades.radgroupreply.table)
+        custom_reply_row = ("TestGroup", "Egress-VLAN-Name", "+=", "2Servernetz")
+        self.assertNotIn(custom_reply_row, radgroupreply_q.all())
+        session.session.execute(hades.radgroupreply_base.insert([custom_reply_row]))
+        session.session.commit()
+        self.assertIn(custom_reply_row, radgroupreply_q.all())
+
+    def test_radgroupreply_access_groups(self):
+        rows = session.session.query(hades.radgroupreply.table).all()
+        vlans = VLAN.q.all()
+        for vlan in vlans:
+            with self.subTest(vlan=vlan):
+                group_name = "{}_untagged".format(vlan.name)
+                self.assertIn((group_name, "Egress-VLAN-Name", "+=", "2{}".format(vlan.name)), rows)
+                self.assertIn((group_name, "Fall-Through", ":=", "Yes"), rows)
+
+                group_name = "{}_tagged".format(vlan.name)
+                self.assertIn((group_name, "Egress-VLAN-Name", "+=", "1{}".format(vlan.name)), rows)
+                self.assertIn((group_name, "Fall-Through", ":=", "Yes"), rows)
+
+    def test_radgroupreply_blocking_groups(self):
+        props = [x[0] for x in session.session.query(hades.radius_property).all()]
+        rows = session.session.query(hades.radgroupreply.table).all()
+        for prop in props:
+            self.assertIn((prop, "Egress-VLAN-Name", ":=", "2hades-unauth"), rows)
+            self.assertIn((prop, "Fall-Through", ":=", "No"), rows)
+
+    # TODO: test radusergroup mapping for regular user
+    # TODO: test radusergroup mapping for user with `payment_in_default`
