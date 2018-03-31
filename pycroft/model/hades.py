@@ -5,11 +5,11 @@ from sqlalchemy.orm import Query
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
 from pycroft.model.facilities import Room
-from pycroft.model.host import Interface, Switch, SwitchPort, Host
+from pycroft.model.host import Interface, Switch, SwitchPort, Host, IP
 from pycroft.model.net import VLAN, Subnet
 from pycroft.model.port import PatchPort
 from pycroft.model.user import User
-from pycroft.model.property import current_property
+from pycroft.model.property import current_property, CurrentProperty
 
 hades_view_ddl = DDLManager()
 
@@ -249,5 +249,21 @@ nas = Table(
     Column('Community', String(50)),
     Column('Description', String(200)),
 )
+
+
+dhcphost = View(
+    name='dhcphost',
+    query=(
+        Query([Interface.mac.label('Mac'), func.host(IP.address).label('IpAddress')])
+        .select_from(User)
+        .join(User._current_properties)
+        .join(Host)
+        .join(Interface)
+        .join(IP)
+        .filter(CurrentProperty.property_name == 'network_access')
+        .statement
+    ),
+)
+hades_view_ddl.add_view(ModelBase.metadata, dhcphost)
 
 hades_view_ddl.register()

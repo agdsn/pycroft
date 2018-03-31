@@ -8,7 +8,7 @@ from tests.factories import PropertyGroupFactory, MembershipFactory, UserWithHos
     SwitchFactory, PatchPortFactory
 
 
-class HadesViewTest(FactoryDataTestBase):
+class HadesTestBase(FactoryDataTestBase):
     def create_factories(self):
         self.user = UserWithHostFactory.create()
         self.network_access_group = PropertyGroupFactory.create(
@@ -41,6 +41,8 @@ class HadesViewTest(FactoryDataTestBase):
             ('traffic_limit_exceeded',),
         ]))
 
+
+class HadesViewTest(HadesTestBase):
     def test_radcheck(self):
         # <mac> - <nasip> - <nasport> - "Cleartext-Password" - := - <mac> - 10
         # We have one interface with a MAC whose room has two ports on the same switch
@@ -107,10 +109,22 @@ class HadesViewTest(FactoryDataTestBase):
             self.assertIn((mac, switch_port.switch.management_ip, switch_port.name, group, 20),
                           rows)
 
-    def test_radusergroup_blocked(self):
+    def test_dhcphost_access(self):
+        rows = session.session.query(hades.dhcphost.table).all()
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        host = self.user.hosts[0]
+        self.assertEqual(row, (host.interfaces[0].mac, str(host.ips[0].address)))
+
+
+class HadesBlockedViewTest(HadesTestBase):
+    def create_factories(self):
+        super().create_factories()
         MembershipFactory.create(user=self.user, group=self.payment_in_default_group,
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
+
+    def test_radusergroup_blocked(self):
         host = self.user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
         self.assertEqual(len(host.ips), 1)
@@ -125,3 +139,7 @@ class HadesViewTest(FactoryDataTestBase):
             self.assertIn((mac, switch_port.switch.management_ip, switch_port.name,
                            'no_network_access', 0),
                           rows)
+
+    def test_dhcphost_blocked(self):
+        rows = session.session.query(hades.dhcphost.table).all()
+        self.assertEqual(len(rows), 0)
