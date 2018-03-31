@@ -39,4 +39,13 @@ current_property = View(
 )
 property_view_ddl.add_view(Membership.__table__, current_property)
 
+
+class CurrentProperty(ModelBase):
+    __table__ = current_property.table
+    __mapper_args__ = {
+        'primary_key': (current_property.table.c.user_id,
+                        current_property.table.c.property_name),
+    }
+
+
 property_view_ddl.register()

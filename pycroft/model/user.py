@@ -80,6 +80,16 @@ class User(IntegerIdModel, UserMixin):
     def current_credit(self):
         return self._current_traffic_balance.amount
 
+    _current_properties = relationship(
+        'CurrentProperty',
+        primaryjoin='User.id == foreign(CurrentProperty.user_id)',
+        viewonly=True
+    )
+
+    @property
+    def current_properties(self):
+        return [p.property_name for p in self._current_properties]
+
     login_regex = re.compile(r"""
         ^
         # Must begin with a lowercase character
