@@ -1,6 +1,6 @@
 from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer, \
-    PrimaryKeyConstraint, null
-from sqlalchemy.orm import Query
+    PrimaryKeyConstraint, null, and_
+from sqlalchemy.orm import Query, aliased
 
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
@@ -265,5 +265,23 @@ dhcphost = View(
     ),
 )
 hades_view_ddl.add_view(ModelBase.metadata, dhcphost)
+
+current_prop_alias = aliased(CurrentProperty)
+alternative_dns = View(
+    name='alternative_dns',
+    query=(
+        Query([func.host(IP.address).label('IpAddress')])
+        .select_from(User)
+        .join(Host)
+        .join(Interface)
+        .join(IP)
+        .join(CurrentProperty, and_(CurrentProperty.user_id == User.id,
+                                    CurrentProperty.property_name == 'network_access'))
+        .join(current_prop_alias, and_(current_prop_alias.user_id == User.id,
+                                       current_prop_alias.property_name == 'cache_access'))
+        .statement
+    ),
+)
+hades_view_ddl.add_view(ModelBase.metadata, alternative_dns)
 
 hades_view_ddl.register()

@@ -116,6 +116,20 @@ class HadesViewTest(HadesTestBase):
         host = self.user.hosts[0]
         self.assertEqual(row, (host.interfaces[0].mac, str(host.ips[0].address)))
 
+    def test_alternative_dns(self):
+        # Nobody is cache user by default
+        self.assertEqual(session.session.query(hades.alternative_dns.table).count(), 0)
+        # add cache group
+        cache_group = PropertyGroupFactory.create(name="Cache User",
+                                                  granted={'cache_access'})
+
+        MembershipFactory.create(user=self.user, group=cache_group,
+                                 begins_at=datetime.now() + timedelta(-1),
+                                 ends_at=datetime.now() + timedelta(1))
+        rows = session.session.query(hades.alternative_dns.table).all()
+        ip = self.user.hosts[0].ips[0]
+        self.assertEqual(rows, [(str(ip.address),)])
+
 
 class HadesBlockedViewTest(HadesTestBase):
     def create_factories(self):
@@ -143,3 +157,12 @@ class HadesBlockedViewTest(HadesTestBase):
     def test_dhcphost_blocked(self):
         rows = session.session.query(hades.dhcphost.table).all()
         self.assertEqual(len(rows), 0)
+
+    def test_no_alternative_dns(self):
+        cache_group = PropertyGroupFactory.create(name="Cache User",
+                                                  granted={'cache_access'})
+
+        MembershipFactory.create(user=self.user, group=cache_group,
+                                 begins_at=datetime.now() + timedelta(-1),
+                                 ends_at=datetime.now() + timedelta(1))
+        self.assertEqual(session.session.query(hades.alternative_dns.table).count(), 0)
