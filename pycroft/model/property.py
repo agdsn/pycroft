@@ -9,7 +9,7 @@ pycroft.model.property
 This module contains model descriptions concerning properties, groups, and memberships.
 
 """
-from sqlalchemy import null, and_, or_, func, Column, Integer, String, union_all, literal
+from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, literal
 from sqlalchemy.orm import Query
 
 from .base import ModelBase
@@ -22,7 +22,7 @@ property_view_ddl = DDLManager()
 current_property = View(
     name='current_property',
     #metadata=ModelBase.metadata,
-    query=union_all(
+    query=union(
         Query([User.id.label('user_id'), Property.name.label('property_name'),
                literal(False).label('denied')])
         .select_from(Membership)
