@@ -20,6 +20,7 @@ from flask import (
     url_for)
 from flask_login import current_user
 from sqlalchemy import func, or_, Text, cast
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft.helpers.i18n import localized
@@ -80,6 +81,20 @@ def bank_accounts_list_json():
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
+    if privilege_check(current_user, 'finance_change'):
+        def actions(activity_id):
+            return [{
+                'href': url_for(
+                    '.bank_account_activities_edit',
+                    activity_id=activity_id),
+                'title': '',
+                'btn_class': 'btn-primary',
+                'icon': 'glyphicon-pencil'
+            }]
+    else:
+        def actions(activity_id):
+            return []
+
     return jsonify(items=[
         {
             'bank_account': activity.bank_account.name,
@@ -90,19 +105,15 @@ def bank_accounts_activities_json():
             'ktonr': activity.other_account_number,
             # 'blz': activity.other_bank,   # todo revisit. wuzdat? dunno…
             'name': activity.other_name,
-            'actions': ([{
-                'href': url_for(
-                    '.bank_account_activities_edit',
-                    activity_id=activity.id),
-                'title': '',
-                'btn_class': 'btn-primary',
-                'icon': 'glyphicon-pencil'
-            }]
-                        if privilege_check(current_user, 'finance_change')
-                        else []),
-        } for activity in BankAccountActivity.q.filter(
-            BankAccountActivity.transaction_id == None
-        ).order_by(BankAccountActivity.valid_on).all()])
+            'actions': actions(activity.id),
+        } for activity in (
+            BankAccountActivity.q
+            .options(joinedload(BankAccountActivity.bank_account))
+            .filter(BankAccountActivity.transaction_id == None)
+            .order_by(BankAccountActivity.valid_on)
+            .all()
+        )
+    ])
 
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
