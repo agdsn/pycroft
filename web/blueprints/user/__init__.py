@@ -232,7 +232,12 @@ def user_show(user_id):
                          account_id=user.account_id),
         traffic_json_url=url_for('.json_trafficdata', user_id=user_id),
         effective_traffic_group_name=traffic_group_name,
-        is_blocked = is_blocked
+        is_blocked=is_blocked,
+        granted_properties=sorted(p.property_name for p in user.current_properties),
+        revoked_properties=sorted(
+            p.property_name
+            for p in set(user.current_properties_maybe_denied) -set(user.current_properties)
+        )
     )
 
 @bp.route("/<int:user_id>/account")

@@ -4,6 +4,18 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 
+<div>
+    <h3>Resultierende Properties</h3>
+    {% for prop in granted_properties %}
+        <span class="label label-success" title="Granted">{{ prop }}</span>
+    {% endfor %}
+    {% for prop in revoked_properties %}
+        <span class="label label-danger" title="Granted, aber dann Denied">{{ prop }}</span>
+    {% endfor %}
+</div>
+<br>
+
+
 <ul class="nav nav-tabs">
     <li class="active"><a href="#memberships-active" data-toggle="tab">Aktiv</a></li>
     <li><a href="#memberships-all" data-toggle="tab">Alle</a></li>
