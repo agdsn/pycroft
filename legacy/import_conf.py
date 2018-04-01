@@ -50,7 +50,7 @@ group_props = {
 
     "suspended": ("Gesperrt", {"network_access": False}),
 
-    "finance": ("Zahlungsrückstand", {"network_access": False, "default_in_payment": True}),
+    "finance": ("Zahlungsrückstand", {"network_access": False, "payment_in_default": True}),
     "traffic": ("Trafficüberschreitung", {"network_access": False, "traffic_limit_exceeded": True}),
     "violator": ("Verstoß gegen Netzordnung", {"network_access": False,
                                               "violation": True}),

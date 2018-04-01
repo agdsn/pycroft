@@ -29,7 +29,7 @@ def user_btn_style(user):
         glyphicons.append('glyphicon-remove')
         tooltips.append('Zugang gesperrt')
 
-    if 'default_in_payment' in props:
+    if 'payment_in_default' in props:
         glyphicons.append('glyphicon-euro')
         btn_class = 'btn-warning'
         tooltips.append('nicht bezahlt')
