@@ -9,7 +9,7 @@ pycroft.model.property
 This module contains model descriptions concerning properties, groups, and memberships.
 
 """
-from sqlalchemy import null, and_, or_, func, Column, Integer, String
+from sqlalchemy import null, and_, or_, func, Column, Integer, String, union_all, literal
 from sqlalchemy.orm import Query
 
 from .base import ModelBase
@@ -22,8 +22,9 @@ property_view_ddl = DDLManager()
 current_property = View(
     name='current_property',
     #metadata=ModelBase.metadata,
-    query=(
-        Query([User.id.label('user_id'), Property.name.label('property_name')])
+    query=union_all(
+        Query([User.id.label('user_id'), Property.name.label('property_name'),
+               literal(False).label('denied')])
         .select_from(Membership)
         .join(PropertyGroup)
         .join(User)
@@ -34,7 +35,22 @@ current_property = View(
         .join(Property)
         .group_by(User.id, Property.name)
         .having(func.every(Property.granted))
-        .statement
+        .statement,
+
+        Query([User.id.label('user_id'), Property.name.label('property_name'),
+               literal(True).label('denied')])
+        .select_from(Membership)
+        .join(PropertyGroup)
+        .join(User)
+        .filter(and_(
+            or_(Membership.begins_at == null(), Membership.begins_at <= utcnow_sql()),
+            or_(Membership.ends_at == null(), utcnow_sql() <= Membership.ends_at),
+        ))
+        .join(Property)
+        .group_by(User.id, Property.name)
+        # granted by ≥1 membership, but also denied by ≥1 membership
+        .having(and_(func.bool_or(Property.granted), ~func.every(Property.granted)))
+        .statement,
     ),
 )
 property_view_ddl.add_view(Membership.__table__, current_property)

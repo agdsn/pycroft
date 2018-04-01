@@ -17,7 +17,8 @@ network_access_subq = (
     # Select `user_id, 1` for all people with network_access
     Query([current_property.table.c.user_id.label('user_id'),
            literal(1).label('network_access')])
-    .filter(current_property.table.c.property_name == 'network_access')
+    .filter(and_(current_property.table.c.property_name == 'network_access',
+                 ~current_property.table.c.denied))
     .subquery('users_with_network_access')
 )
 
@@ -64,8 +65,8 @@ radusergroup = View(
         .join(Interface.ips)
         .join(Subnet)
         .join(VLAN)
-        .join(current_property.table, current_property.table.c.user_id == User.id)
-        .filter(current_property.table.c.property_name == 'network_access')
+        .join(User.current_properties)
+        .filter(CurrentProperty.property_name == 'network_access')
         .statement,
 
         # Priority -10: Blocking reason exists
@@ -84,9 +85,9 @@ radusergroup = View(
         .join(Room.connected_patch_ports)
         .join(SwitchPort)
         .join(Switch)
-        .join(current_property.table, current_property.table.c.user_id == User.id)
+        .join(User.current_properties)
         .join(radius_property,
-              radius_property.c.property == current_property.table.c.property_name)
+              radius_property.c.property == CurrentProperty.property_name)
         .statement,
 
         # Priority 0: No blocking reason exists → generic error group `no_network_access`
@@ -256,7 +257,7 @@ dhcphost = View(
     query=(
         Query([Interface.mac.label('Mac'), func.host(IP.address).label('IpAddress')])
         .select_from(User)
-        .join(User._current_properties)
+        .join(User.current_properties)
         .join(Host)
         .join(Interface)
         .join(IP)
@@ -276,8 +277,10 @@ alternative_dns = View(
         .join(Interface)
         .join(IP)
         .join(CurrentProperty, and_(CurrentProperty.user_id == User.id,
+                                    ~CurrentProperty.denied,
                                     CurrentProperty.property_name == 'network_access'))
         .join(current_prop_alias, and_(current_prop_alias.user_id == User.id,
+                                       ~CurrentProperty.denied,
                                        current_prop_alias.property_name == 'cache_access'))
         .statement
     ),

@@ -525,7 +525,7 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
     def test_current_properties_of_user(self):
         rows = (session.session.query(current_property.table.c.property_name)
                 .add_columns(user.User.login.label('login'))
-                .join(user.User, user.User.id == current_property.table.c.user_id)
+                .join(user.User.current_properties)
                 .all())
         login = self.users['active'].login
         expected_results = [
@@ -533,6 +533,7 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
             ('active', ['mail', 'login'], []),
             ('mail', ['mail'], ['login']),
             ('former', [], ['mail', 'login']),
+            ('violator', ['mail'], ['login'])
         ]
         for user_key, granted, denied in expected_results:
             login = self.users[user_key].login
@@ -541,3 +542,12 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
                     self.assertIn((granted_prop, login), rows)
                 for denied_prop in denied:
                     self.assertNotIn((denied_prop, login), rows)
+
+    def test_current_granted_or_denied_properties_of_user(self):
+        rows = (session.session.query(current_property.table.c.property_name)
+                .add_columns(user.User.login.label('login'))
+                .join(user.User.current_properties_maybe_denied)
+                .all())
+        # This checks that the violator's 'login' property is in the view as well
+        # when ignoring the `denied` column
+        self.assertIn(('login', self.users['violator'].login), rows)
