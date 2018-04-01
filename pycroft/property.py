@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 property_categories = OrderedDict((
     (u"Mitglieder", OrderedDict((
+        ('member', "ist Mitglied"),
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
         (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"semester_fee",  u"ist verpflichtet Semesterbeitrag zu bezahlen"),
