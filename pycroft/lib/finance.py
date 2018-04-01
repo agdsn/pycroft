@@ -566,8 +566,8 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
                 gettext(u"Import conflict:\n"
                         u"Database bank account activities:\n{0}\n"
                         u"File bank account activities:\n{1}").format(
-                    u'\n'.join(islice(activities, i1, i2)),
-                    u'\n'.join(islice(activities, j1, j2))))
+                    u'\n'.join(str(x) for x in islice(activities, i1, i2)),
+                    u'\n'.join(str(x) for x in islice(activities, j1, j2))))
         else:
             raise AssertionError()
     if balance != expected_balance:

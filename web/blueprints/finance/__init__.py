@@ -13,6 +13,8 @@
 from datetime import timedelta, datetime
 from functools import partial
 from itertools import groupby, zip_longest, chain
+from io import StringIO
+
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
@@ -110,8 +112,8 @@ def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     if form.validate_on_submit():
         try:
-            finance.import_bank_account_activities_csv(
-                form.csv_file.data, form.expected_balance.data)
+            csv_data = StringIO(form.csv_file.data.read().decode('utf-8'))
+            finance.import_bank_account_activities_csv(csv_data, form.expected_balance.data)
             session.commit()
             flash(u"Der CSV-Import war erfolgreich!", "success")
         except finance.CSVImportError as e:
