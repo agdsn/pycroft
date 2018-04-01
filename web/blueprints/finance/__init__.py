@@ -81,6 +81,8 @@ def bank_accounts_list_json():
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
+    limit = request.args.get('limit', default=100, type=int)
+    offset = request.args.get('offset', default=0, type=int)
     if privilege_check(current_user, 'finance_change'):
         def actions(activity_id):
             return [{
@@ -95,8 +97,14 @@ def bank_accounts_activities_json():
         def actions(activity_id):
             return []
 
-    return jsonify(items=[
-        {
+    activity_q = (BankAccountActivity.q
+            .options(joinedload(BankAccountActivity.bank_account))
+            .filter(BankAccountActivity.transaction_id == None)
+            .order_by(BankAccountActivity.valid_on))
+
+    return jsonify(items={
+        'total': activity_q.count(),
+        'rows': [{
             'bank_account': activity.bank_account.name,
             'valid_on': date_filter(activity.valid_on),
             'amount': money_filter(activity.amount),
@@ -106,14 +114,8 @@ def bank_accounts_activities_json():
             # 'blz': activity.other_bank,   # todo revisit. wuzdat? dunno…
             'name': activity.other_name,
             'actions': actions(activity.id),
-        } for activity in (
-            BankAccountActivity.q
-            .options(joinedload(BankAccountActivity.bank_account))
-            .filter(BankAccountActivity.transaction_id == None)
-            .order_by(BankAccountActivity.valid_on)
-            .all()
-        )
-    ])
+        } for activity in activity_q.limit(limit).offset(offset).all()]
+    })
 
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])

@@ -50,7 +50,8 @@
         {{ tbl.item_table(
             'bank_accounts_activities',
             url_for('.bank_accounts_activities_json'),
-            bank_account_activities_columns
+            bank_account_activities_columns,
+            server_pagination=True
         ) }}
     </section>
 {% endblock %}
