@@ -9,16 +9,19 @@
     This module defines view functions for /facilities
     :copyright: (c) 2012 by AG DSN.
 """
+from operator import and_
 
+from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
+from sqlalchemy.orm import joinedload
 
 from pycroft import lib, config
 from pycroft.helpers import facilities
-from pycroft.lib.user import status_query
 from pycroft.model import session
 from pycroft.model.facilities import Room, Site
+from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
@@ -131,29 +134,26 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
         abort(404)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
-
-    rooms = session.session.query(Room).filter(
-        Room.building==building, Room.level==level
-    ).order_by(Room.number).all()
-
-    status_q = status_query().join(Room).filter(
-        Room.building == building, Room.level == level,
-        # `True` acts idempotently on `filter()`
-        True if all_users else User.member_of(config.member_group),
-    )
-
-    statuses = {r.id: [] for r in rooms}
-    for row in status_q.all():
-        statuses[row.User.room_id].append(row)
-
+    rooms_users_q = (session.session.query(Room, User)
+                     .options(joinedload(User.current_properties))
+                     .filter(and_(Room.building == building, Room.level == level))
+                     .join(User))
+    if not all_users:
+        rooms_users_q = (
+            rooms_users_q.join(User.current_properties_maybe_denied)
+            .filter(CurrentProperty.property_name == 'network_access')
+        )
+    level_inhabitants = defaultdict(lambda: [])
+    for room, user in rooms_users_q.all():
+        level_inhabitants[room].append(user)
 
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
                 'title': "{:02d} - {}".format(level, room.number)
             },
-            'inhabitants': [user_button(s.User, s) for s in statuses[room.id]]
-        } for room in rooms])
+            'inhabitants': [user_button(i) for i in inhabitants]
+        } for room, inhabitants in level_inhabitants.items()])
 
 
 @bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])

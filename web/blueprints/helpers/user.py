@@ -3,7 +3,7 @@ from flask import url_for
 from pycroft.lib.user import status
 
 
-def userstatus_btn_style(s):
+def user_btn_style(user):
     """Determine the icons and style of the button to a users page.
 
     First, add glyphicons concerning status warnings (finance,
@@ -23,22 +23,23 @@ def userstatus_btn_style(s):
     glyphicons = []
     btn_class = None
     tooltips = []
+    props = set(p.property_name for p in user.current_properties)
 
-    if not s.account_balanced:
+    if 'network_access' not in props:
+        glyphicons.append('glyphicon-remove')
+        tooltips.append('Zugang gesperrt')
+
+    if 'default_in_payment' in props:
         glyphicons.append('glyphicon-euro')
         btn_class = 'btn-warning'
         tooltips.append('nicht bezahlt')
 
-    if s.member:
-        if s.traffic_exceeded:
+    if 'member' in props:
+        if 'traffic_limit_exceeded' in props:
             glyphicons.append('glyphicon-stats')
             btn_class = 'btn-warning'
             tooltips.append('Traffic')
-        if not s.network_access:
-            glyphicons.append('glyphicon-remove')
-            btn_class = 'btn-danger'
-            tooltips.append('Zugang gesperrt')
-        if s.violation:
+        if 'violation' in props:
             glyphicons.append('glyphicon-alert')
             btn_class = 'btn-danger'
             tooltips.append('Verstoß')
@@ -49,11 +50,11 @@ def userstatus_btn_style(s):
     glyphicons = glyphicons or ['glyphicon-ok']
     btn_class = btn_class or 'btn-success'
 
-    if s.admin:
+    if 'user_show' in props:
         glyphicons.append('glyphicon-wrench')
         tooltips.append('Admin')
 
-    if not s.member and s.ldap:
+    if 'member' not in props and 'ldap' in props:
         glyphicons.append('glyphicon-cloud')
         tooltips.append('Eintrag im LDAP')
 
@@ -62,9 +63,8 @@ def userstatus_btn_style(s):
     return btn_class, glyphicons, tooltip
 
 
-def user_button(user, user_status=None):
-    user_status = user_status or status(user)
-    btn_class, glyphicons, tooltip = userstatus_btn_style(user_status)
+def user_button(user):
+    btn_class, glyphicons, tooltip = user_btn_style(user)
     return {
         'href': url_for("user.user_show", user_id=user.id),
         'title': user.name,
