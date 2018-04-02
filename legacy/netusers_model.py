@@ -4,9 +4,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import (Column, Date, DateTime, Enum, Index,
                         Integer, SmallInteger, String, Table,
-                        Text, text, ForeignKey)
+                        Text, text, ForeignKey, func)
 from sqlalchemy.dialects.postgresql import INET
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -36,7 +36,15 @@ class Nutzer(Base):
     vname = Column(String(30), nullable=False, server_default=text("''"))
     wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
     etage = Column(Integer, nullable=False, server_default=text("'0'"))
-    zimmernr = Column(String(10), nullable=False, server_default=text("''"))
+    raw_zimmernr = Column('zimmernr', String(10), nullable=False, server_default=text("''"))
+    @hybrid_property
+    def zimmernr(self):
+        return self.raw_zimmernr.upper()
+
+    @zimmernr.expression
+    def zimmernr(self):
+        return func.upper(self.raw_zimmernr)
+
     tel = Column(String(20))
     unix_account = Column(String(40), nullable=False, unique=True)
     anmeldedatum = Column(Date, nullable=False, server_default=text("'1970-01-01'"))
@@ -63,6 +71,18 @@ class Computer(Base):
     c_wheim_id = Column(Integer, nullable=False, server_default=text("'0'"))
     c_etage = Column(Integer)
     c_zimmernr = Column(String(10))
+    raw_zimmernr = Column('c_zimmernr', String(10))
+
+    @hybrid_property
+    def c_zimmernr(self):
+        try:
+            return self.raw_zimmernr.upper()
+        except AttributeError:
+            return self.raw_zimmernr
+
+    @c_zimmernr.expression
+    def c_zimmernr(self):
+        return func.upper(self.raw_zimmernr)
 
     c_typ = Column(String(20))
     c_cpu = Column(String(10))
@@ -98,6 +118,18 @@ class Hp4108Port(Base):
     wheim_id = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
     etage = Column(String(10))
     zimmernr = Column(String(10))
+    raw_zimmernr = Column('zimmernr', String(10))
+
+    @hybrid_property
+    def zimmernr(self):
+        try:
+            return self.raw_zimmernr.upper()
+        except AttributeError:
+            return self.raw_zimmernr
+
+    @zimmernr.expression
+    def zimmernr(self):
+        return func.upper(self.raw_zimmernr)
 
     ip = Column(INET)
 
