@@ -13,13 +13,13 @@ COPY vagrant/ /
 RUN apt-key add /etc/nodesource.gpg.key && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
+        build-essential \
         curl \
         git \
         libpq-dev \
         nodejs \
         python3-dev \
         python3-venv \
-        build-essential \
         vim \
     && apt-get clean \
     && npm install -g bower
