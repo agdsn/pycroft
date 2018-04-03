@@ -10,6 +10,7 @@ from werkzeug.datastructures import ImmutableDict
 from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
+from web import api
 from . import template_filters
 from . import template_tests
 from .blueprints import (
@@ -78,6 +79,7 @@ def make_app(debug=False):
     app.register_blueprint(properties.bp, url_prefix="/properties")
     app.register_blueprint(finance.bp, url_prefix="/finance")
     app.register_blueprint(login.bp)
+    app.register_blueprint(api.bp, url_prefix="/api/v0")
 
     template_filters.register_filters(app)
     template_tests.register_checks(app)
@@ -105,6 +107,12 @@ def make_app(debug=False):
 
         :param e: The error from the errorhandler
         """
+        # We need this path hard-coding because the global app errorhandlers have higher
+        # precedence than anything registered to a blueprint.
+        # A clean solution would be flask supporting nested blueprints (see flask #539)
+        if request.path.startswith('/api/'):
+            return api.errorpage(e)
+
         if not hasattr(e, 'code'):
             code = 500
         else:
@@ -134,7 +142,7 @@ def make_app(debug=False):
 
         Blueprint "None" is needed for "/static/*" GET requests.
         """
-        if current_user.is_anonymous and request.blueprint not in ("login", None):
+        if current_user.is_anonymous and request.blueprint not in ("login", 'api', None):
             return current_app.login_manager.unauthorized()
 
     return app
