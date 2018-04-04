@@ -39,6 +39,7 @@ _category_map = {"warning": "Warnung",
 
 template_filter("localized")(localized)
 
+
 @template_filter("pretty_category")
 def pretty_category_filter(category):
     """Make pretty category names for flash messages, etc
@@ -122,6 +123,7 @@ def byte_size_filter(value):
 def money_filter(amount):
     return (u"{:.2f}\u202f€".format(amount)).replace('.', ',')
 
+
 @template_filter("account_type")
 def account_type_filter(account_type):
     types = {
@@ -134,6 +136,7 @@ def account_type_filter(account_type):
     }
 
     return types.get(account_type)
+
 
 @template_filter("transaction_type")
 def transaction_type_filter(credit_debit_type):
@@ -151,6 +154,7 @@ def transaction_type_filter(credit_debit_type):
         ("LIABILITY", "LIABILITY"): gettext("Liability exchange")
     }
     return types.get(replacer(credit_debit_type), gettext("Unknown"))
+
 
 """
 @template_filter("host_traffic")
