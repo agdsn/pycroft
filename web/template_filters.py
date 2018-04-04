@@ -176,30 +176,6 @@ def host_traffic_filter(host):
     return u"{} MB".format(traffic_sum)
 """
 
-@template_filter("host_name")
-def host_name_filter(host):
-    return "Not Implemented"
-
-
-@template_filter("host_cname")
-def host_cname_filter(host):
-    return "Not Implemented"
-
-
-@template_filter("record_editable")
-def record_editable_filter(record):
-    if record.discriminator == "a_record" or record.discriminator == "aaaa_record":
-        return False
-    else:
-        return True
-
-
-@template_filter("record_removable")
-def record_removable_filter(record):
-    if record.discriminator == "a_record" or record.discriminator == "aaaa_record":
-        return False
-    else:
-        return True
 
 def register_filters(app):
     for name in _filter_registry:
