@@ -102,6 +102,9 @@ class ReadonlyTextField(TextField):
 def expected_interval_format(units):
     return ' '.join("{{}} {unit}".format(unit=unit) for unit in units)
 
+def default_interval_format(units):
+    return ' '.join("0 {unit}".format(unit=unit) for unit in units)
+
 
 def rebuild_string(values, units):
     return ' '.join("{} {}".format(v, u) for v, u in zip(values, units))
@@ -123,6 +126,8 @@ class IntervalField(TextField):
         self.expected_units = ['years', 'mons', 'days', 'hours', 'mins', 'secs']
 
     def __call__(self, **kwargs):
+        if self.data is None:
+            self.data = default_interval_format(self.expected_units)
         return super(IntervalField, self).__call__(
             class_='pycroftInterval',
              autocomplete='off',
@@ -150,4 +155,4 @@ class IntervalField(TextField):
             raise ValidationError(u'Die Werte müssen als natürliche Zahlen angegeben werden.')
 
         if all(val == 0 for val in decoded_values):
-            raise ValidationError("Intervalle müssen nichtleer sein.")
+            raise ValidationError("Intervalle müssen nichtleer und >0s sein.")
