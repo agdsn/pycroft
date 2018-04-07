@@ -8,6 +8,7 @@ from sqlalchemy import (Column, Date, DateTime, Enum, Index,
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 metadata = Base.metadata
