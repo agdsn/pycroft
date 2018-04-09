@@ -40,7 +40,9 @@ var multiGlyphBtnTemplate = _.template(
  * of the format `{'value': "3,50€", "is_positive": true}`
  */
 function coloredFormatter(value, row, index) {
-    if (!value) {return}
+    if (!value) {
+        return;
+    }
 
     if (value['is_positive']) {
         class_name = 'positive';
@@ -48,10 +50,10 @@ function coloredFormatter(value, row, index) {
         class_name = 'negative';
     }
 
-    result = ''
-    result += value['value']
-    result += '<span class="table-stripe-right '+class_name+'"></span>'
-    return result
+    result = '';
+    result += value['value'];
+    result += '<span class="table-stripe-right ' + class_name + '"></span>';
+    return result;
 }
 
 /**
@@ -67,26 +69,32 @@ function tdRelativeCellStyle(value, row, index, field) {
 }
 
 function linkFormatter(value, row, index) {
-    if (!value) {return}
-    return linkTemplate({'href': value['href'], 'title': value['title']})
+    if (!value) {
+        return;
+    }
+    return linkTemplate({'href': value['href'], 'title': value['title']});
 }
 
 function userFormatter(value, row, index) {
     /* Format an entry as a link or plain, depending on the value of
      * the 'type' field.  It can either be 'plain' or 'native'. */
-    if (!value) {return}
+    if (!value) {
+        return;
+    }
     if (value['type'] == 'plain') {
-        return value['title']
+        return value['title'];
     } else if (value['type'] == 'native') {
-        return linkFormatter(value, row, index)
+        return linkFormatter(value, row, index);
     } else {
-        console.log("ERROR: The following object could not be formatted by a userLogger:", value)
-        return "Invalid format"
+        console.log("ERROR: The following object could not be formatted by a userLogger:", value);
+        return "Invalid format";
     }
 }
 
 function btnFormatter(value, row, index) {
-    if (!value) {return}
+    if (!value) {
+        return;
+    }
     if (value['icon']) {
         if (value['icon'] instanceof Array) {
             return multiGlyphBtnTemplate({
@@ -95,7 +103,7 @@ function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicons': value['icon'],
                 'tooltip': value['tooltip']
-            })
+            });
         } else {
             return glyphBtnTemplate({
                 'href': value['href'],
@@ -103,7 +111,7 @@ function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicon': value['icon'],
                 'tooltip': value['tooltip']
-            })
+            });
         }
     } else {
         return btnTemplate({
@@ -111,22 +119,26 @@ function btnFormatter(value, row, index) {
             'title': value['title'],
             'btn_class': value['btn_class'],
             'tooltip': value['tooltip']
-        })
+        });
     }
 
 }
 
 function multiBtnFormatter(value, row, index) {
-    if (!value) {return}
+    if (!value) {
+        return;
+    }
     var ret = '';
     for (var i = 0; i < value.length; i++) {
-        ret += btnFormatter(value[i], row, index)
+        ret += btnFormatter(value[i], row, index);
     }
-    return ret
+    return ret;
 }
 
 function listFormatter(value, row, index) {
-    if (!value) {return}
+    if (!value) {
+        return;
+    }
     var ret = '<ul>';
     for (var i = 0; i < value.length; i++) {
         if (value[i].length == 0) {
@@ -136,13 +148,13 @@ function listFormatter(value, row, index) {
             // Else: Make first element strong
             ret += '<li><strong>' + value[i][0] + ': </strong>';
             for (var j = 1; j < value[i].length; j++) {
-                ret += '<span>' + value[i][j] + '</span>'
+                ret += '<span>' + value[i][j] + '</span>';
             }
             ret += '</span></li>';
         }
     }
     ret += '</ul>';
-    return ret
+    return ret;
 }
 
 function financeRowFormatter(row, index) {

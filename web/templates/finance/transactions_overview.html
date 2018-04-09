@@ -139,7 +139,7 @@
           .xAxis().tickValues([]);
 
       var accountType = ndx.dimension(function(d){ return d.type; });
-      var accountTypeGroup = accountType.group()
+      var accountTypeGroup = accountType.group();
 
       typeChart
           .height(300)
@@ -250,7 +250,7 @@
             var href = "/finance/transactions/"+d.id;
             // if building template is too slow, jquery may be executed
             // before document is generated :(
-            var desc = "Link"
+            var desc = "Link";
             if (!(d.id in descCache)) {
                 if (!descReq.has(d.id)) {
                   descReq.add(d.id);

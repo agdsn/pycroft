@@ -21,7 +21,7 @@
     var TodayButton = function (element, options) {
         this.element = $(element);
         this.target = $("#" + this.element.data("target"));
-        this.datepicker = this.target.data("datepicker")
+        this.datepicker = this.target.data("datepicker");
         this.dateFormat = this.datepicker.format;
 
         this.element.on('click', $.proxy(this.click, this));
@@ -33,7 +33,7 @@
         click:function (ev) {
             ev.preventDefault();
             this.target.val(this.formatDate(new Date()));
-            this.datepicker.update()
+            this.datepicker.update();
         },
 
         formatDate:function (date) {
