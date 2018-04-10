@@ -40,7 +40,7 @@ $.fn.fixedHeader = function (options) {
   // hack sad times - holdover until rewrite for 2.1
   $head.on('click', function () {
     if (!isFixed) setTimeout(function () {  $win.scrollTop($win.scrollTop() - 47) }, 10);
-  })
+  });
 
   $head.clone(true).removeClass('header').addClass('header-copy header-fixed').css({'position': 'fixed', 'top': config['topOffset']}).appendTo(o);
   o.find('thead.header-copy').width($head.width());
