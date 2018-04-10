@@ -164,8 +164,8 @@
       var dateAccessor = function (d){return d.dd;};
       dateExtent = [];
       dateExtent = d3.extent(data, dateAccessor);
-      if (!(dateMin === null)) {dateExtent[0] = dateMin;};
-      if (!(dateMax === null)) {dateExtent[1] = dateMax;};
+      if (!(dateMin === null)) {dateExtent[0] = dateMin;}
+      if (!(dateMax === null)) {dateExtent[1] = dateMax;}
 
 
       var monthGroup = monthDimension.group().reduceCount();
