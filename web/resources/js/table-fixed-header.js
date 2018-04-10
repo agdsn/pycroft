@@ -55,3 +55,7 @@ $.fn.fixedHeader = function (options) {
   processScroll();
  });
 };
+
+$(function() {
+  $('.table-fixed-header').fixedHeader();
+});
