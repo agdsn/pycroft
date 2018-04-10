@@ -29,10 +29,6 @@
     var form = $('.form-basic');
     var results = $('#results');
 
-    form.find('input').keyup(function(){refreshTable();});
-    form.find('select').change(function(){refreshTable();});
-    $(document).ready(function(){refreshTable();});
-
     inputMacMask($('#mac'));
 
     function refreshTable() {
@@ -44,5 +40,9 @@
 
         results.bootstrapTable('refresh', {query: params})
     }
+
+    form.find('input').keyup(refreshTable);
+    form.find('select').change(refreshTable);
+    $(document).ready(refreshTable);
 </script>
 {% endblock %}
