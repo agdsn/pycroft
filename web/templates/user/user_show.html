@@ -79,9 +79,7 @@
 {% block page_script %}
     {{ resources.link_script_file("js/navigation.js") }}
     <script type="text/javascript">
-        $(".subnav").subNavBar();
-    </script>
-    <script>
+      $(".subnav").subNavBar();
       $('body').scrollspy({ target: '.subnav' })
     </script>
 {% endblock %}
