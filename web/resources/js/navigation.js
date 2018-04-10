@@ -77,4 +77,6 @@
         }, 500);
     }
 
+    $(".subnav").subNavBar();
+    $('body').scrollspy({ target: '.subnav' })
 }(jQuery);
