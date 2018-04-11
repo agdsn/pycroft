@@ -3,15 +3,16 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen", show_cancel=true) -%}
+{% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen", show_cancel=true, show_submit=true) -%}
     <div class="form-actions">
-        <button type="submit" class="btn btn-default btn-primary">{{ submit_text }}</button>
+        {% if show_submit %}
+            <button type="submit" class="btn btn-default btn-primary">{{ submit_text }}</button>
+        {% endif %}
         {% if show_cancel %}
             <a href="{{ cancel_to }}" class="btn btn-default">{{ cancel_text }}</a>
         {% endif %}
     </div>
 {%- endmacro %}
-
 
 {% macro bootstrap_simple_field(field) -%}
     <div class="form-group{% if field.errors %} has-error{% endif %}">
