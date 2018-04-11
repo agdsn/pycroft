@@ -83,6 +83,7 @@ class BootstrapStandardDecorator(WidgetDecorator):
 
     def render_basic(self, field, **kwargs):
         html = [field.label(),
+                '<br/>',
                 self.widget(field, **kwargs)]
         help_block = Markup(u'<span class="help-block">{0}</span>')
         if field.description:
