@@ -7,26 +7,30 @@
 {% import "macros/forms.html" as forms %}
 {% import "macros/table.html" as tbl %}
 {% set cols = [
-    {'name': 'id', 'title': 'ID'},
-    {'name': 'name', 'title': 'Name', 'formatter': 'linkFormatter'},
+    {'name': 'id', 'title': 'ID', 'formatter': 'userIdFormatter'},
+    {'name': 'name', 'title': 'Name'},
     {'name': 'login', 'title': 'Login'},
-    {'name': 'hosts', 'title': 'Hosts'},
 ] %}
 
 {% block content %}
     <div class="row">
-        {{ forms.simple_form(form, '', url_for(".overview"), method="GET") }}
+        <div class="col-xs-12">
+            {{ forms.advanced_form(form, '', url_for(".overview"), method="POST", show_cancel=false, show_submit=false, form_render_mode='basic', field_render_mode='basic', col_width='3') }}
+        </div>
     </div>
     <section>
         <h2>Ergebnisse</h2>
-        {{ tbl.item_table("results", url_for(".search_results"), cols) }}
+        {{ tbl.item_table("results", url_for(".json_search"), cols) }}
     </section>
 {% endblock %}
 
 {% block page_script %}
 <script type="application/javascript" language="javascript">
-    $('input').keyup(function(){updateTable();});
+    $('.form-basic').find('input').keyup(function(){updateTable();});
+    $('.form-basic').find('select').change(function(){updateTable();});
     $(document).ready(function(){updateTable();});
+
+    inputMacMask($('#mac'));
 
     function updateTable() {
         var url = createJsonUrl();
@@ -35,12 +39,12 @@
 
     function createJsonUrl() {
         var params = "";
-        var inputs = $('input.form-control');
+        var inputs = $('.form-basic').find('input,select');
         for(var i = 0; i < inputs.length; i++) {
             if(i>0) params += "&";
             params += inputs.eq(i).attr("name") + "=" + inputs.eq(i).val();
         }
-        return "{{ url_for(".search_results") }}?" + params
+        return "{{ url_for(".json_search") }}?" + params
     }
 </script>
 {% endblock %}

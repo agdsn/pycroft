@@ -10,6 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import re
 from itertools import chain
 from functools import partial
 
@@ -22,7 +23,9 @@ import uuid
 from sqlalchemy import Text, and_
 
 from pycroft import lib, config
+from pycroft.helpers import represents_int
 from pycroft.helpers.interval import closed, closedopen
+from pycroft.helpers.net import mac_regex
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
@@ -142,15 +145,119 @@ def static_datasheet(user_id):
 
 @bp.route('/json/search')
 def json_search():
-    query = request.args['query']
-    results = session.session.query(User.id, User.login, User.name).filter(or_(
-        func.lower(User.name).like(func.lower(u"%{0}%".format(query))),
-        func.lower(User.login).like(func.lower(u"%{0}%".format(query))),
-        cast(User.id, Text).like(u"{0}%".format(query))
-    )).all()
-    users = [{"id": user_id, "login": login, "name": name}
-             for user_id, login, name in results]
-    return jsonify(users=users)
+    user_id = request.args.get('id')
+    name = request.args.get('name')
+    login = request.args.get('login')
+    mac = request.args.get('mac')
+    ip_address = request.args.get('ip_address')
+    trafficgroup_id = request.args.get('trafficgroup_id')
+    propertygroup_id = request.args.get('propertygroup_id')
+    building_id = request.args.get('building_id')
+    query = request.args.get("query")
+    result = User.q
+
+    applied_filter = True
+
+    if user_id and represents_int(user_id):
+        applied_filter = True
+        result = result.filter(User.id == user_id)
+    if name:
+        applied_filter = True
+        result = result.filter(User.name.ilike("%{}%".format(name)))
+    if login:
+        applied_filter = True
+        result = result.filter(User.login.ilike("%{}%".format(login)))
+    if mac and re.match(mac_regex, mac):
+        applied_filter = True
+        interface = Interface.q.filter_by(mac=mac).first()
+
+        if interface is not None:
+            result = result.filter_by(id=interface.host.owner_id)
+        else:
+            result = result.filter_by(id=-1)
+    if ip_address:
+        applied_filter = True
+        ip = IP.q.filter_by(address=ip_address).first()
+
+        # result = result.filter(User.id.in_(User.q.join(Host).filter(
+        # Host.ips.has(IP.address.any_(IP.address == ip.address)))))
+
+        if ip is not None:
+            user_ids = list()
+
+            for host in ip.host:
+                user_ids.append(host.owner_id)
+
+            result = result.filter(User.id.in_(user_ids))
+        else:
+            result = result.filter_by(id=-1)
+    if trafficgroup_id and represents_int(trafficgroup_id):
+        applied_filter = True
+        memberships = Membership.q.join(TrafficGroup) \
+            .filter(TrafficGroup.id == trafficgroup_id) \
+            .filter(or_(
+            Membership.ends_at.is_(None),
+            Membership.ends_at > datetime.today()
+        )) \
+            .filter(or_(
+            Membership.begins_at.is_(None),
+            Membership.begins_at < datetime.today()
+        )) \
+            .all()
+
+        user_ids = list()
+
+        for membership in memberships:
+            user_ids.append(membership.user_id)
+
+        result = result.filter(User.id.in_(user_ids))
+    if propertygroup_id and represents_int(propertygroup_id):
+        applied_filter = True
+        memberships = Membership.q.join(PropertyGroup) \
+            .filter(PropertyGroup.id == propertygroup_id) \
+            .filter(or_(
+            Membership.ends_at.is_(None),
+            Membership.ends_at > datetime.today()
+        )) \
+            .filter(or_(
+            Membership.begins_at.is_(None),
+            Membership.begins_at < datetime.today()
+        )) \
+            .all()
+
+        user_ids = list()
+
+        for membership in memberships:
+            user_ids.append(membership.user_id)
+
+        result = result.filter(User.id.in_(user_ids))
+    if building_id and represents_int(building_id):
+        applied_filter = True
+
+        rooms = Room.q.filter_by(building_id=building_id)
+
+        room_ids = list()
+
+        for room in rooms:
+            room_ids.append(room.id)
+
+        result = result.filter(User.room_id.in_(room_ids))
+    if query:
+        applied_filter = True
+        result = result.filter(or_(
+            func.lower(User.name).like(
+                func.lower(u"%{0}%".format(query))),
+            func.lower(User.login).like(
+                func.lower(u"%{0}%".format(query))),
+            cast(User.id, Text).like(u"{0}%".format(query))
+        ))
+
+    return jsonify(items=[{
+        'id': found_user.id,
+        'name': found_user.name,
+        'login': found_user.login,
+        'room_id': found_user.room_id if found_user.room_id is not None else None
+    } for found_user in result.all()] if applied_filter else {})
 
 
 def infoflags(user):
@@ -602,45 +709,8 @@ def edit_email(user_id):
 @nav.navigate(u"Suchen")
 def search():
     form = UserSearchForm()
-    if form.validate_on_submit():
-        return render_template('user/user_search.html',
-                               page_title=u"Suchergebnis",
-                               form=form)
-    # apply args given in direct GET-link
-    if request.args.get('id'):
-        form.userid.data = request.args.get('id')
-    if request.args.get('name'):
-        form.name.data = request.args.get('name')
-    if request.args.get('login'):
-        form.login.data = request.args.get('login')
+
     return render_template('user/user_search.html', form=form)
-
-
-@bp.route('/search/results')
-def search_results():
-    user_id = request.args.get('userid')
-    name = request.args.get('name')
-    login = request.args.get('login')
-    result = User.q
-    if user_id:
-        result = result.filter(User.id == user_id)
-    if name:
-        result = result.filter(User.name.ilike("%{}%".format(name)))
-    if login:
-        result = result.filter(User.login.ilike("%{}%".format(login)))
-    return jsonify(items=[{
-            'id': found_user.id,
-            'name': {'title': found_user.name,
-                     'href': url_for(".user_show", user_id=found_user.id)},
-            'login': found_user.login,
-            'hosts': ", ".join("{} ({})".format(
-                host_cname_filter(user_host),
-                host_name_filter(user_host)
-            ) for user_host in found_user.hosts)
-        } for found_user in result.all()] if user_id or name or login else [])
-
-
-
 
 
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])

@@ -70,6 +70,11 @@ function linkFormatter(value, row, index) {
     return linkTemplate({'href': value['href'], 'title': value['title']})
 }
 
+function userIdFormatter(value, row, index) {
+    if (!value) {return}
+    return linkTemplate({'href': '/user/' + value, 'title': value})
+}
+
 function userFormatter(value, row, index) {
     /* Format an entry as a link or plain, depending on the value of
      * the 'type' field.  It can either be 'plain' or 'native'. */

@@ -56,9 +56,26 @@ def validate_unique_mac(form, field):
 
 
 class UserSearchForm(Form):
-    userid = TextField(u"NutzerID")
+    id = TextField(u"Nutzer-ID")
     name = TextField(u"Name")
     login = TextField(u"Unix-Login")
+    mac = TextField(u"MAC-Adresse")
+    ip_address = TextField(u"IP-Adresse")
+    trafficgroup_id = QuerySelectField(u"Trafficgruppe",
+                                get_label='name',
+                                query_factory=trafficgroup_query,
+                                allow_blank=True,
+                                blank_text=u"<Trafficgruppe>")
+    propertygroup_id = QuerySelectField(u"Eigenschaftsgruppe",
+                                get_label='name',
+                                query_factory=propertygroup_query,
+                                allow_blank=True,
+                                blank_text=u"<Eigenschaftsgruppe>")
+    building_id = QuerySelectField(u"Wohnheim",
+                                get_label='short_name',
+                                query_factory=building_query,
+                                allow_blank=True,
+                                blank_text=u"<Wohnheim>")
 
 
 class UserResetPasswordForm(Form):
