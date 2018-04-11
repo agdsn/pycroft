@@ -17,6 +17,11 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
   background-color: #0097cf !important;
 }
 
+.typeahead.dropdown-menu{
+    overflow-x: scroll;
+    right: auto;
+}
+
 .level a {
     width: 70%;
     margin: 0.5em;
@@ -255,4 +260,20 @@ input.money-amount {
     right: 5px;
     text-decoration: none;
     color: #000000;
+}
+
+@media(min-width: 768px){
+    .navbar-form .form-control {
+        display: inline-block;
+        width: 180px;
+        vertical-align: middle;
+    }
+}
+
+@media(max-width: 767px){
+    .navbar-form .form-control {
+        display: inline-block;
+        width: 70%;
+        vertical-align: middle;
+    }
 }

@@ -13,7 +13,6 @@
     {{ resources.link_css("libs/bootstrap/dist/css/bootstrap.min.css") }}
     {{ resources.link_css("libs/bootstrap-table/dist/bootstrap-table.min.css") }}
     {{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}
-    {{ resources.link_css("libs/typeahead.js-bootstrap3.less/typeahead.css") }}
     {{ resources.link_css("style.css") }}
     {% block page_css %}{% endblock %}
     <link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>
@@ -47,11 +46,12 @@
                     <ul class="nav navbar-nav navbar-right">
                         {% if current_user.is_authenticated %}
                             <li>
-                                <form class="navbar-form" method="get">
+                                <div class="navbar-form">
                                     <input type="text" class="typeahead form-control" id="nav_search" name="nav_search"
                                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                                            placeholder="Nutzer suchen…">
-                                </form>
+                                    <a href="{{ url_for("user.search") }}"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-zoom-in"></span></button></a>
+                                </div>
                             </li>
                             <li>
                                 <p class="navbar-text navbar-right">
@@ -127,6 +127,7 @@
 <script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap-table/dist/bootstrap-table.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap-table/dist/locale/bootstrap-table-de-DE.min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/typeahead.js/dist/typeahead.bundle.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="libs/bootstrap3-typeahead/bootstrap3-typeahead.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="libs/underscore/underscore-min.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/form.js") }}"></script>
 <script type="text/javascript" src="{{ url_for("static", filename="custom/js/table.js") }}"></script>
@@ -175,35 +176,40 @@
             name: 'users',
             datumTokenizer: (function() {
                 var t = Bloodhound.tokenizers.whitespace;
-                return function(r) { return t(r['name']).push(r['id'], r['login']); };
+                return function(r) {
+                    return t(r['name']).push(r['id'], r['login']);
+                };
             })(),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             remote: {
+                wildcard: '%QUERY',
                 url: '{{ url_for('user.json_search') }}?query=%QUERY',
                 ttl: 60,
-                filter: function(response) { return response.users; }
+                filter: function(response) { return response.items; }
             }
         });
         users.initialize();
+
         $('#nav_search').typeahead(
             {
                 hint: true,
                 highlight: true,
-                minLength: 1
-            },
-            {
+                minLength: 1,
                 name: 'users',
-                displayKey: function(record) {
-                    return record['name'] + ' (' + record['id'] + ', ' + record['login'] + ')';
+                displayText: function(item) {
+                    return item['name'] + ' (' + item['id'] + ', ' + item['login'] + ')';
                 },
                 source: users.ttAdapter(),
                 templates: {
-                    empty: 'Keine Ergebnisse'
-                }
+                    empty: '&nbsp;Keine Ergebnisse'
+                },
+                afterSelect: function(item){
+                    window.location = $SCRIPT_ROOT + "/user/" + item.id
+                },
+                selectOnBlur: false,
+                showHintOnFocus: true
             }
-        ).on('typeahead:selected', function(event, item, dataset) {
-            window.location = $SCRIPT_ROOT + "/user/" + item.id
-        });
+        );
     });
 </script>
 {{ resources.ready_scripts() }}
