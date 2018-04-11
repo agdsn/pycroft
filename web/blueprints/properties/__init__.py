@@ -193,3 +193,16 @@ def property_group_delete(group_id):
     message = u'Eigenschaftengruppe {0} gelöscht'
     flash(message.format(group.name), 'success')
     return redirect(url_for('.property_groups'))
+
+@bp.route('/json/trafficgroups')
+def json_trafficgroups():
+    groups = [(entry.id, entry.name) for entry in TrafficGroup.q.all()]
+
+    return jsonify(dict(items=groups))\
+
+@bp.route('/json/propertygroups')
+def json_propertygroups():
+    groups = [(entry.id, entry.name) for entry in PropertyGroup.q.all()]
+
+    return jsonify(dict(items=groups))
+

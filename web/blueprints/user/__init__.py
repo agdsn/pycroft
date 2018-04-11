@@ -640,17 +640,7 @@ def search_results():
         } for found_user in result.all()] if user_id or name or login else [])
 
 
-@bp.route('/json/groups')
-@access.require('groups_show')
-def json_groups():
-    groups = []
-    group_type = request.args.get("group_type", 0, type=str)
-    if group_type == 'traff':
-        groups = [(entry.id, entry.name) for entry in TrafficGroup.q.all()]
-    elif group_type == 'prop':
-        groups = [(entry.id, entry.name) for entry in PropertyGroup.q.all()]
 
-    return jsonify(dict(items=groups))
 
 
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])
