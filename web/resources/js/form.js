@@ -222,7 +222,7 @@ function pycroftIntervalPicker(IntervalField){
     }
 
     // Fill form with current values
-    data = $('#'+IntervalField).val().split(' ');
+    var data = $('#'+IntervalField).val().split(' ');
     $('#'+IntervalField+'PickerY').val(data[0]);
     $('#'+IntervalField+'PickerM').val(data[2]);
     $('#'+IntervalField+'PickerD').val(data[4]);
