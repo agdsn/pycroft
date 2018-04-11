@@ -653,49 +653,6 @@ def json_groups():
     return jsonify(dict(items=groups))
 
 
-@bp.route('/by_group', methods=['GET', 'POST'])
-@nav.navigate(u"Nach Gruppe")
-def show_by_group():
-    form = UserSelectGroupForm()
-
-    if form.validate_on_submit():
-        group_id = form.group.data
-        if form.group_type.data == 'traff':
-            return redirect(url_for(".list_users_by_traffic_group",
-                                    traffic_group_id=group_id))
-        elif form.group_type.data == 'prop':
-            return redirect(url_for(".list_users_by_property_group",
-                                    property_group_id=group_id))
-
-    return render_template('user/list_groups.html', groups_form=form)
-
-
-@bp.route('/by_group/property/<int:property_group_id>')
-def list_users_by_property_group(property_group_id):
-    property_group = PropertyGroup.q.get(property_group_id)
-    user_list = []
-    for entry in Membership.q.join(PropertyGroup).filter(
-                     PropertyGroup.id == property_group_id).all():
-        user_list.append(User.q.get(entry.user_id))
-
-    return render_template('user/user_show_by_group.html',
-                           group_name=property_group.name,
-                           users=user_list)
-
-
-@bp.route('/by_group/traffic/<int:traffic_group_id>')
-def list_users_by_traffic_group(traffic_group_id):
-    traffic_group = TrafficGroup.q.get(traffic_group_id)
-    user_list = []
-    for entry in Membership.q.join(PropertyGroup).filter(
-                     PropertyGroup.id == traffic_group_id).all():
-        user_list.append(User.q.get(entry.user_id))
-
-    return render_template('user/user_show_by_group.html',
-                           group_name=traffic_group.name,
-                           users=user_list)
-
-
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])
 @access.require('user_change')
 def reset_password(user_id):
