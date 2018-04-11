@@ -77,4 +77,10 @@
     $.fn.subNavBar.defaults = {fix_class:'subnav-fixed'};
     $.fn.subNavBar.Constructor = SubNavBar;
 
+    function scrollToTop(){
+        $('body,html').animate({
+            scrollTop:0
+        }, 500);
+    }
+
 }(window.jQuery);
