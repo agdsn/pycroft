@@ -81,9 +81,9 @@ function userFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    if (value['type'] == 'plain') {
+    if (value['type'] === 'plain') {
         return value['title'];
-    } else if (value['type'] == 'native') {
+    } else if (value['type'] === 'native') {
         return linkFormatter(value, row, index);
     } else {
         console.log("ERROR: The following object could not be formatted by a userLogger:", value);
@@ -141,7 +141,7 @@ function listFormatter(value, row, index) {
     }
     var ret = '<ul>';
     for (var i = 0; i < value.length; i++) {
-        if (value[i].length == 0) {
+        if (value[i].length === 0) {
             // If no list: put out the content
             ret += '<li>' + value[i] + '</li>';
         } else {

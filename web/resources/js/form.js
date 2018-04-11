@@ -55,7 +55,7 @@
 
     $.fn.todayButton = function (options) {
         return this.each(function () {
-            if (undefined == $(this).data('todayButton')) {
+            if (undefined === $(this).data('todayButton')) {
                 var plugin = new TodayButton(this, options);
                 $(this).data('todayButton', plugin);
             }
@@ -98,9 +98,9 @@ $(function(){
         this.dataUrl = this.element.data("url");
 
         var field_ids = [];
-        if (undefined != this.element.data("fieldids"))
+        if (undefined !== this.element.data("fieldids"))
             field_ids = field_ids.concat(this.element.data("fieldids").split(","));
-        if (undefined != this.options.field_ids)
+        if (undefined !== this.options.field_ids)
             field_ids = field_ids.concat(this.options.field_ids);
 
         for(var i = 0; i < field_ids.length; i++) {
@@ -139,7 +139,7 @@ $(function(){
             var items = data[this.itemAttr];
             this.element.find("option").remove();
             for (var i = 0; i < items.length; i++) {
-                if (typeof items[i] == 'object')
+                if (typeof items[i] === 'object')
                     this.element.append('<option value="' + items[i][0] + '">' + items[i][1] + '</option>');
                 else
                     this.element.append('<option value="' + items[i] + '">' + items[i] + '</option>');
@@ -160,7 +160,7 @@ $(function(){
         }
 
         var result = this.each(function () {
-            if (undefined == $(this).data('lazyLoadSelect')) {
+            if (undefined === $(this).data('lazyLoadSelect')) {
                 var plugin = new LazyLoadSelect(this, options);
                 $(this).data('lazyLoadSelect', plugin);
                 toPreload.push(plugin);

@@ -26,7 +26,7 @@ $.fn.fixedHeader = function (options) {
       var i, scrollTop = $win.scrollTop();
     }
     var t = $head.length && $head.offset().top - config.topOffset;
-    if (!isFixed && headTop != t) { headTop = t; }
+    if (!isFixed && headTop !== t) { headTop = t; }
     if (scrollTop >= headTop && !isFixed) {
       isFixed = 1;
     } else if (scrollTop <= headTop && isFixed) {

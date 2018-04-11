@@ -38,7 +38,7 @@ var binaryPrefix = {};
     }
 
     function d3_scale_linearTickRange_binary(domain, m) {
-        if (m == null) m = 10;
+        if (m === null) m = 10;
 
         var extent = d3_scaleExtent(domain),
             span = extent[1] - extent[0],
