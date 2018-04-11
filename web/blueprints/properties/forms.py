@@ -5,8 +5,19 @@
 
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import DataRequired, Regexp, NumberRange, ValidationError
+
+from pycroft.model.user import TrafficGroup, PropertyGroup
 from web.form.fields.core import TextField, IntegerField
 from web.form.fields.custom import IntervalField
+
+
+def trafficgroup_query():
+    return TrafficGroup.q.order_by(TrafficGroup.id)
+
+
+def propertygroup_query():
+    return PropertyGroup.q.order_by(PropertyGroup.id)
+
 
 class TrafficGroupForm(Form):
     name = TextField(u"Gruppenname", [
