@@ -18,12 +18,30 @@
 
         var mac = $('#mac');
         var annex = $('#annex');
+        var force = $('#force');
 
         inputMacMask(mac);
 
         if(!mac.parent().parent().hasClass('has-error') || mac.val().length != 17){
             annex.parent().parent().parent().hide();
             annex.prop('checked', false);
+        }
+
+
+        var found_star = false;
+
+        $('.help-block').each(function(){
+            if($(this).html().startsWith('*')){
+                found_star = true;
+                console.log("found star");
+            }
+        });
+
+        if(!found_star){
+            force.parent().parent().parent().hide();
+        }else{
+            force.parent().parent().parent().show();
+            force.prop('checked', false);
         }
     </script>
 {% endblock %}

@@ -3,6 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+from difflib import SequenceMatcher
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
@@ -11,10 +12,13 @@ from wtforms.validators import (
 from wtforms.widgets import HTMLString
 
 from pycroft.helpers.net import mac_regex
+from pycroft.model.facilities import Room
 from pycroft.model.finance import Semester
 from pycroft.model.host import Host, Interface
-from pycroft.model.user import PropertyGroup, User
+from pycroft.model.user import PropertyGroup, User, TrafficGroup
 from web.blueprints.facilities.forms import building_query
+from web.blueprints.properties.forms import trafficgroup_query, \
+    propertygroup_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
@@ -42,6 +46,37 @@ def validate_unique_login(form, field):
         raise ValidationError(u"Nutzerlogin schon vergeben!")
 
 
+def validate_unique_name(form, field):
+    if not form.force.data:
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data,
+                                building=form.building.data).one()
+
+        if room is not None:
+            users = User.q.filter_by(room_id=room.id).all()
+
+            for user in users:
+                ratio = SequenceMatcher(None, field.data, user.name).ratio()
+
+                if ratio > 0.6:
+                    raise ValidationError(
+                        HTMLString("* " + u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
+                                   "<br/>Nutzer: " +
+                                   "<a target=\"_blank\" href=\"" +
+                                   url_for("user.user_show", user_id=user.id) +
+                                   "\">" + user.name + "</a>"))
+
+
+def validate_unique_email(form, field):
+    user = User.q.filter_by(email=field.data).first()
+    if user is not None and not form.force.data:
+        raise ValidationError(
+            HTMLString("* " + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
+                       "<a target=\"_blank\" href=\"" +
+                       url_for("user.user_show", user_id=user.id) +
+                       "\">" + user.name + "</a>"))
+
+
 def validate_unique_mac(form, field):
     if re.match(mac_regex, field.data):
         interface_existing = Interface.q.filter_by(mac=field.data).first()
@@ -49,10 +84,11 @@ def validate_unique_mac(form, field):
         if interface_existing is not None and not form.annex.data:
             owner = interface_existing.host.owner
 
-            raise ValidationError(HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
-                                  "<a target=\"_blank\" href=\"" +
-                                  url_for("user.user_show", user_id=owner.id) +
-                                  "#hosts\">" + owner.name + "</a>"))
+            raise ValidationError(
+                HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
+                           "<a target=\"_blank\" href=\"" +
+                           url_for("user.user_show", user_id=owner.id) +
+                           "#hosts\">" + owner.name + "</a>"))
 
 
 class UserSearchForm(Form):
@@ -110,7 +146,8 @@ class UserMoveForm(Form):
                                       data_endpoint="facilities.json_rooms")
 
 
-class UserCreateForm(UserEditNameForm, UserMoveForm):
+class UserCreateForm(UserMoveForm):
+    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!"), validate_unique_name])
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
@@ -119,8 +156,9 @@ class UserCreateForm(UserEditNameForm, UserMoveForm):
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!"),
         validate_unique_mac])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
-                                  Optional()])
-    annex = BooleanField(u"Host Annketieren", [Optional()])
+                                  Optional(), validate_unique_email])
+    annex = BooleanField(u"Host annketieren", [Optional()])
+    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
 
 class UserMoveBackInForm(UserMoveForm):
