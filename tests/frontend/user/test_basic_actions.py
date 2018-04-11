@@ -22,9 +22,6 @@ class UserViewingPagesTestCase(UserFrontendTestBase):
     def test_user_search_access(self):
         self.assert200(self.client.get(url_for('user.search')))
 
-    def test_user_by_group_access(self):
-        self.assert200(self.client.get(url_for('user.show_by_group')))
-
 
 class UserBlockingTestCase(LegacyUserFrontendTestBase):
     def setUp(self):
