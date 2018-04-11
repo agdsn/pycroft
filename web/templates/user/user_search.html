@@ -41,8 +41,8 @@
         results.bootstrapTable('refresh', {query: params})
     }
 
-    form.find('input').keyup(refreshTable);
-    form.find('select').change(refreshTable);
+    form.find('input').keyup(_.debounce(refreshTable, 250));
+    form.find('select').change(_.debounce(refreshTable, 250));
     $(document).ready(refreshTable);
 </script>
 {% endblock %}
