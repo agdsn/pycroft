@@ -63,7 +63,7 @@
     };
 
     $.fn.todayButton.defaults = {};
-	$.fn.todayButton.Constructor = TodayButton;
+    $.fn.todayButton.Constructor = TodayButton;
 
 }(jQuery);
 
@@ -173,7 +173,7 @@ $(function(){
     };
 
     $.fn.lazyLoadSelect.defaults = {};
-	$.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
+    $.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
 
 }(jQuery);
 
