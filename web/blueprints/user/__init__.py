@@ -23,7 +23,6 @@ import uuid
 from sqlalchemy import Text, and_
 
 from pycroft import lib, config
-from pycroft.helpers import represents_int
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.finance import get_typed_splits
