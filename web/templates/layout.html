@@ -199,10 +199,8 @@
                 displayText: function(item) {
                     return item['name'] + ' (' + item['id'] + ', ' + item['login'] + ')';
                 },
+                matcher: function(item){ return true; },
                 source: users.ttAdapter(),
-                templates: {
-                    empty: '&nbsp;Keine Ergebnisse'
-                },
                 afterSelect: function(item){
                     window.location = $SCRIPT_ROOT + "/user/" + item.id
                 },
