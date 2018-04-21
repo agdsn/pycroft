@@ -11,11 +11,11 @@ from web.form.fields.core import TextField, IntegerField
 from web.form.fields.custom import IntervalField
 
 
-def trafficgroup_query():
+def traffic_group_query():
     return TrafficGroup.q.order_by(TrafficGroup.id)
 
 
-def propertygroup_query():
+def property_group_query():
     return PropertyGroup.q.order_by(PropertyGroup.id)
 
 

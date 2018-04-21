@@ -15,11 +15,3 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
-
-
-def represents_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False

@@ -25,7 +25,7 @@ from sqlalchemy import Text, and_
 from pycroft import lib, config
 from pycroft.helpers import represents_int
 from pycroft.helpers.interval import closed, closedopen
-from pycroft.helpers.net import mac_regex
+from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
@@ -150,114 +150,103 @@ def json_search():
     login = request.args.get('login')
     mac = request.args.get('mac')
     ip_address = request.args.get('ip_address')
-    trafficgroup_id = request.args.get('trafficgroup_id')
-    propertygroup_id = request.args.get('propertygroup_id')
+    traffic_group_id = request.args.get('traffic_group_id')
+    property_group_id = request.args.get('property_group_id')
     building_id = request.args.get('building_id')
     query = request.args.get("query")
     result = User.q
 
-    applied_filter = True
-
-    if user_id and represents_int(user_id):
-        applied_filter = True
-        result = result.filter(User.id == user_id)
+    if user_id is not None and user_id != "":
+        try:
+            result = result.filter(User.id == int(user_id))
+        except ValueError:
+            return abort(400)
     if name:
-        applied_filter = True
         result = result.filter(User.name.ilike("%{}%".format(name)))
     if login:
-        applied_filter = True
         result = result.filter(User.login.ilike("%{}%".format(login)))
-    if mac and re.match(mac_regex, mac):
-        applied_filter = True
-        interface = Interface.q.filter_by(mac=mac).first()
+    if mac:
+        if not re.match(mac_regex, mac):
+            return abort(400)
 
-        if interface is not None:
-            result = result.filter_by(id=interface.host.owner_id)
-        else:
-            result = result.filter_by(id=-1)
+        result = result.join(User.hosts)\
+                       .join(Host.interfaces)\
+                       .filter(Interface.mac == mac)
     if ip_address:
-        applied_filter = True
-        ip = IP.q.filter_by(address=ip_address).first()
+        if not re.match(ip_regex, ip_address):
+            return abort(400)
 
-        # result = result.filter(User.id.in_(User.q.join(Host).filter(
-        # Host.ips.has(IP.address.any_(IP.address == ip.address)))))
+        result = result.join(User.hosts) \
+                       .join(Host.ips) \
+                       .filter(IP.address == ip_address)
 
-        if ip is not None:
-            user_ids = list()
+    search_for_pg = property_group_id is not None and property_group_id != "" \
+        and property_group_id != "__None"
 
-            for host in ip.host:
-                user_ids.append(host.owner_id)
+    search_for_tg = traffic_group_id is not None and traffic_group_id != "" \
+        and traffic_group_id != "__None"
 
-            result = result.filter(User.id.in_(user_ids))
-        else:
-            result = result.filter_by(id=-1)
-    if trafficgroup_id and represents_int(trafficgroup_id):
-        applied_filter = True
-        memberships = Membership.q.join(TrafficGroup) \
-            .filter(TrafficGroup.id == trafficgroup_id) \
-            .filter(or_(
-            Membership.ends_at.is_(None),
-            Membership.ends_at > datetime.today()
-        )) \
-            .filter(or_(
-            Membership.begins_at.is_(None),
-            Membership.begins_at < datetime.today()
-        )) \
-            .all()
-
-        user_ids = list()
-
-        for membership in memberships:
-            user_ids.append(membership.user_id)
-
-        result = result.filter(User.id.in_(user_ids))
-    if propertygroup_id and represents_int(propertygroup_id):
-        applied_filter = True
-        memberships = Membership.q.join(PropertyGroup) \
-            .filter(PropertyGroup.id == propertygroup_id) \
-            .filter(or_(
-            Membership.ends_at.is_(None),
-            Membership.ends_at > datetime.today()
-        )) \
-            .filter(or_(
-            Membership.begins_at.is_(None),
-            Membership.begins_at < datetime.today()
-        )) \
-            .all()
-
-        user_ids = list()
-
-        for membership in memberships:
-            user_ids.append(membership.user_id)
-
-        result = result.filter(User.id.in_(user_ids))
-    if building_id and represents_int(building_id):
-        applied_filter = True
-
-        rooms = Room.q.filter_by(building_id=building_id)
-
-        room_ids = list()
-
-        for room in rooms:
-            room_ids.append(room.id)
-
-        result = result.filter(User.room_id.in_(room_ids))
-    if query:
-        applied_filter = True
+    if search_for_pg or search_for_tg:
+        result = result.join(Membership)
         result = result.filter(or_(
-            func.lower(User.name).like(
-                func.lower(u"%{0}%".format(query))),
-            func.lower(User.login).like(
-                func.lower(u"%{0}%".format(query))),
-            cast(User.id, Text).like(u"{0}%".format(query))
-        ))
+                            Membership.ends_at.is_(None),
+                            Membership.ends_at > datetime.today())) \
+                       .filter(or_(
+                            Membership.begins_at.is_(None),
+                            Membership.begins_at < datetime.today()))
+
+        try:
+            result_pg, result_tg = None, None
+
+            if search_for_pg:
+                pg_id = int(property_group_id)
+                result_pg = result.join(PropertyGroup, PropertyGroup.id == Membership.group_id) \
+                                  .filter(PropertyGroup.id == pg_id)
+                if not search_for_tg:
+                    result = result_pg
+            if search_for_tg:
+                tg_id = int(traffic_group_id)
+                result_tg = result.join(TrafficGroup, TrafficGroup.id == Membership.group_id) \
+                                  .filter(TrafficGroup.id == tg_id)
+                if not search_for_pg:
+                    result = result_tg
+
+            if search_for_pg and search_for_tg:
+                result = result_pg.intersect(result_tg)
+        except ValueError:
+            return abort(400)
+    if building_id is not None and building_id != "" and building_id != "__None":
+        try:
+            result = result.join(User.room) \
+                           .filter(Room.building_id == int(building_id))
+        except ValueError:
+            return abort(400)
+    if query:
+        query = query.strip()
+
+        if re.match(mac_regex, query):
+            result = result.join(User.hosts) \
+                           .join(Host.interfaces) \
+                           .filter(Interface.mac == query)
+        elif re.match(ip_regex, query):
+            result = result.join(User.hosts) \
+                           .join(Host.ips) \
+                           .filter(IP.address == query)
+        else:
+            result = result.filter(or_(
+                func.lower(User.name).like(
+                    func.lower(u"%{0}%".format(query))),
+                func.lower(User.login).like(
+                    func.lower(u"%{0}%".format(query))),
+                cast(User.id, Text).like(u"{0}%".format(query))
+            ))
 
     return jsonify(items=[{
         'id': found_user.id,
         'name': found_user.name,
         'login': found_user.login,
         'room_id': found_user.room_id if found_user.room_id is not None else None
-    } for found_user in result.all()] if applied_filter else {})
+    } for found_user in result.all()])
 
 
 def infoflags(user):
