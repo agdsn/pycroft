@@ -155,6 +155,8 @@ def json_search():
     query = request.args.get("query")
     result = User.q
 
+    count_no_filter = result.count()
+
     if user_id is not None and user_id != "":
         try:
             result = result.filter(User.id == int(user_id))
@@ -245,7 +247,7 @@ def json_search():
         'name': found_user.name,
         'login': found_user.login,
         'room_id': found_user.room_id if found_user.room_id is not None else None
-    } for found_user in result.all()])
+    } for found_user in (result.all() if result.count() < count_no_filter else [])])
 
 
 def infoflags(user):
