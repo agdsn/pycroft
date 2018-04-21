@@ -245,6 +245,10 @@ def json_search():
     return jsonify(items=[{
         'id': found_user.id,
         'name': found_user.name,
+        'url': {
+            'href': '/user/' + str(found_user.id),
+            'title': found_user.name
+        },
         'login': found_user.login,
         'room_id': found_user.room_id if found_user.room_id is not None else None
     } for found_user in (result.all() if result.count() < count_no_filter else [])])
