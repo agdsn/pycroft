@@ -26,25 +26,23 @@
 
 {% block page_script %}
 <script type="application/javascript" language="javascript">
-    $('.form-basic').find('input').keyup(function(){updateTable();});
-    $('.form-basic').find('select').change(function(){updateTable();});
-    $(document).ready(function(){updateTable();});
+    var form = $('.form-basic');
+    var results = $('#results');
+
+    form.find('input').keyup(function(){refreshTable();});
+    form.find('select').change(function(){refreshTable();});
+    $(document).ready(function(){refreshTable();});
 
     inputMacMask($('#mac'));
 
-    function updateTable() {
-        var url = createJsonUrl();
-        $('#results').bootstrapTable('refresh', {url: url});
-    }
+    function refreshTable() {
+        var params = {};
 
-    function createJsonUrl() {
-        var params = "";
-        var inputs = $('.form-basic').find('input,select');
-        for(var i = 0; i < inputs.length; i++) {
-            if(i>0) params += "&";
-            params += inputs.eq(i).attr("name") + "=" + inputs.eq(i).val();
-        }
-        return "{{ url_for(".json_search") }}?" + params
+        form.find('input,select').each(function(key, obj){
+            params[$(obj).attr("name")] = $(obj).val();
+        });
+
+        results.bootstrapTable('refresh', {query: params})
     }
 </script>
 {% endblock %}
