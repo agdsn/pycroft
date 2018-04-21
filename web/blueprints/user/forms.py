@@ -17,8 +17,8 @@ from pycroft.model.finance import Semester
 from pycroft.model.host import Host, Interface
 from pycroft.model.user import PropertyGroup, User, TrafficGroup
 from web.blueprints.facilities.forms import building_query
-from web.blueprints.properties.forms import trafficgroup_query, \
-    propertygroup_query
+from web.blueprints.properties.forms import traffic_group_query, \
+    property_group_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
@@ -60,21 +60,21 @@ def validate_unique_name(form, field):
 
                 if ratio > 0.6:
                     raise ValidationError(
-                        HTMLString("* " + u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
+                        HTMLString("<div class=\"optional-error\">* " + u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
                                    "<br/>Nutzer: " +
                                    "<a target=\"_blank\" href=\"" +
                                    url_for("user.user_show", user_id=user.id) +
-                                   "\">" + user.name + "</a>"))
+                                   "\">" + user.name + "</a></div>"))
 
 
 def validate_unique_email(form, field):
     user = User.q.filter_by(email=field.data).first()
     if user is not None and not form.force.data:
         raise ValidationError(
-            HTMLString("* " + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
+            HTMLString("<div class=\"optional-error\">* " + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
                        "<a target=\"_blank\" href=\"" +
                        url_for("user.user_show", user_id=user.id) +
-                       "\">" + user.name + "</a>"))
+                       "\">" + user.name + "</a></div>"))
 
 
 def validate_unique_mac(form, field):

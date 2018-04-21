@@ -38,7 +38,8 @@ class BootstrapFormGroupDecorator(WidgetDecorator):
         if field.errors:
             classes.append(u'has-error')
         return HTMLString(u''.join([
-            Markup(u'<div class="{0}">').format(u' '.join(classes)),
+            Markup(u'<div class="{0}" id="form-group-' + field.name + '">')
+            .format(u' '.join(classes)),
             self.widget(field, **kwargs),
             u'</div>']))
 

@@ -16,32 +16,26 @@
     <script type="text/javascript">
         $('[data-role=lazyloadselect]').lazyLoadSelect();
 
+        var form_group_mac = $('#form-group-mac');
         var mac = $('#mac');
+
+        var form_group_annex = $('#form-group-annex');
         var annex = $('#annex');
+
+        var form_group_force = $('#form-group-force');
         var force = $('#force');
 
         inputMacMask(mac);
 
-        if(!mac.parent().parent().hasClass('has-error') || mac.val().length != 17){
-            annex.parent().parent().parent().hide();
-            annex.prop('checked', false);
+        force.prop('checked', false);
+        annex.prop('checked', false);
+
+        if(!form_group_mac.hasClass('has-error') || mac.val().length != 17){
+            form_group_annex.hide();
         }
 
-
-        var found_star = false;
-
-        $('.help-block').each(function(){
-            if($(this).html().startsWith('*')){
-                found_star = true;
-                console.log("found star");
-            }
-        });
-
-        if(!found_star){
-            force.parent().parent().parent().hide();
-        }else{
-            force.parent().parent().parent().show();
-            force.prop('checked', false);
+        if(!$('.help-block').find('.optional-error').length){
+            form_group_force.hide();
         }
     </script>
 {% endblock %}
