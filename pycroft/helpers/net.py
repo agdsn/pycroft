@@ -73,6 +73,8 @@ mac_regex = re.compile(r"""
                SEP2_PATTERN=SEP2_PATTERN, SEP3_PATTERN=SEP3_PATTERN),
     re.VERBOSE | re.IGNORECASE)
 
+ip_regex = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+
 
 def sort_ports(ports):
     number_re = re.compile(r"[0-9]+")
