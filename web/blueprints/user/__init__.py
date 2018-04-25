@@ -201,7 +201,7 @@ def user_show(user_id):
     except NoTrafficGroup:
         traffic_group_name = None
     try:
-        if flask_session['user_sheet'] is not None:
+        if flask_session['user_sheet'] and lib.user.get_user_sheet(flask_session['user_sheet']):
             flash(Markup(u'Es ist ein <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(
                 url_for('.user_sheet'))
             ))
