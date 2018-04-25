@@ -200,6 +200,13 @@ def user_show(user_id):
         traffic_group_name = effective_traffic_group(user).name
     except NoTrafficGroup:
         traffic_group_name = None
+    try:
+        if flask_session['user_sheet'] is not None:
+            flash(Markup(u'Es ist ein <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(
+                url_for('.user_sheet'))
+            ))
+    except KeyError:
+        pass
 
     return render_template(
         'user/user_show.html',
@@ -700,9 +707,7 @@ def reset_password(user_id):
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup(u'Passwort erfolgreich zurückgesetzt.'
-                     ' <a href="{}">Nutzerdatenblatt</a> verfügbar!'
-                     .format(url_for('.user_sheet'))),
+        flash(Markup(u'Passwort erfolgreich zurückgesetzt.'),
               'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
