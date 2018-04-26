@@ -12,9 +12,17 @@ from reportlab.lib.styles import StyleSheet1, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table
 from reportlab.platypus.flowables import HRFlowable
+from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.rl_config import defaultPageSize
+from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT
 
 ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
+ASSETS_EMAIL_FILENAME = join(ASSETS_DIRECTORY, 'email.png')
+ASSETS_FACEBOOK_FILENAME = join(ASSETS_DIRECTORY, 'facebook.png')
+ASSETS_TWITTER_FILENAME = join(ASSETS_DIRECTORY, 'twitter.png')
+ASSETS_WEB_FILENAME = join(ASSETS_DIRECTORY, 'web.png')
+ASSETS_HOUSE_FILENAME = join(ASSETS_DIRECTORY, 'house.png')
 
 
 def generate_user_sheet(user, user_id, plain_password):
@@ -31,10 +39,22 @@ def generate_user_sheet(user, user_id, plain_password):
     pdf = SimpleDocTemplate(buf, pagesize=A4,
                             rightMargin=2 * cm,
                             leftMargin=2 * cm,
-                            topMargin=2 * cm,
+                            topMargin=0.5 * cm,
                             bottomMargin=2 * cm)
     style = getStyleSheet()
     story = []
+
+    PAGE_WIDTH = defaultPageSize[0]
+    PAGE_HEIGHT = defaultPageSize[1]
+
+    story.append(
+        Paragraph('{dorm}<br/>{name}<br/>{level}/{room}'.format(
+            dorm=str(user.room.building.short_name),
+            name=user.name,
+            level=str(user.room.level),
+            room=str(user.room.number)
+        ),
+                  style['RightText']))
 
     im = Image(ASSETS_LOGO_FILENAME, 5 * cm, 5 * cm)
     story.append(im)
@@ -86,6 +106,42 @@ def generate_user_sheet(user, user_id, plain_password):
     story.append(HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.8 * cm,
                             spaceAfter=0.8 * cm))
 
+    # Footer
+    im_web = Image(ASSETS_WEB_FILENAME, 0.5 * cm, 0.5 * cm)
+    im_house = Image(ASSETS_HOUSE_FILENAME, 0.5 * cm, 0.5 * cm)
+    im_email = Image(ASSETS_EMAIL_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
+    data = [
+        [im_web, 'Website:', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 46', im_house, 'Borsbergstr. 34'],
+        ['', 'https://agdsn.de', '', 'Doorbell 0100', '', 'Basement', '', '7th floor'],
+        ['', '', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
+        ['', '', '', '', '', '', '',''],
+        [im_email, 'support@agdsn.de', '', 'Office hours:', '', 'Office hours:', '', 'Office hours:'],
+        [im_fb, '/DresdnerStudentenNetz', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '', 'Mon, 8pm - 9pm'],
+        [im_t, '/ag_dsn', '', 'Thu, 7pm - 8pm', '', 'Thu, 7pm - 7.30pm', '', 'Thu, 8pm - 9pm']
+    ]
+
+    rowHeight = 0.4*cm
+    t = Table(data, colWidths=[0.5*cm, 3.5*cm, 0.5*cm, 3.5*cm, 0.5*cm, 3.5*cm, 0.5*cm, 3.5*cm],
+              rowHeights=[rowHeight, rowHeight, rowHeight, rowHeight, rowHeight, rowHeight, rowHeight],
+              hAlign='CENTER'
+    )
+    story.append(t)
+
+    story.append(
+        Paragraph('''<b>Interested in our work?</b>
+        In the podcast MultiCast you can hear about the latest developments and
+        our day-to-day work in the students network: https://podcast.agdsn.de/''',\
+                  style['JustifyText']))
+
+    story.append(Paragraph('''<b>Join us:</b>\nThe student network was created and is run by students like yourself. If you are interested in our work don’t 
+hesitate to visit us at our office. There are many ways of contribution to our cause without the need of being a 
+computer science engineer. Just to mention some possible of contributions: Administration and finances, network
+maintenance, software development and many more. Besides, you can add some extra extracurricular 
+activity to your CV and have the opportunity to see and work with usually hidden technology. We would be 
+happy to welcome you with us. Be our guest at our office hours.''', style['JustifyText']))
+
     # PDF generieren und speichern
     pdf.build(story)
 
@@ -104,6 +160,16 @@ def getStyleSheet():
     stylesheet.add(ParagraphStyle(name='BodyText',
                                   parent=stylesheet['Normal'],
                                   spaceBefore=14))
+
+    stylesheet.add(ParagraphStyle(name='RightText',
+                                  parent=stylesheet['Normal'],
+                                  alignment=TA_RIGHT,
+                                  spaceBefore=14))
+
+    stylesheet.add(ParagraphStyle(name='JustifyText',
+                                 parent=stylesheet['Normal'],
+                                 alignment=TA_JUSTIFY,
+                                 spaceBefore=14))
 
     stylesheet.add(ParagraphStyle(name='Bold',
                                   parent=stylesheet['BodyText'],
