@@ -25,24 +25,5 @@
 {% endblock %}
 
 {% block page_script %}
-<script type="text/javascript">
-    var form = $('.form-basic');
-    var results = $('#results');
-
-    inputMacMask($('#mac'));
-
-    function refreshTable() {
-        var params = {};
-
-        form.find('input,select').each(function(key, obj){
-            params[$(obj).attr("name")] = $(obj).val();
-        });
-
-        results.bootstrapTable('refresh', {query: params})
-    }
-
-    form.find('input').keyup(_.debounce(refreshTable, 250));
-    form.find('select').change(_.debounce(refreshTable, 250));
-    $(document).ready(refreshTable);
-</script>
+    {{ resources.link_script_file("js/advanced-search.js") }}
 {% endblock %}

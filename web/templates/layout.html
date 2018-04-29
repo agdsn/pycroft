@@ -124,84 +124,8 @@
 </script>
 {{ resources.link_script_file("js/form.js") }}
 {{ resources.link_script_file("js/table.js") }}
-<script type="text/javascript">
-    $(function() {
-        var isFixed = 0,
-            $window = $(window),
-            $subnav = $(".subnav");
-
-        function place_alerts() {
-            var $messages = $(".flash-messages");
-            if (!$messages.length)
-                return;
-            var offset = $messages.offset().top,
-                    top = $window.scrollTop();
-
-            if (isFixed) {
-                if (top < 2) {
-                    $messages.removeClass("flash-messages-fixed");
-                    $messages.css("margin-top", 0);
-                    isFixed = 0;
-                }
-                if ($subnav.length) {
-                    var padding = 28;
-                    if (top < 60) {
-                        padding = (top / 2) - 2;
-                    }
-                    $messages.css("margin-top", padding);
-                }
-            } else {
-                if (top >= 2) {
-                    var width = $messages.width();
-                    $messages.addClass("flash-messages-fixed");
-                    $messages.css("width", width);
-                    isFixed = 1;
-
-                    // reemit event as workaround to get proper subnav offset calc
-                    $window.trigger("scroll");
-                }
-            }
-        }
-
-        $(window).on("scroll", place_alerts);
-        var users = new Bloodhound({
-            name: 'users',
-            datumTokenizer: (function() {
-                var t = Bloodhound.tokenizers.whitespace;
-                return function(r) {
-                    return t(r['name']).push(r['id'], r['login']);
-                };
-            })(),
-            queryTokenizer: Bloodhound.tokenizers.whitespace,
-            remote: {
-                wildcard: '%QUERY',
-                url: '{{ url_for('user.json_search') }}?query=%QUERY',
-                ttl: 60,
-                filter: function(response) { return response.items; }
-            }
-        });
-        users.initialize();
-
-        $('#nav_search').typeahead(
-            {
-                hint: true,
-                highlight: true,
-                minLength: 1,
-                name: 'users',
-                displayText: function(item) {
-                    return item['name'] + ' (' + item['id'] + ', ' + item['login'] + ')';
-                },
-                matcher: function(item){ return true; },
-                source: users.ttAdapter(),
-                afterSelect: function(item){
-                    window.location = $SCRIPT_ROOT + "/user/" + item.id
-                },
-                selectOnBlur: false,
-                showHintOnFocus: true
-            }
-        );
-    });
-</script>
+{{ resources.link_script_file("js/alerts.js") }}
+{{ resources.link_script_file("js/quick-search.js") }}
 {{ resources.ready_scripts() }}
 {% block page_script %}{% endblock %}
 </body>

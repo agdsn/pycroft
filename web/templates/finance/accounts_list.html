@@ -5,6 +5,8 @@
 #}
 {% extends "layout.html" %}
 
+{% import "macros/resources.html" as resources %}
+
 {%  macro list_accounts(type, accounts) -%}
     <div class="col-sm-6 col-md-5 col-lg-4">
         <h3>{{ type }}</h3>
@@ -35,9 +37,5 @@
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript">
-        $(function () {
-            $('[data-toggle="tooltip"]').tooltip()
-        })
-    </script>
+    {{ resources.link_script_file('js/tooltip.js') }}
 {% endblock %}
