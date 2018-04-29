@@ -87,9 +87,9 @@ $(function(){
  * IntervalField is the id of the input-field representing the interval
  */
 function pycroftIntervalPicker(IntervalField){
-    if(!$('#'+IntervalField).next().is('.pycroftIntervalPicker')){
+    if (!$('#' + IntervalField).next().is('.pycroft-interval-picker')) {
         // initial view of form --> create
-        $('#'+IntervalField).after("<div id=\""+IntervalField+"Picker\" class=\"pycroftIntervalPicker\">" +
+        $('#' + IntervalField).after("<div id=\"" + IntervalField + "Picker\" class=\"pycroft-interval-picker\">" +
             '<a id="'+IntervalField+'CloseBtn" href="javascript:void(0)" class="closeBtn">X</a>' +
             '<input id="'+IntervalField+'PickerY" type="number" min="0" value="0"> Jahre ' +
             '<input id="'+IntervalField+'PickerM" type="number" min="0" max="12" value="0"> Monate ' +

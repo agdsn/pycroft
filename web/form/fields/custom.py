@@ -129,7 +129,7 @@ class IntervalField(TextField):
         if self.data is None:
             self.data = default_interval_format(self.expected_units)
         return super(IntervalField, self).__call__(
-            class_='pycroftInterval',
+            class_='pycroft-interval-picker',
             autocomplete='off',
             onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
         )
