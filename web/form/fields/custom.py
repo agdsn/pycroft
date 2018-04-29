@@ -130,8 +130,8 @@ class IntervalField(TextField):
             self.data = default_interval_format(self.expected_units)
         return super(IntervalField, self).__call__(
             class_='pycroftInterval',
-             autocomplete='off',
-             onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
+            autocomplete='off',
+            onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
         )
 
     def pre_validate(self, form):
