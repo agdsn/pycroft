@@ -14,7 +14,5 @@
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript">
-        $('[data-role=lazy-load-select]').lazyLoadSelect()
-    </script>
+    {{ resources.link_script_file('js/lazy-load-select.js') }}
 {% endblock %}

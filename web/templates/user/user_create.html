@@ -8,14 +8,15 @@
 {% set page_title = "Neuer Nutzer" %}
 
 {% import "macros/forms.html" as forms %}
+{% import "macros/resources.html" as resources %}
+
 {% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('facilities.overview')  ) }}
 {% endblock %}
 
 {% block page_script %}
+    {{ resources.link_script_file('js/lazy-load-select.js') }}
     <script type="text/javascript">
-        $('[data-role=lazy-load-select]').lazyLoadSelect();
-
         var form_group_mac = $('#form-group-mac');
         var mac = $('#mac');
 

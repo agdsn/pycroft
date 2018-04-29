@@ -14,8 +14,6 @@
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript">
-        $('[data-role=lazyloadselect]').lazyLoadSelect()
-        inputMacMask($('#mac'));
-    </script>
+    {{ resources.link_script_file('js/lazy-load-select.js') }}
+    inputMacMask($('#mac'));
 {% endblock %}
