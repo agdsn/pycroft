@@ -274,7 +274,7 @@ class LazyLoadSelectWidget(wtforms.widgets.Select):
         conditions = getattr(field, "conditions", None)
         if conditions is not None:
             kwargs["data-fieldids"] = ",".join(conditions)
-        kwargs['data-role'] = u'lazyloadselect'
+        kwargs['data-role'] = u'lazy-load-select'
         kwargs['data-url'] = url_for(field.data_endpoint)
         kwargs['value'] = str(field.data)
 

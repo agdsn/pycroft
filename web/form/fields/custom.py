@@ -54,7 +54,7 @@ class LazyLoadSelectField(fields.SelectField):
     automatically. You need only the form.js and the initializing js code:
         {{ resources.link_script_file('js/form.js') }}
         <script type="text/javascript">
-            $('[data-role=lazyloadselect]').lazyLoadSelect()
+            $('[data-role=lazy-load-select]').lazyLoadSelect()
         </script>
 
     :param conditions: The names of the fields this one depends on as a List.

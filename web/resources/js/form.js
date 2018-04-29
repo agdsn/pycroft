@@ -174,7 +174,6 @@ $(function(){
 
     $.fn.lazyLoadSelect.defaults = {};
     $.fn.lazyLoadSelect.Constructor = LazyLoadSelect;
-
 }(jQuery);
 
 /**
