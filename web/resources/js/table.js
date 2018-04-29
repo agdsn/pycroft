@@ -4,10 +4,6 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-function responseHandler(response) {
-    return response.items;
-}
-
 var linkTemplate = _.template(
     '<a href="<%= href %>"><%= title %></a>'
 );
@@ -167,4 +163,13 @@ function financeRowFormatter(row, index) {
 
 $('table').on('load-error.bs.table', function (e, status, res) {
     $("tr.no-records-found > td", this).html("Error: Server returned HTTP " + status + ".");
+});
+
+$.extend($.fn.bootstrapTable.defaults, {
+    responseHandler: response => response.items,
+    classes: "table table-striped",
+    pageSize: 20,
+    cache: false,
+    search: true,
+    pagination: true,
 });

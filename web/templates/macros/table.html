@@ -26,16 +26,11 @@
             {{ caller() }}
         {% endif %}
     </div>
-    <table id="{{ table_id }}" class="table table-striped"
-           data-page-size=20
+    <table id="{{ table_id }}"
            data-toggle="table"
-           data-cache="false"
            {% if data_url %}data-url="{{ data_url }}"{% endif %}
-           data-response-handler="responseHandler"
-           data-search="true"
            data-sort-order="{{ sort_order }}"
            {% if server_pagination %}data-side-pagination="server"{% endif %}
-           data-pagination="true"
            {% if row_style %}data-row-style="{{ row_style }}"{% endif %}
            {% if query_params %}data-query-params="{{ query_params }}"{% endif %}
            data-toolbar="#{{ table_id }}-toolbar">

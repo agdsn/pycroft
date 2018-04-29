@@ -108,14 +108,8 @@ class BootstrapTable:
     def _init_table_args(self):
         """Set the defaults of :py:attr:`table_args`"""
         default_args = {
-            'class': "table table-striped",
-            'data-page-size': 20,
             'data-toggle': "table",
-            'data-cache': "false",
             'data-url': self.data_url,
-            'data-response-handler': "responseHandler",
-            'data-search': "true",
-            'data-pagination': "true",
         }
         for key, val in default_args.items():
             self.table_args.setdefault(key, val)
