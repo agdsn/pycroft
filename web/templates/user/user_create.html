@@ -27,7 +27,7 @@
 
         inputMacMask(mac);
 
-        if(!form_group_mac.hasClass('has-error') || mac.val().length != 17 && !annex.prop('checked')){
+        if(!form_group_mac.hasClass('has-error') || mac.val().length !== 17 && !annex.prop('checked')){
             form_group_annex.hide();
             annex.prop('checked', false);
         }
