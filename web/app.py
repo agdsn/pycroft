@@ -1,5 +1,6 @@
 import os
 
+import jinja2.ext
 from flask import Flask, redirect, url_for, request, flash, render_template, current_app
 from flask_login import current_user
 from flask_babel import Babel
@@ -23,6 +24,12 @@ class PycroftFlask(Flask):
     """
     jinja_options = ImmutableDict(
         Flask.jinja_options,
+        extensions=[
+            jinja2.ext.autoescape,
+            jinja2.ext.do,
+            jinja2.ext.loopcontrols,
+            jinja2.ext.with_,
+        ],
         undefined=StrictUndefined
     )
 
