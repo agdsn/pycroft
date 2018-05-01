@@ -20,6 +20,14 @@ class PageResourceRegistry(object):
             ctx.page_resources = PageResources(OrderedDict(), list())
         return ctx.page_resources
 
+    @property
+    def script_files(self):
+        return self.page_resources.script_files
+
+    @property
+    def ready_scripts(self):
+        return self.page_resources.ready_scripts
+
     def link_script(self, url, mime_type="text/javascript"):
         """
         Link a script file using a URL.
@@ -27,7 +35,7 @@ class PageResourceRegistry(object):
         A particular URL will only be included once. Scripts are linked in the
         order they were first added.
         """
-        self.page_resources.script_files[url] = LinkedScript(url, mime_type)
+        self.script_files.setdefault(url, LinkedScript(url, mime_type))
 
     def append_ready_script(self, script):
         """
@@ -36,10 +44,10 @@ class PageResourceRegistry(object):
         The scripts will be wrapped in a closure to prevent name clashes between
         variables.
         """
-        self.page_resources.ready_scripts.append(script)
+        self.ready_scripts.append(script)
 
     def init_app(self, app):
-        app.context_processor(lambda: {"page_resources": self.page_resources})
+        app.context_processor(lambda: {"page_resources": self})
 
 
 page_resources = PageResourceRegistry()
