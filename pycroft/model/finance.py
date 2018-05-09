@@ -213,6 +213,7 @@ class BankAccount(IntegerIdModel):
     routing_number = Column(String(8), nullable=False)
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
+    fints_endpoint = Column(String, nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
                         unique=True)
     account = relationship(Account)

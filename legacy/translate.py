@@ -347,6 +347,7 @@ def generate_bank_account(data, resources):
         routing_number="85050300",
         iban="DE61850503003120219540",
         bic="OSDDDE81XXX",
+        fints_endpoint="https://banking-sn5.s-fints-pt-sn.de/fints30",
         account=an_d["Bankkonto"])
 
     resources['bank_account'] = bank_account
