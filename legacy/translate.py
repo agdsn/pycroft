@@ -348,6 +348,7 @@ def generate_bank_account(data, resources):
         iban="DE61850503003120219540",
         bic="OSDDDE81XXX",
         fints_endpoint="https://banking-sn5.s-fints-pt-sn.de/fints30",
+        last_import=None,
         account=an_d["Bankkonto"])
 
     resources['bank_account'] = bank_account

@@ -214,6 +214,8 @@ class BankAccount(IntegerIdModel):
     iban = Column(String(34), nullable=False)
     bic = Column(String(11), nullable=False)
     fints_endpoint = Column(String, nullable=False)
+    last_import = Column(Date, nullable=True) # date on which last finance-
+                                              # import was done
     account_id = Column(Integer, ForeignKey(Account.id), nullable=False,
                         unique=True)
     account = relationship(Account)
