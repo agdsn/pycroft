@@ -12,6 +12,7 @@ from web.form.fields.core import (
     FieldList, StringField, DateField, MoneyField)
 from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
+from pycroft.model.finance import BankAccount
 
 class SemesterCreateForm(Form):
     name = TextField(u"Semestername", validators=[DataRequired()])
@@ -73,6 +74,9 @@ class BankAccountCreateForm(Form):
     iban = TextField(u"IBAN")
     bic = TextField(u"BIC")
 
+    def validate_iban(self, field):
+        if BankAccount.q.filter_by(iban=field.data ).first() is not None:
+            raise ValidationError("Konto existiert bereits.")
 
 class BankAccountActivityEditForm(Form):
     account = TypeaheadField(u"Gegenkonto")

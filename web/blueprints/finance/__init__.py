@@ -154,7 +154,7 @@ def bank_accounts_create():
         )
         session.add(new_bank_account)
         session.commit()
-        return redirect(url_for('.bank_accounts'))
+        return redirect(url_for('.bank_accounts_list'))
 
     return render_template('finance/bank_accounts_create.html',
                            form=form, page_title=u"Bankkonto erstellen")
