@@ -10,7 +10,7 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from functools import partial
 from itertools import groupby, zip_longest, chain
 from io import StringIO
@@ -45,6 +45,9 @@ from web.blueprints.helpers.finance import build_transactions_query
 
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
+from fints.client import FinTS3PinTanClient
+from fints.dialog import FinTSDialogError
+from datetime import date
 
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])
@@ -123,18 +126,56 @@ def bank_accounts_activities_json():
 @nav.navigate(u"Bankkontobewegungen importieren")
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
+    form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
+    transactions = []
     if form.validate_on_submit():
+        # login with fints
+        bankaccount = BankAccount.q.get(form.account.data)
         try:
-            csv_data = StringIO(form.csv_file.data.read().decode('utf-8'))
-            finance.import_bank_account_activities_csv(csv_data, form.expected_balance.data)
-            session.commit()
-            flash(u"Der CSV-Import war erfolgreich!", "success")
-        except finance.CSVImportError as e:
-            session.rollback()
-            message = u"Der CSV-Import ist fehlgeschlagen: {0}"
-            flash(message.format(e), "error")
+            fints = FinTS3PinTanClient(
+                bankaccount.routing_number,
+                form.user.data,
+                form.pin.data,
+                bankaccount.fints_endpoint
+            )
 
-    return render_template('finance/bank_accounts_import.html', form=form)
+            acc = None
+            for account in fints.get_sepa_accounts():
+                if account.iban == bankaccount.iban:
+                    acc = account
+                    break
+            if acc is None:
+                raise KeyError('BankAccount with IBAN {} not found.'.format(
+                    bankaccount.iban)
+                )
+            statement = fints.get_statement(acc, bankaccount.last_updated_at.date(),
+                                        date.today())
+        except FinTSDialogError:
+            flash(u"Ungültige FinTS-Logindaten.", 'error')
+            statement = []
+        except KeyError:
+            flash(u'Das gewünschte Konto kann mit diesem Online-Banking-Zugang nicht erreicht werden.', 'error')
+            statement = []
+
+        for transaction in statement:
+            transactions.append(
+                BankAccountActivity(
+                    bank_account_id=bankaccount.id,
+                    amount=int(transaction.data['amount'].amount*100),
+                    reference=transaction.data['purpose'],
+                    original_reference=transaction.data['purpose'],
+                    other_account_number=transaction.data['applicant_iban'],
+                    other_routing_number=transaction.data['applicant_bin'],
+                    other_name=transaction.data['applicant_name'],
+                    imported_at=date.today(),
+                    posted_on=transaction.data['entry_date'],
+                    valid_on=transaction.data['date'],
+                )
+            )
+
+
+    return render_template('finance/bank_accounts_import.html', form=form,
+                           transactions=transactions)
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])
@@ -150,6 +191,7 @@ def bank_accounts_create():
             routing_number=form.routing_number.data,
             iban=form.iban.data,
             bic=form.bic.data,
+            fints_endpoint=form.fints.data,
             account=Account(name=form.name.data, type='BANK_ASSET'),
         )
         session.add(new_bank_account)

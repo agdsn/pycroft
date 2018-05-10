@@ -12,12 +12,15 @@ from sqlalchemy.schema import (
 from sqlalchemy.types import (
     Date, DateTime, Enum, Integer, Interval, String, Text)
 
+from datetime import datetime
+
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
 from pycroft.model.types import Money
 from .base import IntegerIdModel
 from .functions import utcnow
+
 
 manager = ddl.DDLManager()
 
@@ -226,7 +229,7 @@ class BankAccount(IntegerIdModel):
     @hybrid_property
     def last_updated_at(self):
         if not self.activities:
-            return None
+            return datetime(2018,1,1)
         else:
             return max(act.imported_at for act in self.activities)
 
