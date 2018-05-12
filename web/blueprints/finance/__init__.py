@@ -19,7 +19,7 @@ from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
 from flask_login import current_user
-from sqlalchemy import func, or_, Text, cast
+from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
@@ -78,7 +78,10 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'change_date': ''.format(bank_account.last_updated_at)
+            'change_date': '{}'.format(
+                bank_account.last_updated_at.date() if
+                  bank_account.last_updated_at is not None else 'nie'
+            )
         } for bank_account in BankAccount.q.all()])
 
 
@@ -127,7 +130,8 @@ def bank_accounts_activities_json():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
-    transactions = []
+    transactions = [] # new transactions which would be imported
+    old_transactions = [] # transactions which are already imported
     if form.validate_on_submit():
         # login with fints
         bankaccount = BankAccount.q.get(form.account.data)
@@ -148,34 +152,69 @@ def bank_accounts_import():
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
                     bankaccount.iban)
                 )
-            statement = fints.get_statement(acc, bankaccount.last_updated_at.date(),
-                                        date.today())
+            if bankaccount.last_updated_at is not None:
+                start_date = bankaccount.last_updated_at.date()
+            else:
+                start_date = date(2018,1,1)
+            statement = fints.get_statement(acc, start_date, date.today())
+            flash(
+                "Transaktionen vom {} bis {}.".format(start_date, date.today()))
         except FinTSDialogError:
             flash(u"Ungültige FinTS-Logindaten.", 'error')
             statement = []
         except KeyError:
-            flash(u'Das gewünschte Konto kann mit diesem Online-Banking-Zugang nicht erreicht werden.', 'error')
+            flash(u'Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
+                    nicht erreicht werden.', 'error')
             statement = []
 
+
         for transaction in statement:
-            transactions.append(
-                BankAccountActivity(
-                    bank_account_id=bankaccount.id,
-                    amount=int(transaction.data['amount'].amount*100),
-                    reference=transaction.data['purpose'],
-                    original_reference=transaction.data['purpose'],
-                    other_account_number=transaction.data['applicant_iban'],
-                    other_routing_number=transaction.data['applicant_bin'],
-                    other_name=transaction.data['applicant_name'],
-                    imported_at=date.today(),
-                    posted_on=transaction.data['entry_date'],
-                    valid_on=transaction.data['date'],
-                )
+            iban = transaction.data['applicant_iban'] if \
+                transaction.data['applicant_iban'] is not None else ''
+            bic = transaction.data['applicant_bin'] if \
+                transaction.data['applicant_bin'] is not None else ''
+            other_name = transaction.data['applicant_name'] if \
+                transaction.data['applicant_name'] is not None else ''
+            new_activity = BankAccountActivity(
+                bank_account_id=bankaccount.id,
+                amount=int(transaction.data['amount'].amount*100),
+                reference=transaction.data['purpose'],
+                original_reference=transaction.data['purpose'],
+                other_account_number=iban,
+                other_routing_number=bic,
+                other_name=other_name,
+                imported_at=datetime.now(),
+                posted_on=transaction.data['entry_date'],
+                valid_on=transaction.data['date'],
             )
+            if BankAccountActivity.q.filter(and_(
+                    BankAccountActivity.bank_account_id==
+                        new_activity.bank_account_id,
+                    BankAccountActivity.amount==new_activity.amount,
+                    BankAccountActivity.reference==new_activity.reference,
+                    BankAccountActivity.other_account_number==
+                        new_activity.other_account_number,
+                    BankAccountActivity.other_routing_number==
+                        new_activity.other_routing_number,
+                    BankAccountActivity.other_name==new_activity.other_name,
+                    BankAccountActivity.posted_on==new_activity.posted_on,
+                    BankAccountActivity.valid_on==new_activity.valid_on
+                )).first() is None:
+                transactions.append(new_activity)
+            else:
+                old_transactions.append(new_activity)
+        if form.do_import.data is True:
+            # save transactions to database
+            session.add_all(transactions)
+            session.commit()
+            flash(u'Bankkontobewegungen wurden importiert.')
+            return redirect(url_for(".accounts_show",
+                                    account_id=bankaccount.account_id))
 
 
     return render_template('finance/bank_accounts_import.html', form=form,
-                           transactions=transactions)
+                           transactions=transactions,
+                           old_transactions=old_transactions)
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])

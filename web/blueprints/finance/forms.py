@@ -8,7 +8,7 @@ from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional
 
 from web.form.fields.core import (
-    TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
+    TextField, IntegerField, HiddenField, BooleanField, SelectField, FormField,
     FieldList, StringField, DateField, MoneyField, PasswordField)
 from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
@@ -97,6 +97,7 @@ class BankAccountActivitiesImportForm(Form):
     account = SelectField(u"Bankkonto", coerce=int)
     user = StringField(u"Loginname", validators=[DataRequired()])
     pin = PasswordField(u"PIN", validators=[DataRequired()])
+    do_import = BooleanField(u"Import durchführen", default=False)
 
 
 class AccountCreateForm(Form):

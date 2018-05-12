@@ -12,8 +12,6 @@ from sqlalchemy.schema import (
 from sqlalchemy.types import (
     Date, DateTime, Enum, Integer, Interval, String, Text)
 
-from datetime import datetime
-
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
@@ -229,7 +227,7 @@ class BankAccount(IntegerIdModel):
     @hybrid_property
     def last_updated_at(self):
         if not self.activities:
-            return datetime(2018,1,1)
+            return None
         else:
             return max(act.imported_at for act in self.activities)
 
@@ -267,6 +265,7 @@ class BankAccountActivity(IntegerIdModel):
     split = relationship(Split, foreign_keys=(transaction_id, account_id),
                          backref=backref("bank_account_activity",
                                          uselist=False))
+
     __table_args = (
         ForeignKeyConstraint((transaction_id, account_id),
                              (Split.transaction_id, Split.account_id),
