@@ -11,7 +11,6 @@ from wtforms.validators import (
     Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
 
 from pycroft.helpers.net import mac_regex
-from pycroft.model.finance import Semester
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query
@@ -33,10 +32,6 @@ def host_query():
 
 def group_query():
     return PropertyGroup.q.order_by(PropertyGroup.name)
-
-
-def semester_query():
-    return Semester.q.order_by(Semester.name)
 
 
 def validate_unique_login(form, field):

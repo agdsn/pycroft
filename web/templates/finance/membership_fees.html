@@ -1,0 +1,69 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+{% import "macros/table.html" as tbl %}
+{% import "macros/forms.html" as forms %}
+
+{% set cols = [
+    {'name': 'name', 'title': 'Name'},
+    {'name': 'registration_fee', 'title': 'Anmeldung'},
+    {'name': 'regular_fee', 'title': 'Regulär'},
+    {'name': 'reduced_fee', 'title': 'Ermäßigt'},
+    {'name': 'late_fee', 'title': 'Versäumnis'},
+    {'name': 'payment_deadline', 'title': 'Frist'},
+    {'name': 'payment_deadline_final', 'title': 'Endg. Frist'},
+    {'name': 'begins_on', 'title': 'Beginn'},
+    {'name': 'ends_on', 'title': 'Ende'},
+    {'name': 'finance_link', 'title': 'Fin.Üb.', 'formatter': 'btnFormatter'},
+    {'name': 'edit_link', 'title': 'Bearb.', 'formatter': 'btnFormatter'},
+] %}
+
+{% block content %}
+
+    <b>Hinweise: </b>
+    <ul>
+        <li>Beiträge können bereits im Vorraus erstellt werden, werden jedoch frühestens
+            am Enddatum gebucht.</li>
+        <li>Änderungen an bereits gebuchten Beiträgen werden nicht rückwirkend
+            übernommen.</li>
+        <li>Das Buchen von Beiträgen kann einige Zeit in Anspruch nehmen.</li>
+    </ul>
+
+    <h2 class="page-header">Liste</h2>
+
+{% call tbl.item_table(
+    'semesters',
+    url_for('.membership_fees_json'),
+    cols
+) %}
+    {% if current_user is privileged_for('finance_change') -%}
+        <a class="btn btn-primary" href="{{ url_for('.membership_fee_create') }}">
+            <span class="glyphicon glyphicon-plus"></span>
+            Beitrag erstellen
+        </a>
+    {%- endif %}
+{% endcall %}
+
+    <h2 class="page-header">Buchen</h2>
+
+    <div class="row">
+        <div class="col-xs-12">
+            {{ forms.advanced_form(form, '', show_cancel=False, submit_text="Buchen", actions_offset=0, field_render_mode="basic", form_render_mode="basic") }}
+        </div>
+    </div>
+
+    <h2 class="page-header">Zahlungsrückstände behandeln</h2>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <a class="btn btn-primary" href="{{ url_for('.handle_payments_in_default') }}">
+                <span class="glyphicon glyphicon-time"></span>
+                Überprüfen
+            </a>
+        </div>
+    </div>
+
+{% endblock %}

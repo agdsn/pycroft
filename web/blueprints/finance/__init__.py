@@ -23,18 +23,21 @@ from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
+from pycroft import config
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
-from pycroft.lib.finance import get_typed_splits
+from pycroft.lib.finance import get_typed_splits, \
+    end_payment_in_default_memberships, LateFee, RegistrationFee, post_fees
 from pycroft.model.finance import (
-    Semester, BankAccount, BankAccountActivity, Split)
+    BankAccount, BankAccountActivity, Split, MembershipFee)
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
-    BankAccountActivitiesImportForm, SemesterCreateForm, TransactionCreateForm)
+    BankAccountActivitiesImportForm, TransactionCreateForm,
+    MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
@@ -235,6 +238,8 @@ def bank_account_activities_edit(activity_id):
                               if split.account_id == credit_account.id)
         session.add(activity)
         session.commit()
+
+        end_payment_in_default_memberships()
 
         return redirect(url_for('.bank_accounts_list'))
 
@@ -496,7 +501,11 @@ def transactions_create():
             splits=splits,
             valid_on=form.valid_on.data,
         )
+
+        end_payment_in_default_memberships()
+
         session.commit()
+
         return redirect(url_for('.transactions_show',
                                 transaction_id=transaction.id))
     return render_template(
@@ -520,80 +529,163 @@ def accounts_create():
                            page_title=u"Konto erstellen")
 
 
-@bp.route("/semesters")
-@nav.navigate(u"Semesterliste")
-def semesters_list():
-    return render_template('finance/semesters_list.html')
+@bp.route("/membership_fees", methods=['GET', 'POST'])
+@nav.navigate(u"Beiträge")
+def membership_fees():
+    form = FeeApplyForm()
+
+    if form.is_submitted():
+        if form.validate_on_submit():
+            users = User.q.filter(or_(User.has_property('membership_fee'),
+                                      User.has_property(
+                                          'reduced_membership_fee'))).all()
+
+            fees = []
+
+            if form.apply_registration_fee.data:
+                fees.append(finance.RegistrationFee(config.membership_fee_account))
+
+            if form.apply_membership_fee.data:
+                fees.append(finance.MembershipFee(config.membership_fee_account))
+
+            if form.apply_late_fee.data:
+                fees.append(finance.LateFee(config.membership_fee_account, date.today()))
+
+            new_posts = post_fees(users, fees, current_user)
+
+            session.commit()
+
+            flash("{} neue Buchungen erstellt.".format(new_posts), "success")
+
+            return redirect(url_for(".membership_fees"))
+
+    return render_template('finance/membership_fees.html', form=form)
 
 
-@bp.route("/semesters/json")
-def semesters_list_json():
+@bp.route("/membership_fees/json")
+def membership_fees_json():
     return jsonify(items=[
         {
-            'name': localized(semester.name),
-            'registration_fee': money_filter(semester.registration_fee),
-            'regular_semester_fee': money_filter(
-                semester.regular_semester_fee),
-            'reduced_semester_fee': money_filter(
-                semester.reduced_semester_fee),
-            'late_fee': money_filter(semester.late_fee),
-            'begins_on': date_filter(semester.begins_on),
-            'ends_on': date_filter(semester.ends_on),
+            'name': localized(membership_fee.name),
+            'registration_fee': money_filter(membership_fee.registration_fee),
+            'regular_fee': money_filter(
+                membership_fee.regular_fee),
+            'reduced_fee': money_filter(
+                membership_fee.reduced_fee),
+            'late_fee': money_filter(membership_fee.late_fee),
+            'payment_deadline': membership_fee.payment_deadline.days,
+            'payment_deadline_final': membership_fee.payment_deadline_final.days,
+            'begins_on': date_filter(membership_fee.begins_on),
+            'ends_on': date_filter(membership_fee.ends_on),
             'finance_link': {'href': url_for(".transactions_all",
                                         filter="all",
-                                        after=semester.begins_on,
-                                        before=semester.ends_on),
+                                        after=membership_fee.begins_on,
+                                        before=membership_fee.ends_on),
                             'title': 'Finanzübersicht',
                             'icon': 'glyphicon-euro'},
-        } for semester in Semester.q.order_by(Semester.begins_on.desc()).all()])
+            'edit_link': {'href': url_for(".membership_fee_edit",
+                                        fee_id=membership_fee.id),
+                            'title': 'Bearbeiten',
+                            'icon': 'glyphicon-edit'},
+        } for membership_fee in MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()])
 
 
-@bp.route('/semesters/create', methods=("GET", "POST"))
+@bp.route('/membership_fee/create', methods=("GET", "POST"))
 @access.require('finance_change')
-def semesters_create():
-    previous_semester = Semester.q.order_by(Semester.begins_on.desc()).first()
-    if previous_semester:
-        begins_on_default = previous_semester.ends_on + timedelta(1)
-        ends_on_default = previous_semester.begins_on.replace(
-            year=previous_semester.begins_on.year + 1
-        ) - timedelta(1)
-        if begins_on_default.year == ends_on_default.year:
-            name_default = u'Sommersemester ' + str(begins_on_default.year)
-        else:
-            name_default = (u'Wintersemester ' + str(begins_on_default.year) +
-                            u'/' + str(ends_on_default.year))
-        reduced_semester_fee_threshold = previous_semester.reduced_semester_fee_threshold.days
-        form = SemesterCreateForm(
+def membership_fee_create():
+    previous_fee = MembershipFee.q.order_by(MembershipFee.id.desc()).first()
+    if previous_fee:
+        begins_on_default = previous_fee.ends_on + timedelta(1)
+
+        next_month = begins_on_default.replace(day=28) + timedelta(4)
+        ends_on_default = begins_on_default.replace(
+            day=(next_month - timedelta(days=next_month.day)).day
+        )
+
+        name_default = u'Mitgliedsbeitrag ' + str(begins_on_default.year) \
+                       + "-" + "%02d" % begins_on_default.month
+
+        reduced_fee_threshold = previous_fee.reduced_fee_threshold.days
+        form = MembershipFeeCreateForm(
             name=name_default,
-            registration_fee=previous_semester.registration_fee,
-            regular_semester_fee=previous_semester.regular_semester_fee,
-            reduced_semester_fee=previous_semester.reduced_semester_fee,
-            late_fee=previous_semester.late_fee,
-            grace_period=previous_semester.grace_period.days,
-            reduced_semester_fee_threshold=reduced_semester_fee_threshold,
-            payment_deadline=previous_semester.payment_deadline.days,
-            allowed_overdraft=previous_semester.allowed_overdraft,
+            registration_fee=previous_fee.registration_fee,
+            regular_fee=previous_fee.regular_fee,
+            reduced_fee=previous_fee.reduced_fee,
+            late_fee=previous_fee.late_fee,
+            grace_period=previous_fee.grace_period.days,
+            reduced_fee_threshold=reduced_fee_threshold,
+            payment_deadline=previous_fee.payment_deadline.days,
+            not_allowed_overdraft_late_fee=previous_fee.not_allowed_overdraft_late_fee,
+            payment_deadline_final=previous_fee.payment_deadline_final.days,
             begins_on=begins_on_default,
             ends_on=ends_on_default,
         )
     else:
-        form = SemesterCreateForm()
+        form = MembershipFeeCreateForm()
     if form.validate_on_submit():
-        Semester(
+        mfee = MembershipFee(
             name=form.name.data,
             registration_fee=form.registration_fee.data,
-            regular_semester_fee=form.regular_semester_fee.data,
-            reduced_semester_fee=form.reduced_semester_fee.data,
+            regular_fee=form.regular_fee.data,
+            reduced_fee=form.reduced_fee.data,
             late_fee=form.late_fee.data,
             grace_period=timedelta(days=form.grace_period.data),
-            reduced_semester_fee_threshold=timedelta(days=form.reduced_semester_fee_threshold.data),
+            reduced_fee_threshold=timedelta(days=form.reduced_fee_threshold.data),
             payment_deadline=timedelta(days=form.payment_deadline.data),
-            allowed_overdraft=form.allowed_overdraft.data,
+            not_allowed_overdraft_late_fee=form.not_allowed_overdraft_late_fee.data,
+            payment_deadline_final=timedelta(days=form.payment_deadline_final.data),
             begins_on=form.begins_on.data,
             ends_on=form.ends_on.data,
         )
-        return redirect(url_for(".semesters_list"))
-    return render_template('finance/semesters_create.html', form=form)
+        session.add(mfee)
+        session.commit()
+        return redirect(url_for(".membership_fees"))
+    return render_template('finance/membership_fee_create.html', form=form)
+
+
+@bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
+@access.require('finance_change')
+def membership_fee_edit(fee_id):
+    fee = MembershipFee.q.get(fee_id)
+
+    if fee is None:
+        flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        abort(404)
+
+    form = MembershipFeeEditForm()
+
+    if not form.is_submitted():
+        form = MembershipFeeEditForm(
+            name=fee.name,
+            registration_fee=fee.registration_fee,
+            regular_fee=fee.regular_fee,
+            reduced_fee=fee.reduced_fee,
+            late_fee=fee.late_fee,
+            grace_period=fee.grace_period.days,
+            reduced_fee_threshold=fee.reduced_fee_threshold.days,
+            payment_deadline=fee.payment_deadline.days,
+            not_allowed_overdraft_late_fee=fee.not_allowed_overdraft_late_fee,
+            payment_deadline_final=fee.payment_deadline_final.days,
+            begins_on=fee.begins_on,
+            ends_on=fee.ends_on,
+        )
+    elif form.validate_on_submit():
+        fee.name = form.name.data
+        fee.registration_fee = form.registration_fee.data
+        fee.regular_fee = form.regular_fee.data
+        fee.reduced_fee = form.reduced_fee.data
+        fee.late_fee = form.late_fee.data
+        fee.grace_period = timedelta(days=form.grace_period.data)
+        fee.reduced_fee_threshold = timedelta(days=form.reduced_fee_threshold.data)
+        fee.payment_deadline = timedelta(days=form.payment_deadline.data)
+        fee.not_allowed_overdraft_late_fee = form.not_allowed_overdraft_late_fee.data
+        fee.payment_deadline_final = timedelta(days=form.payment_deadline_final.data)
+        fee.begins_on = form.begins_on.data
+        fee.ends_on = form.ends_on.data
+
+        session.commit()
+        return redirect(url_for(".membership_fees"))
+    return render_template('finance/membership_fee_edit.html', form=form)
 
 
 @bp.route('/json/accounts/system')
