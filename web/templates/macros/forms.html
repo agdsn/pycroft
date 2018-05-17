@@ -27,7 +27,7 @@
     </div>
 {%- endmacro %}
 
-{% macro advanced_form(form, submit_to, cancel_to, form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12) -%}
+{% macro advanced_form(form, submit_to, cancel_to, form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=5) -%}
     <form method="{{ method }}" action="{{ submit_to }}" enctype="{{ enctype }}" class="form-{{ form_render_mode }}" role="form">
         <div class="row">
             {% for field in form %}
@@ -35,8 +35,8 @@
                     {{ field(render_mode=field_render_mode) }}
                 </div>
             {% endfor %}
-            <div class="form-group">
-                <div class="col-sm-offset-5 col-sm-7">{{ form_actions(cancel_to, submit_text, show_cancel=show_cancel, show_submit=show_submit) }}</div>
+            <div class="col-sm-offset-{{ actions_offset }} col-sm-{{ col_width - actions_offset }}">
+                {{ form_actions(cancel_to, submit_text, show_cancel=show_cancel, show_submit=show_submit) }}
             </div>
         </div>
     </form>
