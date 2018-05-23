@@ -5,7 +5,7 @@ from functools import reduce
 # the Apache License, Version 2.0. See the LICENSE file for details.
 member_props = {"member": True,
                 "network_access": True,
-                "semester_fee": True,
+                "membership_fee": True,
                 "late_fee": True,
                 "registration_fee": True,
                 "mail": True}
@@ -56,13 +56,13 @@ group_props = {
     #        ∉ away ∪ member = permanent ausgezogen, keine mailmitgliedschaft, kein semesterbeitrag
     "away": ("Ausgezogen", {"network_access": False,
                             "late_fee": False,
-                            "semester_fee": True,
-                            "reduced_semester_fee": True,
+                            "membership_fee": True,
+                            "reduced_membership_fee": True,
                             "mail": True}),
 
     "moved_from_division": ("Umzug aus anderer Sektion", {"registration_fee": False}),
 
-    "already_paid": ("Semesterbeitrag in anderer Sektion entrichtet", {"semester_fee": False}),
+    "already_paid": ("Semesterbeitrag in anderer Sektion entrichtet", {"membership_fee": False}),
 
     "root": ("Root", reduce(lambda d1,d2: dict(d1, **d2), [org_props,
                                                            finance_admin_props,

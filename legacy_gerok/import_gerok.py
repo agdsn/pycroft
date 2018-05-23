@@ -148,14 +148,14 @@ def get_or_create_config(g_d):
             moved_from_division_group=g_d["moved_from_division"],
             already_paid_semester_fee_group=g_d["already_paid"],
             registration_fee_account=fee_account,
-            semester_fee_account=fee_account,
+            membership_fee_account=fee_account,
             late_fee_account=fee_account,
             additional_fee_account=fee_account,
         )
 
         session.session.add(con)
     else:
-        fee_account = conf.semester_fee_account
+        fee_account = conf.membership_fee_account
 
     return fee_account
 
