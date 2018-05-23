@@ -368,16 +368,17 @@ class Fee(metaclass=ABCMeta):
 
 
 class RegistrationFee(Fee):
-    description = deferred_gettext(u"Registration fee").to_json()
+    description = deferred_gettext(u"Anschlussgebühr").to_json()
 
     def compute(self, user):
         when = single(user.registered_at)
         if user.has_property("registration_fee", when):
             try:
-                semester = get_semester_for_date(user.registered_at.date())
+                mfee = get_membership_fee_for_date(
+                    user.registered_at.date())
             except NoResultFound:
                 return []
-            fee = semester.registration_fee
+            fee = mfee.registration_fee
             if fee > 0:
                 return [(self.description, user.registered_at.date(), fee)]
         return []
@@ -440,13 +441,13 @@ class MembershipFee(Fee):
 
 class LateFee(Fee):
     description = deferred_gettext(
-        u"Late fee for overdue payment from {original_valid_on}")
+        u"Versäumnisgebühr für Beitrag vom {original_valid_on}")
 
     def __init__(self, account, calculate_until):
         """
         :param date calculate_until: Date up until late fees are calculated;
         usually the date of the last bank import
-        :param int allowed_overdraft: Amount of overdraft which does not result
+        :param int allowed_overdraft: Amount of overdraft which does result
         in an late fee being charged.
         :param payment_deadline: Timedelta after which a payment is late
         """
@@ -493,17 +494,25 @@ class LateFee(Fee):
         )
         debts = []
         for last_credit, balance, delta in self.running_totals(transactions):
-            semester = get_semester_for_date(last_credit)
-            if (balance <= semester.allowed_overdraft or
-                    delta <= semester.payment_deadline):
-                continue
-            valid_on = last_credit + semester.payment_deadline + timedelta(days=1)
-            amount = semester.late_fee
-            if liability_intervals & single(valid_on) and amount > 0:
-                debts.append((
-                    self.description.format(original_valid_on=last_credit).to_json(),
-                    amount, valid_on
-                ))
+            try:
+                membership_fee = get_membership_fee_for_date(last_credit)
+
+                if membership_fee.late_fee > 0:
+                    if (
+                            balance < membership_fee.not_allowed_overdraft_late_fee or
+                            delta <= membership_fee.payment_deadline):
+                        continue
+                    valid_on = last_credit + membership_fee.payment_deadline + timedelta(
+                        days=1)
+                    amount = membership_fee.late_fee
+                    if liability_intervals & single(valid_on) and amount > 0:
+                        debts.append((
+                            self.description.format(
+                                original_valid_on=last_credit).to_json(),
+                            amount, valid_on
+                        ))
+            except NoResultFound:
+                pass
         return debts
 
 
@@ -520,7 +529,6 @@ MT940_FIELDNAMES = [
     'currency',
     'info',
 ]
-
 
 MT940Record = namedtuple("MT940Record", MT940_FIELDNAMES)
 
