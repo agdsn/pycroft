@@ -674,6 +674,69 @@ def get_transaction_type(transaction):
             and all(len(accs)>0 for accs in cd_accs):
         return (cd_accs[0][0].type, cd_accs[1][0].type)
 
+
+@with_transaction
+def end_payment_in_default_memberships():
+    processor = User.q.get(0)
+
+    users = User.q.join(User.current_properties) \
+                .filter(CurrentProperty.property_name == 'payment_in_default') \
+                .join(Account).filter(Account.balance <= 0).all()
+
+    for user in users:
+        remove_member_of(user, config.payment_in_default_group, processor,
+                             closedopen(session.utcnow(), None))
+
+    return users
+
+
+@with_transaction
+def handle_payments_in_default():
+    processor = User.q.get(0)
+
+    # Add memberships and end "member" membership if threshold met
+    users = User.q.join(User.current_properties)\
+                  .filter(CurrentProperty.property_name == 'membership_fee') \
+                  .join(Account).filter(Account.balance > 0).all()
+
+    users_pid_membership = []
+    users_membership_terminated = []
+
+    for user in users:
+        last_pid_membership = Membership.q.filter(Membership.user_id == user.id) \
+            .filter(Membership.group_id == config.payment_in_default_group.id) \
+            .order_by(Membership.ends_at.desc()) \
+            .first()
+
+        if last_pid_membership is not None:
+            if last_pid_membership.ends_at is not None and \
+               last_pid_membership.ends_at >= datetime.utcnow() - timedelta(days=7):
+                continue
+
+        in_default_days = user.account.in_default_days
+
+        try:
+            fee = get_membership_fee_for_date(
+                date.today() - timedelta(days=in_default_days))
+        except NoResultFound:
+            fee = get_last_applied_membership_fee()
+
+        if not user.has_property('payment_in_default'):
+            if in_default_days >= fee.payment_deadline.days:
+                make_member_of(user, config.payment_in_default_group,
+                               processor, closed(session.utcnow(), None))
+                users_pid_membership.append(user)
+
+        if in_default_days >= fee.payment_deadline_final.days:
+            remove_member_of(user, config.member_group, processor,
+                             closedopen(session.utcnow(), None))
+            log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand ({})"
+                           .format(fee.name),
+                           processor, user)
+            users_membership_terminated.append(user)
+
+    return users_pid_membership, users_membership_terminated
+
 def process_transactions(bank_account, statement):
     transactions = []  # new transactions which would be imported
     old_transactions = []  # transactions which are already imported

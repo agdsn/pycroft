@@ -688,6 +688,25 @@ def membership_fee_edit(fee_id):
     return render_template('finance/membership_fee_edit.html', form=form)
 
 
+@bp.route('/membership_fees/handle_payments_in_default')
+@access.require('finance_change')
+def handle_payments_in_default():
+    users_pid_membership, users_membership_terminated = finance.handle_payments_in_default()
+    users_no_more_pid = finance.end_payment_in_default_memberships()
+
+    changes = [('Neue Zugehörigkeiten in Zahlungsrückstands-Gruppe',
+                users_pid_membership),
+               ('Beendete Mitgliedschaften', users_membership_terminated),
+               ('Beendete Zugehörigkeiten in Zahlungsrückstands-Gruppe',
+                users_no_more_pid)]
+
+    session.commit()
+
+    return render_template('finance/handle_payments_in_default.html',
+                           changes=changes,
+                           page_title="Zahlungsrückstände Behandeln")
+
+
 @bp.route('/json/accounts/system')
 def json_accounts_system():
     return jsonify(accounts=[

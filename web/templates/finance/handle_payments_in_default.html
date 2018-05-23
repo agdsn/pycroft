@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+    {% for change in changes %}
+        <h4>{{ change[0] }}:</h4>
+        {% if (change[1]|length) > 0 %}
+            <ul>
+                {% for user in change[1] %}
+                    <li>
+                        <a target="_blank" href="{{ url_for("user.user_show", user_id=user.id) }}">{{ user.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <i class="text-muted">- Keine -</i>
+        {% endif %}
+
+        <br/>
+        <br/>
+    {% endfor %}
+{% endblock %}
