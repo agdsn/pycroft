@@ -122,6 +122,29 @@ class Account(IntegerIdModel):
             Split.account_id == cls.id
         ).label("balance")
 
+    @hybrid_property
+    def in_default_days(self):
+        first_overdue = False
+        split_sum = 0
+
+        splits = Split.q.filter(Split.account_id == self.id) \
+                        .join(Transaction) \
+                        .order_by(Transaction.valid_on)
+
+        for split in splits:
+            split_sum += split.amount
+
+            if split_sum > 0:
+                if not first_overdue:
+                    first_overdue = split.transaction.valid_on
+            else:
+                first_overdue = False
+
+        if not first_overdue:
+            return 0
+
+        return fabs((first_overdue - datetime.date.today()).days)
+
 
 manager.add_function(
     Account.__table__,
@@ -157,7 +180,7 @@ class Split(IntegerIdModel):
     # positive amount means credit (ger. Haben) and negative credit (ger. Soll)
     amount = Column(Money, nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
-                        nullable=False)
+                        nullable=False, index=True)
     account = relationship(Account,
                            backref=backref("splits",
                                            cascade="all, delete-orphan"))
