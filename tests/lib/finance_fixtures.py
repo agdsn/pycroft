@@ -154,4 +154,5 @@ class BankAccountData(DataSet):
         routing_number = "85050300"
         iban = "DE61850503003120219540"
         bic = "OSDDDE81XXX"
+        fints_endpoint="https://example.org/fints"
         account = AccountData.bank_account
