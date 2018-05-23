@@ -11,5 +11,5 @@ class MembershipData(DataSet):
     class dummy_membership:
         begins_at = datetime.utcnow() - timedelta(1)
         ends_at = datetime.utcnow() + timedelta(1)
-        group = PropertyGroupData.network_access
+        group = PropertyGroupData.member
         user = UserData.dummy

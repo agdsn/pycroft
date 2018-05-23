@@ -8,19 +8,20 @@ from fixture import DataSet
 today = datetime.utcnow().date()
 
 
-class SemesterData(DataSet):
-    class dummy_semester1:
-        name = "first semester"
-        registration_fee = 25.00
-        regular_semester_fee = 15.00
-        reduced_semester_fee = 4.50
+class MembershipFeeData(DataSet):
+    class dummy_fee1:
+        name = u"first fee"
+        registration_fee = 5.00
+        regular_fee = 5.00
+        reduced_fee = 1.00
         late_fee = 2.50
-        grace_period = timedelta(62)
-        reduced_semester_fee_threshold = timedelta(62)
-        payment_deadline = timedelta(31)
-        allowed_overdraft = 5.00
-        begins_on = today
-        ends_on = today + timedelta(days=180)
+        grace_period = timedelta(14)
+        reduced_fee_threshold = timedelta(10)
+        payment_deadline = timedelta(14)
+        payment_deadline_final = timedelta(62)
+        not_allowed_overdraft_late_fee = 2.00
+        begins_on = today - timedelta(days=31)
+        ends_on = today
 
 
 class AccountData(DataSet):

@@ -12,30 +12,33 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
-    Fee, LateFee, RegistrationFee, SemesterFee, adjustment_description,
-    cleanup_description, get_current_semester, get_semester_for_date,
+    Fee, LateFee, RegistrationFee, adjustment_description,
+    cleanup_description,
     import_bank_account_activities_csv, post_fees, simple_transaction,
     transferred_amount,
-    is_ordered)
+    is_ordered, MembershipFee, get_last_applied_membership_fee,
+    get_membership_fee_for_date, handle_payments_in_default,
+    end_payment_in_default_memberships)
 from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction)
-from pycroft.model.user import PropertyGroup, User
+from pycroft.model.user import PropertyGroup, User, Membership
 from tests import FixtureDataTestBase
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
-    AccountData, BankAccountData, MembershipData, SemesterData, UserData)
+    AccountData, BankAccountData, MembershipData, UserData,
+    MembershipFeeData)
 
 
 class Test_010_BankAccount(FixtureDataTestBase):
 
-    datasets = [AccountData, BankAccountData, SemesterData, UserData]
+    datasets = [AccountData, BankAccountData, MembershipFeeData, UserData]
 
     def setUp(self):
         super(Test_010_BankAccount, self).setUp()
         self.fee_account = Account.q.filter_by(
-            name=AccountData.semester_fee_account.name
+            name=AccountData.membership_fee_account.name
         ).one()
         self.user_account = Account.q.filter_by(
             name=AccountData.user_account.name
@@ -92,13 +95,11 @@ class Test_010_BankAccount(FixtureDataTestBase):
         BankAccountActivity.q.delete()
         session.session.commit()
 
-    def test_0020_get_current_semester(self):
+    def test_0020_get_last_applied_membership_fee(self):
         try:
-            get_current_semester()
+            get_last_applied_membership_fee()
         except NoResultFound:
-            self.fail("No semester found")
-        except MultipleResultsFound:
-            self.fail("Multiple semesters found")
+            self.fail("No fee found")
 
     def test_0030_simple_transaction(self):
         try:
@@ -190,11 +191,11 @@ class FeeTestBase(FixtureDataTestBase):
 
 
 class Test_Fees(FeeTestBase):
-    datasets = (AccountData, ConfigData, PropertyData, SemesterData, UserData)
-    fee_account_name = ConfigData.config.semester_fee_account.name
+    datasets = (AccountData, ConfigData, PropertyData, MembershipFeeData, UserData)
+    fee_account_name = ConfigData.config.membership_fee_account.name
     description = u"Fee"
     valid_on = datetime.utcnow().date()
-    amount = 90.00
+    amount = 10.00
     params = (description, valid_on, amount)
 
     class FeeMock(Fee):
@@ -247,7 +248,7 @@ class Test_Fees(FeeTestBase):
 
 class TestRegistrationFee(FeeTestBase):
     datasets = (AccountData, ConfigData, MembershipData, PropertyData,
-                SemesterData, UserData)
+                MembershipFeeData, UserData)
     fee_account_name = ConfigData.config.registration_fee_account.name
 
     def setUp(self):
@@ -256,7 +257,7 @@ class TestRegistrationFee(FeeTestBase):
 
     def test_registration_fee(self):
         description = RegistrationFee.description
-        amount = SemesterData.with_registration_fee.registration_fee
+        amount = MembershipFeeData.with_registration_fee.registration_fee
         valid_on = self.user.registered_at.date()
         self.assertEqual(self.fee.compute(self.user), [(description, valid_on, amount)])
 
@@ -266,35 +267,40 @@ class TestRegistrationFee(FeeTestBase):
 
     def test_fee_zero(self):
         self.user.registered_at = datetime.combine(
-            SemesterData.without_registration_fee.begins_on,
+            MembershipFeeData.without_registration_fee.begins_on,
             time.min
         )
         self.assertEqual(self.fee.compute(self.user), [])
 
 
-class TestSemesterFee(FeeTestBase):
+class TestMembershipFee(FeeTestBase):
     datasets = (AccountData, ConfigData, MembershipData, PropertyData,
-                PropertyGroupData, SemesterData, UserData)
-    fee_account_name = ConfigData.config.semester_fee_account.name
+                PropertyGroupData, MembershipFeeData, UserData)
+    fee_account_name = ConfigData.config.membership_fee_account.name
+
+    payment_deadline = timedelta(14)
+    valid_on = MembershipFeeData.with_registration_fee.ends_on
+    description = u"Fee description"
+    amount = Decimal(20.00)
 
     def setUp(self):
-        super(TestSemesterFee, self).setUp()
-        self.fee = SemesterFee(self.fee_account)
+        super(TestMembershipFee, self).setUp()
+        self.fee = MembershipFee(self.fee_account)
         self.away_group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.away.name
         ).one()
+        self.bank_account = Account.q.filter_by(
+            name=AccountData.bank_account.name).one()
 
-    def expected_debt(self, semester, regular=True):
-        description = (SemesterFee.description.format(semester=semester.name)
+    def expected_debt(self, fee, regular=True):
+        description = (MembershipFee.description.format(fee_name=fee.name)
                        .to_json())
-        registered_at = self.user.registered_at.date()
-        if semester.begins_on <= registered_at <= semester.ends_on:
-            valid_on = registered_at
-        else:
-            valid_on = semester.begins_on
-        amount = (semester.regular_semester_fee
+
+        valid_on = fee.ends_on
+
+        amount = (fee.regular_fee
                   if regular else
-                  semester.reduced_semester_fee)
+                  fee.reduced_fee)
         return description, valid_on, amount
 
     def set_registered_at(self, when):
@@ -303,10 +309,10 @@ class TestSemesterFee(FeeTestBase):
         for membership in self.user.memberships:
             membership.begins_at = registered_at
 
-    def test_semester_fee(self):
+    def test_membership_fee(self):
         self.assertEqual(self.fee.compute(self.user), [
-            self.expected_debt(SemesterData.with_registration_fee),
-            self.expected_debt(SemesterData.without_registration_fee)
+            self.expected_debt(MembershipFeeData.with_registration_fee),
+            self.expected_debt(MembershipFeeData.without_registration_fee)
         ])
 
     def test_property_absent(self):
@@ -314,44 +320,73 @@ class TestSemesterFee(FeeTestBase):
         self.assertEqual(self.fee.compute(self.user), [])
 
     def test_grace_period(self):
-        semester = SemesterData.with_registration_fee
+        fee = MembershipFeeData.with_registration_fee
         self.set_registered_at(
-            semester.ends_on - semester.grace_period)
+            fee.ends_on - fee.grace_period)
         self.assertEqual(self.fee.compute(self.user), [self.expected_debt(
-            SemesterData.without_registration_fee)])
+            MembershipFeeData.without_registration_fee)])
 
     def test_away(self):
-        semester = SemesterData.without_registration_fee
+        fee = MembershipFeeData.without_registration_fee
         begin = datetime.combine(
-            semester.begins_on, time.min
+            fee.begins_on, time.min
         )
         end = datetime.combine(
-            semester.ends_on, time.min
+            fee.ends_on, time.min
         )
         make_member_of(self.user, self.away_group, self.processor, closed(
-            begin, end - semester.reduced_semester_fee_threshold))
+            begin, end - fee.reduced_fee_threshold))
         self.assertEqual(self.fee.compute(self.user), [
-            self.expected_debt(SemesterData.with_registration_fee),
-            self.expected_debt(semester, False)
+            self.expected_debt(MembershipFeeData.with_registration_fee),
+            self.expected_debt(fee, False)
         ])
+
+    def test_payment_in_default_group(self):
+        membership_fee = MembershipFee(self.fee_account)
+        post_fees([self.user], [membership_fee], self.user)
+        self.assertFalse(self.user.has_property('payment_in_default'))
+        handle_payments_in_default()
+        self.assertTrue(self.user.has_property('payment_in_default'))
+        simple_transaction(
+            self.description, self.user.account, self.bank_account,
+            self.amount, self.user, self.valid_on)
+        end_payment_in_default_memberships()
+        handle_payments_in_default()
+        self.assertFalse(self.user.has_property('payment_in_default'))
+
+    def test_payment_in_default_membership_end(self):
+        user = User.q.all()[1]
+
+        # self.assertEqual(Transaction.q.all(),["bla"])
+
+        self.assertFalse(user.has_property('payment_in_default'))
+        self.assertTrue(user.has_property('member'))
+
+        membership_fee = MembershipFee(self.fee_account)
+        post_fees([user], [membership_fee], self.user)
+
+        handle_payments_in_default()
+
+        self.assertTrue(user.has_property('payment_in_default'))
+        self.assertFalse(user.has_property('member'))
 
 
 class TestLateFee(FeeTestBase):
     datasets = (AccountData, ConfigData, MembershipData, PropertyData,
-                PropertyGroupData, SemesterData, UserData)
+                PropertyGroupData, MembershipFeeData, UserData)
     fee_account_name = ConfigData.config.late_fee_account.name
 
-    allowed_overdraft = 5.00
-    payment_deadline = timedelta(31)
-    valid_on = SemesterData.with_registration_fee.begins_on
+    not_allowed_overdraft_late_fee = Decimal(5.00)
+    payment_deadline = timedelta(14)
+    valid_on = MembershipFeeData.with_registration_fee.ends_on
     description = u"Fee description"
-    amount = 10.00
+    amount = Decimal(10.00)
 
     def setUp(self):
         super(TestLateFee, self).setUp()
         self.fee = LateFee(self.fee_account, date.today())
         self.other_fee_account = Account.q.filter_by(
-            name=ConfigData.config.semester_fee_account.name
+            name=ConfigData.config.membership_fee_account.name
         ).one()
         self.bank_account = Account.q.filter_by(
             name=AccountData.bank_account.name
@@ -362,7 +397,7 @@ class TestLateFee(FeeTestBase):
             original_valid_on=transaction.valid_on).to_json()
         valid_on = (transaction.valid_on + self.payment_deadline +
                     timedelta(days=1))
-        amount = get_semester_for_date(valid_on).late_fee
+        amount = get_membership_fee_for_date(valid_on).late_fee
         return description, amount, valid_on
 
     def book_a_fee(self):

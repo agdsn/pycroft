@@ -13,32 +13,48 @@ from tests.fixtures.dummy.facilities import RoomData
 today = datetime.utcnow().date()
 
 
-class SemesterData(DataSet):
+class MembershipFeeData(DataSet):
     class with_registration_fee:
-        name = u"previous semester"
-        registration_fee = 25.00
-        regular_semester_fee = 15.00
-        reduced_semester_fee = 4.50
+        name = u"previous month"
+        registration_fee = 5.00
+        regular_fee = 5.00
+        reduced_fee = 1.00
         late_fee = 2.50
-        grace_period = timedelta(62)
-        reduced_semester_fee_threshold = timedelta(62)
-        payment_deadline = timedelta(31)
-        allowed_overdraft = 5.00
-        begins_on = today - timedelta(days=271)
-        ends_on = today - timedelta(days=91)
+        grace_period = timedelta(14)
+        reduced_fee_threshold = timedelta(10)
+        payment_deadline = timedelta(14)
+        payment_deadline_final = timedelta(62)
+        not_allowed_overdraft_late_fee = 2.00
+        begins_on = today - timedelta(days=61)
+        ends_on = today - timedelta(days=31)
 
     class without_registration_fee:
-        name = u"current semester"
-        registration_fee = 0
-        regular_semester_fee = 20.00
-        reduced_semester_fee = 1.00
+        name = u"current month"
+        registration_fee = 0.00
+        regular_fee = 5.00
+        reduced_fee = 1.00
         late_fee = 2.50
-        grace_period = timedelta(62)
-        reduced_semester_fee_threshold = timedelta(62)
-        payment_deadline = timedelta(31)
-        allowed_overdraft = 5.00
-        begins_on = today - timedelta(days=90)
-        ends_on = today + timedelta(days=90)
+        grace_period = timedelta(14)
+        reduced_fee_threshold = timedelta(10)
+        payment_deadline = timedelta(14)
+        payment_deadline_final = timedelta(62)
+        not_allowed_overdraft_late_fee = 2.00
+        begins_on = today - timedelta(days=30)
+        ends_on = today
+
+    class first_fee:
+        name = u"first month"
+        registration_fee = 0.00
+        regular_fee = 5.00
+        reduced_fee = 0.00
+        late_fee = 0.00
+        grace_period = timedelta(14)
+        reduced_fee_threshold = timedelta(32)
+        payment_deadline = timedelta(14)
+        payment_deadline_final = timedelta(62)
+        not_allowed_overdraft_late_fee = 0.00
+        begins_on = today - timedelta(days=92)
+        ends_on = today - timedelta(days=62)
 
 
 class AccountData(DataSet):
@@ -50,8 +66,8 @@ class AccountData(DataSet):
         name = u"Registration Fees"
         type = "REVENUE"
 
-    class semester_fee_account:
-        name = u"Semester Fees"
+    class membership_fee_account:
+        name = u"Membership Fees"
         type = "REVENUE"
 
     class late_fee_account:
@@ -62,14 +78,25 @@ class AccountData(DataSet):
         name = u"Dummy User"
         type = "USER_ASSET"
 
+    class user_account_early:
+        name = u"Dummy User Early"
+        type = "USER_ASSET"
+
 
 class UserData(DataSet):
     class dummy:
         login = u"dummy"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(SemesterData.with_registration_fee.begins_on + timedelta(days=31), time.min)
+        registered_at = datetime.combine(MembershipFeeData.with_registration_fee.begins_on + timedelta(days=12), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account
+
+    class dummy_early:
+        login = u"dummy_early"
+        name = u"Dummy Dummy"
+        registered_at = datetime.combine(MembershipFeeData.first_fee.begins_on + timedelta(days=12), time.min)
+        room = RoomData.dummy_room1
+        account = AccountData.user_account_early
 
 
 class MembershipData(DataSet):
@@ -79,29 +106,29 @@ class MembershipData(DataSet):
         user = UserData.dummy
         group = PropertyGroupData.member
 
-    class network_access:
-        begins_at = UserData.dummy.registered_at
+    class member_early:
+        begins_at = UserData.dummy_early.registered_at
         ends_at = None
-        user = UserData.dummy
-        group = PropertyGroupData.network_access
+        user = UserData.dummy_early
+        group = PropertyGroupData.member
 
 
 class TransactionData(DataSet):
     class claim1:
         description = "Claim 1"
-        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=31)
+        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=31)
 
     class late_fee_for_claim1:
         description = "Late fee for Claim 1"
-        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=63)
+        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=63)
 
     class claim2:
         description = "Claim 2"
-        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=81)
+        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=81)
 
     class payment:
         description = "Payment of Claim 1"
-        valid_on = SemesterData.with_registration_fee.begins_on + timedelta(days=64)
+        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=64)
 
 
 class SplitData(DataSet):
@@ -112,7 +139,7 @@ class SplitData(DataSet):
 
     class claim1_debit:
         transaction = TransactionData.claim1
-        account = AccountData.semester_fee_account
+        account = AccountData.membership_fee_account
         amount = -50.00
 
     class late_fee1_credit:
@@ -132,7 +159,7 @@ class SplitData(DataSet):
 
     class claim2_debit:
         transaction = TransactionData.claim2
-        account = AccountData.semester_fee_account
+        account = AccountData.membership_fee_account
         amount = -50.00
 
     class payment_credit:

@@ -18,7 +18,7 @@ from tests.factories import UserFactory, MembershipFactory, TrafficGroupFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.finance import AccountData, SemesterData
+from tests.fixtures.dummy.finance import AccountData, MembershipFeeData
 from tests.fixtures.dummy.host import (
     IPData, PatchPortData, InterfaceData, HostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
@@ -78,7 +78,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
-                RoomData, SemesterData, SubnetData, PatchPortData,
+                RoomData, MembershipFeeData, SubnetData, PatchPortData,
                 TrafficGroupData, UserData, HostData, InterfaceData,
                 VLANData)
 
@@ -129,7 +129,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         self.assertIsNotNone(new_user.account)
         self.assertEqual(new_user.account.balance, 0)
-        self.assertFalse(new_user.has_property("reduced_semester_fee"))
+        self.assertFalse(new_user.has_property("reduced_membership_fee"))
         self.assertTrue(new_user.unix_account is not None)
         account = new_user.unix_account
         self.assertTrue(account.home_directory.endswith(new_user.login))
@@ -162,7 +162,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
-    datasets = (AccountData, ConfigData, IPData, SemesterData,
+    datasets = (AccountData, ConfigData, IPData, MembershipFeeData,
                 PatchPortData, TrafficGroupData)
 
     def setUp(self):
