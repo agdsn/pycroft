@@ -2,7 +2,9 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import datetime
 import operator
+from math import fabs
 
 from sqlalchemy import Column, ForeignKey, event, func, select
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -21,6 +23,44 @@ from .functions import utcnow
 
 
 manager = ddl.DDLManager()
+
+
+class MembershipFee(IntegerIdModel):
+    name = Column(String, nullable=False)
+    registration_fee = Column(Money, CheckConstraint('registration_fee >= 0'),
+                              nullable=False)
+    regular_fee = Column(Money,
+                         CheckConstraint('regular_fee >= 0'),
+                         nullable=False)
+    reduced_fee = Column(Money,
+                         CheckConstraint('reduced_fee >= 0'),
+                         nullable=False)
+    late_fee = Column(Money, CheckConstraint('late_fee >= 0'), nullable=False)
+    # Timedelta a person has to be member in the given period to be charged any
+    # membership fee at all(grace period)
+    grace_period = Column(Interval, nullable=False)
+    # Timedelta a member has to be present (i.e. not away although being member)
+    # in the period to be charged the full fee
+    reduced_fee_threshold = Column(Interval, nullable=False)
+    # Timedelta after which members are being charged a late fee for not paying
+    # in time + will be added to a group with "payment_in_default" property
+    payment_deadline = Column(Interval, nullable=False)
+    # Timedelta after which the membership will be cancelled
+    payment_deadline_final = Column(Interval, nullable=False)
+    # Amount of outstanding debt of member, on which the late-fee will be
+    # charged
+    not_allowed_overdraft_late_fee = Column(Money,
+                               CheckConstraint('not_allowed_overdraft_late_fee >= 0'),
+                               nullable=False)
+    begins_on = Column(Date, nullable=False)
+    ends_on = Column(Date, nullable=False)
+
+    def __contains__(self, date):
+        return date in closed(self.begins_on, self.ends_on)
+
+    __table_args__ = (
+        CheckConstraint('begins_on < ends_on'),
+    )
 
 
 class Semester(IntegerIdModel):

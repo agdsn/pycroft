@@ -19,59 +19,99 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
-from pycroft.helpers.i18n import deferred_gettext, gettext
+from pycroft import config, model
+from pycroft.helpers.i18n import deferred_gettext, gettext, Message
+from pycroft.lib.logging import log_user_event
+from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Semester, Split, Transaction)
+    Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
-    closed, single, Bound, Interval, IntervalSet, UnboundedInterval)
+    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.model.functions import sign, least
+from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction
 from pycroft.model.types import Money
-from pycroft.model.user import User
+from pycroft.model.user import User, Membership, PropertyGroup
 
 
-def get_semesters(when=UnboundedInterval):
+def get_membership_fees(interval_set=None):
     """
 
     :param when:
     :return:
     """
-    criteria = []
-    if when.begin is not None:
-        criteria.append(or_(
-            when.begin <= Semester.begins_on,
-            between(when.begin, Semester.begins_on, Semester.ends_on)
-        ))
-    if when.end is not None:
-        criteria.append(or_(
-            when.end >= Semester.ends_on,
-            between(when.end, Semester.begins_on, Semester.ends_on)
-        ))
-    return Semester.q.filter(*criteria).order_by(Semester.begins_on)
+
+    queries = []
+
+    if interval_set is not None:
+        for interval in interval_set:
+            criteria = []
+
+            if interval.begin is not None:
+                criteria.append(or_(
+                    interval.begin <= model.finance.MembershipFee.begins_on,
+                    between(interval.begin,
+                            model.finance.MembershipFee.begins_on,
+                            model.finance.MembershipFee.ends_on)
+                ))
+
+            if interval.end is not None:
+                criteria.append(or_(
+                    interval.end >= model.finance.MembershipFee.ends_on,
+                    between(interval.end,
+                            model.finance.MembershipFee.begins_on,
+                            model.finance.MembershipFee.ends_on)
+                ))
+
+            queries.append(model.finance.MembershipFee.q.filter(*criteria) \
+                           .order_by(model.finance.MembershipFee.begins_on))
+
+    if len(queries) >= 1:
+        result = queries[0]
+
+        queries.pop(0)
+
+        result.union(*tuple(queries))
+
+        return result.all()
+    else:
+        return []
 
 
-def get_semester_for_date(target_date):
+def get_membership_fee_for_date(target_date):
     """
-    Get the semester which contains a given target date.
-    :param date target_date: The date for which a corresponding semester should
-    be found.
-    :rtype: Semester
-    :raises sqlalchemy.orm.exc.NoResultFound if no semester was found
-    :raises sqlalchemy.orm.exc.MultipleResultsFound if multiple semester were
-    found.
+    Get the membership fee which contains a given target date.
+    :param date target_date: The date for which a corresponding membership
+    fee should be found.
+    :rtype: MembershipFee
+    :raises sqlalchemy.orm.exc.NoResultFound if no membership fee was found
+    :raises sqlalchemy.orm.exc.MultipleResultsFound if multiple membership fees
+    were found.
     """
-    return Semester.q.filter(
-        between(target_date, Semester.begins_on, Semester.ends_on)
+    return model.finance.MembershipFee.q.filter(
+        between(target_date, model.finance.MembershipFee.begins_on,
+                model.finance.MembershipFee.ends_on)
     ).one()
 
 
-def get_current_semester():
+def get_last_applied_membership_fee():
     """
-    Get the current semester.
-    :rtype: Semester
+    Get the last applied membership fee.
+    :rtype: MembershipFee
     """
-    return get_semester_for_date(session.utcnow().date())
+    return model.finance.MembershipFee.q.filter(
+        model.finance.MembershipFee.ends_on <= datetime.now()) \
+        .order_by(model.finance.MembershipFee.ends_on.desc()).first()
+
+
+def get_first_applied_membership_fee():
+    """
+    Get the first applied membership fee.
+    :rtype: MembershipFee
+    """
+    return model.finance.MembershipFee.q.order_by(
+        model.finance.MembershipFee.ends_on.desc()).first()
 
 
 @with_transaction
@@ -178,7 +218,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
 
 adjustment_description = deferred_gettext(
-    u"Correction of „{original_description}“ from {original_valid_on}")
+    u"Korrektur von „{original_description}“ vom {original_valid_on}")
 
 
 @with_transaction
@@ -190,16 +230,26 @@ def post_fees(users, fees, processor):
     :param iterable[Fee] fees:
     :param User processor:
     """
+
+    count = 0
+
     for user in users:
         for fee in fees:
             computed_debts = fee.compute(user)
+
             posted_transactions = fee.get_posted_transactions(user).all()
-            posted_credits = tuple(t for t in posted_transactions if t.amount > 0)
-            posted_corrections = tuple(t for t in posted_transactions if t.amount < 0)
-            missing_debts, erroneous_debts = diff(posted_credits, computed_debts)
+            posted_credits = tuple(
+                t for t in posted_transactions if t.amount > 0)
+
+            posted_corrections = tuple(
+               t for t in posted_transactions if t.amount < 0)
+
+            missing_debts, erroneous_debts = diff(posted_credits,
+                                                  computed_debts)
+
             computed_adjustments = tuple(
                 ((adjustment_description.format(
-                    original_description=description,
+                    original_description=Message.from_json(description).localize(),
                     original_valid_on=valid_on)).to_json(),
                  valid_on, -amount)
                 for description, valid_on, amount in erroneous_debts)
@@ -207,12 +257,16 @@ def post_fees(users, fees, processor):
                 posted_corrections, computed_adjustments
             )
             missing_postings = chain(missing_debts, missing_adjustments)
+
             today = session.utcnow().date()
             for description, valid_on, amount in missing_postings:
                 if valid_on <= today:
                     simple_transaction(
                         description, fee.account, user.account,
                         amount, processor, valid_on)
+                    count = count + 1
+
+    return count
 
 
 def diff(posted, computed):
@@ -279,6 +333,12 @@ class Fee(metaclass=ABCMeta):
         :return:
         :rtype: list[(unicode, date, int)]
         """
+
+        first_fee = get_first_applied_membership_fee()
+
+        if first_fee is None:
+            return []
+
         split1 = aliased(Split)
         split2 = aliased(Split)
         transactions = self.session.query(
@@ -289,7 +349,10 @@ class Fee(metaclass=ABCMeta):
         ).filter(
             split1.account_id == user.account_id,
             split2.account_id == self.account.id
+        ).filter(
+            Transaction.valid_on >= first_fee.ends_on
         ).order_by(Transaction.valid_on)
+
         return transactions
 
     @abstractmethod
@@ -320,52 +383,58 @@ class RegistrationFee(Fee):
         return []
 
 
-class SemesterFee(Fee):
-    description = deferred_gettext(u"Semester fee {semester}")
+class MembershipFee(Fee):
+    description = deferred_gettext(
+        u"Mitgliedsbeitrag {fee_name}")
 
     def compute(self, user):
         regular_fee_intervals = _to_date_intervals(
-            user.property_intervals("semester_fee"))
+            user.property_intervals("membership_fee"))
 
         reduced_fee_intervals = _to_date_intervals(
-            user.property_intervals("reduced_semester_fee"))
+            user.property_intervals("reduced_membership_fee"))
 
         debts = []
 
-        # Compute semester fee for each semester the user is liable to pay it
-        semesters = get_semesters()
-        for semester in semesters:
-            semester_interval = closed(semester.begins_on, semester.ends_on)
-            reg_fee_in_semester = regular_fee_intervals & semester_interval
-            red_fee_in_semester = reduced_fee_intervals & semester_interval
+        fee_intervals = regular_fee_intervals | reduced_fee_intervals
+
+        # Compute membership fee for each period the user is liable to pay it
+        membership_fees = get_membership_fees(fee_intervals)
+        for membership_fee in membership_fees:
+            if membership_fee.ends_on > date.today():
+                continue
+
+            fee_interval = closed(membership_fee.begins_on,
+                                  membership_fee.ends_on)
+            reg_fee_in_period = regular_fee_intervals & fee_interval
+            red_fee_in_period = reduced_fee_intervals & fee_interval
 
             # reduced fee trumps regular fee
-            reg_fee_in_semester = reg_fee_in_semester - red_fee_in_semester
+            reg_fee_in_period = reg_fee_in_period - red_fee_in_period
+
+            valid_on = membership_fee.ends_on
+
+            fee_in_period = reg_fee_in_period | red_fee_in_period
 
             # IntervalSet is type-agnostic, so cannot do .length of empty sets,
             # therefore these double checks are required
-            if (reg_fee_in_semester and
-                        reg_fee_in_semester.length >
-                        semester.reduced_semester_fee_threshold):
-                amount = semester.regular_semester_fee
-                valid_on = reg_fee_in_semester[0].begin
-
-            elif (reg_fee_in_semester and
-                        reg_fee_in_semester.length > semester.grace_period):
-                amount = semester.reduced_semester_fee
-                valid_on = reg_fee_in_semester[0].begin
-
-            elif (red_fee_in_semester and
-                        red_fee_in_semester.length > semester.grace_period):
-                    amount = semester.reduced_semester_fee
-                    valid_on = red_fee_in_semester[0].begin
+            if (reg_fee_in_period and
+                    (not red_fee_in_period or red_fee_in_period.length <
+                     membership_fee.reduced_fee_threshold) and
+                    fee_in_period.length > membership_fee.grace_period):
+                amount = membership_fee.regular_fee
+            elif (red_fee_in_period and
+                  fee_in_period.length > membership_fee.grace_period and
+                  red_fee_in_period.length >=
+                  membership_fee.reduced_fee_threshold):
+                amount = membership_fee.reduced_fee
             else:
                 continue
 
             if amount > 0:
-                debts.append((
-                    self.description.format(semester=semester.name).to_json(),
-                    valid_on, amount))
+                debts.append((self.description.format(
+                                fee_name=membership_fee.name).to_json(),
+                              valid_on, amount))
         return debts
 
 
@@ -507,6 +576,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
     :param imported_at:
     :return:
     """
+
     if imported_at is None:
         imported_at = session.utcnow()
 
@@ -516,8 +586,9 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
     try:
         # Skip first record (header)
         next(records)
-        activities = tuple(process_record(index, record, imported_at=imported_at)
-                           for index, record in records)
+        activities = tuple(
+            process_record(index, record, imported_at=imported_at)
+            for index, record in records)
     except StopIteration:
         raise CSVImportError(gettext(u"No data present."))
     except csv.Error as e:
@@ -574,6 +645,9 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
         message = gettext(u"Balance after does not equal expected balance: "
                           u"{0} != {1}.")
         raise CSVImportError(message.format(balance, expected_balance))
+
+    handle_payments_in_default()
+    end_payment_in_default_memberships()
 
 
 def remove_space_characters(field):

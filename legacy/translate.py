@@ -255,6 +255,7 @@ def translate_semesters(data, resources):
         #   ws02/03 1000: anm2500 sem1750 red450
         #   ss04 4000: anm2500 sem1500 red450
         #   ws14/15 25000: anm0 sem2000 red100
+
         s = finance.Semester(
             name=_sem.name,
             registration_fee=25.00 if _sem.id < 25000 else 0.,
@@ -600,8 +601,9 @@ def generate_config(data, resources):
         network_access_group=g_d["member"],
         cache_group=g_d["cache_user"],
         traffic_limit_exceeded_group=g_d["traffic"],
+        payment_in_default_group=g_d["finance"],
         registration_fee_account=an_d[u"Beiträge"],
-        semester_fee_account=an_d[u"Beiträge"],
+        membership_fee_account=an_d[u"Beiträge"],
         late_fee_account=an_d[u"Beiträge"],
         additional_fee_account=an_d[u"Beiträge"],
 )]
