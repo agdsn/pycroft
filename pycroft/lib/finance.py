@@ -14,7 +14,7 @@ from io import StringIO
 import operator
 import re
 
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
@@ -673,3 +673,45 @@ def get_transaction_type(transaction):
     if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs)\
             and all(len(accs)>0 for accs in cd_accs):
         return (cd_accs[0][0].type, cd_accs[1][0].type)
+
+def process_transactions(bank_account, statement):
+    transactions = []  # new transactions which would be imported
+    old_transactions = []  # transactions which are already imported
+
+    for transaction in statement:
+        iban = transaction.data['applicant_iban'] if \
+            transaction.data['applicant_iban'] is not None else ''
+        bic = transaction.data['applicant_bin'] if \
+            transaction.data['applicant_bin'] is not None else ''
+        other_name = transaction.data['applicant_name'] if \
+            transaction.data['applicant_name'] is not None else ''
+        new_activity = BankAccountActivity(
+            bank_account_id=bank_account.id,
+            amount=int(transaction.data['amount'].amount * 100),
+            reference=transaction.data['purpose'],
+            original_reference=transaction.data['purpose'],
+            other_account_number=iban,
+            other_routing_number=bic,
+            other_name=other_name,
+            imported_at=datetime.now(),
+            posted_on=transaction.data['entry_date'],
+            valid_on=transaction.data['date'],
+        )
+        if BankAccountActivity.q.filter(and_(
+                BankAccountActivity.bank_account_id ==
+                new_activity.bank_account_id,
+                BankAccountActivity.amount == new_activity.amount,
+                BankAccountActivity.reference == new_activity.reference,
+                BankAccountActivity.other_account_number ==
+                new_activity.other_account_number,
+                BankAccountActivity.other_routing_number ==
+                new_activity.other_routing_number,
+                BankAccountActivity.other_name == new_activity.other_name,
+                BankAccountActivity.posted_on == new_activity.posted_on,
+                BankAccountActivity.valid_on == new_activity.valid_on
+        )).first() is None:
+            transactions.append(new_activity)
+        else:
+            old_transactions.append(new_activity)
+
+    return (transactions, old_transactions)

@@ -130,11 +130,10 @@ def bank_accounts_activities_json():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
-    transactions = [] # new transactions which would be imported
-    old_transactions = [] # transactions which are already imported
     if form.validate_on_submit():
         # login with fints
         bank_account = BankAccount.q.get(form.account.data)
+        process = True
         try:
             fints = FinTS3PinTanClient(
                 bank_account.routing_number,
@@ -158,50 +157,19 @@ def bank_accounts_import():
                 "Transaktionen vom {} bis {}.".format(start_date, date.today()))
         except FinTSDialogError:
             flash(u"Ungültige FinTS-Logindaten.", 'error')
-            statement = []
+            process = False
         except KeyError:
             flash(u'Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
                     nicht erreicht werden.', 'error')
-            statement = []
+            process = False
 
+        if process:
+            (transactions, old_transactions) = finance.process_transactions(
+                bank_account, statement)
+        else:
+            (transactions, old_transactions) = ([], [])
 
-        for transaction in statement:
-            iban = transaction.data['applicant_iban'] if \
-                transaction.data['applicant_iban'] is not None else ''
-            bic = transaction.data['applicant_bin'] if \
-                transaction.data['applicant_bin'] is not None else ''
-            other_name = transaction.data['applicant_name'] if \
-                transaction.data['applicant_name'] is not None else ''
-            new_activity = BankAccountActivity(
-                bank_account_id=bank_account.id,
-                amount=int(transaction.data['amount'].amount*100),
-                reference=transaction.data['purpose'],
-                original_reference=transaction.data['purpose'],
-                other_account_number=iban,
-                other_routing_number=bic,
-                other_name=other_name,
-                imported_at=datetime.now(),
-                posted_on=transaction.data['entry_date'],
-                valid_on=transaction.data['date'],
-            )
-            if BankAccountActivity.q.filter(and_(
-                    BankAccountActivity.bank_account_id==
-                        new_activity.bank_account_id,
-                    BankAccountActivity.amount==new_activity.amount,
-                    BankAccountActivity.reference==new_activity.reference,
-                    BankAccountActivity.other_account_number==
-                        new_activity.other_account_number,
-                    BankAccountActivity.other_routing_number==
-                        new_activity.other_routing_number,
-                    BankAccountActivity.other_name==new_activity.other_name,
-                    BankAccountActivity.posted_on==new_activity.posted_on,
-                    BankAccountActivity.valid_on==new_activity.valid_on
-                )).first() is None:
-                transactions.append(new_activity)
-            else:
-                old_transactions.append(new_activity)
-
-        if form.do_import.data is True:
+        if process and form.do_import.data is True:
             # save transactions to database
             session.add_all(transactions)
             session.commit()
