@@ -200,6 +200,7 @@ def bank_accounts_import():
                 transactions.append(new_activity)
             else:
                 old_transactions.append(new_activity)
+
         if form.do_import.data is True:
             # save transactions to database
             session.add_all(transactions)
