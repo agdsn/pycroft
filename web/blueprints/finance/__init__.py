@@ -143,11 +143,8 @@ def bank_accounts_import():
                 bankaccount.fints_endpoint
             )
 
-            acc = None
-            for account in fints.get_sepa_accounts():
-                if account.iban == bankaccount.iban:
-                    acc = account
-                    break
+            acc = next((a for a in fints.get_sepa_accounts()
+                        if a.iban == bankaccount.iban), None)
             if acc is None:
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
                     bankaccount.iban)
