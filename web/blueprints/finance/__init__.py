@@ -134,23 +134,23 @@ def bank_accounts_import():
     old_transactions = [] # transactions which are already imported
     if form.validate_on_submit():
         # login with fints
-        bankaccount = BankAccount.q.get(form.account.data)
+        bank_account = BankAccount.q.get(form.account.data)
         try:
             fints = FinTS3PinTanClient(
-                bankaccount.routing_number,
+                bank_account.routing_number,
                 form.user.data,
                 form.pin.data,
-                bankaccount.fints_endpoint
+                bank_account.fints_endpoint
             )
 
             acc = next((a for a in fints.get_sepa_accounts()
-                        if a.iban == bankaccount.iban), None)
+                        if a.iban == bank_account.iban), None)
             if acc is None:
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
-                    bankaccount.iban)
+                    bank_account.iban)
                 )
-            if bankaccount.last_updated_at is not None:
-                start_date = bankaccount.last_updated_at.date()
+            if bank_account.last_updated_at is not None:
+                start_date = bank_account.last_updated_at.date()
             else:
                 start_date = date(2018,1,1)
             statement = fints.get_statement(acc, start_date, date.today())
@@ -173,7 +173,7 @@ def bank_accounts_import():
             other_name = transaction.data['applicant_name'] if \
                 transaction.data['applicant_name'] is not None else ''
             new_activity = BankAccountActivity(
-                bank_account_id=bankaccount.id,
+                bank_account_id=bank_account.id,
                 amount=int(transaction.data['amount'].amount*100),
                 reference=transaction.data['purpose'],
                 original_reference=transaction.data['purpose'],
@@ -207,7 +207,7 @@ def bank_accounts_import():
             session.commit()
             flash(u'Bankkontobewegungen wurden importiert.')
             return redirect(url_for(".accounts_show",
-                                    account_id=bankaccount.account_id))
+                                    account_id=bank_account.account_id))
 
 
     return render_template('finance/bank_accounts_import.html', form=form,
