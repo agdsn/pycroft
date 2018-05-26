@@ -226,10 +226,7 @@ class BankAccount(IntegerIdModel):
 
     @hybrid_property
     def last_updated_at(self):
-        if not self.activities:
-            return None
-        else:
-            return max(act.imported_at for act in self.activities)
+        return max((act.imported_at for act in self.activities), default=None)
 
     @last_updated_at.expression
     def last_updated_at(self):
