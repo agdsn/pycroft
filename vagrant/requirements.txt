@@ -30,4 +30,4 @@ alembic~=0.9.6
 simplejson~=3.11.1
 #usersheet generation
 reportlab~=3.4.0
-fints
+fints~=0.2.1
