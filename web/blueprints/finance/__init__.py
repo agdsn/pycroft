@@ -37,7 +37,8 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
-    MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm)
+    MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
+    HandlePaymentsInDefaultForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
@@ -703,7 +704,7 @@ def membership_fee_edit(fee_id):
     return render_template('finance/membership_fee_edit.html', form=form)
 
 
-@bp.route('/membership_fees/handle_payments_in_default')
+@bp.route('/membership_fees/handle_payments_in_default', methods=("GET", "POST"))
 @access.require('finance_change')
 def handle_payments_in_default():
     users_pid_membership, users_membership_terminated = finance.handle_payments_in_default()
@@ -715,11 +716,19 @@ def handle_payments_in_default():
                ('Beendete Zugehörigkeiten in Zahlungsrückstands-Gruppe',
                 users_no_more_pid)]
 
-    session.commit()
+    form = HandlePaymentsInDefaultForm()
+
+    if form.is_submitted():
+        session.commit()
+        flash("Zahlungsrückstände behandelt.", "success")
+        return redirect(url_for(".membership_fees"))
+    else:
+        session.rollback()
 
     return render_template('finance/handle_payments_in_default.html',
                            changes=changes,
-                           page_title="Zahlungsrückstände Behandeln")
+                           page_title="Zahlungsrückstände behandeln",
+                           form=form)
 
 
 @bp.route('/json/accounts/system')

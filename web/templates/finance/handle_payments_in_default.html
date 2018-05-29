@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-
+{% import "macros/forms.html" as forms %}
 
 {% block content %}
     {% for change in changes %}
@@ -19,4 +19,6 @@
         <br/>
         <br/>
     {% endfor %}
+
+    {{ forms.advanced_form(form, '', show_cancel=False, submit_text="Anwenden", actions_offset=0, field_render_mode="basic", form_render_mode="basic") }}
 {% endblock %}
