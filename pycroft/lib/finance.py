@@ -660,7 +660,6 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
                           u"{0} != {1}.")
         raise CSVImportError(message.format(balance, expected_balance))
 
-    handle_payments_in_default()
     end_payment_in_default_memberships()
 
 

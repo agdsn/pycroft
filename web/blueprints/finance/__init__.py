@@ -539,6 +539,7 @@ def post_membership_fees():
 
     return post_fees(users, fees, current_user)
 
+
 @bp.route("/book_fees", methods=['GET', 'POST'])
 @access.require('finance_change')
 def book_fees():
@@ -550,7 +551,7 @@ def book_fees():
 
         flash("{} neue Buchungen erstellt.".format(len(new_transactions)), "success")
 
-        return redirect(url_for(".membership_fees"))
+        return redirect(url_for(".membership_fees.handle_payments_in_default"))
     return render_template('finance/book_fees.html', form=form,
                            page_title='Beiträge buchen')
 
