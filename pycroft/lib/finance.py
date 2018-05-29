@@ -231,7 +231,7 @@ def post_fees(users, fees, processor):
     :param User processor:
     """
 
-    count = 0
+    new_transactions = []
 
     for user in users:
         for fee in fees:
@@ -264,9 +264,15 @@ def post_fees(users, fees, processor):
                     simple_transaction(
                         description, fee.account, user.account,
                         amount, processor, valid_on)
-                    count = count + 1
 
-    return count
+                    new_transactions.append({
+                        'user_account': user.account,
+                        'description': description,
+                        'amount': amount,
+                        'valid_on': valid_on
+                    })
+
+    return new_transactions
 
 
 def diff(posted, computed):
