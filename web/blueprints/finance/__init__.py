@@ -656,6 +656,7 @@ def membership_fee_create():
         )
         session.add(mfee)
         session.commit()
+        flash("Beitrag erfolgreich erstellt.", "success")
         return redirect(url_for(".membership_fees"))
     return render_template('finance/membership_fee_create.html', form=form)
 
