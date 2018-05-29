@@ -27,15 +27,14 @@
     <ul>
         <li>Beiträge können bereits im Vorraus erstellt werden, werden jedoch frühestens
             am Enddatum gebucht.</li>
-        <li>Änderungen an bereits gebuchten Beiträgen werden nicht rückwirkend
-            übernommen.</li>
+        <li>Gebuchte Beiträge sollten nicht mehr editiert werden.</li>
         <li>Das Buchen von Beiträgen kann einige Zeit in Anspruch nehmen.</li>
     </ul>
 
     <h2 class="page-header">Liste</h2>
 
 {% call tbl.item_table(
-    'semesters',
+    'membership_fees',
     url_for('.membership_fees_json'),
     cols
 ) %}
