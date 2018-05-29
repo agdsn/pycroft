@@ -357,8 +357,6 @@ class TestMembershipFee(FeeTestBase):
     def test_payment_in_default_membership_end(self):
         user = User.q.all()[1]
 
-        # self.assertEqual(Transaction.q.all(),["bla"])
-
         self.assertFalse(user.has_property('payment_in_default'))
         self.assertTrue(user.has_property('member'))
 
@@ -369,7 +367,6 @@ class TestMembershipFee(FeeTestBase):
 
         self.assertTrue(user.has_property('payment_in_default'))
         self.assertFalse(user.has_property('member'))
-
 
 class TestLateFee(FeeTestBase):
     datasets = (AccountData, ConfigData, MembershipData, PropertyData,
