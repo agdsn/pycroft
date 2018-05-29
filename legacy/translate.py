@@ -599,6 +599,7 @@ def generate_config(data, resources):
         violation_group=g_d["suspended"],
         network_access_group=g_d["member"],
         cache_group=g_d["cache_user"],
+        traffic_limit_exceeded_group=g_d["traffic"],
         registration_fee_account=an_d[u"Beiträge"],
         semester_fee_account=an_d[u"Beiträge"],
         late_fee_account=an_d[u"Beiträge"],

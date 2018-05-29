@@ -45,6 +45,9 @@ class PropertyGroupData(DataSet):
 
 
 
+    class traffic_limit_exceeded:
+        name = u"Trafficlimit überschritten"
+
 class ConfigData(DataSet):
     class config:
         id = 1
@@ -52,6 +55,7 @@ class ConfigData(DataSet):
         network_access_group = PropertyGroupData.network_access
         violation_group = PropertyGroupData.violation
         cache_group = PropertyGroupData.cache
+        traffic_limit_exceeded_group = PropertyGroupData.traffic_limit_exceeded
         registration_fee_account = AccountData.registration_fee
         semester_fee_account = AccountData.semester_fee
         late_fee_account = AccountData.late_fee
@@ -98,3 +102,8 @@ class PropertyData(DataSet):
         property_group = PropertyGroupData.cache
         name = "cache_access"
         granted = False
+
+    class traffic_limit_exceeded:
+        property_group = PropertyGroupData.traffic_limit_exceeded
+        granted = True
+        name = "traffic_limit_exceeded"

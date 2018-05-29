@@ -10,16 +10,18 @@ This module contains functions concerning traffic group membership, credit
 granting, etc.
 
 """
-from operator import attrgetter
+from datetime import datetime
+from operator import attrgetter, or_
 
+from pycroft import config
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import closedopen, closed
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import remove_member_of, make_member_of
 from pycroft.model import session
 from pycroft.model.logging import UserLogEntry
 from pycroft.model.traffic import TrafficCredit
-from pycroft.model.user import TrafficGroup
+from pycroft.model.user import TrafficGroup, User, Membership, PropertyGroup
 from pycroft.model.session import with_transaction
 
 
@@ -151,3 +153,23 @@ def reset_credit(user, processor, target_amount=1*1024**3):
     log_user_event(deferred_gettext("Traffic has ben compensated to 1GiB").to_json(),
                    author=processor,
                    user=user)
+
+
+def handle_exceeded_traffic_limits():
+    # End memberships
+    users = User.q.filter(or_(User.current_credit >= 0,
+                              User.has_property('traffic_limit_disabled'))) \
+                  .filter(User.has_property('traffic_limit_exceeded')) \
+                  .all()
+
+    for user in users:
+        remove_member_of(user, config.traffic_limit_exceeded_group, None, None)
+
+    # Add memberships
+    users = User.q.filter(User.current_credit < 0)\
+                  .filter(not User.has_property('traffic_limit_disabled'))\
+                  .filter(not User.has_property('traffic_limit_exceeded'))\
+                  .all()
+
+    for user in users:
+        make_member_of(user, config.traffic_limit_exceeded_group, None, None)

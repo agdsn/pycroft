@@ -25,6 +25,7 @@ setup(
             'pycroft_legacy_cache = legacy.cache_legacy:main',
             'pycroft_legacy_gerok_import = legacy_gerok.__main__',
             'pycroft_ldap_sync = ldap_sync.__main__',
+            'pycroft_handle_exceeded_traffic_limits = traffic.handle_exceeded_traffic_limits',
         ]
     },
 

@@ -24,6 +24,7 @@ class ConfigFactory(BaseFactory):
     network_access_group = SubFactory(PropertyGroupFactory)
     violation_group = SubFactory(PropertyGroupFactory)
     cache_group = SubFactory(PropertyGroupFactory)
+    traffic_limit_exceeded_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s
     registration_fee_account = SubFactory(AccountFactory)
