@@ -618,7 +618,7 @@ def membership_fee_create():
             day=(next_month - timedelta(days=next_month.day)).day
         )
 
-        name_default = u'Mitgliedsbeitrag ' + str(begins_on_default.year) \
+        name_default = str(begins_on_default.year) \
                        + "-" + "%02d" % begins_on_default.month
 
         reduced_fee_threshold = previous_fee.reduced_fee_threshold.days
