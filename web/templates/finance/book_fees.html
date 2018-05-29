@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% import "macros/forms.html" as forms %}
+{% import "macros/table.html" as tbl %}
+
+{% set cols = [
+    {'name': 'name', 'title': 'Name', 'formatter': 'linkFormatter'},
+    {'name': 'valid_on', 'title': 'Gültig am'},
+    {'name': 'description', 'title': 'Beschreibung'},
+    {'name': 'amount', 'title': 'Betrag', 'formatter':'coloredFormatter'},
+] %}
+
+{% block content %}
+    {{ tbl.item_table(
+        'book_fees',
+        url_for('.book_fees_json'),
+        cols
+    ) }}
+
+    <br/>
+
+    {{ forms.advanced_form(form, '', show_cancel=False, submit_text="Buchen", actions_offset=0, field_render_mode="basic", form_render_mode="basic") }}
+{% endblock %}

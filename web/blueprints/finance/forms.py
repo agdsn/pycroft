@@ -81,9 +81,8 @@ class MembershipFeeCreateForm(Form):
 
 
 class FeeApplyForm(Form):
-    apply_registration_fee = disabled(BooleanField(u"Anmeldegebühr"))
-    apply_membership_fee = BooleanField(u"Mitgliedsbeitrag")
-    apply_late_fee = disabled(BooleanField(u"Versäumnisgebühr"))
+    pass
+
 
 class HandlePaymentsInDefaultForm(Form):
     pass

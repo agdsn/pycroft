@@ -529,40 +529,55 @@ def accounts_create():
                            page_title=u"Konto erstellen")
 
 
+def post_membership_fees():
+    users = User.q.filter(or_(User.has_property('membership_fee'),
+                              User.has_property(
+                                  'reduced_membership_fee'))).all()
+
+    fees = [finance.MembershipFee(config.membership_fee_account)]
+
+    return post_fees(users, fees, current_user)
+
+@bp.route("/book_fees", methods=['GET', 'POST'])
+@access.require('finance_change')
+def book_fees():
+    form = FeeApplyForm()
+    if form.is_submitted():
+        new_transactions = post_membership_fees()
+
+        session.commit()
+
+        flash("{} neue Buchungen erstellt.".format(len(new_transactions)), "success")
+
+        return redirect(url_for(".membership_fees"))
+    return render_template('finance/book_fees.html', form=form,
+                           page_title='Beiträge buchen')
+
+
+@bp.route("/book_fees_json")
+@access.require('finance_change')
+def book_fees_json():
+    new_transactions = post_membership_fees()
+
+    session.rollback()
+
+    return jsonify(items=[{
+        'name': {'title': transaction['user_account'].user.name,
+                 'href': url_for("user.user_show", user_id=transaction['user_account'].user.id)},
+        'amount': {'value': str(transaction['amount']) + '€', 'is_positive': (transaction['amount'] >= 0)},
+        'description': localized(transaction['description']),
+        'valid_on': transaction['valid_on']
+    } for transaction in new_transactions])
+
+
 @bp.route("/membership_fees", methods=['GET', 'POST'])
 @nav.navigate(u"Beiträge")
 def membership_fees():
-    form = FeeApplyForm()
-
-    if form.is_submitted():
-        if form.validate_on_submit():
-            users = User.q.filter(or_(User.has_property('membership_fee'),
-                                      User.has_property(
-                                          'reduced_membership_fee'))).all()
-
-            fees = []
-
-            if form.apply_registration_fee.data:
-                fees.append(finance.RegistrationFee(config.membership_fee_account))
-
-            if form.apply_membership_fee.data:
-                fees.append(finance.MembershipFee(config.membership_fee_account))
-
-            if form.apply_late_fee.data:
-                fees.append(finance.LateFee(config.membership_fee_account, date.today()))
-
-            new_posts = post_fees(users, fees, current_user)
-
-            session.commit()
-
-            flash("{} neue Buchungen erstellt.".format(new_posts), "success")
-
-            return redirect(url_for(".membership_fees"))
-
-    return render_template('finance/membership_fees.html', form=form)
+    return render_template('finance/membership_fees.html')
 
 
 @bp.route("/membership_fees/json")
+@access.require('finance_change')
 def membership_fees_json():
     return jsonify(items=[
         {

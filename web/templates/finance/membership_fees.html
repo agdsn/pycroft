@@ -51,7 +51,10 @@
 
     <div class="row">
         <div class="col-xs-12">
-            {{ forms.advanced_form(form, '', show_cancel=False, submit_text="Buchen", actions_offset=0, field_render_mode="basic", form_render_mode="basic") }}
+            <a class="btn btn-primary" href="{{ url_for('.book_fees') }}">
+                <span class="glyphicon glyphicon-book"></span>
+                Buchungen berechnen und prüfen
+            </a>
         </div>
     </div>
 
