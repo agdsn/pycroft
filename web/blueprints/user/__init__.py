@@ -11,6 +11,7 @@
     :copyright: (c) 2012 by AG DSN.
 """
 import re
+from difflib import SequenceMatcher
 from itertools import chain
 from functools import partial
 
@@ -21,6 +22,7 @@ import operator
 from sqlalchemy import Text
 import uuid
 from sqlalchemy import Text, and_
+from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers.interval import closed, closedopen
@@ -531,12 +533,70 @@ def json_trafficdata(user_id, days=7):
     )
 
 
+def validate_unique_name(form, field):
+    if not form.force.data:
+        try:
+            room = Room.q.filter_by(number=form.room_number.data,
+                                    level=form.level.data,
+                                    building=form.building.data).one()
+
+            if room is not None:
+                users = User.q.filter_by(room_id=room.id).all()
+
+                for user in users:
+                    ratio = SequenceMatcher(None, field.data, user.name).ratio()
+
+                    if ratio > 0.6:
+                        return HTMLString("<div class=\"optional-error\">* " +
+                                          u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
+                                          "<br/>Nutzer: " +
+                                          "<a target=\"_blank\" href=\"" +
+                                          url_for("user.user_show", user_id=user.id) +
+                                          "\">" + user.name + "</a></div>")
+        except:
+            pass
+
+    return False
+
+
+def validate_unique_email(form, field):
+    if field.data:
+        user = User.q.filter_by(email=field.data).first()
+        if user is not None and not form.force.data:
+            return HTMLString("<div class=\"optional-error\">* "
+                              + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
+                              "<a target=\"_blank\" href=\"" +
+                              url_for("user.user_show", user_id=user.id) +
+                              "\">" + user.name + "</a></div>")
+
+
+def validate_unique_mac(form, field):
+    if re.match(mac_regex, field.data):
+        interface_existing = Interface.q.filter_by(mac=field.data).first()
+
+        if interface_existing is not None and not form.annex.data:
+            owner = interface_existing.host.owner
+
+            return HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
+                              "<a target=\"_blank\" href=\"" +
+                              url_for("user.user_show", user_id=owner.id) +
+                              "#hosts\">" + owner.name + "</a>")
+
+
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate(u"Anlegen")
 @access.require('user_change')
 def create():
     form = UserCreateForm()
-    if form.validate_on_submit():
+
+    if form.is_submitted():
+        unique_name_error = validate_unique_name(form, form.name)
+        unique_email_error = validate_unique_email(form, form.email)
+        unique_mac_error = validate_unique_mac(form, form.mac)
+
+    if form.validate_on_submit() and not (unique_name_error or
+                                          unique_email_error or
+                                          unique_mac_error):
         try:
             new_user, plain_password = lib.user.move_in(
                 name=form.name.data,
@@ -562,6 +622,16 @@ def create():
                 InvalidMACAddressException) as error:
             flash(str(error), 'error')
             session.session.rollback()
+
+    if form.is_submitted():
+        if unique_name_error:
+            form.name.errors.append(unique_name_error)
+
+        if unique_email_error:
+            form.email.errors.append(unique_email_error)
+
+        if unique_mac_error:
+            form.mac.errors.append(unique_mac_error)
 
     return render_template('user/user_create.html', form=form)
 

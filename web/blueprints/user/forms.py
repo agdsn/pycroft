@@ -9,13 +9,11 @@ from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import (
     Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
-from wtforms.widgets import HTMLString
 
 from pycroft.helpers.net import mac_regex
-from pycroft.model.facilities import Room
 from pycroft.model.finance import Semester
-from pycroft.model.host import Host, Interface
-from pycroft.model.user import PropertyGroup, User, TrafficGroup
+from pycroft.model.host import Host
+from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query
 from web.blueprints.properties.forms import traffic_group_query, \
     property_group_query
@@ -44,51 +42,6 @@ def semester_query():
 def validate_unique_login(form, field):
     if User.q.filter_by(login=field.data).first():
         raise ValidationError(u"Nutzerlogin schon vergeben!")
-
-
-def validate_unique_name(form, field):
-    if not form.force.data:
-        room = Room.q.filter_by(number=form.room_number.data,
-                                level=form.level.data,
-                                building=form.building.data).one()
-
-        if room is not None:
-            users = User.q.filter_by(room_id=room.id).all()
-
-            for user in users:
-                ratio = SequenceMatcher(None, field.data, user.name).ratio()
-
-                if ratio > 0.6:
-                    raise ValidationError(
-                        HTMLString("<div class=\"optional-error\">* " + u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
-                                   "<br/>Nutzer: " +
-                                   "<a target=\"_blank\" href=\"" +
-                                   url_for("user.user_show", user_id=user.id) +
-                                   "\">" + user.name + "</a></div>"))
-
-
-def validate_unique_email(form, field):
-    user = User.q.filter_by(email=field.data).first()
-    if user is not None and not form.force.data:
-        raise ValidationError(
-            HTMLString("<div class=\"optional-error\">* " + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
-                       "<a target=\"_blank\" href=\"" +
-                       url_for("user.user_show", user_id=user.id) +
-                       "\">" + user.name + "</a></div>"))
-
-
-def validate_unique_mac(form, field):
-    if re.match(mac_regex, field.data):
-        interface_existing = Interface.q.filter_by(mac=field.data).first()
-
-        if interface_existing is not None and not form.annex.data:
-            owner = interface_existing.host.owner
-
-            raise ValidationError(
-                HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
-                           "<a target=\"_blank\" href=\"" +
-                           url_for("user.user_show", user_id=owner.id) +
-                           "#hosts\">" + owner.name + "</a>"))
 
 
 class UserSearchForm(Form):
@@ -147,16 +100,15 @@ class UserMoveForm(Form):
 
 
 class UserCreateForm(UserMoveForm):
-    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!"), validate_unique_name])
+    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
     mac = TextField(u"MAC", [
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!"),
-        validate_unique_mac])
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
-                                  Optional(), validate_unique_email])
+                                  Optional()])
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
