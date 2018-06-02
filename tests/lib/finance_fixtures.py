@@ -82,6 +82,14 @@ class AccountData(DataSet):
         name = u"Dummy User Early"
         type = "USER_ASSET"
 
+    class user_account_grace:
+        name = u"Dummy User Grace"
+        type = "USER_ASSET"
+
+    class user_account_no_grace:
+        name = u"Dummy User No Grace"
+        type = "USER_ASSET"
+
 
 class UserData(DataSet):
     class dummy:
@@ -90,6 +98,20 @@ class UserData(DataSet):
         registered_at = datetime.combine(MembershipFeeData.with_registration_fee.begins_on + timedelta(days=12), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account
+
+    class dummy_grace:
+        login = u"dummy_grace"
+        name = u"Dummy Dummy"
+        registered_at = datetime.combine(MembershipFeeData.without_registration_fee.begins_on + timedelta(days=20), time.min)
+        room = RoomData.dummy_room1
+        account = AccountData.user_account_grace
+
+    class dummy_no_grace:
+        login = u"dummy_no_grace"
+        name = u"Dummy Dummy"
+        registered_at = datetime.combine(MembershipFeeData.without_registration_fee.begins_on - timedelta(days=10), time.min)
+        room = RoomData.dummy_room1
+        account = AccountData.user_account_no_grace
 
     class dummy_early:
         login = u"dummy_early"
@@ -110,6 +132,18 @@ class MembershipData(DataSet):
         begins_at = UserData.dummy_early.registered_at
         ends_at = None
         user = UserData.dummy_early
+        group = PropertyGroupData.member
+
+    class member_grace:
+        begins_at = UserData.dummy_grace.registered_at
+        ends_at = None
+        user = UserData.dummy_grace
+        group = PropertyGroupData.member
+
+    class member_no_grace:
+        begins_at = UserData.dummy_no_grace.registered_at
+        ends_at = UserData.dummy_no_grace.registered_at + timedelta(30)
+        user = UserData.dummy_no_grace
         group = PropertyGroupData.member
 
 

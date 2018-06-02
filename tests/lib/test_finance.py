@@ -368,6 +368,21 @@ class TestMembershipFee(FeeTestBase):
         self.assertTrue(user.has_property('payment_in_default'))
         self.assertFalse(user.has_property('member'))
 
+    def test_grace(self):
+        user = User.q.all()[2]
+
+        membership_fee = MembershipFee(self.fee_account)
+
+        self.assertEqual(post_fees([user], [membership_fee], self.user), [])
+
+    def test_no_grace(self):
+        user = User.q.all()[3]
+
+        membership_fee = MembershipFee(self.fee_account)
+
+        self.assertEqual(len(post_fees([user], [membership_fee], self.user)), 1)
+
+
 class TestLateFee(FeeTestBase):
     datasets = (AccountData, ConfigData, MembershipData, PropertyData,
                 PropertyGroupData, MembershipFeeData, UserData)
