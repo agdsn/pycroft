@@ -27,7 +27,8 @@ from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
-    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
+    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen,
+    PositiveInfinity)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction
@@ -49,22 +50,29 @@ def get_membership_fees(interval_set=None):
             criteria = []
 
             if interval.begin is not None:
-                criteria.append(or_(
-                    interval.begin <= model.finance.MembershipFee.begins_on,
-                    between(interval.begin,
-                            model.finance.MembershipFee.begins_on,
-                            model.finance.MembershipFee.ends_on)
-                ))
+                if not interval.end == PositiveInfinity:
+                    criteria.append(or_(
+                        interval.begin <= model.finance.MembershipFee.begins_on,
+                        between(interval.begin,
+                                model.finance.MembershipFee.begins_on,
+                                model.finance.MembershipFee.ends_on)
+                    ))
 
             if interval.end is not None:
-                criteria.append(or_(
-                    interval.end >= model.finance.MembershipFee.ends_on,
-                    between(interval.end,
-                            model.finance.MembershipFee.begins_on,
-                            model.finance.MembershipFee.ends_on)
-                ))
+                if interval.end == PositiveInfinity:
+                    criteria.append(
+                        interval.end > model.finance.MembershipFee.begins_on
+                    )
+                else:
+                    criteria.append(or_(
+                        interval.end >= model.finance.MembershipFee.ends_on,
+                        between(interval.end,
+                                model.finance.MembershipFee.begins_on,
+                                model.finance.MembershipFee.ends_on)
+                    ))
 
-            queries.append(model.finance.MembershipFee.q.filter(*criteria) \
+
+            queries.append(model.finance.MembershipFee.q.filter(or_(*criteria)) \
                            .order_by(model.finance.MembershipFee.begins_on))
 
     if len(queries) >= 1:
@@ -237,7 +245,11 @@ def post_fees(users, fees, processor):
         for fee in fees:
             computed_debts = fee.compute(user)
 
-            posted_transactions = fee.get_posted_transactions(user).all()
+            try:
+                posted_transactions = fee.get_posted_transactions(user).all()
+            except AttributeError:
+                continue
+
             posted_credits = tuple(
                 t for t in posted_transactions if t.amount > 0)
 
@@ -266,7 +278,7 @@ def post_fees(users, fees, processor):
                         amount, processor, valid_on)
 
                     new_transactions.append({
-                        'user_account': user.account,
+                        'user_id': user.id,
                         'description': description,
                         'amount': amount,
                         'valid_on': valid_on
@@ -275,15 +287,21 @@ def post_fees(users, fees, processor):
     return new_transactions
 
 
-def diff(posted, computed):
+def diff(posted, computed, insert_only=False):
     sequence_matcher = difflib.SequenceMatcher(None, posted, computed)
     missing_postings = []
     erroneous_postings = []
     for tag, i1, i2, j1, j2 in sequence_matcher.get_opcodes():
         if 'replace' == tag:
+            if insert_only:
+                continue
+
             erroneous_postings.extend(islice(posted, i1, i2))
             missing_postings.extend(islice(computed, j1, j2))
         if 'delete' == tag:
+            if insert_only:
+                continue
+
             erroneous_postings.extend(islice(posted, i1, i2))
         if 'insert' == tag:
             missing_postings.extend(islice(computed, j1, j2))
@@ -423,12 +441,19 @@ class MembershipFee(Fee):
 
             fee_in_period = reg_fee_in_period | red_fee_in_period
 
+            first_fee = False
+
+            for regular_fee_interval in regular_fee_intervals:
+                if regular_fee_interval.begin.month == membership_fee.begins_on.month:
+                    first_fee = True
+
             # IntervalSet is type-agnostic, so cannot do .length of empty sets,
             # therefore these double checks are required
             if (reg_fee_in_period and
                     (not red_fee_in_period or red_fee_in_period.length <
                      membership_fee.reduced_fee_threshold) and
-                    fee_in_period.length > membership_fee.grace_period):
+                    (fee_in_period.length > membership_fee.grace_period or
+                     not first_fee)):
                 amount = membership_fee.regular_fee
             elif (red_fee_in_period and
                   fee_in_period.length > membership_fee.grace_period and
@@ -807,6 +832,9 @@ def handle_payments_in_default():
                 date.today() - timedelta(days=in_default_days))
         except NoResultFound:
             fee = get_last_applied_membership_fee()
+
+        if not fee:
+            return [], []
 
         if not user.has_property('payment_in_default'):
             if in_default_days >= fee.payment_deadline.days:

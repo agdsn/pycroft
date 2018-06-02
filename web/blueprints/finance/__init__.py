@@ -551,7 +551,7 @@ def book_fees():
 
         flash("{} neue Buchungen erstellt.".format(len(new_transactions)), "success")
 
-        return redirect(url_for(".membership_fees.handle_payments_in_default"))
+        return redirect(url_for(".handle_payments_in_default"))
     return render_template('finance/book_fees.html', form=form,
                            page_title='Beiträge buchen')
 
@@ -564,8 +564,8 @@ def book_fees_json():
     session.rollback()
 
     return jsonify(items=[{
-        'name': {'title': transaction['user_account'].user.name,
-                 'href': url_for("user.user_show", user_id=transaction['user_account'].user.id)},
+        'user': {'title': str(transaction['user_id']),
+                 'href': url_for("user.user_show", user_id=transaction['user_id'])},
         'amount': {'value': str(transaction['amount']) + '€', 'is_positive': (transaction['amount'] >= 0)},
         'description': localized(transaction['description']),
         'valid_on': transaction['valid_on']
