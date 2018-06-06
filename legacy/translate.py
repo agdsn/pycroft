@@ -103,10 +103,10 @@ def generate_groups(data, resources):
                 name=prop_name, property_group=g, granted=modifier))
     g_d['usertraffic'] = user.TrafficGroup(
         name="Nutzer-Trafficgruppe",
-        credit_amount=3*2**30,
+        credit_amount=10*2**30,
         credit_interval=timedelta(days=1),
-        credit_limit=21*3*2**30,
-        initial_credit_amount=21*2**30)
+        credit_limit=70*3*2**30,
+        initial_credit_amount=70*2**30)
     return list(g_d.values())+properties_l
 
 
