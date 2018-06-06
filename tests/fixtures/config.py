@@ -46,7 +46,6 @@ class PropertyGroupData(DataSet):
     class traffic_limit_exceeded:
         name = u"Trafficlimit überschritten"
 
-
     class payment_in_default:
         name = u"Zahlungsrückstand"
 
