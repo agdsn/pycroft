@@ -598,8 +598,6 @@ def generate_config(data, resources):
         violation_group=g_d["suspended"],
         network_access_group=g_d["member"],
         cache_group=g_d["cache_user"],
-        moved_from_division_group=g_d["moved_from_division"],
-        already_paid_semester_fee_group=g_d["already_paid"],
         registration_fee_account=an_d[u"Beiträge"],
         semester_fee_account=an_d[u"Beiträge"],
         late_fee_account=an_d[u"Beiträge"],

@@ -23,8 +23,6 @@ class ConfigFactory(BaseFactory):
     member_group = SubFactory(PropertyGroupFactory)
     network_access_group = SubFactory(PropertyGroupFactory)
     violation_group = SubFactory(PropertyGroupFactory)
-    moved_from_division_group = SubFactory(PropertyGroupFactory)
-    already_paid_semester_fee_group = SubFactory(PropertyGroupFactory)
     cache_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s

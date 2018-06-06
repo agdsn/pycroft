@@ -23,14 +23,6 @@ class Config(IntegerIdModel):
     cache_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     cache_group = relationship(PropertyGroup, foreign_keys=[cache_group_id])
-    moved_from_division_group_id = Column(
-        Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    moved_from_division_group = relationship(
-        PropertyGroup, foreign_keys=[moved_from_division_group_id])
-    already_paid_semester_fee_group_id = Column(
-        Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    already_paid_semester_fee_group = relationship(
-        PropertyGroup, foreign_keys=[already_paid_semester_fee_group_id])
     registration_fee_account_id = Column(
         Integer, ForeignKey(Account.id), nullable=False)
     registration_fee_account = relationship(

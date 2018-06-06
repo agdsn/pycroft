@@ -43,11 +43,6 @@ class PropertyGroupData(DataSet):
     class cache:
         name = "Cache"
 
-    class moved_from_division:
-        name = u"Umzug aus anderer Sektion"
-
-    class already_paid_semester_fee:
-        name = u"Beitrag bereits gezahlt"
 
 
 class ConfigData(DataSet):
@@ -57,8 +52,6 @@ class ConfigData(DataSet):
         network_access_group = PropertyGroupData.network_access
         violation_group = PropertyGroupData.violation
         cache_group = PropertyGroupData.cache
-        moved_from_division_group = PropertyGroupData.moved_from_division
-        already_paid_semester_fee_group = PropertyGroupData.already_paid_semester_fee
         registration_fee_account = AccountData.registration_fee
         semester_fee_account = AccountData.semester_fee
         late_fee_account = AccountData.late_fee
@@ -85,16 +78,6 @@ class PropertyData(DataSet):
         property_group = PropertyGroupData.member
         name = "late_fee"
         granted = True
-
-    class moved_from_division:
-        property_group = PropertyGroupData.moved_from_division
-        name = "registation_fee"
-        granted = False
-
-    class already_paid:
-        property_group = PropertyGroupData.already_paid_semester_fee
-        name = "semester_fee"
-        granted = False
 
     class away:
         property_group = PropertyGroupData.away

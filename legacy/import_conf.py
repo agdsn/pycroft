@@ -70,10 +70,6 @@ group_props = {
                                                     'userdb': True,
                                                     'userwww': True}),
 
-    "moved_from_division": ("Umzug aus anderer Sektion", {"registration_fee": False}),
-
-    "already_paid": ("Semesterbeitrag in anderer Sektion entrichtet", {"semester_fee": False}),
-
     "root": ("Root", reduce(lambda d1,d2: dict(d1, **d2), [org_props,
                                                            finance_admin_props,
                                                            group_admin_props,
