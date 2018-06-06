@@ -342,6 +342,8 @@ class TestMembershipFee(FeeTestBase):
         ])
 
     def test_payment_in_default_group(self):
+        handle_payments_in_default()
+        self.assertFalse(self.user.has_property('payment_in_default'))
         membership_fee = MembershipFee(self.fee_account)
         post_fees([self.user], [membership_fee], self.user)
         self.assertFalse(self.user.has_property('payment_in_default'))
