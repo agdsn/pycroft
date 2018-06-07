@@ -25,8 +25,8 @@ class Config(IntegerIdModel):
     cache_group = relationship(PropertyGroup, foreign_keys=[cache_group_id])
     traffic_limit_exceeded_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
-                                                foreign_keys=[traffic_limit_exceeded_group_id])
     traffic_limit_exceeded_group = relationship(PropertyGroup,
+                                                foreign_keys=[traffic_limit_exceeded_group_id])
     registration_fee_account_id = Column(
         Integer, ForeignKey(Account.id), nullable=False)
     registration_fee_account = relationship(

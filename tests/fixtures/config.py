@@ -43,8 +43,6 @@ class PropertyGroupData(DataSet):
     class cache:
         name = "Cache"
 
-
-
     class traffic_limit_exceeded:
         name = u"Trafficlimit überschritten"
 

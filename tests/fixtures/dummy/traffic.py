@@ -19,7 +19,7 @@ class TrafficVolumeData(DataSet):
 
     class dummy_volume_before_balance:
         ip = IPData.dummy_user_ipv4
-        user = UserData.dummy
+        user = UserData.privileged
         type = "Ingress"
         amount = int(3.72 * 2**30)
         packets = int(3720)
@@ -27,7 +27,7 @@ class TrafficVolumeData(DataSet):
 
     class dummy_volume_ipv6:
         ip = IPData.dummy_user_ipv6
-        user = UserData.dummy
+        user = UserData.anotheruser
         type = "Egress"
         amount = int(56.1 * 2**20)
         packets = int(5610)
@@ -41,12 +41,12 @@ class TrafficCreditData(DataSet):
         timestamp = datetime.utcnow() - timedelta(minutes=20)
 
     class dummy_credit_before_balance:
-        user = UserData.dummy
+        user = UserData.privileged
         amount = int(62.1 * 2**20)
         timestamp = datetime.utcnow() - timedelta(hours=3)
 
     class dummy_credit_in_future:
-        user = UserData.dummy
+        user = UserData.anotheruser
         amount = int(3 * 2**30)
         timestamp = datetime.utcnow() + timedelta(days=1)
 
