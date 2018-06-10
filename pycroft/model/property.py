@@ -17,7 +17,7 @@ from .ddl import View, DDLManager
 from .functions import utcnow as utcnow_sql
 from .user import User, Property, Membership, PropertyGroup
 
-property_view_ddl = DDLManager()
+manager = DDLManager()
 
 current_property = View(
     name='current_property',
@@ -53,7 +53,7 @@ current_property = View(
         .statement,
     ),
 )
-property_view_ddl.add_view(Membership.__table__, current_property)
+manager.add_view(Membership.__table__, current_property)
 
 
 class CurrentProperty(ModelBase):
@@ -64,4 +64,4 @@ class CurrentProperty(ModelBase):
     }
 
 
-property_view_ddl.register()
+manager.register()
