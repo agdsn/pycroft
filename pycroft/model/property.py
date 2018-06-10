@@ -9,7 +9,11 @@ pycroft.model.property
 This module contains model descriptions concerning properties, groups, and memberships.
 
 """
-from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, literal
+from sqlalchemy.dialects import postgresql
+
+from pycroft.model import ddl
+from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, \
+    literal, literal_column, select
 from sqlalchemy.orm import Query
 
 from .base import ModelBase
@@ -18,6 +22,55 @@ from .functions import utcnow as utcnow_sql
 from .user import User, Property, Membership, PropertyGroup
 
 manager = DDLManager()
+
+property_query_stmt = union(
+    Query([User.id.label('user_id'), Property.name.label('property_name'),
+           literal(False).label('denied')])
+    .select_from(Membership)
+    .join(PropertyGroup)
+    .join(User)
+    .filter(and_(
+        or_(Membership.begins_at == null(), Membership.begins_at <= literal_column('evaluation_time')),
+        or_(Membership.ends_at == null(), literal_column('evaluation_time') <= Membership.ends_at),
+    ))
+    .join(Property)
+    .group_by(User.id, Property.name)
+    .having(func.every(Property.granted))
+    .statement,
+
+    Query([User.id.label('user_id'), Property.name.label('property_name'),
+           literal(True).label('denied')])
+    .select_from(Membership)
+    .join(PropertyGroup)
+    .join(User)
+    .filter(and_(
+        or_(Membership.begins_at == null(), Membership.begins_at <= literal_column('evaluation_time')),
+        or_(Membership.ends_at == null(), literal_column('evaluation_time') <= Membership.ends_at),
+    ))
+    .join(Property)
+    .group_by(User.id, Property.name)
+    # granted by ≥1 membership, but also denied by ≥1 membership
+    .having(and_(func.bool_or(Property.granted), ~func.every(Property.granted)))
+    .statement,
+)
+
+evaluate_properties_function = ddl.Function(
+    'evaluate_properties', ['evaluation_time timestamp with time zone'],
+    'TABLE (user_id INT, property_name VARCHAR(255), denied BOOLEAN)',
+    'BEGIN RETURN QUERY {}; END;'.format(
+        property_query_stmt.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={'literal_binds': True}
+        )
+    ),
+    volatility='stable', strict=True,
+    language='plpgsql'
+)
+
+manager.add_function(
+    Membership.__table__,
+    evaluate_properties_function
+)
 
 current_property = View(
     name='current_property',
