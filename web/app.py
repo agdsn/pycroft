@@ -38,6 +38,7 @@ class PycroftFlask(Flask):
         super().__init__(*a, **kw)
         # config keys to support:
         self.maybe_add_config_from_env([
+            'PYCROFT_API_KEY',
             'HADES_CELERY_APP_NAME',
             'HADES_BROKER_URI',
             'HADES_RESULT_BACKEND_URI',

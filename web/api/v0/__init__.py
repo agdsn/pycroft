@@ -1,7 +1,8 @@
-from operator import attrgetter
+from functools import wraps
 
-from flask import jsonify, request
-from flask_restful import Api, Resource, abort, reqparse, inputs
+from flask import jsonify, request, current_app
+from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
+    reqparse, inputs
 from ipaddr import IPAddress
 from sqlalchemy.exc import OperationalError
 
@@ -17,6 +18,38 @@ from pycroft.model.types import IPAddress
 from pycroft.model.user import User, IllegalEmailError
 
 api = Api()
+
+
+def parse_authorization_header(value):
+    if not value:
+        return None
+
+    try:
+        auth_type, api_key = value.split(maxsplit=1)
+        return api_key if auth_type.lower() == 'apikey' else None
+    except ValueError:
+        return None
+
+
+def authenticate(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth = request.headers.get('authorization')
+        api_key = parse_authorization_header(auth)
+
+        if api_key is None:
+            abort(401, message="Missing API key.")
+
+        if current_app.config['PYCROFT_API_KEY'] != api_key:
+            abort(401, message="Invalid API key.")
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+class Resource(FlaskRestfulResource):
+    method_decorators = [authenticate]
 
 
 def get_user_or_404(user_id):
