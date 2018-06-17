@@ -19,6 +19,7 @@ from web.blueprints.properties.forms import traffic_group_query, \
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField
 from web.form.fields.custom import LazyLoadSelectField
+from web.form.fields.filters import empty_to_none
 from web.form.fields.validators import OptionalIf
 
 
@@ -104,7 +105,7 @@ class UserCreateForm(UserMoveForm):
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
-                                  Optional()])
+                                  Optional()], filters=[empty_to_none])
     mac = TextField(u"MAC", [OptionalIf('room_number', invert=True),
                              Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",
@@ -112,6 +113,7 @@ class UserCreateForm(UserMoveForm):
     property_group = QuerySelectField(u"Gruppe",
                                       get_label='name',
                                       query_factory=property_group_query)
+
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
