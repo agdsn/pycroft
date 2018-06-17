@@ -147,6 +147,17 @@ def reset_password(user, processor):
     return plain_password
 
 
+@with_transaction
+def change_password(user, password):
+    # TODO: verify password complexity
+    user.password = password
+
+    message = deferred_gettext(u"Password was changed")
+    log_user_event(author=user,
+                   user=user,
+                   message=message.to_json())
+
+
 def create_user(name, login, email, birthdate, group, processor):
     """Create a new member
 
@@ -352,6 +363,7 @@ def edit_name(user, name, processor):
     :param name: The new full name.
     :return: The changed user object.
     """
+
     if not name:
         raise ValueError()
     old_name = user.name
@@ -367,7 +379,7 @@ def edit_email(user, email, processor):
     """
     Changes the email address of a user and creates a log entry.
     :param user: User object to change
-    :param email: New email address
+    :param email: New email address, can be None
     :param processor:User object of the processor, which issues the change
     :return:Changed user object
     """

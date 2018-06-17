@@ -158,7 +158,7 @@ class User(IntegerIdModel, UserMixin):
 
     @validates('email')
     def validate_email(self, _, value):
-        if not value:
+        if value is None:
             return value
         if not self.email_regex.match(value):
             raise IllegalEmailError("Illegal email '{}'".format(value))
