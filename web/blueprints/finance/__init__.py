@@ -28,7 +28,7 @@ from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
-    post_transactions_for_membership_fee
+    post_transactions_for_membership_fee, build_transactions_query
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee)
 from pycroft.model.session import session
@@ -47,7 +47,6 @@ from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
 from web.templates import page_resources
 from web.blueprints.helpers.api import json_agg_core
-from web.blueprints.helpers.finance import build_transactions_query
 
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
