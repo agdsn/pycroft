@@ -107,8 +107,8 @@ def generate_user_sheet(user, user_id, plain_password):
                             spaceAfter=0.8 * cm))
 
     # Footer
-    im_web = Image(ASSETS_WEB_FILENAME, 0.5 * cm, 0.5 * cm)
-    im_house = Image(ASSETS_HOUSE_FILENAME, 0.5 * cm, 0.5 * cm)
+    im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_house = Image(ASSETS_HOUSE_FILENAME, 0.4 * cm, 0.4 * cm)
     im_email = Image(ASSETS_EMAIL_FILENAME, 0.4 * cm, 0.4 * cm)
     im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
     im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
