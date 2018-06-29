@@ -34,7 +34,7 @@ except ImportError:
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model
-from pycroft.model import (facilities, user, net, port,
+from pycroft.model import (facilities, user, net, port, traffic,
                            finance, session, host, config, logging)
 from pycroft.helpers import user as usertools
 
@@ -91,15 +91,18 @@ def main(args):
             bank_account = create_bankAccount()
             building = create_site_and_building()
             ger38subnet, sn = create_subnet(session_nvtool)
-            import_facilities_and_switches(session_nvtool, building, ger38subnet)
-            import_SwitchPatchPorts(session_nvtool, building, sn)
             groups = get_or_create_groups()
+            root_user = get_or_create_root_user(groups)
+            import_facilities_and_switches(session_nvtool, building, ger38subnet,
+                                           root_user)
+            import_SwitchPatchPorts(session_nvtool, building, sn, ger38subnet)
             fee_account = get_or_create_config(groups)
             import_users(session_nvtool, building, groups, ger38subnet, fee_account,
-                         bank_account)
+                         bank_account, root_user)
 
         session.session.commit()
-    except:
+    except Exception as e:
+        log.error(e)
         session.session.rollback()
     finally:
         session.session.close()
@@ -156,7 +159,7 @@ def get_or_create_config(g_d):
     return fee_account
 
 
-def import_SwitchPatchPorts(session_nvtool, building, sn):
+def import_SwitchPatchPorts(session_nvtool, building, sn, subnet):
     log.info("fill switches with ports and pull cabels through the house")
 
     # As on the last check (2017-09-03) there are no active cables to jacks with other numbers.
@@ -166,7 +169,9 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
     for j in jacks:
         switch = session.session.query(host.Switch).filter(
             host.Switch.management_ip == j.port.switch.ip).one()
-        port = next(i for i in switch.ports if str(i.name) == str(j.port.number))
+
+        port_name = str(j.port.number)
+        sp = host.SwitchPort(switch= switch, name=port_name, default_vlans=[subnet.vlan])
 
         inhabitable, isswitchroom, room_number = get_room_properties(j.location)
 
@@ -175,35 +180,41 @@ def import_SwitchPatchPorts(session_nvtool, building, sn):
             (facilities.Room.level == j.location.floor.number) &
             (facilities.Room.number == room_number)).one()
 
-        existing_ports = session.session.query(port.SwitchPatchPort).filter(port.SwitchPatchPort.room == room).all()
+        existing_ports = session.session.query(port.PatchPort).filter(port.PatchPort.room
+                                                              == room).all()
         # already imported
         if existing_ports:
             log.info("Ports already existing")
             return
 
-        spp = port.SwitchPatchPort(
+        pp = port.PatchPort(
+            switch_port=sp,
             room=room,
-            switch_port=port,
             name="{flat}{room}".format(flat=j.location.flat,
                                        room=j.location.room, )
         )
-        session.session.add(spp)
+        session.session.add(pp)
 
 
 def create_site_and_building():
 
-    existing_building = session.session.query(facilities.Building).filter(facilities.Building.short_name == "Ger").scalar()
+    existing_building = session.session.query(facilities.Building).filter(
+        facilities.Building.short_name == "Ger38").scalar()
     if existing_building is not None:
         return existing_building
+
+    traffic_group = session.session.query(user.TrafficGroup).first()
 
     site = facilities.Site(
         name="Gerokstraße"
     )
     building = facilities.Building(
+        id=38,
         site=site,
-        short_name="Ger",
+        short_name="Ger38",
         street="Gerokstraße",
-        number="38")
+        number="38",
+        default_traffic_group=traffic_group)
 
     log.info("Created Site and Building")
     return building
@@ -227,7 +238,7 @@ def create_subnet(session_nvtool):
     return ger38subnet, sn
 
 
-def import_facilities_and_switches(session_nvtool, building, ger38subnet):
+def import_facilities_and_switches(session_nvtool, building, ger38subnet, root_user):
     log.info("Importing Rooms and Switches")
 
     oldRooms = session.session.query(facilities.Room).filter(facilities.Room.building == building).all()
@@ -251,20 +262,12 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
         if (isswitchroom):
             switches = session_nvtool.query(Switch).filter(Switch.location == l)
             for s in switches:
+                h = host.Host(owner=root_user, room=room)
                 switch = host.Switch(
                     name=s.comment,
                     management_ip=s.ip,
-                    room=room
+                    host=h
                 )
-                ports = session_nvtool.query(Port).filter(Port.switch == s)
-                for p in ports:
-                    port = host.SwitchPort(
-                        name=p.number,
-                        subnets=[ger38subnet],
-                        mac="00:00:00:00:00:38"
-                        # DGS-3100 are L2 Switches they don't have a mac for interfaces
-                    )
-                    switch.switch_ports.append(port)
 
                 session.session.add(switch)
 
@@ -273,11 +276,9 @@ def import_facilities_and_switches(session_nvtool, building, ger38subnet):
 
 
 def import_users(session_nvtool, building, groups, ger38subnet, fee_account,
-                 bank_account):
+                 bank_account, root_user):
 
     log.info("Import User")
-
-    ru = get_or_create_root_user(groups)
 
     ger38locations = session_nvtool.query(Location.id).filter(
         Location.domain_id == 2)
@@ -287,7 +288,7 @@ def import_users(session_nvtool, building, groups, ger38subnet, fee_account,
     importcount = 0
     for account in legacy_accounts:
         create_user_with_all_data(account, bank_account, building,
-                                  fee_account, ger38subnet, groups, ru,
+                                  fee_account, ger38subnet, groups, root_user,
                                   session_nvtool)
         importcount +=1
 
@@ -303,12 +304,21 @@ def create_user_with_all_data(account, bank_account, building, fee_account,
     create_finance_transactions_for_user(account, bank_account, fee_account,
                                          financeAccount, ru)
     setup_groups_for_user(account, groups, session_nvtool, u)
-    add_user_hosts(account, building, ger38subnet, room, u)
+    add_user_hosts(account, building, ger38subnet, room, u, groups)
 
 
-def add_user_hosts(account, building, ger38subnet, room, u):
+def add_user_hosts(account, building, ger38subnet, room, u, groups):
     for legacy_host in account.hosts:
         mac = legacy_host.mac
+
+        macs = session.session.query(host.Interface).filter(host.Interface.mac ==
+                                                           mac.macaddr).all()
+
+        if macs:
+            log.warning("Ignoring host %s for user %s cause mac already exists",
+                        mac.macaddr, u.name)
+            return
+
         hostLocation = mac.jack.location
         inhabitable, isswitchroom, room_number = get_room_properties(hostLocation)
         hostroom = session.session.query(facilities.Room).filter(
@@ -326,7 +336,13 @@ def add_user_hosts(account, building, ger38subnet, room, u):
         ip = host.IP(interface=interface,
                      address=address,
                      subnet=ger38subnet)
+
         session.session.add(ip)
+        now = session.utcnow()
+        trafficlimit = groups["usertraffic"].credit_limit
+        credit = traffic.TrafficCredit(user=u, timestamp=now,
+                                               amount=trafficlimit)
+        session.session.add(credit)
 
 
 def setup_groups_for_user(account, groups, session_nvtool, u):
@@ -337,6 +353,11 @@ def setup_groups_for_user(account, groups, session_nvtool, u):
         usergroupmember = user.Membership(user=u, group=groups["caretaker"],
                                           begins_at=account.entrydate)
     session.session.add(usergroupmember)
+
+    traffic = user.Membership(user=u, group=groups["usertraffic"],
+                              begins_at=account.entrydate)
+    session.session.add(traffic)
+
     active = session_nvtool.query(Active).filter(
         Active.account == account).one_or_none()
     if not active is None:
@@ -527,9 +548,10 @@ def get_or_create_groups():
 
     g_d['usertraffic'] = user.TrafficGroup(
         name="Nutzer-Trafficgruppe",
-        credit_amount=3 * 2 ** 30,
+        initial_credit_amount=70 * 2 ** 30,
+        credit_amount=10 * 2 ** 30,
         credit_interval=timedelta(days=1),
-        credit_limit=21 * 3 * 2 ** 30)
+        credit_limit=21 * 10 * 2 ** 30)
 
     groups = list(g_d.values()) + properties_l
     session.session.add_all(groups)
