@@ -546,12 +546,16 @@ def get_or_create_groups():
                 model.user.Group.name == group_name).one()
             g_d[role] = g
 
-    g_d['usertraffic'] = user.TrafficGroup(
-        name="Nutzer-Trafficgruppe",
-        initial_credit_amount=70 * 2 ** 30,
-        credit_amount=10 * 2 ** 30,
-        credit_interval=timedelta(days=1),
-        credit_limit=21 * 10 * 2 ** 30)
+    trafficGroup = session.session.query(user.TrafficGroup).first()
+    if (trafficGroup != None):
+        g_d['usertraffic'] = trafficGroup
+    else:
+        g_d['usertraffic'] = user.TrafficGroup(
+            name="Nutzer-Trafficgruppe",
+            initial_credit_amount=70 * 2 ** 30,
+            credit_amount=10 * 2 ** 30,
+            credit_interval=timedelta(days=1),
+            credit_limit=21 * 10 * 2 ** 30)
 
     groups = list(g_d.values()) + properties_l
     session.session.add_all(groups)
