@@ -22,6 +22,7 @@ from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import remove_member_of, make_member_of
 from pycroft.model import session
 from pycroft.model.logging import UserLogEntry
+from pycroft.model.property import CurrentProperty
 from pycroft.model.traffic import TrafficCredit, CurrentTrafficBalance
 from pycroft.model.user import TrafficGroup, User, Membership, PropertyGroup
 from pycroft.model.session import with_transaction
@@ -166,23 +167,27 @@ def sync_exceeded_traffic_limits():
     processor = User.q.get(0)
 
     # Add memberships
-    users = User.q.join(User._current_traffic_balance)\
+    users = User.q.join(User._current_traffic_balance) \
                   .filter(CurrentTrafficBalance.amount < 0) \
-                  .filter(not_(User.has_property('traffic_limit_disabled'))) \
-                  .filter(not_(User.has_property('traffic_limit_exceeded'))) \
+                  .except_(User.q.join(User.current_properties)\
+                  .filter(or_(CurrentProperty.property_name == 'traffic_limit_disabled',\
+                              CurrentProperty.property_name == 'traffic_limit_exceeded')))\
                   .all()
 
     for user in users:
+        print("Added Membership: " + user.name)
         make_member_of(user, config.traffic_limit_exceeded_group,
                        processor, closed(session.utcnow(), None))
 
     # End memberships
-    users = User.q.join(User._current_traffic_balance) \
-        .filter(or_(CurrentTrafficBalance.amount >= 0,
-                    User.has_property('traffic_limit_disabled'))) \
-        .filter(User.has_property('traffic_limit_exceeded')) \
-        .all()
+    users = User.q.join(User.current_properties) \
+                  .filter(CurrentProperty.property_name == 'traffic_limit_exceeded') \
+                  .join(User._current_traffic_balance) \
+                  .filter(or_(CurrentTrafficBalance.amount >= 0,
+                              CurrentProperty.property_name == 'traffic_limit_disabled')) \
+                  .all()
 
     for user in users:
+        print("Ended Membership: " + user.name)
         remove_member_of(user, config.traffic_limit_exceeded_group,
                          processor, closed(session.utcnow(), None))
