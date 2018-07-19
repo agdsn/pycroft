@@ -158,7 +158,11 @@ def reset_credit(user, processor, target_amount=1*1024**3):
 
 
 @with_transaction
-def handle_exceeded_traffic_limits():
+def sync_exceeded_traffic_limits():
+    """Adds and removes memberships of the 'traffic_limit_exceeded group.'
+
+    """
+
     processor = User.q.get(0)
 
     # Add memberships
