@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy import not_, or_
 
 from pycroft import config
-from pycroft.lib.traffic import handle_exceeded_traffic_limits
+from pycroft.lib.traffic import sync_exceeded_traffic_limits
 from pycroft.model.host import IP
 from pycroft.model.traffic import TrafficBalance, TrafficCredit, TrafficVolume, \
     CurrentTrafficBalance
@@ -79,7 +79,7 @@ class Test_020_TrafficLimitExceeded(FixtureDataTestBase):
         self.user = User.q.filter_by(login=UserData.dummy.login).one()
 
     def test_0020_traffic_limit_exceeded_handling(self):
-        handle_exceeded_traffic_limits()
+        sync_exceeded_traffic_limits()
         self.assertFalse(self.user.has_property('traffic_limit_exceeded'))
 
         session.session.add(TrafficVolume(
@@ -91,7 +91,7 @@ class Test_020_TrafficLimitExceeded(FixtureDataTestBase):
             timestamp=datetime.utcnow()
         ))
 
-        handle_exceeded_traffic_limits()
+        sync_exceeded_traffic_limits()
         self.assertTrue(self.user.has_property('traffic_limit_exceeded'))
 
         session.session.add(TrafficCredit(
@@ -100,5 +100,5 @@ class Test_020_TrafficLimitExceeded(FixtureDataTestBase):
             timestamp=datetime.utcnow()
         ))
 
-        handle_exceeded_traffic_limits()
+        sync_exceeded_traffic_limits()
         self.assertFalse(self.user.has_property('traffic_limit_exceeded'))
