@@ -130,6 +130,7 @@ def bank_accounts_activities_json():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
+    (transactions, old_transactions) = ([], [])
     if form.validate_on_submit():
         # login with fints
         bank_account = BankAccount.q.get(form.account.data)
