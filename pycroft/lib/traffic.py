@@ -175,9 +175,9 @@ def sync_exceeded_traffic_limits():
                   .all()
 
     for user in users:
-        print("Added Membership: " + user.name)
         make_member_of(user, config.traffic_limit_exceeded_group,
                        processor, closed(session.utcnow(), None))
+        print("Traffic-Limit exceeded: " + user.name)
 
     # End memberships
     users = User.q.join(User.current_properties) \
@@ -188,6 +188,6 @@ def sync_exceeded_traffic_limits():
                   .all()
 
     for user in users:
-        print("Ended Membership: " + user.name)
         remove_member_of(user, config.traffic_limit_exceeded_group,
                          processor, closed(session.utcnow(), None))
+        print("Traffic-Limit no longer exceeded: " + user.name)
