@@ -42,5 +42,5 @@ $(function () {
         }
     }
 
-    $(window).on("scroll", place_alerts);
+    $window.on("scroll", place_alerts);
 });
