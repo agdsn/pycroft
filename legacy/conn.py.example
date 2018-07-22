@@ -19,27 +19,13 @@ docker inspect <container> --format="{{range \
 .NetworkSettings.Networks}}{{.Gateway}}{{end}}"
 """
 
-_docker_conn_opts = {
+# The options below are only necessary if you perform a manual cache.
+conn_opts = {
     # legacy db - where the whole legacy system will be represented
     # after caching
     "legacy": "postgresql://postgres:password@db/legacy",
-    "pycroft": "postgresql://postgres:password@db/pycroft",
     # pycroft target db – not used when caching, only on import
-}
-
-_vagrant_conn_opts = {
-    "legacy": "postgresql:///legacy",
-    "pycroft": "postgresql:///pycroft",
-}
-
-################################################################################
-# You probably need to edit the things below
-
-# Switch between the vagrant or docker-compose setup
-USE_VAGRANT = False
-
-# The options below are only necessary if you perform a manual cache.
-conn_opts = {
+    "pycroft": "postgresql://postgres:password@db/pycroft",
     # our two lovely and enduring databases looking forward to an
     # honorable death
     "netusers": 'mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1:13306/netusers?charset=utf8&use_unicode=1',
@@ -54,5 +40,3 @@ conn_opts = {
         'bind_pw': '',
     },
 }
-
-conn_opts.update(_vagrant_conn_opts if USE_VAGRANT else _docker_conn_opts)

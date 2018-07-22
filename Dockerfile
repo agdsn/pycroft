@@ -6,7 +6,7 @@ ARG UID=1000
 ARG GID=1000
 ENV PROJECT_DIR=/pycroft LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
-COPY vagrant/ /
+COPY docker/ /
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip

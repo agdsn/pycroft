@@ -2,7 +2,6 @@
 *.DS_Store
 *.orig
 doc/_build
-.vagrant
 # Managed by bower
 web/static/libs/**
 
