@@ -10,7 +10,7 @@ from .exporter import add_stdout_logging, establish_and_return_ldap_connection, 
 logger = logging.getLogger('ldap_sync')
 
 
-def main():
+def sync_production():
     logger.info("Starting the production sync. See --help for other options.")
     config = get_config_or_exit(required_property='ldap')
 
@@ -33,7 +33,7 @@ def main():
     sync_all(db_users, ldap_users, connection, base_dn=config.base_dn)
 
 
-def main_fake_ldap():
+def sync_fake():
     logger.info("Starting sync using a mocked LDAP backend. See --help for other options.")
     try:
         db_uri = os.environ['PYCROFT_DB_URI']
@@ -74,17 +74,23 @@ parser.add_argument("-l", "--log", dest='loglevel', type=str,
 parser.add_argument("-d", "--debug", dest='loglevel', action='store_const',
                     const='debug', help="Short for --log=debug")
 
-args = parser.parse_args()
 
-add_stdout_logging(logger, level=NAME_LEVEL_MAPPING[args.loglevel])
+def main():
+    args = parser.parse_args()
+
+    add_stdout_logging(logger, level=NAME_LEVEL_MAPPING[args.loglevel])
+
+    try:
+        if args.fake:
+            sync_fake()
+        else:
+            sync_production()
+    except KeyboardInterrupt:
+        logger.fatal("SIGINT received, stopping.")
+        logger.info("Re-run the syncer to retain a consistent state.")
+        return 1
+    return 0
 
 
-try:
-    if args.fake:
-        main_fake_ldap()
-    else:
-        main()
-except KeyboardInterrupt:
-    logger.fatal("SIGINT received, stopping.")
-    logger.info("Re-run the syncer to retain a consistent state.")
-    exit()
+if __name__ == '__main__':
+    exit(main())

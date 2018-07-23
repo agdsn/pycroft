@@ -1,6 +1,6 @@
 import argparse
 import logging as std_logging
-from .import_gerok import main, log
+from .import_gerok import import_gerok, log
 
 
 parser = argparse.ArgumentParser(
@@ -13,27 +13,33 @@ parser.add_argument('--delete-old', dest='delete_old', action='store_true',
                     default=True)
 parser.add_argument('--no-delete-old', dest='delete_old', action='store_false')
 
-args = parser.parse_args()
 
-import_log_fname = "import.log"
-sqlalchemy_log_fname = "import.sqlalchemy.log"
+def main():
+    args = parser.parse_args()
 
-log.info("Logging to %s and %s" % (import_log_fname, sqlalchemy_log_fname))
+    import_log_fname = "import.log"
+    sqlalchemy_log_fname = "import.sqlalchemy.log"
 
-log_fmt = '[%(levelname).4s] %(name)s:%(funcName)s:%(message)s'
-formatter = std_logging.Formatter(log_fmt)
-std_logging.basicConfig(level=std_logging.DEBUG,
-                        format=log_fmt,
-                        filename=import_log_fname,
-                        filemode='w')
-console = std_logging.StreamHandler()
-console.setLevel(getattr(std_logging, args.log_level))
-console.setFormatter(formatter)
-std_logging.getLogger('').addHandler(console)
+    log.info("Logging to %s and %s" % (import_log_fname, sqlalchemy_log_fname))
 
-sqlalchemy_loghandler = std_logging.FileHandler(sqlalchemy_log_fname)
-std_logging.getLogger('sqlalchemy').addHandler(sqlalchemy_loghandler)
-sqlalchemy_loghandler.setLevel(std_logging.DEBUG)
+    log_fmt = '[%(levelname).4s] %(name)s:%(funcName)s:%(message)s'
+    formatter = std_logging.Formatter(log_fmt)
+    std_logging.basicConfig(level=std_logging.DEBUG,
+                            format=log_fmt,
+                            filename=import_log_fname,
+                            filemode='w')
+    console = std_logging.StreamHandler()
+    console.setLevel(getattr(std_logging, args.log_level))
+    console.setFormatter(formatter)
+    std_logging.getLogger('').addHandler(console)
 
-main(args)
-log.info("Import finished.")
+    sqlalchemy_loghandler = std_logging.FileHandler(sqlalchemy_log_fname)
+    std_logging.getLogger('sqlalchemy').addHandler(sqlalchemy_loghandler)
+    sqlalchemy_loghandler.setLevel(std_logging.DEBUG)
+    import_gerok(os.environ['PYCROFT_DB_URI'], args.delete_old)
+    log.info("Import finished.")
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

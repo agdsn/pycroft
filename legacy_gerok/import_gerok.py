@@ -34,9 +34,8 @@ except ImportError:
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model
-from pycroft.model import (create_engine as pyc_create_engine, facilities, user,
-                           net, port, traffic, finance, session, host, config,
-                           logging)
+from pycroft.model import (facilities, user, net, port, traffic,
+                           finance, session, host, config, logging)
 from pycroft.helpers import user as usertools
 
 from legacy.import_conf import group_props
@@ -60,9 +59,9 @@ def exists_db(connection, name):
     return exists is not None
 
 
-def main(args):
-    """Import the legacy data according to ``args``"""
-    engine = pyc_create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
+def import_gerok(db_url, delete_old):
+    """Import the legacy data"""
+    engine = create_engine(db_url, echo=False)
     session.set_scoped_session(
         scoped_session(sessionmaker(bind=engine),
                        scopefunc=lambda: _request_ctx_stack.top))
@@ -72,7 +71,7 @@ def main(args):
     engine_nvtool = create_engine(connection_string_nvtool, echo=False)
     session_nvtool = scoped_session(sessionmaker(bind=engine_nvtool))
 
-    if args.delete_old:
+    if delete_old:
         master_engine = create_engine(conn_opts['master'])
         master_connection = master_engine.connect()
         master_connection.execute("COMMIT")
@@ -125,7 +124,6 @@ def create_bankAccount():
         routing_number="85050300",
         iban="DE33850503003120230811",
         bic="OSDDDE81XXX",
-        fints_endpoint="https://banking-sn5.s-fints-pt-sn.de/fints30",
         account=bank_financeAccount)
     session.session.add(bank_account)
     log.info("Created Bank Account")
@@ -149,14 +147,14 @@ def get_or_create_config(g_d):
             moved_from_division_group=g_d["moved_from_division"],
             already_paid_semester_fee_group=g_d["already_paid"],
             registration_fee_account=fee_account,
-            membership_fee_account=fee_account,
+            semester_fee_account=fee_account,
             late_fee_account=fee_account,
             additional_fee_account=fee_account,
         )
 
         session.session.add(con)
     else:
-        fee_account = conf.membership_fee_account
+        fee_account = conf.semester_fee_account
 
     return fee_account
 

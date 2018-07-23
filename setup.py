@@ -74,8 +74,9 @@ setup(
             'pycroft = scripts.server_run:main',
             'pycroft_legacy_import = legacy.import_legacy:main',
             'pycroft_legacy_cache = legacy.cache_legacy:main [ImportCache]',
-            'pycroft_legacy_gerok_import = legacy_gerok.__main__ [ImportGerok]',
-            'pycroft_ldap_sync = ldap_sync.__main__',
+            'pycroft_legacy_gerok_import = legacy_gerok.__main__:main '
+            '[ImportGerok]',
+            'pycroft_ldap_sync = ldap_sync.__main__:main',
             'pycroft_sync_exceeded_traffic_limits = scripts.sync_exceeded_traffic_limits:main',
         ]
     },
