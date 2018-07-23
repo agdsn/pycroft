@@ -32,6 +32,8 @@ setup(
         'Flask',
         'Flask-Babel',
         'Flask-Login',
+        'Flask-WTF',
+        'fints',
         'Jinja2',
         'MarkupSafe',
         'SQLAlchemy >= 1.1',
@@ -41,6 +43,8 @@ setup(
         'ipaddr >= 2.2.0',
         'passlib',
         'psycopg2',
+        'reportlab',
+        'simplejson',
         'wrapt',
     ],
     dependency_links=[
