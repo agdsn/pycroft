@@ -66,19 +66,15 @@ NAME_LEVEL_MAPPING = {
 
 
 parser = argparse.ArgumentParser(description="Pycroft ldap syncer")
-parser.add_argument('--fake', dest='fake', action='store_true',
+parser.add_argument('--fake', dest='fake', action='store_true', default=False,
                     help="Use a mocked LDAP backend")
-group_log = parser.add_mutually_exclusive_group()
-group_log.add_argument("-l", "--log", dest='loglevel', type=str,
-                       choices=list(NAME_LEVEL_MAPPING.keys()),
-                       help="Set the loglevel")
-group_log.add_argument("-d", "--debug", dest='debug', action='store_true',
-                       help="Short for --log=debug")
-parser.set_defaults(fake=False, loglevel='info')
+parser.add_argument("-l", "--log", dest='loglevel', type=str,
+                    choices=list(NAME_LEVEL_MAPPING.keys()), default='info',
+                    help="Set the loglevel")
+parser.add_argument("-d", "--debug", dest='loglevel', action='store_const',
+                    const='debug', help="Short for --log=debug")
 
 args = parser.parse_args()
-if args.debug:
-    args.loglevel = 'debug'
 
 add_stdout_logging(logger, level=NAME_LEVEL_MAPPING[args.loglevel])
 
