@@ -124,6 +124,7 @@ def create_bankAccount():
         routing_number="85050300",
         iban="DE33850503003120230811",
         bic="OSDDDE81XXX",
+        fints_endpoint="https://banking-sn5.s-fints-pt-sn.de/fints30",
         account=bank_financeAccount)
     session.session.add(bank_account)
     log.info("Created Bank Account")
