@@ -1,0 +1,25 @@
+Entrypoint Commands
+===================
+
+The entrypoint script searches for commands in the /container/commands directory.
+To add a command to the entrypoint script, simply place a source-able bash
+script with the name of the command in this folder.
+
+The script should provide two functions: `usage` and `run`.
+
+`usage` should print a usage message to stdout.
+
+`run` should run the command.
+
+Entrypoint Hooks
+================
+
+Place executable files following the rules of run-parts(8) into subdirectories
+to let the entrypoint script automatically execute them.
+
+The following exist currently:
+
+init: Executed very early.
+
+before-command: Executed before a command is executed. Takes the name of the
+command as first parameter

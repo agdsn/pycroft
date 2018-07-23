@@ -1,0 +1,63 @@
+---
+version: "2.3"
+
+services:
+  base:
+    extends:
+      file: docker-compose.base.yml
+      service: base
+  test-app:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    command: ["test"]
+    depends_on:
+      - test-db
+      - test-ldap
+      - test-mq
+    networks:
+      - test
+  test-db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+    # Make PostgreSQL fly
+    command:
+      - "-cshared_buffers=64MB"
+      - "-cwork_mem=128MB"
+      - "-cfsync=off"
+      - "-cfull_page_writes=off"
+      - "-cwal_level=minimal"
+      - "-cmax_wal_senders=0"
+    networks:
+      test:
+        aliases:
+          - db
+    tmpfs:
+      - /var/lib/postgresql/data
+  test-ldap:
+    extends:
+      file: docker-compose.base.yml
+      service: ldap
+    networks:
+      test:
+        aliases:
+          - ldap
+    tmpfs:
+      - /var/lib/ldap
+  test-mq:
+    extends:
+      file: docker-compose.base.yml
+      service: mq
+    networks:
+      test:
+        aliases:
+          - mq
+    tmpfs:
+      - /var/lib/rabbitmq
+
+networks:
+  test:
+
+volumes:
+  home:

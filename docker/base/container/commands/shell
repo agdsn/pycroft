@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=(
+	""
+	"args..."
+)
+
+readonly DESCRIPTION=(
+	"Run a bash login shell."
+
+	"Execute provided arguments as shell command with /bin/sh -c."
+)
+
+run() {
+	if (( $# > 0 )); then
+		exec /bin/bash -c "${*@Q}"
+	else
+		exec /bin/bash
+	fi
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

@@ -1,0 +1,15 @@
+---
+version: '2.3'
+
+services:
+  base:
+    extends:
+      file: docker-compose.base.yml
+      service: base
+  prod-app:
+    build:
+      context: .
+      dockerfile: docker/prod.Dockerfile
+    image: agdsn/pycroft-prod:${TAG:-latest}
+    ports:
+      - "5000:5000"

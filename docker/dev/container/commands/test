@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run unit tests. Optional arguments are passed to the nosetests executable"
+)
+
+run() {
+	cd /opt/pycroft/app
+	exec /opt/pycroft/venv/bin/nosetests -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

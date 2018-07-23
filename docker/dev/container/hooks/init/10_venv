@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
+    echo "Creating virtual environment"
+    python3 -m venv /opt/pycroft/venv
+fi;
+
+PIP="/opt/pycroft/venv/bin/pip"
+if [[ -n $($PIP freeze) ]]; then
+    echo "Pip packages present, nothing to do"
+    exit
+fi;
+
+echo "No pip packages found, installing requirements"
+cd /opt/pycroft/app
+$PIP install -r requirements.txt -r requirements.dev.txt
+$PIP install -e .

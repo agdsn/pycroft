@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("")
+
+readonly DESCRIPTION=(
+	"Print version information of various components."
+)
+
+run() {
+	local -r python=/opt/pycroft/venv/bin/python
+	echo "Python: $("$python" --version)"
+	echo "uWSGI: $(uwsgi --version)"
+	if [[ -f setup.py  ]]; then
+		echo "Pycroft: $("$python" setup.py --version)"
+	else
+		python - <<-'EOF'
+			import pkg_resources
+
+			try:
+			    print("Pycroft: " + pkg_resources.require("pycroft")[0].version)
+			except pkg_resources.DistributionNotFound:
+			    pass
+			EOF
+	fi
+	[[ -x nodejs ]] && echo "NodeJS: $(nodejs --version)" || :
+	[[ -x yarn ]] && echo "yarn: $(yarn --version)" || :
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

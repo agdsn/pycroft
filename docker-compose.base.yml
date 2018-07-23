@@ -1,0 +1,46 @@
+---
+version: '2.3'
+
+services:
+  base:
+    build:
+      context: docker/base
+      dockerfile: ../base.Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    image: agdsn/pycroft-base:${TAG:-latest}
+    entrypoint: ["/bin/true"]
+    command: []
+  dev:
+    build:
+      context: docker/dev
+      dockerfile: ../dev.Dockerfile
+    image: agdsn/pycroft-dev:${TAG:-latest}
+    environment:
+      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
+      - HADES_CELERY_APP_NAME=dummy_tasks
+      - HADES_BROKER_URI=amqp://celery:celery@mq:5672/
+      - HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+    volumes:
+      - "home:/opt/pycroft"
+      - ".:/opt/pycroft/app"
+  db:
+    build:
+      context: ./docker/db
+      dockerfile: ../db.Dockerfile
+    environment:
+      - TZ=Etc/UTC
+      - POSTGRES_DB=pycroft
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_INITDB_ARGS=--locale=C --encoding=UTF-8
+  ldap:
+    image: dinkel/openldap
+    environment:
+      - SLAPD_PASSWORD=password
+      - SLAPD_DOMAIN=agdsn.de
+  mq:
+    image: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=celery
+      - RABBITMQ_DEFAULT_PASS=celery

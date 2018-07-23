@@ -1,0 +1,60 @@
+---
+version: '2.3'
+
+services:
+  base:
+    extends:
+      file: docker-compose.base.yml
+      service: base
+  dev-app:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    security_opt:
+      - "seccomp:unconfined"
+    networks:
+      dev:
+        aliases:
+          - app
+    ports:
+      - "5000:5000"
+    command: ["http", "--debug"]
+  dev-db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+    networks:
+      dev:
+        aliases:
+          - db
+    volumes:
+      - "db:/var/lib/postgresql"
+  dev-ldap:
+    extends:
+      file: docker-compose.base.yml
+      service: ldap
+    networks:
+      dev:
+        aliases:
+          - ldap
+    volumes:
+      - "ldap:/var/lib/ldap"
+  dev-mq:
+    extends:
+      file: docker-compose.base.yml
+      service: mq
+    networks:
+      dev:
+        aliases:
+          - mq
+    volumes:
+      - "mq:/var/lib/rabbitmq"
+
+volumes:
+  home:
+  db:
+  ldap:
+  mq:
+
+networks:
+  dev:

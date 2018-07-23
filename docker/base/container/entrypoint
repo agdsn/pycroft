@@ -1,0 +1,86 @@
+#!/bin/bash -l
+
+set -euo pipefail
+
+print_usage() {
+	cd /container/commands
+	echo "Usage: <command> [args...]"
+	echo ""
+	echo "Available Commands:"
+	for command in *; do
+		(
+			shopt -s extglob
+			[[ -x "./$command" ]] && source "./$command"
+			if [[ ! -v USAGE || ! -v DESCRIPTION ]]; then
+				printf "%s %s\n" "$command" "Warning: No USAGE or DESCRIPTION defined in command script."
+				exit
+			fi
+			if (( ${#USAGE[@]} != ${#DESCRIPTION[@]} )); then
+				printf "%s %s\n" "$command" "Warning: Different number of USAGE and DESCRIPTION entries."
+				exit
+			fi
+			for (( i=0; i < ${#USAGE[@]}; i++ )); do
+				mapfile -t LINES <<<"${DESCRIPTION[$i]}"
+				printf "%s %s\n" "$command" "${USAGE[$i]}"
+				# Remove leading spaces
+				printf "  %s\n" "${LINES[@]##*([[:space:]])}"
+			done
+			printf "\n"
+		) || :
+	done
+	echo "help"
+	echo "  Print this help message"
+}
+
+run_hooks() {
+	local -r hook="$1"
+	shift
+	echo "Running $hook entrypoint hooks"
+	if [[ -d "/container/hooks/$hook" ]]; then
+		run-parts --exit-on-error --verbose "/container/hooks/$hook" "$@"
+	fi
+}
+
+main() {
+	if (( $# < 1 )); then
+		print_usage
+		exit 64
+	fi
+
+	command="$1"
+	shift
+
+	case "$command" in
+		-h|--help|help) print_usage && exit;;
+	esac
+
+	run_hooks init
+
+	source /opt/pycroft/venv/bin/activate
+
+	cd /opt/pycroft/app
+
+	# PyCharm compatibility hack.
+	# Execute absolute paths with shell command
+	if [[ "${command:0:1}" = / ]]; then
+		set "$command" "$@"
+		command=shell
+	fi
+	script="/container/commands/$command"
+
+	if [[ -f "$script" ]]; then
+		run_hooks before-command --arg "$command"
+		source "$script"
+		[[ "$(type -t run)" = function ]] || {
+			echo "Missing run function in command script $script" >&2
+			exit 70
+		}
+		run "$@" && exit
+	else
+		echo "No such command: $command" >&2
+		print_usage >&2
+		exit 64
+	fi
+}
+
+main "$@"

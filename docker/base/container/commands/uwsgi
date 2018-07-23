@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run uWSGI server. Optional arguments are passed to the uWSGI executable."
+)
+
+run() {
+	exec /usr/bin/uwsgi --master --uwsgi-socket 5000 --plugin python3 --venv /opt/python/venv "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

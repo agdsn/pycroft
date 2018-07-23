@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run celery worker. Optional arguments are passed to the Celery worker
+	executable"
+)
+
+run() {
+	echo "Not implemented yet"
+	exit 1
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

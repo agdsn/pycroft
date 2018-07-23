@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run development server. Optional arguments are passed to the startup
+	script."
+)
+
+run() {
+	cd /opt/pycroft/app
+	exec -a python /opt/pycroft/venv/bin/python -m scripts.server_run --exposed "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

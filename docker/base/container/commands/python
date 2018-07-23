@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run the python interpreter of the virtual environment in the project root
+	directory. Optional arguments are passed to the interpreter."
+)
+
+run() {
+	cd /opt/pycroft/app
+	exec -a python /opt/pycroft/venv/bin/python "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
