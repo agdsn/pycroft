@@ -52,13 +52,13 @@ setup(
         '@master#egg=sqlalchemy-schemadisplay',
     ],
     extras_require={
-        'Import-Cache': [
+        'ImportCache': [
             'ldap3',
         ],
-        'Import-Gerok': [
+        'ImportGerok': [
             'PyMySQL',
         ],
-        'Display-Schema': [
+        'SchemaDisplay': [
             'sqlalchemy-schemadisplay',
         ]
     },
@@ -73,9 +73,8 @@ setup(
         'console_scripts': [
             'pycroft = scripts.server_run:main',
             'pycroft_legacy_import = legacy.import_legacy:main',
-            'pycroft_legacy_cache = legacy.cache_legacy:main [Import-Cache]',
-            'pycroft_legacy_gerok_import = legacy_gerok.__main__ '
-            '[Import-Gerok]',
+            'pycroft_legacy_cache = legacy.cache_legacy:main [ImportCache]',
+            'pycroft_legacy_gerok_import = legacy_gerok.__main__ [ImportGerok]',
             'pycroft_ldap_sync = ldap_sync.__main__',
             'pycroft_sync_exceeded_traffic_limits = scripts.sync_exceeded_traffic_limits:main',
         ]
