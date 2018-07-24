@@ -21,7 +21,11 @@ def fetch_ldap_information():
 
     server = ldap3.Server(host=opts['host'], port=opts['port'],
                           get_info=ldap3.SCHEMA, tls=None)
-    connection = ldap3.Connection(server, opts['bind_dn'], opts['bind_pw'])
+    connection = ldap3.Connection(server, opts['bind_dn'], opts['bind_pw'],
+                                  version=3, auto_bind=True,
+                                  authentication=opts.get('authentication'),
+                                  sasl_mechanism=opts.get('sasl_mechanism'),
+                                  sasl_credentials=opts.get('sasl_credentials'))
     success = connection.bind()
     if not success:
         raise ValueError("Bind not successful. Perhaps check your `conn.py`")

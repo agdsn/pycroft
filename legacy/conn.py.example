@@ -38,5 +38,9 @@ conn_opts = {
         'group_base_dn': "ou=Gruppen,ou=Sektion Wundtstrasse,o=AG DSN,c=de",
         'bind_dn': '',
         'bind_pw': '',
+        # SASL Auth for e.g. connection via socket
+        #'authentication': SASL,
+        #'sasl_mechanism': EXTERNAL,
+        #'sasl_credentials': '',
     },
 }
