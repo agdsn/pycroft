@@ -1,17 +1,43 @@
 import unittest
 
 from sqlalchemy import PrimaryKeyConstraint, Table, Column, Integer, MetaData, \
-    select, text
+    select, text, util
 from sqlalchemy.dialects import postgresql
 
 from pycroft.model.ddl import DropConstraint, CreateFunction, DropFunction, \
     Function, View, CreateView, DropView, Rule, CreateRule, ConstraintTrigger, \
     CreateConstraintTrigger, Trigger, CreateTrigger
 
+from sqlalchemy.sql import sqltypes
+import sqlalchemy.dialects.postgresql.base as postgresql_base
+from datetime import timedelta
+
+
+class LiteralInterval(postgresql_base.INTERVAL):
+    @classmethod
+    def _adapt_from_generic_interval(cls, interval):
+        return LiteralInterval(precision=interval.second_precision)
+
+    def literal_processor(self, dialect):
+        def process(value):
+            return "interval '{}'".format(value) \
+                .replace(',', '').replace(' 0:00:00', '')
+
+        return process
+
+
+class Literal_PGDialect_pygresql(postgresql.dialect):
+    colspecs = util.update_copy(
+        postgresql.dialect.colspecs,
+        {
+            sqltypes.Interval: LiteralInterval
+        }
+    )
+
 
 def literal_compile(stmt):
     return str(stmt.compile(compile_kwargs={"literal_binds": True},
-                            dialect=postgresql.dialect()))
+                            dialect=Literal_PGDialect_pygresql()))
 
 
 def create_table(name):
