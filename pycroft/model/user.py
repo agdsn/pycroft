@@ -15,9 +15,9 @@ import re
 
 from flask_login import UserMixin
 from sqlalchemy import (
-    Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
+    Boolean, BigInteger, CheckConstraint, Column, ForeignKey, Integer,
     String, and_, exists, join, literal, not_, null, or_, select, Sequence,
-    Interval, Date)
+    Interval, Date, func)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -31,6 +31,7 @@ from pycroft.helpers.interval import (
 from pycroft.helpers.user import hash_password, verify_password
 from pycroft.model import session, functions
 from pycroft.model.base import ModelBase, IntegerIdModel
+from pycroft.model.types import DateTimeTz
 
 
 class IllegalLoginError(ValueError):
@@ -44,7 +45,7 @@ class IllegalEmailError(ValueError):
 class User(IntegerIdModel, UserMixin):
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
-    registered_at = Column(DateTime, nullable=False)
+    registered_at = Column(DateTimeTz, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
     birthdate = Column(Date, nullable=True)
@@ -389,8 +390,8 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    begins_at = Column(DateTime, nullable=True, index=True, default=functions.utcnow())
-    ends_at = Column(DateTime, nullable=True, index=True)
+    begins_at = Column(DateTimeTz, nullable=True, index=True, server_default=func.current_timestamp())
+    ends_at = Column(DateTimeTz, nullable=True, index=True)
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),

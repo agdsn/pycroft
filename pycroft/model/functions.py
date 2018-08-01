@@ -10,7 +10,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import expression
 from sqlalchemy.sql.functions import max as sa_max
 from sqlalchemy.sql.functions import min as sa_min
-from sqlalchemy.types import DateTime, Numeric, Integer
+from sqlalchemy.types import Numeric, Integer
 
 
 class greatest(expression.FunctionElement):

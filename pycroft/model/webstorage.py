@@ -4,16 +4,16 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 from pycroft.model.base import IntegerIdModel
-from sqlalchemy import Column, DateTime, Text
-from datetime import datetime
+from sqlalchemy import Column, Text, func
 from pycroft.model.session import session
+from pycroft.model.types import DateTimeTz
 
 class WebStorage(IntegerIdModel):
     data = Column(Text, nullable=False)
-    expiry = Column(DateTime, nullable=False)
+    expiry = Column(DateTimeTz, nullable=False)
 
     @staticmethod
     def auto_expire():
         """Delete all expired items from the database"""
-        WebStorage.q.filter(WebStorage.expiry <= datetime.utcnow()).delete(False)
+        WebStorage.q.filter(WebStorage.expiry <= func.current_timestamp()).delete(False)
         session.commit()

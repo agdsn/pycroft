@@ -10,11 +10,11 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, func
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import Integer, DateTime, Text, String
+from sqlalchemy.types import Integer, Text, String
 from pycroft.model.base import IntegerIdModel
-from pycroft.model.functions import utcnow
+from pycroft.model.types import DateTimeTz
 
 
 class LogEntry(IntegerIdModel):
@@ -24,7 +24,7 @@ class LogEntry(IntegerIdModel):
     # variably sized string
     message = Column(Text, nullable=False)
     # created
-    created_at = Column(DateTime, nullable=False, default=utcnow())
+    created_at = Column(DateTimeTz, nullable=False, server_default=func.current_timestamp())
 
     # many to one from LogEntry to User
     author = relationship("User",

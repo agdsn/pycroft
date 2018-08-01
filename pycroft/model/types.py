@@ -4,7 +4,7 @@
 from decimal import Decimal
 from numbers import Number
 import ipaddr
-from sqlalchemy import String, TypeDecorator, Integer
+from sqlalchemy import String, TypeDecorator, Integer, DateTime
 from sqlalchemy.dialects.postgresql import MACADDR, INET
 from pycroft.helpers.net import mac_regex
 
@@ -98,3 +98,8 @@ class Money(TypeDecorator):
 
 class InvalidMACAddressException(ValueError):
     pass
+
+
+class DateTimeTz(DateTime):
+    def __init__(self):
+        super().__init__(timezone=True)

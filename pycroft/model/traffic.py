@@ -5,13 +5,12 @@
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
     PrimaryKeyConstraint, func, or_, and_, true
 from sqlalchemy.orm import relationship, backref, Query
-from sqlalchemy.types import BigInteger, Enum, Integer, DateTime
+from sqlalchemy.types import BigInteger, Enum, Integer
 
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
-from pycroft.model.types import IPAddress
+from pycroft.model.types import IPAddress, DateTimeTz
 from pycroft.model.user import User
-from pycroft.model.functions import utcnow
 from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
@@ -23,11 +22,11 @@ class TrafficBalance(ModelBase):
     user = relationship(User,
                         backref=backref("_traffic_balance", uselist=False))
     amount = Column(BigInteger, nullable=False)
-    timestamp = Column(DateTime, default=utcnow(), nullable=False)
+    timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
 
 
 class TrafficEvent(object):
-    timestamp = Column(DateTime, default=utcnow(), nullable=False)
+    timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
     amount = Column(BigInteger, CheckConstraint('amount >= 0'),
                     nullable=False)
 

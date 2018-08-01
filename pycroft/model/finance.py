@@ -11,15 +11,13 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import (
     CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
-from sqlalchemy.types import (
-    Date, DateTime, Enum, Integer, Interval, String, Text)
+from sqlalchemy.types import Date, Enum, Integer, Interval, String, Text
 
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
 from pycroft.model import ddl
-from pycroft.model.types import Money
+from pycroft.model.types import Money, DateTimeTz
 from .base import IntegerIdModel
-from .functions import utcnow
 
 
 manager = ddl.DDLManager()
@@ -152,9 +150,11 @@ class Transaction(IntegerIdModel):
                                            onupdate='CASCADE'),
                        nullable=True)
     author = relationship("User")
-    posted_at = Column(DateTime, nullable=False,
-                       default=utcnow(), onupdate=utcnow())
-    valid_on = Column(Date, nullable=False, default=utcnow(), index=True)
+    posted_at = Column(DateTimeTz, nullable=False,
+                       server_default=func.current_timestamp(),
+                       onupdate=func.current_timestamp())
+    valid_on = Column(Date, nullable=False,
+                      server_default=func.current_timestamp(), index=True)
     accounts = relationship(Account, secondary="split", backref="transactions")
 
     @property
@@ -300,7 +300,7 @@ class BankAccountActivity(IntegerIdModel):
     other_account_number = Column(String(255), nullable=False)
     other_routing_number = Column(String(255), nullable=False)
     other_name = Column(String(255), nullable=False)
-    imported_at = Column(DateTime, nullable=False)
+    imported_at = Column(DateTimeTz, nullable=False)
     posted_on = Column(Date, nullable=False)
     valid_on = Column(Date, nullable=False)
     transaction_id = Column(Integer, ForeignKey(Transaction.id,
