@@ -18,7 +18,6 @@ from sqlalchemy.orm import Query
 
 from .base import ModelBase
 from .ddl import View, DDLManager
-from .functions import utcnow as utcnow_sql
 from .user import User, Property, Membership, PropertyGroup
 
 manager = DDLManager()
@@ -77,7 +76,7 @@ current_property = View(
     query=(
         select([literal_column('user_id'), literal_column('property_name'),
                 literal_column('denied')])
-        .select_from(func.evaluate_properties(utcnow_sql()))
+        .select_from(func.evaluate_properties(func.current_timestamp()))
     ),
 )
 manager.add_view(Membership.__table__, current_property)

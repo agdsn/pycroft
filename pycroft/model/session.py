@@ -14,7 +14,7 @@
 from werkzeug.local import LocalProxy
 import wrapt
 
-from .functions import utcnow as utcnow_sql
+from sqlalchemy import func
 
 
 class NullScopedSession(object):
@@ -51,4 +51,4 @@ def with_transaction(wrapped, instance, args, kwargs):
 
 
 def utcnow():
-    return session.query(utcnow_sql()).scalar()
+    return session.query(func.current_timestamp()).scalar()

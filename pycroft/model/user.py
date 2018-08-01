@@ -421,7 +421,7 @@ class Membership(IntegerIdModel):
         :rtype: bool
         """
         if when is None:
-            now = object_session(self).query(functions.utcnow()).scalar()
+            now = session.utcnow()
             when = single(now)
 
         return when.overlaps(closed(self.begins_at, self.ends_at))

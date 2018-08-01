@@ -110,7 +110,7 @@ def store_user_sheet(new_user, plain_password, timeout=15):
     """
     pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
-                             expiry=datetime.utcnow() + timedelta(minutes=timeout))
+                             expiry=session.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
 
     return pdf_storage
@@ -465,7 +465,7 @@ def traffic_events_expr():
     return events
 
 
-def traffic_balance_expr(until=func.now()):
+def traffic_balance_expr(until=func.current_timestamp()):
     # not a hybrid attribute expression due to circular import dependencies
 
     balance = select(

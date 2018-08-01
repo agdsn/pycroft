@@ -28,20 +28,6 @@ class sign(expression.FunctionElement):
     name = 'sign'
 
 
-class utcnow(expression.FunctionElement):
-    type = DateTime
-
-
-@compiles(utcnow, 'postgresql')
-def pg_utcnow(element, compiler, **kw):
-    return "TIMEZONE('utc', STATEMENT_TIMESTAMP())"
-
-
-@compiles(utcnow, 'sqlite')
-def sqlite_utcnow(element, compiler, **kw):
-    return "STRFTIME('%Y-%m-%d %H:%M:%f000', 'now')"
-
-
 @compiles(greatest)
 @compiles(least)
 @compiles(sign)

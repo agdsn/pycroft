@@ -631,7 +631,7 @@ def process_transactions(bank_account, statement):
             other_account_number=iban,
             other_routing_number=bic,
             other_name=other_name,
-            imported_at=datetime.now(),
+            imported_at=session.utcnow(),
             posted_on=transaction.data['entry_date'],
             valid_on=transaction.data['date'],
         )
