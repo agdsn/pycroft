@@ -33,8 +33,9 @@ except ImportError:
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model, property
-from pycroft.model import (traffic, facilities, user, net, port,
-                           finance, session, host, config, logging, types)
+from pycroft.model import (create_engine as pyc_create_engine, traffic,
+                           facilities, user, net, port, finance, session, host,
+                           config, logging, types)
 
 from . import userman_model
 from . import netusers_model
@@ -86,7 +87,7 @@ def translate_all(data):
 
 def import_legacy(args):
     """Import the legacy data according to ``args``"""
-    engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
+    engine = pyc_create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
     session.set_scoped_session(
         scoped_session(sessionmaker(bind=engine),
                        scopefunc=lambda: _request_ctx_stack.top))

@@ -13,14 +13,13 @@ import flask_testing as testing
 from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from fixture.util import start_debug, stop_debug
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
 import sys
 
 from tests.factories import ConfigFactory, UserFactory, AdminPropertyGroupFactory, MembershipFactory
 from werkzeug.routing import IntegerConverter, UnicodeConverter
-from pycroft.model import session
+from pycroft.model import session, create_engine
 from pycroft.model import _all, drop_db_model, create_db_model
 
 

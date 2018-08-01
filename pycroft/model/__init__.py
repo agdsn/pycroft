@@ -14,6 +14,16 @@ from . import _all
 from . import base
 from . import session
 
+import os
+from sqlalchemy import create_engine as sqa_create_engine
+
+
+def create_engine(connection_string, **kwargs):
+    kwargs.setdefault('connect_args', {}).update(
+        options="-c TimeZone=UTC"
+    )
+    return sqa_create_engine(connection_string, **kwargs)
+
 
 def create_db_model(bind):
     """Create all models in the database.

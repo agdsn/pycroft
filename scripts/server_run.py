@@ -9,13 +9,12 @@ from time import time
 
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request
-from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 import pycroft
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
-from pycroft.model import create_db_model
+from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
 import web
 from scripts.schema import AlembicHelper, SchemaStrategist
@@ -27,7 +26,6 @@ def server_run(args):
     except KeyError:
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
                            "set to an SQLAlchemy connection string.")
-
     engine = create_engine(connection_string)
     connection = engine.connect()
     state = AlembicHelper(connection)

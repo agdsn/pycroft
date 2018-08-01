@@ -34,8 +34,9 @@ except ImportError:
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pycroft import model
-from pycroft.model import (facilities, user, net, port, traffic,
-                           finance, session, host, config, logging)
+from pycroft.model import (create_engine as pyc_create_engine, facilities, user,
+                           net, port, traffic, finance, session, host, config,
+                           logging)
 from pycroft.helpers import user as usertools
 
 from legacy.import_conf import group_props
@@ -61,7 +62,7 @@ def exists_db(connection, name):
 
 def main(args):
     """Import the legacy data according to ``args``"""
-    engine = create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
+    engine = pyc_create_engine(os.environ['PYCROFT_DB_URI'], echo=False)
     session.set_scoped_session(
         scoped_session(sessionmaker(bind=engine),
                        scopefunc=lambda: _request_ctx_stack.top))

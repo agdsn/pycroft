@@ -17,9 +17,9 @@ and initializes the session.
 import os
 
 from flask import _request_ctx_stack
-from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
 from pycroft.model._all import *
 from pycroft import config

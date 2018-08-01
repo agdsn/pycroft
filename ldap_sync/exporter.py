@@ -6,9 +6,10 @@ import sys
 from collections import Counter, defaultdict, namedtuple
 
 import ldap3
-from sqlalchemy import create_engine, func
+from sqlalchemy import func
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from pycroft.model import create_engine
 from pycroft.model.user import User
 from pycroft.model.session import set_scoped_session, session as global_session
 from .record import Record, RecordState
