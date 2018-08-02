@@ -62,7 +62,7 @@ class PMAcctViewTest(FactoryDataTestBase):
                                                       stamp_inserted=stamp, stamp_updated=stamp))
         self.assertEqual(TrafficVolume.q.count(), 1)
         vol = TrafficVolume.q.one()
-        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00')
+        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00+00:00')
         self.assertEqual(vol.packets, sum(x[1] for x in data))
         self.assertEqual(vol.amount, sum(x[2] for x in data))
 
@@ -92,7 +92,7 @@ class PMAcctViewTest(FactoryDataTestBase):
                                                       stamp_inserted=stamp, stamp_updated=stamp))
         self.assertEqual(TrafficVolume.q.count(), 1)
         vol = TrafficVolume.q.one()
-        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00')
+        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00+00:00')
         self.assertEqual(vol.packets, sum(x[1] for x in data))
         self.assertEqual(vol.amount, sum(x[2] for x in data))
 
