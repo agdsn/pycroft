@@ -154,7 +154,7 @@ class Transaction(IntegerIdModel):
     author = relationship("User")
     posted_at = Column(DateTime, nullable=False,
                        default=utcnow(), onupdate=utcnow())
-    valid_on = Column(Date, nullable=False, default=utcnow())
+    valid_on = Column(Date, nullable=False, default=utcnow(), index=True)
     accounts = relationship(Account, secondary="split", backref="transactions")
 
     @property
