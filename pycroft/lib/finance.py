@@ -314,6 +314,7 @@ def post_transactions_for_membership_fee(membership_fee, processor):
     return affected_users
 
 
+@with_transaction
 def post_fees(users, fees, processor):
     """
     Calculate the given fees for all given user accounts from scratch and post
