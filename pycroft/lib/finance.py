@@ -14,7 +14,7 @@ from io import StringIO
 import operator
 import re
 
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
@@ -230,6 +230,90 @@ adjustment_description = deferred_gettext(
 
 
 @with_transaction
+def post_transactions_for_membership_fee(membership_fee, processor):
+    """
+    Posts transactions (and splits) for users where the specified membership fee
+    was not posted yet.
+
+    User select: User -> Split (user account) -> Transaction -> Split (fee account)
+                 Conditions: User has `membership_fee` property on
+                             begins_on + 1 day and begins_on + grace - 1 day
+
+    :param membership_fee: The membership fee which should be posted
+    :param processor:
+    :return: A list of name of all affected users
+    """
+
+    description = MembershipFee.description.format(
+        fee_name=membership_fee.name).to_json()
+
+    split_user_account = Split.__table__.alias()
+    split_fee_account = Split.__table__.alias()
+
+    users = (select([User.id.label('user_id'), User.name.label('user_name'), User.account_id.label('account_id')])
+            .select_from(User.__table__
+                .join(func.evaluate_properties(membership_fee.begins_on + timedelta(1))
+                .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
+                .join(func.evaluate_properties(membership_fee.begins_on + membership_fee.grace_period - timedelta(1))
+                .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
+            )
+            .where(not_(exists(select([None]).select_from(split_user_account
+                    .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
+                    .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
+                )
+                .where(and_(split_user_account.c.account_id == User.account_id,
+                            Transaction.valid_on.between(literal(membership_fee.begins_on), literal(membership_fee.ends_on)),
+                            split_fee_account.c.account_id == literal(config.membership_fee_account_id),
+                            split_fee_account.c.id != split_user_account.c.id))
+            )))
+            .where(or_(literal_column('properties_beginning.property_name') == 'membership_fee',
+                        literal_column('properties_grace.property_name') == 'membership_fee'))
+            .distinct()
+            .cte('membership_fee_users'))
+
+    numbered_users = (select([users.c.user_id, users.c.account_id, func.row_number().over().label('index')])
+                      .select_from(users)
+                      .cte("membership_fee_numbered_users"))
+
+    transactions = (Transaction.__table__.insert()
+         .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
+                      select([literal(description), literal(processor.id), literal(datetime.utcnow()), literal(membership_fee.ends_on)]).select_from(users))
+         .returning(Transaction.id)
+         .cte('membership_fee_transactions'))
+
+    numbered_transactions = (select([transactions.c.id, func.row_number().over().label('index')])
+         .select_from(transactions)
+         .cte('membership_fee_numbered_transactions'))
+
+    split_insert_fee_account = (Split.__table__.insert()
+        .from_select([Split.amount, Split.account_id, Split.transaction_id],
+                     select([literal(-membership_fee.regular_fee, type_=Money), literal(config.membership_fee_account_id),transactions.c.id])
+                     .select_from(transactions))
+        .returning(Split.id)
+        .cte('membership_fee_split_fee_account'))
+
+    split_insert_user = (Split.__table__.insert().from_select(
+        [Split.amount, Split.account_id, Split.transaction_id],
+        select([literal(membership_fee.regular_fee, type_=Money), numbered_users.c.account_id, numbered_transactions.c.id])
+        .select_from(numbered_users.join(numbered_transactions,
+                    numbered_transactions.c.index == numbered_users.c.index)))
+        .returning(Split.id)
+        .cte('membership_fee_split_user'))
+
+    affected_users_raw = session.session.execute(select([users.c.user_id, users.c.user_name])).fetchall()
+
+    # TODO: Unite the following two queries into one (the membership_fee_users is called twice currently.
+    session.session.execute(select([]).select_from(split_insert_fee_account
+                                       .join(split_insert_user, split_insert_user.c.id == split_insert_fee_account.c.id)))
+
+    affected_users = []
+
+    for user in affected_users_raw:
+        affected_users.insert(0, {'id': user[0], 'name': user[1]})
+
+    return affected_users
+
+
 def post_fees(users, fees, processor):
     """
     Calculate the given fees for all given user accounts from scratch and post
