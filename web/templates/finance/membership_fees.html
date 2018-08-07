@@ -23,9 +23,8 @@
 
     <b>Hinweise: </b>
     <ul>
-        <li>Beiträge können bereits im Vorraus erstellt werden, werden jedoch frühestens
-            am Enddatum gebucht.</li>
-        <li>Gebuchte Beiträge sollten nicht mehr editiert werden.</li>
+        <li>Beiträge können bereits im Vorraus erstellt und gebucht werden.</li>
+        <li>Änderungen werden nicht auf bereits Gebuchte Beiträge angewendet.</li>
         <li>Das Buchen von Beiträgen kann einige Zeit in Anspruch nehmen.</li>
     </ul>
 
@@ -43,18 +42,6 @@
         </a>
     {%- endif %}
 {% endcall %}
-
-    <h2 class="page-header">Buchen</h2>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <a class="btn btn-primary" href="{{ url_for('.book_fees') }}">
-                <span class="glyphicon glyphicon-book"></span>
-                Buchungen berechnen und prüfen
-            </a>
-        </div>
-    </div>
-
     <h2 class="page-header">Zahlungsrückstände behandeln</h2>
 
     <div class="row">

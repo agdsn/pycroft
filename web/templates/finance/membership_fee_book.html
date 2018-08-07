@@ -12,7 +12,7 @@
 {% block content %}
     {{ tbl.item_table(
         'book_fees',
-        url_for('.book_fees_json'),
+        url_for('.membership_fee_users_due_json', fee_id=fee_id),
         cols
     ) }}
 

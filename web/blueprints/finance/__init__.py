@@ -27,7 +27,8 @@ from pycroft import config
 from pycroft.helpers.i18n import localized
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
-    end_payment_in_default_memberships, LateFee, RegistrationFee, post_fees
+    end_payment_in_default_memberships, LateFee, RegistrationFee, post_fees, \
+    post_transactions_for_membership_fee
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee)
 from pycroft.model.session import session
@@ -530,46 +531,49 @@ def accounts_create():
                            page_title=u"Konto erstellen")
 
 
-def post_membership_fees():
-    users = User.q.filter(or_(User.has_property('membership_fee'),
-                              User.has_property(
-                                  'reduced_membership_fee'))).all()
 
-    fees = [finance.MembershipFee(config.membership_fee_account)]
-
-    return post_fees(users, fees, current_user)
-
-
-@bp.route("/book_fees", methods=['GET', 'POST'])
+@bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
 @access.require('finance_change')
-def book_fees():
+def membership_fee_book(fee_id):
+    fee = MembershipFee.q.get(fee_id)
+
+    if fee is None:
+        flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        abort(404)
+
     form = FeeApplyForm()
     if form.is_submitted():
-        new_transactions = post_membership_fees()
+        affected_users = post_transactions_for_membership_fee(
+            fee, current_user)
 
         session.commit()
 
-        flash("{} neue Buchungen erstellt.".format(len(new_transactions)), "success")
+        flash("{} neue Buchungen erstellt.".format(len(affected_users)), "success")
 
         return redirect(url_for(".handle_payments_in_default"))
-    return render_template('finance/book_fees.html', form=form,
-                           page_title='Beiträge buchen')
+    return render_template('finance/membership_fee_book.html', form=form,
+                           page_title='Beitrag buchen', fee_id=fee.id)
 
 
-@bp.route("/book_fees_json")
-@access.require('finance_change')
-def book_fees_json():
-    new_transactions = post_membership_fees()
+@bp.route("/membership_fee/<int:fee_id>/users_due_json")
+def membership_fee_users_due_json(fee_id):
+    fee = MembershipFee.q.get(fee_id)
+
+    if fee is None:
+        abort(404)
+
+    affected_users = post_transactions_for_membership_fee(
+        fee, current_user)
 
     session.rollback()
 
     return jsonify(items=[{
-        'user': {'title': str(transaction['user_id']),
-                 'href': url_for("user.user_show", user_id=transaction['user_id'])},
-        'amount': {'value': str(transaction['amount']) + '€', 'is_positive': (transaction['amount'] >= 0)},
-        'description': localized(transaction['description']),
-        'valid_on': transaction['valid_on']
-    } for transaction in new_transactions])
+        'user': {'title': str(user['name']),
+                 'href': url_for("user.user_show", user_id=user['id'])},
+        'amount': {'value': str(fee.regular_fee) + '€', 'is_positive': (fee.regular_fee < 0)},
+        'description': localized(finance.MembershipFee.description.format(fee_name=fee.name).to_json()),
+        'valid_on': fee.ends_on
+    } for user in affected_users])
 
 
 @bp.route("/membership_fees", methods=['GET', 'POST'])
@@ -596,6 +600,10 @@ def membership_fees_json():
                                         before=membership_fee.ends_on),
                             'title': 'Finanzübersicht',
                             'icon': 'glyphicon-euro'},
+            'book_link': {'href': url_for(".membership_fee_book",
+                                          fee_id=membership_fee.id),
+                          'title': 'Buchen',
+                          'icon': 'glyphicon-book'},
             'edit_link': {'href': url_for(".membership_fee_edit",
                                         fee_id=membership_fee.id),
                             'title': 'Bearbeiten',
