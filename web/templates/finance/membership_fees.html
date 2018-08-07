@@ -9,16 +9,14 @@
 
 {% set cols = [
     {'name': 'name', 'title': 'Name'},
-    {'name': 'registration_fee', 'title': 'Anmeldung'},
     {'name': 'regular_fee', 'title': 'Regulär'},
-    {'name': 'reduced_fee', 'title': 'Ermäßigt'},
-    {'name': 'late_fee', 'title': 'Versäumnis'},
     {'name': 'payment_deadline', 'title': 'Frist'},
-    {'name': 'payment_deadline_final', 'title': 'Endg. Frist'},
+    {'name': 'payment_deadline_final', 'title': 'Endgültige Frist'},
     {'name': 'begins_on', 'title': 'Beginn'},
     {'name': 'ends_on', 'title': 'Ende'},
-    {'name': 'finance_link', 'title': 'Fin.Üb.', 'formatter': 'btnFormatter'},
-    {'name': 'edit_link', 'title': 'Bearb.', 'formatter': 'btnFormatter'},
+    {'name': 'finance_link', 'title': 'Finanzen', 'formatter': 'btnFormatter'},
+    {'name': 'book_link', 'title': 'Buchen', 'formatter': 'btnFormatter'},
+    {'name': 'edit_link', 'title': 'Bearbeiten', 'formatter': 'btnFormatter'},
 ] %}
 
 {% block content %}

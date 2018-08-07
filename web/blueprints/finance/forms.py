@@ -18,32 +18,18 @@ from pycroft.model.finance import BankAccount
 
 class MembershipFeeCreateForm(Form):
     name = TextField(u"Beitragsname", validators=[DataRequired()])
-    registration_fee = MoneyField(
-        u"Anmeldegebühr", validators=[InputRequired(), NumberRange(min=0)])
     regular_fee = MoneyField(
         u"Regulärer Beitrag",
         validators=[InputRequired(), NumberRange(min=0)]
     )
-    reduced_fee = MoneyField(
-        u"Ermäßigter Beitrag",
-        validators=[InputRequired(), NumberRange(min=0)]
-    )
-    late_fee = MoneyField(
-        u"Versäumnisgebühr", validators=[InputRequired(), NumberRange(min=0)]
-    )
-    # TODO Add form fields to specify these values
+
+    # TODO Transform IntegerFields to IntervalFields
+
     grace_period = IntegerField(
         u"Kulanzfrist (Tage)",
         description=u"Ist ein Nutzer weniger oder gleich viele Tage innerhalb "
                     u"des Zeitraums Mitglied, so entfällt jegliche "
                     u"Gebühr.",
-        validators=[InputRequired(), NumberRange(min=0)]
-    )
-    reduced_fee_threshold = IntegerField(
-        u"Ermäßigung ab (Tage)",
-        description=u"Ist ein Nutzer innerhalb eines Zeitraums so viele Tage "
-                    u"wie hier angeben oder länger abwesend, fällt nur der "
-                    u"ermäßigte Beitrag an.",
         validators=[InputRequired(), NumberRange(min=0)]
     )
 
@@ -60,13 +46,6 @@ class MembershipFeeCreateForm(Form):
         u"Endgültige Zahlungsfrist (Tage)",
         description=u"Bleibt ein Mitglied mehr Tage als hier angegeben eine "
                     u"Zahlung schuldig, so wird die Mitgliedschaft beendet.",
-        validators=[InputRequired(), NumberRange(min=0)]
-    )
-
-    not_allowed_overdraft_late_fee = MoneyField(
-        u"Versäumnisgebühr ab Saldo",
-        description=u"Saldo ab dem eine Versäumnisgebühr anfallen kann. "
-                    u"Versäumnisgebühren müssen angemessen sein.",
         validators=[InputRequired(), NumberRange(min=0)]
     )
 

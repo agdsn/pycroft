@@ -27,31 +27,21 @@ manager = ddl.DDLManager()
 
 class MembershipFee(IntegerIdModel):
     name = Column(String, nullable=False)
-    registration_fee = Column(Money, CheckConstraint('registration_fee >= 0'),
-                              nullable=False)
     regular_fee = Column(Money,
                          CheckConstraint('regular_fee >= 0'),
                          nullable=False)
-    reduced_fee = Column(Money,
-                         CheckConstraint('reduced_fee >= 0'),
-                         nullable=False)
-    late_fee = Column(Money, CheckConstraint('late_fee >= 0'), nullable=False)
+
     # Timedelta a person has to be member in the given period to be charged any
     # membership fee at all(grace period)
     grace_period = Column(Interval, nullable=False)
-    # Timedelta a member has to be present (i.e. not away although being member)
-    # in the period to be charged the full fee
-    reduced_fee_threshold = Column(Interval, nullable=False)
+
     # Timedelta after which members are being charged a late fee for not paying
     # in time + will be added to a group with "payment_in_default" property
     payment_deadline = Column(Interval, nullable=False)
+
     # Timedelta after which the membership will be cancelled
     payment_deadline_final = Column(Interval, nullable=False)
-    # Amount of outstanding debt of member, on which the late-fee will be
-    # charged
-    not_allowed_overdraft_late_fee = Column(Money,
-                               CheckConstraint('not_allowed_overdraft_late_fee >= 0'),
-                               nullable=False)
+
     begins_on = Column(Date, nullable=False)
     ends_on = Column(Date, nullable=False)
 

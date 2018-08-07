@@ -584,12 +584,8 @@ def membership_fees_json():
     return jsonify(items=[
         {
             'name': localized(membership_fee.name),
-            'registration_fee': money_filter(membership_fee.registration_fee),
             'regular_fee': money_filter(
                 membership_fee.regular_fee),
-            'reduced_fee': money_filter(
-                membership_fee.reduced_fee),
-            'late_fee': money_filter(membership_fee.late_fee),
             'payment_deadline': membership_fee.payment_deadline.days,
             'payment_deadline_final': membership_fee.payment_deadline_final.days,
             'begins_on': date_filter(membership_fee.begins_on),
@@ -622,17 +618,11 @@ def membership_fee_create():
         name_default = str(begins_on_default.year) \
                        + "-" + "%02d" % begins_on_default.month
 
-        reduced_fee_threshold = previous_fee.reduced_fee_threshold.days
         form = MembershipFeeCreateForm(
             name=name_default,
-            registration_fee=previous_fee.registration_fee,
             regular_fee=previous_fee.regular_fee,
-            reduced_fee=previous_fee.reduced_fee,
-            late_fee=previous_fee.late_fee,
             grace_period=previous_fee.grace_period.days,
-            reduced_fee_threshold=reduced_fee_threshold,
             payment_deadline=previous_fee.payment_deadline.days,
-            not_allowed_overdraft_late_fee=previous_fee.not_allowed_overdraft_late_fee,
             payment_deadline_final=previous_fee.payment_deadline_final.days,
             begins_on=begins_on_default,
             ends_on=ends_on_default,
@@ -642,14 +632,9 @@ def membership_fee_create():
     if form.validate_on_submit():
         mfee = MembershipFee(
             name=form.name.data,
-            registration_fee=form.registration_fee.data,
             regular_fee=form.regular_fee.data,
-            reduced_fee=form.reduced_fee.data,
-            late_fee=form.late_fee.data,
             grace_period=timedelta(days=form.grace_period.data),
-            reduced_fee_threshold=timedelta(days=form.reduced_fee_threshold.data),
             payment_deadline=timedelta(days=form.payment_deadline.data),
-            not_allowed_overdraft_late_fee=form.not_allowed_overdraft_late_fee.data,
             payment_deadline_final=timedelta(days=form.payment_deadline_final.data),
             begins_on=form.begins_on.data,
             ends_on=form.ends_on.data,
@@ -675,28 +660,18 @@ def membership_fee_edit(fee_id):
     if not form.is_submitted():
         form = MembershipFeeEditForm(
             name=fee.name,
-            registration_fee=fee.registration_fee,
             regular_fee=fee.regular_fee,
-            reduced_fee=fee.reduced_fee,
-            late_fee=fee.late_fee,
             grace_period=fee.grace_period.days,
-            reduced_fee_threshold=fee.reduced_fee_threshold.days,
             payment_deadline=fee.payment_deadline.days,
-            not_allowed_overdraft_late_fee=fee.not_allowed_overdraft_late_fee,
             payment_deadline_final=fee.payment_deadline_final.days,
             begins_on=fee.begins_on,
             ends_on=fee.ends_on,
         )
     elif form.validate_on_submit():
         fee.name = form.name.data
-        fee.registration_fee = form.registration_fee.data
         fee.regular_fee = form.regular_fee.data
-        fee.reduced_fee = form.reduced_fee.data
-        fee.late_fee = form.late_fee.data
         fee.grace_period = timedelta(days=form.grace_period.data)
-        fee.reduced_fee_threshold = timedelta(days=form.reduced_fee_threshold.data)
         fee.payment_deadline = timedelta(days=form.payment_deadline.data)
-        fee.not_allowed_overdraft_late_fee = form.not_allowed_overdraft_late_fee.data
         fee.payment_deadline_final = timedelta(days=form.payment_deadline_final.data)
         fee.begins_on = form.begins_on.data
         fee.ends_on = form.ends_on.data
