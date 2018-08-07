@@ -770,8 +770,6 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
                           u"{0} != {1}.")
         raise CSVImportError(message.format(balance, expected_balance))
 
-    end_payment_in_default_memberships()
-
 
 def remove_space_characters(field):
     """Remove every 28th character if it is a space character."""
