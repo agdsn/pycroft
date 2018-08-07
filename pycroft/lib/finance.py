@@ -858,6 +858,7 @@ def get_typed_splits(splits):
         (s for s in splits if s.amount < 0),
     )
 
+
 def get_transaction_type(transaction):
 
     credited = [split.account for split in transaction.splits if split.amount>0]
@@ -934,6 +935,7 @@ def handle_payments_in_default():
             users_membership_terminated.append(user)
 
     return users_pid_membership, users_membership_terminated
+
 
 def process_transactions(bank_account, statement):
     transactions = []  # new transactions which would be imported
