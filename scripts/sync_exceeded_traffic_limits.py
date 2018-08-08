@@ -25,10 +25,12 @@ def main():
     engine = create_engine(connection_string)
     connection = engine.connect()
     state = AlembicHelper(connection)
-    strategy = SchemaStrategist(state).determine_schema_strategy()
-    strategy()
+    strategist = SchemaStrategist(state)
+    is_up_to_date = strategist.helper.running_version == strategist.helper.desired_version
+    if not is_up_to_date:
+        print("Schema is not up to date!")
+        return
 
-    engine = create_engine(connection_string)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
 
