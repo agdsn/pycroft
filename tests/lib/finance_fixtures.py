@@ -14,47 +14,32 @@ today = datetime.utcnow().date()
 
 
 class MembershipFeeData(DataSet):
-    class with_registration_fee:
-        name = u"previous month"
-        registration_fee = 5.00
+    class fee_one:
+        name = u"first fee"
         regular_fee = 5.00
-        reduced_fee = 1.00
-        late_fee = 2.50
         grace_period = timedelta(14)
-        reduced_fee_threshold = timedelta(10)
         payment_deadline = timedelta(14)
         payment_deadline_final = timedelta(62)
-        not_allowed_overdraft_late_fee = 2.00
-        begins_on = today - timedelta(days=61)
+        begins_on = today - timedelta(days=90)
+        ends_on = today - timedelta(days=61)
+
+    class fee_two:
+        name = u"seconds fee"
+        regular_fee = 5.00
+        grace_period = timedelta(14)
+        payment_deadline = timedelta(14)
+        payment_deadline_final = timedelta(62)
+        begins_on = today - timedelta(days=60)
         ends_on = today - timedelta(days=31)
 
-    class without_registration_fee:
-        name = u"current month"
-        registration_fee = 0.00
+    class fee_three:
+        name = u"third fee"
         regular_fee = 5.00
-        reduced_fee = 1.00
-        late_fee = 2.50
         grace_period = timedelta(14)
-        reduced_fee_threshold = timedelta(10)
         payment_deadline = timedelta(14)
         payment_deadline_final = timedelta(62)
-        not_allowed_overdraft_late_fee = 2.00
         begins_on = today - timedelta(days=30)
         ends_on = today
-
-    class first_fee:
-        name = u"first month"
-        registration_fee = 0.00
-        regular_fee = 5.00
-        reduced_fee = 0.00
-        late_fee = 0.00
-        grace_period = timedelta(14)
-        reduced_fee_threshold = timedelta(32)
-        payment_deadline = timedelta(14)
-        payment_deadline_final = timedelta(62)
-        not_allowed_overdraft_late_fee = 0.00
-        begins_on = today - timedelta(days=92)
-        ends_on = today - timedelta(days=62)
 
 
 class AccountData(DataSet):
@@ -62,16 +47,8 @@ class AccountData(DataSet):
         name = u"Bankkonto 3120219540"
         type = "BANK_ASSET"
 
-    class registration_fee_account:
-        name = u"Registration Fees"
-        type = "REVENUE"
-
     class membership_fee_account:
         name = u"Membership Fees"
-        type = "REVENUE"
-
-    class late_fee_account:
-        name = u"Late Fees"
         type = "REVENUE"
 
     class user_account:
@@ -92,119 +69,58 @@ class AccountData(DataSet):
 
 
 class UserData(DataSet):
-    class dummy:
-        login = u"dummy"
+    class dummy_1:
+        login = u"dummy_1"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.with_registration_fee.begins_on + timedelta(days=12), time.min)
+        registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=1), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account
 
-    class dummy_grace:
-        login = u"dummy_grace"
+    class dummy_2:
+        login = u"dummy_2"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.without_registration_fee.begins_on + timedelta(days=20), time.min)
-        room = RoomData.dummy_room1
-        account = AccountData.user_account_grace
-
-    class dummy_no_grace:
-        login = u"dummy_no_grace"
-        name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.without_registration_fee.begins_on - timedelta(days=10), time.min)
-        room = RoomData.dummy_room1
-        account = AccountData.user_account_no_grace
-
-    class dummy_early:
-        login = u"dummy_early"
-        name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.first_fee.begins_on + timedelta(days=12), time.min)
+        registered_at = datetime.combine(MembershipFeeData.fee_three.begins_on + timedelta(days=2), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account_early
 
+    class dummy_14:
+        login = u"dummy_14"
+        name = u"Dummy Dummy"
+        registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=14), time.min)
+        room = RoomData.dummy_room1
+        account = AccountData.user_account_grace
+
+    class dummy_15:
+        login = u"dummy_15"
+        name = u"Dummy Dummy"
+        registered_at = datetime.combine(MembershipFeeData.fee_two.begins_on - timedelta(days=15), time.min)
+        room = RoomData.dummy_room1
+        account = AccountData.user_account_no_grace
 
 class MembershipData(DataSet):
-    class member:
-        begins_at = UserData.dummy.registered_at
+    class member_1:
+        begins_at = UserData.dummy_1.registered_at
+        ends_at = UserData.dummy_1.registered_at
+        user = UserData.dummy_1
+        group = PropertyGroupData.member
+
+    class member_2:
+        begins_at = UserData.dummy_2.registered_at
+        ends_at = UserData.dummy_2.registered_at
+        user = UserData.dummy_2
+        group = PropertyGroupData.member
+
+    class member_14:
+        begins_at = UserData.dummy_14.registered_at
         ends_at = None
-        user = UserData.dummy
+        user = UserData.dummy_14
         group = PropertyGroupData.member
 
-    class member_early:
-        begins_at = UserData.dummy_early.registered_at
+    class member_15:
+        begins_at = UserData.dummy_15.registered_at
         ends_at = None
-        user = UserData.dummy_early
+        user = UserData.dummy_15
         group = PropertyGroupData.member
-
-    class member_grace:
-        begins_at = UserData.dummy_grace.registered_at
-        ends_at = None
-        user = UserData.dummy_grace
-        group = PropertyGroupData.member
-
-    class member_no_grace:
-        begins_at = UserData.dummy_no_grace.registered_at
-        ends_at = UserData.dummy_no_grace.registered_at + timedelta(30)
-        user = UserData.dummy_no_grace
-        group = PropertyGroupData.member
-
-
-class TransactionData(DataSet):
-    class claim1:
-        description = "Claim 1"
-        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=31)
-
-    class late_fee_for_claim1:
-        description = "Late fee for Claim 1"
-        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=63)
-
-    class claim2:
-        description = "Claim 2"
-        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=81)
-
-    class payment:
-        description = "Payment of Claim 1"
-        valid_on = MembershipFeeData.with_registration_fee.begins_on + timedelta(days=64)
-
-
-class SplitData(DataSet):
-    class claim1_credit:
-        transaction = TransactionData.claim1
-        account = AccountData.user_account
-        amount = 50.00
-
-    class claim1_debit:
-        transaction = TransactionData.claim1
-        account = AccountData.membership_fee_account
-        amount = -50.00
-
-    class late_fee1_credit:
-        transaction = TransactionData.late_fee_for_claim1
-        account = AccountData.user_account
-        amount = 25.00
-
-    class late_fee2_credit:
-        transaction = TransactionData.late_fee_for_claim1
-        account = AccountData.late_fee_account
-        amount = -25.00
-
-    class claim2_credit:
-        transaction = TransactionData.claim2
-        account = AccountData.user_account
-        amount = 50.00
-
-    class claim2_debit:
-        transaction = TransactionData.claim2
-        account = AccountData.membership_fee_account
-        amount = -50.00
-
-    class payment_credit:
-        transaction = TransactionData.payment
-        account = AccountData.bank_account
-        amount = 50.00
-
-    class payment_debit:
-        transaction = TransactionData.payment
-        account = AccountData.user_account
-        amount = -50.00
 
 
 class BankAccountData(DataSet):

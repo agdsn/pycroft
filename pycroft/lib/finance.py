@@ -52,28 +52,28 @@ def get_membership_fees(interval_set=None):
             if interval.begin is not None:
                 if not interval.end == PositiveInfinity:
                     criteria.append(or_(
-                        interval.begin <= model.finance.MembershipFee.begins_on,
+                        interval.begin <= MembershipFee.begins_on,
                         between(interval.begin,
-                                model.finance.MembershipFee.begins_on,
-                                model.finance.MembershipFee.ends_on)
+                                MembershipFee.begins_on,
+                                MembershipFee.ends_on)
                     ))
 
             if interval.end is not None:
                 if interval.end == PositiveInfinity:
                     criteria.append(
-                        interval.end > model.finance.MembershipFee.begins_on
+                        interval.end > MembershipFee.begins_on
                     )
                 else:
                     criteria.append(or_(
-                        interval.end >= model.finance.MembershipFee.ends_on,
+                        interval.end >= MembershipFee.ends_on,
                         between(interval.end,
-                                model.finance.MembershipFee.begins_on,
-                                model.finance.MembershipFee.ends_on)
+                                MembershipFee.begins_on,
+                                MembershipFee.ends_on)
                     ))
 
 
-            queries.append(model.finance.MembershipFee.q.filter(or_(*criteria)) \
-                           .order_by(model.finance.MembershipFee.begins_on))
+            queries.append(MembershipFee.q.filter(or_(*criteria)) \
+                           .order_by(MembershipFee.begins_on))
 
     if len(queries) >= 1:
         result = queries[0]
@@ -97,9 +97,9 @@ def get_membership_fee_for_date(target_date):
     :raises sqlalchemy.orm.exc.MultipleResultsFound if multiple membership fees
     were found.
     """
-    return model.finance.MembershipFee.q.filter(
-        between(target_date, model.finance.MembershipFee.begins_on,
-                model.finance.MembershipFee.ends_on)
+    return MembershipFee.q.filter(
+        between(target_date, MembershipFee.begins_on,
+                MembershipFee.ends_on)
     ).one()
 
 
@@ -108,9 +108,9 @@ def get_last_applied_membership_fee():
     Get the last applied membership fee.
     :rtype: MembershipFee
     """
-    return model.finance.MembershipFee.q.filter(
-        model.finance.MembershipFee.ends_on <= datetime.now()) \
-        .order_by(model.finance.MembershipFee.ends_on.desc()).first()
+    return MembershipFee.q.filter(
+        MembershipFee.ends_on <= datetime.now()) \
+        .order_by(MembershipFee.ends_on.desc()).first()
 
 
 def get_first_applied_membership_fee():
@@ -118,8 +118,8 @@ def get_first_applied_membership_fee():
     Get the first applied membership fee.
     :rtype: MembershipFee
     """
-    return model.finance.MembershipFee.q.order_by(
-        model.finance.MembershipFee.ends_on.desc()).first()
+    return MembershipFee.q.order_by(
+        MembershipFee.ends_on.desc()).first()
 
 
 @with_transaction
@@ -225,9 +225,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
     return query.scalar()
 
 
-adjustment_description = deferred_gettext(
-    u"Korrektur von „{original_description}“ vom {original_valid_on}")
-
+memvership_fee_description = "Mitgliedsbeitrag {fee_name}"
 
 @with_transaction
 def post_transactions_for_membership_fee(membership_fee, processor):
@@ -244,7 +242,7 @@ def post_transactions_for_membership_fee(membership_fee, processor):
     :return: A list of name of all affected users
     """
 
-    description = MembershipFee.description.format(
+    description = memvership_fee_description.format(
         fee_name=membership_fee.name).to_json()
 
     split_user_account = Split.__table__.alias()
@@ -314,64 +312,6 @@ def post_transactions_for_membership_fee(membership_fee, processor):
     return affected_users
 
 
-@with_transaction
-def post_fees(users, fees, processor):
-    """
-    Calculate the given fees for all given user accounts from scratch and post
-    them if they have not already been posted and correct erroneous postings.
-    :param iterable[User] users:
-    :param iterable[Fee] fees:
-    :param User processor:
-    """
-
-    new_transactions = []
-
-    for user in users:
-        for fee in fees:
-            computed_debts = fee.compute(user)
-
-            try:
-                posted_transactions = fee.get_posted_transactions(user).all()
-            except AttributeError:
-                continue
-
-            posted_credits = tuple(
-                t for t in posted_transactions if t.amount > 0)
-
-            posted_corrections = tuple(
-               t for t in posted_transactions if t.amount < 0)
-
-            missing_debts, erroneous_debts = diff(posted_credits,
-                                                  computed_debts)
-
-            computed_adjustments = tuple(
-                ((adjustment_description.format(
-                    original_description=Message.from_json(description).localize(),
-                    original_valid_on=valid_on)).to_json(),
-                 valid_on, -amount)
-                for description, valid_on, amount in erroneous_debts)
-            missing_adjustments, erroneous_adjustments = diff(
-                posted_corrections, computed_adjustments
-            )
-            missing_postings = chain(missing_debts, missing_adjustments)
-
-            today = session.utcnow().date()
-            for description, valid_on, amount in missing_postings:
-                if valid_on <= today:
-                    simple_transaction(
-                        description, fee.account, user.account,
-                        amount, processor, valid_on)
-
-                    new_transactions.append({
-                        'user_id': user.id,
-                        'description': description,
-                        'amount': amount,
-                        'valid_on': valid_on
-                    })
-
-    return new_transactions
-
-
 def diff(posted, computed, insert_only=False):
     sequence_matcher = difflib.SequenceMatcher(None, posted, computed)
     missing_postings = []
@@ -417,219 +357,6 @@ def _to_date_intervals(intervals):
     :rtype: IntervalSet[date]
     """
     return IntervalSet(_to_date_interval(i) for i in intervals)
-
-
-class Fee(metaclass=ABCMeta):
-    """
-    Fees must be idempotent, that means if a fee has been applied to a user,
-    another application must not result in any change. This property allows
-    all the fee to be calculated for all times instead of just the current
-    semester or the current day and makes the calculation independent of system
-    time it was running.
-    """
-
-    validity_period = UnboundedInterval
-
-    def __init__(self, account):
-        self.account = account
-        self.session = session.session
-
-    def get_posted_transactions(self, user):
-        """
-        Get all fee transactions that have already been posted to the user's
-        finance account.
-        :param User user:
-        :return:
-        :rtype: list[(unicode, date, int)]
-        """
-
-        first_fee = get_first_applied_membership_fee()
-
-        if first_fee is None:
-            return []
-
-        split1 = aliased(Split)
-        split2 = aliased(Split)
-        transactions = self.session.query(
-            Transaction.description, Transaction.valid_on, split1.amount
-        ).select_from(Transaction).join(
-            (split1, split1.transaction_id == Transaction.id),
-            (split2, split2.transaction_id == Transaction.id)
-        ).filter(
-            split1.account_id == user.account_id,
-            split2.account_id == self.account.id
-        ).filter(
-            Transaction.valid_on >= first_fee.ends_on
-        ).order_by(Transaction.valid_on)
-
-        return transactions
-
-    @abstractmethod
-    def compute(self, user):
-        """
-        Compute all debts the user owes us for this particular fee. Debts must
-        be in ascending order of valid_on.
-
-        :param User user:
-        :rtype: list[(unicode, date, int)]
-        """
-        pass
-
-
-class RegistrationFee(Fee):
-    description = deferred_gettext(u"Anschlussgebühr").to_json()
-
-    def compute(self, user):
-        when = single(user.registered_at)
-        if user.has_property("registration_fee", when):
-            try:
-                mfee = get_membership_fee_for_date(
-                    user.registered_at.date())
-            except NoResultFound:
-                return []
-            fee = mfee.registration_fee
-            if fee > 0:
-                return [(self.description, user.registered_at.date(), fee)]
-        return []
-
-
-class MembershipFee(Fee):
-    description = deferred_gettext(
-        u"Mitgliedsbeitrag {fee_name}")
-
-    def compute(self, user):
-        regular_fee_intervals = _to_date_intervals(
-            user.property_intervals("membership_fee"))
-
-        reduced_fee_intervals = _to_date_intervals(
-            user.property_intervals("reduced_membership_fee"))
-
-        debts = []
-
-        fee_intervals = regular_fee_intervals | reduced_fee_intervals
-
-        # Compute membership fee for each period the user is liable to pay it
-        membership_fees = get_membership_fees(fee_intervals)
-        for membership_fee in membership_fees:
-            if membership_fee.ends_on > date.today():
-                continue
-
-            fee_interval = closed(membership_fee.begins_on,
-                                  membership_fee.ends_on)
-            reg_fee_in_period = regular_fee_intervals & fee_interval
-            red_fee_in_period = reduced_fee_intervals & fee_interval
-
-            # reduced fee trumps regular fee
-            reg_fee_in_period = reg_fee_in_period - red_fee_in_period
-
-            valid_on = membership_fee.ends_on
-
-            fee_in_period = reg_fee_in_period | red_fee_in_period
-
-            first_fee = False
-
-            for regular_fee_interval in regular_fee_intervals:
-                if regular_fee_interval.begin.month == membership_fee.begins_on.month:
-                    first_fee = True
-
-            # IntervalSet is type-agnostic, so cannot do .length of empty sets,
-            # therefore these double checks are required
-            if (reg_fee_in_period and
-                    (not red_fee_in_period or red_fee_in_period.length <
-                     membership_fee.reduced_fee_threshold) and
-                    (fee_in_period.length > membership_fee.grace_period or
-                     not first_fee)):
-                amount = membership_fee.regular_fee
-            elif (red_fee_in_period and
-                  fee_in_period.length > membership_fee.grace_period and
-                  red_fee_in_period.length >=
-                  membership_fee.reduced_fee_threshold):
-                amount = membership_fee.reduced_fee
-            else:
-                continue
-
-            if amount > 0:
-                debts.append((self.description.format(
-                                fee_name=membership_fee.name).to_json(),
-                              valid_on, amount))
-        return debts
-
-
-class LateFee(Fee):
-    description = deferred_gettext(
-        u"Versäumnisgebühr für Beitrag vom {original_valid_on}")
-
-    def __init__(self, account, calculate_until):
-        """
-        :param date calculate_until: Date up until late fees are calculated;
-        usually the date of the last bank import
-        :param int allowed_overdraft: Amount of overdraft which does result
-        in an late fee being charged.
-        :param payment_deadline: Timedelta after which a payment is late
-        """
-        super(LateFee, self).__init__(account)
-        self.calculate_until = calculate_until
-
-    def non_late_fee_transactions(self, user):
-        split1 = aliased(Split)
-        split2 = aliased(Split)
-        return self.session.query(
-            Transaction.valid_on, (-func.sum(split2.amount)).label("debt")
-        ).select_from(Transaction).join(
-            (split1, split1.transaction_id == Transaction.id),
-            (split2, split2.transaction_id == Transaction.id)
-        ).filter(
-            split1.account_id == user.account_id,
-            split2.account_id != user.account_id,
-            split2.account_id != self.account.id
-        ).group_by(
-            Transaction.id, Transaction.valid_on
-        ).order_by(Transaction.valid_on)
-
-    @staticmethod
-    def running_totals(transactions):
-        balance = 0
-        last_credit = transactions[0][0]
-        for valid_on, amount in transactions:
-            if amount > 0:
-                last_credit = valid_on
-            else:
-                delta = valid_on - last_credit
-                yield last_credit, balance, delta
-            balance += amount
-
-    def compute(self, user):
-        # Note: User finance accounts are assets accounts from our perspective,
-        # that means their balance is positive, if the user owes us money
-        transactions = self.non_late_fee_transactions(user).all()
-        # Add a pseudo transaction on the day until late fees should be
-        # calculated
-        transactions.append((self.calculate_until, 0))
-        liability_intervals = _to_date_intervals(
-            user.property_intervals("late_fee")
-        )
-        debts = []
-        for last_credit, balance, delta in self.running_totals(transactions):
-            try:
-                membership_fee = get_membership_fee_for_date(last_credit)
-
-                if membership_fee.late_fee > 0:
-                    if (
-                            balance < membership_fee.not_allowed_overdraft_late_fee or
-                            delta <= membership_fee.payment_deadline):
-                        continue
-                    valid_on = last_credit + membership_fee.payment_deadline + timedelta(
-                        days=1)
-                    amount = membership_fee.late_fee
-                    if liability_intervals & single(valid_on) and amount > 0:
-                        debts.append((
-                            self.description.format(
-                                original_valid_on=last_credit).to_json(),
-                            amount, valid_on
-                        ))
-            except NoResultFound:
-                pass
-        return debts
 
 
 MT940_FIELDNAMES = [
