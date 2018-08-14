@@ -465,7 +465,7 @@ class Membership(IntegerIdModel):
 
     def disable(self, ends_at=None):
         if ends_at is None:
-            ends_at = session.utcnow()
+            ends_at = object_session(self).query(func.current_timestamp()).scalar()
 
         if self.begins_at is not None and self.begins_at > ends_at:
             self.ends_at = self.begins_at
