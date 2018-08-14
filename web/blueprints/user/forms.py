@@ -76,7 +76,8 @@ class UserEditNameForm(Form):
 
 
 class UserEditEMailForm(Form):
-    email = TextField(u"E-Mail", [Email(u"E-Mail-Adresse ist ungültig!")])
+    email = TextField(u"E-Mail", [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
+
 
 class UserEditBirthdateForm(Form):
     birthdate = DateField(u"Birthdate", [Optional()], format="%d.%m.%Y")
@@ -84,18 +85,17 @@ class UserEditBirthdateForm(Form):
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",
-                                [DataRequired(message=u"Wohnheim?")],
+                                [Optional()],
                                 get_label='short_name',
                                 query_factory=building_query)
     level = LazyLoadSelectField(u"Etage",
-                                validators=[NumberRange(message=u"Etage?")],
+                                validators=[Optional(), NumberRange(message=u"Etage?")],
                                 coerce=int,
                                 choices=[],
                                 conditions=["building"],
                                 data_endpoint="facilities.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
-                                      validators=[
-                                          DataRequired(message=u"Raum?")],
+                                      validators=[Optional()],
                                       coerce=str,
                                       choices=[],
                                       conditions=["building", "level"],
@@ -108,10 +108,10 @@ class UserCreateForm(UserMoveForm):
         DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
         validate_unique_login])
-    mac = TextField(u"MAC", [
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
+    mac = TextField(u"MAC", [Optional(),
+        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum", [Optional()], format="%d.%m.%Y")
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])

@@ -47,14 +47,21 @@ def generate_user_sheet(user, user_id, plain_password):
     PAGE_WIDTH = defaultPageSize[0]
     PAGE_HEIGHT = defaultPageSize[1]
 
-    story.append(
-        Paragraph('{dorm}<br/>{name}<br/>{level}/{room}'.format(
-            dorm=str(user.room.building.short_name),
-            name=user.name,
-            level=str(user.room.level),
-            room=str(user.room.number)
-        ),
-                  style['RightText']))
+    if user.room:
+        story.append(
+            Paragraph('{dorm}<br/>{name}<br/>{level}/{room}'.format(
+                dorm=str(user.room.building.short_name),
+                name=user.name,
+                level=str(user.room.level),
+                room=str(user.room.number)
+            ), style['RightText'])
+        )
+    else:
+        story.append(
+            Paragraph('{name}'.format(
+                name=user.name
+            ), style['RightText'])
+        )
 
     im = Image(ASSETS_LOGO_FILENAME, 5 * cm, 5 * cm)
     story.append(im)
@@ -99,7 +106,7 @@ def generate_user_sheet(user, user_id, plain_password):
     data = [['Name:', user.name, 'User-ID:', user_id],
             ['Username:', user.login, 'IPv4-Address:', ', '.join(ips)],
             ['Password:', plain_password, 'MAC-Address:', ', '.join(macs)],
-            ['E-Mail:', user.email, 'Location:', str(user.room)]]
+            ['E-Mail:', user.email, 'Location:', str(user.room) if user.room else ""]]
     t = Table(data, colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2)
 
     story.append(t)

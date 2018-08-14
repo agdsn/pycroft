@@ -163,7 +163,7 @@ def create_member(name, login, email, building, level, room_number, processor):
     :return:
     """
     room = Room.q.filter_by(number=room_number,
-                            level=level, building=building).one()
+                            level=level, building=building).one_or_none()
 
     now = session.utcnow()
     plain_password = user_helper.generate_password(12)
@@ -191,7 +191,7 @@ def create_member(name, login, email, building, level, room_number, processor):
         make_member_of(new_user, group, processor, closed(now, None))
 
     log_user_event(author=processor,
-                   message=deferred_gettext(u"Moved in.").to_json(),
+                   message=deferred_gettext(u"User created.").to_json(),
                    user=new_user)
 
     return new_user, plain_password
@@ -224,31 +224,33 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
     new_user, plain_password = create_member(name, login, email,
                                              building, level, room_number,
                                              processor)
-    room = new_user.room
 
-    interface_existing = Interface.q.filter_by(mac=mac).first()
-    if interface_existing is not None:
-        if host_annex:
-            host_existing = interface_existing.host
-            host_existing.owner_id = new_user.id
+    if mac:
+        room = new_user.room
 
-            session.session.add(host_existing)
-            migrate_user_host(host_existing, new_user.room, processor)
+        interface_existing = Interface.q.filter_by(mac=mac).first()
+        if interface_existing is not None:
+            if host_annex:
+                host_existing = interface_existing.host
+                host_existing.owner_id = new_user.id
+
+                session.session.add(host_existing)
+                migrate_user_host(host_existing, new_user.room, processor)
+            else:
+                raise MacExistsException
         else:
-            raise MacExistsException
-    else:
-        new_host = Host(owner=new_user, room=room)
-        session.session.add(new_host)
-        session.session.add(Interface(mac=mac, host=new_host))
-        setup_ipv4_networking(new_host)
+            new_host = Host(owner=new_user, room=room)
+            session.session.add(new_host)
+            session.session.add(Interface(mac=mac, host=new_host))
+            setup_ipv4_networking(new_host)
 
-    setup_traffic_group(new_user, processor, traffic_group_id)
-    try:
-        grant_initial_credit(new_user)
-    except NoTrafficGroup as e:
-        raise ValueError("User {} could not be assigned a traffic group. "
-                         "Please specify one manually."
-                         .format(new_user)) from e
+        setup_traffic_group(new_user, processor, traffic_group_id)
+        try:
+            grant_initial_credit(new_user)
+        except NoTrafficGroup as e:
+            raise ValueError("User {} could not be assigned a traffic group. "
+                             "Please specify one manually."
+                             .format(new_user)) from e
 
     return (new_user, plain_password)
 
@@ -406,8 +408,10 @@ def edit_email(user, email, processor):
     :param processor:User object of the processor, which issues the change
     :return:Changed user object
     """
+
     if not email:
-        raise ValueError()
+        email = None
+
     old_email = user.email
     user.email = email
     message = deferred_gettext(u"Changed e-mail from {} to {}.")
