@@ -17,7 +17,7 @@ from pycroft.lib.finance import (
     transferred_amount,
     is_ordered, get_last_applied_membership_fee,
     get_membership_fee_for_date, handle_payments_in_default,
-    end_payment_in_default_memberships, memvership_fee_description)
+    end_payment_in_default_memberships, membership_fee_description)
 from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (

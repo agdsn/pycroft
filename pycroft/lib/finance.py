@@ -174,8 +174,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
     return query.scalar()
 
 
-memvership_fee_description = "Mitgliedsbeitrag {fee_name}"
-
+membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 @with_transaction
 def post_transactions_for_membership_fee(membership_fee, processor):
     """
@@ -191,7 +190,7 @@ def post_transactions_for_membership_fee(membership_fee, processor):
     :return: A list of name of all affected users
     """
 
-    description = memvership_fee_description.format(
+    description = membership_fee_description.format(
         fee_name=membership_fee.name).to_json()
 
     split_user_account = Split.__table__.alias()
