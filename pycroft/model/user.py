@@ -463,12 +463,14 @@ class Membership(IntegerIdModel):
                 "begins_at must be before ends_at"
         return value
 
-    def disable(self):
-        now = session.utcnow()
-        if self.begins_at is not None and self.begins_at > now:
+    def disable(self, ends_at=None):
+        if ends_at is None:
+            ends_at = session.utcnow()
+
+        if self.begins_at is not None and self.begins_at > ends_at:
             self.ends_at = self.begins_at
         else:
-            self.ends_at = now
+            self.ends_at = ends_at
 
 
 class PropertyGroup(Group):

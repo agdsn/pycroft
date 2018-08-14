@@ -293,24 +293,6 @@ class UserWithNetworkAccessTestCase(FixtureDataTestBase):
 
         self.assertFalse(user.member_of(config.violation_group, when=subinterval))
 
-    def test_instant_user_blocking_and_unblocking(self):
-        # TODO: test for log entries
-        u = self.user_to_block
-
-        blocked_user = UserHelper.suspend(u, reason=u"test", processor=u)
-        session.session.commit()
-        blocked_during = single(session.utcnow())
-
-        self.assertEqual(u.log_entries[0].author, blocked_user)
-        self.assert_violation_membership(blocked_user)
-        self.assert_violation_membership(blocked_user, subinterval=blocked_during)
-
-        unblocked_user = UserHelper.unblock(blocked_user, processor=u)
-        session.session.commit()
-
-        self.assertEqual(u.log_entries[0].author, unblocked_user)
-        self.assert_violation_membership(unblocked_user, subinterval=blocked_during)
-
     def test_deferred_blocking_and_unblocking_works(self):
         u = self.user_to_block
 
