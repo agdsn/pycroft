@@ -6,8 +6,6 @@ from functools import reduce
 member_props = {"member": True,
                 "network_access": True,
                 "membership_fee": True,
-                "late_fee": True,
-                "registration_fee": True,
                 "ldap": True,
                 "mail": True,
                 "userdb": True,
@@ -62,9 +60,7 @@ group_props = {
     #        ∈ away \ member = permanent ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
     #        ∉ away ∪ member = permanent ausgezogen, keine mailmitgliedschaft, kein semesterbeitrag
     "away": ("Ausgezogen (obsolet, ehem. „mail“)", {"network_access": False,
-                                                    "late_fee": False,
                                                     "membership_fee": False,
-                                                    "reduced_membership_fee": False,
                                                     "mail": True,
                                                     'ldap': True,
                                                     'userdb': True,

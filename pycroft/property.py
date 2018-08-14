@@ -11,8 +11,6 @@ property_categories = OrderedDict((
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
         (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"membership_fee",  u"ist verpflichtet den Mitgliedsbeitrag zu bezahlen"),
-        (u"reduced_membership_fee", u"muss nur reduzierten Mitgliedsbeitrag bezahlen"),
-        (u"late_fee",  u"ist verpflichtet Versäumnisgebühr zu bezahlen"),
     ))),
     ("System / Dienste", OrderedDict((
         ('ldap', "hat einen Directory-Eintrag im LDAP"),
