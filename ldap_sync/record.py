@@ -57,6 +57,8 @@ class Record(object):
 
     ENFORCED_KEYS = frozenset(['mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
                                'homeDirectory', 'gidNumber', 'uidNumber', 'uid'])
+    LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
+    PWD_POLICY_BLOCKED = "login_disabled"
 
     @classmethod
     def from_db_user(cls, user, base_dn):
@@ -64,19 +66,24 @@ class Record(object):
         if user.unix_account == None:
             raise ValueError("User object must have a UnixAccount")
 
+        user_is_blocked = not user.has_property(cls.LDAP_LOGIN_ENABLED_PROPERTY)
+        passwd_hash = "!" if user_is_blocked else "" + user.passwd_hash
+
         attributes = {
             # REQ – required, MAY – optional, SV – single valued
             'uid': user.login,  # REQ by posixAccount, shadowAccount
             'uidNumber': user.unix_account.uid,  # SV, REQ by posixAccount
             'gidNumber': user.unix_account.gid,  # SV, REQ by posixAccount
             'homeDirectory': user.unix_account.home_directory,  # SV, REQ by posixAccount
-            'userPassword': user.passwd_hash,  # MAY by posixAccount, shadowAccount
+            'userPassword': passwd_hash,  # MAY by posixAccount, shadowAccount
             'gecos': user.name,  # SV, MAY by posixAccount
             'loginShell': user.unix_account.login_shell,  # SV, MAY by posixAccount
             'cn': user.name,  # REQ by posixAccount, inetOrgPerson(person)
             'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
             'mail': user.email,  # MAY by inetOrgPerson
         }
+        if user_is_blocked:
+            attributes['pwdPolicySubEntry'] = cls.PWD_POLICY_BLOCKED
         return cls(dn=dn, attrs=attributes)
 
     @classmethod

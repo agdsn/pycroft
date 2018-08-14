@@ -7,6 +7,7 @@ member_props = {"member": True,
                 "network_access": True,
                 "membership_fee": True,
                 "ldap": True,
+                "ldap_login_enabled": True,
                 "mail": True,
                 "userdb": True,
                 "userwww": True}
@@ -46,12 +47,12 @@ group_props = {
 
     "finance_admin": ("Finanzer", finance_admin_props),
 
-    "suspended": ("Gesperrt", {"network_access": False}),
+    "suspended": ("Gesperrt", {"network_access": False, "ldap_login_enabled": False}),
 
-    "finance": ("Zahlungsrückstand", {"network_access": False, "payment_in_default": True}),
-    "traffic": ("Trafficüberschreitung", {"network_access": False, "traffic_limit_exceeded": True}),
+    "finance": ("Zahlungsrückstand", {"network_access": False, "payment_in_default": True, "ldap_login_enabled": False}),
+    "traffic": ("Trafficüberschreitung", {"network_access": False, "traffic_limit_exceeded": True, "ldap_login_enabled": False}),
     "violator": ("Verstoß gegen Netzordnung", {"network_access": False,
-                                              "violation": True}),
+                                              "violation": True, "ldap_login_enabled": False}),
 
     "cache_user": ("Cache Nutzer", {"cache_access": True}),
 

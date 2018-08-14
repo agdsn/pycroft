@@ -8,7 +8,11 @@ member_props = {"member": True,
                 "membership_fee": True,
                 "late_fee": True,
                 "registration_fee": True,
-                "mail": True}
+                "ldap": True,
+                "ldap_login_enabled": True,
+                "mail": True,
+                "userdb": True,
+                "userwww": True}
 
 org_props = {"user_show": True,
              "user_change": True,
@@ -45,10 +49,12 @@ group_props = {
 
     "finance_admin": ("Finanzer", finance_admin_props),
 
-    "suspended": ("Gesperrt", {"network_access": False}),
+    "suspended": ("Gesperrt", {"network_access": False, "ldap_login_enabled": False}),
 
+    "finance": ("Zahlungsrückstand", {"network_access": False, "payment_in_default": True, "ldap_login_enabled": False}),
+    "traffic": ("Trafficüberschreitung", {"network_access": False, "traffic_limit_exceeded": True, "ldap_login_enabled": False}),
     "violator": ("Verstoß gegen Netzordnung", {"network_access": False,
-                                              "violation": True}),
+                                              "violation": True, "ldap_login_enabled": False}),
 
     # nutzer ∈ member \ away = normales mitglied, mailmitgliedschaft, semesterbeitrag
     #        ∈ away ∩ member = temporär ausgezogen, mailmitgliedschaft, reduzierter semesterbeitrag
