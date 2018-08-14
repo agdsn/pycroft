@@ -36,57 +36,6 @@ from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, PropertyGroup
 
 
-def get_membership_fees(interval_set=None):
-    """
-
-    :param when:
-    :return:
-    """
-
-    queries = []
-
-    if interval_set is not None:
-        for interval in interval_set:
-            criteria = []
-
-            if interval.begin is not None:
-                if not interval.end == PositiveInfinity:
-                    criteria.append(or_(
-                        interval.begin <= MembershipFee.begins_on,
-                        between(interval.begin,
-                                MembershipFee.begins_on,
-                                MembershipFee.ends_on)
-                    ))
-
-            if interval.end is not None:
-                if interval.end == PositiveInfinity:
-                    criteria.append(
-                        interval.end > MembershipFee.begins_on
-                    )
-                else:
-                    criteria.append(or_(
-                        interval.end >= MembershipFee.ends_on,
-                        between(interval.end,
-                                MembershipFee.begins_on,
-                                MembershipFee.ends_on)
-                    ))
-
-
-            queries.append(MembershipFee.q.filter(or_(*criteria)) \
-                           .order_by(MembershipFee.begins_on))
-
-    if len(queries) >= 1:
-        result = queries[0]
-
-        queries.pop(0)
-
-        result.union(*tuple(queries))
-
-        return result.all()
-    else:
-        return []
-
-
 def get_membership_fee_for_date(target_date):
     """
     Get the membership fee which contains a given target date.
