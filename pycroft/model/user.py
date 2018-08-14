@@ -389,8 +389,8 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    begins_at = Column(DateTime, nullable=True, default=functions.utcnow())
-    ends_at = Column(DateTime, nullable=True)
+    begins_at = Column(DateTime, nullable=True, index=True, default=functions.utcnow())
+    ends_at = Column(DateTime, nullable=True, index=True)
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),

@@ -57,14 +57,13 @@ property_query_stmt = union(
 evaluate_properties_function = ddl.Function(
     'evaluate_properties', ['evaluation_time timestamp with time zone'],
     'TABLE (user_id INT, property_name VARCHAR(255), denied BOOLEAN)',
-    'BEGIN RETURN QUERY {}; END;'.format(
+    str(
         property_query_stmt.compile(
             dialect=postgresql.dialect(),
             compile_kwargs={'literal_binds': True}
         )
     ),
-    volatility='stable', strict=True,
-    language='plpgsql'
+    volatility='stable',
 )
 
 manager.add_function(
