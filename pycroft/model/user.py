@@ -108,18 +108,20 @@ class User(IntegerIdModel, UserMixin):
                              r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
 
-    blocked_logins = {"abuse", "admin", "administrator", "autoconfic",
+    blocked_logins = {"abuse", "admin", "administrator", "autoconfig",
                       "broadcasthost", "root", "daemon", "bin", "sys", "sync",
                       "games", "man", "hostmaster", "imap", "info", "is",
                       "isatap", "it", "localdomain", "localhost",
                       "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
-                      "majordom", "marketing", "mis", "noc",
+                      "majordom", "marketing", "mis", "noc", "website", "api"
                       "noreply", "no-reply", "pop", "pop3", "postmaster",
-                      "postgres", "sales", "smtp", "ssladmin",
+                      "postgres", "sales", "smtp", "ssladmin", "status",
                       "ssladministrator", "sslwebmaster", "support",
-                      "sysadmin", "usenet", "webmaster", "wpad", "www"
-                      "wwwadmin", "backup", "msql", "operator",
-                      "ftp", "ftpadmin", "guest", "bb", "nobody"}
+                      "sysadmin", "usenet", "webmaster", "wpad", "www",
+                      "wwwadmin", "backup", "msql", "operator", "user",
+                      "ftp", "ftpadmin", "guest", "bb", "nobody", "www-data",
+                      "bacula", "contact", "email", "privacy", "anonymous",
+                      "web", "git", "username", "log", "login", "help", "name"}
 
     login_character_limit = 22
 
