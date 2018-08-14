@@ -320,7 +320,7 @@ def _format_row(split, style, prefix=None):
             'title': localized(split.transaction.description)
         },
         'amount': {
-            'value': money_filter(split.amount),
+            'value': money_filter(-split.amount) if (style == "inverted") else money_filter(split.amount),
             'is_positive': (split.amount > 0) ^ (style == "inverted"),
         },
         'row_positive': (split.amount > 0) ^ (style == "inverted"),

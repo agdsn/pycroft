@@ -61,7 +61,7 @@
             {% endcall %}{% endfor %}
 
             {% call info_row("Saldo") %}
-                {% if balance <= 0 %}
+                {% if balance >= 0 %}
                     {% set balance_class="text-success" %}
                 {% else %}
                     {% set balance_class="text-danger" %}

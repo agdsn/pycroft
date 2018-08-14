@@ -52,7 +52,12 @@ class FinanceTable(BootstrapTable):
             Column(name='amount', title='Wert', formatter='coloredFormatter',
                    cell_style='tdRelativeCellStyle'),
         ], table_args=table_args, **kw)
-        self.saldo = saldo
+
+        if inverted:
+            self.saldo = -saldo
+        else:
+            self.saldo = saldo
+
         self.user_id = user_id
 
     def generate_toolbar(self):

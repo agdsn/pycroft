@@ -287,7 +287,7 @@ def user_show(user_id):
         session.session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
 
-    balance = user.account.balance
+    balance = -user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
     _finance_table_kwargs = {
