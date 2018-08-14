@@ -59,12 +59,16 @@ class SchemaStrategist:
     #: schema can be assumed to be : empty.
     db_filled_heuristic = staticmethod(db_has_nontrivial_objects)
 
+    @property
+    def is_up_to_date(self):
+        return self.helper.running_version == self.helper.desired_version
+
     def determine_schema_strategy(self):
         """Determine the strategy
 
         :param AlembicHelper state:
         """
-        if self.helper.running_version == self.helper.desired_version:
+        if self.is_up_to_date:
             # Q: why is `run` run on an empty database?
             print("Determined strategy 'run'")
             return self.run
