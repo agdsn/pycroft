@@ -1,6 +1,7 @@
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qsl
 
 from flask import url_for
+from flask_babel import gettext
 from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
@@ -109,3 +110,52 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     def generate_table_footer(self, offset=7):
         return super().generate_table_footer(offset=offset)
+
+
+class MembershipFeeTable(BootstrapTable):
+    """A table for displaying the current membership fees"""
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column(name='name', title='Name'),
+            Column(name='regular_fee', title='Regulär'),
+            Column(name='payment_deadline', title='Frist'),
+            Column(name='payment_deadline_final', title='Endgültige Frist'),
+            Column(name='begins_on', title='Beginn'),
+            Column(name='ends_on', title='Ende'),
+            Column(name='finance_link', title='Finanzen', formatter='btnFormatter'),
+            Column(name='book_link', title='Buchen', formatter='btnFormatter'),
+            Column(name='edit_link', title='Bearbeiten', formatter='btnFormatter'),
+        ], **kw)
+
+    def generate_toolbar(self):
+        """An “add fee” button"""
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for(".membership_fee_create")
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+        yield gettext("Beitrag erstellen")
+        yield "</a>"
+
+
+class UsersDueTable(BootstrapTable):
+    """A table for displaying the users that """
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column(name='user', title='Nutzer-ID', formatter='linkFormatter'),
+            Column(name='valid_on', title='Gültig am'),
+            Column(name='description', title='Beschreibung'),
+            Column(name='amount', title='Betrag', formatter='coloredFormatter'),
+        ], **kw)
+
+    def generate_toolbar(self):
+        """An “add fee” button"""
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for(".membership_fee_create")
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+        yield gettext("Beitrag erstellen")
+        yield "</a>"

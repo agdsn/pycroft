@@ -40,7 +40,8 @@ from web.blueprints.finance.forms import (
     BankAccountActivitiesImportForm, TransactionCreateForm,
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
     HandlePaymentsInDefaultForm)
-from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted
+from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
+    MembershipFeeTable, UsersDueTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -551,8 +552,10 @@ def membership_fee_book(fee_id):
         flash("{} neue Buchungen erstellt.".format(len(affected_users)), "success")
 
         return redirect(url_for(".handle_payments_in_default"))
+
+    table = UsersDueTable(data_url=url_for('.membership_fee_users_due_json', fee_id=fee.id))
     return render_template('finance/membership_fee_book.html', form=form,
-                           page_title='Beitrag buchen', fee_id=fee.id)
+                           page_title='Beitrag buchen', table=table)
 
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
@@ -580,7 +583,8 @@ def membership_fee_users_due_json(fee_id):
 @bp.route("/membership_fees", methods=['GET', 'POST'])
 @nav.navigate(u"Beiträge")
 def membership_fees():
-    return render_template('finance/membership_fees.html')
+    table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
+    return render_template('finance/membership_fees.html', table=table)
 
 
 @bp.route("/membership_fees/json")
