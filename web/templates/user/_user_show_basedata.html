@@ -48,6 +48,14 @@
                 {% endcall %}
             {% endif %}
 
+            {% call info_row("Geburtsdatum") %}
+                {% if current_user is privileged_for('user_change') %}
+                <a href="{{ url_for(".edit_birthdate", user_id=user.id) }}">{{ user.birthdate|date}} <span class="glyphicon glyphicon-edit"></span></a>
+                {% else %}
+                {{ user.birthdate|date }}
+                {% endif %}
+            {% endcall %}
+
             {% call info_row("Aktueller Credit") %}
                 {{ user.current_credit | filesizeformat(binary=True) }}
             {% endcall %}

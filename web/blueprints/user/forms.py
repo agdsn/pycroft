@@ -78,6 +78,9 @@ class UserEditNameForm(Form):
 class UserEditEMailForm(Form):
     email = TextField(u"E-Mail", [Email(u"E-Mail-Adresse ist ungültig!")])
 
+class UserEditBirthdateForm(Form):
+    birthdate = DateField(u"Birthdate", [Optional()], format="%d.%m.%Y")
+
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",
@@ -109,6 +112,7 @@ class UserCreateForm(UserMoveForm):
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
+    birthdate = DateField(u"Geburtsdatum", [Optional()], format="%d.%m.%Y")
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 

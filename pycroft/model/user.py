@@ -17,7 +17,7 @@ from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, BigInteger, CheckConstraint, Column, DateTime, ForeignKey, Integer,
     String, and_, exists, join, literal, not_, null, or_, select, Sequence,
-    Interval)
+    Interval, Date)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
@@ -47,6 +47,7 @@ class User(IntegerIdModel, UserMixin):
     registered_at = Column(DateTime, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
+    birthdate = Column(Date, nullable=True)
 
     # one to one from User to Account
     account = relationship("Account", backref=backref("user", uselist=False))

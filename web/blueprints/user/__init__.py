@@ -43,11 +43,11 @@ from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
 from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.user.forms import UserSearchForm, UserCreateForm,\
-    HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm,\
+from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
+    HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm, \
-    UserResetPasswordForm, UserMoveBackInForm
+    UserResetPasswordForm, UserMoveBackInForm, UserEditBirthdateForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta, time
@@ -766,6 +766,29 @@ def edit_email(user_id):
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_edit_email.html', user_id=user_id,
+                           form=form)
+
+
+@bp.route('/<int:user_id>/edit_birthdate', methods=['GET', 'POST'])
+@access.require('user_change')
+def edit_birthdate(user_id):
+    user = get_user_or_404(user_id)
+    form = UserEditBirthdateForm()
+
+    if not form.is_submitted():
+        if user.birthdate is None:
+            form.birthdate.data = user.birthdate
+        else:
+            form.birthdate.data = user.birthdate.strftime('%d.%m.%Y')
+
+    if form.validate_on_submit():
+        edited_user = lib.user.edit_birthdate(user, form.birthdate.data, current_user)
+        session.session.commit()
+
+        flash(u'Geburtsdatum geändert', 'success')
+        return redirect(url_for('.user_show', user_id=edited_user.id))
+
+    return render_template('user/user_edit_birthdate.html', user_id=user_id,
         form=form)
 
 

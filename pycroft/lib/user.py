@@ -416,6 +416,27 @@ def edit_email(user, email, processor):
     return user
 
 
+@with_transaction
+def edit_birthdate(user, birthdate, processor):
+    """
+    Changes the birthdate of a user and creates a log entry.
+    :param user: User object to change
+    :param birthdate: New birthdate
+    :param processor:User object of the processor, which issues the change
+    :return:Changed user object
+    """
+
+    if not birthdate:
+        birthdate = None
+
+    old_bd = user.birthdate
+    user.birthdate = birthdate
+    message = deferred_gettext(u"Changed birthdate from {} to {}.")
+    log_user_event(author=processor, user=user,
+                   message=message.format(old_bd, birthdate).to_json())
+    return user
+
+
 def traffic_events_expr():
     events = union_all(select([
         TrafficCredit.amount,
