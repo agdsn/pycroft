@@ -1,5 +1,5 @@
 from collections import defaultdict, namedtuple
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 
 _radius_log_entry = namedtuple(
@@ -60,7 +60,7 @@ class RadiusLogEntry(_radius_log_entry):
 
     @property
     def time(self):
-        return datetime.fromtimestamp(self.timestamp)
+        return datetime.fromtimestamp(self.timestamp, tz=timezone.utc)
 
     def __bool__(self):
         """Evaluates to :py:prop:`self.accepted`"""

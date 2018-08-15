@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import TestCase
 
 from hades_logs.parsing import RadiusLogEntry, parse_vlan, attrlist_to_dict, \
@@ -30,7 +30,8 @@ class UnauthTrafficEntryTestCase(TestCase):
 
     def test_time(self):
         self.assertEqual(self.entry.time,
-                         datetime.fromtimestamp(self.raw_entry[-1]))
+                         datetime.fromtimestamp(self.raw_entry[-1],
+                                                tz=timezone.utc))
 
     def test_groups(self):
         self.assertEqual(self.entry.groups, ['traffic'])
