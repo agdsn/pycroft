@@ -34,7 +34,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_balance_expr, generate_user_sheet
 from pycroft.lib.membership import make_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
-from pycroft.model import functions, session
+from pycroft.model import session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host, Interface, IP, Interface
@@ -411,11 +411,11 @@ def user_show_groups_json(user_id, group_filter="all"):
         memberships = memberships.filter(
             # it is important to use == here, "is" does NOT work
             or_(Membership.begins_at == None,
-                Membership.begins_at <= functions.utcnow())
+                Membership.begins_at <= session.utcnow())
         ).filter(
             # it is important to use == here, "is" does NOT work
             or_(Membership.ends_at == None,
-                Membership.ends_at > functions.utcnow())
+                Membership.ends_at > session.utcnow())
         )
 
     return jsonify(items=[{
