@@ -6,7 +6,7 @@ sources of logs to a dict.  The latter represents a valid table row to
 :py:cls:`LogTableExtended`.
 
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 
 from flask import url_for
@@ -84,7 +84,7 @@ def format_hades_log_entry(interface, entry):
 
 
 def format_custom_hades_message(message):
-    date = datetime.today()
+    date = datetime.now(tz=timezone.utc)
     return {
         'created_at': datetime_filter(date),
         'raw_created_at': date,
