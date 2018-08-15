@@ -147,7 +147,7 @@ def reset_password(user, processor):
     return plain_password
 
 
-def create_member(name, login, email, building, level, room_number, processor):
+def create_member(name, login, email, building, level, room_number, birthdate, processor):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -159,6 +159,7 @@ def create_member(name, login, email, building, level, room_number, processor):
     :param str building: The short name of the building
     :param int level: The level the user moves in
     :param str room_number: The room number the user moves in
+    :param Date birthdate: Date of birth
     :param User processor: The processor
     :return:
     """
@@ -175,7 +176,8 @@ def create_member(name, login, email, building, level, room_number, processor):
         room=room,
         registered_at=now,
         account=Account(name="", type="USER_ASSET"),
-        password=plain_password
+        password=plain_password,
+        birthdate=birthdate
     )
 
     account = UnixAccount(home_directory="/home/{}".format(login))
@@ -199,7 +201,7 @@ def create_member(name, login, email, building, level, room_number, processor):
 
 @with_transaction
 def move_in(name, login, email, building, level, room_number, mac, processor,
-            traffic_group_id=None, host_annex=False):
+            traffic_group_id=None, host_annex=False, birthdate=None):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -218,12 +220,13 @@ def move_in(name, login, email, building, level, room_number, mac, processor,
         be used instead of the building's default one.
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
+    :param Date birthdate: Date of birth
 
     :return: The new user object.
     """
     new_user, plain_password = create_member(name, login, email,
                                              building, level, room_number,
-                                             processor)
+                                             birthdate, processor)
 
     if mac:
         room = new_user.room
