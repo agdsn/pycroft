@@ -50,7 +50,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserResetPasswordForm, UserMoveInForm, UserEditBirthdateForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
 from flask_login import current_user
 from web.template_filters import datetime_filter
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
@@ -192,10 +192,10 @@ def json_search():
         result = result.join(Membership)
         result = result.filter(or_(
                             Membership.ends_at.is_(None),
-                            Membership.ends_at > datetime.today())) \
+                            Membership.ends_at > func.current_timestamp())) \
                        .filter(or_(
                             Membership.begins_at.is_(None),
-                            Membership.begins_at < datetime.today()))
+                            Membership.begins_at < func.current_timestamp()))
 
         try:
             result_pg, result_tg = None, None
