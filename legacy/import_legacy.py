@@ -10,6 +10,8 @@ from collections import Counter
 import logging as std_logging
 
 from pycroft.model.hades import radius_property
+from pycroft.model.traffic import TrafficCredit
+from pycroft.model.user import User, Membership, TrafficGroup
 from scripts.schema import AlembicHelper
 
 log = std_logging.getLogger('import')
@@ -18,7 +20,7 @@ import random
 from .tools import timed
 
 import sqlalchemy
-from sqlalchemy import create_engine, or_, not_, Integer, func
+from sqlalchemy import create_engine, or_, not_, Integer, func, select, literal
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql.expression import cast
 from flask import _request_ctx_stack
@@ -206,6 +208,18 @@ def import_legacy(args):
     session.session.execute(radius_property.insert([('violation',),
                                                     ('payment_in_default',),
                                                     ('traffic_limit_exceeded',)]))
+
+    session.session.execute(TrafficCredit.__table__.insert()
+                            .from_select([TrafficCredit.user_id, TrafficCredit.amount, TrafficCredit.timestamp],
+                                         select([User.id, TrafficGroup.credit_limit, literal(session.utcnow())])
+                                         .select_from(User.__table__
+                                                      .join(Membership)
+                                                      .join(TrafficGroup)
+                                                      )
+                                         )
+                            )
+
+
     session.session.commit()
 
     log.info("Fixing sequences...")
