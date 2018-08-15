@@ -211,7 +211,7 @@ def import_legacy(args):
 
     session.session.execute(TrafficCredit.__table__.insert()
                             .from_select([TrafficCredit.user_id, TrafficCredit.amount, TrafficCredit.timestamp],
-                                         select([User.id, TrafficGroup.credit_limit, literal(session.utcnow())])
+                                         select([User.id, TrafficGroup.credit_limit, func.current_timestamp()])
                                          .select_from(User.__table__
                                                       .join(Membership)
                                                       .join(TrafficGroup)
