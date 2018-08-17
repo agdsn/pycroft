@@ -602,10 +602,7 @@ def generate_config(data, resources):
         cache_group=g_d["cache_user"],
         traffic_limit_exceeded_group=g_d["traffic"],
         payment_in_default_group=g_d["finance"],
-        registration_fee_account=an_d[u"Beiträge"],
         membership_fee_account=an_d[u"Beiträge"],
-        late_fee_account=an_d[u"Beiträge"],
-        additional_fee_account=an_d[u"Beiträge"],
 )]
 
 

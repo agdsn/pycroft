@@ -30,20 +30,8 @@ class Config(IntegerIdModel):
     payment_in_default_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     payment_in_default_group = relationship(PropertyGroup, foreign_keys=[payment_in_default_group_id])
-    registration_fee_account_id = Column(
-        Integer, ForeignKey(Account.id), nullable=False)
-    registration_fee_account = relationship(
-        Account, foreign_keys=[registration_fee_account_id])
     membership_fee_account_id = Column(
         Integer, ForeignKey(Account.id), nullable=False)
     membership_fee_account = relationship(
         Account, foreign_keys=[membership_fee_account_id])
-    late_fee_account_id = Column(
-        Integer, ForeignKey(Account.id), nullable=False)
-    late_fee_account = relationship(
-        Account, foreign_keys=[late_fee_account_id])
-    additional_fee_account_id = Column(
-        Integer, ForeignKey(Account.id), nullable=False)
-    additional_fee_account = relationship(
-        Account, foreign_keys=[additional_fee_account_id])
     __table_args__ = (CheckConstraint("id = 1"),)
