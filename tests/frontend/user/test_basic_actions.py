@@ -58,13 +58,14 @@ class UserMovingOutTestCase(LegacyUserFrontendTestBase):
 
     def test_user_cannot_be_moved_back_in(self):
         # attempt to move the user back in
-        endpoint = url_for('user.move_back_in', user_id=self.user.id)
+        endpoint = url_for('user.move_in', user_id=self.user.id)
         response = self.client.post(endpoint, data={
             # Will be serialized to str implicitly
             'building': self.user.room.building.id,
             'level': self.user.room.level,
             'room_number': self.user.room.number,
             'mac': "00:de:ad:be:ef:00",
+            'birthday': "1990-01-01"
         })
         self.assert_404(response)
         self.assert_message_flashed("Nutzer {} ist nicht ausgezogen!"
@@ -154,6 +155,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'room_number': self.room.number,
             'login': "testuser",
             'mac': "70:de:ad:be:ef:07",
+            'birthdate': "1990-01-01",
             'email': "",
         })
         self.assert_user_moved_in(response)
@@ -179,6 +181,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'login': "testuser",
             'mac': mac,
             'email': "",
+            'birthdate': "1990-01-01"
         }
         response = self.client.post(url_for('user.create'), data=move_in_formdata)
         self.assert200(response)

@@ -95,11 +95,18 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_email = u"hans@hans.de"
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
+        test_birthdate = "1990-01-01"
 
-        new_user, _ = UserHelper.move_in(
+        new_user, _ = UserHelper.create_member(
             test_name,
             test_login,
             test_email,
+            test_birthdate,
+            processor=self.processing_user
+        )
+
+        UserHelper.move_in(
+            new_user,
             test_building,
             level=1,
             room_number="1",
@@ -144,19 +151,27 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_email = u"hans@hans.de"
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
-
+        test_birthdate = "1990-01-01"
         traffic_group = user.TrafficGroup.q.first()
-        new_user, _ = UserHelper.move_in(
+
+        new_user, _ = UserHelper.create_member(
             test_name,
             test_login,
             test_email,
+            test_birthdate,
+            processor=self.processing_user
+        )
+
+        UserHelper.move_in(
+            new_user,
             test_building,
             level=1,
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            traffic_group_id=traffic_group.id,
+            traffic_group_id=traffic_group.id
         )
+
         self.assertIn(traffic_group, new_user.active_traffic_groups())
 
 
@@ -177,18 +192,26 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
         traffic_group = user.TrafficGroup.q.first()
+        test_birthdate = "1990-01-01"
 
-        new_user, _ = UserHelper.move_in(
+        new_user, _ = UserHelper.create_member(
             test_name,
             test_login,
             test_email,
+            test_birthdate,
+            processor=self.processing_user
+        )
+
+        UserHelper.move_in(
+            new_user,
             test_building,
             level=1,
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            traffic_group_id=traffic_group.id,
+            traffic_group_id=traffic_group.id
         )
+
         session.session.commit()
 
         out_time = session.utcnow()
@@ -208,12 +231,13 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         # check if users finance account still exists
         self.assertIsNotNone(new_user.account)
 
-        UserHelper.move_back_in(
+        UserHelper.move_in(
             user=new_user,
             building=test_building,
             level=1,
             room_number="1",
             mac=test_mac,
+            birthdate=test_birthdate,
             processor=self.processing_user,
             traffic_group_id=traffic_group.id,
         )
