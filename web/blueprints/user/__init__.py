@@ -435,7 +435,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                                          user_id=user_id,
                                          membership_id=membership.id),
                          'title': "Beenden",
-                         'icon': 'glyphicon-off'}],
+                         'icon': 'glyphicon-off'} if membership.active() else {}],
         } for membership in memberships.all()])
 
 
