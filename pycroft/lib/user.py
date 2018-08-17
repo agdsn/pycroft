@@ -147,7 +147,7 @@ def reset_password(user, processor):
     return plain_password
 
 
-def create_member(name, login, email, building, level, room_number, birthdate, processor):
+def create_member(name, login, email, birthdate, processor):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -156,15 +156,10 @@ def create_member(name, login, email, building, level, room_number, birthdate, p
     :param str name: The full name of the user (e.g. Max Mustermann)
     :param str login: The unix login for the user
     :param str email: E-Mail address of the user
-    :param str building: The short name of the building
-    :param int level: The level the user moves in
-    :param str room_number: The room number the user moves in
     :param Date birthdate: Date of birth
     :param User processor: The processor
     :return:
     """
-    room = Room.q.filter_by(number=room_number,
-                            level=level, building=building).one_or_none()
 
     now = session.utcnow()
     plain_password = user_helper.generate_password(12)
@@ -173,7 +168,6 @@ def create_member(name, login, email, building, level, room_number, birthdate, p
         login=login,
         name=name,
         email=email,
-        room=room,
         registered_at=now,
         account=Account(name="", type="USER_ASSET"),
         password=plain_password,
@@ -189,8 +183,7 @@ def create_member(name, login, email, building, level, room_number, birthdate, p
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    for group in {config.member_group, config.network_access_group}:
-        make_member_of(new_user, group, processor, closed(now, None))
+    make_member_of(new_user, config.member_group, processor, closed(now, None))
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),
@@ -200,112 +193,72 @@ def create_member(name, login, email, building, level, room_number, birthdate, p
 
 
 @with_transaction
-def move_in(name, login, email, building, level, room_number, mac, processor,
-            traffic_group_id=None, host_annex=False, birthdate=None):
+def move_in(user, building, level, room_number, mac, processor, birthdate=None,
+            traffic_group_id=None, host_annex=False):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
     UnixAccount, a finance Account, and is made member of important
     groups.  Networking is set up.
 
-    :param str name: See :py:func:`create_member`
-    :param str login: See :py:func:`create_member`
-    :param str email: See :py:func:`create_member`
-    :param str building: See :py:func:`create_member`
+    :param User user: The user to move in
+    :param Building building: See :py:func:`create_member`
     :param int level: See :py:func:`create_member`
     :param str room_number: See :py:func:`create_member`
     :param str mac: The mac address of the users pc.
-    :param User processor: See :py:func:`create_member`
+    :param User processor: See :py:func:`create_member
+    :param Date birthdate: Date of birth`
     :param int traffic_group_id: the id of the chosen traffic group to
         be used instead of the building's default one.
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
-    :param Date birthdate: Date of birth
-
-    :return: The new user object.
-    """
-    new_user, plain_password = create_member(name, login, email,
-                                             building, level, room_number,
-                                             birthdate, processor)
-
-    if mac:
-        room = new_user.room
-
-        interface_existing = Interface.q.filter_by(mac=mac).first()
-        if interface_existing is not None:
-            if host_annex:
-                host_existing = interface_existing.host
-                host_existing.owner_id = new_user.id
-
-                session.session.add(host_existing)
-                migrate_user_host(host_existing, new_user.room, processor)
-            else:
-                raise MacExistsException
-        else:
-            new_host = Host(owner=new_user, room=room)
-            session.session.add(new_host)
-            session.session.add(Interface(mac=mac, host=new_host))
-            setup_ipv4_networking(new_host)
-
-        setup_traffic_group(new_user, processor, traffic_group_id)
-        try:
-            grant_initial_credit(new_user)
-        except NoTrafficGroup as e:
-            raise ValueError("User {} could not be assigned a traffic group. "
-                             "Please specify one manually."
-                             .format(new_user)) from e
-
-    return (new_user, plain_password)
-
-
-@with_transaction
-def move_back_in(user, building, level, room_number, mac, processor,
-                 traffic_group_id=None):
-    """Move a user back in to a given room.
-
-    This function sets `user.room` accordingly, adds a new
-    :py:cls:`Host` with an interface with the given MAC, and adds the
-    user to :py:obj:`config.member_group` and
-    :py:obj:`config.network_access_group`.
-
-    :param User user: The user in question.
-    :param building: The building the user moves in.
-    :param level: The level the user moves in.
-    :param room_number: The room number the user moves in.
-    :param mac: The mac address of the users pc.
-    :param User processor: User issuing the removal
-    :param int traffic_group_id: the id of the traffic group.  If not
-        set, use the building's default one.
+    :return: The user object.
     """
 
-    room = Room.q.filter_by(number=room_number, level=level, building=building).one()
-    now = session.utcnow()
+    room = Room.q.filter_by(number=room_number,
+                            level=level, building=building).one()
 
     user.room = room
 
-    new_host = Host(owner=user, room=room)
-    session.session.add(new_host)
-    session.session.add(Interface(mac=mac, host=new_host))
-    setup_ipv4_networking(new_host)
+    if birthdate:
+        user.birthdate = birthdate
 
-    # Use a set to avoid double log entries
     for group in {config.member_group, config.network_access_group}:
-        make_member_of(user, group, processor, closed(now, None))
+        if not user.member_of(group):
+            make_member_of(user, group, processor, closed(session.utcnow(), None))
+
+    interface_existing = Interface.q.filter_by(mac=mac).first()
+
+    if interface_existing is not None:
+        if host_annex:
+            host_existing = interface_existing.host
+            host_existing.owner_id = user.id
+
+            session.session.add(host_existing)
+            migrate_user_host(host_existing, user.room, processor)
+        else:
+            raise MacExistsException
+    else:
+        new_host = Host(owner=user, room=room)
+        session.session.add(new_host)
+        session.session.add(Interface(mac=mac, host=new_host))
+        setup_ipv4_networking(new_host)
 
     setup_traffic_group(user, processor, traffic_group_id)
-    # if something goes wrong, direct access to `user.login` wouldn't
-    # work due to rollback
-    login = user.login
     try:
         grant_initial_credit(user)
     except NoTrafficGroup as e:
         raise ValueError("User {} could not be assigned a traffic group. "
                          "Please specify one manually."
-                         .format(login)) from e
+                         .format(user)) from e
+
+    msg = deferred_gettext(u"Moved in: {dorm} {level}-{room}")
 
     log_user_event(author=processor,
-                   message=deferred_gettext(u"Moved back in.").to_json(),
+                   message=msg.format(dorm=building.short_name, level=level, room=room_number).to_json(),
                    user=user)
+
+    return user
 
 
 def migrate_user_host(host, new_room, processor):

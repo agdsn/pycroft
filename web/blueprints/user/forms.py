@@ -105,16 +105,20 @@ class UserCreateForm(UserMoveForm):
         validate_unique_login])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()])
-    mac = TextField(u"MAC", [Optional(),
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
-    birthdate = DateField(u"Geburtsdatum", [Optional()], format="%d.%m.%Y")
+    mac = TextField(u"MAC", [OptionalIf('room_number', invert=True),
+                             Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+    birthdate = DateField(u"Geburtsdatum",
+                          [DataRequired(message=u"Geburtsdatum wird benötigt!")])
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
 
-class UserMoveBackInForm(UserMoveForm):
+class UserMoveInForm(UserMoveForm):
     mac = TextField(u"MAC", [
         Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+    birthdate = DateField(u"Geburtsdatum",
+                          [DataRequired(
+                              message=u"Geburtsdatum wird benötigt!")])
 
 
 class HostCreateForm(Form):

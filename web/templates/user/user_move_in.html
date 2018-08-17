@@ -4,16 +4,18 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% set page_title = "Nutzer ausziehen" %}
+{% set page_title = "Einzug" %}
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
 {% block page_css %}{{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}{% endblock %}
 
 {% block single_row_content %}
-    <div class="box box-info">
-        <strong>Hinweis:</strong> hiermit wird die Mitgliedschaft
-        komplett beendet und die IP freigegeben. Bei einem
-        Wiedereinzug müssen Wohnort und MAC erneut angegeben werden.
-    </div>
-    {{ forms.simple_form(form, '', url_for('.user_show',user_id=user_id)  ) }}
+    {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
+{% endblock %}
+
+{% block page_script %}
+    <script type="text/javascript">
+        $('[data-role=lazyloadselect]').lazyLoadSelect()
+        inputMacMask($('#mac'));
+    </script>
 {% endblock %}

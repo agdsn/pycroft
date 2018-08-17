@@ -47,7 +47,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm, \
-    UserResetPasswordForm, UserMoveBackInForm, UserEditBirthdateForm
+    UserResetPasswordForm, UserMoveInForm, UserEditBirthdateForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta, time
@@ -598,17 +598,24 @@ def create():
                                           unique_email_error or
                                           unique_mac_error):
         try:
-            new_user, plain_password = lib.user.move_in(
+            new_user, plain_password = lib.user.create_member(
                 name=form.name.data,
                 login=form.login.data,
-                building=form.building.data, level=form.level.data,
-                room_number=form.room_number.data,
-                mac=form.mac.data,
                 processor=current_user,
                 email=form.email.data,
-                host_annex=form.annex.data,
                 birthdate=form.birthdate.data
             )
+
+            if form.mac.data and form.building.data and form.level.data \
+                    and form.room_number.data and form.birthdate.data:
+                lib.user.move_in(
+                    user=new_user,
+                    building=form.building.data, level=form.level.data,
+                    room_number=form.room_number.data,
+                    mac=form.mac.data,
+                    processor=current_user,
+                    host_annex=form.annex.data
+                )
 
             sheet = lib.user.store_user_sheet(new_user, plain_password)
             session.session.commit()
@@ -780,7 +787,7 @@ def edit_birthdate(user_id):
         if user.birthdate is None:
             form.birthdate.data = user.birthdate
         else:
-            form.birthdate.data = user.birthdate.strftime('%d.%m.%Y')
+            form.birthdate.data = user.birthdate
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_birthdate(user, form.birthdate.data, current_user)
@@ -886,33 +893,36 @@ def move_out(user_id):
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=user.id))
-    return render_template('user/user_moveout.html', form=form, user_id=user_id)
+    return render_template('user/user_move_out.html', form=form, user_id=user_id)
 
 
-@bp.route('/<int:user_id>/move_back_in', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/move_in', methods=['GET', 'POST'])
 @access.require('user_change')
-def move_back_in(user_id):
-    form = UserMoveBackInForm()
+def move_in(user_id):
+    form = UserMoveInForm()
     user = get_user_or_404(user_id)
 
-    if user.member_of(config.member_group):
+    if user.room is not None:
         flash("Nutzer {} ist nicht ausgezogen!".format(user_id), 'error')
         abort(404)
 
     if form.validate_on_submit():
-        lib.user.move_back_in(
+        lib.user.move_in(
             user=user,
             building=form.building.data,
             level=form.level.data,
             room_number=form.room_number.data,
             mac=form.mac.data,
-            processor=current_user,
+            birthdate=form.birthdate.data,
+            processor=current_user
         )
         session.session.commit()
-        flash("Nutzer wurde wieder eingezogen", 'success')
+        flash("Nutzer wurde eingezogen", 'success')
         return redirect(url_for('.user_show', user_id=user_id))
+    else:
+        form.birthdate.data = user.birthdate
 
-    return render_template('user/user_move_back_in.html', form=form, user_id=user_id)
+    return render_template('user/user_move_in.html', form=form, user_id=user_id)
 
 
 @bp.route('/<int:user_id>/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
