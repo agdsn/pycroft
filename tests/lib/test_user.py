@@ -97,7 +97,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"
 
-        new_user, _ = UserHelper.create_member(
+        new_user, _ = UserHelper.create_user(
             test_name,
             test_login,
             test_email,
@@ -154,7 +154,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_birthdate = "1990-01-01"
         traffic_group = user.TrafficGroup.q.first()
 
-        new_user, _ = UserHelper.create_member(
+        new_user, _ = UserHelper.create_user(
             test_name,
             test_login,
             test_email,
@@ -194,7 +194,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         traffic_group = user.TrafficGroup.q.first()
         test_birthdate = "1990-01-01"
 
-        new_user, _ = UserHelper.create_member(
+        new_user, _ = UserHelper.create_user(
             test_name,
             test_login,
             test_email,
