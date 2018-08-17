@@ -25,6 +25,7 @@ class ConfigFactory(BaseFactory):
     violation_group = SubFactory(PropertyGroupFactory)
     cache_group = SubFactory(PropertyGroupFactory)
     traffic_limit_exceeded_group = SubFactory(PropertyGroupFactory)
+    external_group = SubFactory(PropertyGroupFactory)
     payment_in_default_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s

@@ -102,7 +102,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             test_login,
             test_email,
             test_birthdate,
-            processor=self.processing_user
+            processor=self.processing_user,
+            group=config.member_group
         )
 
         UserHelper.move_in(
@@ -159,7 +160,8 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             test_login,
             test_email,
             test_birthdate,
-            processor=self.processing_user
+            processor=self.processing_user,
+            group = config.member_group
         )
 
         UserHelper.move_in(
@@ -199,7 +201,8 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             test_login,
             test_email,
             test_birthdate,
-            processor=self.processing_user
+            processor=self.processing_user,
+            group = config.member_group
         )
 
         UserHelper.move_in(

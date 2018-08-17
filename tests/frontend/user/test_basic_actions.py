@@ -88,6 +88,7 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
         self.user = User.q.filter_by(login=username).one()
 
     def test_user_cannot_be_moved_out(self):
+        self.user.room = None
         endpoint = url_for('user.move_out', user_id=self.user.id)
         response = self.client.post(endpoint, data={'comment': "Ist doof"})
         self.assert_404(response)
@@ -157,6 +158,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'mac': "70:de:ad:be:ef:07",
             'birthdate': "1990-01-01",
             'email': "",
+            'property_group': config.member_group.id
         })
         self.assert_user_moved_in(response)
         response = self.client.get(url_for('user.user_sheet'))
@@ -181,7 +183,8 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'login': "testuser",
             'mac': mac,
             'email': "",
-            'birthdate': "1990-01-01"
+            'birthdate': "1990-01-01",
+            'property_group': config.member_group.id
         }
         response = self.client.post(url_for('user.create'), data=move_in_formdata)
         self.assert200(response)

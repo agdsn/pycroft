@@ -6,20 +6,8 @@ from fixture import DataSet
 
 
 class AccountData(DataSet):
-    class registration_fee:
-        name = u"Anmeldegebühren"
-        type = "REVENUE"
-
     class membership_fee:
         name = u"Mitgliedsbeiträge"
-        type = "REVENUE"
-
-    class late_fee:
-        name = u"Versäumnisgebühren"
-        type = "REVENUE"
-
-    class additional_fee:
-        name = u"Zusatzbeiträge"
         type = "REVENUE"
 
 
@@ -49,6 +37,9 @@ class PropertyGroupData(DataSet):
     class payment_in_default:
         name = u"Zahlungsrückstand"
 
+    class external:
+        name = u"Extern"
+
 
 class ConfigData(DataSet):
     class config:
@@ -59,11 +50,8 @@ class ConfigData(DataSet):
         cache_group = PropertyGroupData.cache
         traffic_limit_exceeded_group = PropertyGroupData.traffic_limit_exceeded
         payment_in_default_group = PropertyGroupData.payment_in_default
-        registration_fee_account = AccountData.registration_fee
+        external_group = PropertyGroupData.external
         membership_fee_account = AccountData.membership_fee
-        late_fee_account = AccountData.late_fee
-        additional_fee_account = AccountData.additional_fee
-
 
 class PropertyData(DataSet):
     class network_access:
@@ -71,19 +59,9 @@ class PropertyData(DataSet):
         name = "network_access"
         granted = True
 
-    class registration_fee:
-        property_group = PropertyGroupData.member
-        name = "registration_fee"
-        granted = True
-
     class membership_fee:
         property_group = PropertyGroupData.member
         name = "membership_fee"
-        granted = True
-
-    class late_fee:
-        property_group = PropertyGroupData.member
-        name = "late_fee"
         granted = True
 
     class away:
