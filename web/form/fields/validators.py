@@ -5,9 +5,10 @@ from wtforms.validators import Optional
 
 
 class OptionalIf(Optional):
-    # makes a field optional if some other data is supplied
-    def __init__(self, deciding_field, *args, **kwargs):
+    # makes a field optional if some other data is supplied or is not supplied
+    def __init__(self, deciding_field, invert=False, *args, **kwargs):
         self.deciding_field = deciding_field
+        self.invert = invert
         super(OptionalIf, self).__init__(*args, **kwargs)
 
     def __call__(self, form, field):
@@ -15,5 +16,6 @@ class OptionalIf(Optional):
         if deciding_field is None:
             raise Exception('no field named "{}" in form'.format(
                 self.deciding_field))
-        if bool(deciding_field.data):
+        if (bool(deciding_field.data) and deciding_field.data != 'None')\
+                ^ self.invert:
             super(OptionalIf, self).__call__(form, field)
