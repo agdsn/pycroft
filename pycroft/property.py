@@ -9,14 +9,16 @@ property_categories = OrderedDict((
     (u"Mitglieder", OrderedDict((
         ('member', "ist Mitglied"),
         (u"network_access",  u"besitzt Zugang zum Studentennetz"),
-        (u"registration_fee",  u"ist verpflichtet Anmeldegebühr zu bezahlen"),
         (u"membership_fee",  u"ist verpflichtet den Mitgliedsbeitrag zu bezahlen"),
+        (u"violation",  u"hat gegen Regeln verstoßen"),
     ))),
     ("System / Dienste", OrderedDict((
         ('ldap', "hat einen Directory-Eintrag im LDAP"),
         ('mail', u"hat Zugriff auf Mailkonto"),
         ('userdb', u"kann sich eine MySQL-Datenbank erstellen"),
         ('userwww', u"hat Zugriff auf das Userhosting"),
+        ('cache_access', u"verwendet den Cache"),
+        ('traffic_limit_exceeded', u"hat Traffic-Limit überschritten"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),
@@ -26,6 +28,7 @@ property_categories = OrderedDict((
     (u"Finanzen", OrderedDict((
         (u"finance_show",  u"darf Finanzendaten einsehen"),
         (u"finance_change",  u"darf Finanzendaten ändern"),
+        (u"payment_in_default",  u"im Zahlungsrückstand"),
     ))),
     (u"Infrastruktur", OrderedDict((
         (u"infrastructure_show",  u"darf Infrastruktur ansehen"),
