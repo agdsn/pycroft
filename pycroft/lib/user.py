@@ -560,12 +560,12 @@ def move_out(user, comment, processor, when):
 
     if comment:
         message = deferred_gettext(
-            u"Moved out on {} ({} hosts deleted). Comment: {}"
-        ).format(when, num_hosts, comment)
+            u"Moved out: ({} hosts deleted). Comment: {}"
+        ).format(num_hosts, comment)
     else:
         message = deferred_gettext(
-            u"Moved out on {} ({} hosts deleted)."
-        ).format(when, num_hosts)
+            u"Moved out: ({} hosts deleted)."
+        ).format(num_hosts)
 
     log_user_event(
         message=message.to_json(),
