@@ -556,6 +556,7 @@ def move_out(user, comment, processor, when):
         session.session.delete(h)
 
     user.room = None
+    user.birthdate = None
 
     if comment:
         message = deferred_gettext(
