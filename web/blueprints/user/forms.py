@@ -109,6 +109,9 @@ class UserCreateForm(UserMoveForm):
                              Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(message=u"Geburtsdatum wird benötigt!")])
+    property_group = QuerySelectField(u"Gruppe",
+                                      get_label='name',
+                                      query_factory=property_group_query)
     annex = BooleanField(u"Host annketieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
@@ -119,6 +122,7 @@ class UserMoveInForm(UserMoveForm):
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(
                               message=u"Geburtsdatum wird benötigt!")])
+    begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
 
 
 class HostCreateForm(Form):
@@ -154,6 +158,7 @@ class UserSuspendForm(Form):
 class UserMoveOutForm(Form):
     # when = DateField(u"Auszug am", [DataRequired()])
     comment = TextAreaField(u"Kommentar")
+    end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
 
 
 class InterfaceChangeMacForm(Form):

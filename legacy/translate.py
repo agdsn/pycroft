@@ -598,6 +598,7 @@ def generate_config(data, resources):
     return [config.Config(
         member_group=g_d["member"],
         violation_group=g_d["suspended"],
+        external_group=g_d["external"],
         network_access_group=g_d["member"],
         cache_group=g_d["cache_user"],
         traffic_limit_exceeded_group=g_d["traffic"],

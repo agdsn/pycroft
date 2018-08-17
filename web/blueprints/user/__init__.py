@@ -597,13 +597,15 @@ def create():
     if form.validate_on_submit() and not (unique_name_error or
                                           unique_email_error or
                                           unique_mac_error):
+
         try:
-            new_user, plain_password = lib.user.create_member(
+            new_user, plain_password = lib.user.create_user(
                 name=form.name.data,
                 login=form.login.data,
                 processor=current_user,
                 email=form.email.data,
-                birthdate=form.birthdate.data
+                birthdate=form.birthdate.data,
+                group=form.property_group.data
             )
 
             if form.mac.data and form.building.data and form.level.data \
@@ -880,7 +882,7 @@ def move_out(user_id):
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
 
-    if not user.member_of(config.member_group):
+    if not user.room:
         flash("Nutzer {} ist aktuell nirgends eingezogen!".
               format(user_id), 'error')
         abort(404)
@@ -889,10 +891,15 @@ def move_out(user_id):
         lib.user.move_out(user=user, comment=form.comment.data,
                           processor=current_user,
                           # when=datetime.combine(form.when.data, time(0))
-                          when=session.utcnow())
+                          when=session.utcnow(),
+                          end_membership=form.end_membership.data)
         session.session.commit()
         flash(u'Nutzer wurde ausgezogen', 'success')
         return redirect(url_for('.user_show', user_id=user.id))
+
+    if not form.is_submitted():
+        form.end_membership.data = True
+
     return render_template('user/user_move_out.html', form=form, user_id=user_id)
 
 
@@ -914,13 +921,16 @@ def move_in(user_id):
             room_number=form.room_number.data,
             mac=form.mac.data,
             birthdate=form.birthdate.data,
+            begin_membership=form.begin_membership.data,
             processor=current_user
         )
         session.session.commit()
         flash("Nutzer wurde eingezogen", 'success')
         return redirect(url_for('.user_show', user_id=user_id))
-    else:
+
+    if not form.is_submitted():
         form.birthdate.data = user.birthdate
+        form.begin_membership.data = True
 
     return render_template('user/user_move_in.html', form=form, user_id=user_id)
 

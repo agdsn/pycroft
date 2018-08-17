@@ -147,7 +147,7 @@ def reset_password(user, processor):
     return plain_password
 
 
-def create_member(name, login, email, birthdate, processor):
+def create_user(name, login, email, birthdate, group, processor):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -157,6 +157,7 @@ def create_member(name, login, email, birthdate, processor):
     :param str login: The unix login for the user
     :param str email: E-Mail address of the user
     :param Date birthdate: Date of birth
+    :param PropertyGroup: The initial group of the new user
     :param User processor: The processor
     :return:
     """
@@ -183,7 +184,7 @@ def create_member(name, login, email, birthdate, processor):
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    make_member_of(new_user, config.member_group, processor, closed(now, None))
+    make_member_of(new_user, group, processor, closed(now, None))
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),
@@ -194,7 +195,7 @@ def create_member(name, login, email, birthdate, processor):
 
 @with_transaction
 def move_in(user, building, level, room_number, mac, processor, birthdate=None,
-            traffic_group_id=None, host_annex=False):
+            traffic_group_id=None, host_annex=False, begin_membership=True):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -212,6 +213,7 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
         be used instead of the building's default one.
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
+    :param bool begin_membership: Starts a membership if true
     :return: The user object.
     """
 
@@ -223,9 +225,14 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
     if birthdate:
         user.birthdate = birthdate
 
-    for group in {config.member_group, config.network_access_group}:
-        if not user.member_of(group):
-            make_member_of(user, group, processor, closed(session.utcnow(), None))
+    if begin_membership:
+        if user.member_of(config.external_group):
+            remove_member_of(user, config.external_group, processor,
+                             closedopen(session.utcnow(), None))
+
+        for group in {config.member_group, config.network_access_group}:
+            if not user.member_of(group):
+                make_member_of(user, group, processor, closed(session.utcnow(), None))
 
     interface_existing = Interface.q.filter_by(mac=mac).first()
 
@@ -528,8 +535,8 @@ def unblock(user, processor, when=None):
 
 
 @with_transaction
-def move_out(user, comment, processor, when):
-    """Move out a user and terminate relevant memberships.
+def move_out(user, comment, processor, when, end_membership=True):
+    """Move out a user and may terminate relevant memberships.
 
     The user's room is set to ``None`` and all hosts are deleted.
     Memberships in :py:obj:`config.member_group` and
@@ -541,22 +548,25 @@ def move_out(user, comment, processor, when):
     :param User processor: The admin who is going to move out the
         user.
     :param datetime when: The time the user is going to move out.
+    :param bool end_membership: Ends membership if true
 
     :return: The user that moved out.
     """
     if when > session.utcnow():
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
-    for group in ({config.member_group, config.network_access_group}
-                  | set(user.traffic_groups)):
-        remove_member_of(user, group, processor, closedopen(when, None))
+    if end_membership:
+        for group in ({config.member_group, config.network_access_group, config.external_group}
+                      | set(user.traffic_groups)):
+            remove_member_of(user, group, processor, closedopen(when, None))
+
+        user.birthdate = None
 
     num_hosts = 0  # In case the chain is empty
     for num_hosts, h in enumerate(user.hosts, 1):
         session.session.delete(h)
 
     user.room = None
-    user.birthdate = None
 
     if comment:
         message = deferred_gettext(

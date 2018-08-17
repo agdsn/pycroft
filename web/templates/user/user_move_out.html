@@ -11,9 +11,8 @@
 
 {% block single_row_content %}
     <div class="box box-info">
-        <strong>Hinweis:</strong> Hiermit wird die Mitgliedschaft
-        komplett beendet und die IP freigegeben. Bei einem
-        Wiedereinzug müssen Wohnort und MAC erneut angegeben werden.
+        <strong>Hinweis:</strong> Hiermit wird die IP freigegeben und, falls gewünscht, die Mitgliedschaft beendet.
+        Bei einem Wiedereinzug müssen Wohnort und MAC erneut angegeben werden.
     </div>
     {{ forms.simple_form(form, '', url_for('.user_show',user_id=user_id)  ) }}
 {% endblock %}

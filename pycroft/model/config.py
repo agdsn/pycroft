@@ -20,6 +20,10 @@ class Config(IntegerIdModel):
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     violation_group = relationship(
         PropertyGroup, foreign_keys=[violation_group_id])
+    external_group_id = Column(
+        Integer, ForeignKey(PropertyGroup.id), nullable=False)
+    external_group = relationship(
+        PropertyGroup, foreign_keys=[external_group_id])
     cache_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     cache_group = relationship(PropertyGroup, foreign_keys=[cache_group_id])

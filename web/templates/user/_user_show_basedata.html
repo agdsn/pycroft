@@ -90,15 +90,15 @@
                 <span class="badge"><span class="glyphicon glyphicon-chevron-right"></span><span class="glyphicon glyphicon-home"></span></span> Einziehen</a></div>
         {% endif %}
         {% if is_blocked %}
-          <div class="user"><a class="btn btn-info" href="{{ url_for(".unblock", user_id=user.id) }}">
+          <div class="user"><a class="btn btn-warning" href="{{ url_for(".unblock", user_id=user.id) }}">
               <span class="badge"><span class="glyphicon glyphicon-ok"></span><span class="glyphicon"></span></span> Entsperren</a></div>
         {% else %}
-          <div class="user"><a class="btn btn-info" href="{{ url_for(".suspend", user_id=user.id) }}">
-              <span class="badge"><span class="glyphicon glyphicon-remove"></span><span class="glyphicon"></span></span> Sperren (wegen Abuse)</a></div>
+          <div class="user"><a class="btn btn-warning" href="{{ url_for(".suspend", user_id=user.id) }}">
+              <span class="badge"><span class="glyphicon glyphicon-remove"></span><span class="glyphicon"></span></span> Sperren</a></div>
         {% endif %}
 
         <div class="user"><div class="btn-group btn-group-justified">
-            <a style="width:1.2%;" role="button" class="btn btn-info" href="{{ url_for(".static_datasheet", user_id=user.id) }}">
+            <a style="width:1.2%;" role="button" class="btn btn-success" href="{{ url_for(".static_datasheet", user_id=user.id) }}">
                 <span class="badge"><span class="glyphicon glyphicon-file"></span><span class="glyphicon"></span></span>
                 Datenblatt
             </a>
