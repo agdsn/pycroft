@@ -259,12 +259,14 @@ def json_search():
 def infoflags(user):
     user_status = lib.user.status(user)
     return [
+        {'title': u"Mitglied", 'val': user_status.member},
         {'title': u"Netzwerkzugang", 'val': user_status.network_access},
         {'title': u"Traffic übrig", 'val': not user_status.traffic_exceeded},
         {'title': u"Bezahlt", 'val': user_status.account_balanced},
         {'title': u"Verstoßfrei", 'val': not user_status.violation},
-        {'title': u"Mailkonto", 'val': user_status.ldap},
+        {'title': u"LDAP", 'val': user_status.ldap},
     ]
+
 
 def get_user_or_404(user_id):
     user = User.q.get(user_id)

@@ -10,7 +10,7 @@
 {%- endmacro %}
 
 <div class="row">
-    <div class="col-sm-6 col-md-5 col-lg-4">
+    <div class="col-xs-6 col-md-5 col-lg-4">
         <dl class="dl-horizontal">
             {% call info_row("ID") %}
                 {{ user_id_new }} <em class="text-muted">{{ user_id_old }}</em>
@@ -60,14 +60,6 @@
                 {{ user.current_credit | filesizeformat(binary=True) }}
             {% endcall %}
 
-            {% for flag in flags %}{% call info_row(flag['title']) %}
-                {% if flag['val'] %}
-                    <strong class="text-success">Ja</strong>
-                {% else %}
-                    <strong class="text-danger">Nein</strong>
-                {% endif %}
-            {% endcall %}{% endfor %}
-
             {% call info_row("Saldo") %}
                 {% if balance >= 0 %}
                     {% set balance_class="text-success" %}
@@ -78,8 +70,19 @@
             {% endcall %}
         </dl>
     </div>
+    <div class="col-xs-6 col-md-5 col-lg-4">
+        <dl class="dl-horizontal">
+            {% for flag in flags %}{% call info_row(flag['title']) %}
+                {% if flag['val'] %}
+                    <strong class="text-success">Ja</strong>
+                {% else %}
+                    <strong class="text-danger">Nein</strong>
+                {% endif %}
+            {% endcall %}{% endfor %}
+        </dl>
+    </div>
     {% if current_user is privileged_for('user_change') %}
-    <div class="col-sm-6 col-md-5 col-lg-4">
+    <div class="col-xs-12 col-md-5 col-lg-4">
         {% if user.room_id is not none %}
             <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">
                 <span class="badge"><span class="glyphicon glyphicon-home"></span><span class="glyphicon glyphicon-resize-horizontal"></span><span class="glyphicon glyphicon-home"></span></span> Umziehen</a></div>
