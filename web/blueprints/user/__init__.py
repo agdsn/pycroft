@@ -247,7 +247,7 @@ def json_search():
         'id': found_user.id,
         'name': found_user.name,
         'url': {
-            'href': '/user/' + str(found_user.id),
+            'href': url_for('.user_show', user_id=found_user.id),
             'title': found_user.name
         },
         'login': found_user.login,
