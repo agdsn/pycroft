@@ -97,6 +97,7 @@ class ReadonlyTextField(TextField):
 def expected_interval_format(units):
     return ' '.join("{{}} {unit}".format(unit=unit) for unit in units)
 
+
 def default_interval_format(units):
     return ' '.join("0 {unit}".format(unit=unit) for unit in units)
 
