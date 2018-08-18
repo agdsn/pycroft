@@ -31,6 +31,8 @@ class Action(object, metaclass=ABCMeta):
         else:
             self.logger.debug("Operation successful")
 
+    def __repr__(self):
+        return "<{} {}>".format(type(self).__name__, self.record.dn)
 
 class AddAction(Action):
     def __init__(self, record):
@@ -40,8 +42,12 @@ class AddAction(Action):
 
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
+        self.logger.debug("Attributes used: %s", self.record.attrs)
         connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
         self.debug_whether_success(connection)
+
+    def __repr__(self):
+        return "<{} {}>".format(type(self).__name__, self.record.attrs['uid'][0])
 
 
 class ModifyAction(Action):
@@ -89,6 +95,10 @@ class ModifyAction(Action):
             for attr, new_value in self.modifications.items()
         })
         self.debug_whether_success(connection)
+
+    def __repr__(self):
+        attr_string = ', '.join(self.record.attrs.keys())
+        return "<{} {} [{}]>".format(type(self).__name__, self.record.dn, attr_string)
 
 
 class DeleteAction(Action):
