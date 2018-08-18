@@ -67,7 +67,12 @@ def require(ctx: Context, asset: str, **kwargs) -> str:
     if asset_map is None or has_changed():
         path = pathlib.Path(current_app.static_folder, 'manifest.json')
         current_app.logger.info("Loading webpack manifest from %s", path)
-        mtime = path.stat().st_mtime
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError as e:
+            raise RuntimeError("manifest.json not found. Did you forget"
+                               " to execute webpack? You might want to"
+                               " take a look at the readme.md.") from e
         with path.open() as f:
             asset_map = json.load(f)
 
