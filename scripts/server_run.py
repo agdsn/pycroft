@@ -98,6 +98,7 @@ def server_run(args):
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
     app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
 
+
 def main():
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
@@ -106,7 +107,7 @@ def main():
                         help="profile and log sql queries")
     parser.add_argument("--exposed", action="store_const", const='0.0.0.0',
                         dest='host', help="expose server on network")
-    parser.add_argument("-p","--port", action="store",
+    parser.add_argument("-p", "--port", action="store",
                         help="port to run Pycroft on", type=int, default=5000)
     parser.add_argument("-w", "--wait-for-database", type=int, default=30,
                         help="Maximum time to wait for database to become "
