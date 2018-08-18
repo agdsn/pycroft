@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run webpack in project root to build frontend assets (JavaScript, CSS,
+	images, fonts). Optional arguments are passed to webpack."
+)
+
+run() {
+	cd /opt/pycroft/app
+	exec yarn run webpack --require @babel/register --config webpack.config.babel.js "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

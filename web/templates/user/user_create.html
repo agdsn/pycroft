@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('js/lazy-load-select.js') }}
+    {{ resources.link_script_file('lazy-load-select.js' | require) }}
     <script type="text/javascript">
         var form_group_mac = $('#form-group-mac');
         var mac = $('#mac');

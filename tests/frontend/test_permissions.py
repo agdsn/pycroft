@@ -4,7 +4,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 from flask import url_for, current_app
+from jinja2.runtime import Context
 
+from template_filters import require
 from tests import FrontendDataTestBase, FixtureDataTestBase
 from tests.fixtures.permissions import UserData, MembershipData, PropertyData
 from tests.fixtures.config import ConfigData
@@ -25,8 +27,9 @@ class Test_010_Anonymous(FrontendDataTestBase, FixtureDataTestBase):
         # Login is OK
         self.assert_response_code(url_for('login.login'), 200)
 
+        ctx = Context(self.app.jinja_env, None, "pseudo", {})
         # Fetching static content is OK
-        self.assert_response_code(url_for('static', filename='style.css'), 200)
+        self.assert_response_code(require(ctx, 'main.css'), 200)
 
         # Access to other pages/blueprints is NOT OK
         self.assert_response_code(url_for('finance.bank_accounts_list'), 302)

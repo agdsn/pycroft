@@ -24,7 +24,7 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
         super().__init__(*a, columns=[
             Column('created_at', 'Erstellt um', width=2),
             Column('type', 'Logtyp'),
-            Column('user', 'Nutzer', formatter='userFormatter'),
+            Column('user', 'Nutzer', formatter='table.userFormatter'),
             Column('message', 'Nachricht'),
         ], **kw)
 
@@ -35,7 +35,7 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
         super().__init__(*a, columns=[
             # specific tables don't need the `type`
             Column('created_at', 'Erstellt um', width=2),
-            Column('user', 'Nutzer', formatter='userFormatter'),
+            Column('user', 'Nutzer', formatter='table.userFormatter'),
             Column('message', 'Nachricht'),
         ], **kw)
 
@@ -51,7 +51,7 @@ class MembershipTable(BootstrapTable):
             Column('group_name', 'Gruppe'),
             Column('begins_at', 'Beginn'),
             Column('ends_at', 'Ende'),
-            Column('actions', 'Aktionen', formatter='multiBtnFormatter')
+            Column('actions', 'Aktionen', formatter='table.multiBtnFormatter')
         ], **kw)
         self.user_id = user_id
 
@@ -81,5 +81,5 @@ class HostTable(BootstrapTable):
             Column('mac', 'Mac-Adresse'),
             Column('switch', 'Switch'),
             Column('port', 'Switchport'),
-            Column('action', 'MAC ändern', formatter='btnFormatter')
+            Column('action', 'MAC ändern', formatter='table.btnFormatter')
         ], **kw)

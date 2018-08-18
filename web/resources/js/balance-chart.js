@@ -4,6 +4,8 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import d3 from 'd3';
+
 d3.selectAll('[data-chart="balance"]', function() {
   var parent = d3.select(this);
   var _width = parent.node().getBoundingClientRect().width;

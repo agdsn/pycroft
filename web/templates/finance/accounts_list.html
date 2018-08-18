@@ -37,5 +37,5 @@
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('js/tooltip.js') }}
+    {{ resources.link_script_file('tooltip.js' | require) }}
 {% endblock %}

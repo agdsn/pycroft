@@ -2,6 +2,7 @@
   "name": "@agdsn/pycroft",
   "version": "0.1.0",
   "description": "AG DSN user management software",
+  "main": "js/main.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/agdsn/pycroft.git"
@@ -13,11 +14,51 @@
   },
   "homepage": "https://github.com/agdsn/pycroft#readme",
   "dependencies": {
+    "@babel/polyfill": "^7.0.0-beta.54",
+    "@babel/runtime": "^7.0.0-beta.54",
+    "autocomplete.js": "^0.30.0",
+    "bootstrap": "^3.3.7",
+    "bootstrap-3-typeahead": "^4.0.2",
+    "bootstrap-datepicker": "^1.7.1",
+    "bootstrap-table": "^1.11.2",
+    "d3": "^3.5.17",
+    "dc": "^2.1.9",
+    "highcharts": "^4.2.7",
+    "jquery": "^3.3.1",
+    "list.js": "^1.5.0",
+    "moment": "^2.20.1",
+    "nvd3": "^1.8.6",
+    "typeahead.js": "^0.11.1",
+    "underscore": "^1.8.3",
+    "url-polyfill": "^1.0.13",
+    "vis": "^4.21.0"
   },
   "engines": {
     "yarn": ">= 1.0.0"
   },
   "devDependencies": {
-    "bower": "^1.8.4",
+    "@babel/core": "^7.0.0-beta.54",
+    "@babel/plugin-transform-runtime": "7.0.0-beta.54",
+    "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/register": "^7.0.0-rc.1",
+    "babel-loader": "^8.0.0-beta.4",
+    "clean-webpack-plugin": "^0.1.19",
+    "css-loader": "^0.28.11",
+    "expose-loader": "^0.7.5",
+    "file-loader": "^1.1.11",
+    "imports-loader": "^0.8.0",
+    "mini-css-extract-plugin": "^0.4.1",
+    "null-loader": "^0.1.1",
+    "postcss-loader": "^3.0.0",
+    "sass-loader": "^7.1.0",
+    "shim-loader": "^1.0.1",
+    "source-map-loader": "^0.2.3",
+    "style-loader": "^0.20.3",
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.1.0",
+    "webpack-manifest-plugin": "^2.0.3"
   },
+  "scripts": {
+    "build": "webpack --require @babel/register --config webpack.config.babel.js"
+  }
 }

@@ -13,7 +13,7 @@
     {'name': 'blz', 'title': 'Bankleitzahl'},
     {'name': 'iban', 'title': 'IBAN'},
     {'name': 'bic', 'title': 'SWIFT-BIC'},
-    {'name': 'kto', 'title': 'Konto', 'formatter': 'btnFormatter'},
+    {'name': 'kto', 'title': 'Konto', 'formatter': 'table.btnFormatter'},
     {'name': 'change_date', 'title': 'Zuletzt aktualisiert'},
 ] %}
 {% set bank_account_activities_columns = [
@@ -25,7 +25,7 @@
     {'name': 'ktonr', 'title': 'Kontonummer'},
     {'name': 'blz', 'title': 'Bankleitzahl'},
     {'name': 'name', 'title': 'Name'},
-    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'multiBtnFormatter'},
+    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'table.multiBtnFormatter'},
 ] %}
 
 {% block content %}

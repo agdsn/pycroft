@@ -4,16 +4,23 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {%- macro link_css(path) -%}
-    <link rel="stylesheet" href="{{ url_for("static", filename=path) }}">
+    <link rel="stylesheet" href="{{ path }}">
 {%- endmacro -%}
 
 {%- macro link_script_file(path, mime_type="text/javascript") -%}
-    <script type="{{ mime_type }}" src="{{ url_for("static", filename=path) }}"></script>
+    <script type="{{ mime_type }}" src="{{ path }}"></script>
 {% endmacro %}
 
 {%- macro linked_script_files() -%}
+    {{ page_resources.script_files }}
     {%- for script_file in page_resources.script_files.values() -%}
-        <script type="{{ script_file.mime_type }}" src="{{ script_file.url }}"></script>
+        {{ link_script_file(script_file.url, script_file.mime_type) }}
+    {%- endfor -%}
+{%- endmacro -%}
+
+{%- macro linked_script_files() -%}
+    {%- for stylesheet in page_resources.stylesheet_files.values() -%}
+        {{ link_css(stylesheet) }}
     {%- endfor -%}
 {%- endmacro -%}
 

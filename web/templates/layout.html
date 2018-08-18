@@ -10,13 +10,10 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    {{ resources.link_css("libs/bootstrap/dist/css/bootstrap.min.css") }}
-    {{ resources.link_css("libs/bootstrap-table/dist/bootstrap-table.min.css") }}
-    {{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}
-    {{ resources.link_css("libs/typeahead.js-bootstrap3.less/typeahead.css") }}
-    {{ resources.link_css("css/style.css") }}
+    {{ resources.link_css("vendor.css" | require) }}
+    {{ resources.link_css("main.css" | require) }}
     {% block page_css %}{% endblock %}
-    <link rel="shortcut icon" href="{{ url_for("static", filename="img/favicon.ico") }}"/>
+    <link rel="shortcut icon" href="{{ "img/favicon.ico" | require }}"/>
     <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
 </head>
 
@@ -32,7 +29,7 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-left" href="/">
-                        <img src="{{ url_for("static", filename="img/pycroft.svg") }}" onerror="this.src='{{ url_for("static", filename="img/pycroft.png") }}'" alt="Pycroft" />
+                        <img src="{{ "img/pycroft.svg" | require }}" onerror="this.src='{{ "img/pycroft.png" | require }}'" alt="Pycroft" />
                     </a>
                     <a class="navbar-brand" href="/">
                          &nbsp;Pycroft
@@ -48,7 +45,7 @@
                         {% if current_user.is_authenticated %}
                             <li>
                                 <form class="navbar-form" method="get">
-                                    <input type="text" class="typeahead form-control" id="nav_search" name="nav_search"
+                                    <input type="text" class="form-control" id="nav_search" name="nav_search"
                                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                                            placeholder="Nutzer suchen…">
                                 </form>
@@ -118,14 +115,13 @@
             </footer>
          {%- endblock %}
     </div> <!-- /container -->
+<script type="text/javascript" src="{{ 'vendor.js' | require }}"></script>
 <script type="text/javascript">
     {# See http://flask.pocoo.org/docs/patterns/jquery/#where-is-my-site #}
     var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
-{{ resources.link_script_file("js/form.js") }}
-{{ resources.link_script_file("js/table.js") }}
-{{ resources.link_script_file("js/alerts.js") }}
-{{ resources.link_script_file("js/quick-search.js") }}
+<script type="text/javascript" src="{{ 'main.js' | require }}"></script>
+{{ resources.linked_script_files() }}
 {{ resources.ready_scripts() }}
 {% block page_script %}{% endblock %}
 </body>

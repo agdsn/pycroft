@@ -49,9 +49,11 @@ class FinanceTable(BootstrapTable):
         super().__init__(*a, columns=[
             Column(name='posted_at', title='Erstellt um'),
             Column(name='valid_on', title='Gültig am'),
-            Column(name='description', title='Beschreibung', formatter='linkFormatter'),
-            Column(name='amount', title='Wert', formatter='coloredFormatter',
-                   cell_style='tdRelativeCellStyle'),
+            Column(name='description', title='Beschreibung',
+                   formatter='table.linkFormatter'),
+            Column(name='amount', title='Wert',
+                   formatter='table.coloredFormatter',
+                   cell_style='table.tdRelativeCellStyle'),
         ], table_args=table_args, **kw)
 
         if inverted:

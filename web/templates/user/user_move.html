@@ -4,15 +4,16 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+
 {% set page_title = "Umzug" %}
+
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
-{% block page_css %}{{ resources.link_css("libs/bootstrap-datepicker/css/datepicker3.css") }}{% endblock %}
 
 {% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('js/lazy-load-select.js') }}
+    {{ resources.link_script_file('lazy-load-select.js' | require) }}
 {% endblock %}

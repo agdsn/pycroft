@@ -85,7 +85,9 @@ class BankAccountCreateForm(Form):
             raise ValidationError("Konto existiert bereits.")
 
 class BankAccountActivityEditForm(Form):
-    account = TypeaheadField(u"Gegenkonto")
+    account = TypeaheadField(u"Gegenkonto", render_kw={
+        'data_toggle': 'account-typeahead'
+    })
     account_id = HiddenField(validators=[DataRequired()])
     bank_account_name = static(StringField(u"Bankkonto"))
     amount = disabled(MoneyField(u"Wert"))

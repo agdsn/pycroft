@@ -4,40 +4,48 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-var users = new Bloodhound({
+import $ from 'jquery';
+import 'autocomplete.js/src/jquery/plugin'
+import Bloodhound from 'typeahead.js/dist/bloodhound';
+
+export const users = new Bloodhound({
     name: 'users',
-    datumTokenizer: (function () {
-        var t = Bloodhound.tokenizers.whitespace;
-        return function (r) {
-            return t(r['name']).push(r['id'], r['login']);
-        };
-    })(),
+    datumTokenizer: r => {
+        return Bloodhound.tokenizers.whitespace(r['name']).push(r['id'], r['login']);
+    },
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     remote: {
         wildcard: '%QUERY',
-        url: $SCRIPT_ROOT + '/user/json/search?query=%QUERY',
+        url: `${$SCRIPT_ROOT}/user/json/search?query=%QUERY`,
         ttl: 60,
-        filter: function(response) { return response.users; },
+        transform: response => response.items,
     },
 });
 
 users.initialize();
 
-$('#nav_search').typeahead({
+const dataSource = users.ttAdapter();
+
+$('#nav_search').autocomplete({
     hint: true,
-    highlight: true,
     minLength: 1,
-    name: 'users',
-    displayText: function(item) {
-        return item['name'] + ' (' + item['id'] + ', ' + item['login'] + ')';
-    },
-    source: users.ttAdapter(),
     templates: {
-        empty: '&nbsp;Keine Ergebnisse',
+
     },
-    afterSelect: function(item) {
-        window.location = $SCRIPT_ROOT + "/user/" + item.id;
+}, {
+    name: 'users',
+    displayKey: item => `${item['name']} (${item['id']}, ${item['login']})`,
+    source: (query, cb) => dataSource(query, cb, cb),
+    templates: {
+        empty: '<span>Keine Ergebnisse</span>',
     },
-    selectOnBlur: false,
-    showHintOnFocus: true,
+    classNames: {
+
+    },
+    //debounce: 250,
+    autoselect: true,
+    autoselectOnBlur: true,
+    openOnFocus: true,
+}).on('autocomplete:selected', (e, user) => {
+    window.location = user.url.href;
 });

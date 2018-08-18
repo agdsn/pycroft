@@ -1,12 +1,13 @@
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
+
 from flask import _request_ctx_stack
 
-
 LinkedScript = namedtuple("LinkedScript", ("url", "mime_type"))
-PageResources = namedtuple("PageResources", ("script_files", "ready_scripts"))
+PageResources = namedtuple("PageResources", ("script_files", "ready_scripts",
+                                             "stylesheet_files"))
 
 
 class PageResourceRegistry(object):
@@ -17,7 +18,8 @@ class PageResourceRegistry(object):
         """Page resources are attached to Flask's current request context."""
         ctx = _request_ctx_stack.top
         if not hasattr(ctx, "page_resources"):
-            ctx.page_resources = PageResources(OrderedDict(), list())
+            ctx.page_resources = PageResources(OrderedDict(), list(),
+                                               OrderedDict())
         return ctx.page_resources
 
     @property
@@ -27,6 +29,14 @@ class PageResourceRegistry(object):
     @property
     def ready_scripts(self):
         return self.page_resources.ready_scripts
+
+    @property
+    def stylesheet_files(self):
+        return self.page_resources.stylesheet_files
+
+    def link_stylesheet(self, url):
+        """Link a stylesheet file using a URL"""
+        self.stylesheet_files.setdefault(url, url)
 
     def link_script(self, url, mime_type="text/javascript"):
         """

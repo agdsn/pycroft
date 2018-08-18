@@ -4,27 +4,31 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-var linkTemplate = _.template(
-    '<a href="<%= href %>"><%= title %></a>'
+import _ from "underscore";
+import $ from 'jquery';
+import 'bootstrap-table';
+
+export var linkTemplate = _.template(
+    '<a href="<%= href %>"><%= title %></a>',
 );
 
-var btnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>"><%= title %></a>'
+export var btnTemplate = _.template(
+    '<a href="<%= href %>" class="btn <%= btn_class %>"><%= title %></a>',
 );
 
-var glyphBtnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= title %>"><span class="glyphicon <%= glyphicon %>"></span></a>'
+export var glyphBtnTemplate = _.template(
+    '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= title %>"><span class="glyphicon <%= glyphicon %>"></span></a>',
 );
 
-var multiGlyphBtnTemplate = _.template(
+export var multiGlyphBtnTemplate = _.template(
     '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= tooltip %>">' +
-        '<span class="badge">' +
-        '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
-            '<span class="glyphicon <%= glyphicons[i] %>"></span>' +
-        '<% } %>' +
-        '</span>' +
-        '<%= title %>' +
-    '</a>'
+    '<span class="badge">' +
+    '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
+    '<span class="glyphicon <%= glyphicons[i] %>"></span>' +
+    '<% } %>' +
+    '</span>' +
+    '<%= title %>' +
+    '</a>',
 );
 
 /**
@@ -35,21 +39,14 @@ var multiGlyphBtnTemplate = _.template(
  * @param value - the JSON content of the current cell. It should be
  * of the format `{'value': "3,50€", "is_positive": true}`
  */
-function coloredFormatter(value, row, index) {
+export function coloredFormatter(value, row, index) {
     if (!value) {
         return;
     }
 
-    if (value['is_positive']) {
-        class_name = 'positive';
-    } else {
-        class_name = 'negative';
-    }
+    const class_name = value.is_positive  ? 'positive' : 'negative';
 
-    result = '';
-    result += value['value'];
-    result += '<span class="table-stripe-right ' + class_name + '"></span>';
-    return result;
+    return `${value['value']}<span class="table-stripe-right ${class_name}"></span>`;
 }
 
 /**
@@ -58,20 +55,20 @@ function coloredFormatter(value, row, index) {
  *
  * The parameters are not used.
  */
-function tdRelativeCellStyle(value, row, index, field) {
+export function tdRelativeCellStyle(value, row, index, field) {
     return {
-        css: {"position": "relative"}
+        css: {"position": "relative"},
     };
 }
 
-function linkFormatter(value, row, index) {
+export function linkFormatter(value, row, index) {
     if (!value) {
         return;
     }
     return linkTemplate({'href': value['href'], 'title': value['title']});
 }
 
-function userFormatter(value, row, index) {
+export function userFormatter(value, row, index) {
     /* Format an entry as a link or plain, depending on the value of
      * the 'type' field.  It can either be 'plain' or 'native'. */
     if (!value) {
@@ -87,7 +84,7 @@ function userFormatter(value, row, index) {
     }
 }
 
-function btnFormatter(value, row, index) {
+export function btnFormatter(value, row, index) {
     if (!value) {
         return;
     }
@@ -98,7 +95,7 @@ function btnFormatter(value, row, index) {
                 'title': value['title'],
                 'btn_class': value['btn_class'],
                 'glyphicons': value['icon'],
-                'tooltip': value['tooltip']
+                'tooltip': value['tooltip'],
             });
         } else {
             return glyphBtnTemplate({
@@ -106,7 +103,7 @@ function btnFormatter(value, row, index) {
                 'title': value['title'],
                 'btn_class': value['btn_class'],
                 'glyphicon': value['icon'],
-                'tooltip': value['tooltip']
+                'tooltip': value['tooltip'],
             });
         }
     } else {
@@ -114,24 +111,20 @@ function btnFormatter(value, row, index) {
             'href': value['href'],
             'title': value['title'],
             'btn_class': value['btn_class'],
-            'tooltip': value['tooltip']
+            'tooltip': value['tooltip'],
         });
     }
 
 }
 
-function multiBtnFormatter(value, row, index) {
+export function multiBtnFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    var ret = '';
-    for (var i = 0; i < value.length; i++) {
-        ret += btnFormatter(value[i], row, index);
-    }
-    return ret;
+    return value.map(v => btnFormatter(v, row, index)).join('');
 }
 
-function listFormatter(value, row, index) {
+export function listFormatter(value, row, index) {
     if (!value) {
         return;
     }
@@ -153,7 +146,7 @@ function listFormatter(value, row, index) {
     return ret;
 }
 
-function financeRowFormatter(row, index) {
+export function financeRowFormatter(row, index) {
     if (row && row['row_positive']) {
         return {classes: 'success'};
     } else {

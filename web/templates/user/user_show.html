@@ -20,7 +20,7 @@
                 <li><a href="#finance">Konto</a></li>
             {% endif %}
             <li><a href="#groups">Gruppen</a></li>
-            <li class="pull-right"><a onclick="scrollToTop();" href="#"><span class="glyphicon glyphicon-chevron-up"></span></a></li>
+            <li class="pull-right"><a data-toggle="scroll-top" href="#"><span class="glyphicon glyphicon-chevron-up"></span></a></li>
         </ul>
     </div>
 
@@ -75,7 +75,4 @@
     </section>
 {% endblock %}
 
-
-{% block page_script %}
-    {{ resources.link_script_file("js/navigation.js") }}
-{% endblock %}
+{% do resources.link_script_file('navigation.js' | require) %}

@@ -4,6 +4,9 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import $ from 'jquery';
+import account_typeahead from './account-typeahead';
+
 $(function () {
     var split_rows = $(".split-row");
     var next_id = split_rows.length;

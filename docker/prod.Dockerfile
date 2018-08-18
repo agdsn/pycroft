@@ -12,10 +12,11 @@ RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requiremen
 
 # Download JS/CSS dependencies
 COPY --chown=pycroft:pycroft package.json .
-RUN yarn install && bower install -F && bower update -F
+RUN yarn install
 
 # Build Pycroft wheel
 COPY --chown=pycroft:pycroft . .
+RUN yarn run --prod build
 RUN /opt/pycroft/venv/bin/pip wheel --no-deps --wheel-dir /opt/pycroft/wheel .
 
 FROM agdsn/pycroft-base

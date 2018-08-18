@@ -19,6 +19,11 @@ services:
     ports:
       - "5000:5000"
     command: ["http", "--debug"]
+  dev-webpack:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    command: ["webpack", "--watch", "--info-verbosity", "verbose"]
   dev-db:
     extends:
       file: docker-compose.base.yml

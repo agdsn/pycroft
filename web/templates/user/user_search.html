@@ -4,11 +4,14 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+
 {% import "macros/forms.html" as forms %}
 {% import "macros/table.html" as tbl %}
+{% import "macros/resources.html" as resources %}
+
 {% set cols = [
     {'name': 'id', 'title': 'ID'},
-    {'name': 'url', 'title': 'Name', 'formatter': 'linkFormatter'},
+    {'name': 'url', 'title': 'Name', 'formatter': 'table.linkFormatter'},
     {'name': 'login', 'title': 'Login'},
 ] %}
 
@@ -25,5 +28,5 @@
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file("js/advanced-search.js") }}
+    {{ resources.link_script_file('advanced-search.js' | require) }}
 {% endblock %}

@@ -8,10 +8,6 @@
 
 {% import "macros/resources.html" as resources %}
 
-{% block page_css %}
-  {{ resources.link_css("libs/dcjs/dc.css") }}
-{% endblock %}
-
 {% block content %}
   <div class="container-fluid">
     <div class="row">
@@ -67,5 +63,5 @@
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('js/transaction-chart.js') }}
+    {{ resources.link_script_file('transaction-chart.js' | require) }}
 {% endblock %}

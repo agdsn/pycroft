@@ -4,6 +4,10 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import $ from 'jquery';
+import _ from 'underscore';
+import {inputMacMask} from "./form";
+
 $(function() {
     const $form = $('.form-basic');
     const $results = $('#results');

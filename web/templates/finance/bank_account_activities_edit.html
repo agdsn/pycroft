@@ -6,19 +6,9 @@
 {% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
 
 {% set page_title = "Bankkontobewegung bearbeiten" %}
 
 {% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.bank_accounts_list')) }}
 {% endblock %}
-
-{% block page_script -%}
-    {{ resources.link_script_file('js/account-typeahead.js') }}
-    <script type="text/javascript">
-        $(function () {
-            account_typeahead($('#account_id'), $('#account'));
-        });
-    </script>
-{%- endblock %}

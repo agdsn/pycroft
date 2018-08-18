@@ -5,6 +5,8 @@
  */
 // disables the DatePicker field if the block is marked as unlimited
 
+import $ from 'jquery';
+
 $(function() {
     var end = $(".form-field");
     var unlimited = end.find("[name='end-unlimited']");

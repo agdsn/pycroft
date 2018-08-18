@@ -4,10 +4,12 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import jQuery from 'jquery';
+
 !function ($) {
     var SubNavBar = function (element, options) {
         this.options = $.extend({
-            fix_class:'subnav-fixed'
+            fix_class: 'subnav-fixed',
         }, options);
         this.window = $(window);
         this.doc = $(document);
@@ -24,9 +26,9 @@
     };
 
     SubNavBar.prototype = {
-        constructor:SubNavBar,
+        constructor: SubNavBar,
 
-        processScroll:function () {
+        processScroll: function () {
             var scrollTop = this.window.scrollTop();
 
             if (!this.isFixed) {
@@ -42,7 +44,7 @@
             }
         },
 
-        processClick:function (ev) {
+        processClick: function (ev) {
             var target_id = $(ev.target).attr("href"),
                 $target = $(target_id),
                 offset = $target.offset().top;
@@ -56,7 +58,7 @@
                 this.window.scrollTop(offset - scrollback);
             else
                 this.window.scrollTop(offset);
-        }
+        },
     };
 
     $.fn.subNavBar = function (options) {
@@ -68,15 +70,19 @@
         });
     };
 
-    $.fn.subNavBar.defaults = {fix_class:'subnav-fixed'};
+    $.fn.subNavBar.defaults = {fix_class: 'subnav-fixed'};
     $.fn.subNavBar.Constructor = SubNavBar;
 
-    function scrollToTop(){
+    function scrollToTop() {
         $('body,html').animate({
-            scrollTop:0
+            scrollTop: 0,
         }, 500);
     }
 
-    $(".subnav").subNavBar();
-    $('body').scrollspy({ target: '.subnav' })
+    $(function () {
+        $('[data-toggle="scroll-top"]').on('click', scrollToTop);
+
+        $(".subnav").subNavBar();
+        $('body').scrollspy({target: '.subnav'});
+    });
 }(jQuery);

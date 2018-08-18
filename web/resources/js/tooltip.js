@@ -4,6 +4,8 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import $ from 'jquery';
+
 $(function () {
     $('[data-toggle="tooltip"]').tooltip()
 });

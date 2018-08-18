@@ -5,9 +5,8 @@
 #}
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
-{% import "macros/resources.html" as resources %}
+
 {% set page_title = "Beitrag erstellen" %}
-{% block page_css %}{{ resources.link_css('datepicker/css/datepicker3.css') }}{% endblock %}
 {% block single_row_content %}
     {{ forms.simple_form(form, '', url_for('.membership_fees')  ) }}
 {% endblock %}

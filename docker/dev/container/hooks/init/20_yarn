@@ -9,5 +9,3 @@ if [[ -d node_modules && $(shopt -s nullglob dotglob; files=(node_modules/*); ((
 fi
 
 yarn install
-bower install -F
-bower update -F

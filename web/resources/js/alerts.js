@@ -4,17 +4,19 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import $ from 'jquery';
+
 $(function () {
-    var isFixed = 0,
-        $window = $(window),
-        $subnav = $(".subnav");
+    let isFixed = 0;
+    const $window = $(window);
+    const $subnav = $(".subnav");
 
     function place_alerts() {
-        var $messages = $(".flash-messages");
+        const $messages = $(".flash-messages");
         if (!$messages.length)
             return;
-        var offset = $messages.offset().top,
-                top = $window.scrollTop();
+        const offset = $messages.offset().top;
+        const top = $window.scrollTop();
 
         if (isFixed) {
             if (top < 2) {
@@ -23,7 +25,7 @@ $(function () {
                 isFixed = 0;
             }
             if ($subnav.length) {
-                var padding = 28;
+                let padding = 28;
                 if (top < 60) {
                     padding = (top / 2) - 2;
                 }
@@ -31,7 +33,7 @@ $(function () {
             }
         } else {
             if (top >= 2) {
-                var width = $messages.width();
+                const width = $messages.width();
                 $messages.addClass("flash-messages-fixed");
                 $messages.css("width", width);
                 isFixed = 1;

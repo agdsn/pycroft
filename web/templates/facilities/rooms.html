@@ -7,8 +7,8 @@
 {% import "macros/table.html" as tbl %}
 
 {% set cols = [
-    {'name': 'room', 'title': 'Raum', 'formatter': 'linkFormatter'},
-    {'name': 'inhabitants', 'title': 'Bewohner', 'formatter': 'multiBtnFormatter'}
+    {'name': 'room', 'title': 'Raum', 'formatter': 'table.linkFormatter'},
+    {'name': 'inhabitants', 'title': 'Bewohner', 'formatter': 'table.multiBtnFormatter'}
 ] %}
 
 {% block content %}

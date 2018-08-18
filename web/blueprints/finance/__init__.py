@@ -304,8 +304,6 @@ def accounts_show(account_id):
         'saldo': account.balance,
     }
 
-    page_resources.link_script(
-        url_for("static", filename="libs/d3/d3.min.js"))
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
@@ -427,12 +425,6 @@ def transactions_show_json(transaction_id):
 @access.require('finance_show')
 @bp.route('/transactions')
 def transactions_all():
-    page_resources.link_script(
-        url_for("static", filename="libs/d3/d3.min.js"))
-    page_resources.link_script(
-        url_for("static", filename="libs/crossfilter2/crossfilter.min.js"))
-    page_resources.link_script(
-        url_for("static", filename="libs/dcjs/dc.min.js"))
     return render_template('finance/transactions_overview.html')
 
 

@@ -4,52 +4,52 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-var binaryPrefix = {};
-!function() {
-    binaryPrefix.format = function (value) {
-        var exponent = Math.abs(value) > 1 ? Math.floor(Math.log(Math.abs(value)) / Math.log(1024)) : 0;
-        var prefix = exponent ? "KMGTPEZY"[exponent - 1] + "iB" : "B";
-        return Math.round((value / Math.pow(1024, exponent)) * 10) / 10 + " " + prefix;
-    };
+import d3 from 'd3';
 
-    binaryPrefix.ceil = function (value) {
-        var exponent = Math.abs(value) > 1 ? Math.floor(Math.log(Math.abs(value)) / Math.log(1024)) : 0;
-        var signum = value < 0 ? -1 : 1;
+    export function format(value) {
+        const exponent = Math.abs(value) > 1 ? Math.floor(Math.log(Math.abs(value)) / Math.log(1024)) : 0;
+        const prefix = exponent ? "KMGTPEZY"[exponent - 1] + "iB" : "B";
+        return Math.round((value / Math.pow(1024, exponent)) * 10) / 10 + " " + prefix;
+    }
+
+    export function ceil(value) {
+        const exponent = Math.abs(value) > 1 ? Math.floor(Math.log(Math.abs(value)) / Math.log(1024)) : 0;
+        const signum = value < 0 ? -1 : 1;
         return signum * (Math.ceil(Math.abs(value) / Math.pow(1024, exponent)) * Math.pow(1024, exponent));
-    };
+    }
 
     /**
      * d3.scale.linear() but with a tick generation function optimized for binary prefixes.
      */
-    binaryPrefix.linearScale = function () {
-        scale = d3.scale.linear();
+    export function linearScale() {
+        const scale = d3.scale.linear();
         scale.ticks = function (m) {
             return d3.range.apply(d3, d3_scale_linearTickRange_binary(this.domain(), m));
         };
 
-        var copyOrg = scale.copy;
+        const copyOrg = scale.copy;
         scale.copy = function () {
-            var copied = copyOrg(this);
+            const copied = copyOrg(this);
             copied.ticks = this.ticks;
             copied.copy = this.copy;
             return copied;
         };
 
         return scale;
-    };
+    }
 
     function d3_scaleExtent(domain) {
-        var start = domain[0], stop = domain[domain.length - 1];
+        const start = domain[0], stop = domain[domain.length - 1];
         return start < stop ? [start, stop] : [stop, start];
     }
 
     function d3_scale_linearTickRange_binary(domain, m) {
         if (m === null) m = 10;
 
-        var extent = d3_scaleExtent(domain),
-            span = extent[1] - extent[0],
-            step = Math.pow(2, Math.floor(Math.log(span / m) / Math.log(2))),
-            err = m / span * step;
+        const extent = d3_scaleExtent(domain);
+        const span = extent[1] - extent[0];
+        let step = Math.pow(2, Math.floor(Math.log(span / m) / Math.log(2)));
+        const err = m / span * step;
 
         // Filter ticks to get closer to the desired count.
         if (err <= 0.20) step *= 8;
@@ -61,5 +61,4 @@ var binaryPrefix = {};
         extent[1] = Math.floor(extent[1] / step) * step + step * 0.5; // inclusive
         extent[2] = step;
         return extent;
-    }
-}();
+}

@@ -88,11 +88,6 @@ class TypeaheadField(StringField):
         BootstrapFormGroupDecorator
     )
 
-    def __call__(self, **kwargs):
-        return super(TypeaheadField, self).__call__(
-            class_='typeahead', **kwargs
-        )
-
 
 class ReadonlyTextField(TextField):
     def __call__(self, **kwargs):
@@ -131,7 +126,7 @@ class IntervalField(TextField):
         return super(IntervalField, self).__call__(
             class_='pycroft-interval-picker',
             autocomplete='off',
-            onclick='pycroftIntervalPicker(\'%s\')' % self.id, **kwargs
+            **kwargs
         )
 
     def pre_validate(self, form):

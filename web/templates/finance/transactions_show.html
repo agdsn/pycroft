@@ -7,7 +7,7 @@
 {% import "macros/table.html" as tbl %}
 {% set page_title = "Buchung anzeigen" %}
 {% set cols = [
-    {'name': 'account', 'title': 'Konto', 'formatter': 'linkFormatter'},
+    {'name': 'account', 'title': 'Konto', 'formatter': 'table.linkFormatter'},
     {'name': 'amount', 'title': 'Wert'}
 ] %}
 
@@ -46,7 +46,7 @@
             url_for(".transactions_show_json", transaction_id=transaction.id),
             cols,
             [],
-            'financeRowFormatter'
+            'table.financeRowFormatter'
         ) }}
     </section>
 {% endblock %}

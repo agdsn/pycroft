@@ -49,6 +49,4 @@
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file("js/account-typeahead.js") }}
-    {{ resources.link_script_file("js/transaction-form.js") }}
-{% endblock %}
+    {{ resources.link_script_file('transaction-form.js' | require) }}
