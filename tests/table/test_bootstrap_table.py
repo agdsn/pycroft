@@ -75,7 +75,6 @@ class InstantiatedBootstrapTableTestCase(TestCase):
             self.assertTrue(str(col))
             self.assertIn(str(col), elements)
 
-
     def test_table_args_passed(self):
         self.assertEqual(self.table.table_args.get('data-cache'), "true")
         self.assertEqual(self.table.table_args.get('foo'), "bar")
