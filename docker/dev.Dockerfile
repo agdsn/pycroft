@@ -21,8 +21,6 @@ RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
         less \
         libpq-dev \
         nodejs \
-        python3-dev \
-        python3-venv \
         vim \
         yarn \
     && apt-get clean

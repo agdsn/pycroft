@@ -42,7 +42,7 @@ setup(
         'jsonschema',
         'ipaddr >= 2.2.0',
         'passlib',
-        'psycopg2',
+        'psycopg2 >= 2.7.0',
         'reportlab',
         'simplejson',
         'wrapt',
@@ -53,7 +53,7 @@ setup(
     ],
     extras_require={
         'ImportCache': [
-            'ldap3',
+            'ldap3 >= 2.4.0',
         ],
         'ImportGerok': [
             'PyMySQL',

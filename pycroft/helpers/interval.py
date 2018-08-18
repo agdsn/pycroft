@@ -678,7 +678,7 @@ def _complement(intervals):
         first = next(intervals)
     except StopIteration:
         yield UnboundedInterval
-        raise StopIteration()
+        return
     if not first.lower_bound.unbounded:
         yield Interval(Bound(NegativeInfinity, False), ~first.lower_bound)
     a, b = tee(intervals)
@@ -702,7 +702,10 @@ def _join(intervals):
     :rtype: iterable[Interval]
     """
     intervals = filterfalse(operator.attrgetter("empty"), iter(intervals))
-    top = next(intervals)
+    try:
+        top = next(intervals)
+    except StopIteration:
+        return
     for interval in intervals:
         join = top.join(interval)
         if join is None or join.empty:
@@ -723,13 +726,16 @@ def _intersect(left, right):
     """
     left = iter(left)
     right = iter(right)
-    a = next(left)
-    b = next(right)
-    while True:
-        intersect = a.intersect(b)
-        if intersect is not None and not intersect.empty:
-            yield intersect
-        if a.upper_bound < b.upper_bound:
-            a = next(left)
-        else:
-            b = next(right)
+    try:
+        a = next(left)
+        b = next(right)
+        while True:
+            intersect = a.intersect(b)
+            if intersect is not None and not intersect.empty:
+                yield intersect
+            if a.upper_bound < b.upper_bound:
+                a = next(left)
+            else:
+                b = next(right)
+    except StopIteration:
+        return

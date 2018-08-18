@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-FROM debian:stretch
+FROM python:3-stretch
 ARG UID=1000
 ARG GID=1000
 ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
@@ -13,9 +13,6 @@ COPY etc/apt /etc/apt
 RUN apt-get update && apt-get install -y --no-install-recommends \
         bash \
         libpq5 \
-        python3 \
-        python3-venv \
-        uwsgi-plugin-python3 \
     && apt-get clean
 
 RUN groupadd --force --gid $GID pycroft \
