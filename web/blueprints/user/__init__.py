@@ -589,7 +589,7 @@ def validate_unique_mac(form, field):
 @nav.navigate(u"Anlegen")
 @access.require('user_change')
 def create():
-    form = UserCreateForm()
+    form = UserCreateForm(property_group=config.member_group)
 
     if form.is_submitted():
         unique_name_error = validate_unique_name(form, form.name)
