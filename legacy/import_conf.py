@@ -83,7 +83,7 @@ status_groups_map = {
     # `usertraffic` is a traffic group, so not given in `import_conf`
     1: ("member", "usertraffic"),  # bezahlt, ok
     2: ("member", "finance", "usertraffic"),  # angemeldet, aber nicht bezahlt
-    3: ("away",),    # nicht bezahlt, hat nur Mail
+    3: ("finance",),    # nicht bezahlt, hat nur Mail
     4: ("member", "finance", "usertraffic"),  # angemeldet, nicht bezahlt, 2. Warnung
     5: ("member", "suspended", "usertraffic"),  # angemeldet, nicht bezahlt, gesperrt
     6: ("away",),  # angemeldet, gesperrt (ruhend)
