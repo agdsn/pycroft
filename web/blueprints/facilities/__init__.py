@@ -15,7 +15,7 @@ from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased
 
 from pycroft import lib, config
 from pycroft.helpers import facilities
@@ -134,13 +134,16 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
         abort(404)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
-    rooms_users_q = (session.session.query(Room, User)
-                     .options(joinedload(User.current_properties))
+    # We need to alias User, otherwise sqlalchemy selects User.id as user_id,
+    # which collides with the joined-loaded user.current_properties.user_id.
+    user = aliased(User)
+    rooms_users_q = (session.session.query(Room, user)
+                     .options(joinedload(user.current_properties))
                      .filter(and_(Room.building == building, Room.level == level))
-                     .join(User))
+                     .join(user))
     if not all_users:
         rooms_users_q = (
-            rooms_users_q.join(User.current_properties_maybe_denied)
+            rooms_users_q.join(user.current_properties_maybe_denied)
             .filter(CurrentProperty.property_name == 'network_access')
         )
     level_inhabitants = defaultdict(lambda: [])
