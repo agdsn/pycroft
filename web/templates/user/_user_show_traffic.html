@@ -83,6 +83,8 @@
   <script type="text/javascript" src="{{ url_for("static", filename="custom/js/binary_prefix.js") }}"></script>
 
   <script>
+      var dateFormat = d3.time.format('%Y-%m-%d');
+
       function setChartSize(graph) {
           var width = graph.parent.node().getBoundingClientRect().width;
           var height = 200;
@@ -135,7 +137,7 @@
                   .margin({top: 25, right: 75, bottom: 30, left: 60})
                   .xScale(d3.time.scale())
                   .yScale(d3.scale.linear());
-              creditGraph.chart.xAxis.tickFormat(timeFormat);
+              creditGraph.chart.xAxis.tickFormat(dateFormat);
               creditGraph.chart.yScale(binaryPrefix.linearScale());
               creditGraph.chart.yAxis.tickFormat(binaryPrefix.format).ticks(5);
 
@@ -158,117 +160,54 @@
           }
       });
 
-      function sumByType(data, type) {
-          return d3.sum(data.filter(function (e) {
-                  return e.type === type;
-              }),
-              function (e) {
-                  return e.amount;
-              });
-      }
-
-      function sumUntil(items, timestamp) {
-          return d3.sum(items
-              .filter(function (d) {
-                  return d.timestamp < timestamp;
-              }), function (d) {
-              return d.amount;
-          });
-      }
-
       function loadTrafficData(sel) {
           var days = sel.value;
           d3.json('{{ traffic_json_url }}/' + days, function (error, resp) {
               if (error) throw error;
 
               // Normalize data
-              var debits = resp.items.debits || [];
-              var credits = resp.items.credits || [];
-
-              debits.forEach(function (d) {
+              var traffic = resp.traffic;
+              traffic.forEach(function (d) {
                   d.timestamp = d3.time.format.iso.parse(d.timestamp);
               });
-
-              credits.forEach(function (d) {
-                  d.timestamp = d3.time.format.iso.parse(d.timestamp);
-              });
-
-              // Determine the first and last day to be plotted
-              var now = d3.time.day.ceil(new Date());
-              var dayExtent = [d3.time.day.offset(now, -days), d3.time.day.offset(now, 1)];
-
-              // Bin by day
-              var dayBins = d3.time.days(dayExtent[0], dayExtent[1]);
-
 
               // Traffic graph
-              var binnedDebits = d3.layout.histogram()
-                  .range(dayExtent)
-                  .bins(dayBins)
-                  .value(function (d) {
-                      return d.timestamp
-                  })(debits)
-                  .map(function (d) {
-                      return {
-                          in: sumByType(d, "Ingress"),
-                          out: sumByType(d, "Egress")
-                      };
-                  });
-
               var data = [{
                   key: "Egress",
                   nonStackable: false,
-                  values: binnedDebits.map(function (e, i) {
+                  values: traffic.map(function (d) {
                       return {
-                          x: i,
-                          y: e.out
+                          x: d.timestamp,
+                          y: d.egress
                       }
                   })
               },
-                  {
-                      key: "Ingress",
-                      nonStackable: false,
-                      values: binnedDebits.map(function (e, i) {
-                          return {
-                              x: i,
-                              y: e.in
-                          }
-                      })
-                  }];
+              {
+                  key: "Ingress",
+                  nonStackable: false,
+                  values: traffic.map(function (d) {
+                      return {
+                          x: d.timestamp,
+                          y: d.ingress
+                      }
+                  })
+              }];
 
               trafficGraph.chart.xAxis.tickFormat(function (d) {
-                  return timeFormat(dayBins[d]);
+                  return dateFormat(d);
               });
 
-              if (debits.length === 0)
+              if (!traffic.some(function (d) { return !!d.ingress || !!d.egress; }))
                   trafficGraph.chart.forceY([0, 1000]);
 
               trafficGraph.data.datum(data).transition().duration(250).call(trafficGraph.chart);
 
-
               // Credit graph
-              var binnedCredits = d3.layout.histogram()
-                  .range(dayExtent)
-                  .bins(dayBins)
-                  .value(function (d) {
-                      return d.timestamp
-                  })(credits)
-                  .map(function (d, i) {
-                      return {
-                          x: dayBins[i],
-                          y: d3.sum(d, function (e) {
-                              return e.amount;
-                          })
-                      };
-                  });
-
-              var balance = resp.items.balance
-                  - sumUntil(debits, dayExtent[0])
-                  + sumUntil(credits, dayExtent[0]);
-
-              binnedCredits.forEach(function (d, i, a) {
-                  d.y += i === 0 ? balance : a[i - 1].y;
-                  d.y -= binnedDebits[i].in + binnedDebits[i].out;
+              var binnedCredits = traffic.map(function (d) {
+                  return {
+                      x: d.timestamp,
+                      y: d.balance
+                  };
               });
 
               var forced = d3.extent(binnedCredits, function (d) {
