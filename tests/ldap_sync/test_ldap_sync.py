@@ -9,6 +9,8 @@ import ldap3
 from pycroft.model.session import session
 from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, get_config, \
      establish_and_return_ldap_connection, fetch_current_ldap_users, sync_all
+if sys.version_info >= (3,5):
+    from ldap_sync.exporter import _ResultProxyType
 from ldap_sync.record import Record, RecordState
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase
@@ -65,7 +67,7 @@ class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FixtureDataTestBase):
     datasets = simple_fixtures.datasets
 
     def test_one_user_fetched(self):
-        users = fetch_users_to_sync(session)
+        users = fetch_users_to_sync(session, required_property='mail')
         self.assertEqual(len(users), 1)
 
 
@@ -78,7 +80,7 @@ class MultipleUsersFilterTestCase(FixtureDataTestBase):
             complex_fixtures.UserData.active_user1.login,
             complex_fixtures.UserData.active_user2.login,
         }
-        self.assertEqual({u.login for u in users}, expected_logins)
+        self.assertEqual({u.User.login for u in users}, expected_logins)
 
 
 class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
@@ -209,8 +211,9 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
 
     def test_attributes_synced_correctly(self):
         records = {}
-        for user in self.users_to_sync:
-            record = Record.from_db_user(user, self.base_dn)
+        for result in self.users_to_sync:
+            record = Record.from_db_user(result.User, self.base_dn,
+                                         should_be_blocked=result.should_be_blocked)
             records[record.dn] = record
 
         for ldap_user in self.new_ldap_users:
@@ -227,11 +230,11 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
                               if k in effective_attributes_in_db})
 
     def test_mail_deletion(self):
-        users_with_mail = [u for u in self.users_to_sync if u.email is not None]
+        users_with_mail = [u for u in self.users_to_sync if u.User.email is not None]
         if not users_with_mail:
             raise RuntimeError("Fixtures do not provide a syncable user with a mail address")
 
-        modified_user = users_with_mail[0]
+        modified_user = users_with_mail[0].User
         mod_dn = Record.from_db_user(modified_user, self.base_dn).dn
         modified_user.email = 'bar@agdsn.de'
         session.add(modified_user)
@@ -241,16 +244,18 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.sync_all()
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
-        modified_record = [u for u in newest_users if u['dn'] == mod_dn][0]
+        newest_users_correct_dn = [u for u in newest_users if u['dn'] == mod_dn]
+        self.assertEqual(len(newest_users_correct_dn), 1)
+        modified_record = newest_users_correct_dn[0]
         self.assertNotIn('mail', modified_record)
 
     def test_mail_creation(self):
-        users_without_mail = [u for u in self.users_to_sync if u.email is not None]
+        users_without_mail = [u for u in self.users_to_sync if u.User.email is None]
         if not users_without_mail:
             raise RuntimeError("Fixtures do not provide a syncable user without a mail address")
-        mod_user = users_without_mail[0]
+        mod_user = users_without_mail[0].User
         mod_dn = Record.from_db_user(mod_user, self.base_dn).dn
-        mod_user.email = 'not_'+mod_user.email
+        mod_user.email = 'bar@agdsn.de'
         session.add(mod_user)
         session.commit()
 
@@ -259,12 +264,14 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
                                        desired=users_to_sync)
         exporter.compile_actions()
         relevant_actions = [a for a in exporter.actions if not isinstance(a, IdleAction)]
+        print(relevant_actions)
         self.assertEqual(len(relevant_actions), 1)
         self.assertEqual(type(relevant_actions[0]), ModifyAction)
         exporter.execute_all(self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.base_dn)
         modified_ldap_record = [u for u in newest_users if u['dn'] == mod_dn][0]
+        self.assertIn('mail', modified_ldap_record['attributes'])
         self.assertEqual(modified_ldap_record['attributes']['mail'], [mod_user.email])
 
     def test_no_desired_records_removes_everything(self):

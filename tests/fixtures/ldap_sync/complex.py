@@ -60,6 +60,12 @@ class PropertyData(DataSet):
         name = "mail"
         granted = True
 
+    class ldap_login_enabled:
+        """Necessary to not add `pwdAccountLockedTime` during tests"""
+        property_group = PropertyGroupData.dummy
+        name = "ldap_login_enabled"
+        granted = True
+
 
 class MembershipData(DataSet):
     class active1_membership:

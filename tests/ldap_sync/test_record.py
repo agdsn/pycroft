@@ -68,7 +68,7 @@ class RecordTestCase(TestCase):
                              'raw_attributes': {'mail': b'mail'}}
         record = Record.from_ldap_record(ldapsearch_record)
         self.assertSubDict({'mail': [u'mail'], 'gecos': [u'baz']}, record.attrs)
-        for key in Record.ENFORCED_KEYS:
+        for key in Record.SYNCED_ATTRIBUTES:
             self.assertIn(key, record.attrs)
 
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ldap3.utils.conv import escape_filter_chars
 
+from pycroft.model.user import User
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -47,27 +48,32 @@ class Record(object):
     """
     def __init__(self, dn, attrs):
         self.dn = dn
-        attrs = {k: v for k, v in attrs.items() if k in self.ENFORCED_KEYS}
-        for key in self.ENFORCED_KEYS:
+        attrs = {k: v for k, v in attrs.items() if k in self.SYNCED_ATTRIBUTES}
+        for key in self.SYNCED_ATTRIBUTES:
             attrs.setdefault(key, [])
         # escape_filter_chars is idempotent ⇒ no double escaping
         self.attrs = {key: [_maybe_escape_filter_chars(x)
                             for x in _canonicalize_to_list(val)]
                       for key, val in attrs.items()}
 
-    ENFORCED_KEYS = frozenset(['mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
-                               'homeDirectory', 'gidNumber', 'uidNumber', 'uid'])
+    SYNCED_ATTRIBUTES = frozenset([
+        'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
+        'homeDirectory', 'gidNumber', 'uidNumber', 'uid', 'pwdAccountLockedTime'
+    ])
     LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
     PWD_POLICY_BLOCKED = "login_disabled"
 
     @classmethod
-    def from_db_user(cls, user, base_dn):
+    def from_db_user(cls, user, base_dn, should_be_blocked=False):
+        # type: (User, str, bool) -> Record
         dn = dn_from_username(user.login, base=base_dn)
-        if user.unix_account == None:
+        if user.unix_account is None:
             raise ValueError("User object must have a UnixAccount")
 
-        user_is_blocked = not user.has_property(cls.LDAP_LOGIN_ENABLED_PROPERTY)
-        passwd_hash = "!" if user_is_blocked else "" + user.passwd_hash
+        # Disabling the password is just a safety measure on top of the
+        # pwdLockout mechanism
+        pwd_hash_prefix = "!" if should_be_blocked else ""
+        passwd_hash = pwd_hash_prefix + user.passwd_hash if user.passwd_hash else None
 
         attributes = {
             # REQ – required, MAY – optional, SV – single valued
@@ -82,8 +88,16 @@ class Record(object):
             'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
             'mail': user.email,  # MAY by inetOrgPerson
         }
-        if user_is_blocked:
-            attributes['pwdPolicySubEntry'] = cls.PWD_POLICY_BLOCKED
+        if should_be_blocked:
+            # See man slapo-ppolicy
+            attributes['pwdAccountLockedTime'] = "1970010100Z"  # 1.3.6.1.4.1.42.2.27.8.1.17
+
+        # sanity check: did we forget something in `cls.SYNCED_ATTRIBUTES` that
+        # we support migrating anyway?
+        _missing_attributes = set(attributes.keys()) - cls.SYNCED_ATTRIBUTES
+        assert not _missing_attributes, \
+            "SYNCED_ATTRIBUTES does not contain attributes {}".format(_missing_attributes)
+
         return cls(dn=dn, attrs=attributes)
 
     @classmethod

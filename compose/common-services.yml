@@ -42,6 +42,8 @@ services:
     environment:
       - SLAPD_PASSWORD=password
       - SLAPD_DOMAIN=agdsn.de
+      - SLAPD_ADDITIONAL_SCHEMAS=ppolicy
+      - SLAPD_ADDITIONAL_MODULES=ppolicy
   rabbitmq:
     image: rabbitmq
     environment:
