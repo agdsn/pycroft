@@ -132,6 +132,13 @@ export default {
                     options: "table",
                 },
             },
+            {
+                test: path.join(dep, 'jquery'),
+                use: {
+                    loader: "expose-loader",
+                    options: "$",
+                },
+            },
             // Inject bootstrap-table import into its locales
             {
                 test: /\.js$/,
