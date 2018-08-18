@@ -1,3 +1,4 @@
+from datetime import timedelta
 from functools import wraps
 
 from flask import jsonify, request, current_app
@@ -11,7 +12,7 @@ from pycroft.lib.finance import build_transactions_query
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
-    status
+    status, traffic_history as func_traffic_history
 from pycroft.model import session
 from pycroft.model.host import IP, Interface
 from pycroft.model.types import IPAddress
@@ -82,6 +83,12 @@ def generate_user_data(user):
     props = {prop.property_name for prop in user.current_properties}
     user_status = status(user)
 
+    interval = timedelta(days=7)
+    step = timedelta(days=1)
+    traffic_history = func_traffic_history(user.id,
+                                          session.utcnow() - interval + step,
+                                          interval, step)
+
     finance_history = [{
         'valid_on': split.transaction.posted_at,
         'amount': split.amount,
@@ -113,6 +120,7 @@ def generate_user_data(user):
         properties=list(props),
         traffic_balance=user.current_credit,
         traffic_maximum=traffic_maxmium,
+        traffic_history=[e.__dict__ for e in traffic_history],
         # TODO: think about better way for credit
         finance_balance=-user.account.balance,
         finance_history=finance_history,
