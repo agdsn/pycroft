@@ -21,7 +21,7 @@ from pycroft.model.types import (
 class Host(IntegerIdModel):
     # many to one from Host to User
     owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                      nullable=True)
+                      nullable=True, index=True)
     owner = relationship(User, backref=backref("hosts",
                                                cascade="all, delete-orphan"))
 
@@ -29,7 +29,7 @@ class Host(IntegerIdModel):
     room = relationship(Room, backref=backref("hosts"))
     # We don't want to `ONDELETE CASCADE` because deleting a room
     # should not delete a host being there
-    room_id = Column(Integer, ForeignKey(Room.id))
+    room_id = Column(Integer, ForeignKey(Room.id), index=True)
 
 
 class Switch(ModelBase):
@@ -38,7 +38,7 @@ class Switch(ModelBase):
     A `Switch` is directly tied to a `Host` because instead of having an `id`
     column, the primary key is `host_id`, a foreign key on a `Host`.
     """
-    host_id = Column(Integer, ForeignKey(Host.id), primary_key=True)
+    host_id = Column(Integer, ForeignKey(Host.id), primary_key=True, index=True)
     host = relationship(Host, backref=backref("switch", uselist=False))
 
     name = Column(String(127), nullable=False)
@@ -74,7 +74,7 @@ class Interface(IntegerIdModel):
     mac = Column(MACAddress, nullable=False, unique=True)
 
     host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),
-                     nullable=False)
+                     nullable=False, index=True)
 
     @validates('mac')
     def validate_mac(self, _, mac_address):
@@ -93,14 +93,16 @@ class Interface(IntegerIdModel):
 # See the `SwitchPort.default_vlans` relationship
 switch_port_default_vlans = Table(
     'switch_port_default_vlans', ModelBase.metadata,
-    Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE')),
-    Column('vlan_id', Integer, ForeignKey('vlan.id', ondelete='CASCADE')),
+    Column('switch_port_id', Integer, ForeignKey('switch_port.id', ondelete='CASCADE'),
+           index=True),
+    Column('vlan_id', Integer, ForeignKey('vlan.id', ondelete='CASCADE'),
+           index=True),
 )
 
 
 class SwitchPort(IntegerIdModel):
     switch_id = Column(Integer, ForeignKey(Switch.host_id, ondelete="CASCADE"),
-                       nullable=False)
+                       nullable=False, index=True)
     switch = relationship(Switch,
                           backref=backref("ports",
                                         cascade="all, delete-orphan"))
@@ -129,7 +131,7 @@ class IP(IntegerIdModel):
                         backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
-                       nullable=False)
+                       nullable=False, index=True)
     subnet = relationship(Subnet,
                           backref=backref("ips", cascade="all, delete-orphan"),
                           lazy='joined')

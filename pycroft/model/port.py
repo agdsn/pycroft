@@ -11,7 +11,7 @@ from pycroft.model.host import SwitchPort
 class PatchPort(IntegerIdModel):
     """A patch panel port that may or not be connected to a switch"""
     id = Column(Integer, primary_key=True)
-    room_id = Column(Integer, ForeignKey("room.id"), nullable=False)
+    room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
     name = Column(String(8), nullable=False)
 
     switch_port_id = Column(Integer, ForeignKey(SwitchPort.id), unique=True)

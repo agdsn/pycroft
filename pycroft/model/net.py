@@ -27,7 +27,7 @@ class Subnet(IntegerIdModel):
     reserved_addresses = Column(Integer, default=0, nullable=True)
     description = Column(String(50))
 
-    vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False)
+    vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False, index=True)
     vlan = relationship(VLAN, back_populates="subnets")
 
 

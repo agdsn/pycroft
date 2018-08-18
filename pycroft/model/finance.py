@@ -292,7 +292,7 @@ class BankAccount(IntegerIdModel):
 
 class BankAccountActivity(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
-                             nullable=False)
+                             nullable=False, index=True)
     bank_account = relationship(BankAccount, backref=backref("activities"))
     amount = Column(Money, nullable=False)
     reference = Column(Text, nullable=False)

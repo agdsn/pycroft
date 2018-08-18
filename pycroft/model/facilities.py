@@ -15,12 +15,12 @@ class Site(IntegerIdModel):
 
 
 class Building(IntegerIdModel):
-    site_id = Column(Integer, ForeignKey(Site.id), nullable=False)
+    site_id = Column(Integer, ForeignKey(Site.id), nullable=False, index=True)
     site = relationship(Site, backref=backref("buildings"))
     number = Column(String(3), nullable=False)
     short_name = Column(String(8), unique=True, nullable=False)
     street = Column(String(40), nullable=False)
-    default_traffic_group_id = Column(Integer, ForeignKey(TrafficGroup.id))
+    default_traffic_group_id = Column(Integer, ForeignKey(TrafficGroup.id), index=True)
     default_traffic_group = relationship(TrafficGroup)
 
     __table_args__ = (UniqueConstraint("street", "number", name="address"),)
@@ -32,7 +32,7 @@ class Room(IntegerIdModel):
     inhabitable = Column(Boolean, nullable=False)
 
     # many to one from Room to Building
-    building_id = Column(Integer, ForeignKey(Building.id), nullable=False)
+    building_id = Column(Integer, ForeignKey(Building.id), nullable=False, index=True)
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
     patch_ports = relationship('PatchPort')

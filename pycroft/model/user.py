@@ -52,7 +52,7 @@ class User(IntegerIdModel, UserMixin):
 
     # one to one from User to Account
     account = relationship("Account", backref=backref("user", uselist=False))
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
 
     unix_account = relationship('UnixAccount')  # backref not really needed.
     unix_account_id = Column(Integer, ForeignKey('unix_account.id'),
@@ -60,7 +60,7 @@ class User(IntegerIdModel, UserMixin):
 
     # many to one from User to Room
     room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
-                     nullable=True)
+                     nullable=True, index=True)
     room = relationship("Room",
                         backref=backref("users", cascade="all"))
 
@@ -395,14 +395,14 @@ class Membership(IntegerIdModel):
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
-                      nullable=False)
+                      nullable=False, index=True)
     group = relationship(Group, backref=backref("memberships",
                                                 cascade="all, delete-orphan",
                                                 order_by='Membership.id'))
 
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     nullable=False)
+                     nullable=False, index=True)
     user = relationship(User, backref=backref("memberships",
                                               cascade="all, delete-orphan"))
 
@@ -484,13 +484,14 @@ class PropertyGroup(Group):
 
 
 class Property(IntegerIdModel):
+    # TODO add unique key
     name = Column(String(255), nullable=False)
     granted = Column(Boolean, nullable=False)
 
     # many to one from Property to PropertyGroup
     # nullable=True
     property_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
-                               nullable=False)
+                               nullable=False, index=True)
     #TODO prüfen, ob cascade Properties löscht, wenn zugehörige PGroup deleted
     property_group = relationship(
         PropertyGroup,

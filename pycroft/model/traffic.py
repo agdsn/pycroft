@@ -38,7 +38,7 @@ class TrafficVolume(TrafficEvent, ModelBase):
     type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
-                   nullable=False)
+                   nullable=False, index=True)
     ip = relationship(IP, backref=backref("traffic_volumes",
                                           cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
