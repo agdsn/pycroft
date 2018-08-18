@@ -31,7 +31,7 @@ from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_balance_expr, generate_user_sheet
+    traffic_history, generate_user_sheet
 from pycroft.lib.membership import make_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import session
@@ -499,27 +499,40 @@ def end_membership(user_id, membership_id):
 @bp.route('/<int:user_id>/traffic/json')
 @bp.route('/<int:user_id>/traffic/json/<int:days>')
 def json_trafficdata(user_id, days=7):
-    """Generate a Highcharts compatible JSON file to use with traffic graphs.
+    """Generate a JSON file to use with traffic and credit graphs.
 
     :param user_id:
     :param days: optional amount of days to be included
-    :return: JSON with traffic data for INPUT and OUTPUT with [datetime, megabyte] tuples.
+    :return: JSON with traffic and credit data formatted according to the following schema
+    {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "object",
+                "properties": {
+                    "credit_limit": { "type": "integer" },
+                    "traffic": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "balance": { "type": "integer" },
+                                "credit": { "type": "integer" },
+                                "egress": { "type": "integer" },
+                                "ingress": { "type": "integer" },
+                                "timestamp": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     """
-    traffic_timespan = (session.utcnow() - timedelta(days=days)).date()
-
-    # get all traffic volumes for the user in the timespan
-    def traffic_events_as_json(model):
-        result = model.q.filter(
-            model.user_id == user_id,
-            model.timestamp > traffic_timespan).order_by(
-            model.timestamp)
-        result = json_agg(result).one()[0]
-        return result if result is not None else []
-
-    # sum traffic balance up until the beginning of traffic_timespan
-    traffic_balance = session.session.query(traffic_balance_expr(
-        datetime.combine(traffic_timespan, time()) - timedelta(
-            microseconds=1))).filter(User.id == user_id).scalar()
+    interval = timedelta(days=days)
+    step = timedelta(days=1)
+    result = traffic_history(user_id, session.utcnow() - interval + step, interval, step)
 
     credit_limit = session.session.execute(User.active_traffic_groups().where(
         User.id == user_id).with_only_columns(
@@ -527,9 +540,7 @@ def json_trafficdata(user_id, days=7):
 
     return jsonify(
         items={
-            'debits': traffic_events_as_json(TrafficVolume),
-            'credits': traffic_events_as_json(TrafficCredit),
-            'balance': traffic_balance,
+            'traffic': [e.__dict__ for e in result],
             'credit_limit': credit_limit
         }
     )
