@@ -1,2 +1,2 @@
-deb http://deb.nodesource.com/node_9.x/ jessie main
-deb-src http://deb.nodesource.com/node_9.x/ jessie main
+deb http://deb.nodesource.com/node_10.x/ stretch main
+deb-src http://deb.nodesource.com/node_10.x/ stretch main
