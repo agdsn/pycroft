@@ -152,7 +152,7 @@ def establish_and_return_ldap_connection(host, port, bind_dn, bind_pw):
 
 def fetch_current_ldap_users(connection, base_dn):
     success = connection.search(search_base=base_dn,
-                                search_filter='(objectclass=*)',
+                                search_filter='(objectclass=inetOrgPerson)',
                                 attributes=ldap3.ALL_ATTRIBUTES)
     if not success:
         logger.warning("LDAP search not successful.  Result: %s", connection.result)

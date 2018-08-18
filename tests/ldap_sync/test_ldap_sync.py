@@ -104,8 +104,7 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
                                 password=self.config.bind_pw, auto_bind=True)
 
     def _clean_ldap_base(self):
-        """Delete the base including its subtree and create it.
-        """
+        """Delete and recreate the base and set up a default ppolicy."""
         self.conn.search(self.base_dn, '(objectclass=*)')
         if self.conn.entries:
             for response_item in self.conn.response:
@@ -117,6 +116,38 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         if not result:
             raise RuntimeError("Couldn't create base_dn {} as organizationalUnit"
                                .format(self.base_dn), self.conn.result)
+
+        # PASSWORD POLICIES
+        # mimicking the LDIF given in https://hub.docker.com/r/dinkel/openldap/
+
+        policies_dn = "ou=policies,{base}".format(base=self.base_dn)
+        result = self.conn.add(policies_dn, 'organizationalUnit')
+
+        if not result:
+            raise RuntimeError("Couldn't create policies_dn {} as organizationalUnit"
+                               .format(policies_dn), self.conn.result)
+
+        default_ppolicy_dn = "cn=default,{}".format(policies_dn)
+        policy_attrs = {
+            'pwdAllowUserChange': True,
+            'pwdAttribute': "userPassword",
+            'pwdCheckQuality': 1,
+            'pwdExpireWarning': 604800,  # 7 days
+            'pwdFailureCountInterval': 0,
+            'pwdGraceAuthNLimit': 0,
+            'pwdInHistory': 5,
+            'pwdLockout': True,
+            'pwdLockoutDuration': 1800,  # 30 minutes
+            'pwdMaxAge': 15552000,  # 180 days
+            'pwdMaxFailure': 5,
+            'pwdMinAge': 0,
+            'pwdMinLength': 6,
+            'pwdMustChange': True,
+        }
+
+        result = self.conn.add(default_ppolicy_dn,
+                               ['applicationProcess', 'pwdPolicy'],
+                               policy_attrs)
 
     def tearDown(self):
         self.conn.unbind()
@@ -131,7 +162,7 @@ class LdapFunctionalityTestCase(LdapTestBase):
     def test_adding_an_entry_works(self):
         self.conn.add('uid=bar,{}'.format(self.base_dn), ['inetOrgPerson'],
                       {'sn': 'test', 'cn': 'test'})
-        success = self.conn.search(self.base_dn, '(objectclass=*)')
+        success = self.conn.search(self.base_dn, '(objectclass=inetOrgPerson)')
         if not success:
             self.fail("Base DN subtree search failed: {}".format(self.conn.result))
         relevant_entries = [r for r in self.conn.response if r['dn'] != self.base_dn]
