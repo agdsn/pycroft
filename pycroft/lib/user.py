@@ -37,7 +37,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import Host, IP, Host, Interface, Interface
 from pycroft.model.session import with_transaction
-from pycroft.model.traffic import TrafficCredit, TrafficVolume, TrafficBalance
+from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount
 from pycroft.model.webstorage import WebStorage
 
@@ -404,56 +404,11 @@ def edit_birthdate(user, birthdate, processor):
     return user
 
 
-def traffic_events_expr():
-    events = union_all(select([
-        TrafficCredit.amount,
-        TrafficCredit.user_id,
-        TrafficCredit.timestamp,
-        literal("credit").label('type')]),
-
-        select([(-TrafficVolume.amount).label('amount'),
-                TrafficVolume.user_id,
-                TrafficVolume.timestamp,
-                literal("debit").label('type')]
-               ),
-
-        select([TrafficBalance.amount,
-                TrafficBalance.user_id,
-                TrafficBalance.timestamp,
-                literal("balance").label('type')]  # ).select_from(
-               # .__table__.outerjoin(TrafficBalance)
-               )
-    ).alias('traffic_events')
-
-    return events
-
-
-def traffic_balance_expr(until=func.current_timestamp()):
-    # not a hybrid attribute expression due to circular import dependencies
-
-    balance = select(
-        [func.sum(literal_column('traffic_events.amount'))]
-    ).select_from(
-        traffic_events_expr()
-    ).where(
-        and_(
-            literal_column('traffic_events.user_id') == User.id,
-            literal_column('traffic_events.timestamp') <= until,
-            literal_column('traffic_events.timestamp') >=
-            func.coalesce(
-                select([TrafficBalance.timestamp]
-                       ).where(
-                    TrafficBalance.user_id == User.id
-                ).correlate_except(
-                    TrafficBalance).as_scalar(),
-                datetime.fromtimestamp(0)
-            ).label(
-                'balance_timestamp'))
-    )
-
-    # NOTE: if balance timestamp is in future, balance is always None
-    #       since consistency cannot be guaranteed
-    return balance.label('traffic_balance')
+def traffic_history(user_id, start, interval, step):
+    result = session.session.execute(
+        select(['*']).select_from(
+            func.traffic_history(user_id, start, interval, step))).fetchall()
+    return [TrafficHistoryEntry(**dict(row.items())) for row in result]
 
 
 def has_balance_of_at_least(user, amount):
