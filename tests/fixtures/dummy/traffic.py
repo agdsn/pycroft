@@ -19,45 +19,56 @@ class TrafficVolumeData(DataSet):
 
     class dummy_volume_before_balance:
         ip = IPData.dummy_user_ipv4
-        user = UserData.privileged
+        user = UserData.dummy
         type = "Ingress"
         amount = int(3.72 * 2**30)
         packets = int(3720)
-        timestamp = datetime.utcnow() - timedelta(hours=2)
+        timestamp = datetime.utcnow() - timedelta(days=5)
 
     class dummy_volume_ipv6:
         ip = IPData.dummy_user_ipv6
-        user = UserData.anotheruser
+        user = UserData.dummy
         type = "Egress"
         amount = int(56.1 * 2**20)
         packets = int(5610)
         timestamp = datetime.utcnow() - timedelta(minutes=25)
 
+    class anotheruser_volume:
+        ip = IPData.dummy_user_ipv4
+        user = UserData.anotheruser
+        type = "Ingress"
+        amount = int(6.00 * 2**30)
+        packets = int(3720)
+        timestamp = datetime.utcnow() - timedelta(hours=12)
 
 class TrafficCreditData(DataSet):
     class dummy_credit:
         user= UserData.dummy
         amount = int(5.47 * 2**30)
-        timestamp = datetime.utcnow() - timedelta(minutes=20)
+        timestamp = datetime.utcnow() - timedelta(days=2)
 
     class dummy_credit_before_balance:
-        user = UserData.privileged
+        user = UserData.dummy
         amount = int(62.1 * 2**20)
-        timestamp = datetime.utcnow() - timedelta(hours=3)
+        timestamp = datetime.utcnow() - timedelta(days=6)
 
     class dummy_credit_in_future:
-        user = UserData.anotheruser
+        user = UserData.dummy
         amount = int(3 * 2**30)
         timestamp = datetime.utcnow() + timedelta(days=1)
 
+    class anotheruser_credit:
+        user = UserData.anotheruser
+        amount = int(0.88 * 2**30)
+        timestamp = datetime.utcnow() - timedelta(hours=12)
 
 class TrafficBalanceData(DataSet):
     class dummy_balance:
         user = UserData.dummy
-        timestamp = datetime.utcnow() - timedelta(hours=1)
+        timestamp = datetime.utcnow() - timedelta(days=3)
         amount = int(2.73 * 2**20)
 
-    class dummy_balance3:
-        user = UserData.anotheruser
-        timestamp = datetime.utcnow() + timedelta(days=1)
+    class privileged_balance:
+        user = UserData.privileged
+        timestamp = datetime.utcnow() - timedelta(days=1)
         amount = int(6.12 * 2**30)

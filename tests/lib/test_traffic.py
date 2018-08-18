@@ -20,11 +20,10 @@ from tests.fixtures.dummy.user import UserData
 
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.lib.user import traffic_balance_expr
+from pycroft.lib.user import traffic_history
 
+from datetime import timedelta
 
-# this test is broken. Skipping, because the balance logic needs to be changed anyway.
-@unittest.skip
 class Test_010_BalanceCalculation(FixtureDataTestBase):
     datasets = [UserData, IPData, InterfaceData, HostData,
                 TrafficVolumeData, TrafficBalanceData, TrafficCreditData]
@@ -45,29 +44,29 @@ class Test_010_BalanceCalculation(FixtureDataTestBase):
                     TrafficCreditData.dummy_credit.amount -
                     TrafficVolumeData.dummy_volume_ipv6.amount -
                     TrafficVolumeData.dummy_volume.amount),
-            self.users[1]: 0,
+            self.users[1]: TrafficBalanceData.privileged_balance.amount,
         # used to be switch traffic before the refactoring
-            self.users[2]: None,
+            self.users[2]: (TrafficCreditData.anotheruser_credit.amount -
+                            TrafficVolumeData.anotheruser_volume.amount),
         }
+
+        self.correct_balance_orm = self.correct_balance.copy()
+        self.correct_balance_orm[
+            self.users[0]] += TrafficCreditData.dummy_credit_in_future.amount
 
     def test_0010_orm(self):
         orm_values = [(u.id, u.current_credit) for u in self.users]
-        correct_values = [(u.id, b) for u, b in self.correct_balance.items()]
-        self.assertEqual(set(orm_values), set(correct_values))
+        correct_values = [(u.id, b) for u, b in self.correct_balance_orm.items()]
+        self.assertEqual(set(correct_values), set(orm_values))
 
-    def test_0010_expr(self):
-        expr_values = session.session.query(
-            User.id, traffic_balance_expr()).all()
-        correct_values = [(u.id, b) for u, b in self.correct_balance.items()]
-        self.assertEqual(set(expr_values), set(correct_values))
-
-    def test_0030_expr_comparator(self):
-        # test comparator expression
-        correct_values = [(u.id, b > 0 if b is not None else None)
-                          for u, b in self.correct_balance.items()]
-        res = session.session.query(User.id, traffic_balance_expr() > 0).all()
-
-        self.assertEqual(set(correct_values), set(res))
+    def test_0010_expr_user(self):
+        expr_values = [(u.id, traffic_history(u.id, session.utcnow(),
+                                              timedelta(minutes=1),
+                                              timedelta(minutes=1))[0].balance)
+                       for u in self.users]
+        correct_values = [(u_b[0].id, u_b[1]) for u_b in
+                          self.correct_balance.items()]
+        self.assertEqual(set(correct_values), set(expr_values))
 
 
 class Test_020_TrafficLimitExceeded(FixtureDataTestBase):
