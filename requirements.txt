@@ -27,3 +27,4 @@ simplejson~=3.11.1
 #usersheet generation
 reportlab~=3.4.0
 fints~=0.2.1
+uwsgi~=2.0.14
