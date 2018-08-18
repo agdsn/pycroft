@@ -42,10 +42,15 @@ class LdapExporter(object):
 
     def __init__(self, current, desired):
         self.states_dict = defaultdict(self.RecordState)
-        for record in current:
+        l = 0
+        for l, record in enumerate(current, 1):
             self.states_dict[record.dn].current = record
-        for record in desired:
+        logger.info("Gathered %d records of current state", l)
+
+        for l, record in enumerate(desired):
             self.states_dict[record.dn].desired = record
+        logger.info("Gathered %d records lof desired state", l)
+
         self.actions = []
 
     @classmethod
