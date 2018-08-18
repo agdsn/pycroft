@@ -9,6 +9,7 @@
 
 {% import "macros/forms.html" as forms %}
 {% import "macros/resources.html" as resources %}
+
 {% block content %}
     <form method="POST" action="{{ url_for('.transactions_create') }}" role="form">
         {{ form.csrf_token() }}
