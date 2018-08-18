@@ -12,7 +12,7 @@ logger = logging.getLogger('ldap_sync')
 
 def main():
     logger.info("Starting the production sync. See --help for other options.")
-    config = get_config_or_exit(required_property='mail')
+    config = get_config_or_exit(required_property='ldap')
 
     db_users = fetch_users_to_sync(
         session=establish_and_return_session(config.db_uri),
@@ -47,7 +47,7 @@ def main_fake_ldap():
     logger.info("Fetched %s database users", len(db_users))
 
     connection = fake_connection()
-    BASE_DN = 'ou=users,dc=agdsn,dc=de'
+    BASE_DN = 'ou=pycroft,dc=agdsn,dc=de'
     logger.debug("BASE_DN set to %s", BASE_DN)
 
     ldap_users = fetch_current_ldap_users(connection, base_dn=BASE_DN)
