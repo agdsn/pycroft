@@ -112,7 +112,7 @@ class UserCreateForm(UserMoveForm):
     property_group = QuerySelectField(u"Gruppe",
                                       get_label='name',
                                       query_factory=property_group_query)
-    annex = BooleanField(u"Host annketieren", [Optional()])
+    annex = BooleanField(u"Host annektieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 
 
