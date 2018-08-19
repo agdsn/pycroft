@@ -1,4 +1,5 @@
 include AUTHORS LICENSE NOTICE pycroft/model/alembic.ini web/flask.cfg
 recursive-include pycroft/helpers/printing/assets *
+recursive-include pycroft/messages *.mo *.po *.pot
 recursive-include web/static *
 recursive-include web/templates *
