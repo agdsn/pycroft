@@ -12,7 +12,7 @@ services:
     image: agdsn/pycroft-base:${TAG:-latest}
     entrypoint: ["/bin/true"]
     command: []
-  dev:
+  dev-base:
     build:
       context: docker/dev
       dockerfile: ../dev.Dockerfile
@@ -23,6 +23,8 @@ services:
       - HADES_CELERY_APP_NAME=dummy_tasks
       - HADES_BROKER_URI=amqp://celery:celery@mq:5672/
       - HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+  dev:
+    extends: dev-base
     volumes:
       - "home:/opt/pycroft"
       - ".:/opt/pycroft/app"

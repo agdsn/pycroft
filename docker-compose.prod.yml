@@ -6,6 +6,11 @@ services:
     extends:
       file: docker-compose.base.yml
       service: base
+  dev-app:
+    extends:
+      file: docker-compose.base.yml
+      service: dev-base
+    entrypoint: ["/bin/true"]
   prod-app:
     build:
       context: .
