@@ -297,10 +297,26 @@ def import_users(session_nvtool, building, groups, ger38subnet, fee_account,
 
 def create_user_with_all_data(account, bank_account, building, fee_account,
                               ger38subnet, groups, ru, session_nvtool):
-    log.debug("Importing User {}".format(account.name))
+    u = None
+    existing_user_q = user.User.q.filter_by(login=account.login)
+    if existing_user_q.count() == 1:
+        user_with_name = existing_user_q.one()
+        if user_with_name.room and user_with_name.room.building == building:
+            u = user_with_name
+        else:
+            existing_user_q = user.User.q.filter_by(login=account.login + '_gerok')
+            if existing_user_q.count() == 1:
+                u = existing_user_q.one()
+    if u:
+        log.info("Found existing user %s", u.login)
+
     room = get_room_for_location(account, building)
-    financeAccount = get_finance_account_for_user(account)
-    u = create_user(account, financeAccount, room, ru)
+    financeAccount = u.account if u else get_finance_account_for_user(account)
+
+    if not u:
+        log.info("Importing User %s", account.login)
+        u = create_user(account, financeAccount, room, ru)
+
     create_finance_transactions_for_user(account, bank_account, fee_account,
                                          financeAccount, ru)
     setup_groups_for_user(account, groups, session_nvtool, u)
