@@ -1,13 +1,16 @@
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
+from pkg_resources import resource_filename
 
 from pycroft.model import create_db_model
 
 
 class AlembicHelper:
-    def __init__(self, connection, config_file="./alembic.ini"):
+    def __init__(self, connection, config_file=None):
         self.connection = connection
+        if config_file is None:
+            config_file = resource_filename("pycroft.model", "alembic.ini")
         config = Config(config_file)
         self.scr = ScriptDirectory.from_config(config)
         self.context = self._new_context()
