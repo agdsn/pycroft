@@ -1,20 +1,21 @@
 import os
 
 import jinja2.ext
-from flask import Flask, redirect, url_for, request, flash, render_template, current_app
-from flask_login import current_user
+from flask import (
+    Flask, current_app, redirect, render_template, request, url_for,
+)
 from flask_babel import Babel
-from jinja2 import StrictUndefined
+from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
 
 from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
 from web import api
-from . import template_filters
-from . import template_tests
+from . import template_filters, template_tests
 from .blueprints import (
-    finance, infrastructure, properties, user, facilities, login)
+    facilities, finance, infrastructure, login, properties, user,
+)
 from .blueprints.login import login_manager
 from .templates import page_resources
 
@@ -31,7 +32,7 @@ class PycroftFlask(Flask):
             jinja2.ext.loopcontrols,
             jinja2.ext.with_,
         ],
-        undefined=StrictUndefined
+        undefined=jinja2.StrictUndefined,
     )
 
     def __init__(self, *a, **kw):
