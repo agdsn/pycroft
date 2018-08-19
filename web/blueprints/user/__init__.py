@@ -25,6 +25,7 @@ from sqlalchemy import Text, and_
 from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
+from pycroft.helpers import utc
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.finance import get_typed_splits
@@ -50,7 +51,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserResetPasswordForm, UserMoveInForm, UserEditBirthdateForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
-from datetime import datetime, timedelta, time, timezone
+from datetime import datetime, timedelta
 from flask_login import current_user
 from web.template_filters import datetime_filter
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
@@ -445,11 +446,11 @@ def add_membership(user_id):
 
     if form.validate_on_submit():
         if form.begins_at.data is not None:
-            begins_at = datetime.combine(form.begins_at.data, time(0))
+            begins_at = datetime.combine(form.begins_at.data, utc.time_min())
         else:
             begins_at = session.utcnow()
         if not form.ends_at.unlimited.data:
-            ends_at = datetime.combine(form.ends_at.date.data, time(0))
+            ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
         else:
             ends_at = None
         make_member_of(user, form.group.data, current_user,
@@ -723,13 +724,11 @@ def edit_membership(user_id, membership_id):
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.begins_at = datetime.combine(form.begins_at.data,
-                                                datetime.min.time())
+        membership.begins_at = datetime.combine(form.begins_at.data, utc.time_min())
         if form.ends_at.unlimited.data:
             membership.ends_at = None
         else:
-            membership.ends_at = datetime.combine(form.ends_at.date.data,
-                                                  datetime.min.time())
+            membership.ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
 
         message = (u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' "
                    u"bearbeitet.".format(membership.group.name))
@@ -847,7 +846,7 @@ def suspend(user_id):
         if form.ends_at.unlimited.data:
             ends_at = None
         else:
-            ends_at = datetime.combine(form.ends_at.date.data, time(0))
+            ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
 
         try:
             during = closedopen(session.utcnow(), ends_at)
@@ -901,7 +900,7 @@ def move_out(user_id):
     if form.validate_on_submit():
         lib.user.move_out(user=user, comment=form.comment.data,
                           processor=current_user,
-                          # when=datetime.combine(form.when.data, time(0))
+                          # when=datetime.combine(form.when.data, utc.time_min())
                           when=session.utcnow(),
                           end_membership=form.end_membership.data)
         session.session.commit()
