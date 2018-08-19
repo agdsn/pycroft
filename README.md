@@ -262,7 +262,7 @@ if none exists yet.
 Select the config file `docker-compose.dev.yml` in the project root,
 select the the service: `dev-app`,
 and type in the following path for the python interpreter:
-`/opt/pycroft/venv/python`.
+`/opt/pycroft/venv/bin/python`.
 
 Be sure to also add a path mapping from the project directory on your machine
 to `/opt/pycroft/app`, so that PyCharm can correctly map remote files to files
