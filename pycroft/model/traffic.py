@@ -225,6 +225,7 @@ class CurrentTrafficBalance(ModelBase):
         'primary_key': current_traffic_balance_view.table.c.user_id,
     }
 
+
 def traffic_history_query():
     timestamptz = TIMESTAMP(timezone=True)
 

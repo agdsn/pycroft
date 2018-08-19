@@ -124,6 +124,7 @@ class DropFunction(schema.DDLElement):
         self.if_exists = if_exists
         self.cascade = cascade
 
+
 # noinspection PyUnusedLocal
 @compiles(CreateFunction, 'postgresql')
 def visit_create_function(element, compiler, **kw):
