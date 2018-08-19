@@ -25,6 +25,7 @@ RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
         nodejs \
         postgresql-client \
         strace \
+        unzip \
         vim \
         yarn \
     && apt-get clean
