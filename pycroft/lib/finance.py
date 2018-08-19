@@ -573,6 +573,7 @@ def handle_payments_in_default():
     users_pid_membership = []
     users_membership_terminated = []
 
+    ts_now = session.utcnow()
     for user in users:
         last_pid_membership = Membership.q.filter(Membership.user_id == user.id) \
             .filter(Membership.group_id == config.payment_in_default_group.id) \
@@ -581,7 +582,7 @@ def handle_payments_in_default():
 
         if last_pid_membership is not None:
             if last_pid_membership.ends_at is not None and \
-               last_pid_membership.ends_at >= datetime.utcnow() - timedelta(days=7):
+               last_pid_membership.ends_at >= ts_now - timedelta(days=7):
                 continue
 
         in_default_days = user.account.in_default_days
@@ -598,12 +599,12 @@ def handle_payments_in_default():
         if not user.has_property('payment_in_default'):
             if in_default_days >= fee.payment_deadline.days:
                 make_member_of(user, config.payment_in_default_group,
-                               processor, closed(session.utcnow(), None))
+                               processor, closed(ts_now, None))
                 users_pid_membership.append(user)
 
         if in_default_days >= fee.payment_deadline_final.days:
             remove_member_of(user, config.member_group, processor,
-                             closedopen(session.utcnow(), None))
+                             closedopen(ts_now, None))
             log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand ({})"
                            .format(fee.name),
                            processor, user)
