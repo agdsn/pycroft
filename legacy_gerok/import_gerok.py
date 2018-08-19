@@ -88,13 +88,13 @@ def import_gerok(db_url, delete_old):
     try:
 
         with timed(log, thing="Translation"):
-            bank_account = create_bankAccount()
-            building = create_site_and_building()
+            bank_account = get_or_create_bankAccount()
+            building = get_or_create_site_and_building()
             ger38subnet, sn = create_subnet(session_nvtool)
             groups = get_or_create_groups()
             root_user = get_or_create_root_user(groups)
-            import_facilities_and_switches(session_nvtool, building, ger38subnet,
-                                           root_user)
+            maybe_import_facilities_and_switches(session_nvtool, building, ger38subnet,
+                                                 root_user)
             import_SwitchPatchPorts(session_nvtool, building, sn, ger38subnet)
             fee_account = get_or_create_config(groups)
             import_users(session_nvtool, building, groups, ger38subnet, fee_account,
@@ -107,7 +107,7 @@ def import_gerok(db_url, delete_old):
     finally:
         session.session.close()
 
-def create_bankAccount():
+def get_or_create_bankAccount():
 
     existing_account = session.session.query(finance.BankAccount).filter(finance.BankAccount.account_number == "3120230811").scalar()
 
@@ -196,7 +196,7 @@ def import_SwitchPatchPorts(session_nvtool, building, sn, subnet):
         session.session.add(pp)
 
 
-def create_site_and_building():
+def get_or_create_site_and_building():
 
     existing_building = session.session.query(facilities.Building).filter(
         facilities.Building.short_name == "Ger38").scalar()
@@ -238,7 +238,7 @@ def create_subnet(session_nvtool):
     return ger38subnet, sn
 
 
-def import_facilities_and_switches(session_nvtool, building, ger38subnet, root_user):
+def maybe_import_facilities_and_switches(session_nvtool, building, ger38subnet, root_user):
     log.info("Importing Rooms and Switches")
 
     oldRooms = session.session.query(facilities.Room).filter(facilities.Room.building == building).all()
