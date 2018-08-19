@@ -331,8 +331,7 @@ def add_user_hosts(account, building, ger38subnet, room, u, groups):
                                                            mac.macaddr).all()
 
         if macs:
-            log.warning("Ignoring host %s for user %s cause mac already exists",
-                        mac.macaddr, u.name)
+            log.info("Mac %s already exists, skipping", mac.macaddr)
             return
 
         hostLocation = mac.jack.location
@@ -402,14 +401,19 @@ def setup_groups_for_user(account, groups, session_nvtool, u):
 
 def create_finance_transactions_for_user(account, bank_account, fee_account,
                                          finance_account, ru):
+    i = 0
     for trans in account.financetransactions:
         # Mitgliedsbeitrag
         if trans.banktransfer is not None:
+            i += 1
             create_bank_transfer_transaction(bank_account, finance_account, ru, trans)
 
         # Semesterbeitrag
         if trans.fee is not None:
+            i += 1
             create_userfee_transaction(fee_account, finance_account, ru, trans)
+    if i:
+        log.debug("Added %d transactions", i)
 
 
 def create_userfee_transaction(fee_account, finance_account, ru, trans):
