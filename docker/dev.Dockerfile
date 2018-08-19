@@ -17,11 +17,13 @@ RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
         bash \
         build-essential \
         curl \
+        gdb \
         git \
         less \
         libpq-dev \
         nodejs \
         postgresql-client \
+        strace \
         vim \
         yarn \
     && apt-get clean
