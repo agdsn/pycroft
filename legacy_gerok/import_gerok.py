@@ -371,31 +371,33 @@ def add_user_hosts(account, building, ger38subnet, room, u, groups):
 
 
 def setup_groups_for_user(account, groups, session_nvtool, u):
-    if "Hausmeister" not in account.name:
-        usergroupmember = user.Membership(user=u, group=groups["member"],
-                                          begins_at=account.entrydate)
-    else:
-        usergroupmember = user.Membership(user=u, group=groups["caretaker"],
-                                          begins_at=account.entrydate)
-    session.session.add(usergroupmember)
+    def maybe_add_membership(u, group, ends_at=None):
+        if u.member_of(group) or group in u.active_traffic_groups():
+            return None
+        if ends_at:
+            log.debug("Adding membership in %s (terminating %s)",
+                      group.name, ends_at)
+        else:
+            log.debug("Adding membership in %s", group.name)
 
-    traffic = user.Membership(user=u, group=groups["usertraffic"],
-                              begins_at=account.entrydate)
-    session.session.add(traffic)
+        session.session.add(
+            user.Membership(user=u, group=group,
+                            begins_at=account.entrydate, ends_at=ends_at)
+        )
+
+    if "Hausmeister" not in account.name:
+        maybe_add_membership(u, groups['member'])
+    else:
+        maybe_add_membership(u, groups['caretaker'])
+
+    maybe_add_membership(u, groups['usertraffic'])
 
     active = session_nvtool.query(Active).filter(
         Active.account == account).one_or_none()
     if not active is None:
-        if active.activegroup_id == 10:  # oldstaff
-            oldstaff = user.Membership(user=u, group=groups["org"],
-                                       begins_at=account.entrydate,
-                                       ends_at=account.entrydate + timedelta(
-                                           days=1))
-            session.session.add(oldstaff)
-        else:
-            staff = user.Membership(user=u, group=groups["org"],
-                                    begins_at=account.entrydate)
-            session.session.add(staff)
+        maybe_ends_at = account.entrydate + timedelta(days=1) \
+            if active.activegroup_id == 10 else None
+        maybe_add_membership(u, groups['org'], ends_at=maybe_ends_at)
 
 
 def create_finance_transactions_for_user(account, bank_account, fee_account,
