@@ -91,11 +91,11 @@ nv.addGraph({
 function loadTrafficData(sel) {
     var url = sel.dataset.url;
     var days = sel.value;
-    d3.json(url + days, function (error, resp) {
+    d3.json(url + "/" + days, function (error, resp) {
         if (error) throw error;
 
         // Normalize data
-        var traffic = resp.traffic;
+        var traffic = resp.items.traffic;
         traffic.forEach(function (d) {
             d.timestamp = d3.time.format.iso.parse(d.timestamp);
         });
@@ -111,16 +111,16 @@ function loadTrafficData(sel) {
                 };
             }),
         },
-            {
-                key: "Ingress",
-                nonStackable: false,
-                values: traffic.map(function (d) {
-                    return {
-                        x: d.timestamp,
-                        y: d.ingress,
-                    };
-                }),
-            }];
+        {
+            key: "Ingress",
+            nonStackable: false,
+            values: traffic.map(function (d) {
+                return {
+                    x: d.timestamp,
+                    y: d.ingress,
+                };
+            }),
+        }];
 
         trafficGraph.chart.xAxis.tickFormat(function (d) {
             return dateFormat(d);
