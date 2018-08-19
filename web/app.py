@@ -73,7 +73,7 @@ def make_app(debug=False):
     app = PycroftFlask(__name__)
     app.debug = debug
 
-    #initialization code
+    # initialization code
     login_manager.init_app(app)
     app.register_blueprint(user.bp, url_prefix="/user")
     app.register_blueprint(facilities.bp, url_prefix="/facilities")
