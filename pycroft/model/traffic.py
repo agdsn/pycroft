@@ -12,7 +12,7 @@ from sqlalchemy.types import BigInteger, Enum, Integer
 
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
-from pycroft.model.types import IPAddress, DateTimeTz
+from pycroft.model.types import DateTimeTz
 from pycroft.model.user import User
 from pycroft.model.host import IP, Host, Interface
 
