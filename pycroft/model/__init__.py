@@ -56,7 +56,8 @@ class UTCTZInfoCursorFactory(psycopg2.extensions.cursor):
 
 def create_engine(connection_string, **kwargs):
     kwargs.setdefault('connect_args', {}).update(
-        options="-c TimeZone=UTC", cursor_factory=UTCTZInfoCursorFactory
+        options=r"-c TimeZone=UTC -c search_path=pycroft,\ public",
+        cursor_factory=UTCTZInfoCursorFactory,
     )
     return sqa_create_engine(connection_string, **kwargs)
 
