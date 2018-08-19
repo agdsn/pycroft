@@ -104,6 +104,7 @@ def import_gerok(db_url, delete_old):
     except Exception as e:
         log.error(e)
         session.session.rollback()
+        raise
     finally:
         session.session.close()
 
@@ -124,7 +125,9 @@ def get_or_create_bankAccount():
         routing_number="85050300",
         iban="DE33850503003120230811",
         bic="OSDDDE81XXX",
-        account=bank_financeAccount)
+        account=bank_financeAccount,
+        fints_endpoint="https://banking-sn5.s-fints-pt-sn.de/fints30",
+    )
     session.session.add(bank_account)
     log.info("Created Bank Account")
     return bank_account
@@ -146,15 +149,12 @@ def get_or_create_config(g_d):
             away_group=g_d["away"],
             moved_from_division_group=g_d["moved_from_division"],
             already_paid_semester_fee_group=g_d["already_paid"],
-            registration_fee_account=fee_account,
-            semester_fee_account=fee_account,
-            late_fee_account=fee_account,
-            additional_fee_account=fee_account,
+            membership_fee_account=fee_account,
         )
 
         session.session.add(con)
     else:
-        fee_account = conf.semester_fee_account
+        fee_account = conf.membership_fee_account
 
     return fee_account
 
