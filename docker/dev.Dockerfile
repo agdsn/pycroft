@@ -15,6 +15,7 @@ RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
+        bash-completion \
         build-essential \
         curl \
         gdb \
