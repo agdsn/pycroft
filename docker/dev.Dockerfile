@@ -21,6 +21,7 @@ RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
         less \
         libpq-dev \
         nodejs \
+        postgresql-client \
         vim \
         yarn \
     && apt-get clean
