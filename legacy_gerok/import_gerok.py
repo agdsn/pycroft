@@ -360,6 +360,9 @@ def add_user_hosts(account, building, ger38subnet, room, u, groups):
                      subnet=ger38subnet)
 
         session.session.add(ip)
+
+    if not u.traffic_credits:
+        log.debug("Adding initial credit")
         now = session.utcnow()
         trafficlimit = groups["usertraffic"].credit_limit
         credit = traffic.TrafficCredit(user=u, timestamp=now,
