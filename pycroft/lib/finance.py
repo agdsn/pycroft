@@ -58,7 +58,7 @@ def get_last_applied_membership_fee():
     :rtype: MembershipFee
     """
     return MembershipFee.q.filter(
-        MembershipFee.ends_on <= datetime.now()) \
+        MembershipFee.ends_on <= func.current_timestamp()) \
         .order_by(MembershipFee.ends_on.desc()).first()
 
 
@@ -223,7 +223,7 @@ def post_transactions_for_membership_fee(membership_fee, processor):
 
     transactions = (Transaction.__table__.insert()
          .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
-                      select([literal(description), literal(processor.id), literal(datetime.utcnow()), literal(membership_fee.ends_on)]).select_from(users))
+                      select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on)]).select_from(users))
          .returning(Transaction.id)
          .cte('membership_fee_transactions'))
 
