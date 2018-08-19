@@ -1,4 +1,3 @@
 include AUTHORS LICENSE NOTICE pycroft/model/alembic.ini web/flask.cfg
-graft alembic
 recursive-include web/static *.css *.js *.map *.ttf *.woff *.eot *.svg *.png *.ico
 recursive-include web/templates *.html
