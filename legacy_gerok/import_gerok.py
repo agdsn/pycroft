@@ -349,6 +349,12 @@ def add_user_hosts(account, building, ger38subnet, room, u, groups):
             interface = host.Interface(host=h, mac=mac.macaddr)
 
         address = ipaddr.IPv4Network(mac.ip.ip).ip
+
+        if host.IP.q.filter_by(address=address).count() >= 1:
+            log.warning("IP %s already exists", address)
+            session.session.add(interface)
+            continue
+
         ip = host.IP(interface=interface,
                      address=address,
                      subnet=ger38subnet)
