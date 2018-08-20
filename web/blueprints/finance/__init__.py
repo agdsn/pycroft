@@ -25,6 +25,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import config
 from pycroft.helpers.i18n import localized
+from pycroft.helpers.util import map_or_default
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
@@ -84,9 +85,8 @@ def bank_accounts_list_json():
                 'btn_class': 'btn-primary'
             },
             'change_date': '{}'.format(
-                bank_account.last_updated_at.date() if
-                  bank_account.last_updated_at is not None else 'nie'
-            )
+                map_or_default(bank_account.last_updated_at, datetime.date,
+                               'nie'))
         } for bank_account in BankAccount.q.all()])
 
 
@@ -154,10 +154,8 @@ def bank_accounts_import():
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
                     bank_account.iban)
                 )
-            if bank_account.last_updated_at is not None:
-                start_date = bank_account.last_updated_at.date()
-            else:
-                start_date = date(2018,1,1)
+            start_date = map_or_default(bank_account.last_updated_at,
+                                        datetime.date, date(2018, 1, 1))
             statement = fints.get_statement(acc, start_date, date.today())
             flash(
                 "Transaktionen vom {} bis {}.".format(start_date, date.today()))
