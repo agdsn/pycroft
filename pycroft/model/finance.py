@@ -9,7 +9,7 @@ from math import fabs
 
 from sqlalchemy import Column, ForeignKey, event, func, select
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, object_session
 from sqlalchemy.schema import (
     CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
 from sqlalchemy.types import (
@@ -283,13 +283,14 @@ class BankAccount(IntegerIdModel):
 
     @hybrid_property
     def last_updated_at(self):
-        return max((act.imported_at for act in self.activities), default=None)
+        return object_session(self).query(
+            BankAccount.last_updated_at).scalar()
 
     @last_updated_at.expression
-    def last_updated_at(self):
+    def last_updated_at(cls):
         return (
-            select(func.max(BankAccountActivity.imported_at))
-            .where(BankAccountActivity.bank_account_id == self.id)
+            select([func.max(BankAccountActivity.imported_at)])
+            .where(BankAccountActivity.bank_account_id == cls.id)
             .label("last_updated_at")
         )
 
