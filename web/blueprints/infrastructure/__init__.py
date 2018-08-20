@@ -13,10 +13,12 @@
 
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
+from sqlalchemy.orm import joinedload
 from pycroft.helpers import net
 from pycroft.model import session
-from pycroft.model.host import Switch
+from pycroft.model.host import Switch, SwitchPort
 from pycroft.model.net import VLAN, Subnet
+from pycroft.model.port import PatchPort
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.access import BlueprintAccess
 
@@ -72,7 +74,9 @@ def switch_show(switch_id):
 
 @bp.route('/switch/show/<int:switch_id>/json')
 def switch_show_json(switch_id):
-    switch = Switch.q.get(switch_id)
+    switch = Switch.q.options(
+        joinedload(Switch.ports).joinedload(SwitchPort.patch_port).joinedload(
+            PatchPort.room)).get(switch_id)
     if not switch:
         abort(404)
     switch_port_list = switch.ports
