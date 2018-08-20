@@ -15,7 +15,7 @@ import operator
 import re
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
@@ -657,7 +657,7 @@ def process_transactions(bank_account, statement):
 
 
 def build_transactions_query(account, search=None, sort_by='valid_on', sort_order=None,
-                             offset=None, limit=None, positive=None):
+                             offset=None, limit=None, positive=None, eagerload=False):
     """Build a query returning the Splits for a finance account
 
     :param Account account: The finance Account to filter by
@@ -672,6 +672,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
         splits with amount ≥ 0, and amount < 0 if ``False``.  In the
         latter case, the effect of the :attr:`sort_order` parameter is
         being reversed.
+    :param bool eagerload: Eagerly load involved transactions.
 
     :returns: The prepared SQLAlchemy query
 
@@ -695,5 +696,8 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
             query = query.filter(Split.amount < 0)
 
     query = query.order_by(ordering).offset(offset).limit(limit)
+
+    if eagerload:
+        query = query.options(contains_eager(Split.transaction))
 
     return query

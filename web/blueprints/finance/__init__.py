@@ -360,7 +360,8 @@ def accounts_show_json(account_id):
 
     build_this_query = partial(build_transactions_query,
                                account=account, search=search, sort_by=sort_by,
-                               sort_order=sort_order, offset=offset, limit=limit)
+                               sort_order=sort_order, offset=offset,
+                               limit=limit, eagerload=True)
 
     def rows_from_query(query):
         # iterating over `query` executes it
