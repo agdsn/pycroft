@@ -4,7 +4,7 @@ set -euo pipefail
 
 cd /opt/pycroft/app
 
-if [[ -d node_modules && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ) ]]; then
+if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
 	exit
 fi
 
