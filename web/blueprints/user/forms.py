@@ -76,7 +76,7 @@ class UserEditEMailForm(Form):
 
 
 class UserEditBirthdateForm(Form):
-    birthdate = DateField(u"Birthdate", [Optional()], format)
+    birthdate = DateField(u"Birthdate", [Optional()])
 
 
 class UserMoveForm(Form):
