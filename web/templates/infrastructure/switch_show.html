@@ -4,20 +4,6 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-
-{% set cols = [
-    {
-        'name': 'portname',
-        'title': "Name",
-        'width': 2
-    }, {
-        'name': 'room',
-        'title': "Raum",
-        'formatter': "table.linkFormatter",
-        'width': 10
-    }
-] %}
 
 {% block content %}
     <section>
@@ -31,10 +17,6 @@
     </section>
     <section>
         <h2 class="page-header">Ports</h2>
-        {{ tbl.item_table(
-            'switches',
-             url_for('infrastructure.switch_show_json', switch_id=switch.host_id),
-             cols
-        ) }}
+        {{ port_table.render('ports') }}
     </section>
 {% endblock %}

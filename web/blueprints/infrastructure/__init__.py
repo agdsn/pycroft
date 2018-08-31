@@ -21,6 +21,7 @@ from pycroft.model.net import VLAN, Subnet
 from pycroft.model.port import PatchPort
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.access import BlueprintAccess
+from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
 
 bp = Blueprint('infrastructure', __name__)
 access = BlueprintAccess(bp, required_properties=['infrastructure_show'])
@@ -30,7 +31,9 @@ nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
 @bp.route('/subnets')
 @nav.navigate(u"Subnetze")
 def subnets():
-    return render_template('infrastructure/subnets_list.html')
+    return render_template(
+        'infrastructure/subnets_list.html',
+        subnet_table=SubnetTable(data_url=url_for(".subnets_json")))
 
 
 @bp.route('/subnets/json')
@@ -46,7 +49,9 @@ def subnets_json():
 @bp.route('/switches')
 @nav.navigate(u"Switche")
 def switches():
-    return render_template('infrastructure/switches_list.html')
+    return render_template(
+        'infrastructure/switches_list.html',
+        switch_table=SwitchTable(data_url=url_for(".switches_json")))
 
 
 @bp.route('/switches/json')
@@ -67,9 +72,12 @@ def switch_show(switch_id):
     if not switch:
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
-    return render_template('infrastructure/switch_show.html',
-                           page_title=u"Switch: " + switch.name,
-                           switch=switch)
+    return render_template(
+        'infrastructure/switch_show.html',
+        page_title=u"Switch: " + switch.name,
+        switch=switch,
+        port_table=PortTable(
+            data_url=url_for('.switch_show_json', switch_id=switch.host_id)))
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
@@ -99,7 +107,9 @@ def switch_show_json(switch_id):
 @bp.route('/vlans')
 @nav.navigate(u"VLANs")
 def vlans():
-    return render_template('infrastructure/vlan_list.html')
+    return render_template(
+        'infrastructure/vlan_list.html',
+        vlan_table=VlanTable(data_url=url_for(".vlans_json")))
 
 
 @bp.route('/vlans/json')

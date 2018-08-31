@@ -4,16 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-
-{% set cols = [
-    {'name': 'id', 'title': '#'},
-    {'name': 'address', 'title': 'IP'},
-    {'name': 'gateway', 'title': 'Gateway'},
-] %}
 
 {% block content %}
-    {{ tbl.item_table(
-        'subnets', url_for('infrastructure.subnets_json'), cols
-    ) }}
+    {{ subnet_table.render("subnets") }}
 {% endblock %}

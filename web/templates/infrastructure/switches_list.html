@@ -4,13 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-{% set cols = [
-    {'name': 'id', 'title': '#'},
-    {'name': 'name', 'title': 'Name', 'formatter': 'table.linkFormatter'},
-    {'name': 'ip', 'title': 'Management IP'}
-]%}
 
 {% block content %}
-    {{ tbl.item_table("switches", url_for(".switches_json"), cols) }}
+    {{ switch_table.render("switches") }}
 {% endblock %}

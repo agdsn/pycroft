@@ -4,16 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-
-{% set cols = [
-    {'name': 'id', 'title': '#'},
-    {'name': 'name', 'title': 'Name'},
-    {'name': 'vid', 'title': 'VID'}
-] %}
 
 {% block content %}
-    {{ tbl.item_table(
-        'vlans', url_for('infrastructure.vlans_json'), cols
-    ) }}
+    {{ vlan_table.render("vlans") }}
 {% endblock %}
