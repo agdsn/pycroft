@@ -5,6 +5,7 @@ class SubnetTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             Column('id', '#'),
+            Column('description', 'Beschreibung'),
             Column('address', 'IP'),
             Column('gateway', 'Gateway'),
         ], **kw)

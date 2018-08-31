@@ -41,6 +41,7 @@ def subnets_json():
     subnets_list = Subnet.q.all()
     return jsonify(items=[{
             'id': subnet.id,
+            'description': subnet.description,
             'address': str(subnet.address),
             'gateway': str(subnet.gateway),
         } for subnet in subnets_list])
