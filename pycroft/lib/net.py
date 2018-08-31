@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from itertools import islice
 from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
+import sys
 
 
 class SubnetFullException(Exception):
@@ -15,9 +16,14 @@ class MacExistsException(Exception):
 
 def get_free_ip(subnets):
     for subnet in subnets:
-        reserved = subnet.reserved_addresses or 0
+        reserved_bottom = subnet.reserved_addresses_bottom or 0
+        reserved_top = subnet.reserved_addresses_top or 0
         used_ips = frozenset(ip.address for ip in subnet.ips)
-        unreserved = islice(subnet.address.iterhosts(), reserved, None)
+        unreserved = islice(
+            subnet.address.iterhosts(), reserved_bottom,
+            # Stop argument must be None or an integer: 0 <= x <= sys.maxsize.
+            # IPv6 subnets can exceed this boundary on 32 bit python builds.
+            min(subnet.address.numhosts - reserved_top - 2, sys.maxsize))
         unused = (ip for ip in unreserved if ip not in used_ips)
         try:
             return next(unused), subnet

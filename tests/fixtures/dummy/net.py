@@ -19,18 +19,21 @@ class SubnetData(DataSet):
     class user_ipv4:
         address = IPv4Network("192.168.0.0/24")
         gateway = IPv4Address("192.168.0.1")
-        reserved_addresses = 10
+        reserved_addresses_bottom = 10
+        reserved_addresses_top = 2
         vlan = VLANData.vlan_dummy1
 
     class user_ipv6:
         address = IPv6Network("2001:db8:0::/48")
         gateway = IPv6Address("2001:db8:0::1")
-        reserved_addresses = 10
+        reserved_addresses_bottom = 10
+        reserved_addresses_top = 2
         vlan = VLANData.vlan_dummy1
 
     class dummy_subnet2:
         address = IPv4Network("192.168.1.0/24")
-        reserved_addresses = 10
+        reserved_addresses_bottom = 10
+        reserved_addresses_top = 2
         vlan = VLANData.vlan_dummy2
 
     class dummy_subnet3(dummy_subnet2):

@@ -57,7 +57,8 @@ class Test_020_IpHelper(FixtureDataTestBase):
 
     def calculate_usable_ips(self, net):
         ips = ipaddr.IPNetwork(net.address).numhosts
-        return ips - net.reserved_addresses - 2
+        reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
+        return ips - reserved - 2
 
     def test_0010_get_free_ip_simple(self):
         subnets = Subnet.q.all()

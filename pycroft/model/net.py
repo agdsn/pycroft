@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import (
-    CheckConstraint, Column, Integer, ForeignKey, String, between, event)
+    CheckConstraint, Column, Integer, ForeignKey, String, between, event, sql)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import AddConstraint
 from pycroft.model.base import IntegerIdModel
@@ -24,7 +24,10 @@ class VLAN(IntegerIdModel):
 class Subnet(IntegerIdModel):
     address = Column(IPNetwork, nullable=False)
     gateway = Column(IPAddress)
-    reserved_addresses = Column(Integer, default=0, nullable=True)
+    reserved_addresses_bottom = Column(Integer, server_default=sql.text('0'),
+                                       nullable=False)
+    reserved_addresses_top = Column(Integer, server_default=sql.text('0'),
+                                    nullable=False)
     description = Column(String(50))
 
     vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False, index=True)
