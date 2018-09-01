@@ -36,6 +36,32 @@ def subnets():
         subnet_table=SubnetTable(data_url=url_for(".subnets_json")))
 
 
+def format_address_range(base_address, amount):
+    if amount == 0:
+        raise ValueError
+    elif abs(amount) == 1:
+        return str(base_address)
+    elif amount > 1:
+        return '{} - {}'.format(str(base_address),
+                                str(base_address + amount - 1))
+    else:
+        return '{} - {}'.format(str(base_address + amount + 1),
+                                str(base_address))
+
+
+def format_reserved_addresses(subnet):
+    reserved = []
+    if subnet.reserved_addresses_bottom:
+        reserved.append(
+            format_address_range(subnet.address.network + 1,
+                                 subnet.reserved_addresses_bottom))
+    if subnet.reserved_addresses_top:
+        reserved.append(
+            format_address_range(subnet.address.broadcast - 1,
+                                 -subnet.reserved_addresses_top))
+    return reserved
+
+
 @bp.route('/subnets/json')
 def subnets_json():
     subnets_list = Subnet.q.all()
@@ -44,6 +70,7 @@ def subnets_json():
             'description': subnet.description,
             'address': str(subnet.address),
             'gateway': str(subnet.gateway),
+            'reserved': format_reserved_addresses(subnet),
         } for subnet in subnets_list])
 
 

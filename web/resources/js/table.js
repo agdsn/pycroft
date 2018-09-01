@@ -128,19 +128,9 @@ export function listFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    var ret = '<ul>';
+    var ret = '<ul style="margin:0;">';
     for (var i = 0; i < value.length; i++) {
-        if (value[i].length === 0) {
-            // If no list: put out the content
-            ret += '<li>' + value[i] + '</li>';
-        } else {
-            // Else: Make first element strong
-            ret += '<li><strong>' + value[i][0] + ': </strong>';
-            for (var j = 1; j < value[i].length; j++) {
-                ret += '<span>' + value[i][j] + '</span>';
-            }
-            ret += '</span></li>';
-        }
+        ret += '<li>' + value[i] + '</li>';
     }
     ret += '</ul>';
     return ret;

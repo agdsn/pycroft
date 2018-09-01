@@ -8,6 +8,8 @@ class SubnetTable(BootstrapTable):
             Column('description', 'Beschreibung'),
             Column('address', 'IP'),
             Column('gateway', 'Gateway'),
+            Column('reserved', 'Reservierte Adressen',
+                   formatter='table.listFormatter'),
         ], **kw)
 
 
