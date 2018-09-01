@@ -91,7 +91,8 @@ def generate_user_data(user):
 
     finance_history = [{
         'valid_on': split.transaction.posted_at,
-        'amount': split.amount,
+        # Invert amount, to display it from the user's point of view
+        'amount': -split.amount,
         'description': split.transaction.description
     } for split in build_transactions_query(user.account)]
     last_finance_update = finance_history[-1]['valid_on'] if finance_history \
