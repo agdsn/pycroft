@@ -32,7 +32,10 @@ class Room(IntegerIdModel):
     inhabitable = Column(Boolean, nullable=False)
 
     # many to one from Room to Building
-    building_id = Column(Integer, ForeignKey(Building.id), nullable=False, index=True)
+    building_id = Column(
+        Integer, ForeignKey(Building.id, onupdate='CASCADE'), nullable=False,
+        index=True,
+    )
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
     patch_ports = relationship('PatchPort')
