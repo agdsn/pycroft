@@ -5,17 +5,18 @@ from flask import jsonify, request, current_app
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from ipaddr import IPAddress
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
 from pycroft.lib.finance import build_transactions_query
+from pycroft.lib.host import change_mac
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history
 from pycroft.model import session
 from pycroft.model.host import IP, Interface
-from pycroft.model.types import IPAddress
+from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError
 
 api = Api()
@@ -112,7 +113,8 @@ def generate_user_data(user):
         },
         room=str(user.room),
         interfaces=[
-            {'mac': str(i.mac), 'ips': [str(ip.address) for ip in i.ips]}
+            {'id': i.id, 'mac': str(i.mac),
+             'ips': [str(ip.address) for ip in i.ips]}
             for h in user.hosts for i in h.interfaces
         ],
         mail=user.email,
@@ -240,21 +242,27 @@ api.add_resource(UserByIPResource, '/user/from-ip')
 
 class UserInterfaceResource(Resource):
     def post(self, user_id, interface_id):
-        user = get_user_or_404(user_id)
-        interface = get_interface_or_404(interface_id)
-        if interface.host.owner != user:
-            abort(404, msg="User {} does not have a host with interface {}"
-                  .format(user_id, interface_id))
         parser = reqparse.RequestParser()
+        parser.add_argument('password', dest='password', required=True)
         parser.add_argument('mac', dest='mac', required=True)
         args = parser.parse_args()
 
-        interface.mac = args.mac
-        session.session.add(interface)
+        user = get_authenticated_user(user_id, args.password)
+        interface = get_interface_or_404(interface_id)
+        if interface.host.owner != user:
+            abort(404, message="User {} does not have a host with interface {}"
+                  .format(user_id, interface_id))
+
         try:
+            change_mac(interface, args.mac, user)
+            session.session.add(interface)
             session.session.commit()
-            # TODO: check what can go wrong if e.g. bad mac is supplied
-            # or unique constraint is violated
-        except OperationalError:
-            session.session.rollback()
-            raise
+        except InvalidMACAddressException:
+            abort(400, message='Invalid mac address.')
+        except IntegrityError:
+            abort(400, message='Mac address is already in use.')
+        return "Mac address has been changed."
+
+
+api.add_resource(UserInterfaceResource,
+                 '/user/<int:user_id>/change-mac/<int:interface_id>')
