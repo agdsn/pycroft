@@ -11,7 +11,7 @@ from pycroft.model.user import TrafficGroup
 
 
 class Site(IntegerIdModel):
-    name = Column(String(255), nullable=False)
+    name = Column(String(), nullable=False)
 
 
 class Building(IntegerIdModel):
