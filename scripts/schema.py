@@ -1,4 +1,5 @@
 from alembic.config import Config
+from alembic.operations.base import Operations
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from pkg_resources import resource_filename
@@ -35,7 +36,9 @@ class AlembicHelper:
         # early binding of the upgrade function (i.e., in self.ctx) is not possible because it is
         # bound to the target revision.
         upgrade_bound_ctx = self._new_context(opts={'fn': upgrade})
-        upgrade_bound_ctx.run_migrations(**kwargs)
+        # Configure alembic.op to use our upgrade context
+        with Operations.context(upgrade_bound_ctx):
+            upgrade_bound_ctx.run_migrations(**kwargs)
 
 
 def db_has_nontrivial_objects(connection):
