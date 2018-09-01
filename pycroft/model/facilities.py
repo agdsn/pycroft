@@ -17,9 +17,9 @@ class Site(IntegerIdModel):
 class Building(IntegerIdModel):
     site_id = Column(Integer, ForeignKey(Site.id), nullable=False, index=True)
     site = relationship(Site, backref=backref("buildings"))
-    number = Column(String(3), nullable=False)
-    short_name = Column(String(8), unique=True, nullable=False)
-    street = Column(String(40), nullable=False)
+    number = Column(String(), nullable=False)
+    short_name = Column(String(), unique=True, nullable=False)
+    street = Column(String(), nullable=False)
     default_traffic_group_id = Column(Integer, ForeignKey(TrafficGroup.id), index=True)
     default_traffic_group = relationship(TrafficGroup)
 
@@ -27,7 +27,7 @@ class Building(IntegerIdModel):
 
 
 class Room(IntegerIdModel):
-    number = Column(String(36), nullable=False)
+    number = Column(String(), nullable=False)
     level = Column(Integer, nullable=False)
     inhabitable = Column(Boolean, nullable=False)
 
