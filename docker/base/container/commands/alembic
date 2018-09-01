@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Runs alembic in pycroft model directory.
+	Optional arguments are passed to the interpreter."
+)
+
+run() {
+	cd /opt/pycroft/app/pycroft/model
+	exec /opt/pycroft/venv/bin/alembic "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
