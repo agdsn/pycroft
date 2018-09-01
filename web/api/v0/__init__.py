@@ -152,7 +152,7 @@ class ChangeEmailResource(Resource):
             edit_email(user, args.new_email, user)
             session.session.commit()
         except IllegalEmailError as e:
-            abort(400, 'Invalid email address.')
+            abort(400, message='Invalid email address.')
         return "Email has been changed."
 
 
@@ -221,7 +221,7 @@ class AuthenticationResource(Resource):
         user = User.verify_and_get(login=args.login,
                                    plaintext_password=args.password)
         if user is None:
-            abort(401, msg="Authentication failed")
+            abort(401, message="Authentication failed")
         return {'id': user.id}
 
 
@@ -233,7 +233,7 @@ class UserByIPResource(Resource):
         ipv4 = request.args.get('ip', IPAddress)
         ip = IP.q.filter_by(address=ipv4).one()
         if ip is None:
-            abort(404, msg="IP {} is not related to a user".format(ipv4))
+            abort(404, message="IP {} is not related to a user".format(ipv4))
         return generate_user_data(ip.interface.host.owner)
 
 
