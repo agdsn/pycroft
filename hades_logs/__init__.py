@@ -71,7 +71,7 @@ class HadesLogs:
             app_name = app.config['HADES_CELERY_APP_NAME']
             broker_uri = app.config['HADES_BROKER_URI']
             backend_uri = app.config['HADES_RESULT_BACKEND_URI']
-            routing_key = app.config.get('HADES_ROUTING_KEY')
+            routing_key = app.config.get('HADES_ROUTING_KEY','hades-ng')
         except KeyError as e:
             self.logger.warning("Missing config key: %s\n%s", e, _CONFIGURATION_DOCS)
             raise KeyError("Missing config key: {}".format(e)) from e

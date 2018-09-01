@@ -16,7 +16,7 @@ class HadesCelery(Celery):
     def __init__(self, *a, routing_key=None, **kw):
         super().__init__(*a, **kw)
         self.routing_key = routing_key
-        self.conf['CELERY_DEFAULT_EXCHANGE'] = 'hades.unicast'
+        self.conf['CELERY_DEFAULT_EXCHANGE'] = 'hades.agent.rpc'
         self.conf['CELERY_DEFAULT_EXCHANGE_TYPE'] = 'topic'
         self.conf['CELERY_CREATE_MISSING_QUEUES'] = True
         self.conf['CELERY_TASK_SERIALIZER'] = 'json'
