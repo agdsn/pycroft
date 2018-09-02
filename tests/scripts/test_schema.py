@@ -91,7 +91,8 @@ class TestUpgrade(SQLAlchemyTestCase):
         config file for that, so this is the more pragmatic approach.
         """
         try:
-            out = subprocess.check_output(["alembic", "revision", "-m", msg])
+            out = subprocess.check_output(["alembic", "revision", "-m", msg],
+                                          cwd="pycroft/model")
         except subprocess.CalledProcessError:
             self.fail("`alembic revision` returned a nonzero exit code.", )
 
