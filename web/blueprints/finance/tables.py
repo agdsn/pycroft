@@ -124,9 +124,9 @@ class MembershipFeeTable(BootstrapTable):
             Column(name='payment_deadline_final', title='Endgültige Frist'),
             Column(name='begins_on', title='Beginn'),
             Column(name='ends_on', title='Ende'),
-            Column(name='finance_link', title='Finanzen', formatter='btnFormatter'),
-            Column(name='book_link', title='Buchen', formatter='btnFormatter'),
-            Column(name='edit_link', title='Bearbeiten', formatter='btnFormatter'),
+            Column(name='finance_link', title='Finanzen', formatter='table.btnFormatter'),
+            Column(name='book_link', title='Buchen', formatter='table.btnFormatter'),
+            Column(name='edit_link', title='Bearbeiten', formatter='table.btnFormatter'),
         ], **kw)
 
     def generate_toolbar(self):
@@ -145,10 +145,10 @@ class UsersDueTable(BootstrapTable):
     """A table for displaying the users that """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='user', title='Nutzer-ID', formatter='linkFormatter'),
+            Column(name='user', title='Nutzer-ID', formatter='table.linkFormatter'),
             Column(name='valid_on', title='Gültig am'),
             Column(name='description', title='Beschreibung'),
-            Column(name='amount', title='Betrag', formatter='coloredFormatter'),
+            Column(name='amount', title='Betrag', formatter='table.coloredFormatter'),
         ], **kw)
 
     def generate_toolbar(self):
