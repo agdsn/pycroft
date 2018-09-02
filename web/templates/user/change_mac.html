@@ -15,6 +15,6 @@
 
 {% block page_script %}
     <script type="text/javascript">
-        inputMacMask($('#mac'));
+        {{ resources.link_script_file('mac-address-input.js' | require) }}
     </script>
 {% endblock %}

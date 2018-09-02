@@ -22,6 +22,7 @@ export default {
         'advanced-search': './js/advanced-search.js',
         'balance-chart': './js/balance-chart.js',
         'lazy-load-select': './js/lazy-load-select.js',
+        'mac-address-input': './js/mac-address-input.js',
         'main': './main.js',
         'navigation': './js/navigation.js',
         'tooltip': './js/tooltip.js',

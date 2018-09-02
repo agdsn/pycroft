@@ -10,7 +10,6 @@ from flask_wtf import FlaskForm as Form
 from wtforms.validators import (
     Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
 
-from pycroft.helpers.net import mac_regex
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query
@@ -18,9 +17,9 @@ from web.blueprints.properties.forms import traffic_group_query, \
     property_group_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField
-from web.form.fields.custom import LazyLoadSelectField
+from web.form.fields.custom import LazyLoadSelectField, MacField
 from web.form.fields.filters import empty_to_none
-from web.form.fields.validators import OptionalIf
+from web.form.fields.validators import OptionalIf, MacAddress
 
 
 def user_query():
@@ -44,7 +43,7 @@ class UserSearchForm(Form):
     id = TextField(u"Nutzer-ID")
     name = TextField(u"Name")
     login = TextField(u"Unix-Login")
-    mac = TextField(u"MAC-Adresse")
+    mac = MacField(u"MAC-Adresse")
     ip_address = TextField(u"IP-Adresse")
     traffic_group_id = QuerySelectField(u"Trafficgruppe",
                                 get_label='name',
@@ -106,8 +105,8 @@ class UserCreateForm(UserMoveForm):
         validate_unique_login])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
-    mac = TextField(u"MAC", [OptionalIf('room_number', invert=True),
-                             Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+    mac = MacField(u"MAC", [OptionalIf('room_number', invert=True),
+                            MacAddress(message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(message=u"Geburtsdatum wird benötigt!")])
     property_group = QuerySelectField(u"Gruppe",
@@ -119,8 +118,7 @@ class UserCreateForm(UserMoveForm):
 
 
 class UserMoveInForm(UserMoveForm):
-    mac = TextField(u"MAC", [
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(
                               message=u"Geburtsdatum wird benötigt!")])
@@ -164,8 +162,7 @@ class UserMoveOutForm(Form):
 
 
 class InterfaceChangeMacForm(Form):
-    mac = TextField(u"MAC", [
-        Regexp(regex=mac_regex, message=u"MAC ist ungültig!")])
+    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
 
 
 class UserSelectGroupForm(Form):

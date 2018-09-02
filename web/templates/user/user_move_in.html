@@ -16,5 +16,5 @@
 
 {% block page_script %}
     {{ resources.link_script_file('lazy-load-select.js' | require) }}
-    inputMacMask($('#mac'));
+    {{ resources.link_script_file('mac-address-input.js' | require) }}
 {% endblock %}

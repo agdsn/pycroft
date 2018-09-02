@@ -136,24 +136,3 @@ export function pycroftIntervalPicker(IntervalField) {
     $('#' + IntervalField + 'PickerI').val(data[8]);
     $('#' + IntervalField + 'PickerS').val(data[10]);
 }
-
-/**
- *  MAC-Mask
- *
- *  Adds format mask for MAC addresses on input fields.
- */
-
-export function inputMacMask(selector) {
-    selector.on("keyup", function (e) {
-        var r = /([a-f0-9]{2})([a-f0-9]{2})/i,
-            str = e.target.value.replace(/[^a-f0-9]/ig, "");
-
-        while (r.test(str)) {
-            str = str.replace(r, '$1' + ':' + '$2');
-        }
-
-        e.target.value = str.slice(0, 17).toLowerCase();
-    });
-
-    selector.trigger('keyup');
-}

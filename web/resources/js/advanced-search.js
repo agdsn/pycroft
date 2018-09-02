@@ -6,13 +6,10 @@
 
 import $ from 'jquery';
 import _ from 'underscore';
-import {inputMacMask} from "./form";
 
 $(function() {
     const $form = $('.form-basic');
     const $results = $('#results');
-
-    inputMacMask($('#mac'));
 
     function refreshTable() {
         const params = {};

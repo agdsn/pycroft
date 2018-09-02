@@ -138,3 +138,16 @@ class IntervalField(core.StringField):
 
         if all(val == 0 for val in decoded_values):
             raise ValidationError("Intervalle müssen nichtleer und >0s sein.")
+
+
+class MacField(core.StringField):
+    """A MacField """
+
+    def __init__(self, *args, **kwargs):
+        super(MacField, self).__init__(*args, **kwargs)
+
+    def __call__(self, **kwargs):
+        return super(MacField, self).__call__(
+            data_role='mac-address-input',
+            **kwargs
+        )
