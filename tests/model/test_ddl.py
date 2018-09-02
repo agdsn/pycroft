@@ -26,11 +26,20 @@ class LiteralInterval(postgresql_base.INTERVAL):
         return process
 
 
+class LiteralDate(postgresql_base.DATE):
+    def literal_processor(self, dialect):
+        def process(value):
+            return "date '{}'".format(value.isoformat())
+
+        return process
+
+
 class Literal_PGDialect_pygresql(postgresql.dialect):
     colspecs = util.update_copy(
         postgresql.dialect.colspecs,
         {
-            sqltypes.Interval: LiteralInterval
+            sqltypes.Interval: LiteralInterval,
+            sqltypes.Date: LiteralDate,
         }
     )
 
