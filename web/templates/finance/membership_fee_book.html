@@ -2,13 +2,6 @@
 {% import "macros/forms.html" as forms %}
 {% import "macros/table.html" as tbl %}
 
-{% set cols = [
-    {'name': 'user', 'title': 'Nutzer-ID', 'formatter': 'table.linkFormatter'},
-    {'name': 'valid_on', 'title': 'Gültig am'},
-    {'name': 'description', 'title': 'Beschreibung'},
-    {'name': 'amount', 'title': 'Betrag', 'formatter':'table.coloredFormatter'},
-] %}
-
 {% block content %}
     {{ table.render('book_fees') }}
 
