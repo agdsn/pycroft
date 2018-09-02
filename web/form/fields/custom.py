@@ -1,11 +1,11 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from web.form.fields import core
 from web.form.widgets import LazyLoadSelectWidget,\
     BootstrapFormControlDecorator, BootstrapStandardDecorator, \
     BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
     decorators, decorate_field, Disabler
-from wtforms import TextField, StringField
 from wtforms import fields
 from wtforms.validators import ValidationError
 
@@ -78,18 +78,11 @@ class LazyLoadSelectField(fields.SelectField):
         pass
 
 
-class TypeaheadField(StringField):
+class TypeaheadField(core.StringField):
     """A Twitter typeahead.js field."""
 
-    widget = decorate_field(
-        StringField,
-        BootstrapFormControlDecorator,
-        BootstrapStandardDecorator,
-        BootstrapFormGroupDecorator
-    )
 
-
-class ReadonlyTextField(TextField):
+class ReadonlyTextField(fields.StringField):
     def __call__(self, **kwargs):
         return self.widget(self, disabled=True)
 
@@ -106,15 +99,8 @@ def rebuild_string(values, units):
     return ' '.join("{} {}".format(v, u) for v, u in zip(values, units))
 
 
-class IntervalField(TextField):
+class IntervalField(core.StringField):
     """A IntervalField """
-
-    widget = decorate_field(
-        StringField,
-        BootstrapFormControlDecorator,
-        BootstrapStandardDecorator,
-        BootstrapFormGroupDecorator
-    )
 
     def __init__(self, *args, **kwargs):
         super(IntervalField, self).__init__(*args, **kwargs)
