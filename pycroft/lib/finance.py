@@ -176,7 +176,8 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 @with_transaction
-def post_transactions_for_membership_fee(membership_fee, processor):
+def post_transactions_for_membership_fee(membership_fee, processor,
+                                         simulate=False):
     """
     Posts transactions (and splits) for users where the specified membership fee
     was not posted yet.
@@ -187,6 +188,7 @@ def post_transactions_for_membership_fee(membership_fee, processor):
 
     :param membership_fee: The membership fee which should be posted
     :param processor:
+    :param simulate: Do not post any transactions, just return the affected users.
     :return: A list of name of all affected users
     """
 
@@ -217,40 +219,41 @@ def post_transactions_for_membership_fee(membership_fee, processor):
             .distinct()
             .cte('membership_fee_users'))
 
-    numbered_users = (select([users.c.user_id, users.c.account_id, func.row_number().over().label('index')])
-                      .select_from(users)
-                      .cte("membership_fee_numbered_users"))
-
-    transactions = (Transaction.__table__.insert()
-         .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
-                      select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on)]).select_from(users))
-         .returning(Transaction.id)
-         .cte('membership_fee_transactions'))
-
-    numbered_transactions = (select([transactions.c.id, func.row_number().over().label('index')])
-         .select_from(transactions)
-         .cte('membership_fee_numbered_transactions'))
-
-    split_insert_fee_account = (Split.__table__.insert()
-        .from_select([Split.amount, Split.account_id, Split.transaction_id],
-                     select([literal(-membership_fee.regular_fee, type_=Money), literal(config.membership_fee_account_id),transactions.c.id])
-                     .select_from(transactions))
-        .returning(Split.id)
-        .cte('membership_fee_split_fee_account'))
-
-    split_insert_user = (Split.__table__.insert().from_select(
-        [Split.amount, Split.account_id, Split.transaction_id],
-        select([literal(membership_fee.regular_fee, type_=Money), numbered_users.c.account_id, numbered_transactions.c.id])
-        .select_from(numbered_users.join(numbered_transactions,
-                    numbered_transactions.c.index == numbered_users.c.index)))
-        .returning(Split.id)
-        .cte('membership_fee_split_user'))
-
     affected_users_raw = session.session.execute(select([users.c.user_id, users.c.user_name])).fetchall()
 
-    # TODO: Unite the following two queries into one (the membership_fee_users is called twice currently.
-    session.session.execute(select([]).select_from(split_insert_fee_account
-                                       .join(split_insert_user, split_insert_user.c.id == split_insert_fee_account.c.id)))
+    if not simulate:
+        numbered_users = (select([users.c.user_id, users.c.account_id, func.row_number().over().label('index')])
+                          .select_from(users)
+                          .cte("membership_fee_numbered_users"))
+
+        transactions = (Transaction.__table__.insert()
+             .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
+                          select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on)]).select_from(users))
+             .returning(Transaction.id)
+             .cte('membership_fee_transactions'))
+
+        numbered_transactions = (select([transactions.c.id, func.row_number().over().label('index')])
+             .select_from(transactions)
+             .cte('membership_fee_numbered_transactions'))
+
+        split_insert_fee_account = (Split.__table__.insert()
+            .from_select([Split.amount, Split.account_id, Split.transaction_id],
+                         select([literal(-membership_fee.regular_fee, type_=Money), literal(config.membership_fee_account_id),transactions.c.id])
+                         .select_from(transactions))
+            .returning(Split.id)
+            .cte('membership_fee_split_fee_account'))
+
+        split_insert_user = (Split.__table__.insert().from_select(
+            [Split.amount, Split.account_id, Split.transaction_id],
+            select([literal(membership_fee.regular_fee, type_=Money), numbered_users.c.account_id, numbered_transactions.c.id])
+            .select_from(numbered_users.join(numbered_transactions,
+                        numbered_transactions.c.index == numbered_users.c.index)))
+            .returning(Split.id)
+            .cte('membership_fee_split_user'))
+
+        # TODO: Unite the following two queries into one (the membership_fee_users is called twice currently.
+        session.session.execute(select([]).select_from(split_insert_fee_account
+                                           .join(split_insert_user, split_insert_user.c.id == split_insert_fee_account.c.id)))
 
     affected_users = []
 

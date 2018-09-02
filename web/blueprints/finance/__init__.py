@@ -555,16 +555,18 @@ def membership_fee_users_due_json(fee_id):
         abort(404)
 
     affected_users = post_transactions_for_membership_fee(
-        fee, current_user)
+        fee, current_user, simulate=True)
 
-    session.rollback()
+    fee_amount = {'value': str(fee.regular_fee) + '€',
+                  'is_positive': (fee.regular_fee < 0)}
+    fee_description = localized(
+        finance.membership_fee_description.format(fee_name=fee.name).to_json())
 
     return jsonify(items=[{
         'user': {'title': str(user['name']),
                  'href': url_for("user.user_show", user_id=user['id'])},
-        'amount': {'value': str(fee.regular_fee) + '€', 'is_positive': (fee.regular_fee < 0)},
-        'description': localized(finance.membership_fee_description
-                                 .format(fee_name=fee.name).to_json()),
+        'amount': fee_amount,
+        'description': fee_description,
         'valid_on': fee.ends_on
     } for user in affected_users])
 
