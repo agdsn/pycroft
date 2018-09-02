@@ -19,6 +19,8 @@ from pycroft.model.types import (
 
 
 class Host(IntegerIdModel):
+    name = Column(String, nullable=True)
+
     # many to one from Host to User
     owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                       nullable=True, index=True)
