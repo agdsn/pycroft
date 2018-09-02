@@ -77,4 +77,6 @@
     </div>
 </div>
 
-{% do page_resources.link_script('traffic-graph.js' | require) %}
+{% block page_script %}
+    {{ resources.link_script_file('traffic-graph.js' | require) }}
+{% endblock %}
