@@ -15,6 +15,12 @@ env:
     - DOCKER_COMPOSE="docker-compose -f docker-compose.test.yml"
 
 before_install:
+  # upgrade to latest docker version to avoid "Forbidden path outside the build context: ../Dockerfile" error
+  # TODO: Remove when travis comes with a adequate default version
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - sudo apt-get update
+  - sudo apt-get -y install docker-ce
   # list docker-engine versions
   - apt-cache madison docker-engine
   - "docker version"
