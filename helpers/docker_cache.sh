@@ -34,7 +34,7 @@ load_cache() {  # cache_file
 
 save_cache() {  # cache_file
     if [[ -z $DOCKER_IMAGE_NAME ]]; then
-        local image=pycroft
+        local image=agdsn/pycroft-base
     else
         local image=$DOCKER_IMAGE_NAME
     fi
