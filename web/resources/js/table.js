@@ -48,6 +48,7 @@ export function coloredFormatter(value, row, index) {
 
     return `${value['value']}<span class="table-stripe-right ${class_name}"></span>`;
 }
+coloredFormatter.attributes = { sortName: 'value' };
 
 /**
  * This function makes the td `relative`.  It can be applied to a col
@@ -67,6 +68,7 @@ export function linkFormatter(value, row, index) {
     }
     return linkTemplate({'href': value['href'], 'title': value['title']});
 }
+linkFormatter.attributes = { sortName: 'title' };
 
 export function userFormatter(value, row, index) {
     /* Format an entry as a link or plain, depending on the value of
@@ -83,6 +85,7 @@ export function userFormatter(value, row, index) {
         return "Invalid format";
     }
 }
+userFormatter.attributes = { sortName: 'title' };
 
 export function btnFormatter(value, row, index) {
     if (!value) {
@@ -156,3 +159,44 @@ $.extend($.fn.bootstrapTable.defaults, {
     search: true,
     pagination: true,
 });
+
+/**
+ * This bootstrap table extension adds the `data-sort-name` attribute to columns
+ * that are formatted by a `data-formatter`. Therefor a formatter can specify a
+ * `sortName`, which is used to derive the column's `data-sort-name` attribute.
+ */
+!function ($) {
+    var BootstrapTable = $.fn.bootstrapTable.Constructor,
+        _initTable = BootstrapTable.prototype.initTable;
+
+    BootstrapTable.prototype.initTable = function () {
+        // Init sort name
+        this.initSortName();
+
+        // Init Body
+        _initTable.apply(this, Array.prototype.slice.apply(arguments));
+    };
+
+    // Init sort name
+    BootstrapTable.prototype.initSortName = function () {
+        var header = this.$el.find('>thead');
+        header.find('th').each(function () {
+            var column = this;
+            // Column already has a sort name
+            if (column.hasAttribute("data-sort-name") || !column.hasAttribute('data-field'))
+                return;
+
+            // Lookup sort name in formatter attributes
+            if (column.hasAttribute('data-formatter')) {
+                var formatter = column.getAttribute('data-formatter');
+                var attributes = $.fn.bootstrapTable.utils.calculateObjectValue(
+                    column, formatter + '.attributes', [], null);
+
+                if (attributes !== null && attributes.hasOwnProperty('sortName')) {
+                    var sortName = column.getAttribute('data-field') + "." + attributes.sortName;
+                    column.setAttribute('data-sort-name', sortName);
+                }
+            }
+        });
+    };
+}($);
