@@ -12,7 +12,7 @@ services:
 env:
   global:
     - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.gz
-    - DOCKER_COMPOSE="docker-compose -f compose/travis/docker-compose.yml"
+    - DOCKER_COMPOSE="docker-compose -f docker-compose.test.yml"
 
 before_install:
   # list docker-engine versions
@@ -32,7 +32,8 @@ before_script:
   - $DOCKER_COMPOSE up -d
 
 script:
-  - $DOCKER_COMPOSE run --rm web nosetests -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy
+  - $DOCKER_COMPOSE run --rm test-app webpack --mode production
+  - $DOCKER_COMPOSE run --rm test-app test -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy
 
 after_success:
   - sudo ./helpers/registry.sh all
