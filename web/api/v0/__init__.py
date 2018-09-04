@@ -91,7 +91,7 @@ def generate_user_data(user):
                                           interval, step)
 
     finance_history = [{
-        'valid_on': split.transaction.posted_at,
+        'valid_on': split.transaction.valid_on,
         # Invert amount, to display it from the user's point of view
         'amount': -split.amount,
         'description': split.transaction.description
