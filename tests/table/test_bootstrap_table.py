@@ -79,12 +79,6 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         self.assertEqual(self.table.table_args.get('data-cache'), "true")
         self.assertEqual(self.table.table_args.get('foo'), "bar")
 
-    def test_default_args_get_set(self):
-        # just take these two entries to conceptually check whether
-        # any default args have been set
-        self.assertEqual(self.table.table_args.get('class'), "table table-striped")
-        self.assertEqual(self.table.table_args.get('data-pagination'), "true")
-
     def test_render_uses_the_generators_correctly(self):
         class MockedTable(BootstrapTable):
             def __init__(self):
