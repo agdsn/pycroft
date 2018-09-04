@@ -255,10 +255,11 @@ class User(IntegerIdModel, UserMixin):
 
     @hybrid_method
     def member_of(self, group, when=None):
-        return group in self.active_property_groups(when)
+        return group in self.active_property_groups(when) or group in self.active_traffic_groups(when)
 
     @member_of.expression
     def member_of(cls, group, when=None):
+        # TODO: Add check for TrafficGroup
         return exists(
             select([null()]).select_from(
                 PropertyGroup.__table__.join(
