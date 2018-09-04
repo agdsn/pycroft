@@ -111,9 +111,6 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 
     level_l0 = "{:02d}".format(level)
 
-    #TODO depending on, whether a user is living in the room, the room is
-    # a link to the user. If there is more then one user, the room is
-    # duplicated
     return render_template(
         'facilities/rooms.html',
         level=level_l0,
