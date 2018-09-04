@@ -33,6 +33,7 @@ import Bloodhound from 'typeahead.js/dist/bloodhound';
             url: $SCRIPT_ROOT + '/finance/json/accounts/user-search?query=%QUERY',
             ttl: 60,
             transform: response => response.accounts,
+            wildcard: '%QUERY'
         },
     });
 
