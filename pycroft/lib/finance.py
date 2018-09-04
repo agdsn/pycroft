@@ -629,7 +629,7 @@ def process_transactions(bank_account, statement):
             transaction.data['applicant_name'] is not None else ''
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
-            amount=int(transaction.data['amount'].amount * 100),
+            amount=transaction.data['amount'].amount,
             reference=transaction.data['purpose'],
             original_reference=transaction.data['purpose'],
             other_account_number=iban,
