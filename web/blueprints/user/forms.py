@@ -14,9 +14,10 @@ from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query
 from web.blueprints.properties.forms import traffic_group_query, \
-    property_group_query
+    property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
-    QuerySelectField, DateField, SelectField, FormField
+    QuerySelectField, DateField, SelectField, FormField, \
+    QuerySelectMultipleField
 from web.form.fields.custom import LazyLoadSelectField, MacField
 from web.form.fields.filters import empty_to_none
 from web.form.fields.validators import OptionalIf, MacAddress
@@ -109,10 +110,9 @@ class UserCreateForm(UserMoveForm):
                             MacAddress(message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(message=u"Geburtsdatum wird benötigt!")])
-    property_group = QuerySelectField(u"Gruppe",
+    property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
-                                      query_factory=property_group_query)
-
+                                      query_factory=property_group_user_create_query)
     annex = BooleanField(u"Host annektieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 

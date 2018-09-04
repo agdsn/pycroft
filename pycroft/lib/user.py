@@ -158,7 +158,7 @@ def change_password(user, password):
                    message=message.to_json())
 
 
-def create_user(name, login, email, birthdate, group, processor):
+def create_user(name, login, email, birthdate, groups, processor):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -168,7 +168,7 @@ def create_user(name, login, email, birthdate, group, processor):
     :param str login: The unix login for the user
     :param str email: E-Mail address of the user
     :param Date birthdate: Date of birth
-    :param PropertyGroup: The initial group of the new user
+    :param PropertyGroup groups: The initial groups of the new user
     :param User processor: The processor
     :return:
     """
@@ -195,7 +195,8 @@ def create_user(name, login, email, birthdate, group, processor):
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
-    make_member_of(new_user, group, processor, closed(now, None))
+    for group in groups:
+        make_member_of(new_user, group, processor, closed(now, None))
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),

@@ -6,6 +6,7 @@
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import DataRequired, Regexp, NumberRange, ValidationError
 
+from pycroft import config
 from pycroft.model.user import TrafficGroup, PropertyGroup
 from web.form.fields.core import TextField, IntegerField
 from web.form.fields.custom import IntervalField
@@ -17,6 +18,14 @@ def traffic_group_query():
 
 def property_group_query():
     return PropertyGroup.q.order_by(PropertyGroup.id)
+
+
+def property_group_user_create_query():
+    return PropertyGroup.q.filter(PropertyGroup.id.in_([
+        config.member_group_id,
+        config.external_group_id,
+        config.cache_group_id
+    ])).order_by(PropertyGroup.id)
 
 
 class TrafficGroupForm(Form):
