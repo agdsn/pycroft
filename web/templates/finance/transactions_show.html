@@ -17,7 +17,7 @@
             <dt>Typ</dt>
             <dd>{{ get_transaction_type(transaction)|transaction_type }}</dd>
             <dt>Beschreibung</dt>
-            <dd>{{ transaction.description }}</dd>
+            <dd>{{ localized(transaction.description) }}</dd>
             <dt>Erstellt um</dt>
             <dd>{{ transaction.posted_at|datetime }}</dd>
             <dt>Gültig am</dt>

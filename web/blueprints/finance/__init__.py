@@ -399,7 +399,8 @@ def transactions_show(transaction_id):
     return render_template(
         'finance/transactions_show.html',
         transaction=transaction,
-        get_transaction_type=finance.get_transaction_type
+        get_transaction_type=finance.get_transaction_type,
+        localized=localized
     )
 
 
