@@ -525,7 +525,8 @@ def move_out(user, comment, processor, when, end_membership=True):
     if end_membership:
         for group in ({config.member_group, config.network_access_group, config.external_group}
                       | set(user.traffic_groups)):
-            remove_member_of(user, group, processor, closedopen(when, None))
+            if user.member_of(group):
+                remove_member_of(user, group, processor, closedopen(when, None))
 
         user.birthdate = None
 
