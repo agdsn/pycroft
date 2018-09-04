@@ -42,7 +42,8 @@ from web.blueprints.finance.forms import (
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
     HandlePaymentsInDefaultForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
-    MembershipFeeTable, UsersDueTable
+    MembershipFeeTable, UsersDueTable, BankAccountTable, \
+    BankAccountActivityTable, TransactionTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -65,7 +66,18 @@ nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
 @bp.route('/bank-accounts/list')
 @nav.navigate(u"Bankkonten")
 def bank_accounts_list():
-    return render_template('finance/bank_accounts_list.html')
+    bank_account_table = BankAccountTable(
+        data_url=url_for('.bank_accounts_list_json'),
+        create_account=privilege_check(current_user, 'finance_change'))
+
+    bank_account_activity_table = BankAccountActivityTable(
+        data_url=url_for('.bank_accounts_activities_json'))
+
+    return render_template(
+        'finance/bank_accounts_list.html',
+        bank_account_table=bank_account_table,
+        bank_account_activity_table=bank_account_activity_table,
+    )
 
 
 @bp.route('/bank-accounts/list/json')
@@ -396,11 +408,15 @@ def transactions_show(transaction_id):
 
     if transaction is None:
         abort(404)
+
     return render_template(
         'finance/transactions_show.html',
         transaction=transaction,
         get_transaction_type=finance.get_transaction_type,
-        localized=localized
+        localized=localized,
+        transaction_table=TransactionTable(
+            data_url=url_for(".transactions_show_json",
+                             transaction_id=transaction.id)),
     )
 
 

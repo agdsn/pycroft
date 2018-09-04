@@ -4,17 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-
-{% set cols = [
-    {'name': 'site', 'title': 'Site', 'formatter': 'table.linkFormatter'},
-    {'name': 'buildings', 'title': 'Buildings', 'formatter': 'table.multiBtnFormatter'}]
-    %}
 
 {% block content %}
-    {{ tbl.item_table(
-        'sites',
-        url_for('facilities.overview_json'),
-        cols
-    ) }}
+    {{ site_table.render("sites") }}
 {% endblock %}

@@ -161,3 +161,64 @@ class UsersDueTable(BootstrapTable):
         yield "<span class=\"glyphicon glyphicon-plus\"></span>"
         yield gettext("Beitrag erstellen")
         yield "</a>"
+
+
+class BankAccountTable(BootstrapTable):
+    """A table for displaying bank accounts
+
+    :param bool create_account: An optional switch adding
+        a “create bank account” button to the toolbar
+    """
+    def __init__(self, *a, create_account=False, **kw):
+        self.create_account = create_account
+        super().__init__(*a, columns=[
+            Column(name='name', title='Name'),
+            Column(name='bank', title='Bank'),
+            Column(name='ktonr', title='Kontonummer'),
+            Column(name='blz', title='Bankleitzahl'),
+            Column(name='iban', title='IBAN'),
+            Column(name='bic', title='SWIFT-BIC'),
+            Column(name='kto', title='Konto', formatter='table.btnFormatter'),
+            Column(name='change_date', title='Zuletzt aktualisiert'),
+        ], **kw)
+
+    def generate_toolbar(self):
+        """A “create bank account” button"""
+        if self.create_account:
+            args = {
+                'class': "btn btn-primary",
+                'href': url_for(".bank_accounts_create")
+            }
+            yield "<a {}>".format(html_params(**args))
+            yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+            yield gettext("Neues Bankkonto anlegen")
+            yield "</a>"
+
+
+class BankAccountActivityTable(BootstrapTable):
+    """A table for displaying bank account activities """
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column(name='bank_account', title='Bankkonto'),
+            Column(name='date', title='Datum'),
+            Column(name='amount', title='Betrag'),
+            Column(name='reference', title='Verwendung'),
+            Column(name='original_reference', title='Ursprüngliche Verwendung'),
+            Column(name='ktonr', title='Kontonummer'),
+            Column(name='blz', title='Bankleitzahl'),
+            Column(name='name', title='Name'),
+            Column(name='actions', title='Aktionen', formatter='table.multiBtnFormatter'),
+        ], table_args = {
+            'data-side-pagination': 'server',
+        }, **kw)
+
+
+class TransactionTable(BootstrapTable):
+    """A table for displaying bank account activities """
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column(name='account', title='Konto', formatter='table.linkFormatter'),
+            Column(name='amount', title='Wert'),
+        ], table_args = {
+            'data-row-style': 'table.financeRowFormatter',
+        }, **kw)

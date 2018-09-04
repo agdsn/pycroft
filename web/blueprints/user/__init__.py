@@ -57,7 +57,8 @@ from web.template_filters import datetime_filter
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry
 from .log import formatted_user_hades_logs
-from .tables import LogTableExtended, LogTableSpecific, MembershipTable, HostTable
+from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
+                     HostTable, SearchTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
@@ -812,7 +813,11 @@ def edit_birthdate(user_id):
 def search():
     form = UserSearchForm()
 
-    return render_template('user/user_search.html', form=form)
+    return render_template(
+        'user/user_search.html',
+        form=form,
+        search_table=SearchTable(data_url=url_for(".json_search"))
+    )
 
 
 @bp.route('/<int:user_id>/reset_password', methods=['GET', 'POST'])

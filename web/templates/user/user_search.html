@@ -6,14 +6,7 @@
 {% extends "layout.html" %}
 
 {% import "macros/forms.html" as forms %}
-{% import "macros/table.html" as tbl %}
 {% import "macros/resources.html" as resources %}
-
-{% set cols = [
-    {'name': 'id', 'title': 'ID'},
-    {'name': 'url', 'title': 'Name', 'formatter': 'table.linkFormatter'},
-    {'name': 'login', 'title': 'Login'},
-] %}
 
 {% block content %}
     <div class="row">
@@ -23,7 +16,7 @@
     </div>
     <section>
         <h2>Ergebnisse</h2>
-        {{ tbl.item_table("results", url_for(".json_search"), cols) }}
+        {{ search_table.render("results") }}
     </section>
 {% endblock %}
 

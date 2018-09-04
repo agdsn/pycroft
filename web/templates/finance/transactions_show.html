@@ -4,12 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
 {% set page_title = "Buchung anzeigen" %}
-{% set cols = [
-    {'name': 'account', 'title': 'Konto', 'formatter': 'table.linkFormatter'},
-    {'name': 'amount', 'title': 'Wert'}
-] %}
 
 {% block content %}
     <section>
@@ -40,13 +35,7 @@
             {% endif %}
         </dl>
     </section>
-    <section id="tbl_transactions">
-        {{ tbl.item_table(
-            'transactions',
-            url_for(".transactions_show_json", transaction_id=transaction.id),
-            cols,
-            [],
-            'table.financeRowFormatter'
-        ) }}
+    <section>
+        {{ transaction_table.render('transactions') }}
     </section>
 {% endblock %}

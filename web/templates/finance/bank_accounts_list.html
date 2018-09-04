@@ -4,53 +4,15 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import 'macros/table.html' as tbl %}
-
-{% set bank_accounts_columns = [
-    {'name': 'name', 'title': 'Name'},
-    {'name': 'bank', 'title': 'Bank'},
-    {'name': 'ktonr', 'title': 'Kontonummer'},
-    {'name': 'blz', 'title': 'Bankleitzahl'},
-    {'name': 'iban', 'title': 'IBAN'},
-    {'name': 'bic', 'title': 'SWIFT-BIC'},
-    {'name': 'kto', 'title': 'Konto', 'formatter': 'table.btnFormatter'},
-    {'name': 'change_date', 'title': 'Zuletzt aktualisiert'},
-] %}
-{% set bank_account_activities_columns = [
-    {'name': 'bank_account', 'title': 'Bankkonto'},
-    {'name': 'name', 'title': 'Name'},
-    {'name': 'valid_on', 'title': 'Gültig am'},
-    {'name': 'imported_at', 'title': 'Importiert am'},
-    {'name': 'original_reference', 'title': 'Verwendungszweck'},
-    {'name': 'iban', 'title': 'IBAN'},
-    {'name': 'amount', 'title': 'Betrag'},
-    {'name': 'actions', 'title': 'Aktionen', 'formatter': 'table.multiBtnFormatter'},
-] %}
 
 {% block content %}
     <section id="tbl_bank_accounts">
         <h2 class="page-header">{{ _("Übersicht") }}</h2>
-        {% call tbl.item_table(
-            'bank_accounts',
-            url_for('.bank_accounts_list_json'),
-            bank_accounts_columns
-        ) %}
-            {% if current_user is privileged_for('finance_change') -%}
-            <a class="btn btn-primary" href="{{ url_for('.bank_accounts_create') }}">
-                <span class="glyphicon glyphicon-plus"></span>
-                {{ _("Neues Bankkonto anlegen") }}
-            </a>
-            {%- endif %}
-        {% endcall %}
+        {{ bank_account_table.render('bank_accounts') }}
     </section>
 
     <section>
         <h2 class="page-header">{{ _("Unzugeordnete Kontobewegungen") }}</h2>
-        {{ tbl.item_table(
-            'bank_accounts_activities',
-            url_for('.bank_accounts_activities_json'),
-            bank_account_activities_columns,
-            server_pagination=True
-        ) }}
+        {{ bank_account_activity_table.render('bank_accounts_activities') }}
     </section>
 {% endblock %}

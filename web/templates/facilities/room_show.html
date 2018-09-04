@@ -6,12 +6,6 @@
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
 {% import "macros/button.html" as btn %}
-{% import "macros/table.html" as tbl %}
-{% set cols = [
-    {'name': 'created_at', 'title': 'Erstellt um'},
-    {'name': 'user', 'title': 'Nutzer', 'formatter': 'table.linkFormatter'},
-    {'name': 'message', 'title': 'Nachricht'}
-] %}
 
 {% block content %}
     <ul class="breadcrumb">
@@ -95,7 +89,7 @@
         <h2 class="page-header">Logs</h2>
         <div class="row">
             <div class="col-xs-12">
-                {{ tbl.item_table("logs", url_for(".room_logs_json", room_id=room.id), cols) }}
+                {{ room_log_table.render("logs") }}
             </div>
         </div>
 

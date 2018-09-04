@@ -24,7 +24,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
 from web.template_filters import byte_size_filter
-
+from .tables import TrafficGroupTable
 
 bp = Blueprint('properties', __name__)
 access = BlueprintAccess(bp, required_properties=['groups_show'])
@@ -35,9 +35,13 @@ nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
 @nav.navigate(u"Trafficgruppen")
 @access.require('groups_traffic_show')
 def traffic_groups():
-    traffic_groups_list = TrafficGroup.q.all()
-    return render_template('properties/traffic_groups_list.html',
-        traffic_groups=traffic_groups_list)
+    traffic_group_table = TrafficGroupTable(
+        data_url=url_for('.traffic_groups_json'))
+
+    return render_template(
+        'properties/traffic_groups_list.html',
+        traffic_group_table=traffic_group_table,
+    )
 
 
 @bp.route('/traffic_groups/json')
@@ -52,8 +56,8 @@ def traffic_groups_json():
             'delete': {
                 'href': url_for(".traffic_group_delete", group_id=group.id),
                 'title': 'Löschen',
-                'btn_class': '',
-                'glyphicon': 'glyphicon-delete'
+                'btn_class': 'btn-danger',
+                'icon': 'glyphicon-remove'
             }
         } for group in TrafficGroup.q.all()])
 

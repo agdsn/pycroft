@@ -29,6 +29,7 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import datetime_filter
+from .tables import BuildingLevelRoomTable, RoomLogTable, SiteTable
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -41,7 +42,10 @@ def root():
 @nav.navigate(u"Wohnheime")
 @bp.route('/sites/')
 def overview():
-    return render_template('facilities/site_overview.html')
+    return render_template(
+        'facilities/site_overview.html',
+        site_table=SiteTable(data_url=url_for('.overview_json')),
+    )
 
 @bp.route('/sites/json')
 def overview_json():
@@ -111,13 +115,17 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 
     level_l0 = "{:02d}".format(level)
 
+    room_table = BuildingLevelRoomTable(
+        data_url=url_for('.building_level_rooms_json',
+                         building_shortname=building.short_name, level=level))
     return render_template(
         'facilities/rooms.html',
         level=level_l0,
         building=building,
         page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(
             level, building.short_name
-        )
+        ),
+        room_table=room_table,
     )
 
 
@@ -173,6 +181,9 @@ def room_show(room_id):
 
     room_log_list = reversed(room.log_entries)
 
+    room_log_table = RoomLogTable(
+        data_url=url_for(".room_logs_json", room_id=room.id))
+
     return render_template('facilities/room_show.html',
         page_title=u"Raum " + str(room.building.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number),
@@ -180,7 +191,9 @@ def room_show(room_id):
         ports=room.patch_ports,
         room_log=room_log_list,
         user_buttons=list(map(user_button, room.users)),
-        form=form)
+        room_log_table=room_log_table,
+        form=form,
+    )
 
 
 @bp.route('/rooms/<int:room_id>/logs/json')

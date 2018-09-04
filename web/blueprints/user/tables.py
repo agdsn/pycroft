@@ -83,3 +83,13 @@ class HostTable(BootstrapTable):
             Column('port', 'Switchport'),
             Column('action', 'MAC ändern', formatter='table.btnFormatter')
         ], **kw)
+
+
+class SearchTable(BootstrapTable):
+    """A table for displaying search results"""
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column('id', 'ID'),
+            Column('url', 'Name', formatter='table.linkFormatter'),
+            Column('login', 'Login'),
+        ], **kw)

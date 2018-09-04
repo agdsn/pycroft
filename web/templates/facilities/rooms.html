@@ -4,12 +4,6 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
-{% import "macros/table.html" as tbl %}
-
-{% set cols = [
-    {'name': 'room', 'title': 'Raum', 'formatter': 'table.linkFormatter'},
-    {'name': 'inhabitants', 'title': 'Bewohner', 'formatter': 'table.multiBtnFormatter'}
-] %}
 
 {% block content %}
     <ul class="breadcrumb">
@@ -17,17 +11,7 @@
         <li><a href="{{ url_for('facilities.building_levels', building_shortname=building.short_name) }}">{{ building.short_name }}</a></li>
         <li class="active">Etage {{ level }}</li>
     </ul>
-    {% call tbl.item_table(
-        'rooms',
-        url_for('facilities.building_level_rooms_json', building_shortname=building.short_name, level=level),
-        cols,
-        query_params="perhaps_all_users_query_params"
-    ) %}
-        <a href="#" id="rooms-toggle-all-users" class="btn btn-default" role="button">
-            <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-            Display all users
-        </a>
-    {% endcall %}
+    {{ room_table.render("rooms") }}
 {% endblock %}
 
 {% block page_script %}
