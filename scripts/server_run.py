@@ -57,10 +57,6 @@ def server_run(args):
     strategy = SchemaStrategist(state).determine_schema_strategy()
     strategy()
 
-    print("If you're running in a docker setup, the port may differ"
-          " from what is given below."
-          " It is probably http://0.0.0.0:5001")
-
     @app.before_request
     def get_time():
         g.request_time = time.time()
