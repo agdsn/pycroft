@@ -33,7 +33,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet
-from pycroft.lib.membership import make_member_of
+from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import session
 from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
@@ -470,22 +470,19 @@ def add_membership(user_id):
 @bp.route('/<int:user_id>/end_membership/<int:membership_id>')
 @access.require('groups_change_membership')
 def end_membership(user_id, membership_id):
+    user = get_user_or_404(user_id)
     membership = Membership.q.get(membership_id)
 
     if membership is None:
         flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(membership.id), 'error')
         abort(404)
 
-    membership.disable()
-
     if membership.user.id != user_id:
         flash(u"Gruppenmitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
         return abort(404)
 
-    # ToDo: Make the log messages not Frontend specific (a helper?)
-    message = u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' " \
-              u"beendet.".format(membership.group.name)
-    lib.logging.log_user_event(message, current_user, membership.user)
+    remove_member_of(user, membership.group, current_user, closedopen(session.utcnow(), None))
+
     session.session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show",
