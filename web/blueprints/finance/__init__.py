@@ -117,13 +117,12 @@ def bank_accounts_activities_json():
         'total': activity_q.count(),
         'rows': [{
             'bank_account': activity.bank_account.name,
-            'valid_on': date_filter(activity.valid_on),
-            'amount': money_filter(activity.amount),
-            'reference': activity.reference,
-            'original_reference': activity.original_reference,
-            'ktonr': activity.other_account_number,
-            # 'blz': activity.other_bank,   # todo revisit. wuzdat? dunno…
             'name': activity.other_name,
+            'valid_on': date_filter(activity.valid_on),
+            'imported_at': date_filter(activity.imported_at),
+            'original_reference': activity.original_reference,
+            'amount': money_filter(activity.amount),
+            'iban': activity.other_account_number,
             'actions': actions(activity.id),
         } for activity in activity_q.limit(limit).offset(offset).all()]
     })

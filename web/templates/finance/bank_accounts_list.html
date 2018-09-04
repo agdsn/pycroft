@@ -18,13 +18,12 @@
 ] %}
 {% set bank_account_activities_columns = [
     {'name': 'bank_account', 'title': 'Bankkonto'},
-    {'name': 'date', 'title': 'Datum'},
-    {'name': 'amount', 'title': 'Betrag'},
-    {'name': 'reference', 'title': 'Verwendung'},
-    {'name': 'original_reference', 'title': 'Ursprüngliche Verwendung'},
-    {'name': 'ktonr', 'title': 'Kontonummer'},
-    {'name': 'blz', 'title': 'Bankleitzahl'},
     {'name': 'name', 'title': 'Name'},
+    {'name': 'valid_on', 'title': 'Gültig am'},
+    {'name': 'imported_at', 'title': 'Importiert am'},
+    {'name': 'original_reference', 'title': 'Verwendungszweck'},
+    {'name': 'iban', 'title': 'IBAN'},
+    {'name': 'amount', 'title': 'Betrag'},
     {'name': 'actions', 'title': 'Aktionen', 'formatter': 'table.multiBtnFormatter'},
 ] %}
 
