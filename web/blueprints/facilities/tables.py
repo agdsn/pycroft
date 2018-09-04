@@ -15,6 +15,7 @@ class BuildingLevelRoomTable(BootstrapTable):
             Column('room', 'Raum', formatter='table.linkFormatter'),
             Column('inhabitants', 'Bewohner', formatter='table.multiBtnFormatter'),
         ], table_args={
+            'data-sort-name': 'room',
             'data-query-params': 'perhaps_all_users_query_params',
         }, **kw)
 
