@@ -6,10 +6,10 @@
 from flask import url_for, current_app
 from jinja2.runtime import Context
 
-from template_filters import require
 from tests import FrontendDataTestBase, FixtureDataTestBase
 from tests.fixtures.permissions import UserData, MembershipData, PropertyData
 from tests.fixtures.config import ConfigData
+from web.template_filters import require
 
 
 class PermissionsTestBase(FrontendDataTestBase, FixtureDataTestBase):
