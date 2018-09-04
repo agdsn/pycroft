@@ -59,7 +59,7 @@ import Bloodhound from 'typeahead.js/dist/bloodhound';
     export const user_accounts_dataset = {
         name: 'user_accounts',
         displayKey: record => `${record['user_name']} (${record['user_id']}, ${record['user_login']})`,
-        source: user_accounts.ttAdapter(),
+        source: (query, cb) => user_accounts.ttAdapter()(query, cb, cb),
         templates: {
             empty: '<span class="disabled">Keine Ergebnisse</span>',
             header: '<span class="dropdown-header">Nutzerkonten</span>',
