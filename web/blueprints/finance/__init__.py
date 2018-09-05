@@ -132,7 +132,7 @@ def bank_accounts_activities_json():
             'name': activity.other_name,
             'valid_on': date_filter(activity.valid_on),
             'imported_at': date_filter(activity.imported_at),
-            'original_reference': activity.original_reference,
+            'reference': activity.reference,
             'amount': money_filter(activity.amount),
             'iban': activity.other_account_number,
             'actions': actions(activity.id),

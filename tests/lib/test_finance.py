@@ -62,7 +62,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         # test for correct dataimport
         activity = BankAccountActivity.q.filter_by(
             bank_account=bank_account,
-            original_reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
+            reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
         self.assertEqual(activity.other_account_number, "12345678")
         self.assertEqual(activity.other_routing_number, "80040400")
@@ -74,7 +74,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         # verify that the right year gets chosen for the transaction
         activity = BankAccountActivity.q.filter_by(
             bank_account=bank_account,
-            original_reference=u"Pauschalen"
+            reference=u"Pauschalen"
         ).first()
         self.assertEqual(activity.posted_on, date(2012, 12, 24))
         self.assertEqual(activity.valid_on, date(2012, 12, 24))
@@ -86,7 +86,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         # which is in the next year
         activity = BankAccountActivity.q.filter_by(
             bank_account=bank_account,
-            original_reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
+            reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
         self.assertEqual(activity.posted_on, date(2013, 12, 29))
         self.assertEqual(activity.valid_on, date(2013, 1, 10))

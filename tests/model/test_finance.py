@@ -143,7 +143,6 @@ class TestBankAccountActivity(FinanceModelTest, PostgreSQLTestCase):
         return BankAccountActivity(
             bank_account=self.bank_account,
             reference='Reference',
-            original_reference='Reference',
             other_name='John Doe',
             other_account_number='0123456789',
             other_routing_number='01245',

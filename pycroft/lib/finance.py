@@ -409,7 +409,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
     ).scalar()
     a = tuple(session.session.query(
         BankAccountActivity.amount, BankAccountActivity.bank_account_id,
-        BankAccountActivity.reference, BankAccountActivity.original_reference,
+        BankAccountActivity.reference, BankAccountActivity.reference,
         BankAccountActivity.other_account_number,
         BankAccountActivity.other_routing_number,
         BankAccountActivity.other_name, BankAccountActivity.imported_at,
@@ -426,8 +426,8 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
             balance += sum(a[0] for a in islice(activities, j1, j2))
             session.session.add_all(
                 BankAccountActivity(
-                    amount=e[0], bank_account_id=e[1], reference=e[2],
-                    original_reference=e[3], other_account_number=e[4],
+                    amount=e[0], bank_account_id=e[1], reference=e[3],
+                    other_account_number=e[4],
                     other_routing_number=e[5], other_name=e[6],
                     imported_at=e[7], posted_on=e[8], valid_on=e[9]
                 ) for e in islice(activities, j1, j2)
@@ -631,7 +631,6 @@ def process_transactions(bank_account, statement):
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
             reference=transaction.data['purpose'],
-            original_reference=transaction.data['purpose'],
             other_account_number=iban,
             other_routing_number=bic,
             other_name=other_name,

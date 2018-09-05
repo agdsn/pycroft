@@ -295,7 +295,6 @@ class BankAccountActivity(IntegerIdModel):
     bank_account = relationship(BankAccount, backref=backref("activities"))
     amount = Column(Money, nullable=False)
     reference = Column(Text, nullable=False)
-    original_reference = Column(Text, nullable=False)
     other_account_number = Column(String(255), nullable=False)
     other_routing_number = Column(String(255), nullable=False)
     other_name = Column(String(255), nullable=False)

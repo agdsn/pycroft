@@ -94,7 +94,7 @@ class BankAccountActivityEditForm(Form):
     bank_account_name = static(StringField(u"Bankkonto"))
     amount = disabled(MoneyField(u"Wert"))
     description = StringField(u"Beschreibung")
-    original_reference = static(StringField(u"Ursprüngliche Verwendung"))
+    reference = static(StringField(u"Verwendungszweck"))
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
