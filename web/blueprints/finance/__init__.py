@@ -123,7 +123,7 @@ def bank_accounts_activities_json():
     activity_q = (BankAccountActivity.q
             .options(joinedload(BankAccountActivity.bank_account))
             .filter(BankAccountActivity.transaction_id == None)
-            .order_by(BankAccountActivity.valid_on))
+            .order_by(BankAccountActivity.valid_on.desc()))
 
     return jsonify(items={
         'total': activity_q.count(),
