@@ -232,10 +232,15 @@ def bank_account_activities_edit(activity_id):
         flash(u"Bankbewegung mit ID {} existiert nicht!".format(activity_id), 'error')
         abort(404)
 
-    form = BankAccountActivityEditForm(
-        obj=activity, bank_account_name=activity.bank_account.name)
+    if activity.transaction_id is not None:
+        flash(u"Bankbewegung mit ID {} ist bereits zugewiesen!".format(activity_id),
+              'error')
+        abort(404)
 
-    if form.validate():
+    form = BankAccountActivityEditForm(
+        obj=activity, bank_account_name=activity.bank_account.name, description=activity.reference)
+
+    if form.validate_on_submit():
         debit_account = Account.q.filter(
             Account.id == form.account_id.data
         ).one()
@@ -248,9 +253,12 @@ def bank_account_activities_edit(activity_id):
         activity.split = next(split for split in transaction.splits
                               if split.account_id == credit_account.id)
         session.add(activity)
-        session.commit()
 
         end_payment_in_default_memberships()
+
+        session.commit()
+
+        flash(u"Transaktion erfolgreich erstellt.", 'success')
 
         return redirect(url_for('.bank_accounts_list'))
 
