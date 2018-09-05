@@ -375,6 +375,32 @@ docker-compose -f docker-compose.testing.yml run --rm web nosetests -v
 docker-compose -f docker-compose.testing.yml run --rm web nosetests -v tests.frontend
 ```
 
+## Making changes to the database schema
+
+Pycroft uses [Alembic](http://alembic.zzzcomputing.com/) to manage changes to its database schema.
+On startup Pycroft invokes Alembic to ensure that the database schema is up-to-date. Should Alembic
+detect database migrations that are not yet applied to the database, it will apply them
+automatically.
+
+To get familiar with Alembic it is recommended to read the official
+[tutorial](http://alembic.zzzcomputing.com/en/latest/tutorial.html).
+
+### Creating a database migration
+
+Migrations are python modules stored under `pycroft/model/alembic/versions/`.
+
+A new migration can be created by running:
+```
+docker-compose run --rm dev-app alembic revision -m "add test table"
+```
+
+Alembic also has the really convenient feature to
+[autogenerate](http://alembic.zzzcomputing.com/en/latest/autogenerate.html) migrations,
+by comparing the current status of the database against the table metadata of the application.
+```
+docker-compose run --rm dev-app alembic revision --autogenerate -m "add complex test table"
+```
+
 ## What databases are there? ##
 
 In the container, there are two different databases in use (although perhaps
