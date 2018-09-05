@@ -290,7 +290,7 @@ def user_show(user_id):
         session.session.commit()
         flash(u'Kommentar hinzugefügt', 'success')
 
-    balance = -user.account.balance
+    balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
     _membership_endpoint = partial(url_for, ".user_show_groups_json", user_id=user.id)
     _finance_table_kwargs = {
@@ -321,7 +321,7 @@ def user_show(user_id):
         user_not_there=user_not_there,
         user_id_new=encode_type2_user_id(user.id),
         user_id_old=encode_type1_user_id(user.id),
-        balance=balance,
+        balance=-balance,
         hosts_rooms={host.room for host in user.hosts},
         log_table_all=LogTableExtended(data_url=_log_endpoint()),
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
