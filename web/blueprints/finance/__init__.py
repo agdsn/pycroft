@@ -165,7 +165,7 @@ def bank_accounts_import():
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
                     bank_account.iban)
                 )
-            start_date = map_or_default(bank_account.last_updated_at,
+            start_date = map_or_default(bank_account.last_imported_at,
                                         datetime.date, date(2018, 1, 1))
             statement = fints.get_statement(acc, start_date, date.today())
             flash(
