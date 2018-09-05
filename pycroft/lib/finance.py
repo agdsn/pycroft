@@ -627,10 +627,12 @@ def process_transactions(bank_account, statement):
             transaction.data['applicant_bin'] is not None else ''
         other_name = transaction.data['applicant_name'] if \
             transaction.data['applicant_name'] is not None else ''
+        prupose = transaction.data['purpose'] if \
+            transaction.data['purpose'] is not None else ''
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
-            reference=transaction.data['purpose'],
+            reference=prupose,
             other_account_number=iban,
             other_routing_number=bic,
             other_name=other_name,
