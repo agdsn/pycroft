@@ -96,8 +96,8 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'change_date': '{}'.format(
-                map_or_default(bank_account.last_updated_at, datetime.date,
+            'last_imported_at': '{}'.format(
+                map_or_default(bank_account.last_imported_at, datetime.date,
                                'nie'))
         } for bank_account in BankAccount.q.all()])
 

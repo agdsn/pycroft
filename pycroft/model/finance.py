@@ -282,11 +282,12 @@ class BankAccount(IntegerIdModel):
     )
 
     @hybrid_property
-    def last_updated_at(self):
+    def last_imported_at(self):
         return object_session(self).execute(
                     select([func.max(BankAccountActivity.imported_at)])
                     .where(BankAccountActivity.bank_account_id == self.id)
                 ).fetchone()[0]
+
 
 class BankAccountActivity(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),

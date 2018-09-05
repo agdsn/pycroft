@@ -179,7 +179,7 @@ class BankAccountTable(BootstrapTable):
             Column(name='iban', title='IBAN'),
             Column(name='bic', title='SWIFT-BIC'),
             Column(name='kto', title='Konto', formatter='table.btnFormatter'),
-            Column(name='change_date', title='Zuletzt aktualisiert'),
+            Column(name='last_imported_at', title='Zuletzt importiert'),
         ], **kw)
 
     def generate_toolbar(self):
