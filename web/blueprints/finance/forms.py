@@ -84,9 +84,11 @@ class BankAccountCreateForm(Form):
         if BankAccount.q.filter_by(iban=field.data ).first() is not None:
             raise ValidationError("Konto existiert bereits.")
 
+
 class BankAccountActivityEditForm(Form):
     account = TypeaheadField(u"Gegenkonto", render_kw={
-        'data_toggle': 'account-typeahead'
+        'data_toggle': 'account-typeahead',
+        'data-target': 'account_id'
     })
     account_id = HiddenField(validators=[DataRequired()])
     bank_account_name = static(StringField(u"Bankkonto"))
