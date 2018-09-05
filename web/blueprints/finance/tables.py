@@ -200,13 +200,12 @@ class BankAccountActivityTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             Column(name='bank_account', title='Bankkonto'),
-            Column(name='date', title='Datum'),
-            Column(name='amount', title='Betrag'),
-            Column(name='reference', title='Verwendung'),
-            Column(name='original_reference', title='Ursprüngliche Verwendung'),
-            Column(name='ktonr', title='Kontonummer'),
-            Column(name='blz', title='Bankleitzahl'),
             Column(name='name', title='Name'),
+            Column(name='valid_on', title='Gültig am'),
+            Column(name='imported_at', title='Importiert am'),
+            Column(name='reference', title='Verwendungszweck'),
+            Column(name='iban', title='IBAN'),
+            Column(name='amount', title='Betrag'),
             Column(name='actions', title='Aktionen', formatter='table.multiBtnFormatter'),
         ], table_args = {
             'data-side-pagination': 'server',
