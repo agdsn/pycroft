@@ -283,17 +283,10 @@ class BankAccount(IntegerIdModel):
 
     @hybrid_property
     def last_updated_at(self):
-        return object_session(self).query(
-            BankAccount.last_updated_at).scalar()
-
-    @last_updated_at.expression
-    def last_updated_at(cls):
-        return (
-            select([func.max(BankAccountActivity.imported_at)])
-            .where(BankAccountActivity.bank_account_id == cls.id)
-            .label("last_updated_at")
-        )
-
+        return object_session(self).execute(
+                    select([func.max(BankAccountActivity.imported_at)])
+                    .where(BankAccountActivity.bank_account_id == self.id)
+                ).fetchone()[0]
 
 class BankAccountActivity(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
