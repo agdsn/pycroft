@@ -742,8 +742,10 @@ def json_accounts_system():
         {
             "account_id": account.id,
             "account_name": localized(account.name),
-        } for account in session.query(Account).outerjoin(User).filter(
-            User.account == None
+            "account_type": account.type
+        } for account in Account.q.outerjoin(User).filter(
+            and_(User.account == None,
+            Account.type != "USER_ASSET")
         ).all()])
 
 
