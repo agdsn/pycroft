@@ -191,7 +191,7 @@ class User(IntegerIdModel, UserMixin):
     @staticmethod
     def verify_and_get(login, plaintext_password):
         try:
-            user = User.q.filter_by(login=login).one()
+            user = User.q.filter(User.login == func.lower(login)).one()
         except NoResultFound:
             return None
         else:

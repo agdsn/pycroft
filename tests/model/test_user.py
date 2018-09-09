@@ -113,6 +113,19 @@ class Test_040_User_Login(FixtureDataTestBase):
                 "user already in the database - cannot change login anymore!"):
             u.login = "abc"
 
+    def test_0020_user_login_case_insensitive(self):
+        u = user.User.q.filter_by(login=UserData.dummy.login).one()
+
+        password = 'secret'
+        u.password = password
+        session.session.commit()
+
+        self.assertEqual(
+            user.User.verify_and_get(u.login, password), u)
+
+        # Verification of login name should be case insensitive
+        self.assertEqual(
+            user.User.verify_and_get(u.login.upper(), password), u)
 
 class TestUnixAccounts(FixtureDataTestBase):
     datasets = [unixaccount.UserData]
