@@ -27,8 +27,8 @@ from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
     RoomForm, BuildingForm, RoomLogEntry)
+from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
-from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
 from .tables import BuildingLevelRoomTable, RoomLogTable, SiteTable
 
@@ -206,14 +206,8 @@ def room_show(room_id):
 
 @bp.route('/rooms/<int:room_id>/logs/json')
 def room_logs_json(room_id):
-    return jsonify(items=[{
-            'created_at': datetime_format(entry.created_at),
-            'user': {
-                'title': entry.author.name,
-                'href': url_for("user.user_show", user_id=entry.author.id)
-            },
-            'message': entry.message
-        } for entry in reversed(Room.q.get(room_id).log_entries)])
+    return jsonify(items=[format_room_log_entry(entry) for entry in
+                          reversed(Room.q.get(room_id).log_entries)])
 
 
 @bp.route('/json/levels')
