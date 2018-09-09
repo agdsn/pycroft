@@ -28,8 +28,8 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
     RoomForm, BuildingForm, RoomLogEntry)
 from web.blueprints.helpers.user import user_button
+from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
-from web.template_filters import datetime_filter
 from .tables import BuildingLevelRoomTable, RoomLogTable, SiteTable
 
 bp = Blueprint('facilities', __name__)
@@ -207,7 +207,7 @@ def room_show(room_id):
 @bp.route('/rooms/<int:room_id>/logs/json')
 def room_logs_json(room_id):
     return jsonify(items=[{
-            'created_at': datetime_filter(entry.created_at),
+            'created_at': datetime_format(entry.created_at),
             'user': {
                 'title': entry.author.name,
                 'href': url_for("user.user_show", user_id=entry.author.id)

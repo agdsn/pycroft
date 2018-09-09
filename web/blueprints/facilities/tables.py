@@ -31,7 +31,7 @@ class BuildingLevelRoomTable(BootstrapTable):
 class RoomLogTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('created_at', 'Erstellt um'),
+            Column('created_at', 'Erstellt um', formatter='table.dateFormatter'),
             Column('user', 'Nutzer', formatter='table.linkFormatter'),
             Column('message', 'Nachricht'),
         ], **kw)

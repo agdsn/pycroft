@@ -43,6 +43,7 @@ from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
 from sqlalchemy.sql.expression import or_, func, cast
+from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm, \
@@ -53,7 +54,6 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta
 from flask_login import current_user
-from web.template_filters import datetime_filter
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry
 from .log import formatted_user_hades_logs
@@ -422,10 +422,8 @@ def user_show_groups_json(user_id, group_filter="all"):
 
     return jsonify(items=[{
             'group_name': membership.group.name,
-            'begins_at': (datetime_filter(membership.begins_at)
-                          if membership.begins_at is not None else ''),
-            'ends_at': (datetime_filter(membership.ends_at)
-                        if membership.ends_at is not None else ''),
+            'begins_at': datetime_format(membership.begins_at, default=''),
+            'ends_at': datetime_format(membership.ends_at, default=''),
             'actions': [{'href': url_for(".edit_membership",
                                         user_id=user_id,
                                         membership_id=membership.id),

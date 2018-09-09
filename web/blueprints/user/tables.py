@@ -22,7 +22,7 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('created_at', 'Erstellt um', width=2),
+            Column('created_at', 'Erstellt um', width=2, formatter='table.dateFormatter'),
             Column('type', 'Logtyp'),
             Column('user', 'Nutzer', formatter='table.userFormatter'),
             Column('message', 'Nachricht'),
@@ -34,7 +34,7 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             # specific tables don't need the `type`
-            Column('created_at', 'Erstellt um', width=2),
+            Column('created_at', 'Erstellt um', width=2, formatter='table.dateFormatter'),
             Column('user', 'Nutzer', formatter='table.userFormatter'),
             Column('message', 'Nachricht'),
         ], **kw)
@@ -49,8 +49,8 @@ class MembershipTable(BootstrapTable):
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
             Column('group_name', 'Gruppe'),
-            Column('begins_at', 'Beginn'),
-            Column('ends_at', 'Ende'),
+            Column('begins_at', 'Beginn', formatter='table.dateFormatter'),
+            Column('ends_at', 'Ende', formatter='table.dateFormatter'),
             Column('actions', 'Aktionen', formatter='table.multiBtnFormatter')
         ], **kw)
         self.user_id = user_id
