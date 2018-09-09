@@ -105,6 +105,7 @@ class User(IntegerIdModel, UserMixin):
         # but between punctuation characters must be characters or numbers
         (?:[._-]?[a-z0-9])+$
         """, re.VERBOSE)
+    login_regex_ci = re.compile(login_regex.pattern, re.VERBOSE | re.IGNORECASE)
     email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
                              r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
                              r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
