@@ -139,6 +139,14 @@ export function listFormatter(value, row, index) {
     return ret;
 }
 
+export function dateFormatter(value, row, index) {
+    if (!value) {
+        return;
+    }
+    return value['formatted'];
+}
+dateFormatter.attributes = { sortName: 'timestamp' };
+
 export function financeRowFormatter(row, index) {
     if (row && row['row_positive']) {
         return {classes: 'success'};

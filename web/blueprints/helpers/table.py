@@ -1,5 +1,10 @@
+from datetime import date, datetime
+
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
+
+from pycroft.helpers import utc
+from web.template_filters import date_filter, datetime_filter
 
 class Column:
     """A class representing a bootstrap-table column
@@ -211,3 +216,41 @@ class SplittedTable(BootstrapTable):
                 )
         yield "</tr>"
         yield "</thead>"
+
+
+def date_format(dt, default=None):
+    """
+    Format date or datetime objects for `table.dateFormatter`.
+    :param datetime|date|None dt: a date or datetime object or None
+    :param str|None default: formatted value to use if `dt` is None
+    :return:
+    """
+    if dt is not None:
+        return {
+            'formatted': date_filter(dt),
+            'timestamp': int(datetime.combine(dt, utc.time_min()).timestamp()),
+        }
+    else:
+        return {
+            'formatted': default if default is not None else date_filter(None),
+            'timestamp': None,
+        }
+
+
+def datetime_format(dt, default=None):
+    """
+    Format datetime objects for `table.dateFormatter`.
+    :param datetime|None dt: a datetime object or None
+    :param str|None default: formatted value to use if `dt` is None
+    :return:
+    """
+    if dt is not None:
+        return {
+            'formatted': datetime_filter(dt),
+            'timestamp': int(dt.timestamp()),
+        }
+    else:
+        return {
+            'formatted': default if default is not None else datetime_filter(None),
+            'timestamp': None,
+        }
