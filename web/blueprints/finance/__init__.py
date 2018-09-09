@@ -36,6 +36,7 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.helpers.table import date_format
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
@@ -104,8 +105,6 @@ def bank_accounts_list_json():
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
-    limit = request.args.get('limit', default=100, type=int)
-    offset = request.args.get('offset', default=0, type=int)
     if privilege_check(current_user, 'finance_change'):
         def actions(activity_id):
             return [{
@@ -122,22 +121,18 @@ def bank_accounts_activities_json():
 
     activity_q = (BankAccountActivity.q
             .options(joinedload(BankAccountActivity.bank_account))
-            .filter(BankAccountActivity.transaction_id == None)
-            .order_by(BankAccountActivity.valid_on.desc()))
+            .filter(BankAccountActivity.transaction_id == None))
 
-    return jsonify(items={
-        'total': activity_q.count(),
-        'rows': [{
+    return jsonify(items=[{
             'bank_account': activity.bank_account.name,
             'name': activity.other_name,
-            'valid_on': date_filter(activity.valid_on),
-            'imported_at': date_filter(activity.imported_at),
+            'valid_on': date_format(activity.valid_on),
+            'imported_at': date_format(activity.imported_at),
             'reference': activity.reference,
             'amount': money_filter(activity.amount),
             'iban': activity.other_account_number,
             'actions': actions(activity.id),
-        } for activity in activity_q.limit(limit).offset(offset).all()]
-    })
+        } for activity in activity_q.all()])
 
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
