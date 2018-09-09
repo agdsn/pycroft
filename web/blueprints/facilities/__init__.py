@@ -179,8 +179,6 @@ def room_show(room_id):
         flash(u'Kommentar hinzugefügt', 'success')
         session.session.commit()
 
-    room_log_list = reversed(room.log_entries)
-
     room_log_table = RoomLogTable(
         data_url=url_for(".room_logs_json", room_id=room.id))
 
@@ -189,7 +187,6 @@ def room_show(room_id):
                    str(room.level) + u"-" + str(room.number),
         room=room,
         ports=room.patch_ports,
-        room_log=room_log_list,
         user_buttons=list(map(user_button, room.users)),
         room_log_table=room_log_table,
         form=form,
