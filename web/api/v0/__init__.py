@@ -231,7 +231,7 @@ api.add_resource(AuthenticationResource, '/user/authenticate')
 class UserByIPResource(Resource):
     def get(self):
         ipv4 = request.args.get('ip', IPAddress)
-        ip = IP.q.filter_by(address=ipv4).one()
+        ip = IP.q.filter_by(address=ipv4).one_or_none()
         if ip is None:
             abort(404, message="IP {} is not related to a user".format(ipv4))
         return generate_user_data(ip.interface.host.owner)
