@@ -95,7 +95,7 @@ def generate_user_data(user):
         # Invert amount, to display it from the user's point of view
         'amount': -split.amount,
         'description': split.transaction.description
-    } for split in build_transactions_query(user.account)]
+    } for split in build_transactions_query(user.account, eagerload=True)]
     last_finance_update = finance_history[-1]['valid_on'] if finance_history \
         else None
 
