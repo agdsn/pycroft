@@ -15,6 +15,7 @@ from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
+from sqlalchemy.sql import and_, select, exists
 from sqlalchemy.orm import joinedload, aliased
 
 from pycroft import lib, config
@@ -142,18 +143,28 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
     # We need to alias User, otherwise sqlalchemy selects User.id as user_id,
     # which collides with the joined-loaded user.current_properties.user_id.
     user = aliased(User)
+
+    user_join_condition = user.room_id == Room.id
+    if not all_users:
+        user_join_condition = and_(
+            user_join_condition,
+            exists(select([CurrentProperty]).where(
+                and_(CurrentProperty.user_id == user.id,
+                     CurrentProperty.property_name == 'network_access')))
+        )
+
     rooms_users_q = (session.session.query(Room, user)
                      .options(joinedload(user.current_properties))
                      .filter(and_(Room.building == building, Room.level == level))
-                     .join(user))
-    if not all_users:
-        rooms_users_q = (
-            rooms_users_q.join(user.current_properties_maybe_denied)
-            .filter(CurrentProperty.property_name == 'network_access')
-        )
+                     .outerjoin(user, user_join_condition))
+
     level_inhabitants = defaultdict(lambda: [])
     for room, user in rooms_users_q.all():
-        level_inhabitants[room].append(user)
+        if user is not None:
+            level_inhabitants[room].append(user)
+        else:
+            # Ensure room is in level_inhabitants
+            level_inhabitants[room]
 
     return jsonify(items=[{
             'room': {
