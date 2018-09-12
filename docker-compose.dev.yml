@@ -38,6 +38,8 @@ services:
           - db
     volumes:
       - "db:/var/lib/postgresql"
+    ports:
+    - "55432:5432"
   dev-ldap:
     extends:
       file: docker-compose.base.yml
