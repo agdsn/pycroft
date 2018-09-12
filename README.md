@@ -264,10 +264,6 @@ select the the service: `dev-app`,
 and type in the following path for the python interpreter:
 `/opt/pycroft/venv/bin/python`.
 
-Be sure to also add a path mapping from the project directory on your machine
-to `/opt/pycroft/app`, so that PyCharm can correctly map remote files to files
-on your machine and vice versa (especially important for using the debugger).
-
 Repeat the same thing for **test** environment defined in
 `docker-compose.test.yml`.
 
@@ -279,7 +275,8 @@ As a proof of concept, you can run a “Python Console” inside PyCharm.
 ### Run Configurations
 
 A few run configurations are already included in the project's `.idea` folder.
-Set the appropriate interpreters for each run configurations.
+If you have created the project interpreters according to the above steps,
+the appropriate interpreters should have been autoselected for each run configuration.
 
 ### Database connections (optional)
 
