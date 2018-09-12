@@ -2,8 +2,7 @@
   <configuration default="false" name="Nosetests docker-compose" type="tests" factoryName="Nosetests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs />
-    <option name="SDK_HOME" value="docker-compose://[$PROJECT_DIR$/compose/testing/docker-compose.yml]:web/python3" />
+    <option name="SDK_HOME" value="docker-compose://[$PROJECT_DIR$/docker-compose.test.yml]:test-app//opt/pycroft/venv/bin/python" />
     <option name="WORKING_DIRECTORY" value="" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -13,7 +12,7 @@
     <PathMappingSettings>
       <option name="pathMappings">
         <list>
-          <mapping local-root="." remote-root="/pycroft" />
+          <mapping local-root="$PROJECT_DIR$" remote-root="/opt/pycroft/app" />
         </list>
       </option>
     </PathMappingSettings>

@@ -5,7 +5,7 @@
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="docker-compose://[$PROJECT_DIR$/compose/default/docker-compose.yml]:web/python3" />
+    <option name="SDK_HOME" value="docker-compose://[$PROJECT_DIR$/docker-compose.dev.yml]:dev-app//opt/pycroft/venv/bin/python" />
     <option name="WORKING_DIRECTORY" value="" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -15,7 +15,7 @@
     <PathMappingSettings>
       <option name="pathMappings">
         <list>
-          <mapping local-root="$PROJECT_DIR$" remote-root="/pycroft" />
+          <mapping local-root="$PROJECT_DIR$" remote-root="/opt/pycroft/app" />
         </list>
       </option>
     </PathMappingSettings>
