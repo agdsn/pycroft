@@ -6,7 +6,7 @@ from factory import SubFactory
 
 from pycroft.model.config import Config
 from .base import BaseFactory
-from .finance import AccountFactory
+from .finance import AccountFactory, BankAccountFactory
 from .property import PropertyGroupFactory
 
 
@@ -30,3 +30,4 @@ class ConfigFactory(BaseFactory):
 
     # `Account`s
     membership_fee_account = SubFactory(AccountFactory)
+    membership_fee_bank_account = SubFactory(BankAccountFactory)

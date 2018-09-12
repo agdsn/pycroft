@@ -3,7 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
-
+from .dummy import finance
 
 class AccountData(DataSet):
     class membership_fee:
@@ -52,6 +52,7 @@ class ConfigData(DataSet):
         payment_in_default_group = PropertyGroupData.payment_in_default
         external_group = PropertyGroupData.external
         membership_fee_account = AccountData.membership_fee
+        membership_fee_bank_account = finance.BankAccountData.dummy
 
 class PropertyData(DataSet):
     class network_access:
