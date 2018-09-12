@@ -14,7 +14,7 @@
     {{ resources.link_css("main.css" | require) }}
     {% block page_css %}{% endblock %}
     <link rel="shortcut icon" href="{{ "img/favicon.ico" | require }}"/>
-    <title>Userman – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
+    <title>Pycroft – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
 </head>
 
 <body>
@@ -111,6 +111,7 @@
         {% block footer -%}
             <footer class="footer">
                 <small>You've seen everything. We're finished.</small>
+                <small><a href="{{ url_for('version') }}">Version Info</a></small>
                 <small class="pull-right">But while you're at it, check <a href="https://twitter.com/hashtag/justagdsnthings">THIS</a> out!</small>
             </footer>
          {%- endblock %}

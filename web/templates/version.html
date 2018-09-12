@@ -1,0 +1,39 @@
+{#
+ Copyright (c) 2018 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends 'layout.html' %}
+{% set page_title = "Version" %}
+
+{% block single_row_content %}
+  <h2>Current version</h2>
+
+    <p class="lead">
+        Branch running:
+        <strong><code class="text-bold">{{ active_branch }}</code></strong>
+    </p>
+
+    <h3>Latest commits</h3>
+
+    {% if commits %}
+        <table class="table table-striped table-bordered col-md-8">
+            <thead><tr>
+                <th>Commit Date</th>
+                <th>Hash</th>
+                <th>Message</th>
+                <th>Author</th>
+            </tr></thead>
+            {% for commit in commits %}
+                <tr>
+                    <td>{{ commit['date'] }}</td>
+                    <td><a href="https://github.com/agdsn/pycroft/commit/{{ commit['hexsha'] }}">
+                            {{ commit['hexsha'][:8] }}</a>
+                        </td>
+                    <td>{{ commit['message'] }}</td>
+                    <td>{{ commit['author'] }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+{% endif %}
+{% endblock %}
