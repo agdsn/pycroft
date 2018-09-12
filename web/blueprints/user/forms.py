@@ -66,18 +66,11 @@ class UserSearchForm(Form):
 class UserResetPasswordForm(Form):
     pass
 
-
-class UserEditNameForm(Form):
+class UserEditForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
-
-
-class UserEditEMailForm(Form):
-    email = TextField(u"E-Mail", [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
-
-
-class UserEditBirthdateForm(Form):
-    birthdate = DateField(u"Birthdate", [Optional()])
-
+    email = TextField(u"E-Mail",
+                      [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
+    birthdate = DateField(u"Geburtsdatum", [Optional()])
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",

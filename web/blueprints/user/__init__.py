@@ -47,9 +47,9 @@ from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm, \
-    UserEditNameForm, UserEditEMailForm, UserSuspendForm, UserMoveOutForm, \
+    UserEditForm, UserSuspendForm, UserMoveOutForm, \
     InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm, \
-    UserResetPasswordForm, UserMoveInForm, UserEditBirthdateForm
+    UserResetPasswordForm, UserMoveInForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta
@@ -743,66 +743,30 @@ def edit_membership(user_id, membership_id):
                            form=form)
 
 
-@bp.route('/<int:user_id>/edit_name', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
 @access.require('user_change')
-def edit_name(user_id):
+def edit_user(user_id):
     user = get_user_or_404(user_id)
-    form = UserEditNameForm()
+    form = UserEditForm()
 
     if not form.is_submitted():
         form.name.data = user.name
+        form.email.data = user.email
+        form.birthdate.data = user.birthdate
+
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
+        edited_user = lib.user.edit_email(edited_user, form.email.data,
+                                              current_user)
+        edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data,
+                                              current_user)
         session.session.commit()
 
-        flash(u'Benutzername geändert', 'success')
+        flash(u'Änderungen gespeichert', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
-    return render_template('user/user_edit_name.html', user_id=user_id,
-        form=form)
-
-
-@bp.route('/<int:user_id>/edit_email', methods=['GET', 'POST'])
-@access.require('user_change')
-def edit_email(user_id):
-    user = get_user_or_404(user_id)
-    form = UserEditEMailForm()
-
-    if not form.is_submitted():
-        form.email.data = user.email
-
-    if form.validate_on_submit():
-        edited_user = lib.user.edit_email(user, form.email.data, current_user)
-        session.session.commit()
-
-        flash(u'E-Mail-Adresse geändert', 'success')
-        return redirect(url_for('.user_show', user_id=edited_user.id))
-
-    return render_template('user/user_edit_email.html', user_id=user_id,
-                           form=form)
-
-
-@bp.route('/<int:user_id>/edit_birthdate', methods=['GET', 'POST'])
-@access.require('user_change')
-def edit_birthdate(user_id):
-    user = get_user_or_404(user_id)
-    form = UserEditBirthdateForm()
-
-    if not form.is_submitted():
-        if user.birthdate is None:
-            form.birthdate.data = user.birthdate
-        else:
-            form.birthdate.data = user.birthdate
-
-    if form.validate_on_submit():
-        edited_user = lib.user.edit_birthdate(user, form.birthdate.data, current_user)
-        session.session.commit()
-
-        flash(u'Geburtsdatum geändert', 'success')
-        return redirect(url_for('.user_show', user_id=edited_user.id))
-
-    return render_template('user/user_edit_birthdate.html', user_id=user_id,
+    return render_template('user/user_edit.html', user_id=user_id,
         form=form)
 
 

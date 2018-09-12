@@ -367,6 +367,11 @@ def edit_name(user, name, processor):
 
     if not name:
         raise ValueError()
+
+    if name == user.name:
+        # name wasn't changed, do nothing
+        return user
+
     old_name = user.name
     user.name = name
     message = deferred_gettext(u"Changed name from {} to {}.")
@@ -388,6 +393,10 @@ def edit_email(user, email, processor):
     if not email:
         email = None
 
+    if email == user.email:
+        # email wasn't changed, do nothing
+        return user
+
     old_email = user.email
     user.email = email
     message = deferred_gettext(u"Changed e-mail from {} to {}.")
@@ -408,6 +417,10 @@ def edit_birthdate(user, birthdate, processor):
 
     if not birthdate:
         birthdate = None
+
+    if birthdate == user.birthdate:
+        # birthdate wasn't changed, do nothing
+        return user
 
     old_bd = user.birthdate
     user.birthdate = birthdate

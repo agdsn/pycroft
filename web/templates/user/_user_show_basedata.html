@@ -18,7 +18,7 @@
 
             {% call info_row("Name") %}
                 {% if current_user is privileged_for('user_change') %}
-                <a href="{{ url_for(".edit_name", user_id=user.id) }}">{{ user.name }} <span class="glyphicon glyphicon-edit"></span></a>
+                <a href="{{ url_for(".edit_user", user_id=user.id) }}">{{ user.name }} <span class="glyphicon glyphicon-edit"></span></a>
                 {% else %}
                 {{ user.name }}
                 {% endif %}
@@ -28,7 +28,7 @@
 
             {% call info_row("E-Mail") %}
                 {% if current_user is privileged_for('user_change') %}
-                <a href="{{ url_for(".edit_email", user_id=user.id) }}">{{ user.email }} <span class="glyphicon glyphicon-edit"></span></a>
+                <a href="{{ url_for(".edit_user", user_id=user.id) }}">{{ user.email }} <span class="glyphicon glyphicon-edit"></span></a>
                 {% else %}
                 {{ user.email }}
                 {% endif %}
@@ -50,7 +50,7 @@
 
             {% call info_row("Geburtsdatum") %}
                 {% if current_user is privileged_for('user_change') %}
-                <a href="{{ url_for(".edit_birthdate", user_id=user.id) }}">{{ user.birthdate|date}} <span class="glyphicon glyphicon-edit"></span></a>
+                <a href="{{ url_for(".edit_user", user_id=user.id) }}">{{ user.birthdate|date}} <span class="glyphicon glyphicon-edit"></span></a>
                 {% else %}
                 {{ user.birthdate|date }}
                 {% endif %}
@@ -83,6 +83,14 @@
     </div>
     {% if current_user is privileged_for('user_change') %}
     <div class="col-xs-12 col-md-5 col-lg-4">
+        <div class="user"><div class="btn-group btn-group-justified">
+            <a class="btn btn-info" href="{{ url_for(".edit_user", user_id=user.id) }}">
+                <span class="badge"><span class="glyphicon glyphicon-pencil"></span></span> Ändern</a>
+            <a style="width:1.2%;" role="button" class="btn btn-success" href="{{ url_for(".static_datasheet", user_id=user.id) }}">
+                <span class="badge"><span class="glyphicon glyphicon-file"></span><span class="glyphicon"></span></span>
+                Datenblatt
+            </a>
+        </div></div>
         {% if user.room_id is not none %}
             <div class="user"><a class="btn btn-info" href="{{ url_for(".move", user_id=user.id) }}">
                 <span class="badge"><span class="glyphicon glyphicon-home"></span><span class="glyphicon glyphicon-resize-horizontal"></span><span class="glyphicon glyphicon-home"></span></span> Umziehen</a></div>
@@ -100,17 +108,13 @@
               <span class="badge"><span class="glyphicon glyphicon-remove"></span><span class="glyphicon"></span></span> Sperren</a></div>
         {% endif %}
 
-        <div class="user"><div class="btn-group btn-group-justified">
-            <a style="width:1.2%;" role="button" class="btn btn-success" href="{{ url_for(".static_datasheet", user_id=user.id) }}">
-                <span class="badge"><span class="glyphicon glyphicon-file"></span><span class="glyphicon"></span></span>
-                Datenblatt
-            </a>
+        <div class="user">
             <a role="button" class="btn btn-danger" href="{{ url_for(".reset_password", user_id=user.id) }}"
                hint="Passwort zurücksetzen">
                 <span class="badge"><span class="glyphicon glyphicon-asterisk"></span><span class="glyphicon"></span></span>
-                Reset
+                Passwort zurücksetzen
             </a>
-        </div></div>
+        </div>
     </div>
     {% endif %}
 </div>
