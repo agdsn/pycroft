@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% import "macros/forms.html" as forms %}
+
+{% block single_row_content %}
+    {{ forms.simple_form(**form_args) }}
+{% endblock %}
+
+{% block page_script %}
+    {{ resources.link_script_file('lazy-load-select.js' | require) }}
+    {{ resources.link_script_file('mac-address-input.js' | require) }}
+{% endblock %}
