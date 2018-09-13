@@ -200,16 +200,19 @@ def generate_user_sheet(user, user_id, plain_password):
         level=str(user.room.level),
         room=str(user.room.number)
     )
-    amount = contribution * 6 / 100
+    amount = contribution / 100
     data = [
         ['Beneficiary:', recipient],
         ['Bank:', bank.bank],
         ['IBAN:', bank.iban],
         ['BIC:', bank.bic],
-        ['Purpose/Intended use:', purpose],
+        ['Purpose/Intended use/\nDescription:', purpose],
         ['Amount', '{0:1.2f}€'.format(amount)]
     ]
-    payment_table = Table(data, colWidths=[4 * cm, 4 * cm])
+    payment_table = Table(data, colWidths=[4 * cm, 4 * cm],
+                          style=[
+                              ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                          ])
 
     qr_size = 4 * cm
     qr_code = qr.QrCodeWidget(
