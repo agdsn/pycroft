@@ -22,6 +22,7 @@ from flask_login import current_user
 from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from wtforms import BooleanField
 
 from pycroft import config
 from pycroft.helpers.i18n import localized
@@ -29,7 +30,8 @@ from pycroft.helpers.util import map_or_default
 from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
-    post_transactions_for_membership_fee, build_transactions_query
+    post_transactions_for_membership_fee, build_transactions_query, \
+    match_activities
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee)
 from pycroft.model.session import session
@@ -259,6 +261,34 @@ def bank_account_activities_edit(activity_id):
 
     return render_template('finance/bank_account_activities_edit.html',
                            form=form)
+
+@bp.route('/bank-account-activities/match')
+@access.require('finance_change')
+def bank_account_activities_match():
+    #debit_account # user
+    #credit_account # bank account
+
+    FieldList = [
+        #("Field-Name",BooleanField('Text')),
+    ]
+
+    matching = {}
+    for acc in BankAccount.q.all():
+        matching.update(match_activities(acc))
+
+    for activity, user in matching.items():
+        print(" ")
+        print(" ")
+        print("activity: ")
+        print(activity)
+        print(" ")
+        FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
+            activity.reference, activity.amount, user.name, user.id, user.login
+        ), default=True)))
+
+    form = forms.ActivityMatchForm.append_fields(FieldList)()
+
+    return render_template('finance/bank_accounts_match.html', form=form)
 
 
 @bp.route('/accounts/')
