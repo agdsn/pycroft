@@ -12,6 +12,7 @@
 """
 import re
 from difflib import SequenceMatcher
+from ipaddr import IPv4Address
 from itertools import chain
 from functools import partial
 
@@ -19,6 +20,8 @@ from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 import operator
+
+from flask_wtf import FlaskForm
 from sqlalchemy import Text
 import uuid
 from sqlalchemy import Text, and_
@@ -26,10 +29,13 @@ from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers import utc
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.finance import get_typed_splits
-from pycroft.lib.net import SubnetFullException, MacExistsException
+from pycroft.lib.logging import log_user_event
+from pycroft.lib.net import SubnetFullException, MacExistsException, \
+    get_unused_ips
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet
@@ -46,10 +52,10 @@ from sqlalchemy.sql.expression import or_, func, cast
 from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
-    HostCreateForm, UserLogEntry, UserAddGroupMembership, UserMoveForm, \
+    UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
-    InterfaceChangeMacForm, UserEditGroupMembership, UserSelectGroupForm, \
-    UserResetPasswordForm, UserMoveInForm
+    UserEditGroupMembership, UserSelectGroupForm, \
+    UserResetPasswordForm, UserMoveInForm, HostForm, InterfaceForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
 from datetime import datetime, timedelta
@@ -58,7 +64,7 @@ from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     HostTable, SearchTable)
+                     HostTable, SearchTable, InterfaceTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
@@ -336,7 +342,10 @@ def user_show(user_id):
             user_id=user.id,
             data_url=_membership_endpoint(group_filter="active"),
         ),
-        host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id)),
+        host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id),
+                             user_id=user.id),
+        interface_table=InterfaceTable(data_url=url_for(".user_show_interfaces_json", user_id=user.id),
+                                       user_id=user.id),
         finance_table_regular=FinanceTable(**_finance_table_kwargs),
         finance_table_splitted=FinanceTableSplitted(**_finance_table_kwargs),
         room=room,
@@ -381,29 +390,382 @@ def user_show_logs_json(user_id, logtype="all"):
 
 @bp.route("/<int:user_id>/hosts")
 def user_show_hosts_json(user_id):
+    user = get_user_or_404(user_id)
+
     list_items = []
-    for user_host in User.q.get(user_id).hosts:
-        if user_host.room:
-            patch_ports = user_host.room.connected_patch_ports
+    for host in user.hosts:
+        if host.room:
+            patch_ports = host.room.connected_patch_ports
             switches = ', '.join(p.switch_port.switch.name for p in patch_ports)
             ports = ', '.join(p.switch_port.name for p in patch_ports)
         else:
             switches = None
             ports = None
-        for ip in user_host.ips:
+
+        list_items.append({
+            'id': host.id,
+            'name': host.name,
+            'switch': switches,
+            'port': ports,
+            'edit_link': {'href': url_for('.host_edit', host_id=host.id,
+                                          user_id=user_id),
+                          'title': "Bearbeiten",
+                          'icon': 'glyphicon-pencil',
+                          'btn-class': 'btn-link'},
+            'delete_link': {'href': url_for('.host_delete', host_id=host.id,
+                                          user_id=user_id),
+                          'title': "Löschen",
+                          'icon': 'glyphicon-trash',
+                          'btn-class': 'btn-link'}
+        })
+    return jsonify(items=list_items)
+
+
+@bp.route('/<int:user_id>/host/<int:host_id>/delete', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def host_delete(user_id, host_id):
+    host = Host.q.get(host_id)
+
+    if host is None:
+        flash(u"Host existiert nicht.", 'error')
+        abort(404)
+
+    if host.owner_id != user_id:
+        flash(u"Host gehört nicht zum Nutzer.", 'error')
+        abort(404)
+
+    form = FlaskForm()
+
+    owner = host.owner
+
+    if form.is_submitted():
+        message = deferred_gettext("Deleted host '{}'.".format(host.name))
+        log_user_event(author=current_user,
+                       user=owner,
+                       message=message.to_json())
+
+        session.session.delete(host)
+        session.session.commit()
+
+        flash(u'Host erfolgreich gelöscht.', 'success')
+        return redirect(url_for('.user_show', user_id=owner.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=owner.id),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Host löschen",
+                           form_args=form_args,
+                           form=form)
+
+
+@bp.route('/<int:user_id>/host/<int:host_id>/edit', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def host_edit(user_id, host_id):
+    host = Host.q.get(host_id)
+
+    if host is None:
+        flash(u"Host existiert nicht.", 'error')
+        abort(404)
+
+    if host.owner_id != user_id:
+        flash(u"Host gehört nicht zum Nutzer.", 'error')
+        abort(404)
+
+    form = HostForm(obj=host)
+
+    owner = host.owner
+
+    if form.validate_on_submit():
+        if host.name != form.name.data:
+            message = deferred_gettext(
+                u"Changed name of host '{}' to '{}'.".format(host.name,
+                                                             form.name.data))
+
+            host.name = form.name.data
+
+            log_user_event(author=current_user,
+                           user=owner,
+                           message=message.to_json())
+
+            session.session.commit()
+
+            flash(u'Host erfolgreich editiert.', 'success')
+        return redirect(url_for('.user_show', user_id=owner.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=owner.id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Host editieren",
+                           form_args = form_args,
+                           form=form)
+
+@bp.route('/<int:user_id>/host/create', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def host_create(user_id):
+    user = get_user_or_404(user_id)
+
+    form = HostForm()
+
+    if form.validate_on_submit():
+        host = Host(name=form.name.data,
+                                 owner_id=user.id,
+                                 room=user.room)
+
+        message = deferred_gettext(u"Created host '{}'.".format(host.name))
+        log_user_event(author=current_user,
+                       user=user,
+                       message=message.to_json())
+
+        session.session.add(host)
+
+        session.session.commit()
+
+        flash(u'Host erfolgreich erstellt.', 'success')
+        return redirect(url_for('.interface_create', user_id=user.id, host_id=host.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=user.id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Host erstellen",
+                           form_args = form_args,
+                           form=form)
+
+@bp.route("/<int:user_id>/interfaces")
+def user_show_interfaces_json(user_id):
+    user = get_user_or_404(user_id)
+
+    list_items = []
+    for host in user.hosts:
+        for interface in host.interfaces:
             list_items.append({
-                'id': str(user_host.id),
-                'ip': str(ip.address),
-                'mac': ip.interface.mac,
-                'switch': switches,
-                'port': ports,
-                'action': {'href': url_for('.change_mac', user_id=user_id,
-                                           user_interface_id=ip.interface.id),
-                           'title': "Bearbeiten",
-                           'icon': 'glyphicon-pencil',
-                           'btn-class': 'btn-link'}
+                'id': interface.id,
+                'host': host.name,
+                'ips': ', '.join(str(ip.address) for ip in interface.ips),
+                'mac': interface.mac,
+                'edit_link': {'href': url_for('.interface_edit', interface_id=interface.id,
+                                          user_id=user_id),
+                              'title': "Bearbeiten",
+                              'icon': 'glyphicon-pencil',
+                              'btn-class': 'btn-link'},
+                'delete_link': {'href': url_for('.interface_delete',
+                                                interface_id=interface.id,
+                                                user_id=user_id),
+                              'title': "Löschen",
+                              'icon': 'glyphicon-trash',
+                              'btn-class': 'btn-link'}
             })
     return jsonify(items=list_items)
+
+
+@bp.route('/<int:user_id>/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def interface_delete(user_id, interface_id):
+    interface = Interface.q.get(interface_id)
+
+    if interface is None:
+        flash(u"Interface existiert nicht.", 'error')
+        abort(404)
+
+    if interface.host.owner_id != user_id:
+        flash(u"Interface gehört nicht zum Nutzer.", 'error')
+        abort(404)
+
+    form = FlaskForm()
+
+    owner = interface.host.owner
+
+    if form.is_submitted():
+        message = deferred_gettext(u"Deleted interface {} of host {}."
+                                   .format(interface.mac, interface.host.name))
+        log_user_event(author=current_user,
+                       user=owner,
+                       message=message.to_json())
+
+        session.session.delete(interface)
+        session.session.commit()
+
+        flash(u'Interface erfolgreich gelöscht.', 'success')
+        return redirect(url_for('.user_show', user_id=owner.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=owner.id),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Interface löschen",
+                           form_args=form_args,
+                           form=form)
+
+
+@bp.route('/<int:user_id>/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def interface_edit(user_id, interface_id):
+    interface = Interface.q.get(interface_id)
+
+    if interface is None:
+        flash(u"Interface existiert nicht.", 'error')
+        abort(404)
+
+    if interface.host.owner_id != user_id:
+        flash(u"Interface gehört nicht zum Nutzer.", 'error')
+        abort(404)
+
+    owner = interface.host.owner
+
+    subnets = [s for p in interface.host.room.connected_patch_ports
+               for v in p.switch_port.default_vlans
+               for s in v.subnets
+               if s.address.version == 4]
+
+    current_ips = list(ip.address for ip in interface.ips)
+
+    form = InterfaceForm(obj=interface)
+
+    form.host.query = Host.q.filter(Host.owner_id == owner.id).order_by(Host.name)
+    form.ips.choices = ((str(ip), str(ip)) for ip in current_ips + list(get_unused_ips(subnets)))
+
+    if not form.is_submitted():
+        form.ips.process_data(ip for ip in current_ips)
+        #form.mac.process_data(interface.mac)
+
+    if form.validate_on_submit():
+        message = u"Edited interface ({}, {}) of host '{}'."\
+                                   .format(interface.mac,
+                                           ', '.join(str(ip.address) for ip in
+                                                     interface.ips),
+                                           interface.host.name)
+
+        if interface.host != form.host.data:
+            interface.host = form.host.data
+            message += " New host: '{}'.".format(interface.host.name)
+
+        if interface.mac != form.mac.data:
+            interface.mac = form.mac.data
+            message += " New MAC: {}.".format(interface.mac)
+
+        ips = set([IPv4Address(ip) for ip in form.ips.data])
+
+        ips_changed = False
+
+        # IP removed
+        for ip in current_ips:
+            if ip not in ips:
+                session.session.delete(IP.q.filter_by(address=ip).first())
+                ips_changed = True
+
+        # IP added
+        for ip in ips:
+            if ip not in current_ips:
+                subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
+
+                if subnet is not None:
+                    session.session.add(IP(interface=interface, address=ip,
+                                        subnet=subnet))
+                    ips_changed = True
+
+        session.session.commit()
+
+        if ips_changed:
+            message += " New IPs: {}.".format(', '.join(str(ip.address) for ip in
+                                                     interface.ips))
+
+        log_user_event(author=current_user,
+                       user=owner,
+                       message=deferred_gettext(message).to_json())
+
+        session.session.commit()
+
+        flash(u'Interface erfolgreich editiert.', 'success')
+        return redirect(url_for('.user_show', user_id=owner.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=owner.id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Interface editieren",
+                           form_args=form_args)
+
+
+@bp.route('/<int:user_id>/interface/create', methods=['GET', 'POST'])
+@access.require('user_hosts_change')
+def interface_create(user_id):
+    user = get_user_or_404(user_id)
+
+    subnets = [s for p in user.room.connected_patch_ports
+               for v in p.switch_port.default_vlans
+               for s in v.subnets
+               if s.address.version == 4]
+
+    host_id = request.args.get('host_id', None)
+    host = None
+
+    if host_id:
+        host = Host.q.get(host_id)
+
+    form = InterfaceForm(host=host)
+
+    unused = get_unused_ips(subnets)
+
+    form.host.query = Host.q.filter(Host.owner_id == user.id).order_by(Host.name)
+    form.ips.choices = ((str(ip), str(ip)) for ip in list(unused))
+
+    if not form.is_submitted():
+        form.ips.process_data([next(iter(unused), None)])
+
+    if form.validate_on_submit():
+        interface = Interface(host=form.host.data,
+                              mac=form.mac.data)
+
+        session.session.add(interface)
+
+        ips = set([IPv4Address(ip) for ip in form.ips.data])
+
+        # IP added
+        for ip in ips:
+            subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
+
+            if subnet is not None:
+                session.session.add(IP(interface=interface, address=ip,
+                                    subnet=subnet))
+
+        message = deferred_gettext(u"Created interface ({}, {}) for host '{}'."
+                                   .format(interface.mac,
+                                           ', '.join(str(ip.address) for ip in
+                                                     interface.ips),
+                                           interface.host.name))
+        log_user_event(author=current_user,
+                       user=user,
+                       message=message.to_json())
+
+        session.session.commit()
+
+        flash(u'Interface erfolgreich erstellt.', 'success')
+        return redirect(url_for('.user_show', user_id=user.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.user_show', user_id=user.id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Interface erstellen",
+                           form_args=form_args)
 
 
 @bp.route("/<int:user_id>/groups")
@@ -912,36 +1274,6 @@ def move_in(user_id):
         form.begin_membership.data = True
 
     return render_template('user/user_move_in.html', form=form, user_id=user_id)
-
-
-@bp.route('/<int:user_id>/change_mac/<int:user_interface_id>', methods=['GET', 'POST'])
-@access.require('user_mac_change')
-def change_mac(user_id, user_interface_id):
-    user = get_user_or_404(user_id)
-
-    form = InterfaceChangeMacForm()
-    my_interface = Interface.q.get(user_interface_id)
-
-    if my_interface is None:
-        flash(u"Interface mit ID {} existiert nicht!".format(user_interface_id), 'error')
-        abort(404)
-
-    if my_interface.host.owner.id != user_id:
-        flash(u"Interface {} gehört nicht zu Nutzer {}!".format(my_interface.id, user.id), 'error')
-        return abort(404)
-
-    if not form.is_submitted():
-        form.mac.data = my_interface.mac
-    if form.validate_on_submit():
-        changed_interface = lib_change_mac(interface=my_interface,
-            mac=form.mac.data,
-            processor=current_user)
-        flash(u'Mac geändert', 'success')
-        session.session.commit()
-        return redirect(url_for('.user_show', user_id=changed_interface.host.owner.id))
-    return render_template('user/change_mac.html',
-                           form=form, user_id=user.id,
-                           user_interface_id=my_interface.id)
 
 
 @bp.route('/<int:user_id>/reset_credit')

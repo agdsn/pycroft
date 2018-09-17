@@ -17,7 +17,7 @@ from web.blueprints.properties.forms import traffic_group_query, \
     property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField, \
-    QuerySelectMultipleField
+    QuerySelectMultipleField, SelectMultipleField
 from web.form.fields.custom import LazyLoadSelectField, MacField
 from web.form.fields.filters import empty_to_none
 from web.form.fields.validators import OptionalIf, MacAddress
@@ -139,10 +139,6 @@ class UserMoveInForm(UserMoveForm):
     begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
 
 
-class HostCreateForm(Form):
-    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
-
-
 class UserLogEntry(Form):
     message = TextAreaField(u"", [DataRequired()])
 
@@ -175,8 +171,14 @@ class UserMoveOutForm(Form):
     end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
 
 
-class InterfaceChangeMacForm(Form):
+class HostForm(Form):
+    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
+
+
+class InterfaceForm(Form):
+    host = QuerySelectField(u"Host", get_label='name')
     mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
+    ips = SelectMultipleField(u"IPs", validators=[Optional()])
 
 
 class UserSelectGroupForm(Form):

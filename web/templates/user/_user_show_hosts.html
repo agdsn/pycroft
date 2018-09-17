@@ -3,4 +3,12 @@
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
-{{ host_table.render("user_hosts") }}
+<div class="row">
+    <div class="col-md-6">
+        {{ host_table.render("user_hosts") }}
+    </div>
+    <div class="col-md-6">
+        {{ interface_table.render("user_interfaces") }}
+    </div>
+</div>
+

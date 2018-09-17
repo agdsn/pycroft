@@ -14,6 +14,7 @@ property_categories = OrderedDict((
     ))),
     ("System / Dienste", OrderedDict((
         ('ldap', "hat einen Directory-Eintrag im LDAP"),
+        ('ldap_login_enabled', "hat einen aktivierten Directory-Eintrag im LDAP"),
         ('mail', u"hat Zugriff auf Mailkonto"),
         ('userdb', u"kann sich eine MySQL-Datenbank erstellen"),
         ('userwww', u"hat Zugriff auf das Userhosting"),
@@ -23,7 +24,7 @@ property_categories = OrderedDict((
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),
         (u"user_change",  u"darf Nutzer anlegen, ändern, löschen"),
-        (u"user_mac_change",  u"darf MAC-Adressen ändern"),
+        (u"user_hosts_change",  u"darf Hosts & Interfaces ändern"),
     ))),
     (u"Finanzen", OrderedDict((
         (u"finance_show",  u"darf Finanzendaten einsehen"),

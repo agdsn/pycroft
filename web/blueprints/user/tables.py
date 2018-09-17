@@ -72,17 +72,59 @@ class MembershipTable(BootstrapTable):
 
 class HostTable(BootstrapTable):
     """A table for displaying hosts
-
-    It has a “change_mac” column.
     """
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
-            Column('ip', 'IP-Adresse'),
-            Column('mac', 'Mac-Adresse'),
+            Column('name', 'Name'),
             Column('switch', 'Switch'),
             Column('port', 'Switchport'),
-            Column('action', 'MAC ändern', formatter='table.btnFormatter')
+            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
+            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
         ], **kw)
+
+        self.user_id = user_id
+
+    def generate_toolbar(self):
+        if self.user_id is None:
+            return
+        #if not current_user.has_property('user_hosts_change'):
+        #    return
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for(".host_create", user_id=self.user_id),
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+        yield "Host"
+        yield "</a>"
+
+
+class InterfaceTable(BootstrapTable):
+    """A table for displaying interfaces
+    """
+    def __init__(self, *a, user_id=None, **kw):
+        super().__init__(*a, columns=[
+            Column('host', 'Host'),
+            Column('mac', 'MAC'),
+            Column('ips', 'IPs'),
+            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
+            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
+        ], **kw)
+        self.user_id = user_id
+
+    def generate_toolbar(self):
+        if self.user_id is None:
+            return
+        #if not current_user.has_property('user_hosts_change'):
+         #   return
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for(".interface_create", user_id=self.user_id),
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+        yield "Interface"
+        yield "</a>"
 
 
 class SearchTable(BootstrapTable):
