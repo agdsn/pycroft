@@ -14,7 +14,9 @@ class MacExistsException(Exception):
     message = "MAC exists"
 
 
-def get_free_ip(subnets):
+def get_unused_ips(subnets):
+    unused = []
+
     for subnet in subnets:
         reserved_bottom = subnet.reserved_addresses_bottom or 0
         reserved_top = subnet.reserved_addresses_top or 0
@@ -24,11 +26,24 @@ def get_free_ip(subnets):
             # Stop argument must be None or an integer: 0 <= x <= sys.maxsize.
             # IPv6 subnets can exceed this boundary on 32 bit python builds.
             min(subnet.address.numhosts - reserved_top - 2, sys.maxsize))
-        unused = (ip for ip in unreserved if ip not in used_ips)
-        try:
-            return next(unused), subnet
-        except StopIteration:
-            continue
+        unused = unused + list(ip for ip in unreserved if ip not in used_ips)
+
+    return unused
+
+
+def get_free_ip(subnets):
+    unused = iter(get_unused_ips(subnets))
+
+    try:
+        ip = next(unused)
+
+        subnet = next(
+            iter([subnet for subnet in subnets if (ip in subnet.address)]),
+            None)
+
+        return ip, subnet
+    except StopIteration:
+        pass
 
     raise SubnetFullException()
 
