@@ -1,0 +1,33 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% set page_title = "Überweisungen matchen" %}
+
+{% block content %}
+
+        <div class="row">
+            <div class="col-md-12">
+                Folgende Nutzer konnten den Überweisungen zugeordnet werden:
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                {{ form.csrf_token }}
+                {% for field in form %}{% if field.type != 'CSRFTokenField' %}
+                    {{ field }} {{ field.label }}<br>
+                {% endif %}{% endfor %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Markierte Überweisungen zuordnen</button>
+            </div>
+        </div>
+
+{% endblock %}

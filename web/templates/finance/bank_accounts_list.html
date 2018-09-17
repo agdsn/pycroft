@@ -13,6 +13,7 @@
 
     <section>
         <h2 class="page-header">{{ _("Unzugeordnete Kontobewegungen") }}</h2>
+        <a href="{{ url_for('.bank_account_activities_match') }}" class="btn btn-primary">Kontobewegungen matchen</a>
         {{ bank_account_activity_table.render('bank_accounts_activities') }}
     </section>
 {% endblock %}

@@ -15,7 +15,7 @@ import operator
 import re
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_
-from sqlalchemy.orm import aliased, contains_eager
+from sqlalchemy.orm import aliased, contains_eager, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
@@ -705,3 +705,22 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
         query = query.options(contains_eager(Split.transaction))
 
     return query
+
+def match_activities(BankAccount):
+    """Get a dict of all unmatched transactions and a user they should be matched with
+
+    :param BankAccount bank_account: The BankAccount to get the unmatched transactions from
+
+    :returns: Dictionary with transaction and user
+    :rtype: Dict
+    """
+
+    matching = {}
+    activity_q = (BankAccountActivity.q
+                  .options(joinedload(BankAccountActivity.bank_account))
+                  .filter(BankAccountActivity.transaction_id == None))
+    for activity in activity_q.all():
+        user = User.q.filter_by(login='beyerm').first()
+        matching.update({activity: user})
+
+    return matching
