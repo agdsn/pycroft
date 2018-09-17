@@ -15,7 +15,7 @@ class MacExistsException(Exception):
 
 
 def get_unused_ips(subnets):
-    unused = []
+    unused = dict()
 
     for subnet in subnets:
         reserved_bottom = subnet.reserved_addresses_bottom or 0
@@ -26,22 +26,19 @@ def get_unused_ips(subnets):
             # Stop argument must be None or an integer: 0 <= x <= sys.maxsize.
             # IPv6 subnets can exceed this boundary on 32 bit python builds.
             min(subnet.address.numhosts - reserved_top - 2, sys.maxsize))
-        unused = unused + list(ip for ip in unreserved if ip not in used_ips)
+        unused[subnet] = list(ip for ip in unreserved if ip not in used_ips)
 
     return unused
 
 
 def get_free_ip(subnets):
-    unused = iter(get_unused_ips(subnets))
+    unused = get_unused_ips(subnets)
 
     try:
-        ip = next(unused)
+        for subnet, ips in unused.items():
+            ip = next(iter(ips))
 
-        subnet = next(
-            iter([subnet for subnet in subnets if (ip in subnet.address)]),
-            None)
-
-        return ip, subnet
+            return ip, subnet
     except StopIteration:
         pass
 

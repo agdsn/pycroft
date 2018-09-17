@@ -635,12 +635,13 @@ def interface_edit(user_id, interface_id):
 
     form = InterfaceForm(obj=interface)
 
+    unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
+
     form.host.query = Host.q.filter(Host.owner_id == owner.id).order_by(Host.name)
-    form.ips.choices = ((str(ip), str(ip)) for ip in current_ips + list(get_unused_ips(subnets)))
+    form.ips.choices = ((str(ip), str(ip)) for ip in current_ips + unused_ips)
 
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
-        #form.mac.process_data(interface.mac)
 
     if form.validate_on_submit():
         message = u"Edited interface ({}, {}) of host '{}'."\
@@ -720,13 +721,13 @@ def interface_create(user_id):
 
     form = InterfaceForm(host=host)
 
-    unused = get_unused_ips(subnets)
+    unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
 
     form.host.query = Host.q.filter(Host.owner_id == user.id).order_by(Host.name)
-    form.ips.choices = ((str(ip), str(ip)) for ip in list(unused))
+    form.ips.choices = ((str(ip), str(ip)) for ip in unused_ips)
 
     if not form.is_submitted():
-        form.ips.process_data([next(iter(unused), None)])
+        form.ips.process_data([next(iter(unused_ips), None)])
 
     if form.validate_on_submit():
         interface = Interface(host=form.host.data,
