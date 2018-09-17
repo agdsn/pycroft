@@ -120,10 +120,10 @@ class UserCreateForm(Form):
                                       choices=[],
                                       conditions=["building", "level"],
                                       data_endpoint="facilities.json_rooms")
-    mac = MacField(u"MAC", [OptionalIf('room_number', invert=True),
-                            MacAddress(message=u"MAC ist ungültig!")])
+    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!"), Optional()])
     birthdate = DateField(u"Geburtsdatum",
-                          [DataRequired(message=u"Geburtsdatum wird benötigt!")])
+                          [DataRequired(message=u"Geburtsdatum wird benötigt!"),
+                           OptionalIf('mac', invert=True)])
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)

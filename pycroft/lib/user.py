@@ -260,9 +260,7 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
     """
 
     room = Room.q.filter_by(number=room_number,
-                            level=level, building=building).one()
-
-    user.room = room
+                            level=level, building=building).one_or_none()
 
     if birthdate:
         user.birthdate = birthdate
@@ -276,24 +274,28 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
             if not user.member_of(group):
                 make_member_of(user, group, processor, closed(session.utcnow(), None))
 
-    interface_existing = Interface.q.filter_by(mac=mac).first()
+    if room:
+        user.room = room
 
-    if interface_existing is not None:
-        if host_annex:
-            host_existing = interface_existing.host
-            host_existing.owner_id = user.id
+        if mac and user.birthdate:
+            interface_existing = Interface.q.filter_by(mac=mac).first()
 
-            session.session.add(host_existing)
-            migrate_user_host(host_existing, user.room, processor)
-        else:
-            raise MacExistsException
-    else:
-        new_host = Host(owner=user, room=room)
-        session.session.add(new_host)
-        session.session.add(Interface(mac=mac, host=new_host))
-        setup_ipv4_networking(new_host)
+            if interface_existing is not None:
+                if host_annex:
+                    host_existing = interface_existing.host
+                    host_existing.owner_id = user.id
 
-    setup_traffic_group(user, processor, traffic_group_id)
+                    session.session.add(host_existing)
+                    migrate_user_host(host_existing, user.room, processor)
+                else:
+                    raise MacExistsException
+            else:
+                new_host = Host(owner=user, room=room)
+                session.session.add(new_host)
+                session.session.add(Interface(mac=mac, host=new_host))
+                setup_ipv4_networking(new_host)
+
+        setup_traffic_group(user, processor, traffic_group_id)
     try:
         grant_initial_credit(user)
     except NoTrafficGroup as e:
