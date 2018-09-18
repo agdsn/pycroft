@@ -1,0 +1,37 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% set page_title = "Überweisungen matchen" %}
+
+{% block content %}
+
+        <div class="row">
+            <div class="col-md-12">
+                Folgende Überweisungen wurden zugeordnet:<br><br>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <b>Überweisung</b>
+            </div>
+            <div class="col-md-6">
+                <b>Nutzer</b>
+            </div>
+        </div>
+        {% for match in matched %}
+        <div class="row">
+            <div class="col-md-6">
+                {{ match[0].reference }} ({{ match[0].amount }}€)
+            </div>
+            <div class="col-md-6">
+                <a href="{{ url_for('user.user_show', user_id=match[1].id) }}">{{ match[1].name }}</a>
+            </div>
+        </div>
+        {% endfor %}
+
+{% endblock %}

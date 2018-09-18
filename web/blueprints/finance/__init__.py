@@ -18,6 +18,7 @@ from io import StringIO
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
+from flask import session as user_session
 from flask_login import current_user
 from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
@@ -265,9 +266,6 @@ def bank_account_activities_edit(activity_id):
 @bp.route('/bank-account-activities/match')
 @access.require('finance_change')
 def bank_account_activities_match():
-    #debit_account # user
-    #credit_account # bank account
-
     FieldList = [
         #("Field-Name",BooleanField('Text')),
     ]
@@ -285,6 +283,47 @@ def bank_account_activities_match():
 
     return render_template('finance/bank_accounts_match.html', form=form)
 
+@bp.route('/bank-account-activities/match/do', methods=['GET', 'POST'])
+@access.require('finance_change')
+def bank_account_activities_do_match():
+
+    # Generate form again
+    matching = {}
+    for acc in BankAccount.q.all():
+        matching.update(match_activities(acc))
+
+    matched = []
+    FieldList = []
+    for activity, user in matching.items():
+        FieldList.append(
+            (str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
+                activity.reference, activity.amount, user.name, user.id,
+                user.login
+            ))))
+
+    form = forms.ActivityMatchForm.append_fields(FieldList)()
+
+    if form.validate_on_submit():
+        # look for all matches which were checked
+        for activity, user in matching.items():
+            if form._fields[str(activity.id)].data is True and activity.transaction_id is None:
+                debit_account = user.account
+                credit_account = activity.bank_account.account
+                transaction = finance.simple_transaction(
+                    description=form.description.data,
+                    debit_account=debit_account,
+                    credit_account=credit_account, amount=activity.amount,
+                    author=current_user, valid_on=activity.valid_on)
+                activity.split = next(split for split in transaction.splits
+                                      if split.account_id == credit_account.id)
+                #session.add(activity)
+
+                end_payment_in_default_memberships()
+
+                matched.append( (activity, user) )
+
+        session.commit()
+    return render_template('finance/bank_accounts_matched.html', matched=matched)
 
 @bp.route('/accounts/')
 @bp.route('/accounts/list')

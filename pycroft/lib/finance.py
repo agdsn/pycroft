@@ -725,7 +725,6 @@ def match_activities(BankAccount):
         search = re.search(r"(([0-9]*-[0-9]{1,2}),|gerok38/([a-zA-Z]*\s[a-zA-Z]*))", activity.reference)
         if search:
             if activity.reference.startswith('gerok38'):
-                print("Gerok Name: {}".format(search.group(3)))
                 user = User.q.filter_by(name=search.group(3)).first()
 
             elif True or check_user_id(search.group(2)):
