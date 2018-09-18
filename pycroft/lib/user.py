@@ -340,7 +340,7 @@ def migrate_user_host(host, new_room, processor):
             session.session.delete(old_ip)
 
             message = deferred_gettext(u"Changed IP from {old_ip} to {new_ip}.").format(
-                old_ip=str(old_address), new_ip=str(new_ip))
+                old_ip=str(old_address), new_ip=str(new_ip.address))
             log_user_event(author=processor, user=host.owner,
                            message=message.to_json())
 
