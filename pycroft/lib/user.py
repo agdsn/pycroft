@@ -82,6 +82,32 @@ def decode_type2_user_id(string):
     return match.groups() if match else None
 
 
+def check_user_id(string):
+    """
+    Check if the given string is a valid user id (type1 or type2).
+    :param string: Type1 or Type2 encoded user ID
+    :returns True if user id was valid, otherwise False
+    :rtype Boolean
+    """
+    idsplit = string.split("-")
+    if len(idsplit) != 2:
+        return False
+    uid = idsplit[0]
+    code = idsplit[1]
+
+    if len(code) == 2:
+        # Type2 code
+        verify = encode_type2_user_id(uid)
+    else:
+        # Type1 code
+        verify = encode_type1_user_id(uid)
+
+    if string == verify:
+        return True
+    else:
+        return False
+
+
 class HostAliasExists(ValueError):
     pass
 
