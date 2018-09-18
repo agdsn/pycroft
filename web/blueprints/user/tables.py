@@ -87,8 +87,8 @@ class HostTable(BootstrapTable):
     def generate_toolbar(self):
         if self.user_id is None:
             return
-        #if not current_user.has_property('user_hosts_change'):
-        #    return
+        if not current_user.has_property('user_hosts_change'):
+            return
         args = {
             'class': "btn btn-primary",
             'href': url_for(".host_create", user_id=self.user_id),
@@ -115,8 +115,8 @@ class InterfaceTable(BootstrapTable):
     def generate_toolbar(self):
         if self.user_id is None:
             return
-        #if not current_user.has_property('user_hosts_change'):
-         #   return
+        if not current_user.has_property('user_hosts_change'):
+            return
         args = {
             'class': "btn btn-primary",
             'href': url_for(".interface_create", user_id=self.user_id),
