@@ -714,13 +714,24 @@ def match_activities(BankAccount):
     :returns: Dictionary with transaction and user
     :rtype: Dict
     """
-
+    from pycroft.lib.user import check_user_id
     matching = {}
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
                   .filter(BankAccountActivity.transaction_id == None))
     for activity in activity_q.all():
-        user = User.q.filter_by(login='beyerm').first()
-        matching.update({activity: user})
+        # search for user-ID
+        user = None
+        search = re.search(r"(([0-9]*-[0-9]{1,2}),|gerok38/([a-zA-Z]*\s[a-zA-Z]*))", activity.reference)
+        if search:
+            if activity.reference.startswith('gerok38'):
+                print("Gerok Name: {}".format(search.group(3)))
+                user = User.q.filter_by(name=search.group(3)).first()
+
+            elif True or check_user_id(search.group(2)):
+                uid = search.group(2).split("-")[0]
+                user = User.q.get(uid)
+            if user:
+                matching.update({activity: user})
 
     return matching

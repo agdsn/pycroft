@@ -277,11 +277,6 @@ def bank_account_activities_match():
         matching.update(match_activities(acc))
 
     for activity, user in matching.items():
-        print(" ")
-        print(" ")
-        print("activity: ")
-        print(activity)
-        print(" ")
         FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
             activity.reference, activity.amount, user.name, user.id, user.login
         ), default=True)))
