@@ -706,7 +706,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
 
     return query
 
-def match_activities(BankAccount):
+def match_activities():
     """Get a dict of all unmatched transactions and a user they should be matched with
 
     :param BankAccount bank_account: The BankAccount to get the unmatched transactions from

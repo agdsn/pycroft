@@ -270,9 +270,7 @@ def bank_account_activities_match():
         #("Field-Name",BooleanField('Text')),
     ]
 
-    matching = {}
-    for acc in BankAccount.q.all():
-        matching.update(match_activities(acc))
+    matching = match_activities()
 
     for activity, user in matching.items():
         FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
@@ -288,9 +286,7 @@ def bank_account_activities_match():
 def bank_account_activities_do_match():
 
     # Generate form again
-    matching = {}
-    for acc in BankAccount.q.all():
-        matching.update(match_activities(acc))
+    matching = match_activities()
 
     matched = []
     FieldList = []
@@ -316,13 +312,16 @@ def bank_account_activities_do_match():
                     author=current_user, valid_on=activity.valid_on)
                 activity.split = next(split for split in transaction.splits
                                       if split.account_id == credit_account.id)
-                activity.transaction_id = transaction.id
+
+                session.add(activity)
 
                 end_payment_in_default_memberships()
 
-                matched.append( (activity, user) )
+                matched.append((activity, user))
 
+        session.flush()
         session.commit()
+
     return render_template('finance/bank_accounts_matched.html', matched=matched)
 
 @bp.route('/accounts/')
