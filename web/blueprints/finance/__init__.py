@@ -277,7 +277,7 @@ def bank_account_activities_match():
     for activity, user in matching.items():
         FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
             activity.reference, activity.amount, user.name, user.id, user.login
-        ), default=True)))
+        ), default=False)))
 
     form = forms.ActivityMatchForm.append_fields(FieldList)()
 
@@ -310,13 +310,13 @@ def bank_account_activities_do_match():
                 debit_account = user.account
                 credit_account = activity.bank_account.account
                 transaction = finance.simple_transaction(
-                    description=form.description.data,
+                    description=activity.reference,
                     debit_account=debit_account,
                     credit_account=credit_account, amount=activity.amount,
                     author=current_user, valid_on=activity.valid_on)
                 activity.split = next(split for split in transaction.splits
                                       if split.account_id == credit_account.id)
-                #session.add(activity)
+                activity.transaction_id = transaction.id
 
                 end_payment_in_default_memberships()
 
