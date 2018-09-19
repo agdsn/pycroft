@@ -719,6 +719,7 @@ def match_activities(BankAccount):
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
                   .filter(BankAccountActivity.transaction_id == None))
+
     for activity in activity_q.all():
         # search for user-ID
         user = None
