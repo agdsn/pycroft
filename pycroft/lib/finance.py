@@ -728,7 +728,7 @@ def match_activities(BankAccount):
             if activity.reference.startswith('gerok38'):
                 user = User.q.filter_by(name=search.group(3)).first()
 
-            elif True or check_user_id(search.group(2)):
+            elif check_user_id(search.group(2)):
                 uid = search.group(2).split("-")[0]
                 user = User.q.get(uid)
             if user:
