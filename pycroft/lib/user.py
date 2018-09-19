@@ -97,10 +97,10 @@ def check_user_id(string):
 
     if len(code) == 2:
         # Type2 code
-        verify = encode_type2_user_id(uid)
+        verify = encode_type2_user_id(int(uid))
     else:
         # Type1 code
-        verify = encode_type1_user_id(uid)
+        verify = encode_type1_user_id(int(uid))
 
     if string == verify:
         return True
