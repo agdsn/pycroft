@@ -99,16 +99,17 @@ def setup_ipv4_networking(host):
         session.session.add(new_ip)
 
 
-def store_user_sheet(new_user, plain_password, timeout=15):
+def store_user_sheet(new_user, plain_password, timeout=15, generation_purpose=''):
     """Generate a user sheet and store it in the WebStorage.
 
     Returns the generated `WebStorage` object holding the pdf.
 
     :param User new_user:
     :param str plain_password:
+    :param str generation_purpose:
     :param int timeout: The lifetime in minutes
     """
-    pdf_data = b64encode(generate_user_sheet(new_user, plain_password)).decode('ascii')
+    pdf_data = b64encode(generate_user_sheet(new_user, plain_password, generation_purpose)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=session.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
@@ -607,7 +608,7 @@ def status_query():
     ).join(Account)
 
 
-def generate_user_sheet(user, plain_password):
+def generate_user_sheet(user, plain_password, generation_purpose=''):
     """Create a „new member“ datasheet for the given user
 
     This is a wrapper for
@@ -620,5 +621,6 @@ def generate_user_sheet(user, plain_password):
 
     :param User user: A pycroft user
     :param str plain_password: The password
+    :param generation_purpose: Optional purpose why this usersheet was printed
     """
-    return generate_pdf(user, encode_type2_user_id(user.id), plain_password)
+    return generate_pdf(user, encode_type2_user_id(user.id), plain_password, generation_purpose)

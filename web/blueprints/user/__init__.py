@@ -141,7 +141,8 @@ def static_datasheet(user_id):
     if user is None:
         abort(404)
 
-    return make_pdf_response(generate_user_sheet(user, plain_password="********"),
+    return make_pdf_response(generate_user_sheet(user, plain_password="********",
+                                                 generation_purpose='reprint'),
                              filename='user_sheet_plain_{}.pdf'.format(user_id))
 
 
@@ -672,6 +673,11 @@ def move(user_id):
             session.session.commit()
 
             flash(u'Benutzer umgezogen', 'success')
+            sheet = lib.user.store_user_sheet(edited_user, '********',
+                                              generation_purpose='user moved')
+            session.session.commit()
+
+            flask_session['user_sheet'] = sheet.id
             return redirect(url_for('.user_show', user_id=edited_user.id))
 
     if not form.is_submitted() or refill_form_data:
@@ -789,7 +795,7 @@ def reset_password(user_id):
     myUser = User.q.get(user_id)
     if form.validate_on_submit():
         plain_password = lib.user.reset_password(myUser, processor=current_user)
-        sheet = lib.user.store_user_sheet(myUser, plain_password)
+        sheet = lib.user.store_user_sheet(myUser, plain_password, generation_purpose='password reset')
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id

@@ -2,7 +2,7 @@
 # Copyright (c) 2017 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
+import datetime
 from io import BytesIO
 from os.path import dirname, join
 
@@ -29,8 +29,7 @@ ASSETS_TWITTER_FILENAME = join(ASSETS_DIRECTORY, 'twitter.png')
 ASSETS_WEB_FILENAME = join(ASSETS_DIRECTORY, 'web.png')
 ASSETS_HOUSE_FILENAME = join(ASSETS_DIRECTORY, 'house.png')
 
-
-def generate_user_sheet(user, user_id, plain_password):
+def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     """Create a „new member“ datasheet for the given user
 
     :param User user: A pycroft user
@@ -45,7 +44,7 @@ def generate_user_sheet(user, user_id, plain_password):
                             rightMargin=2 * cm,
                             leftMargin=2 * cm,
                             topMargin=0.5 * cm,
-                            bottomMargin=2 * cm)
+                            bottomMargin=0.5 * cm)
     style = getStyleSheet()
     story = []
 
@@ -236,6 +235,21 @@ def generate_user_sheet(user, user_id, plain_password):
         Paragraph(
             '<i>Scan the QR-Code with your banking app to import the payment details.</i>',
             style['CenterText'])
+    )
+
+    if generation_purpose:
+        generation_purpose = ' ({})'.format(generation_purpose)
+    story.append(
+        Paragraph(
+            '<i>Generated on {date}{purpose}</i>'.format(
+                date=datetime.date.today(),
+                purpose=generation_purpose
+            ),
+            ParagraphStyle(name='SmallRightText',
+                           parent=style['Normal'],
+                           alignment=TA_RIGHT,
+                           fontSize=8,
+                           spaceBefore=15))
     )
 
     # PDF generieren und speichern
