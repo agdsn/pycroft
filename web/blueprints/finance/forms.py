@@ -150,8 +150,4 @@ class TransactionCreateForm(Form):
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
 
 class ActivityMatchForm(Form):
-    @classmethod
-    def append_fields(cls,FieldList):
-        for (name, field) in FieldList:
-            setattr(cls, name, field)
-        return cls
+    pass
