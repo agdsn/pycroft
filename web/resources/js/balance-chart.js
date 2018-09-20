@@ -6,7 +6,7 @@
 
 import d3 from 'd3';
 
-d3.selectAll('[data-chart="balance"]', function() {
+d3.selectAll('[data-chart="balance"]').each(function(d, i) {
   var parent = d3.select(this);
   var _width = parent.node().getBoundingClientRect().width;
   var margin = {top: 20, right: 20, bottom: 30, left: 50},
