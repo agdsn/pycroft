@@ -18,7 +18,6 @@ from io import StringIO
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
-from flask import session as user_session
 from flask_login import current_user
 from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
@@ -263,7 +262,7 @@ def bank_account_activities_edit(activity_id):
     return render_template('finance/bank_account_activities_edit.html',
                            form=form)
 
-@bp.route('/bank-account-activities/match')
+@bp.route('/bank-account-activities/match/')
 @access.require('finance_change')
 def bank_account_activities_match():
     FieldList = [
@@ -277,11 +276,16 @@ def bank_account_activities_match():
             activity.reference, activity.amount, user.name, user.id, user.login
         ), default=False)))
 
-    form = forms.ActivityMatchForm.append_fields(FieldList)()
+    class F(forms.ActivityMatchForm):
+        pass
+
+    for (name, field) in FieldList:
+        setattr(F, name, field)
+    form = F()
 
     return render_template('finance/bank_accounts_match.html', form=form)
 
-@bp.route('/bank-account-activities/match/do', methods=['GET', 'POST'])
+@bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')
 def bank_account_activities_do_match():
 
@@ -297,8 +301,14 @@ def bank_account_activities_do_match():
                 user.login
             ))))
 
-    form = forms.ActivityMatchForm.append_fields(FieldList)()
+    class F(forms.ActivityMatchForm):
+        pass
 
+    for (name, field) in FieldList:
+        setattr(F, name, field)
+    form = F()
+
+    # parse data
     if form.validate_on_submit():
         # look for all matches which were checked
         for activity, user in matching.items():
