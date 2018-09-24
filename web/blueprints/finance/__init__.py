@@ -274,7 +274,7 @@ def bank_account_activities_match():
     for activity, user in matching.items():
         FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
             activity.reference, activity.amount, user.name, user.id, user.login
-        ), default=False)))
+        ), default=True)))
 
     class F(forms.ActivityMatchForm):
         pass
