@@ -74,17 +74,18 @@ class UserEditForm(Form):
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",
-                                [Optional()],
+                                [DataRequired(message=u"Wohnheim?")],
                                 get_label='short_name',
                                 query_factory=building_query)
     level = LazyLoadSelectField(u"Etage",
-                                validators=[Optional(), NumberRange(message=u"Etage?")],
+                                validators=[NumberRange(message=u"Etage?")],
                                 coerce=int,
                                 choices=[],
                                 conditions=["building"],
                                 data_endpoint="facilities.json_levels")
     room_number = LazyLoadSelectField(u"Raumnummer",
-                                      validators=[Optional()],
+                                      validators=[
+                                          DataRequired(message=u"Raum?")],
                                       coerce=str,
                                       choices=[],
                                       conditions=["building", "level"],
