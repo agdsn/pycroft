@@ -91,7 +91,8 @@ class UserMoveForm(Form):
                                       data_endpoint="facilities.json_rooms")
 
 
-class UserCreateForm(UserMoveForm):
+
+class UserCreateForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
@@ -99,6 +100,25 @@ class UserCreateForm(UserMoveForm):
         validate_unique_login])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
+    building = QuerySelectField(u"Wohnheim",
+                                [Optional()],
+                                get_label='short_name',
+                                query_factory=building_query)
+    level = LazyLoadSelectField(u"Etage",
+                                validators=[
+                                    OptionalIf('building', invert=True),
+                                    NumberRange(message=u"Etage?")],
+                                coerce=int,
+                                choices=[],
+                                conditions=["building"],
+                                data_endpoint="facilities.json_levels")
+    room_number = LazyLoadSelectField(u"Raumnummer",
+                                      validators=[
+                                          OptionalIf('level', invert=True)],
+                                      coerce=str,
+                                      choices=[],
+                                      conditions=["building", "level"],
+                                      data_endpoint="facilities.json_rooms")
     mac = MacField(u"MAC", [OptionalIf('room_number', invert=True),
                             MacAddress(message=u"MAC ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum",

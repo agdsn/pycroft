@@ -615,8 +615,9 @@ def create():
                 groups=form.property_groups.data
             )
 
-            if form.mac.data and form.building.data and form.level.data \
-                    and form.room_number.data and form.birthdate.data:
+            # We only have to check if building is present, as the presence
+            # of the other fields depends on building
+            if form.building.data is not None:
                 lib.user.move_in(
                     user=new_user,
                     building=form.building.data, level=form.level.data,
