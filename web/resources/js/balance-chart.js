@@ -5,6 +5,7 @@
  */
 
 import d3 from 'd3';
+import {de, timeFormat} from './d3locale.js';
 
 d3.selectAll('[data-chart="balance"]').each(function(d, i) {
   var parent = d3.select(this);
@@ -57,15 +58,15 @@ d3.selectAll('[data-chart="balance"]').each(function(d, i) {
   d3.json(parent.attr("data-url"), function(error, resp) {
     if (error) throw error;
 
-    data = resp.items;
+    var data = resp.items;
     data.forEach(function(d) {
       d.valid_on = d3.time.format.iso.parse(d.valid_on);
       d.balance = +d.balance/100.; //converts string to number
     });
 
-    today = new Date();
-    first = data[0];
-    last = data[data.length-1];
+    var today = new Date();
+    var first = data[0];
+    var last = data[data.length-1];
     // 'today' might be earlier than last valid_on though...
     data.push({'balance': last.balance, 'valid_on': today});
     data.splice(0, 0, {'balance': 0, 'valid_on': d3.time.day.offset(first.valid_on, -1)});

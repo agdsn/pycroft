@@ -30,4 +30,4 @@ const timeFormat = de.timeFormat.multi([
     ["%Y", () => true],
 ]);
 
-export default de;
+export {timeFormat, de};
