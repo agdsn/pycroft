@@ -89,6 +89,9 @@ def check_user_id(string):
     :returns True if user id was valid, otherwise False
     :rtype Boolean
     """
+    if not string:
+        return False
+
     idsplit = string.split("-")
     if len(idsplit) != 2:
         return False

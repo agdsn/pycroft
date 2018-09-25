@@ -723,10 +723,10 @@ def match_activities():
     for activity in activity_q.all():
         # search for user-ID
         user = None
-        search = re.search(r"(([0-9]*-[0-9]{1,2}),|gerok38/([a-zA-Z]*\s[a-zA-Z]*))", activity.reference)
+        search = re.search(r"(([\d]+-[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
         if search:
-            if activity.reference.startswith('gerok38'):
-                user = User.q.filter_by(name=search.group(3)).first()
+            if activity.reference.lower().startswith('gerok38'):
+                user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
 
             elif check_user_id(search.group(2)):
                 uid = search.group(2).split("-")[0]
