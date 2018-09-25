@@ -10,7 +10,6 @@ import 'bootstrap-table/dist/locale/bootstrap-table-de-DE.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-en-US.js';
 import 'd3';
 import 'dc';
-import 'highcharts';
 import 'jquery';
 import 'list.js';
 import 'moment';
