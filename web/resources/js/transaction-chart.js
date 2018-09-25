@@ -10,6 +10,7 @@ import dc from 'dc';
 
 $(function () {
     var dateFormat = d3.time.format('%Y-%m-%d');
+    var parent = d3.select('[data-chart="transactions-overview"]');
 
     //todo custom reduce functions for server-side stuff
     var volumeChart = dc.barChart('#volume-chart');
@@ -35,17 +36,15 @@ $(function () {
         return false;
     });
 
-    var url = new URL($SCRIPT_ROOT + '/transactions/json');
-    url.search = document.location.search;
-    d3.json(url.toString(), function (resp) {
+    d3.json(parent.attr("data-url"), function (resp) {
 
-        data = resp.items;
+        var data = resp.items;
         data.forEach(function (d) {
             d.dd = dateFormat.parse(d.valid_on);
             d.month = d3.time.month(d.dd);
         });
 
-        var ndx = crossfilter(data);
+        var ndx = dc.crossfilter(data);
         var all = ndx.groupAll();
 
         var transaction = ndx.dimension(function (d) {
@@ -69,10 +68,10 @@ $(function () {
                 var href = "/finance/accounts/" + acc_id;
                 if (!accountReq.has(acc_id)) {
                     accountReq.add(acc_id);
-                    jQuery.getJSON(href + "/json?limit=0", function (data) {
+                    $.getJSON(href + "/json?limit=0", function (data) {
                         accountCache[acc_id] = data.name;
                         action_func(acc_id, data.name);
-                    }).complete(function () {
+                    }).done(function () {
                         accountReq.delete(acc_id);
                     });
                 }
@@ -94,7 +93,7 @@ $(function () {
                     return "acc-" + acc_id;
                 };
                 var action_func = function (acc_id, replacement) {
-                    jQuery('text:contains("' + format_func(acc_id) + '")').text(replacement);
+                    $('text:contains("' + format_func(acc_id) + '")').text(replacement);
                 };
                 return accountName(d.key, format_func, action_func);
             })
@@ -132,7 +131,7 @@ $(function () {
         var dateAccessor = function (d) {
             return d.dd;
         };
-        dateExtent = [];
+        var dateExtent = [];
         dateExtent = d3.extent(data, dateAccessor);
         if (!(dateMin === null)) {
             dateExtent[0] = dateMin;
@@ -202,10 +201,6 @@ $(function () {
             .compose([amountChart, cumAmountChart]);
 
 
-        var linkTemplate = _.template(
-            '<a id="<%= id %>" href="<%= href %>"><%= title %></a>',
-        );
-
         var descCache = {};
         var descReq = new Set([]);
 
@@ -220,7 +215,7 @@ $(function () {
                         return "<span id=\"acc-" + acc_id + "\"></span>";
                     };
                     var action_func = function (acc_id, replacement) {
-                        jQuery('#acc-' + acc_id).text(replacement);
+                        $('#acc-' + acc_id).text(replacement);
                     };
                     return accountName(d.account_id, format_func, action_func);
                 },
@@ -237,8 +232,8 @@ $(function () {
                 if (!(d.id in descCache)) {
                     if (!descReq.has(d.id)) {
                         descReq.add(d.id);
-                        jQuery.getJSON(href + "/json", function (data) {
-                            jQuery('a[href="' + href + '"]').text(data.description);
+                        $.getJSON(href + "/json", function (data) {
+                            $('a[href="' + href + '"]').text(data.description);
                             descCache[d.id] = data.description;
                             descReq.delete(d.id);
                         });
@@ -247,11 +242,8 @@ $(function () {
                     desc = descCache[d.id];
                 }
                 var date = d3.time.format("%Y-%m-%d")(d.dd);
-                var link = linkTemplate({
-                    'id': "transaction-link",
-                    'href': href,
-                    'title': desc,
-                });
+
+                var link = `<a id="transaction-link" href="${href}">${desc}</a>`
                 return date + " " + link;
             })
             .sortBy(function (d) {

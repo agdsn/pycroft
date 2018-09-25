@@ -515,7 +515,9 @@ def transactions_show_json(transaction_id):
 @access.require('finance_show')
 @bp.route('/transactions')
 def transactions_all():
-    return render_template('finance/transactions_overview.html')
+    return render_template('finance/transactions_overview.html',
+                           api_endpoint=url_for(".transactions_all_json",
+                                                **request.args))
 
 
 @access.require('finance_show')
