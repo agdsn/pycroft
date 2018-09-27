@@ -34,13 +34,14 @@ def get_unused_ips(subnets):
 def get_free_ip(subnets):
     unused = get_unused_ips(subnets)
 
-    try:
-        for subnet, ips in unused.items():
-            ip = next(iter(ips))
+    for subnet, ips in unused.items():
+        try:
+            ip = next(ips)
 
-            return ip, subnet
-    except StopIteration:
-        pass
+            if ip is not None and subnet is not None:
+                return ip, subnet
+        except StopIteration:
+            continue
 
     raise SubnetFullException()
 
