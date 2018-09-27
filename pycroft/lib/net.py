@@ -26,7 +26,7 @@ def get_unused_ips(subnets):
             # Stop argument must be None or an integer: 0 <= x <= sys.maxsize.
             # IPv6 subnets can exceed this boundary on 32 bit python builds.
             min(subnet.address.numhosts - reserved_top - 2, sys.maxsize))
-        unused[subnet] = list(ip for ip in unreserved if ip not in used_ips)
+        unused[subnet] = (ip for ip in unreserved if ip not in used_ips)
 
     return unused
 
