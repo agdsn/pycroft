@@ -18,7 +18,7 @@ from web.blueprints.properties.forms import traffic_group_query, \
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField, \
     QuerySelectMultipleField, SelectMultipleField
-from web.form.fields.custom import LazyLoadSelectField, MacField
+from web.form.fields.custom import LazyLoadSelectField, MacField, UserIDField
 from web.form.fields.filters import empty_to_none
 from web.form.fields.validators import OptionalIf, MacAddress
 
@@ -172,8 +172,13 @@ class UserMoveOutForm(Form):
     end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
 
 
-class HostForm(Form):
+class _HostForm(Form):
+    owner_id = UserIDField(u"Besitzer-ID")
     name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
+
+
+class HostForm(_HostForm, UserMoveForm):
+    pass
 
 
 class InterfaceForm(Form):
