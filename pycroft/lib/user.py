@@ -332,17 +332,30 @@ def migrate_user_host(host, new_room, processor):
         old_ips = tuple(ip for ip in interface.ips)
         for old_ip in old_ips:
             ip_address, subnet = get_free_ip(subnets)
-            new_ip = IP(interface=interface, address=ip_address,
-                        subnet=subnet)
+            new_ip = IP(interface=interface, address=ip_address, subnet=subnet)
             session.session.add(new_ip)
 
             old_address = old_ip.address
             session.session.delete(old_ip)
 
-            message = deferred_gettext(u"Changed IP from {old_ip} to {new_ip}.").format(
-                old_ip=str(old_address), new_ip=str(new_ip.address))
+            message = deferred_gettext(u"Changed IP of {mac} from {old_ip} to {new_ip}.").format(
+                old_ip=str(old_address), new_ip=str(new_ip.address), mac=interface.mac)
             log_user_event(author=processor, user=host.owner,
                            message=message.to_json())
+
+    message = deferred_gettext(
+        u"Moved host '{name}' from {dorm_old} {level_old}-{room_old} to {dorm} {level}-{room}."
+            .format(name=host.name,
+                    dorm_old=old_room.building.short_name,
+                    level_old=old_room.level,
+                    room_old=old_room.number,
+                    dorm=new_room.building.short_name,
+                    level=new_room.level,
+                    room=new_room.number))
+
+    log_user_event(author=processor,
+                   user=host.owner,
+                   message=message.to_json())
 
 
 #TODO ensure serializability
