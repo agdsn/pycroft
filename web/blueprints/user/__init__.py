@@ -1089,23 +1089,7 @@ def move(user_id):
 
     if not form.is_submitted() or refill_form_data:
         if user.room is not None:
-            form.building.data = user.room.building
-
-            levels = session.session.query(Room.level.label('level')).filter_by(
-                building_id=user.room.building.id).order_by(Room.level).distinct()
-
-            form.level.choices = [(entry.level, str(entry.level)) for entry in
-                                                                  levels]
-            form.level.data = user.room.level
-
-            rooms = session.session.query(Room).filter_by(
-                building_id=user.room.building.id,
-                level=user.room.level
-            ).order_by(Room.number).distinct()
-
-            form.room_number.choices = [(entry.number, str(entry.number))
-                                        for entry in rooms]
-            form.room_number.data = user.room
+            refill_room_data(form, user.room)
 
     return render_template('user/user_move.html', user_id=user_id, form=form)
 
