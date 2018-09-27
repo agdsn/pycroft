@@ -77,7 +77,7 @@ import jQuery from 'jquery';
                 this.element.val(this.element.attr("value"));
             }
 
-            this.element.trigger('change');
+            //this.element.trigger('change');
         },
     };
 
