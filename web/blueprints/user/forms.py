@@ -66,11 +66,13 @@ class UserSearchForm(Form):
 class UserResetPasswordForm(Form):
     pass
 
+
 class UserEditForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
     email = TextField(u"E-Mail",
                       [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
     birthdate = DateField(u"Geburtsdatum", [Optional()])
+
 
 class UserMoveForm(Form):
     building = QuerySelectField(u"Wohnheim",
@@ -92,15 +94,8 @@ class UserMoveForm(Form):
                                       data_endpoint="facilities.json_rooms")
 
 
-
 class UserCreateForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
-    login = TextField(u"Login", [
-        DataRequired(message=u"Login wird benötigt!"),
-        Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
-        validate_unique_login])
-    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
-                                  Optional()], filters=[empty_to_none])
     building = QuerySelectField(u"Wohnheim",
                                 [Optional()],
                                 get_label='short_name',
@@ -120,6 +115,12 @@ class UserCreateForm(Form):
                                       choices=[],
                                       conditions=["building", "level"],
                                       data_endpoint="facilities.json_rooms")
+    login = TextField(u"Login", [
+        DataRequired(message=u"Login wird benötigt!"),
+        Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
+        validate_unique_login])
+    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
+                                  Optional()], filters=[empty_to_none])
     mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!"), Optional()])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(message=u"Geburtsdatum wird benötigt!"),
