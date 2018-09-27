@@ -38,7 +38,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException, \
     get_unused_ips
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_history, generate_user_sheet
+    traffic_history, generate_user_sheet, migrate_user_host
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import session
@@ -49,6 +49,8 @@ from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
 from sqlalchemy.sql.expression import or_, func, cast
+
+from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.table import datetime_format
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
@@ -480,21 +482,52 @@ def host_edit(user_id, host_id):
 
     owner = host.owner
 
+    if not form.is_submitted():
+        refill_room_data(form, host.room)
+
     if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data,
+                                building=form.building.data).one()
+
+        if host.owner_id != int(form.owner_id.data):
+            new_owner = User.q.get(form.owner_id.data)
+
+            message = deferred_gettext(
+                u"Transferred Host '{}' to {}.".format(host.name,
+                                                       form.owner_id.data))
+            log_user_event(author=current_user,
+                           user=owner,
+                           message=message.to_json())
+
+            message = deferred_gettext(
+                u"Transferred Host '{}' from {}.".format(host.name,
+                                                             owner.id))
+            log_user_event(author=current_user,
+                           user=new_owner,
+                           message=message.to_json())
+
+            host.owner_id = form.owner_id.data
+
+            owner = new_owner
+
+        if host.room != room:
+            migrate_user_host(host, room, current_user)
+
         if host.name != form.name.data:
             message = deferred_gettext(
                 u"Changed name of host '{}' to '{}'.".format(host.name,
                                                              form.name.data))
-
             host.name = form.name.data
 
             log_user_event(author=current_user,
                            user=owner,
                            message=message.to_json())
 
-            session.session.commit()
+        session.session.commit()
 
-            flash(u'Host erfolgreich editiert.', 'success')
+        flash(u'Host erfolgreich editiert.', 'success')
+
         return redirect(url_for('.user_show', user_id=owner.id))
 
     form_args = {
@@ -512,14 +545,24 @@ def host_edit(user_id, host_id):
 def host_create(user_id):
     user = get_user_or_404(user_id)
 
-    form = HostForm()
+    form = HostForm(owner_id=user.id)
+
+    if not form.is_submitted():
+        refill_room_data(form, user.room)
 
     if form.validate_on_submit():
-        host = Host(name=form.name.data,
-                                 owner_id=user.id,
-                                 room=user.room)
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data, building=form.building.data).one()
 
-        message = deferred_gettext(u"Created host '{}'.".format(host.name))
+        host = Host(name=form.name.data,
+                    owner_id=form.owner_id.data,
+                    room=room)
+
+        message = deferred_gettext(u"Created host '{name}' in {dorm} {level}-{room}."
+                                   .format(name=host.name,
+                                           dorm=room.building.short_name,
+                                           level=room.level,
+                                           room=room.number))
         log_user_event(author=current_user,
                        user=user,
                        message=message.to_json())
