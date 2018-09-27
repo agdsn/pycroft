@@ -1,6 +1,7 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from pycroft.model.user import User
 from web.form.fields import core
 from web.form.widgets import LazyLoadSelectWidget,\
     BootstrapFormControlDecorator, BootstrapStandardDecorator, \
@@ -151,3 +152,20 @@ class MacField(core.StringField):
             data_role='mac-address-input',
             **kwargs
         )
+
+
+class UserIDField(core.StringField):
+    """A User-ID Field """
+
+    def __init__(self, *args, **kwargs):
+        super(UserIDField, self).__init__(*args, **kwargs)
+
+    def __call__(self, **kwargs):
+        return super(UserIDField, self).__call__(
+            **kwargs
+        )
+
+    def pre_validate(self, form):
+        if User.q.get(self.data) is None:
+            raise ValidationError("Ungültige Nutzer-ID.")
+
