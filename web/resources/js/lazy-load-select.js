@@ -57,12 +57,12 @@ import jQuery from 'jquery';
         reload: function (ev, cb) {
             var self = this;
             $.getJSON(this.dataUrl, this.queryData(), function (data) {
-                self.replaceOptions.call(self, data);
+                self.replaceOptions.call(self, data, ev);
                 if (cb) cb();
             });
         },
 
-        replaceOptions: function (data) {
+        replaceOptions: function (data, ev) {
             var items = data[this.itemAttr];
             this.element.find("option").remove();
             for (var i = 0; i < items.length; i++) {
@@ -77,7 +77,9 @@ import jQuery from 'jquery';
                 this.element.val(this.element.attr("value"));
             }
 
-            //this.element.trigger('change');
+            if(ev !== null && ev.originalEvent){
+                this.element.trigger('change');
+            }
         },
     };
 
