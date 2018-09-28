@@ -31,6 +31,7 @@ export default {
         'transaction-chart': './js/transaction-chart.js',
         'transaction-form': './js/transaction-form.js',
         'unlimited-end-date': './js/unlimited-end-date.js',
+        'select-multiple-improvement': './js/select-multiple-improvement.js',
     },
     output: {
         path: dst,
