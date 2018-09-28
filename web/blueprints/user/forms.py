@@ -121,10 +121,11 @@ class UserCreateForm(Form):
         validate_unique_login])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
-    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!"), Optional()])
     birthdate = DateField(u"Geburtsdatum",
                           [DataRequired(message=u"Geburtsdatum wird benötigt!"),
                            OptionalIf('mac', invert=True)])
+    mac = MacField(u"MAC",
+                   [MacAddress(message=u"MAC ist ungültig!"), Optional()])
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
@@ -133,8 +134,8 @@ class UserCreateForm(Form):
 
 
 class UserMoveInForm(UserMoveForm):
-    mac = MacField(u"MAC", [Optional()])
     birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
+    mac = MacField(u"MAC", [Optional()])
     begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
 
 
