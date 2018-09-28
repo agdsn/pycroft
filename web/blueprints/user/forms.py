@@ -133,10 +133,8 @@ class UserCreateForm(Form):
 
 
 class UserMoveInForm(UserMoveForm):
-    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
-    birthdate = DateField(u"Geburtsdatum",
-                          [DataRequired(
-                              message=u"Geburtsdatum wird benötigt!")])
+    mac = MacField(u"MAC", [Optional()])
+    birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
     begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
 
 
