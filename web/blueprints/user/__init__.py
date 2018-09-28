@@ -450,7 +450,8 @@ def host_delete(user_id, host_id):
         session.session.commit()
 
         flash(u'Host erfolgreich gelöscht.', 'success')
-        return redirect(url_for('.user_show', user_id=owner.id))
+        return redirect(url_for('.user_show', user_id=owner.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
@@ -528,7 +529,8 @@ def host_edit(user_id, host_id):
 
         flash(u'Host erfolgreich editiert.', 'success')
 
-        return redirect(url_for('.user_show', user_id=owner.id))
+        return redirect(url_for('.user_show', user_id=owner.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
@@ -572,7 +574,8 @@ def host_create(user_id):
         session.session.commit()
 
         flash(u'Host erfolgreich erstellt.', 'success')
-        return redirect(url_for('.interface_create', user_id=user.id, host_id=host.id))
+        return redirect(url_for('.interface_create', user_id=user.id, host_id=host.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
@@ -639,7 +642,8 @@ def interface_delete(user_id, interface_id):
         session.session.commit()
 
         flash(u'Interface erfolgreich gelöscht.', 'success')
-        return redirect(url_for('.user_show', user_id=owner.id))
+        return redirect(url_for('.user_show', user_id=owner.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
@@ -734,7 +738,8 @@ def interface_edit(user_id, interface_id):
         session.session.commit()
 
         flash(u'Interface erfolgreich editiert.', 'success')
-        return redirect(url_for('.user_show', user_id=owner.id))
+        return redirect(url_for('.user_show', user_id=owner.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
@@ -800,7 +805,8 @@ def interface_create(user_id):
         session.session.commit()
 
         flash(u'Interface erfolgreich erstellt.', 'success')
-        return redirect(url_for('.user_show', user_id=user.id))
+        return redirect(url_for('.user_show', user_id=user.id,
+                                _anchor='hosts'))
 
     form_args = {
         'form': form,
