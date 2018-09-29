@@ -1127,8 +1127,9 @@ def edit_membership(user_id, membership_id):
         else:
             membership.ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
 
-        message = (u"hat die Mitgliedschaft des Nutzers in der Gruppe '{}' "
-                   u"bearbeitet.".format(membership.group.name))
+        message = (u"Edited the membership of group '{group}'. During: {during}"
+                   .format(group=membership.group.name,
+                           during=closed(membership.begins_at, membership.ends_at)))
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
