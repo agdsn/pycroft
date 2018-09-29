@@ -19,7 +19,7 @@ from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField, \
     QuerySelectMultipleField, SelectMultipleField
 from web.form.fields.custom import LazyLoadSelectField, MacField, UserIDField
-from web.form.fields.filters import empty_to_none
+from web.form.fields.filters import empty_to_none, to_lowercase
 from web.form.fields.validators import OptionalIf, MacAddress
 
 
@@ -117,8 +117,9 @@ class UserCreateForm(Form):
                                       data_endpoint="facilities.json_rooms")
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
-        Regexp(regex=User.login_regex, message=u"Login ist ungültig!"),
-        validate_unique_login])
+        Regexp(regex=User.login_regex_ci, message=u"Login ist ungültig!"),
+        validate_unique_login],
+                      filters=[to_lowercase])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
     birthdate = DateField(u"Geburtsdatum",
