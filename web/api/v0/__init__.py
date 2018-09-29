@@ -9,13 +9,13 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
 from pycroft.lib.finance import build_transactions_query
-from pycroft.lib.host import change_mac
+from pycroft.lib.host import change_mac, host_create, interface_create
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history
 from pycroft.model import session
-from pycroft.model.host import IP, Interface
+from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError
 
@@ -266,3 +266,41 @@ class UserInterfaceResource(Resource):
 
 api.add_resource(UserInterfaceResource,
                  '/user/<int:user_id>/change-mac/<int:interface_id>')
+
+
+class ActivateNetworkAccessResource(Resource):
+    def post(self, user_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('password', dest='password', required=True)
+        parser.add_argument('birthdate', dest='birthdate', required=True)
+        parser.add_argument('mac', dest='mac', required=True)
+        parser.add_argument('host_name', dest='host_name', required=False)
+        args = parser.parse_args()
+
+        user = get_authenticated_user(user_id, args.password)
+
+        interfaces = Interface.q.join(Host).filter(Host.owner_id == user.id).all()
+        if len(interfaces) > 0:
+            abort(404, message="User {} already has a host with interface.")
+
+        user.birthdate = args.birthdate
+
+        host = Host.q.filter_by(owner_id=user.id).one_or_none()
+
+        try:
+            if host is None:
+                host = host_create(user, user.room, args.host_name, user)
+
+            interface_create(host, args.mac, None, user)
+
+            session.session.commit()
+        except InvalidMACAddressException:
+            abort(400, message='Invalid mac address.')
+        except IntegrityError:
+            abort(400, message='Mac address is already in use.')
+        return "Network access has been activated."
+
+
+api.add_resource(ActivateNetworkAccessResource,
+                 '/user/<int:user_id>/activate-network-access')
+
