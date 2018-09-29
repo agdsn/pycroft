@@ -35,7 +35,7 @@ from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import SubnetFullException, MacExistsException, \
-    get_unused_ips
+    get_unused_ips, get_subnets_for_room
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, migrate_user_host
@@ -441,12 +441,8 @@ def host_delete(user_id, host_id):
     owner = host.owner
 
     if form.is_submitted():
-        message = deferred_gettext("Deleted host '{}'.".format(host.name))
-        log_user_event(author=current_user,
-                       user=owner,
-                       message=message.to_json())
+        lib.host.host_delete(host, current_user)
 
-        session.session.delete(host)
         session.session.commit()
 
         flash(u'Host erfolgreich gelöscht.', 'success')
@@ -481,8 +477,6 @@ def host_edit(user_id, host_id):
 
     form = HostForm(obj=host)
 
-    owner = host.owner
-
     if not form.is_submitted():
         refill_room_data(form, host.room)
 
@@ -491,39 +485,9 @@ def host_edit(user_id, host_id):
                                 level=form.level.data,
                                 building=form.building.data).one()
 
-        if host.owner_id != int(form.owner_id.data):
-            new_owner = User.q.get(form.owner_id.data)
+        owner = User.q.filter_by(id=form.owner_id.data).one()
 
-            message = deferred_gettext(
-                u"Transferred Host '{}' to {}.".format(host.name,
-                                                       form.owner_id.data))
-            log_user_event(author=current_user,
-                           user=owner,
-                           message=message.to_json())
-
-            message = deferred_gettext(
-                u"Transferred Host '{}' from {}.".format(host.name,
-                                                             owner.id))
-            log_user_event(author=current_user,
-                           user=new_owner,
-                           message=message.to_json())
-
-            host.owner_id = form.owner_id.data
-
-            owner = new_owner
-
-        if host.room != room:
-            migrate_user_host(host, room, current_user)
-
-        if host.name != form.name.data:
-            message = deferred_gettext(
-                u"Changed name of host '{}' to '{}'.".format(host.name,
-                                                             form.name.data))
-            host.name = form.name.data
-
-            log_user_event(author=current_user,
-                           user=owner,
-                           message=message.to_json())
+        lib.host.host_edit(host, owner, room, form.name.data, current_user)
 
         session.session.commit()
 
@@ -534,13 +498,14 @@ def host_edit(user_id, host_id):
 
     form_args = {
         'form': form,
-        'cancel_to': url_for('.user_show', user_id=owner.id)
+        'cancel_to': url_for('.user_show', user_id=host.owner.id)
     }
 
     return render_template('generic_form.html',
                            page_title="Host editieren",
                            form_args = form_args,
                            form=form)
+
 
 @bp.route('/<int:user_id>/host/create', methods=['GET', 'POST'])
 @access.require('user_hosts_change')
@@ -556,25 +521,14 @@ def host_create(user_id):
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
-        host = Host(name=form.name.data,
-                    owner_id=form.owner_id.data,
-                    room=room)
+        owner = User.q.filter_by(id=form.owner_id.data).one()
 
-        message = deferred_gettext(u"Created host '{name}' in {dorm} {level}-{room}."
-                                   .format(name=host.name,
-                                           dorm=room.building.short_name,
-                                           level=room.level,
-                                           room=room.number))
-        log_user_event(author=current_user,
-                       user=user,
-                       message=message.to_json())
-
-        session.session.add(host)
+        host = lib.host.host_create(owner, room, form.name.data, current_user)
 
         session.session.commit()
 
         flash(u'Host erfolgreich erstellt.', 'success')
-        return redirect(url_for('.interface_create', user_id=user.id, host_id=host.id,
+        return redirect(url_for('.interface_create', user_id=host.owner_id, host_id=host.id,
                                 _anchor='hosts'))
 
     form_args = {
@@ -629,25 +583,18 @@ def interface_delete(user_id, interface_id):
 
     form = FlaskForm()
 
-    owner = interface.host.owner
-
     if form.is_submitted():
-        message = deferred_gettext(u"Deleted interface {} of host {}."
-                                   .format(interface.mac, interface.host.name))
-        log_user_event(author=current_user,
-                       user=owner,
-                       message=message.to_json())
+        lib.host.interface_delete(interface, current_user)
 
-        session.session.delete(interface)
         session.session.commit()
 
         flash(u'Interface erfolgreich gelöscht.', 'success')
-        return redirect(url_for('.user_show', user_id=owner.id,
+        return redirect(url_for('.user_show', user_id=user_id,
                                 _anchor='hosts'))
 
     form_args = {
         'form': form,
-        'cancel_to': url_for('.user_show', user_id=owner.id),
+        'cancel_to': url_for('.user_show', user_id=user_id),
         'submit_text': 'Löschen',
         'actions_offset': 0
     }
@@ -671,12 +618,7 @@ def interface_edit(user_id, interface_id):
         flash(u"Interface gehört nicht zum Nutzer.", 'error')
         abort(404)
 
-    owner = interface.host.owner
-
-    subnets = [s for p in interface.host.room.connected_patch_ports
-               for v in p.switch_port.default_vlans
-               for s in v.subnets
-               if s.address.version == 4]
+    subnets = get_subnets_for_room(interface.host.room)
 
     current_ips = list(ip.address for ip in interface.ips)
 
@@ -684,66 +626,27 @@ def interface_edit(user_id, interface_id):
 
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
 
-    form.host.query = Host.q.filter(Host.owner_id == owner.id).order_by(Host.name)
+    form.host.query = Host.q.filter(Host.owner_id == user_id).order_by(Host.name)
     form.ips.choices = ((str(ip), str(ip)) for ip in current_ips + unused_ips)
 
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
 
     if form.validate_on_submit():
-        message = u"Edited interface ({}, {}) of host '{}'."\
-                                   .format(interface.mac,
-                                           ', '.join(str(ip.address) for ip in
-                                                     interface.ips),
-                                           interface.host.name)
-
-        if interface.host != form.host.data:
-            interface.host = form.host.data
-            message += " New host: '{}'.".format(interface.host.name)
-
-        if interface.mac != form.mac.data:
-            interface.mac = form.mac.data
-            message += " New MAC: {}.".format(interface.mac)
-
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
-        ips_changed = False
-
-        # IP removed
-        for ip in current_ips:
-            if ip not in ips:
-                session.session.delete(IP.q.filter_by(address=ip).first())
-                ips_changed = True
-
-        # IP added
-        for ip in ips:
-            if ip not in current_ips:
-                subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
-
-                if subnet is not None:
-                    session.session.add(IP(interface=interface, address=ip,
-                                        subnet=subnet))
-                    ips_changed = True
-
-        session.session.commit()
-
-        if ips_changed:
-            message += " New IPs: {}.".format(', '.join(str(ip.address) for ip in
-                                                     interface.ips))
-
-        log_user_event(author=current_user,
-                       user=owner,
-                       message=deferred_gettext(message).to_json())
+        lib.host.interface_edit(interface, form.host.data, form.mac.data, ips,
+                                current_user)
 
         session.session.commit()
 
         flash(u'Interface erfolgreich editiert.', 'success')
-        return redirect(url_for('.user_show', user_id=owner.id,
+        return redirect(url_for('.user_show', user_id=user_id,
                                 _anchor='hosts'))
 
     form_args = {
         'form': form,
-        'cancel_to': url_for('.user_show', user_id=owner.id)
+        'cancel_to': url_for('.user_show', user_id=user_id)
     }
 
     return render_template('generic_form.html',
@@ -756,14 +659,11 @@ def interface_edit(user_id, interface_id):
 def interface_create(user_id):
     user = get_user_or_404(user_id)
 
-    subnets = [s for p in user.room.connected_patch_ports
-               for v in p.switch_port.default_vlans
-               for s in v.subnets
-               if s.address.version == 4]
+    subnets = get_subnets_for_room(user.room)
 
     host_id = request.args.get('host_id', None)
-    host = None
 
+    host = None
     if host_id:
         host = Host.q.get(host_id)
 
@@ -778,29 +678,10 @@ def interface_create(user_id):
         form.ips.process_data([next(iter(unused_ips), None)])
 
     if form.validate_on_submit():
-        interface = Interface(host=form.host.data,
-                              mac=form.mac.data)
-
-        session.session.add(interface)
-
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
-        # IP added
-        for ip in ips:
-            subnet = next(iter([subnet for subnet in subnets if (ip in subnet.address)]), None)
-
-            if subnet is not None:
-                session.session.add(IP(interface=interface, address=ip,
-                                    subnet=subnet))
-
-        message = deferred_gettext(u"Created interface ({}, {}) for host '{}'."
-                                   .format(interface.mac,
-                                           ', '.join(str(ip.address) for ip in
-                                                     interface.ips),
-                                           interface.host.name))
-        log_user_event(author=current_user,
-                       user=user,
-                       message=message.to_json())
+        lib.host.interface_create(form.host.data, form.mac.data, ips,
+                                  current_user)
 
         session.session.commit()
 
