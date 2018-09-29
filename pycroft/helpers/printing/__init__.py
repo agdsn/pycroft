@@ -192,13 +192,21 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     bank = config.membership_fee_bank_account
 
     recipient = 'Studentenrat TUD - AG DSN'
-    purpose = '{id}, {name}, {dorm} {level} {room}'.format(
-        id=user_id,
-        name=user.name,
-        dorm=str(user.room.building.short_name),
-        level=str(user.room.level),
-        room=str(user.room.number)
-    )
+
+    if user.room:
+        purpose = '{id}, {name}, {dorm} {level} {room}'.format(
+            id=user_id,
+            name=user.name,
+            dorm=str(user.room.building.short_name),
+            level=str(user.room.level),
+            room=str(user.room.number)
+        )
+    else:
+        purpose = '{id}, {name}'.format(
+            id=user_id,
+            name=user.name
+        )
+
     amount = contribution / 100
     data = [
         ['Beneficiary:', recipient],
