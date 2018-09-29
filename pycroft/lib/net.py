@@ -45,6 +45,14 @@ def get_free_ip(subnets):
     raise SubnetFullException()
 
 
+#TODO: Implement this in the model
+def get_subnets_for_room(room):
+    return [s for p in room.connected_patch_ports
+               for v in p.switch_port.default_vlans
+               for s in v.subnets
+               if s.address.version == 4]
+
+
 def ptr_name(network, ip_address):
     """
     :param IPv4Network|IPv6Network network:

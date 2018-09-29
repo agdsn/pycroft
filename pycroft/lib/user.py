@@ -29,7 +29,8 @@ from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.net import get_free_ip, MacExistsException
+from pycroft.lib.net import get_free_ip, MacExistsException, \
+    get_subnets_for_room
 from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
     NoTrafficGroup
 from pycroft.model import session
@@ -117,10 +118,8 @@ class HostAliasExists(ValueError):
 
 def setup_ipv4_networking(host):
     """Add suitable ips for every interface of a host"""
-    subnets = [s for p in host.room.connected_patch_ports
-               for v in p.switch_port.default_vlans
-               for s in v.subnets
-               if s.address.version == 4]
+    subnets = get_subnets_for_room(host.room)
+
     for interface in host.interfaces:
         ip_address, subnet = get_free_ip(subnets)
         new_ip = IP(interface=interface, address=ip_address,
