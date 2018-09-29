@@ -99,7 +99,8 @@ class UserCreateForm(Form):
     building = QuerySelectField(u"Wohnheim",
                                 [Optional()],
                                 get_label='short_name',
-                                query_factory=building_query)
+                                query_factory=building_query,
+                                allow_blank=True)
     level = LazyLoadSelectField(u"Etage",
                                 validators=[
                                     OptionalIf('building', invert=True),
