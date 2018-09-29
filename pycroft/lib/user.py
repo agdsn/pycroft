@@ -592,23 +592,29 @@ def move_out(user, comment, processor, when, end_membership=True):
 
         user.birthdate = None
 
-    num_hosts = 0  # In case the chain is empty
+    deleted_interfaces = list()
+    num_hosts = 0
     for num_hosts, h in enumerate(user.hosts, 1):
+        for interface in h.interfaces:
+            deleted_interfaces.append(interface.mac)
+
         session.session.delete(h)
+
+    message = u"Moved out of {dorm} {level}-{room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
+        .format(dorm=user.room.building.short_name,
+                level=user.room.level,
+                room=user.room.number,
+                num_hosts=num_hosts,
+                interfaces=', '.join(deleted_interfaces))
 
     user.room = None
 
     if comment:
-        message = deferred_gettext(
-            u"Moved out: ({} hosts deleted). Comment: {}"
-        ).format(num_hosts, comment)
-    else:
-        message = deferred_gettext(
-            u"Moved out: ({} hosts deleted)."
-        ).format(num_hosts)
+        message += u" Comment: {}"\
+            .format(comment)
 
     log_user_event(
-        message=message.to_json(),
+        message=deferred_gettext(message).to_json(),
         author=processor,
         user=user
     )
