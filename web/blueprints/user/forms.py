@@ -124,8 +124,7 @@ class UserCreateForm(Form):
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
     birthdate = DateField(u"Geburtsdatum",
-                          [DataRequired(message=u"Geburtsdatum wird benötigt!"),
-                           OptionalIf('mac', invert=True)])
+                          [OptionalIf('mac', invert=True)])
     mac = MacField(u"MAC",
                    [MacAddress(message=u"MAC ist ungültig!"), Optional()])
     property_groups = QuerySelectMultipleField(u"Gruppen",
