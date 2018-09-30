@@ -312,12 +312,15 @@ Importing the production database into Pycroft is a three-step process:
 
 1. A regular dump is published in our
    [internal gitlab](https://git.agdsn.de/team-services/pycroft-data).
+   
    Clone this repository to your computer.
 
 2. Copy the `pycroft.sql` file to the database container:
+
    `docker cp ~/.../pycroft-data/pycroft.sql pycroft_dev-db_1:/pycroft.sql`
    
 3. Import the dump:
+
    `docker-compose exec --user postgres dev-db psql -f /pycroft.sql`
 
 After all that, you should be able to log in into your pycroft
