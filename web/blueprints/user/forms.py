@@ -95,7 +95,8 @@ class UserMoveForm(Form):
 
 
 class UserCreateForm(Form):
-    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
+    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")],
+                     render_kw={'autofocus': True})
     building = QuerySelectField(u"Wohnheim",
                                 [Optional()],
                                 get_label='short_name',
