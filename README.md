@@ -1,6 +1,6 @@
 # About #
 
-Pycroft is the future user management system of the AG DSN student
+Pycroft is the current user management system of the AG DSN student
 network.  It is based on [Flask](http://flask.pocoo.org) and expects a
 [Postgres](https://www.postgresql.org/) database making use of the
 [SQLAlchemy ORM](http://www.sqlalchemy.org/).
@@ -219,8 +219,6 @@ docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow
 
 The last command should tell you that the server spawned an instance
 at 0.0.0.0:5000 from inside the container.
-Due to the port forwarding, you can take a peek at a working UI by accessing
-`0.0.0.0:5001` from your browser.
 
 **But don't be too excited, pycroft will fail after the login – we
 have to set up the database.**
@@ -310,54 +308,17 @@ The unit tests will generate the schema and data automatically,
 but usually you want to run your development instance against a recent copy of
 our current production database.
 
-Importing the production databases into Pycroft is a two-step process:
+Importing the production database into Pycroft is a three-step process:
 
-1. Because the Pycroft schema might change, a local copy of our various
-   production databases (`netusers` MySQL, atlantis LDAP, `nvtool` PostgreSQL,
-   `userman` PostgreSQL) are created in the PostgreSQL database `legacy`.
-   You have to perform this step only if you want to obtain a fresh version of the
-   current production data.
-   Someone else can also perform this step for you, if you have insufficient
-   permissions to access the production databases.
-
-   A regular dump is published in our
+1. A regular dump is published in our
    [internal gitlab](https://git.agdsn.de/team-services/pycroft-data).
-   You can import the dump into your development database by running the following
-   command (assuming you stored it under `example/legacy.sql`):
+   Clone this repository to your computer.
 
-   ```sh
-   docker-compose exec --user postgres db psql -f - < example/legacy.sql
-   ```
-
-2. The legacy importer (`legacy/import_legacy.py`) can then translate the cached
-   `legacy` data to the current pycroft schema.:
-
-   ```sh
-   docker-compose stop dev-app  # A running app container locks the postgres db
-   docker-compose run --rm dev-app import-legacy
-   docker-compose start dev-app
-   ```
-
-   This will take some time as well, as you will be translating more than
-   400k financial records using an abstracted ORM backend.
-
-Before we congratulate ourselves, let's dump the contents of the
-`pycroft` database just to be sure we don't have to run the importer
-again (except someone changes the schema, then you'll have to do it
-regardless).  This is more tricky since the `postgres` user from
-inside the container does not have write permissions on the mounted
-directory by default:
-
-```sh
-docker-compose exec --user postgres db pg_dump --create --clean --if-exists postgres:///pycroft -f - > example/pycroft_$(date +%Y-%m-%d).sql
-```
-
-If you want to re-import the dump later,
-import it like the legacy database just with
-
-```sh
-docker-compose exec --user postgres db psql -f - < example/pycroft_YYYY-mm-dd.sql
-```
+2. Copy the `pycroft.sql` file to the database container:
+   `docker cp ~/.../pycroft-data/pycroft.sql pycroft_dev-db_1:/pycroft.sql`
+   
+3. Import the dump:
+   `docker-compose exec --user postgres dev-db psql -f /pycroft.sql`
 
 After all that, you should be able to log in into your pycroft
 instance at `0.0.0.0:5000`!  **Congratulations!**
