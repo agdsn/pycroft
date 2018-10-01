@@ -392,7 +392,7 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
         user=user
     )
 
-    setup_traffic_group(user, processor, traffic_group_id, terminate_other=True)
+    setup_traffic_group(user, processor, traffic_group_id, terminate_other=False)
 
     for user_host in user.hosts:
         migrate_user_host(user_host, new_room, processor)
