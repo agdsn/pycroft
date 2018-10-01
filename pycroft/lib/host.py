@@ -164,11 +164,14 @@ def interface_edit(interface, host, mac, ips, processor):
     current_ips = list(ip.address for ip in interface.ips)
     subnets = get_subnets_for_room(interface.host.room)
 
+    new_ips = set(current_ips)
+
     # IP removed
     for ip in current_ips:
         if ip not in ips:
             session.delete(IP.q.filter_by(address=ip).first())
             ips_changed = True
+            new_ips.remove(ip)
 
     # IP added
     for ip in ips:
@@ -181,12 +184,11 @@ def interface_edit(interface, host, mac, ips, processor):
                 session.add(IP(interface=interface, address=ip,
                                        subnet=subnet))
                 ips_changed = True
-
-    session.refresh(interface)
+                new_ips.add(str(ip))
 
     if ips_changed:
-        message += " New IPs: {}.".format(', '.join(str(ip.address) for ip in
-                                                    interface.ips))
+        message += " New IPs: {}.".format(', '.join(str(ip) for ip in
+                                                    new_ips))
 
     log_user_event(author=processor,
                    user=interface.host.owner,
