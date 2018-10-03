@@ -287,3 +287,10 @@ class MoneyFieldDecorator(WidgetDecorator):
         kwargs['class_'] += ' money-amount'
         return (u"<div class=\"input-group\">" + self.widget(field, **kwargs) +
                 u"<span class=\"input-group-addon\">€</span></div>")
+
+
+class MacFieldDecorator(WidgetDecorator):
+    """Adds an addon which shows the vendor."""
+    def __call__(self, field, **kwargs):
+        return (u"<div class=\"input-group\">" + self.widget(field, **kwargs) +
+                u"<span class=\"input-group-addon mac-manufacturer\">?</span></div>")

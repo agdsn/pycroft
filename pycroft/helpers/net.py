@@ -6,6 +6,8 @@ import re
 import ipaddr
 
 # Byte represented by 2 hexadecimal digits
+from manuf import manuf
+
 BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
 # Pattern for the most significant byte
 # Does not allow the first bit to be set (multicast flag)
@@ -100,3 +102,12 @@ def reverse_pointer(ip_address):
         reversed_chars = reversed(ip_address.exploded.replace(':', ''))
         return '.'.join(reversed_chars) + '.ip6.arpa'
     raise TypeError()
+
+
+def get_interface_manufacturer(mac):
+    try:
+        p = manuf.MacParser()
+    except FileNotFoundError:
+        p = manuf.MacParser(update=True)
+
+    return p.get_manuf(mac)

@@ -22,6 +22,18 @@ import jQuery from 'jquery';
             }
 
             e.target.value = str.slice(0, 17).toLowerCase();
+
+            var manufacturer_addon = $(e.target).closest('.input-group').find('.mac-manufacturer');
+
+            if(e.target.value.length === 17){
+                $.getJSON( $SCRIPT_ROOT + '/user/interface-manufacturer/' + e.target.value, function( data ){
+                    if(data.manufacturer){
+                        manufacturer_addon.text(data.manufacturer);
+                    }
+                });
+            }else{
+                manufacturer_addon.text('?');
+            }
         });
 
         this.trigger('keyup');

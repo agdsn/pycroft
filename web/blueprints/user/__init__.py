@@ -31,7 +31,7 @@ from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
-from pycroft.helpers.net import mac_regex, ip_regex
+from pycroft.helpers.net import mac_regex, ip_regex, get_interface_manufacturer
 from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import SubnetFullException, MacExistsException, \
@@ -697,6 +697,14 @@ def interface_create(user_id):
     return render_template('generic_form.html',
                            page_title="Interface erstellen",
                            form_args=form_args)
+
+
+@bp.route("/interface-manufacturer/<string:mac>")
+def interface_manufacturer_json(mac):
+    if not re.match(mac_regex, mac):
+        return abort(400)
+
+    return jsonify(manufacturer=get_interface_manufacturer(mac))
 
 
 @bp.route("/<int:user_id>/groups")

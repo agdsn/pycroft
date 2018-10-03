@@ -3,10 +3,10 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.model.user import User
 from web.form.fields import core
-from web.form.widgets import LazyLoadSelectWidget,\
+from web.form.widgets import LazyLoadSelectWidget, \
     BootstrapFormControlDecorator, BootstrapStandardDecorator, \
     BootstrapFormGroupDecorator, decorate, BootstrapStaticFieldWidget, \
-    decorators, decorate_field, Disabler
+    decorators, decorate_field, Disabler, MacFieldDecorator
 from wtforms import fields
 from wtforms.validators import ValidationError
 
@@ -141,9 +141,16 @@ class IntervalField(core.StringField):
             raise ValidationError("Intervalle müssen nichtleer und >0s sein.")
 
 
-class MacField(core.StringField):
+class MacField(fields.StringField):
     """A MacField """
 
+    widget = decorate_field(
+        fields.StringField,
+        MacFieldDecorator,
+        BootstrapFormControlDecorator,
+        BootstrapStandardDecorator,
+        BootstrapFormGroupDecorator
+    )
     def __init__(self, *args, **kwargs):
         super(MacField, self).__init__(*args, **kwargs)
 
