@@ -144,9 +144,18 @@ def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
     (transactions, old_transactions) = ([], [])
+    if request.method != 'POST':
+        del(form.start_date)
+
     if form.validate_on_submit():
-        # login with fints
         bank_account = BankAccount.q.get(form.account.data)
+
+        # set start_date
+        if form.start_date.data is None:
+            form.start_date.data = map_or_default(bank_account.last_imported_at,
+                                        datetime.date, date(2018, 1, 1))
+
+        # login with fints
         process = True
         try:
             fints = FinTS3PinTanClient(
@@ -162,8 +171,7 @@ def bank_accounts_import():
                 raise KeyError('BankAccount with IBAN {} not found.'.format(
                     bank_account.iban)
                 )
-            start_date = map_or_default(bank_account.last_imported_at,
-                                        datetime.date, date(2018, 1, 1))
+            start_date = form.start_date.data
             statement = fints.get_statement(acc, start_date, date.today())
             flash(
                 "Transaktionen vom {} bis {}.".format(start_date, date.today()))
