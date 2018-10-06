@@ -174,7 +174,8 @@ class UserMoveOutForm(Form):
 
 class _HostForm(Form):
     owner_id = UserIDField(u"Besitzer-ID")
-    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")])
+    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")],
+                     description=u"z.B. TP-LINK WR841, FritzBox 4040 oder MacBook")
 
 
 class HostForm(_HostForm, UserMoveForm):
