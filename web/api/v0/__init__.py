@@ -281,7 +281,7 @@ class ActivateNetworkAccessResource(Resource):
 
         interfaces = Interface.q.join(Host).filter(Host.owner_id == user.id).all()
         if len(interfaces) > 0:
-            abort(404, message="User {} already has a host with interface.")
+            abort(412, message="User {} already has a host with interface.")
 
         user.birthdate = args.birthdate
 
@@ -290,6 +290,8 @@ class ActivateNetworkAccessResource(Resource):
         try:
             if host is None:
                 host = host_create(user, user.room, args.host_name, user)
+            else:
+                host.room = user.room
 
             interface_create(host, args.mac, None, user)
 
