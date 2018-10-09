@@ -7,11 +7,13 @@ import sys
 
 
 class SubnetFullException(Exception):
-    message = "Subnet full"
+    def __init__(self):
+        super().__init__("Subnet full")
 
 
 class MacExistsException(Exception):
-    message = "MAC exists"
+    def __init__(self):
+        super().__init__("MAC address already exists")
 
 
 def get_subnet_unused_ips(subnet):

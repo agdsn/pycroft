@@ -936,10 +936,17 @@ def create():
                          .format(url_for('.user_sheet'))), 'success')
             return redirect(url_for('.user_show', user_id=new_user.id))
 
-        except (MacExistsException,
-                SubnetFullException,
-                InvalidMACAddressException) as error:
-            flash(str(error), 'error')
+        except MacExistsException:
+            flash("MAC-Adresse ist bereits in Verwendung.", 'error')
+
+            session.session.rollback()
+        except SubnetFullException:
+            flash("Das IP-Subnetz ist voll.", 'error')
+
+            session.session.rollback()
+        except InvalidMACAddressException:
+            flash("Die angegebene MAC-Adresse ist ungültig.", 'error')
+
             session.session.rollback()
 
     if form.is_submitted():
