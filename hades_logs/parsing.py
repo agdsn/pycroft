@@ -90,7 +90,11 @@ def reduce_to_first_occurrence(iterable, comparator=_eq):
         previous element.
     """
     iterator = iter(iterable)
-    previous = next(iterator)
+    try:
+        previous = next(iterator)
+    except StopIteration:
+        return
+
     yield previous
 
     for element in iterator:
