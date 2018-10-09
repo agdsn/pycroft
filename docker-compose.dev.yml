@@ -12,6 +12,10 @@ services:
       service: dev
     security_opt:
       - "seccomp:unconfined"
+    depends_on:
+      - dev-db
+      - dev-ldap
+      - dev-mq
     networks:
       dev:
         aliases:
