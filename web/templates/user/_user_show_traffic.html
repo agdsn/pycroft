@@ -1,4 +1,4 @@
-{#
+﻿{#
  Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
  This file is part of the Pycroft project and licensed under the terms of
  the Apache License, Version 2.0. See the LICENSE file for details.
@@ -44,7 +44,7 @@
         <div class="box box-info">
             Der Aktuelle Credit beträgt <strong>{{ user.current_credit | filesizeformat(binary=True) }}</strong>.
             In Ausnahmefällen kannst du einen Korrekturcredit buchen, sodass insgesamt wieder 1GiB zur Verfügung stehen.
-            Der Vorgang wird gelogged.
+            Der Vorgang wird geloggt.
 
             <a class="btn btn-danger btn-xs" href="{{ url_for(".reset_credit", user_id=user.id) }}">
                 <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>
