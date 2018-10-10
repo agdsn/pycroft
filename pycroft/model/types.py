@@ -97,8 +97,7 @@ class Money(TypeDecorator):
 
 
 class InvalidMACAddressException(ValueError):
-    def __init__(self):
-        super().__init__("Invalid MAC address")
+    pass
 
 
 class DateTimeTz(DateTime):
