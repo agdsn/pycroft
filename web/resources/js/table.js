@@ -166,6 +166,7 @@ $.extend($.fn.bootstrapTable.defaults, {
     cache: false,
     search: true,
     pagination: true,
+    escape: true,
 });
 
 /**
