@@ -558,7 +558,8 @@ def end_payment_in_default_memberships():
                 .join(Account).filter(Account.balance <= 0).all()
 
     for user in users:
-        remove_member_of(user, config.payment_in_default_group, processor,
+        if user.member_of(config.payment_in_default_group):
+            remove_member_of(user, config.payment_in_default_group, processor,
                              closedopen(session.utcnow(), None))
 
     return users
