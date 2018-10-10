@@ -128,7 +128,11 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
             ['Password:', plain_password, 'Location:',
              str(user.room) if user.room else ""],
             ['E-Mail:', user.email, "", ""]]
-    t = Table(data, colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2)
+    t = Table(data,
+              style=[
+                  ('FONTNAME', (1, 2), (1, 2), 'Courier'),
+              ],
+              colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2,)
 
     story.append(t)
     story.append(
