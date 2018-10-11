@@ -244,7 +244,9 @@ docker-compose build --force-rm --pull [service]
 ## PyCharm Integration
 
 In order to integrate the setup into PyCharm,
-make sure you've updated to a recent version,
+make sure that you are using the Professional edition, because the Docker
+integration feature is only available in the Professional edition of PyCharm.
+Also make sure that you have updated to a recent version,
 there were important bug fixes with regards to the Docker integration.
 
 ### Project interpreters
