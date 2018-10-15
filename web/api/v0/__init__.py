@@ -9,7 +9,8 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
 from pycroft.lib.finance import build_transactions_query
-from pycroft.lib.host import change_mac, host_create, interface_create
+from pycroft.lib.host import change_mac, host_create, interface_create, \
+    host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
@@ -245,6 +246,7 @@ class UserInterfaceResource(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('password', dest='password', required=True)
         parser.add_argument('mac', dest='mac', required=True)
+        parser.add_argument('host_name', dest='host_name', required=False)
         args = parser.parse_args()
 
         user = get_authenticated_user(user_id, args.password)
@@ -254,6 +256,9 @@ class UserInterfaceResource(Resource):
                   .format(user_id, interface_id))
 
         try:
+            if args.host_name is not None:
+                host_edit(interface.host, interface.host.owner, interface.host.room,
+                          args.host_name, user)
             change_mac(interface, args.mac, user)
             session.session.add(interface)
             session.session.commit()
