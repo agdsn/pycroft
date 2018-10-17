@@ -35,3 +35,13 @@ class RoomLogTable(BootstrapTable):
             Column('user', 'Nutzer', formatter='table.linkFormatter'),
             Column('message', 'Nachricht'),
         ], **kw)
+
+
+class RoomOvercrowdedTable(BootstrapTable):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, columns=[
+            Column('room', 'Raum', formatter='table.linkFormatter'),
+            Column('inhabitants', 'Bewohner', formatter='table.multiBtnFormatter'),
+        ], table_args={
+            'data-sort-name': 'room',
+        }, **kw)

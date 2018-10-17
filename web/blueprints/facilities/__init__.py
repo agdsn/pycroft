@@ -15,13 +15,14 @@ from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
-from sqlalchemy.sql import and_, select, exists
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.sql import and_, select, exists, func
+from sqlalchemy.orm import joinedload, aliased, contains_eager
 
 from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.model import session
-from pycroft.model.facilities import Room, Site
+from pycroft.model.host import Host
+from pycroft.model.facilities import Room, Building, Site
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
@@ -30,7 +31,8 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
-from .tables import BuildingLevelRoomTable, RoomLogTable, SiteTable
+from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
+                     RoomOvercrowdedTable)
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -229,3 +231,54 @@ def json_rooms():
         building_id=building_id, level=level).order_by(
         Room.number).distinct()
     return jsonify(dict(items=[entry.room_num for entry in rooms]))
+
+
+@bp.route('/overcrowded')
+@nav.navigate(u"Mehrfachbelegungen")
+def overcrowded():
+    return render_template(
+        "facilities/room_overcrowded.html",
+        room_table=RoomOvercrowdedTable(data_url=url_for('.overcrowded_json')),
+    )
+
+
+@bp.route('/overcrowded/json')
+def overcrowded_json():
+    # rooms containing multiple users each of which has a host in the room
+    oc_rooms_query = (
+        Room.q.join(User)
+            .join(Host).filter(User.room_id == Host.room_id)
+            .group_by(Room.id).having(func.count(User.id) > 1)
+            .subquery()
+    )
+
+    user = aliased(User)
+
+    # room can be extracted from the subquery
+    oc_room = contains_eager(user.room, alias=oc_rooms_query)
+
+    query = (
+        session.session.query(user)
+        # only include users living in overcrowded rooms
+        .join(oc_rooms_query)
+        # only include users that have a host in their room
+        .join(Host, and_(user.id == Host.owner_id, user.room_id == Host.room_id))
+        .options(oc_room)
+        .options(oc_room.joinedload(Room.building))
+        .options(joinedload(user.current_properties))
+    )
+
+    rooms = defaultdict(list)
+    for user in query.all():
+        rooms[user.room.id].append(user)
+
+    return jsonify(items=[{
+        'room': {
+            'title': '{} / {:02d} / {}'.format(
+                inhabitants[0].room.building.short_name,
+                inhabitants[0].room.level, inhabitants[0].room.number),
+            'href': url_for("facilities.room_show",
+                            room_id=inhabitants[0].room.id)
+        },
+        'inhabitants': [user_button(user) for user in inhabitants]
+    } for inhabitants in rooms.values()])
