@@ -10,6 +10,11 @@ from pycroft.model.user import User
 
 
 def get_overcrowded_rooms():
+    """
+    Returns a dict of overcrowded rooms with their inhabitants
+    :return: dict
+    """
+
     # rooms containing multiple users each of which has a host in the room
     oc_rooms_query = (
         Room.q.join(User)
