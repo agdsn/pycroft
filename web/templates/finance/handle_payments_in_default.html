@@ -2,23 +2,41 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
-    {% for change in changes %}
-        <h4>{{ change[0] }}:</h4>
-        {% if (change[1]|length) > 0 %}
-            <ul>
-                {% for user in change[1] %}
-                    <li>
-                        <a target="_blank" href="{{ url_for("user.user_show", user_id=user.id) }}">{{ user.name }}</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <i class="text-muted">- Keine -</i>
-        {% endif %}
+        <h4>Neue Zugehörigkeiten in Zahlungsrückstands-Gruppe:</h4>
+        <form action="#" method="post">
+        {{ form_pid.csrf_token }}
+        {% for field in form_pid %}
+            {% if field.type != 'CSRFTokenField' %}
+                {{ field }} {{ field.label }}<br>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Zahlungsrückstände anwenden</button>
+        </form>
+        <br>
+        <br>
 
-        <br/>
-        <br/>
-    {% endfor %}
+        <h4>Beendete Mitgliedschaften</h4>
+        <form action="#" method="post">
+        {{ form_terminated.csrf_token }}
+        {% for field in form_terminated %}
+            {% if field.type != 'CSRFTokenField' %}
+                {{ field }} {{ field.label }}<br>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Mitgliedschaften beenden</button>
+        </form>
+        <br>
+        <br>
 
-    {{ forms.advanced_form(form, '', show_cancel=False, submit_text="Anwenden", actions_offset=0, field_render_mode="basic", form_render_mode="basic") }}
+        <h4>Beendete Zugehörigkeiten in Zahlungsrückstands-Gruppe</h4>
+        <form action="#" method="post">
+        {{ form_no_pid.csrf_token }}
+        {% for field in form_no_pid %}
+            {% if field.type != 'CSRFTokenField' %}
+                {{ field }} {{ field.label }}<br>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Zahlungsrückstände beenden</button>
+        </form>
+
 {% endblock %}

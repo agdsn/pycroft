@@ -798,25 +798,38 @@ def handle_payments_in_default():
     users_pid_membership, users_membership_terminated = finance.handle_payments_in_default()
     users_no_more_pid = finance.end_payment_in_default_memberships()
 
-    changes = [('Neue Zugehörigkeiten in Zahlungsrückstands-Gruppe',
-                users_pid_membership),
-               ('Beendete Mitgliedschaften', users_membership_terminated),
-               ('Beendete Zugehörigkeiten in Zahlungsrückstands-Gruppe',
-                users_no_more_pid)]
+    class Form_pid(forms.ActivityMatchForm):
+        pass
+    for user in users_pid_membership:
+        setattr(Form_pid, str(user.id), BooleanField(user.name, default=True))
+    form_pid = Form_pid()
 
-    form = HandlePaymentsInDefaultForm()
+    class Form_terminated(forms.ActivityMatchForm):
+        pass
+    for user in users_membership_terminated:
+        setattr(Form_terminated, str(user.id), BooleanField(user.name, default=True))
+    form_terminated = Form_terminated()
 
-    if form.is_submitted():
-        session.commit()
-        flash("Zahlungsrückstände behandelt.", "success")
-        return redirect(url_for(".membership_fees"))
-    else:
-        session.rollback()
+    class Form_no_pid(forms.ActivityMatchForm):
+        pass
+    for user in users_no_more_pid:
+        setattr(Form_no_pid, str(user.id), BooleanField(user.name, default=True))
+    form_no_pid = Form_no_pid()
+
+    #form = HandlePaymentsInDefaultForm()
+
+    #if form.is_submitted():
+    #    session.commit()
+    #    flash("Zahlungsrückstände behandelt.", "success")
+    #    return redirect(url_for(".membership_fees"))
+    #else:
+    #    session.rollback()
 
     return render_template('finance/handle_payments_in_default.html',
-                           changes=changes,
-                           page_title="Zahlungsrückstände behandeln",
-                           form=form)
+                           form_pid=form_pid,
+                           form_terminated=form_terminated,
+                           form_no_pid=form_no_pid,
+                           page_title="Zahlungsrückstände behandeln")
 
 
 @bp.route('/json/accounts/system')
