@@ -212,6 +212,7 @@ export default {
                 test: [
                     /\.(?:gif|ico|jpg|png|svg)$/, // Images
                     /\.(?:eot|otf|ttf|woff|woff2)$/, // Fonts
+                    /\.(?:xml)$/, // static XML initial for openSearch
                 ],
                 use: {
                     loader: 'file-loader',

@@ -43,3 +43,5 @@ import './img/pycroft.svg';
 
 import './css/autocomplete.css';
 import './css/style.css';
+
+import './xml/opensearch.en.xml'

@@ -15,6 +15,8 @@
     {% block page_css %}{% endblock %}
     <link rel="shortcut icon" href="{{ "img/favicon.ico" | require }}"/>
     <title>Pycroft – {{ navigation.get_blueprint_title(config) }} {{ navigation.get_page_title(config, page_title) -}}</title>
+
+    <link rel="search" href="{{"xml/opensearch.en.xml" | require }}" title="Pycroft" type="application/opensearchdescription+xml">
 </head>
 
 <body>

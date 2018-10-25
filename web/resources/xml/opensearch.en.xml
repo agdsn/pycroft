@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Pycroft</ShortName>
+  <Description>open the the userspage for a provided userid</Description>
+  <Tags>pyrcoft</Tags>
+  <Contact>support@agdsn.de</Contact>
+  <Url type="text/html" method="get" template="https://pycroft.agdsn.de/user/{searchTerms}"/>
+</OpenSearchDescription>
+
