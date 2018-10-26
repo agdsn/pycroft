@@ -9,6 +9,10 @@
     <ul class="breadcrumb">
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="active">{{ building.short_name }}</li>
+        <a class="btn btn-primary btn-xs pull-right" href="{{ url_for('.overcrowded', building_id=building.id) }}">
+            <span class="glyphicon glyphicon-fire"></span>
+            Mehrfachbelegungen
+        </a>
     </ul>
     <div class="row">
         <div class="col-xs-12 text-center">
