@@ -8,7 +8,6 @@ from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
-from pycroft.lib.net import MacExistsException
 
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.facilities import Room
