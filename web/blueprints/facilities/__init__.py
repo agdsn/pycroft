@@ -233,18 +233,29 @@ def json_rooms():
     return jsonify(dict(items=[entry.room_num for entry in rooms]))
 
 
-@bp.route('/overcrowded')
+@bp.route('/overcrowded', defaults={'building_id': None})
+@bp.route('/overcrowded/<int:building_id>')
 @nav.navigate(u"Mehrfachbelegungen")
-def overcrowded():
+def overcrowded(building_id):
+    page_title = "Mehrfachbelegungen"
+    if building_id:
+        building = facilities.determine_building(id=building_id)
+        if building is None:
+            flash(u"Gebäude existiert nicht!", 'error')
+            abort(404)
+        page_title = "Mehrfachbelegungen {}".format(building.short_name)
+
     return render_template(
         "facilities/room_overcrowded.html",
-        room_table=RoomOvercrowdedTable(data_url=url_for('.overcrowded_json')),
+        page_title=page_title,
+        room_table=RoomOvercrowdedTable(
+            data_url=url_for('.overcrowded_json', building_id=building_id)),
     )
 
-
-@bp.route('/overcrowded/json')
-def overcrowded_json():
-    rooms = get_overcrowded_rooms()
+@bp.route('/overcrowded/json', defaults={'building_id': None})
+@bp.route('/overcrowded/<int:building_id>/json')
+def overcrowded_json(building_id):
+    rooms = get_overcrowded_rooms(building_id)
 
     return jsonify(items=[{
         'room': {

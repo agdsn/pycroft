@@ -9,16 +9,22 @@ from pycroft.model.host import Host
 from pycroft.model.user import User
 
 
-def get_overcrowded_rooms():
+def get_overcrowded_rooms(building_id=None):
     """
+    :param building_id: Limit to rooms of the building.
     Returns a dict of overcrowded rooms with their inhabitants
     :return: dict
     """
+
+    oc_rooms_filter = []
+    if building_id is not None:
+        oc_rooms_filter.append(Room.building_id == building_id)
 
     # rooms containing multiple users each of which has a host in the room
     oc_rooms_query = (
         Room.q.join(User)
             .join(Host).filter(User.room_id == Host.room_id)
+            .filter(*oc_rooms_filter)
             .group_by(Room.id).having(func.count(User.id) > 1)
             .subquery()
     )
