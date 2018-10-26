@@ -56,3 +56,8 @@ class Test_010_Building(FrontendDataTestBase, FixtureDataTestBase):
         self.assert_template_get_request(
             "/facilities/overcrowded",
             "facilities/room_overcrowded.html")
+
+    def test_per_building_overcrowded_rooms(self):
+        self.assert_template_get_request(
+            "/facilities/overcrowded/{}".format(self.building),
+            "facilities/room_overcrowded.html")
