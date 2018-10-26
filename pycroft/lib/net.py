@@ -5,6 +5,12 @@ from itertools import islice
 from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 import sys
 
+from sqlalchemy import func, and_, cast
+
+from pycroft.model import session
+from pycroft.model.host import IP
+from pycroft.model.net import Subnet
+from pycroft.model.types import IPAddress
 
 class SubnetFullException(Exception):
     def __init__(self):
@@ -53,6 +59,34 @@ def get_subnets_for_room(room):
                for v in p.switch_port.default_vlans
                for s in v.subnets
                if s.address.version == 4]
+
+
+def get_subnets_with_usage():
+    is_unreserved_ip = and_(
+        IP.address >= cast(func.host(func.network(
+            Subnet.address) + Subnet.reserved_addresses_bottom + 1), IPAddress),
+        IP.address <= cast(func.host(
+            func.broadcast(Subnet.address) - Subnet.reserved_addresses_top - 1),
+            IPAddress)
+    )
+
+    subnets_with_used_ips = (
+        session.session.query(Subnet, func.count(IP.id).label('used_ips'))
+        .outerjoin(IP, and_(IP.subnet_id == Subnet.id, is_unreserved_ip))
+        .group_by(Subnet.id)
+    ).all()
+
+    subnets = []
+    for subnet, used_ips in subnets_with_used_ips:
+        max_ips = subnet.address.numhosts - 2
+        if subnet.reserved_addresses_bottom:
+            max_ips -= subnet.reserved_addresses_bottom
+        if subnet.reserved_addresses_top:
+            max_ips -= subnet.reserved_addresses_top
+        subnet.used_ips = used_ips
+        subnet.max_ips = max_ips
+        subnets.append(subnet)
+    return subnets
 
 
 def ptr_name(network, ip_address):

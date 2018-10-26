@@ -19,6 +19,7 @@ from pycroft.model import session
 from pycroft.model.host import Switch, SwitchPort
 from pycroft.model.net import VLAN, Subnet
 from pycroft.model.port import PatchPort
+from pycroft.lib.net import get_subnets_with_usage
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.access import BlueprintAccess
 from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
@@ -64,13 +65,15 @@ def format_reserved_addresses(subnet):
 
 @bp.route('/subnets/json')
 def subnets_json():
-    subnets_list = Subnet.q.all()
+    subnets_list = get_subnets_with_usage()
     return jsonify(items=[{
             'id': subnet.id,
             'description': subnet.description,
             'address': str(subnet.address),
             'gateway': str(subnet.gateway),
             'reserved': format_reserved_addresses(subnet),
+            'free_ips': '{:5d} ({}/{})'.format(subnet.max_ips - subnet.used_ips,
+                                             subnet.used_ips, subnet.max_ips),
         } for subnet in subnets_list])
 
 
