@@ -9,25 +9,25 @@ import $ from 'jquery';
 import 'bootstrap-table';
 
 export var linkTemplate = _.template(
-    '<a href="<%= href %>"><%= title %></a>',
+    '<a href="<%- href %>"><%- title %></a>',
 );
 
 export var btnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>"><%= title %></a>',
+    '<a href="<%- href %>" class="btn <%- btn_class %>"><%- title %></a>',
 );
 
 export var glyphBtnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= title %>"><span class="glyphicon <%= glyphicon %>"></span></a>',
+    '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="glyphicon <%- glyphicon %>"></span></a>',
 );
 
 export var multiGlyphBtnTemplate = _.template(
-    '<a href="<%= href %>" class="btn <%= btn_class %>" title="<%= tooltip %>">' +
+    '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- tooltip %>">' +
     '<span class="badge">' +
     '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
-    '<span class="glyphicon <%= glyphicons[i] %>"></span>' +
+    '<span class="glyphicon <%- glyphicons[i] %>"></span>' +
     '<% } %>' +
     '</span>' +
-    '<%= title %>' +
+    '<%- title %>' +
     '</a>',
 );
 
