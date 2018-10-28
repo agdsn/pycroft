@@ -4,6 +4,7 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import _ from 'underscore';
 import $ from 'jquery';
 import 'autocomplete.js/src/jquery/plugin'
 import Bloodhound from 'typeahead.js/dist/bloodhound';
@@ -58,7 +59,7 @@ import Bloodhound from 'typeahead.js/dist/bloodhound';
 
     export const user_accounts_dataset = {
         name: 'user_accounts',
-        displayKey: record => `${record['user_name']} (${record['user_id']}, ${record['user_login']})`,
+        displayKey: record => `${_.escape(record['user_name'])} (${record['user_id']}, ${_.escape(record['user_login'])})`,
         source: (query, cb) => user_accounts.ttAdapter()(query, cb, cb),
         templates: {
             empty: '<span class="disabled">Keine Ergebnisse</span>',

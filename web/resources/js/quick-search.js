@@ -4,6 +4,7 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
+import _ from "underscore";
 import $ from 'jquery';
 import 'autocomplete.js/src/jquery/plugin'
 import Bloodhound from 'typeahead.js/dist/bloodhound';
@@ -34,7 +35,7 @@ $('#nav_search').autocomplete({
     },
 }, {
     name: 'users',
-    displayKey: item => `${item['name']} (${item['id']}, ${item['login']})`,
+    displayKey: item => `${_.escape(item['name'])} (${item['id']}, ${_.escape(item['login'])})`,
     source: (query, cb) => dataSource(query, cb, cb),
     templates: {
         empty: '<span>Keine Ergebnisse</span>',
