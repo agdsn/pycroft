@@ -103,7 +103,7 @@ class User(IntegerIdModel, UserMixin):
         [a-z]
         # Can continue with lowercase characters, numbers and some punctuation
         # but between punctuation characters must be characters or numbers
-        (?:[._-]?[a-z0-9])+$
+        (?:[.-]?[a-z0-9])+$
         """, re.VERBOSE)
     login_regex_ci = re.compile(login_regex.pattern, re.VERBOSE | re.IGNORECASE)
     email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
