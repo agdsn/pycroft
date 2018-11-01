@@ -141,7 +141,7 @@ class User(IntegerIdModel, UserMixin):
             raise IllegalLoginError(
                 "Illegal login '{}': Logins must begin with a lower case "
                 "letter and may be followed by lower case letters, digits or "
-                "punctuation (dash, underscore and dot). Punctuation "
+                "punctuation (dash and dot). Punctuation "
                 "characters must be separated by at least on letter or digit."
                 .format(value)
             )
