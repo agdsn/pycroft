@@ -609,7 +609,7 @@ def move_out(user, comment, processor, when, end_membership=True):
     user.room = None
 
     if comment:
-        message += u" Comment: {}"\
+        message += u"\nComment: {}"\
             .format(comment)
 
     log_user_event(
