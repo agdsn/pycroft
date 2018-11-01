@@ -200,9 +200,9 @@ def post_transactions_for_membership_fee(membership_fee, processor,
 
     users = (select([User.id.label('user_id'), User.name.label('user_name'), User.account_id.label('account_id')])
             .select_from(User.__table__
-                .join(func.evaluate_properties(membership_fee.begins_on + timedelta(1))
+                .outerjoin(func.evaluate_properties(membership_fee.begins_on + timedelta(1))
                 .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
-                .join(func.evaluate_properties(membership_fee.begins_on + membership_fee.grace_period - timedelta(1))
+                .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.grace_period - timedelta(1))
                 .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
             )
             .where(not_(exists(select([None]).select_from(split_user_account
