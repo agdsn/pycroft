@@ -145,23 +145,12 @@ class UsersDueTable(BootstrapTable):
     """A table for displaying the users that """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='user', title='Nutzer-ID', formatter='table.linkFormatter'),
+            Column(name='user_id', title='Nutzer-ID'),
+            Column(name='user', title='Name', formatter='table.linkFormatter'),
             Column(name='valid_on', title='Gültig am'),
             Column(name='description', title='Beschreibung'),
             Column(name='amount', title='Betrag', formatter='table.coloredFormatter'),
         ], **kw)
-
-    def generate_toolbar(self):
-        """An “add fee” button"""
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".membership_fee_create")
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield gettext("Beitrag erstellen")
-        yield "</a>"
-
 
 class BankAccountTable(BootstrapTable):
     """A table for displaying bank accounts

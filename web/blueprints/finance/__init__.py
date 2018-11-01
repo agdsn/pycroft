@@ -665,6 +665,7 @@ def membership_fee_users_due_json(fee_id):
         finance.membership_fee_description.format(fee_name=fee.name).to_json())
 
     return jsonify(items=[{
+        'user_id': user['id'],
         'user': {'title': str(user['name']),
                  'href': url_for("user.user_show", user_id=user['id'])},
         'amount': fee_amount,
