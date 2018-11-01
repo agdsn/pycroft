@@ -642,7 +642,7 @@ def membership_fee_book(fee_id):
 
         flash("{} neue Buchungen erstellt.".format(len(affected_users)), "success")
 
-        return redirect(url_for(".handle_payments_in_default"))
+        return redirect(url_for(".membership_fees"))
 
     table = UsersDueTable(data_url=url_for('.membership_fee_users_due_json', fee_id=fee.id))
     return render_template('finance/membership_fee_book.html', form=form,
