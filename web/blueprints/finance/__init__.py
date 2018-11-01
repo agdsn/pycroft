@@ -333,9 +333,9 @@ def bank_account_activities_do_match():
 
                 session.add(activity)
 
-                end_payment_in_default_memberships()
-
                 matched.append((activity, user))
+
+        end_payment_in_default_memberships()
 
         session.flush()
         session.commit()
