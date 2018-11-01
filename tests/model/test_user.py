@@ -82,8 +82,9 @@ class Test_040_User_Login(FixtureDataTestBase):
                 with self.assertRaises(IllegalLoginError):
                     u.login = "a" * length
 
-        valid = ["abcdefg", "a_b", "a3b", "a_2b", "a33", "a_4"]
-        invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&"]
+        valid = ["abcdefg", "a-b", "a3b", "a.2b", "a33", "a-4"]
+        invalid = ["123", "ABC", "3bc", "_ab", "ab_", "3b_", "_b3", "&&",
+                   "a_b", "a_2b", "a_4", "-ab", "ab-", ".ab", "ab."]
         blocked = ["abuse", "admin", "administrator", "autoconfig",
                    "broadcasthost", "root", "daemon", "bin", "sys", "sync",
                    "games", "man", "hostmaster", "imap", "info", "is",
