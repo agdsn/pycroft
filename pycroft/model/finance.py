@@ -31,9 +31,11 @@ class MembershipFee(IntegerIdModel):
                          CheckConstraint('regular_fee >= 0'),
                          nullable=False)
 
-    # Timedelta a person has to be member in the given period to be charged any
-    # membership fee at all(grace period)
-    grace_period = Column(Interval, nullable=False)
+    # Timedelta after which a member has to pay
+    booking_begin = Column(Interval, nullable=False)
+
+    # Timedelta until which a member has to pay
+    booking_end = Column(Interval, nullable=False)
 
     # Timedelta after which members are being charged a late fee for not paying
     # in time + will be added to a group with "payment_in_default" property

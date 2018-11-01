@@ -15,7 +15,8 @@ class MembershipFeeData(DataSet):
         regular_fee = 5.00
         reduced_fee = 1.00
         late_fee = 2.50
-        grace_period = timedelta(14)
+        booking_begin = timedelta(2)
+        booking_end = timedelta(14)
         reduced_fee_threshold = timedelta(10)
         payment_deadline = timedelta(14)
         payment_deadline_final = timedelta(62)

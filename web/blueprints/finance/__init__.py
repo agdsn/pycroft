@@ -728,7 +728,8 @@ def membership_fee_create():
         form = MembershipFeeCreateForm(
             name=name_default,
             regular_fee=previous_fee.regular_fee,
-            grace_period=previous_fee.grace_period.days,
+            booking_begin=previous_fee.booking_begin.days,
+            booking_end=previous_fee.booking_end.days,
             payment_deadline=previous_fee.payment_deadline.days,
             payment_deadline_final=previous_fee.payment_deadline_final.days,
             begins_on=begins_on_default,
@@ -740,7 +741,8 @@ def membership_fee_create():
         mfee = MembershipFee(
             name=form.name.data,
             regular_fee=form.regular_fee.data,
-            grace_period=timedelta(days=form.grace_period.data),
+            booking_begin=timedelta(days=form.booking_begin.data),
+            booking_end=timedelta(days=form.booking_end.data),
             payment_deadline=timedelta(days=form.payment_deadline.data),
             payment_deadline_final=timedelta(days=form.payment_deadline_final.data),
             begins_on=form.begins_on.data,
@@ -768,7 +770,8 @@ def membership_fee_edit(fee_id):
         form = MembershipFeeEditForm(
             name=fee.name,
             regular_fee=fee.regular_fee,
-            grace_period=fee.grace_period.days,
+            booking_begin=fee.booking_begin.days,
+            booking_end=fee.booking_end.days,
             payment_deadline=fee.payment_deadline.days,
             payment_deadline_final=fee.payment_deadline_final.days,
             begins_on=fee.begins_on,
@@ -777,7 +780,8 @@ def membership_fee_edit(fee_id):
     elif form.validate_on_submit():
         fee.name = form.name.data
         fee.regular_fee = form.regular_fee.data
-        fee.grace_period = timedelta(days=form.grace_period.data)
+        fee.booking_begin = timedelta(days=form.booking_begin.data)
+        fee.booking_end = timedelta(days=form.booking_end.data)
         fee.payment_deadline = timedelta(days=form.payment_deadline.data)
         fee.payment_deadline_final = timedelta(days=form.payment_deadline_final.data)
         fee.begins_on = form.begins_on.data

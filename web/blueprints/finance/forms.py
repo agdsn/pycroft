@@ -25,12 +25,18 @@ class MembershipFeeCreateForm(Form):
 
     # TODO Transform IntegerFields to IntervalFields
 
-    grace_period = IntegerField(
-        u"Kulanzfrist (Tage)",
-        description=u"Ist ein Nutzer weniger oder gleich viele Tage innerhalb "
-                    u"des Zeitraums Mitglied, so entfällt jegliche "
-                    u"Gebühr.",
-        validators=[InputRequired(), NumberRange(min=0)]
+    booking_begin = IntegerField(
+        u"Buchungsbeginn (Tage)",
+        description=u"Ab diesem Tag im Zeitraum wird ein Mitglied "
+                    u"als zahlungspflichtig angesehen.",
+        validators=[InputRequired(), NumberRange(min=1)]
+    )
+
+    booking_end = IntegerField(
+        u"Buchungsende (Tage)",
+        description=u"Bis zu diesem Tag im Zeitraum wird ein neues Mitglied "
+                    u"als zahlungspflichtig angesehen.",
+        validators=[InputRequired(), NumberRange(min=1)]
     )
 
     payment_deadline = IntegerField(
