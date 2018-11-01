@@ -30,7 +30,7 @@ class UserData(DataSet):
 
     class user3_user(BaseUser):
         # User without any usergroup
-        login = "otto_normalnutzer"
+        login = "otto-normalnutzer"
 
 
 class BaseMembership():

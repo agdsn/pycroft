@@ -73,28 +73,28 @@ class AccountData(DataSet):
 
 class UserData(DataSet):
     class dummy_1:
-        login = u"dummy_1"
+        login = u"dummy1"
         name = u"Dummy Dummy"
         registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=1), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account
 
     class dummy_2:
-        login = u"dummy_2"
+        login = u"dummy2"
         name = u"Dummy Dummy"
         registered_at = datetime.combine(MembershipFeeData.fee_three.begins_on + timedelta(days=2), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account_early
 
     class dummy_14:
-        login = u"dummy_14"
+        login = u"dummy14"
         name = u"Dummy Dummy"
         registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=14), time.min)
         room = RoomData.dummy_room1
         account = AccountData.user_account_grace
 
     class dummy_15:
-        login = u"dummy_15"
+        login = u"dummy15"
         name = u"Dummy Dummy"
         registered_at = datetime.combine(MembershipFeeData.fee_two.begins_on - timedelta(days=15), time.min)
         room = RoomData.dummy_room1

@@ -27,7 +27,7 @@ class UserData(DataSet):
 
     class moved_out_user1(dummy):
         """unix_account, but no 'mail'"""
-        login = "moved_out"
+        login = "moved-out"
         room = RoomData.dummy_room2
         account = AccountData.dummy_user2
         unix_account = UnixAccountData.dummy_account_1
