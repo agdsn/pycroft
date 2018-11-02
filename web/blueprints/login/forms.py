@@ -8,5 +8,5 @@ from web.form.fields.core import TextField, PasswordField
 
 
 class LoginForm(Form):
-    login = TextField(validators=[Regexp(User.login_regex_ci)])
+    login = TextField()
     password = PasswordField()
