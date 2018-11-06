@@ -4,7 +4,7 @@
     // bind events
     input.on('input', function () {
         var searchString = input.val();
-        if (searchString.length > 0) {
+        if (searchString.length >= 3) {
             // get Forecast
             // setAutocomplete(searchString)
             //getForecast(searchString)
