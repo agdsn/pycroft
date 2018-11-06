@@ -279,7 +279,7 @@
         }
         return '' +
                 '<li class="spotlight__item" onmouseover="spotlight.selectItem(this)">' +
-                '<a href="' + link + '">' +
+                '<a target="_blank" href="' + link + '">' +
                 image +
                 '<div class="spotlight__info">' +
                 '<h3 class="spotlight__title">' + title + '</h3>' +
