@@ -33,12 +33,15 @@ class Column:
         javascript function's name to be passed to
         ``data-cell-style``.
     """
-    def __init__(self, name, title, formatter=None, width=0, cell_style=None):
+
+    def __init__(self, name, title, formatter=None, width=0, cell_style=None,
+                 col_args=None):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
         self.cell_style = cell_style if cell_style is not None else False
         self.width = width
+        self.col_args = col_args if col_args is not None else {}
 
     def __repr__(self):
         return "<{cls} {name!r} title={title!r}>".format(
@@ -64,6 +67,7 @@ class Column:
             'data-formatter': self.formatter,
             'data-cell-style': self.cell_style,
         }
+        html_args.update(self.col_args)
         html_args.update(kwargs)
         return html_params(**html_args)
 
