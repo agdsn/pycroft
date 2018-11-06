@@ -72,8 +72,10 @@ def subnets_json():
             'address': str(subnet.address),
             'gateway': str(subnet.gateway),
             'reserved': format_reserved_addresses(subnet),
-            'free_ips': '{:5d} ({}/{})'.format(subnet.max_ips - subnet.used_ips,
-                                             subnet.used_ips, subnet.max_ips),
+            'free_ips': '{}'.format(subnet.max_ips - subnet.used_ips),
+            'free_ips_formatted': '{} (von {})'.format(
+                subnet.max_ips - subnet.used_ips,
+                subnet.max_ips),
         } for subnet in subnets_list])
 
 

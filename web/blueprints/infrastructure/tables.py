@@ -10,7 +10,9 @@ class SubnetTable(BootstrapTable):
             Column('gateway', 'Gateway'),
             Column('reserved', 'Reservierte Adressen',
                    formatter='table.listFormatter'),
-            Column('free_ips', 'Freie IPs'),
+            Column('free_ips_formatted', 'Freie IPs', col_args={
+                'data-sort-name': 'free_ips',
+            }),
         ], **kw)
 
 
