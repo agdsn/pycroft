@@ -10,6 +10,7 @@ import 'bootstrap-table/dist/locale/bootstrap-table-de-DE.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-en-US.js';
 import 'd3';
 import 'dc';
+import 'hotkeys-js';
 import 'jquery';
 import 'list.js';
 import 'moment';
@@ -32,8 +33,11 @@ import './js/alerts';
 import './js/balance-chart';
 import './js/d3locale';
 import './js/form';
+import './js/keyboard-shortcuts';
 import './js/navigation';
 import './js/quick-search';
+import './js/spotlight';
+import './js/spotlight-modules';
 import './js/table';
 import './js/table-fixed-header';
 
@@ -42,4 +46,5 @@ import './img/pycroft.png';
 import './img/pycroft.svg';
 
 import './css/autocomplete.css';
+import './css/spotlight.css';
 import './css/style.css';

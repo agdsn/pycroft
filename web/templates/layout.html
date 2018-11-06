@@ -116,6 +116,18 @@
             </footer>
          {%- endblock %}
     </div> <!-- /container -->
+<nav class="spotlight">
+    <div class="spotlight__search">
+        <div class="spotlight__inputbg" data-autocomplete=""></div>
+        <input class="spotlight__input" type="text" autofocus>
+    </div>
+    <div class="spotlight__results spotlight__results--empty">
+        <ul class="spotlight__list"></ul>
+        <div class="spotlight__indicator">
+            <div class="spotlight__thumb"></div>
+        </div>
+    </div>
+</nav>
 <script type="text/javascript" src="{{ 'vendor.js' | require }}"></script>
 <script type="text/javascript">
     {# See http://flask.pocoo.org/docs/patterns/jquery/#where-is-my-site #}

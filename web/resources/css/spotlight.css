@@ -1,0 +1,130 @@
+.spotlight div, .spotlight h3, .spotlight p, .spotlight li, .spotlight ul, .spotlight nav, .spotlight figure, .spotlight img {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+
+.spotlight ul {
+  list-style: none; }
+
+.spotlight, .spotlight figure {
+  display: block; }
+
+.spotlight {
+  line-height: 1; }
+
+body .spotlight__input, body .spotlight__inputbg, body .spotlight__inputbg:after {
+  box-sizing: border-box;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: #FFFFFF;
+  font-size: 34px;
+  font-weight: 300;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  line-height: 40px;
+  outline: none; }
+
+body .spotlight {
+  display: none;
+  position: fixed;
+  top: 25%;
+  left: 50%;
+  width: 100%;
+  max-width: 540px;
+  transform: translateX(-50%);
+  transition: top .3s ease-in-out;
+  border-radius: 3px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); }
+  body .spotlight--active {
+    display: block; }
+  body .spotlight__search {
+    position: relative;
+    padding: 12px 16px;
+    background-color: #0B0B0B; }
+  body .spotlight__inputbg {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    white-space: pre;
+    position: absolute;
+    display: inline-block;
+    color: transparent;
+    max-width: 100%; }
+    body .spotlight__inputbg:after {
+      content: attr(data-autocomplete);
+      color: #9F9FA0; }
+      .spotlight__search--smalldescr body .spotlight__inputbg:after {
+        font-size: 16px;
+        vertical-align: middle; }
+  body .spotlight__input {
+    position: relative;
+    width: 100%;
+    margin: 0; }
+  body .spotlight__results {
+    position: relative;
+    padding: 8px;
+    padding-top: 0;
+    background-color: #0B0B0B; }
+    body .spotlight__results--empty {
+      padding: 0; }
+  body .spotlight__list {
+    position: relative;
+    max-height: 390px;
+    overflow: hidden; }
+  body .spotlight__item {
+    padding: 4px 8px;
+    color: #FFFFFF; }
+    body .spotlight__item--active {
+      background-color: #272727; }
+  body .spotlight__figure {
+    float: left;
+    width: 32px;
+    height: 32px;
+    margin-right: 8px; }
+  body .spotlight__title {
+    font-weight: 300;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap; }
+  body .spotlight__subtitle {
+    margin-top: 4px;
+    font-weight: 100;
+    font-size: 12px;
+    color: #B6B6B6;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap; }
+  body .spotlight__indicator {
+    display: none;
+    position: absolute;
+    top: -2px;
+    bottom: 6px;
+    right: 8px;
+    width: 5px;
+    background-color: #0B0B0B; }
+    body .spotlight__indicator--active {
+      display: block; }
+  body .spotlight__thumb {
+    position: absolute;
+    top: 0%;
+    right: 0;
+    width: 2px;
+    height: 10%;
+    background-color: #272727;
+    transition: top ease-in-out .05s; }
+  @media (max-width: 572px) {
+    body .spotlight {
+      transform: none;
+      width: auto;
+      top: 16px;
+      left: 16px;
+      right: 16px; } }
+  @media (max-height: 574px) {
+    body .spotlight {
+      top: 16px; } }
