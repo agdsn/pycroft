@@ -184,7 +184,8 @@ def post_transactions_for_membership_fee(membership_fee, processor,
 
     User select: User -> Split (user account) -> Transaction -> Split (fee account)
                  Conditions: User has `membership_fee` property on
-                             begins_on + 1 day and begins_on + grace - 1 day
+                             begins_on + booking_begin - 1 day or
+                             begins_on + booking_end - 1 day
 
     :param membership_fee: The membership fee which should be posted
     :param processor:
