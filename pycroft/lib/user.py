@@ -322,10 +322,11 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
-    subnets = [subnet for p in new_room.connected_patch_ports
-               for vlan in p.switch_port.default_vlans
-               for subnet in vlan.subnets]
-    if old_room.building_id == new_room.building_id:
+    
+    subnets_old = get_subnets_for_room(old_room)
+    subnets = get_subnets_for_room(new_room)
+
+    if subnets_old == subnets:
         return
     for interface in host.interfaces:
         old_ips = tuple(ip for ip in interface.ips)
