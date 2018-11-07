@@ -113,7 +113,7 @@ class IntervalField(core.StringField):
             self.data = default_interval_format(self.expected_units)
         return super(IntervalField, self).__call__(
             class_='pycroft-interval-picker',
-            autocomplete='off',
+            #autocomplete='off',
             **kwargs
         )
 
