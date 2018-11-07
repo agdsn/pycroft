@@ -31,7 +31,7 @@ from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
-    match_activities
+    match_activities, take_actions_for_payment_in_default_users
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee)
 from pycroft.model.session import session
@@ -795,14 +795,9 @@ def membership_fee_edit(fee_id):
 @bp.route('/membership_fees/handle_payments_in_default', methods=("GET", "POST"))
 @access.require('finance_change')
 def handle_payments_in_default():
-    users_pid_membership, users_membership_terminated = finance.handle_payments_in_default()
-    users_no_more_pid = finance.end_payment_in_default_memberships()
+    finance.end_payment_in_default_memberships()
 
-    class Form_pid(forms.ActivityMatchForm):
-        pass
-    for user in users_pid_membership:
-        setattr(Form_pid, str(user.id), BooleanField(user.name, default=True))
-    form_pid = Form_pid()
+    users_pid_membership_all, users_membership_terminated_all = finance.get_users_with_payment_in_default()
 
     class Form_terminated(forms.ActivityMatchForm):
         pass
@@ -810,26 +805,38 @@ def handle_payments_in_default():
         setattr(Form_terminated, str(user.id), BooleanField(user.name, default=True))
     form_terminated = Form_terminated()
 
-    class Form_no_pid(forms.ActivityMatchForm):
-        pass
-    for user in users_no_more_pid:
-        setattr(Form_no_pid, str(user.id), BooleanField(user.name, default=True))
-    form_no_pid = Form_no_pid()
+    form.new_pid_memberships.query = User.q.filter(User.id.in_(
+        user.id for user in users_pid_membership_all)).order_by(User.name)
 
-    #form = HandlePaymentsInDefaultForm()
+    form.terminated_member_memberships.query = User.q.filter(User.id.in_(
+        user.id for user in users_membership_terminated_all)).order_by(User.name)
 
-    #if form.is_submitted():
-    #    session.commit()
-    #    flash("Zahlungsrückstände behandelt.", "success")
-    #    return redirect(url_for(".membership_fees"))
-    #else:
-    #    session.rollback()
+    form.new_pid_memberships.process_data(users_pid_membership_all)
+    form.terminated_member_memberships.process_data(users_membership_terminated_all)
 
-    return render_template('finance/handle_payments_in_default.html',
-                           form_pid=form_pid,
-                           form_terminated=form_terminated,
-                           form_no_pid=form_no_pid,
-                           page_title="Zahlungsrückstände behandeln")
+    if form.validate_on_submit():
+        users_pid_membership = form.new_pid_memberships.data
+        users_membership_terminated = form.terminated_member_memberships.data
+
+        take_actions_for_payment_in_default_users(
+            users_pid_membership=users_pid_membership,
+            users_membership_terminated=users_membership_terminated,
+            processor=current_user)
+        session.commit()
+        flash("Zahlungsrückstände behandelt.", "success")
+        return redirect(url_for(".membership_fees"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.membership_fees'),
+        'submit_text': 'Anwenden',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Zahlungsrückstände behandeln",
+                           form_args=form_args,
+                           form=form)
 
 
 @bp.route('/json/accounts/system')

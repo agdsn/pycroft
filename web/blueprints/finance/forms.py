@@ -10,7 +10,8 @@ from wtforms.validators import DataRequired, NumberRange, Optional, \
 
 from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
-    FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField, BooleanField)
+    FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField,
+    BooleanField, SelectMultipleField, QuerySelectMultipleField)
 from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
 from pycroft.model.finance import BankAccount
@@ -66,10 +67,6 @@ class MembershipFeeCreateForm(Form):
 
 
 class FeeApplyForm(Form):
-    pass
-
-
-class HandlePaymentsInDefaultForm(Form):
     pass
 
 
@@ -156,5 +153,15 @@ class TransactionCreateForm(Form):
         if balance != 0:
             raise ValidationError(u"Buchung ist nicht ausgeglichen.")
 
+
 class ActivityMatchForm(Form):
     pass
+
+
+class HandlePaymentsInDefaultForm(Form):
+    new_pid_memberships = QuerySelectMultipleField(u"Neue Mitgliedschaften in der 'Zahlungsrückstand' Gruppe",
+                                                   get_label='name',
+                                                   render_kw={'size': 20})
+    terminated_member_memberships = QuerySelectMultipleField(u"Beendete Mitgliedschaften/Auszüge",
+                                                             get_label='name',
+                                                             render_kw={'size': 20})

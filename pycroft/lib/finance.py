@@ -568,10 +568,7 @@ def end_payment_in_default_memberships():
     return users
 
 
-@with_transaction
-def handle_payments_in_default():
-    processor = User.q.get(0)
-
+def get_users_with_payment_in_default():
     # Add memberships and end "member" membership if threshold met
     users = User.q.join(User.current_properties)\
                   .filter(CurrentProperty.property_name == 'membership_fee') \
@@ -595,29 +592,45 @@ def handle_payments_in_default():
         in_default_days = user.account.in_default_days
 
         try:
-            fee = get_membership_fee_for_date(
-                date.today() - timedelta(days=in_default_days))
+            fee_date = ts_now - timedelta(days=in_default_days)
+
+            # datetime not working as datetime type
+            fee = get_membership_fee_for_date(str(fee_date))
         except NoResultFound:
             fee = get_last_applied_membership_fee()
 
-        if not fee:
-            return [], []
+        if fee is None:
+            raise ValueError("No fee found")
 
         if not user.has_property('payment_in_default'):
             if in_default_days >= fee.payment_deadline.days:
-                make_member_of(user, config.payment_in_default_group,
-                               processor, closed(ts_now, None))
                 users_pid_membership.append(user)
 
         if in_default_days >= fee.payment_deadline_final.days:
-            remove_member_of(user, config.member_group, processor,
-                             closedopen(ts_now, None))
-            log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand ({})"
-                           .format(fee.name),
-                           processor, user)
             users_membership_terminated.append(user)
 
     return users_pid_membership, users_membership_terminated
+
+
+@with_transaction
+def take_actions_for_payment_in_default_users(users_pid_membership,
+                                              users_membership_terminated,
+                                              processor):
+    ts_now = session.utcnow()
+
+    for user in users_pid_membership:
+        if not user.member_of(config.payment_in_default_group):
+            make_member_of(user, config.payment_in_default_group,
+                           processor, closed(ts_now, None))
+
+    from pycroft.lib.user import move_out
+
+    for user in users_membership_terminated:
+        if user.member_of(config.member_group):
+            move_out(user, "Zahlungsrückstand", processor, ts_now, True)
+
+            log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand.",
+                           processor, user)
 
 
 def process_transactions(bank_account, statement):
