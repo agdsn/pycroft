@@ -9,7 +9,7 @@
 
 {% import "macros/forms.html" as forms %}
 {% block single_row_content %}
-    {{ forms.upload_form(form, '', url_for('.bank_accounts_list')) }}
+    {{ forms.simple_form(form, '', url_for('.bank_accounts_list'), autocomplete="on") }}
 
     {% if transactions %}
         Folgende Bewegungen werden importiert:
