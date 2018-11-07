@@ -215,8 +215,10 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                             split_fee_account.c.account_id == literal(config.membership_fee_account_id),
                             split_fee_account.c.id != split_user_account.c.id))
             )))
-            .where(or_(literal_column('properties_beginning.property_name') == 'membership_fee',
-                        literal_column('properties_grace.property_name') == 'membership_fee'))
+            .where(or_(and_(literal_column('properties_beginning.property_name') == 'membership_fee',
+                            not_(literal_column('properties_beginning.denied'))),
+                       and_(literal_column('properties_grace.property_name') == 'membership_fee',
+                            not_(literal_column('properties_grace.denied')))))
             .distinct()
             .cte('membership_fee_users'))
 
