@@ -28,7 +28,7 @@
 
             {% call info_row("E-Mail") %}
                 {% if current_user is privileged_for('user_change') %}
-                <a href="{{ url_for(".edit_user", user_id=user.id) }}">{{ user.email }} <span class="glyphicon glyphicon-edit"></span></a>
+                  <a href="mailto:{{ user.email }}">{{ user.email }}</a> <a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
                 {% else %}
                 {{ user.email }}
                 {% endif %}
