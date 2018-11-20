@@ -316,11 +316,11 @@ Importing the production database into Pycroft is a three-step process:
 
 2. Copy the `pycroft.sql` file to the database container:
 
-   `docker cp ~/.../pycroft-data/pycroft.sql pycroft_dev-db_1:/pycroft.sql`
+   `docker cp ~/.../pycroft-data/pycroft.sql $(docker ps -aqf "name=pycroft_dev-db"):/pycroft.sql`
 
 3. Import the dump:
 
-   `docker-compose exec --user postgres dev-db psql -f /pycroft.sql`
+   `docker-compose exec --user postgres dev-db psql -d pycroft -f /pycroft.sql`
 
 After all that, you should be able to log in into your pycroft
 instance at `0.0.0.0:5000`!  **Congratulations!**
