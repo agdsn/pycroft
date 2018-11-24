@@ -103,14 +103,15 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         return ldap3.Connection(self.server, user=self.config.bind_dn,
                                 password=self.config.bind_pw, auto_bind=True)
 
+    def _recursive_delete(self, base_dn):
+        self.conn.search(base_dn, '(objectclass=*)', ldap3.LEVEL)
+        for response_item in self.conn.response:
+            self._recursive_delete(response_item['dn'])
+        self.conn.delete(base_dn)
+
     def _clean_ldap_base(self):
         """Delete and recreate the base and set up a default ppolicy."""
-        self.conn.search(self.base_dn, '(objectclass=*)')
-        if self.conn.entries:
-            for response_item in self.conn.response:
-                self.conn.delete(response_item['dn'])
-
-        self.conn.delete(self.base_dn)
+        self._recursive_delete(self.base_dn)
 
         result = self.conn.add(self.base_dn, 'organizationalUnit')
         if not result:
