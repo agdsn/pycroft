@@ -20,6 +20,11 @@ services:
     environment:
       - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
       - PYCROFT_API_KEY=secret
+      - PYCROFT_LDAP_HOST=ldap
+      - PYCROFT_LDAP_PORT=389
+      - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
+      - PYCROFT_LDAP_BIND_PW=password
+      - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
       - HADES_CELERY_APP_NAME=dummy_tasks
       - HADES_BROKER_URI=amqp://celery:celery@mq:5672/
       - HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
@@ -42,6 +47,8 @@ services:
     environment:
       - SLAPD_PASSWORD=password
       - SLAPD_DOMAIN=agdsn.de
+      - SLAPD_ADDITIONAL_SCHEMAS=ppolicy
+      - SLAPD_ADDITIONAL_MODULES=ppolicy
   mq:
     image: rabbitmq
     environment:
