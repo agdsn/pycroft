@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly USAGE=("[args]")
+
+readonly DESCRIPTION=(
+	"Run dummy celery worker. Optional arguments are passed to the Celery worker
+	executable"
+)
+
+run() {
+	cd /opt/pycroft/app
+	exec -a python /opt/pycroft/venv/bin/python helpers/dummy_celery_worker.py "$@"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

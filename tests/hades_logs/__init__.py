@@ -18,6 +18,7 @@ class DummyHadesWorkerBase(TestCase):
             'HADES_CELERY_APP_NAME': 'dummy_tasks',
             'HADES_BROKER_URI': self.BROKER_URL,
             'HADES_RESULT_BACKEND_URI': self.BACKEND_URL,
+            'HADES_ROUTING_KEY': None,
         }
 
 
