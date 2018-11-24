@@ -58,10 +58,19 @@ services:
           - mq
     tmpfs:
       - /var/lib/rabbitmq
+  # a dummy worker mocking hades for testing the client
   test-dummy-worker:
     extends:
       file: docker-compose.base.yml
-      service: dummy-worker
+      service: dev
+    command: "dummy-worker worker --loglevel=debug"
+    environment:
+      - TEST_HADES_BROKER_URI=amqp://celery:celery@mq:5672/
+      - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+    depends_on:
+      - test-mq
+    networks:
+      - test
 
 networks:
   test:
