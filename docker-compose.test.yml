@@ -39,6 +39,8 @@ services:
     extends:
       file: docker-compose.base.yml
       service: ldap
+    environment:
+      - SLAPD_FORCE_RECONFIGURE=true
     networks:
       test:
         aliases:
