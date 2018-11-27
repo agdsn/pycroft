@@ -104,7 +104,7 @@
           <div class="user"><a class="btn btn-warning" href="{{ url_for(".unblock", user_id=user.id) }}">
               <span class="badge"><span class="glyphicon glyphicon-ok"></span><span class="glyphicon"></span></span> Entsperren</a></div>
         {% else %}
-          <div class="user"><a class="btn btn-warning" href="{{ url_for(".suspend", user_id=user.id) }}">
+          <div class="user"><a class="btn btn-warning" href="{{ url_for(".block", user_id=user.id) }}">
               <span class="badge"><span class="glyphicon glyphicon-remove"></span><span class="glyphicon"></span></span> Sperren</a></div>
         {% endif %}
 

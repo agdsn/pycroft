@@ -38,7 +38,7 @@ from pycroft.lib.net import SubnetFullException, MacExistsException, \
     get_unused_ips, get_subnets_for_room
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_history, generate_user_sheet, migrate_user_host
+    traffic_history, generate_user_sheet, migrate_user_host, get_blocked_groups
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import session
@@ -309,7 +309,13 @@ def user_show(user_id):
         'inverted': True,
         'saldo': balance,
     }
-    is_blocked = user.member_of(config.violation_group)
+
+    is_blocked = False
+
+    for group in get_blocked_groups():
+        if user.member_of(group):
+            is_blocked = True
+
     user_not_there = not user.member_of(config.member_group)
     try:
         traffic_group_name = effective_traffic_group(user).name
@@ -1118,9 +1124,9 @@ def reset_password(user_id):
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
 
 
-@bp.route('/<int:user_id>/suspend', methods=['GET', 'POST'])
+@bp.route('/<int:user_id>/block', methods=['GET', 'POST'])
 @access.require('user_change')
-def suspend(user_id):
+def block(user_id):
     form = UserSuspendForm()
     myUser = get_user_or_404(user_id)
     if form.validate_on_submit():
@@ -1131,16 +1137,17 @@ def suspend(user_id):
 
         try:
             during = closedopen(session.utcnow(), ends_at)
-            blocked_user = lib.user.suspend(
+            blocked_user = lib.user.block(
                 user=myUser,
                 reason=form.reason.data,
                 processor=current_user,
-                during=during)
+                during=during,
+                violation=form.violation.data)
             session.session.commit()
         except ValueError as e:
             flash(str(e), 'error')
         else:
-            flash(u'Nutzer gesperrt', 'success')
+            flash(u'Nutzer gesperrt.', 'success')
             return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_block.html', form=form, user_id=user_id)
 
@@ -1150,20 +1157,15 @@ def suspend(user_id):
 def unblock(user_id):
     user = get_user_or_404(user_id)
 
-    if user.member_of(config.violation_group) == False:
-        flash(u"Nutzer {} ist nicht gesperrt!".format(
-            user_id), 'error')
-        return abort(404)
-
     try:
-        unblocked_user = lib.user.unblock(
+        lib.user.unblock(
             user=user,
             processor=current_user)
         session.session.commit()
     except ValueError as e:
         flash(str(e), 'error')
     else:
-        flash(u'Nutzer entsperrt', 'success')
+        flash(u'Nutzer entsperrt.', 'success')
         return redirect(url_for('.user_show', user_id=user_id))
 
 

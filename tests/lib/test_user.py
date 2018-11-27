@@ -325,8 +325,8 @@ class UserWithNetworkAccessTestCase(FixtureDataTestBase):
 
         blockage = session.utcnow() + timedelta(days=1)
         unblockage = blockage + timedelta(days=2)
-        blocked_user = UserHelper.suspend(u, reason=u"test", processor=u,
-                                          during=closedopen(blockage, None))
+        blocked_user = UserHelper.block(u, reason=u"test", processor=u,
+                                        during=closedopen(blockage, None))
         session.session.commit()
 
         blocked_during = closedopen(blockage, unblockage)

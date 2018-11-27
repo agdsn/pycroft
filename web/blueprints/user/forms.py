@@ -164,6 +164,7 @@ class UserEditGroupMembership(Form):
 class UserSuspendForm(Form):
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
     reason = TextAreaField(u"Grund", [DataRequired()])
+    violation = BooleanField("Verstoß")
 
 
 class UserMoveOutForm(Form):

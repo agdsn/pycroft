@@ -507,11 +507,15 @@ def has_positive_balance(user):
     return has_balance_of_at_least(user, 0)
 
 
+def get_blocked_groups():
+    return [config.violation_group, config.payment_in_default_group,
+                      config.blocked_group]
+
 @with_transaction
-def suspend(user, reason, processor, during=None):
+def block(user, reason, processor, during=None, violation=True):
     """Suspend a user during a given interval.
 
-    The user is added to ``config.violation_group`` in a given
+    The user is added to violation_group or blocked_group in a given
     interval.  A reason needs to be provided.
 
     :param User user: The user to be suspended.
@@ -520,12 +524,18 @@ def suspend(user, reason, processor, during=None):
     :param Interval|None during: The interval in which the user is
         suspended.  If None the user will be suspendeded from now on
         without an upper bound.
+    :param Boolean violation: If the user should be added to the violation group
 
     :return: The suspended user.
     """
     if during is None:
         during = closedopen(session.utcnow(), None)
-    make_member_of(user, config.violation_group, processor, during)
+
+    if violation:
+        make_member_of(user, config.violation_group, processor, during)
+    else:
+        make_member_of(user, config.blocked_group, processor, during)
+
     message = deferred_gettext(u"Suspended during {during}. Reason: {reason}.")
     log_user_event(message=message.format(during=during, reason=reason)
                    .to_json(), author=processor, user=user)
@@ -536,7 +546,8 @@ def suspend(user, reason, processor, during=None):
 def unblock(user, processor, when=None):
     """Unblocks a user.
 
-    This removes his membership of the ``config.violation`` group.
+    This removes his membership of the violation, blocken and payment_in_default
+    group.
 
     Note that for unblocking, no further asynchronous action has to be
     triggered, as opposed to e.g. membership termination.
@@ -553,8 +564,11 @@ def unblock(user, processor, when=None):
     if when is None:
         when = session.utcnow()
 
-    remove_member_of(user=user, group=config.violation_group,
-                     processor=processor, during=closedopen(when, None))
+    for group in get_blocked_groups():
+        if user.member_of(group):
+            remove_member_of(user=user, group=group,
+                             processor=processor, during=closedopen(when, None))
+
     message = deferred_gettext(u"User has been unblocked.")
     log_user_event(message=message.to_json(), author=processor, user=user)
     return user
