@@ -627,7 +627,7 @@ def interface_edit(user_id, interface_id):
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
 
     form.host.query = Host.q.filter(Host.owner_id == user_id).order_by(Host.name)
-    form.ips.choices = ((str(ip), str(ip)) for ip in current_ips + unused_ips)
+    form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
@@ -672,7 +672,7 @@ def interface_create(user_id):
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
 
     form.host.query = Host.q.filter(Host.owner_id == user.id).order_by(Host.name)
-    form.ips.choices = ((str(ip), str(ip)) for ip in unused_ips)
+    form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
     if not form.is_submitted():
         form.ips.process_data([next(iter(unused_ips), None)])
