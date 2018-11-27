@@ -40,6 +40,12 @@ class PropertyGroupData(DataSet):
     class external:
         name = u"Extern"
 
+    class caretaker:
+        name = "Hausmeister"
+
+    class blocked:
+        name = "Gesperrt"
+
 
 class ConfigData(DataSet):
     class config:
@@ -51,6 +57,8 @@ class ConfigData(DataSet):
         traffic_limit_exceeded_group = PropertyGroupData.traffic_limit_exceeded
         payment_in_default_group = PropertyGroupData.payment_in_default
         external_group = PropertyGroupData.external
+        blocked_group = PropertyGroupData.blocked
+        caretaker_group = PropertyGroupData.caretaker
         membership_fee_account = AccountData.membership_fee
         membership_fee_bank_account = finance.BankAccountData.dummy
 
