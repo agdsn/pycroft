@@ -629,10 +629,20 @@ def interface_edit(user_id, interface_id):
     form.host.query = Host.q.filter(Host.owner_id == user_id).order_by(Host.name)
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
+    unique_mac_error = None
+
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
+    else:
+        if form.mac.data != interface.mac:
+            unique_mac_error = validate_unique_mac(form, form.mac)
 
-    if form.validate_on_submit():
+            if unique_mac_error:
+                form.validate()
+
+                form.mac.errors.append(unique_mac_error)
+
+    if not unique_mac_error and form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
         lib.host.interface_edit(interface, form.host.data, form.mac.data, ips,
@@ -674,10 +684,19 @@ def interface_create(user_id):
     form.host.query = Host.q.filter(Host.owner_id == user.id).order_by(Host.name)
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
+    unique_mac_error = None
+
     if not form.is_submitted():
         form.ips.process_data([next(iter(unused_ips), None)])
+    else:
+        unique_mac_error = validate_unique_mac(form, form.mac)
 
-    if form.validate_on_submit():
+        if unique_mac_error:
+            form.validate()
+
+            form.mac.errors.append(unique_mac_error)
+
+    if not unique_mac_error and form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
         lib.host.interface_create(form.host.data, form.mac.data, ips,
@@ -882,7 +901,7 @@ def validate_unique_mac(form, field):
     if re.match(mac_regex, field.data):
         interface_existing = Interface.q.filter_by(mac=field.data).first()
 
-        if interface_existing is not None and not form.annex.data:
+        if interface_existing is not None and (not hasattr(form, 'annex') or not form.annex.data):
             owner = interface_existing.host.owner
 
             return HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
