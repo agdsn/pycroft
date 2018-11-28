@@ -25,8 +25,7 @@ from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Split, Transaction,
-    MembershipFee)
+    Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
     closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen,
     PositiveInfinity)
@@ -176,8 +175,6 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
-
-
 @with_transaction
 def post_transactions_for_membership_fee(membership_fee, processor,
                                          simulate=False):
@@ -202,90 +199,64 @@ def post_transactions_for_membership_fee(membership_fee, processor,
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
-    users = (select([User.id.label('user_id'), User.name.label('user_name'),
-                     User.account_id.label('account_id')])
-             .select_from(User.__table__
-                          .outerjoin(func.evaluate_properties(
-        membership_fee.begins_on + membership_fee.booking_begin - timedelta(1))
-                                     .alias('properties_beginning'),
-                                     literal_column(
-                                         'properties_beginning.user_id') == User.id)
-                          .outerjoin(func.evaluate_properties(
-        membership_fee.begins_on + membership_fee.booking_end - timedelta(1))
-                                     .alias('properties_grace'), literal_column(
-        'properties_grace.user_id') == User.id)
-                          )
-             .where(not_(exists(select([None]).select_from(split_user_account
-                                                           .join(Transaction,
-                                                                 Transaction.id == split_user_account.c.transaction_id)
-                                                           .join(
-        split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
-                                                           )
-                                .where(
-        and_(split_user_account.c.account_id == User.account_id,
-             Transaction.valid_on.between(literal(membership_fee.begins_on),
-                                          literal(membership_fee.ends_on)),
-             split_fee_account.c.account_id == literal(
-                 config.membership_fee_account_id),
-             split_fee_account.c.id != split_user_account.c.id))
-                                )))
-             .where(or_(and_(literal_column(
-        'properties_beginning.property_name') == 'membership_fee',
-                             not_(literal_column(
-                                 'properties_beginning.denied'))),
-                        and_(literal_column(
-                            'properties_grace.property_name') == 'membership_fee',
-                             not_(literal_column('properties_grace.denied')))))
-             .distinct()
-             .cte('membership_fee_users'))
+    users = (select([User.id.label('user_id'), User.name.label('user_name'), User.account_id.label('account_id')])
+            .select_from(User.__table__
+                .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_begin - timedelta(1))
+                .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
+                .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_end - timedelta(1))
+                .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
+            )
+            .where(not_(exists(select([None]).select_from(split_user_account
+                    .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
+                    .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
+                )
+                .where(and_(split_user_account.c.account_id == User.account_id,
+                            Transaction.valid_on.between(literal(membership_fee.begins_on), literal(membership_fee.ends_on)),
+                            split_fee_account.c.account_id == literal(config.membership_fee_account_id),
+                            split_fee_account.c.id != split_user_account.c.id))
+            )))
+            .where(or_(and_(literal_column('properties_beginning.property_name') == 'membership_fee',
+                            not_(literal_column('properties_beginning.denied'))),
+                       and_(literal_column('properties_grace.property_name') == 'membership_fee',
+                            not_(literal_column('properties_grace.denied')))))
+            .distinct()
+            .cte('membership_fee_users'))
 
-    affected_users_raw = session.session.execute(
-        select([users.c.user_id, users.c.user_name])).fetchall()
+    affected_users_raw = session.session.execute(select([users.c.user_id, users.c.user_name])).fetchall()
 
     if not simulate:
-        numbered_users = (select([users.c.user_id, users.c.account_id,
-                                  func.row_number().over().label('index')])
+        numbered_users = (select([users.c.user_id, users.c.account_id, func.row_number().over().label('index')])
                           .select_from(users)
                           .cte("membership_fee_numbered_users"))
 
         transactions = (Transaction.__table__.insert()
-                        .from_select(
-            [Transaction.description, Transaction.author_id,
-             Transaction.posted_at, Transaction.valid_on],
-            select([literal(description), literal(processor.id),
-                    func.current_timestamp(),
-                    literal(membership_fee.ends_on)]).select_from(users))
-                        .returning(Transaction.id)
-                        .cte('membership_fee_transactions'))
+             .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
+                          select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on)]).select_from(users))
+             .returning(Transaction.id)
+             .cte('membership_fee_transactions'))
 
-        numbered_transactions = (
-            select([transactions.c.id, func.row_number().over().label('index')])
-            .select_from(transactions)
-            .cte('membership_fee_numbered_transactions'))
+        numbered_transactions = (select([transactions.c.id, func.row_number().over().label('index')])
+             .select_from(transactions)
+             .cte('membership_fee_numbered_transactions'))
 
         split_insert_fee_account = (Split.__table__.insert()
-                                    .from_select(
-            [Split.amount, Split.account_id, Split.transaction_id],
-            select([literal(-membership_fee.regular_fee, type_=Money),
-                    literal(config.membership_fee_account_id),
-                    transactions.c.id])
-            .select_from(transactions))
-                                    .returning(Split.id)
-                                    .cte('membership_fee_split_fee_account'))
+            .from_select([Split.amount, Split.account_id, Split.transaction_id],
+                         select([literal(-membership_fee.regular_fee, type_=Money), literal(config.membership_fee_account_id),transactions.c.id])
+                         .select_from(transactions))
+            .returning(Split.id)
+            .cte('membership_fee_split_fee_account'))
 
         split_insert_user = (Split.__table__.insert().from_select(
             [Split.amount, Split.account_id, Split.transaction_id],
-            select([literal(membership_fee.regular_fee, type_=Money),
-                    numbered_users.c.account_id, numbered_transactions.c.id])
-                .select_from(numbered_users.join(numbered_transactions,
-                                                 numbered_transactions.c.index == numbered_users.c.index)))
-                             .returning(Split.id)
-                             .cte('membership_fee_split_user'))
+            select([literal(membership_fee.regular_fee, type_=Money), numbered_users.c.account_id, numbered_transactions.c.id])
+            .select_from(numbered_users.join(numbered_transactions,
+                        numbered_transactions.c.index == numbered_users.c.index)))
+            .returning(Split.id)
+            .cte('membership_fee_split_user'))
 
         # TODO: Unite the following two queries into one (the membership_fee_users is called twice currently.
         session.session.execute(select([]).select_from(split_insert_fee_account
-                                                       .join(split_insert_user,
-                                                             split_insert_user.c.id == split_insert_fee_account.c.id)))
+                                           .join(split_insert_user, split_insert_user.c.id == split_insert_fee_account.c.id)))
 
     affected_users = []
 
@@ -506,8 +477,7 @@ def cleanup_description(description):
     match = sepa_description_pattern.match(description)
     if match is None:
         return description
-    return u' '.join(
-        remove_space_characters(f) for f in match.groups() if f is not None)
+    return u' '.join(remove_space_characters(f) for f in match.groups() if f is not None)
 
 
 def restore_record(record):
@@ -571,15 +541,14 @@ def get_typed_splits(splits):
 
 
 def get_transaction_type(transaction):
-    credited = [split.account for split in transaction.splits if
-                split.amount > 0]
-    debited = [split.account for split in transaction.splits if
-               split.amount < 0]
+
+    credited = [split.account for split in transaction.splits if split.amount>0]
+    debited = [split.account for split in transaction.splits if split.amount<0]
 
     cd_accs = (credited, debited)
     # all involved accounts have the same type:
-    if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs) \
-            and all(len(accs) > 0 for accs in cd_accs):
+    if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs)\
+            and all(len(accs)>0 for accs in cd_accs):
         return (cd_accs[0][0].type, cd_accs[1][0].type)
 
 
@@ -588,8 +557,8 @@ def end_payment_in_default_memberships():
     processor = User.q.get(0)
 
     users = User.q.join(User.current_properties) \
-        .filter(CurrentProperty.property_name == 'payment_in_default') \
-        .join(Account).filter(Account.balance <= 0).all()
+                .filter(CurrentProperty.property_name == 'payment_in_default') \
+                .join(Account).filter(Account.balance <= 0).all()
 
     for user in users:
         if user.member_of(config.payment_in_default_group):
@@ -604,9 +573,9 @@ def handle_payments_in_default():
     processor = User.q.get(0)
 
     # Add memberships and end "member" membership if threshold met
-    users = User.q.join(User.current_properties) \
-        .filter(CurrentProperty.property_name == 'membership_fee') \
-        .join(Account).filter(Account.balance > 0).all()
+    users = User.q.join(User.current_properties)\
+                  .filter(CurrentProperty.property_name == 'membership_fee') \
+                  .join(Account).filter(Account.balance > 0).all()
 
     users_pid_membership = []
     users_membership_terminated = []
@@ -620,7 +589,7 @@ def handle_payments_in_default():
 
         if last_pid_membership is not None:
             if last_pid_membership.ends_at is not None and \
-                    last_pid_membership.ends_at >= ts_now - timedelta(days=7):
+               last_pid_membership.ends_at >= ts_now - timedelta(days=7):
                 continue
 
         in_default_days = user.account.in_default_days
@@ -662,12 +631,8 @@ def process_transactions(bank_account, statement):
             transaction.data['applicant_bin'] is not None else ''
         other_name = transaction.data['applicant_name'] if \
             transaction.data['applicant_name'] is not None else ''
-        purpose = ''
         prupose = transaction.data['purpose'] if \
             transaction.data['purpose'] is not None else ''
-        if 'end_to_end_reference' in transaction.data and transaction.data[
-            'end_to_end_reference'] is not None:
-            purpose = purpose + ' ' + transaction.data['end_to_end_reference']
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
@@ -699,10 +664,8 @@ def process_transactions(bank_account, statement):
     return (transactions, old_transactions)
 
 
-def build_transactions_query(account, search=None, sort_by='valid_on',
-                             sort_order=None,
-                             offset=None, limit=None, positive=None,
-                             eagerload=False):
+def build_transactions_query(account, search=None, sort_by='valid_on', sort_order=None,
+                             offset=None, limit=None, positive=None, eagerload=False):
     """Build a query returning the Splits for a finance account
 
     :param Account account: The finance Account to filter by
@@ -730,10 +693,9 @@ def build_transactions_query(account, search=None, sort_by='valid_on',
         sort_by = "valid_on"
 
     descending = (sort_order == "desc") ^ (positive == False)
-    ordering = sort_by + " desc" if descending else sort_by
+    ordering = sort_by+" desc" if descending else sort_by
     if search:
-        query = query.filter(
-            Transaction.description.ilike('%{}%'.format(search)))
+        query = query.filter(Transaction.description.ilike('%{}%'.format(search)))
 
     if positive is not None:
         if positive:
@@ -747,7 +709,6 @@ def build_transactions_query(account, search=None, sort_by='valid_on',
         query = query.options(contains_eager(Split.transaction))
 
     return query
-
 
 def match_activities():
     """Get a dict of all unmatched transactions and a user they should be matched with
@@ -766,13 +727,10 @@ def match_activities():
     for activity in activity_q.all():
         # search for user-ID
         user = None
-        search = re.search(
-            r"(([\d]+-[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))",
-            activity.reference)
+        search = re.search(r"(([\d]+-[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
         if search:
             if activity.reference.lower().startswith('gerok38'):
-                user = User.q.filter(func.lower(User.name) == func.lower(
-                    search.group(4))).first()
+                user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
 
             elif check_user_id(search.group(2)):
                 uid = search.group(2).split("-")[0]
