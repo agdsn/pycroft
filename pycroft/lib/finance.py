@@ -631,8 +631,12 @@ def process_transactions(bank_account, statement):
             transaction.data['applicant_bin'] is not None else ''
         other_name = transaction.data['applicant_name'] if \
             transaction.data['applicant_name'] is not None else ''
+        purpose = ''
         prupose = transaction.data['purpose'] if \
             transaction.data['purpose'] is not None else ''
+        if 'end_to_end_reference' in transaction.data and \
+                transaction.data['end_to_end_reference'] is not None:
+            purpose = purpose + transaction.data['end_to_end_reference']
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
