@@ -4,7 +4,7 @@ import webpack from "webpack";
 import ManifestPlugin from "webpack-manifest-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CleanWebpackPlugin from "clean-webpack-plugin";
-import UglifyJSPlugin from "uglifyjs-webpack-plugin";
+import TerserPlugin from "terser-webpack-plugin";
 
 // Check for production mode
 const PROD = process.env.NODE_ENV === "production";
@@ -54,7 +54,7 @@ export default {
     optimization: {
         minimizer: [
             // Compress JavaScript
-            new UglifyJSPlugin({
+            new TerserPlugin({
                 cache: true,
                 parallel: true,
                 sourceMap: true,
