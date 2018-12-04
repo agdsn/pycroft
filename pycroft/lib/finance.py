@@ -586,7 +586,7 @@ def get_users_with_payment_in_default():
 
         if last_pid_membership is not None:
             if last_pid_membership.ends_at is not None and \
-               last_pid_membership.ends_at >= ts_now - timedelta(days=7):
+                    last_pid_membership.ends_at >= ts_now - timedelta(days=7):
                 continue
 
         in_default_days = user.account.in_default_days
@@ -602,8 +602,8 @@ def get_users_with_payment_in_default():
         if fee is None:
             raise ValueError("No fee found")
 
-        if not user.has_property('payment_in_default'):
-            if in_default_days >= fee.payment_deadline.days:
+        if in_default_days >= fee.payment_deadline.days:
+            if not user.has_property('payment_in_default'):
                 users_pid_membership.append(user)
 
         if in_default_days >= fee.payment_deadline_final.days:

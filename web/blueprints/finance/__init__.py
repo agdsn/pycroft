@@ -807,8 +807,10 @@ def handle_payments_in_default():
     form.terminated_member_memberships.query = User.q.filter(User.id.in_(
         user.id for user in users_membership_terminated_all)).order_by(User.name)
 
-    form.new_pid_memberships.process_data(users_pid_membership_all)
-    form.terminated_member_memberships.process_data(users_membership_terminated_all)
+    if not form.is_submitted():
+        form.new_pid_memberships.process_data(users_pid_membership_all)
+        form.terminated_member_memberships.process_data(
+            users_membership_terminated_all)
 
     if form.validate_on_submit():
         users_pid_membership = form.new_pid_memberships.data
