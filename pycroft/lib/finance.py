@@ -570,25 +570,15 @@ def end_payment_in_default_memberships():
 
 def get_users_with_payment_in_default():
     # Add memberships and end "member" membership if threshold met
-    users = User.q.join(User.current_properties)\
-                  .filter(CurrentProperty.property_name == 'membership_fee') \
-                  .join(Account).filter(Account.balance > 0).all()
+    users = User.q.join(User.current_properties) \
+        .filter(CurrentProperty.property_name == 'membership_fee') \
+        .join(Account).filter(Account.balance > 0).all()
 
     users_pid_membership = []
     users_membership_terminated = []
 
     ts_now = session.utcnow()
     for user in users:
-        last_pid_membership = Membership.q.filter(Membership.user_id == user.id) \
-            .filter(Membership.group_id == config.payment_in_default_group.id) \
-            .order_by(Membership.ends_at.desc()) \
-            .first()
-
-        if last_pid_membership is not None:
-            if last_pid_membership.ends_at is not None and \
-                    last_pid_membership.ends_at >= ts_now - timedelta(days=7):
-                continue
-
         in_default_days = user.account.in_default_days
 
         try:
@@ -603,10 +593,21 @@ def get_users_with_payment_in_default():
             raise ValueError("No fee found")
 
         if in_default_days >= fee.payment_deadline.days:
+            # Skip user if the payment in default group membership was terminated within the last week
+            last_pid_membership = Membership.q.filter(Membership.user_id == user.id).filter(
+                Membership.group_id == config.payment_in_default_group.id).order_by(Membership.ends_at.desc()).first()
+
+            if last_pid_membership is not None:
+                if last_pid_membership.ends_at is not None and \
+                        last_pid_membership.ends_at >= ts_now - timedelta(days=7):
+                    continue
+
             if not user.has_property('payment_in_default'):
+                # Add user to new payment in default list
                 users_pid_membership.append(user)
 
         if in_default_days >= fee.payment_deadline_final.days:
+            # Add user to terminated memberships
             users_membership_terminated.append(user)
 
     return users_pid_membership, users_membership_terminated
