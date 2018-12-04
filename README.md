@@ -363,16 +363,3 @@ by comparing the current status of the database against the table metadata of th
 ```
 docker-compose run --rm dev-app alembic revision --autogenerate -m "add complex test table"
 ```
-
-## What databases are there? ##
-
-In the container, there are two different databases in use (although perhaps
-not yet created):
-
-* `pycroft`: This is where the web app expects its actual data.
-* `legacy`: This is where `legacy/cache_legacy.py` deposits legacy
-  data from the legacy backends (netusers(mysql), userman(postgres),
-  ldap(planned/in progress)), and where `legacy/import_legacy.py`
-  reads the data from.
-
-The latter is where the sql dump should be inserted.
