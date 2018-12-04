@@ -614,12 +614,17 @@ def move_out(user, comment, processor, when, end_membership=True):
 
         session.session.delete(h)
 
-    message = u"Moved out of {dorm} {level}-{room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
-        .format(dorm=user.room.building.short_name,
-                level=user.room.level,
-                room=user.room.number,
-                num_hosts=num_hosts,
-                interfaces=', '.join(deleted_interfaces))
+    if user.room is not None:
+        message = u"Moved out of {dorm} {level}-{room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
+            .format(dorm=user.room.building.short_name,
+                    level=user.room.level,
+                    room=user.room.number,
+                    num_hosts=num_hosts,
+                    interfaces=', '.join(deleted_interfaces))
+    else:
+        message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
+            .format(num_hosts=num_hosts,
+                    interfaces=', '.join(deleted_interfaces))
 
     user.room = None
 

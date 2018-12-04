@@ -799,11 +799,7 @@ def handle_payments_in_default():
 
     users_pid_membership_all, users_membership_terminated_all = finance.get_users_with_payment_in_default()
 
-    class Form_terminated(forms.ActivityMatchForm):
-        pass
-    for user in users_membership_terminated:
-        setattr(Form_terminated, str(user.id), BooleanField(user.name, default=True))
-    form_terminated = Form_terminated()
+    form = HandlePaymentsInDefaultForm()
 
     form.new_pid_memberships.query = User.q.filter(User.id.in_(
         user.id for user in users_pid_membership_all)).order_by(User.name)
