@@ -158,10 +158,14 @@ class ActivityMatchForm(Form):
     pass
 
 
+def get_user_name_with_id(user):
+    return "{} ({})".format(user.name, user.id)
+
+
 class HandlePaymentsInDefaultForm(Form):
     new_pid_memberships = QuerySelectMultipleField(u"Neue Mitgliedschaften in der 'Zahlungsrückstand' Gruppe",
-                                                   get_label='name',
+                                                   get_label=get_user_name_with_id,
                                                    render_kw={'size': 20})
     terminated_member_memberships = QuerySelectMultipleField(u"Beendete Mitgliedschaften/Auszüge",
-                                                             get_label='name',
+                                                             get_label=get_user_name_with_id,
                                                              render_kw={'size': 20})
