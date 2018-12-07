@@ -31,10 +31,11 @@ def sync_production():
         bind_pw=config.bind_pw,
     )
 
-    ldap_users = fetch_current_ldap_users(connection, base_dn=config.base_dn)
+    user_base_dn='ou=users,{}'.format(config.base_dn)
+    ldap_users = fetch_current_ldap_users(connection, base_dn=user_base_dn)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    sync_all(db_users, ldap_users, connection, base_dn=config.base_dn)
+    sync_all(db_users, ldap_users, connection, base_dn=user_base_dn)
 
 
 def sync_fake():
