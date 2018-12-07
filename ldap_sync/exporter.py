@@ -160,7 +160,7 @@ def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
 def fetch_current_ldap_users(connection, base_dn):
     success = connection.search(search_base=base_dn,
                                 search_filter='(objectclass=inetOrgPerson)',
-                                attributes=ldap3.ALL_ATTRIBUTES)
+                                attributes=[ldap3.ALL_ATTRIBUTES, 'pwdAccountLockedTime'])
     if not success:
         logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []

@@ -90,7 +90,9 @@ class Record(object):
         }
         if should_be_blocked:
             # See man slapo-ppolicy
-            attributes['pwdAccountLockedTime'] = "1970010100Z"  # 1.3.6.1.4.1.42.2.27.8.1.17
+            # A 000001010000Z value means that the account has been locked permanently,
+            # and that only a password administrator can unlock the account.
+            attributes['pwdAccountLockedTime'] = "000001010000Z"  # 1.3.6.1.4.1.42.2.27.8.1.17
 
         # sanity check: did we forget something in `cls.SYNCED_ATTRIBUTES` that
         # we support migrating anyway?
