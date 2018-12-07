@@ -4,7 +4,9 @@ import logging
 import os
 import sys
 from collections import Counter, defaultdict, namedtuple
+from distutils.util import strtobool
 
+import ssl
 import ldap3
 from sqlalchemy import and_
 from sqlalchemy.orm import scoped_session, sessionmaker, foreign, joinedload
@@ -145,8 +147,13 @@ def fetch_users_to_sync(session, required_property=None):
     )
 
 
-def establish_and_return_ldap_connection(host, port, bind_dn, bind_pw):
-    server = ldap3.Server(host=host, port=port)
+def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
+                                         ca_certs_data, bind_dn, bind_pw):
+    tls = None
+    if ca_certs_file or ca_certs_data:
+        tls = ldap3.Tls(ca_certs_file=ca_certs_file,
+                        ca_certs_data=ca_certs_data, validate=ssl.CERT_REQUIRED)
+    server = ldap3.Server(host=host, port=port, use_ssl=use_ssl, tls=tls)
     return ldap3.Connection(server, user=bind_dn, password=bind_pw, auto_bind=True)
 
 
@@ -207,7 +214,8 @@ def sync_all(db_users, ldap_users, connection, base_dn):
 
 _sync_config = namedtuple(
     'LdapSyncConfig',
-    ['host', 'port', 'bind_dn', 'bind_pw', 'base_dn', 'db_uri', 'required_property']
+    ['host', 'port', 'use_ssl', 'ca_certs_file', 'ca_certs_data', 'bind_dn',
+     'bind_pw', 'base_dn', 'db_uri', 'required_property']
 )
 
 
@@ -228,6 +236,8 @@ def get_config(**defaults):
         for key in _sync_config._fields if key != 'db_uri'
     }
     config_dict['port'] = int(config_dict['port'])
+    if 'use_ssl' in config_dict:
+        config_dict['use_ssl'] = bool(strtobool(config_dict['use_ssl']))
     config_dict['db_uri'] = os.environ['PYCROFT_DB_URI']
     config = _sync_config(**config_dict)
 

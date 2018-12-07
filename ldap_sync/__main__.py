@@ -12,7 +12,8 @@ logger = logging.getLogger('ldap_sync')
 
 def sync_production():
     logger.info("Starting the production sync. See --help for other options.")
-    config = get_config_or_exit(required_property='ldap')
+    config = get_config_or_exit(required_property='ldap', use_ssl='False',
+                                ca_certs_file=None, ca_certs_data=None)
 
     db_users = fetch_users_to_sync(
         session=establish_and_return_session(config.db_uri),
@@ -23,6 +24,9 @@ def sync_production():
     connection = establish_and_return_ldap_connection(
         host=config.host,
         port=config.port,
+        use_ssl=config.use_ssl,
+        ca_certs_file=config.ca_certs_file,
+        ca_certs_data=config.ca_certs_data,
         bind_dn=config.bind_dn,
         bind_pw=config.bind_pw,
     )

@@ -88,7 +88,8 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
     def setUpClass(cls):
         super(LdapTestBase, cls).setUpClass()
         try:
-            cls.config = get_config(required_property='mail')
+            cls.config = get_config(required_property='mail', use_ssl='False',
+                                    ca_certs_file=None, ca_certs_data=None)
         except KeyError as e:
             raise RuntimeError("Environment variable {} must be set".format(e.args[0]))
         cls.base_dn = cls.config.base_dn
@@ -202,6 +203,7 @@ class LdapTestCase(LdapSyncerTestBase):
     def test_connection_works(self):
         conn = establish_and_return_ldap_connection(
             host=self.config.host, port=self.config.port,
+            use_ssl=self.config.use_ssl, ca_certs_file=None, ca_certs_data=None,
             bind_dn=self.config.bind_dn, bind_pw=self.config.bind_pw
         )
         self.assertTrue(conn.bound)
