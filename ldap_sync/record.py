@@ -120,7 +120,12 @@ class Record(object):
         if self == other:
             return IdleAction(self)
 
-        return ModifyAction.from_two_records(desired_record=self, current_record=other)
+        action = ModifyAction.from_two_records(desired_record=self, current_record=other)
+        # Do not try to delete pwdAccountLockedTime if password is changed,
+        # as the ppolicy overlay already takes care of that.
+        if 'userPassword' in action.modifications and not action.modifications.get('pwdAccountLockedTime', None):
+            action.modifications.pop('pwdAccountLockedTime', None)
+        return action
 
     def __rsub__(self, other):
         if other is None:
