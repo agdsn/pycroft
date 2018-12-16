@@ -10,7 +10,7 @@ readonly DESCRIPTION=(
 
 run() {
 	cd /opt/pycroft/app
-	exec /opt/pycroft/venv/bin/nosetests -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft"$@"
+	exec /opt/pycroft/venv/bin/nosetests -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
