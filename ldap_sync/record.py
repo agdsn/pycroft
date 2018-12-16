@@ -82,7 +82,7 @@ class Record(object):
             'gidNumber': user.unix_account.gid,  # SV, REQ by posixAccount
             'homeDirectory': user.unix_account.home_directory,  # SV, REQ by posixAccount
             'userPassword': passwd_hash,  # MAY by posixAccount, shadowAccount
-            'gecos': user.name,  # SV, MAY by posixAccount
+            'gecos': user.name.encode("ascii","replace"),  # SV, MAY by posixAccount, IA5String
             'loginShell': user.unix_account.login_shell,  # SV, MAY by posixAccount
             'cn': user.name,  # REQ by posixAccount, inetOrgPerson(person)
             'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
