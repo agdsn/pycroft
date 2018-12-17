@@ -58,7 +58,8 @@ class Record(object):
 
     SYNCED_ATTRIBUTES = frozenset([
         'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
-        'homeDirectory', 'gidNumber', 'uidNumber', 'uid', 'pwdAccountLockedTime'
+        'homeDirectory', 'gidNumber', 'uidNumber', 'uid',
+        'pwdAccountLockedTime', 'shadowExpire'
     ])
     LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
     PWD_POLICY_BLOCKED = "login_disabled"
@@ -93,6 +94,11 @@ class Record(object):
             # A 000001010000Z value means that the account has been locked permanently,
             # and that only a password administrator can unlock the account.
             attributes['pwdAccountLockedTime'] = "000001010000Z"  # 1.3.6.1.4.1.42.2.27.8.1.17
+            # See man shadow
+            # The date of expiration of the account, expressed as the number of days since Jan 1, 1970.
+            # The value 0 should not be used as it is interpreted as either
+            # an account with no expiration, or as an expiration on Jan 1, 1970.
+            attributes['shadowExpire'] = 1
 
         # sanity check: did we forget something in `cls.SYNCED_ATTRIBUTES` that
         # we support migrating anyway?
