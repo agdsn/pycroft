@@ -4,7 +4,7 @@
 from datetime import datetime
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.logging import UserLogEntry, RoomLogEntry
+from pycroft.model.logging import UserLogEntry, RoomLogEntry, LogEntry
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
 
@@ -30,6 +30,19 @@ def _create_log_entry(class_, message, author, created_at=None, **kwargs):
     entry = class_(**kwargs)
     session.session.add(entry)
     return entry
+
+
+def log_event(message, author, created_at=None):
+    """
+    This method will create a new LogEntry.
+
+    :param unicode message: the log message text
+    :param User author: user responsible for the entry
+    :param datetime|None created_at: Creation time of the entry. Defaults to
+    current database time if None.
+    :return: the newly created RoomLogEntry.
+    """
+    return _create_log_entry(LogEntry, message, author, created_at)
 
 
 def log_user_event(message, author, user, created_at=None):
