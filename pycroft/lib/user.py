@@ -392,7 +392,8 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
     setup_traffic_group(user, processor, traffic_group_id, terminate_other=False)
 
     for user_host in user.hosts:
-        migrate_user_host(user_host, new_room, processor)
+        if user_host.room == old_room:
+            migrate_user_host(user_host, new_room, processor)
 
     return user
 
@@ -605,10 +606,11 @@ def move_out(user, comment, processor, when, end_membership=True):
     deleted_interfaces = list()
     num_hosts = 0
     for num_hosts, h in enumerate(user.hosts, 1):
-        for interface in h.interfaces:
-            deleted_interfaces.append(interface.mac)
+        if h.room == user.room or end_membership:
+            for interface in h.interfaces:
+                deleted_interfaces.append(interface.mac)
 
-        session.session.delete(h)
+            session.session.delete(h)
 
     if user.room is not None:
         message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
