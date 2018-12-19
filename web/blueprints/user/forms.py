@@ -12,7 +12,7 @@ from wtforms.validators import (
 
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query
+from web.blueprints.facilities.forms import building_query, SelectRoomForm
 from web.blueprints.properties.forms import traffic_group_query, \
     property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
@@ -74,24 +74,8 @@ class UserEditForm(Form):
     birthdate = DateField(u"Geburtsdatum", [Optional()])
 
 
-class UserMoveForm(Form):
-    building = QuerySelectField(u"Wohnheim",
-                                [DataRequired(message=u"Wohnheim?")],
-                                get_label='short_name',
-                                query_factory=building_query)
-    level = LazyLoadSelectField(u"Etage",
-                                validators=[NumberRange(message=u"Etage?")],
-                                coerce=int,
-                                choices=[],
-                                conditions=["building"],
-                                data_endpoint="facilities.json_levels")
-    room_number = LazyLoadSelectField(u"Raumnummer",
-                                      validators=[
-                                          DataRequired(message=u"Raum?")],
-                                      coerce=str,
-                                      choices=[],
-                                      conditions=["building", "level"],
-                                      data_endpoint="facilities.json_rooms")
+class UserMoveForm(SelectRoomForm):
+    pass
 
 
 class UserCreateForm(Form):
@@ -173,14 +157,12 @@ class UserMoveOutForm(Form):
     end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
 
 
-class _HostForm(Form):
+class HostForm(SelectRoomForm):
     owner_id = UserIDField(u"Besitzer-ID")
     name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")],
                      description=u"z.B. TP-LINK WR841, FritzBox 4040 oder MacBook")
 
-
-class HostForm(_HostForm, UserMoveForm):
-    pass
+    _order = ("name", "owner_id")
 
 
 class InterfaceForm(Form):
