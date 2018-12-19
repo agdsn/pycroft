@@ -3,6 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
@@ -51,3 +52,7 @@ class Room(IntegerIdModel):
     def __unicode__(self):
         return u"{} {} {}".format(self.building.short_name, self.level,
                                   self.number)
+
+    @hybrid_property
+    def short_name(self):
+        return "{} {}-{}".format(self.building.short_name, self.level, self.number)

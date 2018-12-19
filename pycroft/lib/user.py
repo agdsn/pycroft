@@ -302,10 +302,10 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
                          "Please specify one manually."
                          .format(user)) from e
 
-    msg = deferred_gettext(u"Moved in: {dorm} {level}-{room}")
+    msg = deferred_gettext(u"Moved in: {room}")
 
     log_user_event(author=processor,
-                   message=msg.format(dorm=building.short_name, level=level, room=room_number).to_json(),
+                   message=msg.format(room=room.short_name).to_json(),
                    user=user)
 
     return user
@@ -344,14 +344,10 @@ def migrate_user_host(host, new_room, processor):
                            message=message.to_json())
 
     message = deferred_gettext(
-        u"Moved host '{name}' from {dorm_old} {level_old}-{room_old} to {dorm} {level}-{room}."
+        u"Moved host '{name}' from {room_old} to {room_new}."
             .format(name=host.name,
-                    dorm_old=old_room.building.short_name,
-                    level_old=old_room.level,
-                    room_old=old_room.number,
-                    dorm=new_room.building.short_name,
-                    level=new_room.level,
-                    room=new_room.number))
+                    room_old=old_room.short_name,
+                    room_new=new_room.short_name))
 
     log_user_event(author=processor,
                    user=host.owner,
@@ -615,10 +611,8 @@ def move_out(user, comment, processor, when, end_membership=True):
         session.session.delete(h)
 
     if user.room is not None:
-        message = u"Moved out of {dorm} {level}-{room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
-            .format(dorm=user.room.building.short_name,
-                    level=user.room.level,
-                    room=user.room.number,
+        message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
+            .format(room=user.room.short_name,
                     num_hosts=num_hosts,
                     interfaces=', '.join(deleted_interfaces))
     else:
