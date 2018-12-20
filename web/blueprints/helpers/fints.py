@@ -16,10 +16,12 @@ class FinTS3Client(FinTS3PinTanClient):
         Fetches the list of transactions of a bank account in a certain timeframe.
         MT940-Errors are catched and the statements containing them returned as
         a seperate list.
+
         :param account: SEPA
         :param start_date: First day to fetch
         :param end_date: Last day to fetch
-        :return: A list of mt940.models.Transaction objects
+        :return: A tuple with list of mt940.models.Transaction objects and another
+        list with tuples of mt940-data and error messages.
         """
 
         with self._get_dialog() as dialog:
