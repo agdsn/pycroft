@@ -26,7 +26,21 @@ class SwitchTable(BootstrapTable):
             Column('id', '#'),
             Column('name', 'Name', formatter='table.linkFormatter'),
             Column('ip', 'Management IP'),
+            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
+            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
         ], **kw)
+
+    def generate_toolbar(self):
+        if not current_user.has_property('infrastructure_change'):
+            return
+        args = {
+            'class': "btn btn-primary",
+            'href': url_for(".switch_create"),
+        }
+        yield "<a {}>".format(html_params(**args))
+        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
+        yield "Switch"
+        yield "</a>"
 
 
 class VlanTable(BootstrapTable):

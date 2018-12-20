@@ -105,7 +105,15 @@ def switches_json():
                 'title': switch.name,
                 'href': url_for(".switch_show", switch_id=switch.host_id)
             },
-            'ip': str(switch.management_ip)
+            'ip': str(switch.management_ip),
+            "edit_link": {"href": url_for(".switch_edit", switch_id=switch.host_id),
+                          'title': "Bearbeiten",
+                          'icon': 'glyphicon-pencil',
+                          'btn-class': 'btn-link'},
+            "delete_link": {"href": url_for(".switch_delete", switch_id=switch.host_id),
+                            'title': "Löschen",
+                            'icon': 'glyphicon-trash',
+                            'btn-class': 'btn-link'}
         } for switch in Switch.q.all()])
 
 
