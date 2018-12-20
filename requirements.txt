@@ -27,7 +27,7 @@ alembic~=0.9.6
 simplejson~=3.11.1
 #usersheet generation
 reportlab~=3.4.0
-fints~=0.2.1
+fints~=2.0.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
 manuf~=1.0.0

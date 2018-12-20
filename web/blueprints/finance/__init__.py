@@ -33,11 +33,12 @@ from pycroft.lib.finance import get_typed_splits, \
     post_transactions_for_membership_fee, build_transactions_query, \
     match_activities, take_actions_for_payment_in_default_users
 from pycroft.model.finance import (
-    BankAccount, BankAccountActivity, Split, MembershipFee)
+    BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.helpers.fints import FinTS3Client
 from web.blueprints.helpers.table import date_format
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
@@ -46,7 +47,7 @@ from web.blueprints.finance.forms import (
     HandlePaymentsInDefaultForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
-    BankAccountActivityTable, TransactionTable
+    BankAccountActivityTable, TransactionTable, ImportErrorTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -55,7 +56,6 @@ from web.blueprints.helpers.api import json_agg_core
 
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
-from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
 from datetime import date
 
@@ -137,6 +137,21 @@ def bank_accounts_activities_json():
         } for activity in activity_q.all()])
 
 
+@bp.route('/bank-accounts/import/errors/json')
+def bank_accounts_errors_json():
+    return jsonify(items=[
+        {
+            'name': error.bank_account.name,
+            'fix': {
+                'href': url_for('.fix_import_error',
+                                error_id=error.id),
+                'title': 'korrigieren',
+                'btn_class': 'btn-primary'
+            },
+            'imported_at': '{}'.format(
+                map_or_default(error.imported_at, datetime.date, 'nie'))
+        } for error in MT940Error.q.all()])
+
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
 @nav.navigate(u"Bankkontobewegungen importieren")
@@ -158,7 +173,7 @@ def bank_accounts_import():
         # login with fints
         process = True
         try:
-            fints = FinTS3PinTanClient(
+            fints = FinTS3Client(
                 bank_account.routing_number,
                 form.user.data,
                 form.pin.data,
@@ -172,9 +187,12 @@ def bank_accounts_import():
                     bank_account.iban)
                 )
             start_date = form.start_date.data
-            statement = fints.get_statement(acc, start_date, date.today())
+            statement, with_error = fints.get_filtered_transactions(acc, start_date, date.today())
             flash(
                 "Transaktionen vom {} bis {}.".format(start_date, date.today()))
+            if len(with_error) > 0:
+                flash("{} Statements enthielten fehlerhafte Daten und müssen vor dem Import manuell korrigiert werden.".format(len(with_error)), 'error')
+
         except FinTSDialogError:
             flash(u"Ungültige FinTS-Logindaten.", 'error')
             process = False
@@ -190,6 +208,10 @@ def bank_accounts_import():
             (transactions, old_transactions) = ([], [])
 
         if process and form.do_import.data is True:
+            # save errors to database
+            for error in with_error:
+                session.add(MT940Error(error[0], error[1], current_user, bank_account))
+
             # save transactions to database
             session.add_all(transactions)
             session.commit()
@@ -201,6 +223,21 @@ def bank_accounts_import():
     return render_template('finance/bank_accounts_import.html', form=form,
                            transactions=transactions,
                            old_transactions=old_transactions)
+
+@bp.route('/bank-accounts/importerrors', methods=['GET', 'POST'])
+@access.require('finance_change')
+@nav.navigate(u"Fehlerhafter Bankimport")
+def bank_accounts_import_errors():
+    error_table = ImportErrorTable(
+        data_url=url_for('.bank_accounts_errors_json'),
+        create_account=privilege_check(current_user, 'finance_change'))
+    return render_template('finance/bank_accounts_import_errors.html',
+                           error_table=error_table)
+
+@bp.route('/bank-accounts/importerrors/<error_id>')
+@access.require('finance_change')
+def fix_import_error(error_id):
+    return "a"
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])

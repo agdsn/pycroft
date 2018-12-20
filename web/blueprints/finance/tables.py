@@ -211,3 +211,14 @@ class TransactionTable(BootstrapTable):
         ], table_args = {
             'data-row-style': 'table.financeRowFormatter',
         }, **kw)
+
+
+class ImportErrorTable(BootstrapTable):
+    """A table for displaying buggy mt940 imports"""
+    def __init__(self, *a, create_account=False, **kw):
+        self.create_account = create_account
+        super().__init__(*a, columns=[
+            Column(name='name', title='Bankkonto'),
+            Column(name='imported_at', title='Importiert am'),
+            Column(name='fix', title='Importieren', formatter='table.btnFormatter'),
+        ], **kw)

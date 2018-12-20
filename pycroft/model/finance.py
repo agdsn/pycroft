@@ -325,6 +325,25 @@ class BankAccountActivity(IntegerIdModel):
     )
 
 
+class MT940Error(IntegerIdModel):
+    mt940 = Column(Text(), nullable=False)
+    exception = Column(Text(), nullable=False)
+    author = relationship("User")
+    author_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    imported_at = Column(DateTimeTz, nullable=False,
+                       server_default=func.current_timestamp(),
+                       onupdate=func.current_timestamp())
+    bank_account = relationship(BankAccount, backref=backref("mt940_errors"))
+    bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
+                             nullable=False)
+
+    def __init__(self, mt940, exception, author, bank_account):
+        self.mt940 = mt940
+        self.exception = exception
+        self.author = author
+        self.bank_account = bank_account
+
+
 manager.add_constraint(
     BankAccount.__table__,
     CheckConstraint(
