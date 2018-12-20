@@ -157,6 +157,99 @@ def switch_show_json(switch_id):
         } for port in switch_port_list])
 
 
+@bp.route('/switch/create', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def switch_create():
+    form = SwitchForm()
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data, building=form.building.data).one()
+
+        switch = create_switch(form.name.data, IPAddress(form.management_ip.data), room, current_user)
+
+        session.session.commit()
+
+        flash("Die Switch wurde erfolgreich erstellt.", "success")
+
+        return redirect(url_for('.switch_show', switch_id=switch.host_id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switches')
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Switch erstellen",
+                           form_args=form_args)
+
+
+@bp.route('/switch/<int:switch_id>/edit', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def switch_edit(switch_id):
+    switch = Switch.q.filter_by(host_id=switch_id).one()
+
+    if not switch:
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        return redirect(url_for('.switches'))
+
+    form = SwitchForm(name=switch.name, management_ip=switch.management_ip, building=switch.host.room.building,
+                      level=switch.host.room.level, room_number=switch.host.room.number)
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data, building=form.building.data).one()
+
+        edit_switch(switch, form.name.data, form.management_ip.data, room, current_user)
+
+        session.session.commit()
+
+        flash("Die Switch wurde erfolgreich bearbeitet.", "success")
+
+        return redirect(url_for('.switches'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switches')
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Switch bearbeiten",
+                           form_args=form_args)
+
+
+@bp.route('/switch/<int:switch_id>/delete', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def switch_delete(switch_id):
+    switch = Switch.q.filter_by(host_id=switch_id).one()
+
+    if not switch:
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        return redirect(url_for('.switches'))
+
+    form = FlaskForm()
+
+    if form.validate_on_submit():
+        delete_switch(switch, current_user)
+
+        session.session.commit()
+
+        flash("Die Switch wurde erfolgreich gelöscht.", "success")
+
+        return redirect(url_for('.switches'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switches'),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Switch löschen",
+                           form_args=form_args)
+
+
 @bp.route('/switch/<int:switch_id>/create-port-relation', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def port_relation_create(switch_id):
