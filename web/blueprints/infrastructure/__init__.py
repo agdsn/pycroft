@@ -120,7 +120,8 @@ def switch_show(switch_id):
         page_title=u"Switch: " + switch.name,
         switch=switch,
         port_table=PortTable(
-            data_url=url_for('.switch_show_json', switch_id=switch.host_id)))
+            data_url=url_for('.switch_show_json', switch_id=switch.host_id),
+            switch_id=switch_id))
 
 
 @bp.route('/switch/show/<int:switch_id>/json')
@@ -133,7 +134,8 @@ def switch_show_json(switch_id):
     switch_port_list = switch.ports
     switch_port_list = net.sort_ports(switch_port_list)
     return jsonify(items=[{
-            "portname": port.name,
+            "switchport_name": port.name,
+            "patchport_name": port.patch_port.name if port.patch_port else None,
             "room": {
                 "href": url_for(
                     "facilities.room_show",
@@ -143,7 +145,15 @@ def switch_show_json(switch_id):
                     port.patch_port.room.level,
                     port.patch_port.room.number
                 )
-            } if port.patch_port else None
+            } if port.patch_port else None,
+            "edit_link": {"href": url_for(".port_relation_edit", switchport_id=port.id),
+                          'title': "Bearbeiten",
+                          'icon': 'glyphicon-pencil',
+                          'btn-class': 'btn-link'},
+            "delete_link": {"href": url_for(".port_relation_delete", switchport_id=port.id),
+                            'title': "Löschen",
+                            'icon': 'glyphicon-trash',
+                            'btn-class': 'btn-link'}
         } for port in switch_port_list])
 
 
