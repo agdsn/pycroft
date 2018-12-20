@@ -13,7 +13,17 @@
 
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
+from flask_login import current_user
+from flask_wtf import FlaskForm
+from ipaddr import IPAddress
 from sqlalchemy.orm import joinedload
+
+from pycroft.lib.infrastructure import edit_port_relation, create_port_relation, delete_port_relation, create_switch, \
+    edit_switch, delete_switch
+from pycroft.lib.logging import log_room_event
+from pycroft.model.facilities import Room
+from web.blueprints.infrastructure.forms import PortForm, SwitchForm
+
 from pycroft.helpers import net
 from pycroft.model import session
 from pycroft.model.host import Switch, SwitchPort
@@ -135,6 +145,109 @@ def switch_show_json(switch_id):
                 )
             } if port.patch_port else None
         } for port in switch_port_list])
+
+
+@bp.route('/switch/<int:switch_id>/create-port-relation', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def port_relation_create(switch_id):
+    switch = Switch.q.get(switch_id)
+
+    if not switch:
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        return redirect(url_for('.switches'))
+
+    form = PortForm(level=switch.host.room.level, building=switch.host.room.building)
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data, building=form.building.data).one()
+
+        create_port_relation(switch, form.switchport_name.data, form.patchport_name.data, room, current_user)
+
+        session.session.commit()
+
+        flash("Die Port-Relation wurde erfolgreich erstellt.", "success")
+
+        return redirect(url_for('.switch_show', switch_id=switch.host_id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switch_show', switch_id=switch_id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Port-Relation erstellen",
+                           form_args=form_args)
+
+
+@bp.route('/port-relation/edit/<int:switchport_id>', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def port_relation_edit(switchport_id):
+    switchport = SwitchPort.q.get(switchport_id)
+
+    if not switchport:
+        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switchport_id), "error")
+        return redirect(url_for('.switches'))
+
+    patchport = switchport.patch_port
+
+    form = PortForm(switchport_name=switchport.name, patchport_name=patchport.name, building=patchport.room.building,
+                    level=patchport.room.level, room_number=patchport.room.number)
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(number=form.room_number.data,
+                                level=form.level.data, building=form.building.data).one()
+
+        edit_port_relation(switchport, patchport, form.switchport_name.data, form.patchport_name.data, room, current_user)
+
+        session.session.commit()
+
+        flash("Die Port-Relation wurde erfolgreich bearbeitet.", "success")
+
+        return redirect(url_for('.switch_show', switch_id=switchport.switch_id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switch_show', switch_id=switchport.switch_id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Port-Relation bearbeiten",
+                           form_args=form_args)
+
+
+@bp.route('/port-relation/delete/<int:switchport_id>', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def port_relation_delete(switchport_id):
+    switchport = SwitchPort.q.get(switchport_id)
+
+    if not switchport:
+        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switchport_id), "error")
+        return redirect(url_for('.switches'))
+
+    patchport = switchport.patch_port
+
+    form = FlaskForm()
+
+    if form.validate_on_submit():
+        delete_port_relation(switchport, patchport, current_user)
+
+        session.session.commit()
+
+        flash("Die Port-Relation wurde erfolgreich gelöscht.", "success")
+
+        return redirect(url_for('.switch_show', switch_id=switchport.switch_id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.switch_show', switch_id=switchport.switch_id),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Port-Relation löschen",
+                           form_args=form_args)
 
 
 @bp.route('/vlans')
