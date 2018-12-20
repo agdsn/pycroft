@@ -7,12 +7,11 @@ from flask_wtf import FlaskForm as Form
 from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
-from wtforms.widgets import TextArea
 
 from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
     FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField,
-    BooleanField, SelectMultipleField, QuerySelectMultipleField)
+    BooleanField, SelectMultipleField, QuerySelectMultipleField, TextAreaField)
 from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
 from pycroft.model.finance import BankAccount
@@ -172,5 +171,5 @@ class HandlePaymentsInDefaultForm(Form):
                                                              render_kw={'size': 20})
 
 class FixMT940Form(Form):
-    mt940 = StringField(u'MT940', widget=TextArea())
+    mt940 = TextAreaField(u'MT940')
     do_import = BooleanField(u"Import durchführen", default=False)
