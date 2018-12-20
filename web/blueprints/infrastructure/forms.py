@@ -10,3 +10,7 @@ class PortForm(SelectRoomForm):
 
     _order = ("switchport_name", "patchport_name")
 
+
+class SwitchForm(SelectRoomForm):
+    name = TextField(label="Name", validators=[DataRequired()])
+    management_ip = TextField(label="Management IP", validators=[DataRequired(), IPAddress()])
