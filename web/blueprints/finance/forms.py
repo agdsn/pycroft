@@ -7,6 +7,7 @@ from flask_wtf import FlaskForm as Form
 from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
+from wtforms.widgets import TextArea
 
 from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
@@ -169,3 +170,7 @@ class HandlePaymentsInDefaultForm(Form):
     terminated_member_memberships = QuerySelectMultipleField(u"Beendete Mitgliedschaften/Auszüge",
                                                              get_label=get_user_name_with_id,
                                                              render_kw={'size': 20})
+
+class FixMT940Form(Form):
+    mt940 = StringField(u'MT940', widget=TextArea())
+    do_import = BooleanField(u"Import durchführen", default=False)

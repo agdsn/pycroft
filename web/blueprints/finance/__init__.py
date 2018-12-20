@@ -44,7 +44,7 @@ from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
-    HandlePaymentsInDefaultForm)
+    HandlePaymentsInDefaultForm, FixMT940Form)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
     BankAccountActivityTable, TransactionTable, ImportErrorTable
@@ -57,6 +57,7 @@ from web.blueprints.helpers.api import json_agg_core
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
 from fints.dialog import FinTSDialogError
+from fints.utils import mt940_to_array
 from datetime import date
 
 bp = Blueprint('finance', __name__)
@@ -234,10 +235,43 @@ def bank_accounts_import_errors():
     return render_template('finance/bank_accounts_import_errors.html',
                            error_table=error_table)
 
-@bp.route('/bank-accounts/importerrors/<error_id>')
+@bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
 def fix_import_error(error_id):
-    return "a"
+    error = MT940Error.q.get(error_id)
+    form = FixMT940Form()
+    (transactions, old_transactions) = ([], [])
+    new_exception = None
+
+    if request.method != 'POST':
+        form.mt940.data = error.mt940
+
+    if form.validate_on_submit():
+        statement = []
+        try:
+            statement += mt940_to_array(form.mt940.data)
+        except Exception as e:
+            new_exception = str(e)
+
+        if new_exception is None:
+            flash('MT940 ist jetzt valide.', 'success')
+            (transactions, old_transactions) = finance.process_transactions(
+                error.bank_account, statement)
+
+            if form.do_import.data is True:
+                # save transactions to database
+                session.add_all(transactions)
+                session.delete(error)
+                session.commit()
+                flash(u'Bankkontobewegungen wurden importiert.')
+                return redirect(url_for(".bank_accounts_import_errors"))
+        else:
+            flash('Es existieren weiterhin Fehler.', 'error')
+
+    return render_template('finance/bank_accounts_error_fix.html',
+                    error_id=error_id, exception=error.exception,
+                    new_exception=new_exception, form=form,
+                    transactions=transactions, old_transactions=old_transactions)
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])

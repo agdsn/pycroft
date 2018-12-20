@@ -1,0 +1,41 @@
+{#
+ Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
+ This file is part of the Pycroft project and licensed under the terms of
+ the Apache License, Version 2.0. See the LICENSE file for details.
+#}
+{% extends "layout.html" %}
+
+{% set page_title = "MT940 Korrektur" %}
+{% block content %}
+  <section>
+    <b>Beim Import aufgetretener Fehler:</b><br>
+    <span style="font-family: monospace;">{{ exception }}</span><br>
+    <br>
+    {% if new_exception %}
+      <b>Nach Korrektur aufgetretener Fehler:</b><br>
+      <span style="font-family: monospace;">{{ new_exception }}</span><br>
+      <br>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('.fix_import_error', error_id=error_id) }}" role="form">
+        {{ form.csrf_token() }}
+        <div class="row">
+            <div class="col-xs-12">
+              {{ form.mt940(class="form-control",rows="20") }}
+            </div>
+        </div>
+        <br>
+        <div class="row">
+          <div class="col-xs-6">
+            {{ form.do_import() }}
+          </div>
+         <div class="col-xs-6">
+            <input type="submit" class="btn btn-primary" value="übernehmen">
+         </div>
+        </div>
+
+    </form>
+  </section>
+
+  {% include "finance/_import_preview.html" with context %}
+{% endblock %}
