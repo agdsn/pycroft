@@ -11,3 +11,4 @@ class PatchPortData(DataSet):
         name = "??"
         switch_port = SwitchPortData.dummy_port1
         room = RoomData.dummy_room1
+        switch_room = RoomData.dummy_room1

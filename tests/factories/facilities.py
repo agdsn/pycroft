@@ -50,6 +50,7 @@ class PatchPortFactory(BaseFactory):
         model = PatchPort
 
     room = SubFactory(RoomFactory)
+    switch_room = SubFactory(RoomFactory)
     name = "??"
     switch_port = None
     class Params:

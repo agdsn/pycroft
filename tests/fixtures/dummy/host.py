@@ -63,16 +63,19 @@ class SwitchPortData(DataSet):
 class PatchPortData(DataSet):
     class dummy_patch_port1:
         room = RoomData.dummy_room1
+        switch_room = RoomData.dummy_room1
         name = "D1"
         switch_port = SwitchPortData.dummy_port1
 
     class dummy_patch_port2:
         room = RoomData.dummy_room2
+        switch_room = RoomData.dummy_room2
         name = "D2"
         switch_port = SwitchPortData.dummy_port2
 
     class dummy_patch_port3:
         room = RoomData.dummy_room3
+        switch_room = RoomData.dummy_room3
         name = "D3"
         switch_port = SwitchPortData.dummy_port3
 
