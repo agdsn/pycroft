@@ -4,6 +4,7 @@
  the Apache License, Version 2.0. See the LICENSE file for details.
 #}
 {% extends "layout.html" %}
+{% import "macros/misc.html" as misc %}
 
 {% block content %}
     <section>
@@ -12,7 +13,7 @@
             <dt>Management IP</dt>
             <dd>{{ switch.management_ip }}</dd>
             <dt>Standort</dt>
-            <dd>{% if switch.host.room != None %}{{ switch.host.room.building.short_name }} / {{ switch.host.room.level }}-{{ switch.host.room.number }}{% else %}unbekannt{% endif %}</dd>
+            <dd>{% if switch.host.room != None %}{{ misc.room_link(switch.host.room) }}{% else %}unbekannt{% endif %}</dd>
         </dl>
     </section>
     <section>
