@@ -15,24 +15,28 @@ from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
+from flask_wtf import Form
 from sqlalchemy.sql import and_, select, exists
 from sqlalchemy.orm import joinedload, aliased
 
 from pycroft import lib, config
 from pycroft.helpers import facilities
+from pycroft.helpers.net import sort_ports
 from pycroft.lib.facilities import get_overcrowded_rooms
+from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port
 from pycroft.model import session
 from pycroft.model.facilities import Room, Site
+from pycroft.model.port import PatchPort
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
-    RoomForm, BuildingForm, RoomLogEntry)
+    RoomForm, BuildingForm, RoomLogEntry, PatchPortForm)
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
 from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
-                     RoomOvercrowdedTable)
+                     RoomOvercrowdedTable, PatchPortTable)
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
@@ -177,7 +181,145 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
         } for room, inhabitants in level_inhabitants.items()])
 
 
-@bp.route('/rooms/<int:room_id>', methods=['GET', 'POST'])
+@bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def patch_port_create(switch_room_id):
+    switch_room = Room.q.get(switch_room_id)
+
+    if not switch_room:
+        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        return redirect(url_for('.overview'))
+
+    if not switch_room.is_switch_room:
+        flash("Dieser Raum ist kein Switchraum!", "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    form = PatchPortForm(switch_room=switch_room.short_name,
+                         building=switch_room.building,
+                         level=switch_room.level)
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(building=form.building.data,
+                                level=form.level.data,
+                                number=form.room_number.data).one()
+
+        patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
+
+        session.session.commit()
+
+        flash("Der Patch-Port {} zum Zimmer {} wurde erfolgreich erstellt.".format(patch_port.name,
+                                                                                   patch_port.room.short_name),
+              "success")
+
+        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel")
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Patch-Port erstellen",
+                           form_args=form_args)
+
+
+@bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def patch_port_edit(switch_room_id, patch_port_id):
+    switch_room = Room.q.get(switch_room_id)
+    patch_port = PatchPort.q.get(patch_port_id)
+
+    if not switch_room:
+        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        return redirect(url_for('.overview'))
+
+    if not switch_room.is_switch_room:
+        flash("Dieser Raum ist kein Switchraum!", "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    if not patch_port:
+        flash("Patch-Port mit ID {} nicht gefunden!".format(patch_port_id), "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    if not patch_port.switch_room == switch_room:
+        flash("Patch-Port ist nicht im Switchraum!".format(patch_port_id), "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    form = PatchPortForm(switch_room=switch_room.short_name,
+                         name=patch_port.name,
+                         building=patch_port.room.building,
+                         level=patch_port.room.level,
+                         room_number=patch_port.room.number)
+
+    if form.validate_on_submit():
+        room = Room.q.filter_by(building=form.building.data,
+                                level=form.level.data,
+                                number=form.room_number.data).one()
+
+        edit_patch_port(patch_port, form.name.data, room,current_user)
+
+        session.session.commit()
+
+        flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
+
+        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel")
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Patch-Port bearbeiten",
+                           form_args=form_args)
+
+
+@bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
+@access.require('infrastructure_change')
+def patch_port_delete(switch_room_id, patch_port_id):
+    switch_room = Room.q.get(switch_room_id)
+    patch_port = PatchPort.q.get(patch_port_id)
+
+    if not switch_room:
+        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        return redirect(url_for('.overview'))
+
+    if not switch_room.is_switch_room:
+        flash("Dieser Raum ist kein Switchraum!", "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    if not patch_port:
+        flash("Patch-Port mit ID {} nicht gefunden!".format(patch_port_id), "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    if not patch_port.switch_room == switch_room:
+        flash("Patch-Port ist nicht im Switchraum!".format(patch_port_id), "error")
+        return redirect(url_for('.room_show', room_id=switch_room_id))
+
+    form = Form()
+
+    if form.validate_on_submit():
+        delete_patch_port(patch_port, current_user)
+
+        session.session.commit()
+
+        flash("Der Patch-Port wurde erfolgreich gelöscht.", "success")
+
+        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Patch-Port löschen",
+                           form_args=form_args)
+
+
+@bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
 def room_show(room_id):
     room = Room.q.get(room_id)
 
@@ -195,21 +337,65 @@ def room_show(room_id):
     room_log_table = RoomLogTable(
         data_url=url_for(".room_logs_json", room_id=room.id))
 
+    patch_port_table = PatchPortTable(data_url=url_for(".room_patchpanel_json", room_id=room.id),
+                                      room_id=room_id)
+
     return render_template('facilities/room_show.html',
-        page_title=u"Raum " + str(room.building.short_name) + u" " + \
+        page_title="Raum " + str(room.building.short_name) + u" " + \
                    str(room.level) + u"-" + str(room.number),
         room=room,
         ports=room.patch_ports,
         user_buttons=list(map(user_button, room.users)),
         room_log_table=room_log_table,
+        patch_port_table=patch_port_table,
         form=form,
     )
 
 
-@bp.route('/rooms/<int:room_id>/logs/json')
+@bp.route('/room/<int:room_id>/logs/json')
 def room_logs_json(room_id):
     return jsonify(items=[format_room_log_entry(entry) for entry in
                           reversed(Room.q.get(room_id).log_entries)])
+
+
+@bp.route('/room/<int:room_id>/patchpanel/json')
+def room_patchpanel_json(room_id):
+    room = Room.q.get(room_id)
+
+    if not room:
+        abort(404)
+
+    if not room.is_switch_room:
+        abort(400)
+
+    patch_ports = PatchPort.q.filter_by(switch_room=room).all()
+    patch_ports = sort_ports(patch_ports)
+
+    return jsonify(items=[{
+        "name": port.name,
+        "room": {
+            "href": url_for(
+                ".room_show",
+                room_id=port.room.id
+            ),
+            "title": port.room.short_name
+        },
+        "switch_port": {
+            "href": url_for(
+                "infrastructure.switch_show",
+                switch_id=port.switch_port.switch.host_id
+            ),
+            "title": "{}/{}".format(port.switch_port.switch.host.name, port.switch_port.name)
+        } if port.switch_port else None,
+        "edit_link": {"href": url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
+                      'title': "Bearbeiten",
+                      'icon': 'glyphicon-pencil',
+                      'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
+        "delete_link": {"href": url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
+                        'title': "Löschen",
+                        'icon': 'glyphicon-trash',
+                        'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
+    } for port in patch_ports])
 
 
 @bp.route('/json/levels')

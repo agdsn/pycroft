@@ -12,7 +12,8 @@ from web.form.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField
 
 from pycroft.helpers.facilities import sort_buildings
-from web.form.fields.custom import LazyLoadSelectField
+from web.form.fields.custom import LazyLoadSelectField, static
+from web.form.fields.filters import to_uppercase
 
 
 def building_query():
@@ -56,3 +57,10 @@ class BuildingForm(Form):
 
 class RoomLogEntry(Form):
     message = TextAreaField(u"", [DataRequired()])
+
+
+class PatchPortForm(SelectRoomForm):
+    name = TextField(label="Name", validators=[DataRequired()], filters=[to_uppercase])
+    switch_room = static(TextField(label="Switchraum"))
+
+    _order = ("name","switch_room")

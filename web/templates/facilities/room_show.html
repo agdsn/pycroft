@@ -85,6 +85,17 @@
         {% endif %}
     </section>
 
+    {% if room.is_switch_room %}
+        <h2 class="page-header">Patchpanel</h2>
+        <section id="patchpanel">
+            <div class="row">
+                <div class="col-xs-12">
+                    {{ patch_port_table.render("patch_ports") }}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
     <section id="logs">
         <h2 class="page-header">Logs</h2>
         <div class="row">
@@ -101,4 +112,5 @@
             </div>
         </div>
     </section>
+
 {% endblock %}
