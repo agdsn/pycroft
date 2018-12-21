@@ -7,3 +7,10 @@ def to_lowercase(x):
         return x.lower()
     else:
         return x
+
+
+def to_uppercase(x):
+    if type(x) is str:
+        return x.upper()
+    else:
+        return x
