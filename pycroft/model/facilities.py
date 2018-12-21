@@ -55,3 +55,10 @@ class Room(IntegerIdModel):
     @hybrid_property
     def short_name(self):
         return "{} {}-{}".format(self.building.short_name, self.level, self.number)
+
+    @hybrid_property
+    def is_switch_room(self):
+        from pycroft.model.host import Host
+        from pycroft.model.host import Switch
+
+        return Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id==self.id).first() is not None
