@@ -404,7 +404,7 @@ def user_show_hosts_json(user_id):
     for host in user.hosts:
         if host.room:
             patch_ports = host.room.connected_patch_ports
-            switches = ', '.join(p.switch_port.switch.name for p in patch_ports)
+            switches = ', '.join(p.switch_port.switch.host.name for p in patch_ports)
             ports = ', '.join(p.switch_port.name for p in patch_ports)
         else:
             switches = None

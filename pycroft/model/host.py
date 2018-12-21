@@ -42,8 +42,6 @@ class Switch(ModelBase):
     host_id = Column(Integer, ForeignKey(Host.id), primary_key=True, index=True)
     host = relationship(Host, backref=backref("switch", uselist=False))
 
-    name = Column(String(127), nullable=False)
-
     management_ip = Column(IPAddress, nullable=False)
 
 
@@ -116,7 +114,7 @@ class SwitchPort(IntegerIdModel):
                                  back_populates='switch_ports')
 
     def __str__(self):
-        return "{} {}".format(self.switch.name, self.name)
+        return "{} {}".format(self.switch.host.name, self.name)
 
 
 class IP(IntegerIdModel):

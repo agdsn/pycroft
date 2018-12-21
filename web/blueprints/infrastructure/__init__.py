@@ -102,18 +102,18 @@ def switches_json():
     return jsonify(items=[{
             'id': switch.host_id,
             'name': {
-                'title': switch.name,
+                'title': switch.host.name,
                 'href': url_for(".switch_show", switch_id=switch.host_id)
             },
             'ip': str(switch.management_ip),
             "edit_link": {"href": url_for(".switch_edit", switch_id=switch.host_id),
                           'title': "Bearbeiten",
                           'icon': 'glyphicon-pencil',
-                          'btn-class': 'btn-link'},
+                          'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
             "delete_link": {"href": url_for(".switch_delete", switch_id=switch.host_id),
                             'title': "Löschen",
                             'icon': 'glyphicon-trash',
-                            'btn-class': 'btn-link'}
+                            'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
         } for switch in Switch.q.all()])
 
 
@@ -125,7 +125,7 @@ def switch_show(switch_id):
         return redirect(url_for('.switches'))
     return render_template(
         'infrastructure/switch_show.html',
-        page_title=u"Switch: " + switch.name,
+        page_title=u"Switch: " + switch.host.name,
         switch=switch,
         port_table=PortTable(
             data_url=url_for('.switch_show_json', switch_id=switch.host_id),
@@ -201,7 +201,7 @@ def switch_edit(switch_id):
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
 
-    form = SwitchForm(name=switch.name, management_ip=switch.management_ip, building=switch.host.room.building,
+    form = SwitchForm(name=switch.host.name, management_ip=switch.management_ip, building=switch.host.room.building,
                       level=switch.host.room.level, room_number=switch.host.room.number)
 
     if form.validate_on_submit():

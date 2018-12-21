@@ -61,7 +61,7 @@
                 <dt>Gepatched zu</dt>
                 <dd><a href={{ url_for('infrastructure.switch_show',
                                        switch_id=port.switch_port.switch.host_id) }}>
-                        {{ port.switch_port.switch.name }}/{{ port.switch_port.name }}
+                        {{ port.switch_port.switch.host.name }}/{{ port.switch_port.name }}
                 </a></dd>
 
                 {% for vlan in port.switch_port.default_vlans %}

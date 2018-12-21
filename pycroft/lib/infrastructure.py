@@ -45,19 +45,19 @@ def delete_port_relation(switchport, patchport, processor):
 
 @with_transaction
 def edit_switch(switch, name, management_ip, room, processor):
-    if switch.name != name:
-        log_room_event("Changed name of '{}' to '{}'.".format(switch.name, name), processor, switch.host.room)
+    if switch.host.name != name:
+        log_room_event("Changed name of '{}' to '{}'.".format(switch.host.name, name), processor, switch.host.room)
 
-        switch.name = name
+        switch.host.name = name
 
     if switch.host.room != room:
-        log_room_event("Moved switch '{}' from {} to {}.".format(switch.name, switch.host.room, room), processor, switch.host.room)
+        log_room_event("Moved switch '{}' from {} to {}.".format(switch.host.name, switch.host.room, room), processor, switch.host.room)
 
         switch.host.room = room
 
     if switch.management_ip != management_ip:
         log_room_event("Changed management IP of switch '{}' from {} to {}."
-                       .format(switch.name, switch.management_ip, management_ip), processor, switch.host.room)
+                       .format(switch.host.name, switch.management_ip, management_ip), processor, switch.host.room)
 
         switch.management_ip = management_ip
 
@@ -74,6 +74,6 @@ def create_switch(name, management_ip, room, processor):
 
 @with_transaction
 def delete_switch(switch, processor):
-    log_room_event("Deleted switch {}.".format(switch.name), processor, switch.host.room)
+    log_room_event("Deleted switch {}.".format(switch.host.name), processor, switch.host.room)
 
     session.delete(switch)
