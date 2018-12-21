@@ -57,6 +57,7 @@ from web.blueprints.helpers.api import json_agg_core
 from sqlalchemy.sql.expression import literal_column, func, select, Join
 
 from fints.dialog import FinTSDialogError
+from fints.exceptions import FinTSClientPINError
 from fints.utils import mt940_to_array
 from datetime import date
 
@@ -192,9 +193,11 @@ def bank_accounts_import():
             flash(
                 "Transaktionen vom {} bis {}.".format(start_date, date.today()))
             if len(with_error) > 0:
-                flash("{} Statements enthielten fehlerhafte Daten und müssen vor dem Import manuell korrigiert werden.".format(len(with_error)), 'error')
+                flash("{} Statements enthielten fehlerhafte Daten und müssen "
+                      "vor dem Import manuell korrigiert werden.".format(
+                    len(with_error)), 'error')
 
-        except FinTSDialogError:
+        except (FinTSDialogError, FinTSClientPINError):
             flash(u"Ungültige FinTS-Logindaten.", 'error')
             process = False
         except KeyError:
@@ -211,7 +214,9 @@ def bank_accounts_import():
         if process and form.do_import.data is True:
             # save errors to database
             for error in with_error:
-                session.add(MT940Error(error[0], error[1], current_user, bank_account))
+                session.add(MT940Error(mt940=error[0], exception=error[1],
+                                       author=current_user,
+                                       bank_account=bank_account))
 
             # save transactions to database
             session.add_all(transactions)

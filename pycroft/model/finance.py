@@ -337,12 +337,6 @@ class MT940Error(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
                              nullable=False)
 
-    def __init__(self, mt940, exception, author, bank_account):
-        self.mt940 = mt940
-        self.exception = exception
-        self.author = author
-        self.bank_account = bank_account
-
 
 manager.add_constraint(
     BankAccount.__table__,
