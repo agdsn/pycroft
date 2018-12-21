@@ -26,8 +26,8 @@ class SwitchTable(BootstrapTable):
             Column('id', '#'),
             Column('name', 'Name', formatter='table.linkFormatter'),
             Column('ip', 'Management IP'),
-            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
-            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
+            Column('edit_link', 'Editieren', formatter='table.btnFormatter', width=1),
+            Column('delete_link', 'Löschen', formatter='table.btnFormatter', width=1)
         ], **kw)
 
     def generate_toolbar(self):
@@ -57,7 +57,7 @@ class PortTable(BootstrapTable):
         super().__init__(*a, columns=[
             Column('switchport_name', 'Name', width=2),
             Column('patchport_name', '→ Patchport', width=2),
-            Column('room', 'Raum', formatter='table.linkFormatter', width=10),
+            Column('room', '→ Raum', formatter='table.linkFormatter', width=6),
             Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
             Column('delete_link', 'Löschen', formatter='table.btnFormatter')
         ], **kw)
@@ -69,9 +69,9 @@ class PortTable(BootstrapTable):
             return
         args = {
             'class': "btn btn-primary",
-            'href': url_for(".port_relation_create", switch_id=self.switch_id),
+            'href': url_for(".switch_port_create", switch_id=self.switch_id),
         }
         yield "<a {}>".format(html_params(**args))
         yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Port-Relation"
+        yield "Switch-Port"
         yield "</a>"

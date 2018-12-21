@@ -14,15 +14,15 @@
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
 from flask_login import current_user
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, Form
 from ipaddr import IPAddress
 from sqlalchemy.orm import joinedload
 
-from pycroft.lib.infrastructure import edit_port_relation, create_port_relation, delete_port_relation, create_switch, \
-    edit_switch, delete_switch
-from pycroft.lib.logging import log_room_event
+from pycroft.lib.infrastructure import create_switch, \
+    edit_switch, delete_switch, create_switch_port, patch_switch_port_to_patch_port, PatchPortAlreadyPatchedException, \
+    edit_switch_port, remove_patch_to_patch_port, delete_switch_port
 from pycroft.model.facilities import Room
-from web.blueprints.infrastructure.forms import PortForm, SwitchForm
+from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
 
 from pycroft.helpers import net
 from pycroft.model import session
@@ -149,19 +149,16 @@ def switch_show_json(switch_id):
                     "facilities.room_show",
                     room_id=port.patch_port.room.id
                 ),
-                "title": "{}-{}".format(
-                    port.patch_port.room.level,
-                    port.patch_port.room.number
-                )
+                "title": port.patch_port.room.short_name
             } if port.patch_port else None,
-            "edit_link": {"href": url_for(".port_relation_edit", switchport_id=port.id),
+            "edit_link": {"href": url_for(".switch_port_edit", switch_id=switch.host.id, switch_port_id=port.id),
                           'title': "Bearbeiten",
                           'icon': 'glyphicon-pencil',
-                          'btn-class': 'btn-link'},
-            "delete_link": {"href": url_for(".port_relation_delete", switchport_id=port.id),
+                          'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
+            "delete_link": {"href": url_for(".switch_port_delete", switch_id=switch.host.id, switch_port_id=port.id),
                             'title': "Löschen",
                             'icon': 'glyphicon-trash',
-                            'btn-class': 'btn-link'}
+                            'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
         } for port in switch_port_list])
 
 
@@ -258,28 +255,39 @@ def switch_delete(switch_id):
                            form_args=form_args)
 
 
-@bp.route('/switch/<int:switch_id>/create-port-relation', methods=['GET', 'POST'])
+@bp.route('/switch/<int:switch_id>/port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def port_relation_create(switch_id):
+def switch_port_create(switch_id):
     switch = Switch.q.get(switch_id)
 
     if not switch:
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
 
-    form = PortForm(level=switch.host.room.level, building=switch.host.room.building)
+    form = SwitchPortForm()
+
+    form.patch_port.query = PatchPort.q.filter_by(switch_room=switch.host.room)
 
     if form.validate_on_submit():
-        room = Room.q.filter_by(number=form.room_number.data,
-                                level=form.level.data, building=form.building.data).one()
+        error = False
 
-        create_port_relation(switch, form.switchport_name.data, form.patchport_name.data, room, current_user)
+        switch_port = create_switch_port(switch, form.name.data, current_user)
 
-        session.session.commit()
+        if form.patch_port.data:
+            try:
+                patch_switch_port_to_patch_port(switch_port, form.patch_port.data, current_user)
+            except PatchPortAlreadyPatchedException:
+                form.patch_port.errors.append("Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.")
+                error = True
 
-        flash("Die Port-Relation wurde erfolgreich erstellt.", "success")
+        if not error:
+            session.session.commit()
 
-        return redirect(url_for('.switch_show', switch_id=switch.host_id))
+            flash("Der Switch-Port {} wurde erfolgreich erstellt.".format(switch_port.name), "success")
+
+            return redirect(url_for('.switch_show', switch_id=switch.host_id))
+        else:
+            session.session.rollback()
 
     form_args = {
         'form': form,
@@ -287,77 +295,105 @@ def port_relation_create(switch_id):
     }
 
     return render_template('generic_form.html',
-                           page_title="Port-Relation erstellen",
+                           page_title="Switch-Port erstellen",
                            form_args=form_args)
 
 
-@bp.route('/port-relation/edit/<int:switchport_id>', methods=['GET', 'POST'])
+@bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def port_relation_edit(switchport_id):
-    switchport = SwitchPort.q.get(switchport_id)
+def switch_port_edit(switch_id, switch_port_id):
+    switch = Switch.q.filter_by(switch_id)
+    switch_port = SwitchPort.q.get(switch_port_id)
 
-    if not switchport:
-        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switchport_id), "error")
+    if not switch:
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
 
-    patchport = switchport.patch_port
+    if not switch_port:
+        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switch_port_id), "error")
+        return redirect(url_for('.switch_show', switch_id=switch_id))
 
-    form = PortForm(switchport_name=switchport.name, patchport_name=patchport.name, building=patchport.room.building,
-                    level=patchport.room.level, room_number=patchport.room.number)
+    if switch_port.switch != switch:
+        flash(u"SwitchPort mit ID {} gehört nicht zu {}!".format(switch_port_id, switch.host.name), "error")
+        return redirect(url_for('.switch_show', switch_id=switch_id))
+
+    form = SwitchPortForm(obj=switch_port)
+
+    form.patch_port.query = PatchPort.q.filter_by(switch_room=switch.host.room).order_by(PatchPort.name.asc())
 
     if form.validate_on_submit():
-        room = Room.q.filter_by(number=form.room_number.data,
-                                level=form.level.data, building=form.building.data).one()
+        error = False
 
-        edit_port_relation(switchport, patchport, form.switchport_name.data, form.patchport_name.data, room, current_user)
+        edit_switch_port(switch_port, form.name.data, current_user)
 
-        session.session.commit()
+        if switch_port.patch_port != form.patch_port.data:
+            if switch_port.patch_port:
+                remove_patch_to_patch_port(switch_port.patch_port, current_user)
 
-        flash("Die Port-Relation wurde erfolgreich bearbeitet.", "success")
+            if form.patch_port.data:
+                try:
+                    patch_switch_port_to_patch_port(switch_port, form.patch_port.data, current_user)
+                except PatchPortAlreadyPatchedException:
+                    form.patch_port.errors.append("Dieser Patch-Port ist bereits mit einem Switch-Port verbunden.")
+                    error = True
 
-        return redirect(url_for('.switch_show', switch_id=switchport.switch_id))
+        if not error:
+            session.session.commit()
+
+            flash("Der Switch-Port wurde erfolgreich bearbeitet.", "success")
+
+            return redirect(url_for('.switch_show', switch_id=switch_port.switch_id))
+        else:
+            session.session.rollback()
 
     form_args = {
         'form': form,
-        'cancel_to': url_for('.switch_show', switch_id=switchport.switch_id)
+        'cancel_to': url_for('.switch_show', switch_id=switch_port.switch_id)
     }
 
     return render_template('generic_form.html',
-                           page_title="Port-Relation bearbeiten",
+                           page_title="Switch-Port bearbeiten",
                            form_args=form_args)
 
 
-@bp.route('/port-relation/delete/<int:switchport_id>', methods=['GET', 'POST'])
+@bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
-def port_relation_delete(switchport_id):
-    switchport = SwitchPort.q.get(switchport_id)
+def switch_port_delete(switch_id, switch_port_id):
+    switch = Switch.q.get(switch_id)
+    switch_port = SwitchPort.q.get(switch_port_id)
 
-    if not switchport:
-        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switchport_id), "error")
+    if not switch:
+        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
 
-    patchport = switchport.patch_port
+    if not switch_port:
+        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switch_port_id), "error")
+        return redirect(url_for('.switch_show', switch_id=switch_id))
 
-    form = FlaskForm()
+    if switch_port.switch != switch:
+        flash(u"SwitchPort mit ID {} gehört nicht zu {}!".format(switch_port_id, switch.host.name), "error")
+        return redirect(url_for('.switch_show', switch_id=switch_id))
+
+    form = Form()
 
     if form.validate_on_submit():
-        delete_port_relation(switchport, patchport, current_user)
+        delete_switch_port(switch_port, current_user)
 
         session.session.commit()
 
-        flash("Die Port-Relation wurde erfolgreich gelöscht.", "success")
+        flash("Der Switch-Port wurde erfolgreich gelöscht.", "success")
 
-        return redirect(url_for('.switch_show', switch_id=switchport.switch_id))
+        return redirect(url_for('.switch_show', switch_id=switch_port.switch_id))
 
     form_args = {
         'form': form,
-        'cancel_to': url_for('.switch_show', switch_id=switchport.switch_id),
+        'cancel_to': url_for('.switch_show', switch_id=switch_port.switch_id),
         'submit_text': 'Löschen',
         'actions_offset': 0
     }
 
     return render_template('generic_form.html',
-                           page_title="Port-Relation löschen",
+                           page_title="Switch-Port löschen",
                            form_args=form_args)
 
 
