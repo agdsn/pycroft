@@ -39,7 +39,6 @@ class Room(IntegerIdModel):
     )
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
 
-    patch_ports = relationship('PatchPort')
     connected_patch_ports = relationship(
         'PatchPort',
         primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
