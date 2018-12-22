@@ -1,6 +1,6 @@
 from unittest import TestCase as TestCase_
 
-from ldap_sync.record import Record, RecordState, _canonicalize_to_list
+from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
@@ -13,7 +13,7 @@ class TestCase(TestCase_):
 
 class RecordDirectInitTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={'userPassword': "{CRYPT}**shizzle",
+        self.record = UserRecord(dn='test', attrs={'userPassword': "{CRYPT}**shizzle",
                                                'mail': None, 'cn': "User", 'uid': 50})
 
     def test_empty_attr_converted_to_list(self):
@@ -31,13 +31,13 @@ class RecordDirectInitTestCase(TestCase):
 
 class RecordTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={'mail': 'shizzle'})
+        self.record = UserRecord(dn='test', attrs={'mail': 'shizzle'})
 
     def test_record_equality(self):
-        self.assertEqual(self.record, Record(dn='test', attrs={'mail': 'shizzle'}))
+        self.assertEqual(self.record, UserRecord(dn='test', attrs={'mail': 'shizzle'}))
 
     def test_record_noncanonical_equality(self):
-        self.assertEqual(self.record, Record(dn='test', attrs={'mail': ['shizzle']}))
+        self.assertEqual(self.record, UserRecord(dn='test', attrs={'mail': ['shizzle']}))
 
     def test_record_subtraction_with_none_adds(self):
         difference = self.record - None
@@ -52,29 +52,29 @@ class RecordTestCase(TestCase):
     def test_different_dn_raises_typeerror(self):
         with self.assertRaises(TypeError):
             # pylint: disable=expression-not-assigned
-            self.record - Record(dn='notatest', attrs={})
+            self.record - UserRecord(dn='notatest', attrs={})
 
     def test_same_record_subtraction_idles(self):
         difference = self.record - self.record
         self.assertIsInstance(difference, IdleAction)
 
     def test_correctly_different_record_modifies(self):
-        difference = self.record - Record(dn='test', attrs={'mail': ''})
+        difference = self.record - UserRecord(dn='test', attrs={'mail': ''})
         self.assertIsInstance(difference, ModifyAction)
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
                              'attributes': {'mail': u'mail', 'gecos': u'baz'},
                              'raw_attributes': {'mail': b'mail'}}
-        record = Record.from_ldap_record(ldapsearch_record)
+        record = UserRecord.from_ldap_record(ldapsearch_record)
         self.assertSubDict({'mail': [u'mail'], 'gecos': [u'baz']}, record.attrs)
-        for key in Record.SYNCED_ATTRIBUTES:
+        for key in UserRecord.get_synced_attributes():
             self.assertIn(key, record.attrs)
 
 
 class EmptyAttributeRecordTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={'mail': None})
+        self.record = UserRecord(dn='test', attrs={'mail': None})
 
     def test_attribute_is_empty_list(self):
         self.assertEqual(self.record.attrs['mail'], [])
@@ -97,7 +97,7 @@ class RecordFromOrmTestCase(TestCase):
         passwd_hash = 'somehash'
 
     def setUp(self):
-        self.attrs = Record.from_db_user(self.complete_user, base_dn='o=test').attrs
+        self.attrs = UserRecord.from_db_user(self.complete_user, base_dn='o=test').attrs
 
     def test_attributes_passed(self):
         pass
@@ -155,7 +155,7 @@ class CanonicalizationTestCase(TestCase):
 
 class RecordStateTestCase(TestCase):
     def setUp(self):
-        self.record = Record(dn='test', attrs={})
+        self.record = UserRecord(dn='test', attrs={})
 
     def test_equality_both_none(self):
         self.assertEqual(RecordState(), RecordState())

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import abc
+
 from ldap3.utils.conv import escape_filter_chars
 
 from pycroft.model.user import User
@@ -35,7 +37,7 @@ def _maybe_escape_filter_chars(value):
 class Record(object):
     """Create a new record with a dn and certain attributes.
 
-    A record represents the user which is to be synced to the LDAP,
+    A record represents an entry which is to be synced to the LDAP,
     and consists of a dn and relevant attributes.  Constructors are
     provided for SQLAlchemy ORM objects as well as entries of an ldap
     search response.
@@ -48,13 +50,60 @@ class Record(object):
     """
     def __init__(self, dn, attrs):
         self.dn = dn
-        attrs = {k: v for k, v in attrs.items() if k in self.SYNCED_ATTRIBUTES}
-        for key in self.SYNCED_ATTRIBUTES:
+        attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
+        for key in self.get_synced_attributes():
             attrs.setdefault(key, [])
         # escape_filter_chars is idempotent ⇒ no double escaping
         self.attrs = {key: [_maybe_escape_filter_chars(x)
                             for x in _canonicalize_to_list(val)]
                       for key, val in attrs.items()}
+
+    @classmethod
+    @abc.abstractmethod
+    def get_synced_attributes(cls):
+        """Returns the attributes to be synced."""
+        return
+
+    @classmethod
+    def from_ldap_record(cls, record):
+        return cls(dn=record['dn'], attrs=record['attributes'])
+
+    def remove_empty_attributes(self):
+        self.attrs = {key: val for key, val in self.attrs.items() if val}
+
+    def __sub__(self, other):
+        """Return the action needed to transform another record into this one"""
+        if other is None:
+            return AddAction(record=self)
+
+        if self.dn != getattr(other, 'dn', object()):
+            raise TypeError("Cannot compute difference to record with different dn")
+
+        if self == other:
+            return IdleAction(self)
+
+        return ModifyAction.from_two_records(desired_record=self, current_record=other)
+
+    def __rsub__(self, other):
+        if other is None:
+            return DeleteAction(record=self)
+        return NotImplemented
+
+    def __eq__(self, other):
+        try:
+            return self.dn == other.dn and self.attrs == other.attrs
+        except AttributeError:
+            return False
+
+    def __repr__(self):
+        return "<{} dn={}>".format(type(self).__name__, self.dn)
+
+
+class UserRecord(Record):
+    """Create a new user record with a dn and certain attributes.
+    """
+    def __init__(self, dn, attrs):
+        super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
         'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
@@ -63,6 +112,10 @@ class Record(object):
     ])
     LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
     PWD_POLICY_BLOCKED = "login_disabled"
+
+    @classmethod
+    def get_synced_attributes(cls):
+        return cls.SYNCED_ATTRIBUTES
 
     @classmethod
     def from_db_user(cls, user, base_dn, should_be_blocked=False):
@@ -108,49 +161,21 @@ class Record(object):
 
         return cls(dn=dn, attrs=attributes)
 
-    @classmethod
-    def from_ldap_record(cls, record):
-        return cls(dn=record['dn'], attrs=record['attributes'])
-
-    def remove_empty_attributes(self):
-        self.attrs = {key: val for key, val in self.attrs.items() if val}
-
     def __sub__(self, other):
-        """Return the action needed to transform another record into this one"""
-        if other is None:
-            return AddAction(record=self)
+        action = super().__sub__(other)
 
-        if self.dn != getattr(other, 'dn', object()):
-            raise TypeError("Cannot compute difference to record with different dn")
-
-        if self == other:
-            return IdleAction(self)
-
-        action = ModifyAction.from_two_records(desired_record=self, current_record=other)
         # Do not try to delete pwdAccountLockedTime if password is changed,
         # as the ppolicy overlay already takes care of that.
-        if 'userPassword' in action.modifications and not action.modifications.get('pwdAccountLockedTime', None):
-            action.modifications.pop('pwdAccountLockedTime', None)
+        if isinstance(action, ModifyAction):
+            if 'userPassword' in action.modifications and not action.modifications.get(
+                    'pwdAccountLockedTime', None):
+                action.modifications.pop('pwdAccountLockedTime', None)
+
         return action
-
-    def __rsub__(self, other):
-        if other is None:
-            return DeleteAction(record=self)
-        return NotImplemented
-
-    def __eq__(self, other):
-        try:
-            return self.dn == other.dn and self.attrs == other.attrs
-        except AttributeError:
-            return False
-
-    def __repr__(self):
-        return "<{} dn={}>".format(type(self).__name__, self.dn)
 
 
 class RecordState(object):
-    """A Class representing the state (current, desired) of a user
-    record.
+    """A Class representing the state (current, desired) of a record.
 
     This class is essentially a duple consisting of a current and
     desired record to represent the difference.

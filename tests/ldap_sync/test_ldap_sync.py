@@ -11,7 +11,7 @@ from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, get_config, \
      establish_and_return_ldap_connection, fetch_current_ldap_users, sync_all
 if sys.version_info >= (3,5):
     from ldap_sync.exporter import _ResultProxyType
-from ldap_sync.record import Record, RecordState
+from ldap_sync.record import UserRecord, RecordState
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.user import UserData
@@ -21,7 +21,7 @@ import tests.fixtures.ldap_sync.complex as complex_fixtures
 
 class ExporterInitializationTestCase(TestCase):
     def setUp(self):
-        self.desired_user = Record(dn='user', attrs={})
+        self.desired_user = UserRecord(dn='user', attrs={})
         self.exporter = LdapExporter(desired=[self.desired_user], current=[])
 
     def test_one_record_state(self):
@@ -32,7 +32,7 @@ class ExporterInitializationTestCase(TestCase):
 
 class EmptyLdapTestCase(TestCase):
     def setUp(self):
-        self.desired_user = Record(dn='user', attrs={})
+        self.desired_user = UserRecord(dn='user', attrs={})
         self.exporter = LdapExporter(desired=[self.desired_user], current=[])
         self.exporter.compile_actions()
 
@@ -246,12 +246,12 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_attributes_synced_correctly(self):
         records = {}
         for result in self.users_to_sync:
-            record = Record.from_db_user(result.User, self.base_dn,
+            record = UserRecord.from_db_user(result.User, self.base_dn,
                                          should_be_blocked=result.should_be_blocked)
             records[record.dn] = record
 
         for ldap_user in self.new_ldap_users:
-            ldap_record = Record.from_ldap_record(ldap_user)
+            ldap_record = UserRecord.from_ldap_record(ldap_user)
             # Due to the canonicalization, empty attributes will appear in
             # `records`.  We want to ignore those for the comparison.
             effective_attributes_in_db = {
@@ -269,7 +269,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             raise RuntimeError("Fixtures do not provide a syncable user with a mail address")
 
         modified_user = users_with_mail[0].User
-        mod_dn = Record.from_db_user(modified_user, self.base_dn).dn
+        mod_dn = UserRecord.from_db_user(modified_user, self.base_dn).dn
         modified_user.email = 'bar@agdsn.de'
         session.add(modified_user)
         session.commit()
@@ -288,7 +288,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         if not users_without_mail:
             raise RuntimeError("Fixtures do not provide a syncable user without a mail address")
         mod_user = users_without_mail[0].User
-        mod_dn = Record.from_db_user(mod_user, self.base_dn).dn
+        mod_dn = UserRecord.from_db_user(mod_user, self.base_dn).dn
         mod_user.email = 'bar@agdsn.de'
         session.add(mod_user)
         session.commit()

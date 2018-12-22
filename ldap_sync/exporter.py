@@ -15,7 +15,7 @@ from pycroft.model import create_engine
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from pycroft.model.session import set_scoped_session, session as global_session
-from .record import Record, RecordState
+from .record import UserRecord, RecordState
 
 logger = logging.getLogger('ldap_sync')
 
@@ -25,8 +25,8 @@ class LdapExporter(object):
 
     Usage:
 
-        >>> from ldap_sync.record import Record
-        >>> record = Record(dn='cn=admin,ou=users,dc=agdsn,dc=de', attrs={})
+        >>> from ldap_sync.record import UserRecord
+        >>> record = UserRecord(dn='cn=admin,ou=users,dc=agdsn,dc=de', attrs={})
         >>> exporter = LdapExporter(current=[], desired=[record])
         >>> exporter.compile_actions()
         >>> exporter.execute_all()
@@ -40,11 +40,8 @@ class LdapExporter(object):
     :param iterable desired: An iterable of the desired
         :py:cls:`Record`s
     """
-    RecordState = RecordState
-    Record = Record
-
     def __init__(self, current, desired):
-        self.states_dict = defaultdict(self.RecordState)
+        self.states_dict = defaultdict(RecordState)
         l = 0
         for l, record in enumerate(current, 1):
             self.states_dict[record.dn].current = record
@@ -66,8 +63,8 @@ class LdapExporter(object):
         :param desired: An iterable of sqlalchemy result proxies as returned
             by :py:func:`fetch_users_to_sync`
         """
-        return cls((cls.Record.from_ldap_record(x) for x in current),
-                   (cls.Record.from_db_user(x.User, base_dn, x.should_be_blocked)
+        return cls((UserRecord.from_ldap_record(x) for x in current),
+                   (UserRecord.from_db_user(x.User, base_dn, x.should_be_blocked)
                     for x in desired))
 
     def compile_actions(self):
