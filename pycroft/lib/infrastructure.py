@@ -120,7 +120,7 @@ def edit_switch(switch, name, management_ip, room, processor):
 
 @with_transaction
 def create_switch(name, management_ip, room, processor):
-    switch = Switch(name=name, management_ip=management_ip, host=Host(room=room, owner=User.q.get(0), name=name))
+    switch = Switch(management_ip=management_ip, host=Host(room=room, owner=User.q.get(0), name=name))
 
     session.add(switch)
 
