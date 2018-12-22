@@ -302,7 +302,7 @@ def switch_port_create(switch_id):
 @bp.route('/switch/<int:switch_id>/port/<int:switch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def switch_port_edit(switch_id, switch_port_id):
-    switch = Switch.q.filter_by(switch_id)
+    switch = Switch.q.get(switch_id)
     switch_port = SwitchPort.q.get(switch_port_id)
 
     if not switch:
