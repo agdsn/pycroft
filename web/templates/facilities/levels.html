@@ -10,10 +10,12 @@
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="active">{{ building.short_name }}</li>
         <div class="pull-right">
-            <a class="btn btn-success btn-xs" href="{{ url_for('.room_create', building_id=building.id) }}">
-                <span class="glyphicon glyphicon-plus"></span>
-                Raum
-            </a>
+            {% if current_user is privileged_for('facilities_change') %}
+                <a class="btn btn-success btn-xs" href="{{ url_for('.room_create', building_id=building.id) }}">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    Raum
+                </a>
+            {% endif %}
             <a class="btn btn-primary btn-xs" href="{{ url_for('.overcrowded', building_id=building.id) }}">
                 <span class="glyphicon glyphicon-fire"></span>
                 Mehrfachbelegungen

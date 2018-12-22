@@ -15,10 +15,12 @@
         <li><a href="{{ url_for('.building_level_rooms', building_id=room.building_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
         <li class="active">Zimmer {{ room.number }}</li>
 
-        <a class="btn btn-primary btn-xs pull-right" href="{{ url_for('.room_edit', room_id=room.id) }}">
-            <span class="glyphicon glyphicon-pencil"></span>
-            Bearbeiten
-        </a>
+        {% if current_user is privileged_for('facilities_change') %}
+            <a class="btn btn-primary btn-xs pull-right" href="{{ url_for('.room_edit', room_id=room.id) }}">
+                <span class="glyphicon glyphicon-pencil"></span>
+                Bearbeiten
+            </a>
+        {% endif %}
     </ul>
 
     <section id="overview">
