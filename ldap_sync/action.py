@@ -5,8 +5,6 @@ from abc import ABCMeta, abstractmethod
 import ldap3
 
 
-LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
-
 class Action(object, metaclass=ABCMeta):
     """An Action on an ldap record
 
@@ -43,7 +41,7 @@ class AddAction(Action):
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         self.logger.debug("Attributes used: %s", self.record.attrs)
-        connection.add(self.record.dn, LDAP_OBJECTCLASSES, self.record.attrs)
+        connection.add(self.record.dn, attributes=self.record.attrs)
         self.debug_whether_success(connection)
 
     def __repr__(self):

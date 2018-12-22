@@ -4,7 +4,7 @@ import ldap3
 
 from ldap_sync.record import UserRecord, dn_from_username
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, \
-     DeleteAction, LDAP_OBJECTCLASSES
+     DeleteAction
 
 
 class ActionSubclassTestCase(TestCase):
@@ -106,7 +106,8 @@ SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
 class AddActionTestCase(MockedLdapTestBase):
     def setUp(self):
         super(AddActionTestCase, self).setUp()
-        self.attributes = {'mail': ['bas'],
+        self.attributes = {'objectClass': UserRecord.LDAP_OBJECTCLASSES,
+                           'mail': ['bas'],
                            'userPassword': ['$1$dtruiandetnuhgaldrensutrhawtruhs']}
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
@@ -127,7 +128,7 @@ class AddActionTestCase(MockedLdapTestBase):
 
     def test_correct_objectclasses(self):
         classes = self.objects[0]['attributes']['objectClass']
-        self.assertEqual(classes, LDAP_OBJECTCLASSES)
+        self.assertEqual(classes, UserRecord.LDAP_OBJECTCLASSES)
 
     def test_other_attributes_passed(self):
         received_attributes = self.objects[0]['attributes']
@@ -142,7 +143,7 @@ class DeleteActionTestCase(MockedLdapTestBase):
         super(DeleteActionTestCase, self).setUp()
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
-        self.connection.add(self.dn, LDAP_OBJECTCLASSES)
+        self.connection.add(self.dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=self.dn, attrs={})
         DeleteAction(record=record).execute(self.connection)
 
@@ -155,7 +156,7 @@ class ModifyActionTestCase(MockedLdapTestBase):
         super(ModifyActionTestCase, self).setUp()
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
-        self.connection.add(self.dn, LDAP_OBJECTCLASSES)
+        self.connection.add(self.dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=self.dn, attrs={})
         action = ModifyAction(record=record, modifications={'mail': 'new@shizzle.de'})
         action.execute(self.connection)

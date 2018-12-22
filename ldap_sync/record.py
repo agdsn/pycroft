@@ -106,10 +106,12 @@ class UserRecord(Record):
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
+        'objectClass',
         'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
         'homeDirectory', 'gidNumber', 'uidNumber', 'uid',
         'pwdAccountLockedTime', 'shadowExpire'
     ])
+    LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
     LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
     PWD_POLICY_BLOCKED = "login_disabled"
 
@@ -131,6 +133,7 @@ class UserRecord(Record):
 
         attributes = {
             # REQ – required, MAY – optional, SV – single valued
+            'objectClass': cls.LDAP_OBJECTCLASSES,
             'uid': user.login,  # REQ by posixAccount, shadowAccount
             'uidNumber': user.unix_account.uid,  # SV, REQ by posixAccount
             'gidNumber': user.unix_account.gid,  # SV, REQ by posixAccount
