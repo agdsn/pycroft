@@ -9,10 +9,16 @@
     <ul class="breadcrumb">
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="active">{{ building.short_name }}</li>
-        <a class="btn btn-primary btn-xs pull-right" href="{{ url_for('.overcrowded', building_id=building.id) }}">
-            <span class="glyphicon glyphicon-fire"></span>
-            Mehrfachbelegungen
-        </a>
+        <div class="pull-right">
+            <a class="btn btn-success btn-xs" href="{{ url_for('.room_create', building_id=building.id) }}">
+                <span class="glyphicon glyphicon-plus"></span>
+                Raum
+            </a>
+            <a class="btn btn-primary btn-xs" href="{{ url_for('.overcrowded', building_id=building.id) }}">
+                <span class="glyphicon glyphicon-fire"></span>
+                Mehrfachbelegungen
+            </a>
+        </div>
     </ul>
     <div class="row">
         <div class="col-xs-12 text-center">
