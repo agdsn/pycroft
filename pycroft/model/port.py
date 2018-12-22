@@ -41,7 +41,7 @@ manager.add_function(
           v_patch_port patch_port;
           v_switch_port_switch_host_room_id integer;
         BEGIN
-          v_patch_port := COALESCE(NEW, OLD);
+          v_patch_port := NEW;
         
           IF v_patch_port.switch_port_id IS NOT NULL THEN
               SELECT h.room_id INTO v_switch_port_switch_host_room_id FROM patch_port pp
