@@ -31,7 +31,7 @@ from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
-    RoomLogEntry, PatchPortForm, CreateRoomForm)
+    RoomLogEntry, PatchPortForm, CreateRoomForm, EditRoomForm)
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
@@ -158,7 +158,10 @@ def room_edit(room_id):
         flash("Raum mit ID {} nicht gefunden!".format(room_id), "error")
         return redirect(url_for('.overview'))
 
-    form = CreateRoomForm(obj=room)
+    form = EditRoomForm(building=room.building.short_name,
+                        level=room.level,
+                        number=room.number,
+                        inhabitable=room.inhabitable)
 
     if form.validate_on_submit():
         try:

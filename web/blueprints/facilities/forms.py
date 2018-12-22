@@ -50,9 +50,7 @@ class CreateRoomForm(Form):
 
 
 class EditRoomForm(Form):
-    building = static(QuerySelectField("Wohnheim",
-                                       get_label='short_name',
-                                       query_factory=building_query))
+    building = static(TextField("Wohnheim"))
     level = static(IntegerField("Etage"))
     number = TextField("Nummer")
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
