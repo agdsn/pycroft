@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import ldap3
 
-from ldap_sync.record import Record, dn_from_username
+from ldap_sync.record import UserRecord, dn_from_username
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, \
      DeleteAction, LDAP_OBJECTCLASSES
 
@@ -24,14 +24,14 @@ class ActionSubclassTestCase(TestCase):
 
 class ModifyActionConstructorTestCase(TestCase):
     def action_from_attrs(self, current, desired):
-        current_record = Record(dn=None, attrs=current)
-        desired_record = Record(dn=None, attrs=desired)
+        current_record = UserRecord(dn=None, attrs=current)
+        desired_record = UserRecord(dn=None, attrs=desired)
         return ModifyAction.from_two_records(desired_record=desired_record,
                                              current_record=current_record)
 
     def test_desired_record_passed(self):
-        desired = Record(dn=None, attrs={'gecos': 'test'})
-        current = Record(dn=None, attrs={})
+        desired = UserRecord(dn=None, attrs={'gecos': 'test'})
+        current = UserRecord(dn=None, attrs={})
         action = ModifyAction.from_two_records(desired_record=desired, current_record=current)
         self.assertEqual(action.record, desired)
 
@@ -110,7 +110,7 @@ class AddActionTestCase(MockedLdapTestBase):
                            'userPassword': ['$1$dtruiandetnuhgaldrensutrhawtruhs']}
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
-        record = Record(dn=self.dn, attrs=self.attributes)
+        record = UserRecord(dn=self.dn, attrs=self.attributes)
         action = AddAction(record=record)
 
         action.execute(self.connection)
@@ -143,7 +143,7 @@ class DeleteActionTestCase(MockedLdapTestBase):
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
         self.connection.add(self.dn, LDAP_OBJECTCLASSES)
-        record = Record(dn=self.dn, attrs={})
+        record = UserRecord(dn=self.dn, attrs={})
         DeleteAction(record=record).execute(self.connection)
 
     def test_no_objects(self):
@@ -156,7 +156,7 @@ class ModifyActionTestCase(MockedLdapTestBase):
         self.uid = 'shizzle'
         self.dn = dn_from_username(self.uid, base=self.base)
         self.connection.add(self.dn, LDAP_OBJECTCLASSES)
-        record = Record(dn=self.dn, attrs={})
+        record = UserRecord(dn=self.dn, attrs={})
         action = ModifyAction(record=record, modifications={'mail': 'new@shizzle.de'})
         action.execute(self.connection)
 
@@ -171,5 +171,5 @@ class ModifyActionTestCase(MockedLdapTestBase):
 
 class IdleActionTestCase(TestCase):
     def test_execute_does_nothing(self):
-        record = Record(dn='test', attrs={})
+        record = UserRecord(dn='test', attrs={})
         IdleAction(record=record).execute()
