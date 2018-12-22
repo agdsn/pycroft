@@ -73,11 +73,7 @@
     <div class="col-xs-6 col-md-4">
         <dl class="dl-horizontal">
             {% for flag in flags %}{% call info_row(flag['title']) %}
-                {% if flag['val'] %}
-                    <strong class="text-success">Ja</strong>
-                {% else %}
-                    <strong class="text-danger">Nein</strong>
-                {% endif %}
+                {{ misc.yes_no_formatter(flag['val']) }}
             {% endcall %}{% endfor %}
         </dl>
     </div>

@@ -6,6 +6,7 @@
 {% extends "layout.html" %}
 {% import "macros/forms.html" as forms %}
 {% import "macros/button.html" as btn %}
+{% import "macros/misc.html" as misc %}
 
 {% block content %}
     <ul class="breadcrumb">
@@ -28,7 +29,7 @@
                     <dt>Etage</dt>
                     <dd>{{ room.level }}</dd>
                     <dt>Bewohnbar</dt>
-                    <dd>{{ room.inhabitable }}</dd>
+                    <dd>{{ misc.yes_no_formatter(room.inhabitable) }}</dd>
                 </dl>
             </div>
             {% if room.inhabitable -%}

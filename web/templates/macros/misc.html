@@ -13,3 +13,11 @@
         <span class="text-muted">None</span>
     {% endif %}
 {% endmacro %}
+
+{% macro yes_no_formatter(bool) %}
+     {% if bool %}
+         <strong class="text-success">Ja</strong>
+     {% else %}
+         <strong class="text-danger">Nein</strong>
+     {% endif %}
+{% endmacro %}
