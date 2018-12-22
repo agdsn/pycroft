@@ -187,8 +187,8 @@ def room_edit(room_id):
 
 
 # ToDo: Review this!
-@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/')
-@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/')
+@bp.route('/building/<int:building_id>/level/<int:level>/rooms/')
+@bp.route('/building/<building_shortname>/level/<int:level>/rooms/')
 def building_level_rooms(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(building_shortname, building_id)
 
@@ -212,8 +212,8 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
     )
 
 
-@bp.route('/buildings/<int:building_id>/levels/<int:level>/rooms/json')
-@bp.route('/buildings/<building_shortname>/levels/<int:level>/rooms/json')
+@bp.route('/building/<int:building_id>/level/<int:level>/rooms/json')
+@bp.route('/building/<building_shortname>/level/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
