@@ -2,7 +2,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from sqlalchemy import Column, ForeignKey, event
+from sqlalchemy import Column, ForeignKey, event, UniqueConstraint
 from sqlalchemy.orm import backref, relationship, validates, object_session
 from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
@@ -115,6 +115,8 @@ class SwitchPort(IntegerIdModel):
 
     def __str__(self):
         return "{} {}".format(self.switch.host.name, self.name)
+
+    __table_args__ = (UniqueConstraint("name", "switch_id"),)
 
 
 class IP(IntegerIdModel):

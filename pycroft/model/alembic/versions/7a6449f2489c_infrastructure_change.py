@@ -89,20 +89,22 @@ def upgrade():
         FOR EACH ROW EXECUTE PROCEDURE patch_port_switch_in_switch_room()
     ''')
 
+    op.create_unique_constraint("switch_port_name_switch_id_key", 'switch_port', ['name', 'switch_id'])
+
 
 def downgrade():
+    host = sa.table('host',
+                    sa.column('id', sa.Integer),
+                    sa.column('name', sa.String))
+    switch = sa.table('switch', sa.column('host_id', sa.Integer),
+                      sa.column('name', sa.String))
+
     op.drop_constraint("patch_port_switch_room_id_fkey", 'patch_port', type_='foreignkey')
     op.drop_constraint("patch_port_name_switch_room_id_key", 'patch_port', type_='unique')
     op.drop_index(op.f('ix_patch_port_switch_room_id'), table_name='patch_port')
     op.drop_column('patch_port', 'switch_room_id')
 
     op.add_column('switch', sa.Column('name', sa.String(127), nullable=True))
-
-    host = sa.table('host',
-                    sa.column('id', sa.Integer),
-                    sa.column('name', sa.String))
-    switch = sa.table('switch', sa.column('host_id', sa.Integer),
-                      sa.column('name', sa.String))
 
     # Set switch.name to switch.host.name
     op.execute(switch.update().values(
@@ -117,3 +119,5 @@ def downgrade():
     # Drop patch_port_switch_in_switch_room function and trigger
     op.execute('DROP TRIGGER IF EXISTS patch_port_switch_in_switch_room_trigger ON patch_port')
     op.execute('DROP FUNCTION IF EXISTS patch_port_switch_in_switch_room()')
+
+    op.drop_constraint("switch_port_name_switch_id_key", 'switch_port', type_='unique')
