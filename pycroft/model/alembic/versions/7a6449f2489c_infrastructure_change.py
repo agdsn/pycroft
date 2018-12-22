@@ -44,7 +44,6 @@ def upgrade():
     op.alter_column('patch_port', 'switch_room_id', nullable=False)
 
     op.create_index(op.f('ix_patch_port_switch_room_id'), 'patch_port', ['switch_room_id'], unique=False)
-    op.create_unique_constraint("patch_port_name_switch_room_id_key", 'patch_port', ['name', 'switch_room_id'])
     op.create_foreign_key("patch_port_switch_room_id_fkey", 'patch_port', 'room', ['switch_room_id'], ['id'])
 
     # Set switch.host.name to switch.name
@@ -100,7 +99,6 @@ def downgrade():
                       sa.column('name', sa.String))
 
     op.drop_constraint("patch_port_switch_room_id_fkey", 'patch_port', type_='foreignkey')
-    op.drop_constraint("patch_port_name_switch_room_id_key", 'patch_port', type_='unique')
     op.drop_index(op.f('ix_patch_port_switch_room_id'), table_name='patch_port')
     op.drop_column('patch_port', 'switch_room_id')
 

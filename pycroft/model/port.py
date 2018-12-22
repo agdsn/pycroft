@@ -27,7 +27,7 @@ class PatchPort(IntegerIdModel):
     switch_room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
     switch_room = relationship(Room, foreign_keys=switch_room_id)
 
-    __table_args__ = (UniqueConstraint("name", "switch_room_id"),)
+    #__table_args__ = (UniqueConstraint("name", "switch_room_id"),)
 
 
 # Ensure that a connected switch is in the switch_room (patch_port.switch_room_id)
