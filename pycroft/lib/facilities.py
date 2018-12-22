@@ -3,10 +3,15 @@ from collections import defaultdict
 from sqlalchemy import func, and_
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
+from pycroft.lib.logging import log_room_event, log_event
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import Host
 from pycroft.model.user import User
+
+
+class RoomAlreadyExistsException(Exception):
+    pass
 
 
 def get_overcrowded_rooms(building_id=None):
@@ -51,3 +56,34 @@ def get_overcrowded_rooms(building_id=None):
         rooms[user.room.id].append(user)
 
     return rooms
+
+
+def create_room(building, level, number, processor, inhabitable=True):
+    if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
+        raise RoomAlreadyExistsException()
+
+    room = Room(number=number,
+                level=level,
+                inhabitable=inhabitable,
+                building=building)
+
+    log_room_event("Room created.", processor, room)
+
+    return room
+
+
+def edit_room(room, number, inhabitable, processor):
+    if room.number != number:
+        if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
+            raise RoomAlreadyExistsException()
+
+        log_room_event("Renamed room from {} to {}.".format(room.number, number), processor, room)
+
+        room.number = number
+
+    if room.inhabitable != inhabitable:
+        log_room_event("Changed inhabitable status to {}.".format(str(inhabitable)), processor, room)
+
+        room.inhabitable = inhabitable
+
+    return room
