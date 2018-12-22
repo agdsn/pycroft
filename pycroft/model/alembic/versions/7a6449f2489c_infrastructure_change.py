@@ -57,7 +57,37 @@ def upgrade():
 
     op.drop_column('switch', 'name')
 
-    #TODO: Create patch_port_switch_in_switch_room function and trigger
+    # Create patch_port_switch_in_switch_room function and trigger
+    op.execute('''
+        CREATE OR REPLACE FUNCTION patch_port_switch_in_switch_room() RETURNS trigger STABLE STRICT LANGUAGE plpgsql AS $$
+        DECLARE
+          v_patch_port patch_port;
+          v_switch_port_switch_host_room_id integer;
+        BEGIN
+          v_patch_port := NEW;
+
+          IF v_patch_port.switch_port_id IS NOT NULL THEN
+              SELECT h.room_id INTO v_switch_port_switch_host_room_id FROM patch_port pp
+                  JOIN switch_port sp ON pp.switch_port_id = sp.id
+                  JOIN host h ON sp.switch_id = h.id
+                  WHERE pp.id = v_patch_port.id;
+
+              IF v_switch_port_switch_host_room_id <> v_patch_port.switch_room_id THEN
+                RAISE EXCEPTION 'A patch-port can only be patched to a switch that is located in the switch-room of
+                                  the patch-port';
+              END IF;
+          END IF;
+          RETURN NULL;
+        END;
+        $$
+    ''')
+    op.execute('''
+        CREATE CONSTRAINT TRIGGER patch_port_switch_in_switch_room_trigger
+        AFTER INSERT OR UPDATE
+        ON patch_port
+        DEFERRABLE INITIALLY DEFERRED
+        FOR EACH ROW EXECUTE PROCEDURE patch_port_switch_in_switch_room()
+    ''')
 
 
 def downgrade():
@@ -84,4 +114,6 @@ def downgrade():
 
     op.alter_column('switch', 'name', nullable=False)
 
-    # TODO: Drop patch_port_switch_in_switch_room function and trigger
+    # Drop patch_port_switch_in_switch_room function and trigger
+    op.execute('DROP TRIGGER IF EXISTS patch_port_switch_in_switch_room_trigger ON patch_port')
+    op.execute('DROP FUNCTION IF EXISTS patch_port_switch_in_switch_room()')
