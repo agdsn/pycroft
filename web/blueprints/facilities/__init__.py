@@ -22,16 +22,16 @@ from sqlalchemy.orm import joinedload, aliased
 from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.helpers.net import sort_ports
-from pycroft.lib.facilities import get_overcrowded_rooms
+from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, RoomAlreadyExistsException
 from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port
 from pycroft.model import session
-from pycroft.model.facilities import Room, Site
+from pycroft.model.facilities import Room, Site, Building
 from pycroft.model.port import PatchPort
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.facilities.forms import (
-    RoomForm, BuildingForm, RoomLogEntry, PatchPortForm)
+    RoomLogEntry, PatchPortForm, CreateRoomForm)
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
@@ -68,7 +68,7 @@ def overview_json():
         } for site in Site.q.all()])
 
 
-@bp.route('/sites/<int:site_id>')
+@bp.route('/site/<int:site_id>')
 def site_show(site_id):
     site = Site.q.get(site_id)
     buildings_list = facilities.sort_buildings(site.buildings)
@@ -77,8 +77,8 @@ def site_show(site_id):
         page_title=site.name)
 
 
-@bp.route('/buildings/<int:building_id>/')
-@bp.route('/buildings/<building_shortname>/')
+@bp.route('/building/<int:building_id>/')
+@bp.route('/building/<building_shortname>/')
 def building_show(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
@@ -92,8 +92,8 @@ def building_show(building_id=None, building_shortname=None):
 
 
 # ToDo: Review this!
-@bp.route('/buildings/<int:building_id>/levels/')
-@bp.route('/buildings/<building_shortname>/levels/')
+@bp.route('/building/<int:building_id>/levels/')
+@bp.route('/building/<building_shortname>/levels/')
 def building_levels(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
@@ -108,6 +108,79 @@ def building_levels(building_id=None, building_shortname=None):
     return render_template('facilities/levels.html',
         levels=levels_list, building=building,
         page_title=u"Etagen Wohnheim {}".format(building.short_name))
+
+
+@bp.route('/room/create', methods=['GET', 'POST'])
+@access.require('facilities_change')
+def room_create():
+    building_id = request.args.get("building_id")
+
+    building = None
+
+    if building_id:
+        building = Building.q.get(building_id)
+
+        if not building:
+            flash("Gebäude mit ID {} nicht gefunden!".format(building_id), "error")
+            return redirect(url_for('.overview'))
+
+    form = CreateRoomForm(building=building)
+
+    if form.validate_on_submit():
+        try:
+            room = create_room(form.building.data, form.level.data, form.number.data, current_user, form.inhabitable.data)
+
+            session.session.commit()
+
+            flash("Der Raum {} wurde erfolgreich erstellt.".format(room.short_name),
+                  "success")
+
+            return redirect(url_for('.room_show', room_id=room.id))
+        except RoomAlreadyExistsException:
+            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.overview')
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Raum erstellen",
+                           form_args=form_args)
+
+
+@bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
+@access.require('facilities_change')
+def room_edit(room_id):
+    room = Room.q.get(room_id)
+
+    if not room:
+        flash("Raum mit ID {} nicht gefunden!".format(room_id), "error")
+        return redirect(url_for('.overview'))
+
+    form = CreateRoomForm(obj=room)
+
+    if form.validate_on_submit():
+        try:
+            edit_room(room, form.number.data, form.inhabitable.data, current_user)
+
+            session.session.commit()
+
+            flash("Der Raum {} wurde erfolgreich bearbeitet.".format(room.short_name),
+                  "success")
+
+            return redirect(url_for('.room_show', room_id=room.id))
+        except RoomAlreadyExistsException:
+            form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.room_show', room_id=room.id)
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Raum bearbeiten",
+                           form_args=form_args)
 
 
 # ToDo: Review this!

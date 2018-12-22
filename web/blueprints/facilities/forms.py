@@ -5,11 +5,11 @@
 
 
 from flask_wtf import FlaskForm as Form
-from wtforms.validators import Length, DataRequired, NumberRange
+from wtforms.validators import Length, DataRequired, NumberRange, Optional
 from pycroft.model.facilities import Building
 from web.form.base_form import BaseForm
 from web.form.fields.core import TextField, BooleanField, TextAreaField, \
-    QuerySelectField
+    QuerySelectField, IntegerField
 
 from pycroft.helpers.facilities import sort_buildings
 from web.form.fields.custom import LazyLoadSelectField, static
@@ -40,13 +40,22 @@ class SelectRoomForm(BaseForm):
                                       data_endpoint="facilities.json_rooms")
 
 
-class RoomForm(Form):
-    number = TextField(u"Nummer")
-    level = TextField(u"Etage")
-    inhabitable = BooleanField(u"Bewohnbar")
-    building_id = QuerySelectField(u"Wohnheim",
-                                    get_label='short_name',
-                                    query_factory=building_query)
+class CreateRoomForm(Form):
+    building = QuerySelectField("Wohnheim",
+                                get_label='short_name',
+                                query_factory=building_query)
+    level = IntegerField("Etage")
+    number = TextField("Nummer")
+    inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
+
+
+class EditRoomForm(Form):
+    building = static(QuerySelectField("Wohnheim",
+                                       get_label='short_name',
+                                       query_factory=building_query))
+    level = static(IntegerField("Etage"))
+    number = TextField("Nummer")
+    inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
 
 
 class BuildingForm(Form):
