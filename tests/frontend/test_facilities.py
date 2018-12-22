@@ -33,22 +33,22 @@ class Test_010_Building(FrontendDataTestBase, FixtureDataTestBase):
 
     def test_0020_show_building(self):
         self.assert_template_get_request(
-            "/facilities/buildings/{}/".format(self.building.id),
+            "/facilities/building/{}/".format(self.building.id),
             "facilities/building_show.html")
 
     def test_0040_show_room(self):
         self.assert_template_get_request(
-            "/facilities/rooms/{}".format(self.room.id),
+            "/facilities/room/{}".format(self.room.id),
             "facilities/room_show.html")
 
     def test_0070_building_levels(self):
         self.assert_template_get_request(
-            "/facilities/buildings/{}/levels/".format(self.building.id),
+            "/facilities/building/{}/levels/".format(self.building.id),
             "facilities/levels.html")
 
     def test_0080_building_level_rooms(self):
         self.assert_template_get_request(
-            "/facilities/buildings/{}/levels/{}/rooms/".format(
+            "/facilities/building/{}/levels/{}/rooms/".format(
                 self.building.id, self.room.level),
             "facilities/rooms.html")
 

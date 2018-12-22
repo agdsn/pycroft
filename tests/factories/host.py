@@ -52,7 +52,6 @@ class SwitchFactory(BaseFactory):
         model = Switch
 
     host = factory.SubFactory(HostFactory, interface=None, room__inhabitable=False)
-    name = factory.Sequence(lambda n: "Switch {}".format(n))
     management_ip = factory.Faker('ipv4')
     switch_port = factory.RelatedFactory('tests.factories.host.SwitchPortFactory', 'switch')
 

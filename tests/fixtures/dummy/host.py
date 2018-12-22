@@ -27,7 +27,6 @@ class InterfaceData(DataSet):
 class SwitchData(DataSet):
     class dummy:
         host = HostData.dummy_switch
-        name = "dummy_switch"
         management_ip = "141.30.216.15"
 
 
@@ -69,13 +68,13 @@ class PatchPortData(DataSet):
 
     class dummy_patch_port2:
         room = RoomData.dummy_room2
-        switch_room = RoomData.dummy_room2
+        switch_room = RoomData.dummy_room1
         name = "D2"
         switch_port = SwitchPortData.dummy_port2
 
     class dummy_patch_port3:
         room = RoomData.dummy_room3
-        switch_room = RoomData.dummy_room3
+        switch_room = RoomData.dummy_room1
         name = "D3"
         switch_port = SwitchPortData.dummy_port3
 
