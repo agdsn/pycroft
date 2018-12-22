@@ -38,7 +38,8 @@ class AlembicHelper:
         upgrade_bound_ctx = self._new_context(opts={'fn': upgrade})
         # Configure alembic.op to use our upgrade context
         with Operations.context(upgrade_bound_ctx):
-            upgrade_bound_ctx.run_migrations(**kwargs)
+            with upgrade_bound_ctx.begin_transaction():
+                upgrade_bound_ctx.run_migrations(**kwargs)
 
 
 def db_has_nontrivial_objects(connection):
