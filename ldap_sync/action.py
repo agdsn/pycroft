@@ -45,7 +45,7 @@ class AddAction(Action):
         self.debug_whether_success(connection)
 
     def __repr__(self):
-        return "<{} {}>".format(type(self).__name__, self.record.attrs['uid'][0])
+        return "<{} {}>".format(type(self).__name__, self.record.dn)
 
 
 class ModifyAction(Action):

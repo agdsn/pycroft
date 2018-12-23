@@ -2,13 +2,18 @@
 import abc
 
 from ldap3.utils.conv import escape_filter_chars
+from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
 def dn_from_username(username, base):
-    return "uid={},{}".format(username, base)
+    return safe_dn(["uid={}".format(username), base])
+
+
+def dn_from_cn(name, base):
+    return safe_dn(["cn={}".format(name), base])
 
 
 def _canonicalize_to_list(value):
@@ -98,6 +103,14 @@ class Record(object):
     def __repr__(self):
         return "<{} dn={}>".format(type(self).__name__, self.dn)
 
+    @classmethod
+    def _validate_attributes(cls, attributes):
+        # sanity check: did we forget something in `cls.get_synced_attributes()` that
+        # we support migrating anyway?
+        _missing_attributes = set(attributes.keys()) - cls.get_synced_attributes()
+        assert not _missing_attributes, \
+            "get_synced_attributes() does not contain attributes {}".format(_missing_attributes)
+
 
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
@@ -156,11 +169,7 @@ class UserRecord(Record):
             # an account with no expiration, or as an expiration on Jan 1, 1970.
             attributes['shadowExpire'] = 1
 
-        # sanity check: did we forget something in `cls.SYNCED_ATTRIBUTES` that
-        # we support migrating anyway?
-        _missing_attributes = set(attributes.keys()) - cls.SYNCED_ATTRIBUTES
-        assert not _missing_attributes, \
-            "SYNCED_ATTRIBUTES does not contain attributes {}".format(_missing_attributes)
+        cls._validate_attributes(attributes)
 
         return cls(dn=dn, attrs=attributes)
 
@@ -175,6 +184,38 @@ class UserRecord(Record):
                 action.modifications.pop('pwdAccountLockedTime', None)
 
         return action
+
+
+class GroupRecord(Record):
+    """Create a new groupOfMembers record with a dn and certain attributes.
+    Used to represent groups and properties.
+    """
+    def __init__(self, dn, attrs):
+        super().__init__(dn, attrs)
+
+    SYNCED_ATTRIBUTES = frozenset([
+        'objectClass', 'cn', 'member'
+    ])
+    LDAP_OBJECTCLASSES = ['groupOfMembers']
+
+    @classmethod
+    def get_synced_attributes(cls):
+        return cls.SYNCED_ATTRIBUTES
+
+    @classmethod
+    def from_db_group(cls, name, members, base_dn, user_base_dn):
+        dn = dn_from_cn(name, base=base_dn)
+        members_dn = [dn_from_username(member, user_base_dn) for member in members]
+
+        attributes = {
+            # REQ – required, MAY – optional, SV – single valued
+            'objectClass': cls.LDAP_OBJECTCLASSES,
+            'cn': name,  # REQ by groupOfMembers
+            'member': members_dn, # MAY by groupOfMembers
+        }
+        cls._validate_attributes(attributes)
+
+        return cls(dn=dn, attrs=attributes)
 
 
 class RecordState(object):
