@@ -5,19 +5,36 @@ import os
 import sys
 from collections import Counter, defaultdict, namedtuple
 from distutils.util import strtobool
+from itertools import chain
+from typing import Iterable, List, NamedTuple
 
 import ssl
 import ldap3
-from sqlalchemy import and_
+from sqlalchemy import and_, func, select, join
 from sqlalchemy.orm import scoped_session, sessionmaker, foreign, joinedload
 
 from pycroft.model import create_engine
 from pycroft.model.property import CurrentProperty
-from pycroft.model.user import User
+from pycroft.model.user import User, Group, Membership
 from pycroft.model.session import set_scoped_session, session as global_session
-from .record import UserRecord, RecordState
+from .record import UserRecord, GroupRecord, RecordState
 
 logger = logging.getLogger('ldap_sync')
+
+
+class UserProxyType(NamedTuple):
+    User: User
+    should_be_blocked: bool
+
+
+class GroupProxyType(NamedTuple):
+    Group: Group
+    members: List[str]
+
+
+class PropertyProxyType(NamedTuple):
+    name: str
+    members: List[str]
 
 
 class LdapExporter(object):
@@ -47,25 +64,58 @@ class LdapExporter(object):
             self.states_dict[record.dn].current = record
         logger.info("Gathered %d records of current state", l)
 
-        for l, record in enumerate(desired):
+        for l, record in enumerate(desired, 1):
             self.states_dict[record.dn].desired = record
-        logger.info("Gathered %d records lof desired state", l)
+        logger.info("Gathered %d records of desired state", l)
 
         self.actions = []
 
     @classmethod
-    def from_orm_objects_and_ldap_result(cls, current, desired, base_dn):
+    def from_orm_objects_and_ldap_result(
+            cls, ldap_users: dict, db_users: Iterable[UserProxyType], user_base_dn,
+            ldap_groups: dict = None, db_groups: Iterable[GroupProxyType] = None,
+            group_base_dn=None, ldap_properties: dict = None,
+            db_properties: Iterable[PropertyProxyType] = None, property_base_dn=None):
         """Construct an exporter instance with non-raw parameters
 
-        :param cls:
-        :param current: An iterable of records as returned by
-            ldapsearch
-        :param desired: An iterable of sqlalchemy result proxies as returned
-            by :py:func:`fetch_users_to_sync`
+        :param ldap_users: An iterable of records as returned by :func:`fetch_current_ldap_users`.
+        :param db_users: An iterable of sqlalchemy result proxies as returned by :func:`fetch_users_to_sync`.
+        :param user_base_dn:
+        :param ldap_groups: An iterable of records as returned by :func:`fetch_current_ldap_groups`.
+        :param db_groups: An iterable of sqlalchemy result proxies as returned by :func:`fetch_groups_to_sync`.
+        :param group_base_dn:
+        :param ldap_properties: An iterable of records as returned by :py:func:`fetch_current_ldap_properties`.
+        :param db_properties: An iterable of sqlalchemy result proxies as returned by :func:`fetch_properties_to_sync`.
+        :param property_base_dn:
+        :return:
         """
-        return cls((UserRecord.from_ldap_record(x) for x in current),
-                   (UserRecord.from_db_user(x.User, base_dn, x.should_be_blocked)
-                    for x in desired))
+        current = []
+        current.append(UserRecord.from_ldap_record(x) for x in ldap_users)
+        if ldap_groups:
+            current.append(GroupRecord.from_ldap_record(x) for x in ldap_groups)
+        if ldap_properties:
+            current.append(GroupRecord.from_ldap_record(x) for x in ldap_properties)
+
+
+        desired = []
+        desired.append(UserRecord.from_db_user(x.User, user_base_dn, x.should_be_blocked)
+                    for x in db_users)
+
+        # Remove members that are not exported from groups/properties
+        exported_users = { u.User.login for u in db_users }
+
+        if db_groups:
+            desired.append(
+                GroupRecord.from_db_group(x.Group.name,
+                                          (m for m in x.members if m in exported_users),
+                                          group_base_dn, user_base_dn) for x in db_groups)
+        if db_properties:
+            desired.append(
+                GroupRecord.from_db_group(x.name,
+                                          (m for m in x.members if m in exported_users),
+                                          property_base_dn, user_base_dn) for x in db_properties)
+
+        return cls(chain.from_iterable(current), chain.from_iterable(desired))
 
     def compile_actions(self):
         """Consolidate current and desired records into necessary actions"""
@@ -85,17 +135,7 @@ def establish_and_return_session(connection_string):
     return global_session  # from pycroft.model.session
 
 
-# TODO replace by actual import && proper pep484 style hints after upgrade
-if sys.version_info >= (3,5):
-    from typing import List
-
-    class _ResultProxyType:
-        User = None  # type: User
-        should_be_blocked = None  # type: bool
-
-
-def fetch_users_to_sync(session, required_property=None):
-    # type: (...) -> List[_ResultProxyType]
+def fetch_users_to_sync(session, required_property=None) -> List[UserProxyType]:
     """Fetch the users who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -144,6 +184,57 @@ def fetch_users_to_sync(session, required_property=None):
     )
 
 
+def fetch_groups_to_sync(session) -> List[GroupProxyType]:
+    """Fetch the groups who should be synced
+
+    :param session: The SQLAlchemy session to use
+
+    :returns: An iterable of `(Group, members)` ResultProxies.
+    """
+    return (
+        # Grab all users with the required property
+        Group.q
+        # uids of the members of the group
+        .add_column(select([func.array_agg(User.login)])
+                .select_from(join(Group, Membership).join(User))
+                .where(Membership.active())
+                .group_by(Group.id)
+                .as_scalar().label('members'))
+        .all()
+    )
+
+
+EXPORTED_PROPERTIES = frozenset([
+    'network_access',
+    'mail',
+    'traffic_limit_exceeded',
+    'payment_in_default',
+    'violation',
+    'member',
+    'ldap_login_enabled',
+    'userdb',
+    'cache_access',
+    'membership_fee',
+])
+
+
+def fetch_properties_to_sync(session) -> List[PropertyProxyType]:
+    """Fetch the groups who should be synced
+
+    :param session: The SQLAlchemy session to use
+
+    :returns: An iterable of `(property_name, members)` ResultProxies.
+    """
+    return session.execute(
+        # Grab all users with the required property
+        select([CurrentProperty.property_name.label('name'),
+                func.array_agg(User.login).label('members')])
+        .select_from(join(CurrentProperty, User, onclause=CurrentProperty.user_id == User.id))
+        .where(CurrentProperty.property_name.in_(EXPORTED_PROPERTIES))
+        .group_by(CurrentProperty.property_name)
+    ).fetchall()
+
+
 def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
                                          ca_certs_data, bind_dn, bind_pw):
     tls = None
@@ -154,15 +245,29 @@ def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
     return ldap3.Connection(server, user=bind_dn, password=bind_pw, auto_bind=True)
 
 
-def fetch_current_ldap_users(connection, base_dn):
+def fetch_ldap_entries(connection, base_dn, search_filter=None, attributes=ldap3.ALL_ATTRIBUTES):
     success = connection.search(search_base=base_dn,
-                                search_filter='(objectclass=inetOrgPerson)',
-                                attributes=[ldap3.ALL_ATTRIBUTES, 'pwdAccountLockedTime'])
+                                search_filter=search_filter,
+                                attributes=attributes)
     if not success:
         logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []
 
     return [r for r in connection.response if r['dn'] != base_dn]
+
+
+def fetch_current_ldap_users(connection, base_dn):
+    return fetch_ldap_entries(connection, base_dn,
+                              search_filter='(objectclass=inetOrgPerson)',
+                              attributes=[ldap3.ALL_ATTRIBUTES, 'pwdAccountLockedTime'])
+
+
+def fetch_current_ldap_groups(connection, base_dn):
+    return fetch_ldap_entries(connection, base_dn, search_filter='(objectclass=groupOfMembers)')
+
+
+def fetch_current_ldap_properties(connection, base_dn):
+    return fetch_ldap_entries(connection, base_dn, search_filter='(objectclass=groupOfMembers)')
 
 
 def fake_connection():
@@ -180,20 +285,19 @@ def add_stdout_logging(logger, level=logging.INFO):
     logger.setLevel(level)
 
 
-def sync_all(db_users, ldap_users, connection, base_dn):
+def sync_all(connection, ldap_users: dict, db_users: Iterable[UserProxyType], user_base_dn,
+            ldap_groups: dict = None, db_groups: Iterable[GroupProxyType] = None,
+            group_base_dn=None, ldap_properties: dict = None,
+            db_properties: Iterable[PropertyProxyType] = None, property_base_dn=None):
     """Execute the LDAP sync given a connection and state data.
 
-    :param db_users: An iterable of result proxies corresponding to the
-     users to be synced. See what :py:func:`fetch_users_to_sync` returns
-      for the fields.
-    :param ldap_users: An LDAP search result representing the current
-        set of users
     :param connection: An LDAP connection
-    :param base_dn: The LDAP base_dn
+
+    For the other parameters see :func:`LdapExporter.from_orm_objects_and_ldap_result`.
     """
-    exporter = LdapExporter.from_orm_objects_and_ldap_result(current=ldap_users,
-                                                             desired=db_users,
-                                                             base_dn=base_dn)
+    exporter = LdapExporter.from_orm_objects_and_ldap_result(
+        ldap_users, db_users, user_base_dn, ldap_groups, db_groups, group_base_dn, ldap_properties,
+        db_properties, property_base_dn)
     logger.info("Initialized LdapExporter (%s unique objects in total) from fetched objects",
                 len(exporter.states_dict))
 
