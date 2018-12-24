@@ -42,6 +42,7 @@ def edit_patch_port(patch_port, name, room, processor):
         patch_port.room = room
 
 
+@with_transaction
 def delete_patch_port(patch_port, processor):
     log_room_event("Deleted patch-port {}.".format(patch_port.name), processor, patch_port.switch_room)
 
