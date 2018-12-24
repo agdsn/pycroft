@@ -15,7 +15,7 @@ from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 from sqlalchemy.sql import and_, select, exists
 from sqlalchemy.orm import joinedload, aliased
 

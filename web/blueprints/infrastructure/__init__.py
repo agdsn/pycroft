@@ -14,7 +14,7 @@
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
 from flask_login import current_user
-from flask_wtf import FlaskForm, Form
+from flask_wtf import FlaskForm as Form
 from ipaddr import IPAddress
 from sqlalchemy.orm import joinedload
 
@@ -232,7 +232,7 @@ def switch_delete(switch_id):
         flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
         return redirect(url_for('.switches'))
 
-    form = FlaskForm()
+    form = Form()
 
     if form.validate_on_submit():
         delete_switch(switch, current_user)
