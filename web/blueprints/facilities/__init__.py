@@ -23,7 +23,8 @@ from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, RoomAlreadyExistsException
-from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port
+from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port, \
+    PatchPortAlreadyExistsException
 from pycroft.model import session
 from pycroft.model.facilities import Room, Site, Building
 from pycroft.model.port import PatchPort
@@ -278,16 +279,20 @@ def patch_port_create(switch_room_id):
         room = Room.q.filter_by(building=form.building.data,
                                 level=form.level.data,
                                 number=form.room_number.data).one()
+        try:
+            patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
 
-        patch_port = create_patch_port(form.name.data, room, switch_room, current_user)
+            session.session.commit()
 
-        session.session.commit()
+            flash("Der Patch-Port {} zum Zimmer {} wurde erfolgreich erstellt.".format(patch_port.name,
+                                                                                       patch_port.room.short_name),
+                  "success")
 
-        flash("Der Patch-Port {} zum Zimmer {} wurde erfolgreich erstellt.".format(patch_port.name,
-                                                                                   patch_port.room.short_name),
-              "success")
+            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+        except PatchPortAlreadyExistsException:
+            session.session.rollback()
 
-        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+            form.name.errors.append("Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum.")
 
     form_args = {
         'form': form,
@@ -332,13 +337,18 @@ def patch_port_edit(switch_room_id, patch_port_id):
                                 level=form.level.data,
                                 number=form.room_number.data).one()
 
-        edit_patch_port(patch_port, form.name.data, room,current_user)
+        try:
+            edit_patch_port(patch_port, form.name.data, room,current_user)
 
-        session.session.commit()
+            session.session.commit()
 
-        flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
+            flash("Der Patch-Port wurde erfolgreich bearbeitet.", "success")
 
-        return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+            return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
+        except PatchPortAlreadyExistsException:
+            session.session.rollback()
+
+            form.name.errors.append("Ein Patch-Port mit dieser Bezeichnung existiert bereits in diesem Switchraum.")
 
     form_args = {
         'form': form,
