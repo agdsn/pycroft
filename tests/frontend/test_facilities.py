@@ -48,7 +48,7 @@ class Test_010_Building(FrontendDataTestBase, FixtureDataTestBase):
 
     def test_0080_building_level_rooms(self):
         self.assert_template_get_request(
-            "/facilities/building/{}/levels/{}/rooms/".format(
+            "/facilities/building/{}/level/{}/rooms/".format(
                 self.building.id, self.room.level),
             "facilities/rooms.html")
 
