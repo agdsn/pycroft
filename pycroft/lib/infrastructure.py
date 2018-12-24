@@ -15,6 +15,10 @@ class PatchPortAlreadyExistsException(Exception):
 
 @with_transaction
 def create_patch_port(name, room, switch_room, processor):
+    # This check can be removed as soon as the unique constraint exists
+    if PatchPort.q.filter_by(name=name, switch_room=switch_room).first():
+        raise PatchPortAlreadyExistsException()
+
     patch_port = PatchPort(name=name, room=room, switch_room=switch_room)
     session.add(patch_port)
 
@@ -26,7 +30,8 @@ def create_patch_port(name, room, switch_room, processor):
 @with_transaction
 def edit_patch_port(patch_port, name, room, processor):
     if patch_port.name != name:
-        if PatchPort.q.filter_by(name=name).one_or_none():
+        # This check can be removed as soon as the unique constraint exists
+        if PatchPort.q.filter_by(name=name, switch_room=patch_port.switch_room).first():
             raise PatchPortAlreadyExistsException()
 
         log_room_event("Changed name of patch-port {} to {}.".format(patch_port.name, name),
