@@ -427,15 +427,13 @@ def room_show(room_id):
                                       room_id=room_id)
 
     return render_template('facilities/room_show.html',
-        page_title="Raum " + str(room.building.short_name) + u" " + \
-                   str(room.level) + u"-" + str(room.number),
-        room=room,
-        ports=room.patch_ports,
-        user_buttons=list(map(user_button, room.users)),
-        room_log_table=room_log_table,
-        patch_port_table=patch_port_table,
-        form=form,
-    )
+                           page_title="Raum {}".format(room.short_name),
+                           room=room,
+                           ports=room.patch_ports,
+                           user_buttons=list(map(user_button, room.users)),
+                           room_log_table=room_log_table,
+                           patch_port_table=patch_port_table,
+                           form=form,)
 
 
 @bp.route('/room/<int:room_id>/logs/json')
