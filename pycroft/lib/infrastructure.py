@@ -57,7 +57,7 @@ def delete_patch_port(patch_port, processor):
 @with_transaction
 def patch_switch_port_to_patch_port(switch_port, patch_port, processor):
     if patch_port.switch_port:
-        raise PatchPortAlreadyPatchedException
+        raise PatchPortAlreadyPatchedException()
 
     log_room_event("Added patch from {}/{} to {}.".format(switch_port.switch.host.name, switch_port.name, patch_port.name),
                    processor, switch_port.switch.host.room)
