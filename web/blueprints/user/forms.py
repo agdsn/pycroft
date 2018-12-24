@@ -12,7 +12,7 @@ from wtforms.validators import (
 
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query, SelectRoomForm
+from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional
 from web.blueprints.properties.forms import traffic_group_query, \
     property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
@@ -78,28 +78,9 @@ class UserMoveForm(SelectRoomForm):
     pass
 
 
-class UserCreateForm(Form):
+class UserCreateForm(SelectRoomFormOptional):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
-    building = QuerySelectField(u"Wohnheim",
-                                [Optional()],
-                                get_label='short_name',
-                                query_factory=building_query,
-                                allow_blank=True)
-    level = LazyLoadSelectField(u"Etage",
-                                validators=[
-                                    OptionalIf('building', invert=True),
-                                    NumberRange(message=u"Etage?")],
-                                coerce=int,
-                                choices=[],
-                                conditions=["building"],
-                                data_endpoint="facilities.json_levels")
-    room_number = LazyLoadSelectField(u"Raumnummer",
-                                      validators=[
-                                          OptionalIf('level', invert=True)],
-                                      coerce=str,
-                                      choices=[],
-                                      conditions=["building", "level"],
-                                      data_endpoint="facilities.json_rooms")
+
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex_ci, message=u"Login ist ungültig!"),
@@ -116,6 +97,8 @@ class UserCreateForm(Form):
                                       query_factory=property_group_user_create_query)
     annex = BooleanField(u"Host annektieren", [Optional()])
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+
+    _order = ("name", "building", "level", "room_number")
 
 
 class UserMoveInForm(UserMoveForm):
