@@ -52,3 +52,18 @@ class LazyJoinTest(TestCase):
             yield "</span>"
 
         self.assertEqual(str(outer()), "<span>\na, b\n</span>")
+
+    def test_exhaustion(self):
+        @lazy_join
+        def foo():
+            yield "a"
+            yield "b"
+
+        combinations = [(str, str), (str, list), (list, str), (list, list)]
+        for call1, call2 in combinations:
+            with self.subTest(call1=call1, call2=call2):
+                gen = foo()
+                print(f"Calling {call1}, {call2} on gen=foo()")
+                call1(gen)
+                with self.assertRaises(RuntimeError):
+                    call2(gen)
