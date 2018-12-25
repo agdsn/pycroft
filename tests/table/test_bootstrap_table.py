@@ -100,6 +100,11 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         self.assertEqual(len(re.findall(TOOLBAR_RE, markup)), 1)
         self.assertEqual(len(re.findall(HEADER_RE, markup)), 1)
 
+    def test_columns_appear_in_header(self):
+        rendered = self.table.render("test_id")
+        self.assertIn("Column 1", rendered)
+        self.assertIn("Column 2", rendered)
+
 
 class DeclarativeTableTestCase(TestCase):
     class Table(BootstrapTable):
