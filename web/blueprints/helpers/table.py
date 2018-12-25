@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from copy import copy
+from dataclasses import dataclass
 from datetime import date, datetime
-from typing import List, Dict
+from typing import List, Dict, Iterable, Tuple
 
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
@@ -129,8 +130,13 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         self._init_table_args()
 
     @property
-    def columns(self) -> List[Column]:
+    def _columns(self) -> List[Column]:
         return [getattr(self, a) for a in self.column_attrname_map.values()]
+
+    @property
+    def columns(self):
+        """Wrapper for subclasses to override."""
+        return self._columns
 
     def __repr__(self):
         return "<{cls} cols={numcols} data_url={data_url!r}>".format(
@@ -209,40 +215,56 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         return Markup("\n".join(html))
 
 
-class SplittedTable(BootstrapTable):
-    def __init__(self, *a, splits, **kw):
-        """Initialize a new Splitted Table
+@dataclass
+class TableSplit:
+    prefix: str
+    title: str
 
-        :param splits: Split definitions of the format
-            (('split_1_prefix', "Display_Name"), …).  The format will
-            be checked
-        :param kwargs: Passed to super()
-        """
-        super().__init__(*a, **kw)
-        # each split shall have the format:
-        # ('split_prefix', "Name to be displayed")
-        if any(len(x) != 2 for x in splits):
-            raise ValueError("`splits` must be a tuple of 2-tuples")
-        self.splits = splits
+
+class SplittedTable(BootstrapTable):
+    """A table that repeats it columns in multiple flavors
+
+    If you assign :py:attr:`splits` a sequence of prefix/Title tuples,
+    like ``(('split_1_prefix', "Split 1 Title"), …)``, the table gets an
+    additional header of the form ``Split 1 Title | _`` and represents every
+    column in the :py:attr:`columns` property multiple times, each time
+    equipped with the chosen prefix.
+
+    For instance, if ``splits = (('a', "Type A"), ('b', "Type B"))``, and you
+    have columns ``name, id``, the effective column list will be
+    ``a_name, a_id, b_name, b_id``.
+    """
+    splits: Iterable[Tuple[str, str]]
+
+    def _iter_typed_splits(self):
+        for t in self.splits:
+            yield TableSplit(*t)
+
+    @property
+    def columns(self):
+        cols = []
+        unaltered_columns = self._columns
+        for split in self._iter_typed_splits():
+            for c in unaltered_columns:
+                prefixed_col = copy(c)
+                prefixed_col.name = f"{split.prefix}_{c.name}"
+                cols.append(prefixed_col)
+        return cols
 
     def generate_table_header(self):
         yield "<thead>"
         yield "<tr>"
-        for _, split_name in self.splits:
+        for split in self._iter_typed_splits():
             yield ("<th colspan=\"{}\" class=\"text-center\">{}</th>"
-                   .format(len(self.columns), split_name))
+                   .format(len(super().columns), split.title))
         yield "</tr>"
 
-        yield "<tr>"
-        def prefixed_col(prefix, col_name):
-            return "{prefix}_{col_name}".format(prefix=prefix, col_name=col_name)
-        for split_prefix, _ in self.splits:
-            for col in self.columns:
-                new_name = prefixed_col(split_prefix, col.name)
-                yield "<th {}>{}</th>".format(
-                    col.build_col_args(**{'data-field': new_name}),
-                    col.title
-                )
+        yield "<tr>"  # that's the same as in BootstrapTable.
+        for col in self.columns:
+            yield "<th {}>{}</th>".format(
+                col.build_col_args(**{'data-field': col.name}),
+                col.title
+            )
         yield "</tr>"
         yield "</thead>"
 

@@ -98,7 +98,6 @@ class FinanceTable(BootstrapTable):
 
 class FinanceTableSplitted(FinanceTable, SplittedTable):
     def __init__(self, *a, **kw):
-        splits = (('soll', "Soll"), ('haben', "Haben"))
         table_args = {
             'data-row-style': False,
             'data-sort-name': False,  # the "valid_on" col doesn't exist here
@@ -107,7 +106,9 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
         if 'data_url' in kw:
             kw['data_url'] = enforce_url_params(kw['data_url'],
                                                 params={'splitted': True})
-        super().__init__(*a, splits=splits, table_args=table_args, **kw)
+        super().__init__(*a, table_args=table_args, **kw)
+
+    splits = (('soll', "Soll"), ('haben', "Haben"))
 
     def generate_table_footer(self, offset=7):
         return super().generate_table_footer(offset=offset)

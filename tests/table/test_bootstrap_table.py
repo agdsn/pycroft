@@ -156,10 +156,15 @@ class SplittedTableTestCase(TestCase):
         super().setUp()
 
         class Table(SplittedTable):
+            splits = (('split1', "Split 1"), ('split2', "Split 2"))
             foo = Column("Foo")
             bar = Column("Bar")
 
-        self.table = SplittedTable(data_url="#")
+        self.table = Table(data_url="#")
+
+    def test_table_correct_cols(self):
+        self.assertEqual([c.name for c in self.table.columns],
+                         ['split1_foo', 'split1_bar', 'split2_foo', 'split2_bar'])
 
     def test_table_header_generation(self):
         items = list(self.table.generate_table_header())
