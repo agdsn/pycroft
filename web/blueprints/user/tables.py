@@ -20,26 +20,17 @@ class RefreshableTableMixin:
 
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('Erstellt um', 'created_at', formatter='table.dateFormatter',
-                   width=2),
-            Column('Logtyp', 'type'),
-            Column('Nutzer', 'user', formatter='table.userFormatter'),
-            Column('Nachricht', 'message'),
-        ], **kw)
+    created_at = Column("Erstellt um", formatter='table.dateFormatter', width=2)
+    type_ = Column("Logtyp", name='type')
+    user = Column("Nutzer", formatter='table.userFormatter')
+    message = Column("Nachricht")
 
 
 class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs"""
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            # specific tables don't need the `type`
-            Column('Erstellt um', 'created_at', formatter='table.dateFormatter',
-                   width=2),
-            Column('Nutzer', 'user', formatter='table.userFormatter'),
-            Column('Nachricht', 'message'),
-        ], **kw)
+    created_at = Column("Erstellt um", formatter='table.dateFormatter', width=2)
+    user = Column("Nutzer", formatter='table.userFormatter')
+    message = Column("Nachricht")
 
 
 class MembershipTable(BootstrapTable):
@@ -48,13 +39,13 @@ class MembershipTable(BootstrapTable):
     In the toolbar, a “new membership” button is inserted if the
     :py:obj:`current_user` has the ``add_membership`` property.
     """
+    group_name = Column("Gruppe")
+    begins_at = Column("Beginn", formatter='table.dateFormatter')
+    ends_at = Column("Ende", formatter='table.dateFormatter')
+    actions = Column("Aktionen", formatter='table.multiBtnFormatter')
+
     def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, columns=[
-            Column('Gruppe', 'group_name'),
-            Column('Beginn', 'begins_at', formatter='table.dateFormatter'),
-            Column('Ende', 'ends_at', formatter='table.dateFormatter'),
-            Column('Aktionen', 'actions', formatter='table.multiBtnFormatter')
-        ], **kw)
+        super().__init__(*a, **kw)
         self.user_id = user_id
 
     def generate_toolbar(self):
@@ -75,15 +66,14 @@ class MembershipTable(BootstrapTable):
 class HostTable(BootstrapTable):
     """A table for displaying hosts
     """
-    def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, columns=[
-            Column('Name', 'name'),
-            Column('Switch', 'switch'),
-            Column('Switchport', 'port'),
-            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
-            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
-        ], **kw)
+    name = Column("Name")
+    switch = Column("Switch")
+    port = Column("SwitchPort")
+    edit_link = Column("Editieren", formatter='table.btnFormatter')
+    delete_link = Column("Löschen", formatter='table.btnFormatter')
 
+    def __init__(self, *a, user_id=None, **kw):
+        super().__init__(*a, **kw)
         self.user_id = user_id
 
     def generate_toolbar(self):
@@ -104,14 +94,14 @@ class HostTable(BootstrapTable):
 class InterfaceTable(BootstrapTable):
     """A table for displaying interfaces
     """
+    host = Column("Host")
+    mac = Column("MAC")
+    ips = Column("IPs")
+    edit_link = Column("Editieren", formatter='table.btnFormatter')
+    delete_link = Column("Löschen", formatter='table.btnFormatter')
+
     def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, columns=[
-            Column('Host', 'host'),
-            Column('MAC', 'mac'),
-            Column('IPs', 'ips'),
-            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
-            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
-        ], **kw)
+        super().__init__(*a, **kw)
         self.user_id = user_id
 
     def generate_toolbar(self):
@@ -131,9 +121,6 @@ class InterfaceTable(BootstrapTable):
 
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('ID', 'id'),
-            Column('Name', 'url', formatter='table.linkFormatter'),
-            Column('Login', 'login'),
-        ], **kw)
+    id = Column("ID")
+    url = Column("Name", formatter='table.linkFormatter')
+    login = Column("Login")

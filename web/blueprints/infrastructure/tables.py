@@ -6,29 +6,22 @@ from web.blueprints.helpers.table import BootstrapTable, Column
 
 
 class SubnetTable(BootstrapTable):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('#', 'id'),
-            Column('Beschreibung', 'description'),
-            Column('IP', 'address'),
-            Column('Gateway', 'gateway'),
-            Column('Reservierte Adressen', 'reserved',
-                   formatter='table.listFormatter'),
-            Column('Freie IPs', 'free_ips_formatted', col_args={
-                'data-sort-name': 'free_ips',
-            }),
-        ], **kw)
+    id = Column("#")
+    description = Column("Beschreibung")
+    address = Column("IP")
+    gateway = Column("Gateway")
+    reserved = Column("Reservierte Adressen", formatter='table.listFormatter')
+    free_ips_formatted = Column("Freie IPs", col_args={
+        'data-sort-name': 'free_ips',
+    })
 
 
 class SwitchTable(BootstrapTable):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('#', 'id'),
-            Column('Name', 'name', formatter='table.linkFormatter'),
-            Column('Management IP', 'ip'),
-            Column('Editieren', 'edit_link', formatter='table.btnFormatter', width=1),
-            Column('Löschen', 'delete_link', formatter='table.btnFormatter', width=1)
-        ], **kw)
+    id = Column("#")
+    name = Column("Name", formatter='table.linkFormatter')
+    ip = Column("Management IP")
+    edit_link = Column('Editieren', formatter='table.btnFormatter', width=1)
+    delete_link = Column('Löschen', formatter='table.btnFormatter', width=1)
 
     def generate_toolbar(self):
         if not current_user.has_property('infrastructure_change'):
@@ -44,25 +37,21 @@ class SwitchTable(BootstrapTable):
 
 
 class VlanTable(BootstrapTable):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column('#', 'id'),
-            Column('Name', 'name'),
-            Column('VID', 'vid'),
-        ], **kw)
+    id = Column("#")
+    name = Column("Name")
+    vid = Column("VID")
 
 
 class PortTable(BootstrapTable):
     def __init__(self, *a, switch_id=None, **kw):
-        super().__init__(*a, columns=[
-            Column('Name', 'switchport_name', width=2),
-            Column('→ Patchport', 'patchport_name', width=2),
-            Column('→ Raum', 'room', formatter='table.linkFormatter', width=6),
-            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
-            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
-        ], **kw)
-
+        super().__init__(*a, **kw)
         self.switch_id = switch_id
+
+    switchport_name = Column("Name", width=2)
+    patchport_name = Column("→ Patchport", width=2)
+    room = Column("→ Raum", formatter='table.linkFormatter', width=10)
+    edit_link = Column('Editieren', formatter='table.btnFormatter')
+    delete_link = Column('Löschen', formatter='table.btnFormatter')
 
     def generate_toolbar(self):
         if not current_user.has_property('infrastructure_change'):

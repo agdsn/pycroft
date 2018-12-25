@@ -6,18 +6,15 @@ from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column
 
+
 class TrafficGroupTable(BootstrapTable):
     """A table for displaying traffic groups"""
-    def __init__(self, *a, **kw):
-        super().__init__(*a, columns=[
-            Column(title='Bezeichnung', name='name'),
-            Column(title='Gutschrift', name='credit_amount'),
-            Column(title='Intervall', name='credit_interval'),
-            Column(title='Anspargrenze', name='credit_limit'),
-            Column(title='Initialer Credit', name='initial_credit'),
-            Column(title='Löschen', name='delete',
-                   formatter='table.btnFormatter'),
-        ], **kw)
+    name = Column("Bezeichnung")
+    credit_amount = Column("Gutschrift")
+    credit_interval = Column("Intervall")
+    credit_limit = Column("Anspargrenze")
+    initial_credit = Column("Initialer Credit")
+    delete = Column("Löschen", formatter='table.btnFormatter')
 
     def generate_toolbar(self):
         """A “create traffic group” button"""

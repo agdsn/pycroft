@@ -106,8 +106,6 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     :meth:`__str__` and :meth:`__html__` are NOT provided, since
     :meth:`render` expects an obligatory `table_id`!
 
-    :param columns: A list of :py:cls:`Column` objects defining the
-        columns.
     :param data_url: The URL to be used as a JSON endpoint.  The JSON
         endpoint must provide the table data in the scheme defaulting
         to ``{"rows": [], "total": …}``.  In this instance, a custom
@@ -119,8 +117,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     """
     columns_by_attrname: List[str]  # provided by BootstrapTableMeta
 
-    def __init__(self, columns, data_url, table_args=None):
-        # self.columns = columns
+    def __init__(self, data_url, table_args=None):
         self.data_url = data_url
         self.table_args = table_args if table_args is not None else {}
         self._init_table_args()

@@ -54,20 +54,22 @@ class BootstrapTableTestCase(TestCase):
         with self.assertRaises(TypeError):
             BootstrapTable()  # pylint: disable=no-value-for-parameter
 
-
     def test_minimal_instantiation(self):
-        t = BootstrapTable(columns=["dummy"], data_url="http://foobar")
-        self.assertEqual(t.columns, ["dummy"])
+        t = BootstrapTable(data_url="http://foobar")
+        self.assertEqual(t.columns, [])
         self.assertEqual(t.data_url, "http://foobar")
-        self.assertEqual(repr(t), "<BootstrapTable cols=1 data_url='http://foobar'>")
+        self.assertEqual(repr(t), "<BootstrapTable cols=0 data_url='http://foobar'>")
 
 
 class InstantiatedBootstrapTableTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.table = BootstrapTable(
-            columns=[Column(title="Column 1", name="col1"),
-                     Column(title="Column 2", name="col2")],
+
+        class Table(BootstrapTable):
+            col1 = Column("Column 1")
+            col2 = Column("Column 2")
+
+        self.table = Table(
             data_url="http://dummy",
             table_args={'foo': "bar", 'data-cache': "true"}
         )
@@ -88,7 +90,7 @@ class InstantiatedBootstrapTableTestCase(TestCase):
     def test_render_uses_the_generators_correctly(self):
         class MockedTable(BootstrapTable):
             def __init__(self):
-                super().__init__(columns=[], data_url="http://dummy")
+                super().__init__(data_url="http://dummy")
             generate_table_header = lambda self: ["HEADER"]
             generate_table_footer = lambda self: ["FOOTER"]
             generate_toolbar = lambda self: ["TOOLBAR"]
@@ -108,8 +110,8 @@ class InstantiatedBootstrapTableTestCase(TestCase):
 
 class DeclarativeTableTestCase(TestCase):
     class Table(BootstrapTable):
-        a = Column(title="Column 1", name=None)
-        b = Column(title="Column 2", name='bar')
+        a = Column("Column 1")
+        b = Column("Column 2", name='bar')
 
         def toolbar(self):
             yield "<span>"
@@ -118,7 +120,7 @@ class DeclarativeTableTestCase(TestCase):
 
     def test_columns_are_collected(self):
         Table = type(self).Table
-        t = Table(data_url="", columns=[])
+        t = Table(data_url="")
         self.assertEqual(t.columns, [Table.a, Table.b])
 
     def test_column_names_are_undeferred(self):
@@ -130,11 +132,12 @@ class DeclarativeTableTestCase(TestCase):
 class SplittedTableTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.table = SplittedTable(
-            splits=(('split1', "Split 1"), ('split2', "Split 2")),
-            columns=[Column("Foo", 'foo'), Column("Bar", 'bar')],
-            data_url="#"
-        )
+
+        class Table(SplittedTable):
+            foo = Column("Foo")
+            bar = Column("Bar")
+
+        self.table = SplittedTable(data_url="#")
 
     def test_table_header_generation(self):
         items = list(self.table.generate_table_header())
