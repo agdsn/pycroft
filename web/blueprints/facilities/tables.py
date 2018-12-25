@@ -8,16 +8,18 @@ from web.blueprints.helpers.table import BootstrapTable, Column
 class SiteTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('site', 'Site', formatter='table.linkFormatter'),
-            Column('buildings', 'Buildings', formatter='table.multiBtnFormatter'),
+            Column('Site', 'site', formatter='table.linkFormatter'),
+            Column('Buildings', 'buildings',
+                   formatter='table.multiBtnFormatter'),
         ], **kw)
 
 
 class BuildingLevelRoomTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('room', 'Raum', formatter='table.linkFormatter'),
-            Column('inhabitants', 'Bewohner', formatter='table.multiBtnFormatter'),
+            Column('Raum', 'room', formatter='table.linkFormatter'),
+            Column('Bewohner', 'inhabitants',
+                   formatter='table.multiBtnFormatter'),
         ], table_args={
             'data-sort-name': 'room',
             'data-query-params': 'perhaps_all_users_query_params',
@@ -35,17 +37,19 @@ class BuildingLevelRoomTable(BootstrapTable):
 class RoomLogTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('created_at', 'Erstellt um', formatter='table.dateFormatter'),
-            Column('user', 'Nutzer', formatter='table.linkFormatter'),
-            Column('message', 'Nachricht'),
+            Column('Erstellt um', 'created_at',
+                   formatter='table.dateFormatter'),
+            Column('Nutzer', 'user', formatter='table.linkFormatter'),
+            Column('Nachricht', 'message'),
         ], **kw)
 
 
 class RoomOvercrowdedTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('room', 'Raum', formatter='table.linkFormatter'),
-            Column('inhabitants', 'Bewohner', formatter='table.multiBtnFormatter'),
+            Column('Raum', 'room', formatter='table.linkFormatter'),
+            Column('Bewohner', 'inhabitants',
+                   formatter='table.multiBtnFormatter'),
         ], table_args={
             'data-sort-name': 'room',
         }, **kw)

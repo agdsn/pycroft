@@ -8,13 +8,13 @@ from web.blueprints.helpers.table import BootstrapTable, Column
 class SubnetTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('id', '#'),
-            Column('description', 'Beschreibung'),
-            Column('address', 'IP'),
-            Column('gateway', 'Gateway'),
-            Column('reserved', 'Reservierte Adressen',
+            Column('#', 'id'),
+            Column('Beschreibung', 'description'),
+            Column('IP', 'address'),
+            Column('Gateway', 'gateway'),
+            Column('Reservierte Adressen', 'reserved',
                    formatter='table.listFormatter'),
-            Column('free_ips_formatted', 'Freie IPs', col_args={
+            Column('Freie IPs', 'free_ips_formatted', col_args={
                 'data-sort-name': 'free_ips',
             }),
         ], **kw)
@@ -23,11 +23,11 @@ class SubnetTable(BootstrapTable):
 class SwitchTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('id', '#'),
-            Column('name', 'Name', formatter='table.linkFormatter'),
-            Column('ip', 'Management IP'),
-            Column('edit_link', 'Editieren', formatter='table.btnFormatter', width=1),
-            Column('delete_link', 'Löschen', formatter='table.btnFormatter', width=1)
+            Column('#', 'id'),
+            Column('Name', 'name', formatter='table.linkFormatter'),
+            Column('Management IP', 'ip'),
+            Column('Editieren', 'edit_link', formatter='table.btnFormatter', width=1),
+            Column('Löschen', 'delete_link', formatter='table.btnFormatter', width=1)
         ], **kw)
 
     def generate_toolbar(self):
@@ -46,20 +46,20 @@ class SwitchTable(BootstrapTable):
 class VlanTable(BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('id', '#'),
-            Column('name', 'Name'),
-            Column('vid', 'VID'),
+            Column('#', 'id'),
+            Column('Name', 'name'),
+            Column('VID', 'vid'),
         ], **kw)
 
 
 class PortTable(BootstrapTable):
     def __init__(self, *a, switch_id=None, **kw):
         super().__init__(*a, columns=[
-            Column('switchport_name', 'Name', width=2),
-            Column('patchport_name', '→ Patchport', width=2),
-            Column('room', '→ Raum', formatter='table.linkFormatter', width=6),
-            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
-            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
+            Column('Name', 'switchport_name', width=2),
+            Column('→ Patchport', 'patchport_name', width=2),
+            Column('→ Raum', 'room', formatter='table.linkFormatter', width=6),
+            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
+            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
         ], **kw)
 
         self.switch_id = switch_id

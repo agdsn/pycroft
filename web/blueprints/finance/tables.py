@@ -47,11 +47,11 @@ class FinanceTable(BootstrapTable):
                                                 params={'style': 'inverted'})
 
         super().__init__(*a, columns=[
-            Column(name='posted_at', title='Erstellt um'),
-            Column(name='valid_on', title='Gültig am'),
-            Column(name='description', title='Beschreibung',
+            Column(title='Erstellt um', name='posted_at'),
+            Column(title='Gültig am', name='valid_on'),
+            Column(title='Beschreibung', name='description',
                    formatter='table.linkFormatter'),
-            Column(name='amount', title='Wert',
+            Column(title='Wert', name='amount',
                    formatter='table.coloredFormatter',
                    cell_style='table.tdRelativeCellStyle'),
         ], table_args=table_args, **kw)
@@ -118,15 +118,20 @@ class MembershipFeeTable(BootstrapTable):
     """A table for displaying the current membership fees"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='name', title='Name'),
-            Column(name='regular_fee', title='Regulär'),
-            Column(name='payment_deadline', title='Frist'),
-            Column(name='payment_deadline_final', title='Endgültige Frist'),
-            Column(name='begins_on', title='Beginn', formatter='table.dateFormatter'),
-            Column(name='ends_on', title='Ende', formatter='table.dateFormatter'),
-            Column(name='finance_link', title='Finanzen', formatter='table.btnFormatter'),
-            Column(name='book_link', title='Buchen', formatter='table.btnFormatter'),
-            Column(name='edit_link', title='Bearbeiten', formatter='table.btnFormatter'),
+            Column(title='Name', name='name'),
+            Column(title='Regulär', name='regular_fee'),
+            Column(title='Frist', name='payment_deadline'),
+            Column(title='Endgültige Frist', name='payment_deadline_final'),
+            Column(title='Beginn', name='begins_on',
+                   formatter='table.dateFormatter'),
+            Column(title='Ende', name='ends_on',
+                   formatter='table.dateFormatter'),
+            Column(title='Finanzen', name='finance_link',
+                   formatter='table.btnFormatter'),
+            Column(title='Buchen', name='book_link',
+                   formatter='table.btnFormatter'),
+            Column(title='Bearbeiten', name='edit_link',
+                   formatter='table.btnFormatter'),
         ], **kw)
 
     def generate_toolbar(self):
@@ -145,11 +150,12 @@ class UsersDueTable(BootstrapTable):
     """A table for displaying the users that """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='user_id', title='Nutzer-ID'),
-            Column(name='user', title='Name', formatter='table.linkFormatter'),
-            Column(name='valid_on', title='Gültig am'),
-            Column(name='description', title='Beschreibung'),
-            Column(name='amount', title='Betrag', formatter='table.coloredFormatter'),
+            Column(title='Nutzer-ID', name='user_id'),
+            Column(title='Name', name='user', formatter='table.linkFormatter'),
+            Column(title='Gültig am', name='valid_on'),
+            Column(title='Beschreibung', name='description'),
+            Column(title='Betrag', name='amount',
+                   formatter='table.coloredFormatter'),
         ], **kw)
 
 class BankAccountTable(BootstrapTable):
@@ -161,14 +167,14 @@ class BankAccountTable(BootstrapTable):
     def __init__(self, *a, create_account=False, **kw):
         self.create_account = create_account
         super().__init__(*a, columns=[
-            Column(name='name', title='Name'),
-            Column(name='bank', title='Bank'),
-            Column(name='ktonr', title='Kontonummer'),
-            Column(name='blz', title='Bankleitzahl'),
-            Column(name='iban', title='IBAN'),
-            Column(name='bic', title='SWIFT-BIC'),
-            Column(name='kto', title='Konto', formatter='table.btnFormatter'),
-            Column(name='last_imported_at', title='Zuletzt importiert'),
+            Column(title='Name', name='name'),
+            Column(title='Bank', name='bank'),
+            Column(title='Kontonummer', name='ktonr'),
+            Column(title='Bankleitzahl', name='blz'),
+            Column(title='IBAN', name='iban'),
+            Column(title='SWIFT-BIC', name='bic'),
+            Column(title='Konto', name='kto', formatter='table.btnFormatter'),
+            Column(title='Zuletzt importiert', name='last_imported_at'),
         ], **kw)
 
     def generate_toolbar(self):
@@ -188,14 +194,17 @@ class BankAccountActivityTable(BootstrapTable):
     """A table for displaying bank account activities """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='bank_account', title='Bankkonto'),
-            Column(name='name', title='Name'),
-            Column(name='valid_on', title='Gültig am', formatter='table.dateFormatter'),
-            Column(name='imported_at', title='Importiert am', formatter='table.dateFormatter'),
-            Column(name='reference', title='Verwendungszweck'),
-            Column(name='iban', title='IBAN'),
-            Column(name='amount', title='Betrag'),
-            Column(name='actions', title='Aktionen', formatter='table.multiBtnFormatter'),
+            Column(title='Bankkonto', name='bank_account'),
+            Column(title='Name', name='name'),
+            Column(title='Gültig am', name='valid_on',
+                   formatter='table.dateFormatter'),
+            Column(title='Importiert am', name='imported_at',
+                   formatter='table.dateFormatter'),
+            Column(title='Verwendungszweck', name='reference'),
+            Column(title='IBAN', name='iban'),
+            Column(title='Betrag', name='amount'),
+            Column(title='Aktionen', name='actions',
+                   formatter='table.multiBtnFormatter'),
         ], table_args = {
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
@@ -206,8 +215,9 @@ class TransactionTable(BootstrapTable):
     """A table for displaying bank account activities """
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='account', title='Konto', formatter='table.linkFormatter'),
-            Column(name='amount', title='Wert'),
+            Column(title='Konto', name='account',
+                   formatter='table.linkFormatter'),
+            Column(title='Wert', name='amount'),
         ], table_args = {
             'data-row-style': 'table.financeRowFormatter',
         }, **kw)
@@ -218,7 +228,8 @@ class ImportErrorTable(BootstrapTable):
     def __init__(self, *a, create_account=False, **kw):
         self.create_account = create_account
         super().__init__(*a, columns=[
-            Column(name='name', title='Bankkonto'),
-            Column(name='imported_at', title='Importiert am'),
-            Column(name='fix', title='Importieren', formatter='table.btnFormatter'),
+            Column(title='Bankkonto', name='name'),
+            Column(title='Importiert am', name='imported_at'),
+            Column(title='Importieren', name='fix',
+                   formatter='table.btnFormatter'),
         ], **kw)

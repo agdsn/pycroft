@@ -9,17 +9,23 @@ class ColumnTestCase(TestCase):
             Column()  # pylint: disable=no-value-for-parameter
 
     def test_instatiation_with_name_and_title_works(self):
-        c = Column(name="test_col", title="Test Column")
+        c = Column(title="Test Column", name="test_col")
         self.assertEqual(c.name, "test_col")
         self.assertEqual(c.title, "Test Column")
         self.assertEqual(c.width, 0)
         self.assertEqual(c.cell_style, False)
         self.assertEqual(repr(c), "<Column 'test_col' title='Test Column'>")
 
+    def test_instantiation_without_name(self):
+        c = Column("Test Title")
+        self.assertIsNone(c.name)
+        self.assertEqual(c.title, "Test Title")
+
+
 class InstantiatedColumnTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.column = Column(name="test_col", title="Test Column")
+        self.column = Column(title="Test Column", name="test_col")
 
     def test_col_args(self):
         arg_string = self.column.build_col_args()
@@ -37,8 +43,8 @@ class InstantiatedColumnTestCase(TestCase):
 
 class CustomizedColumnTestCase(TestCase):
     def test_custom_arguments_set(self):
-        rendered = str(Column(name="test_col", title="Test Column",
-                              width=3, cell_style="customCellStyle"))
+        rendered = str(Column(title="Test Column", name="test_col", width=3,
+                              cell_style="customCellStyle"))
         self.assertIn('data-cell-style="customCellStyle"', rendered)
         self.assertIn('class="col-sm-3"', rendered)
 
@@ -60,8 +66,8 @@ class InstantiatedBootstrapTableTestCase(TestCase):
     def setUp(self):
         super().setUp()
         self.table = BootstrapTable(
-            columns=[Column(name="col1", title="Column 1"),
-                     Column(name="col2", title="Column 2")],
+            columns=[Column(title="Column 1", name="col1"),
+                     Column(title="Column 2", name="col2")],
             data_url="http://dummy",
             table_args={'foo': "bar", 'data-cache': "true"}
         )
@@ -97,8 +103,8 @@ class InstantiatedBootstrapTableTestCase(TestCase):
 
 class DeclarativeTableTestCase(TestCase):
     class Table(BootstrapTable):
-        a = Column(name=None, title="Column 1")
-        b = Column(name='bar', title="Column 2")
+        a = Column(title="Column 1", name=None)
+        b = Column(title="Column 2", name='bar')
 
         def toolbar(self):
             yield "<span>"
@@ -121,7 +127,7 @@ class SplittedTableTestCase(TestCase):
         super().setUp()
         self.table = SplittedTable(
             splits=(('split1', "Split 1"), ('split2', "Split 2")),
-            columns=[Column('foo', "Foo"), Column('bar', "Bar")],
+            columns=[Column("Foo", 'foo'), Column("Bar", 'bar')],
             data_url="#"
         )
 

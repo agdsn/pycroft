@@ -7,6 +7,7 @@ from wtforms.widgets.core import html_params
 from pycroft.helpers import utc
 from web.template_filters import date_filter, datetime_filter
 
+
 class Column:
     """A class representing a bootstrap-table column
 
@@ -35,8 +36,8 @@ class Column:
         ``data-cell-style``.
     """
 
-    def __init__(self, name, title, formatter=None, width=0, cell_style=None,
-                 col_args=None):
+    def __init__(self, title, name=None, formatter=None, width=0,
+                 cell_style=None, col_args=None):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False

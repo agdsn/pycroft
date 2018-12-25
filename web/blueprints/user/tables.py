@@ -22,10 +22,11 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('created_at', 'Erstellt um', width=2, formatter='table.dateFormatter'),
-            Column('type', 'Logtyp'),
-            Column('user', 'Nutzer', formatter='table.userFormatter'),
-            Column('message', 'Nachricht'),
+            Column('Erstellt um', 'created_at', formatter='table.dateFormatter',
+                   width=2),
+            Column('Logtyp', 'type'),
+            Column('Nutzer', 'user', formatter='table.userFormatter'),
+            Column('Nachricht', 'message'),
         ], **kw)
 
 
@@ -34,9 +35,10 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
             # specific tables don't need the `type`
-            Column('created_at', 'Erstellt um', width=2, formatter='table.dateFormatter'),
-            Column('user', 'Nutzer', formatter='table.userFormatter'),
-            Column('message', 'Nachricht'),
+            Column('Erstellt um', 'created_at', formatter='table.dateFormatter',
+                   width=2),
+            Column('Nutzer', 'user', formatter='table.userFormatter'),
+            Column('Nachricht', 'message'),
         ], **kw)
 
 
@@ -48,10 +50,10 @@ class MembershipTable(BootstrapTable):
     """
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
-            Column('group_name', 'Gruppe'),
-            Column('begins_at', 'Beginn', formatter='table.dateFormatter'),
-            Column('ends_at', 'Ende', formatter='table.dateFormatter'),
-            Column('actions', 'Aktionen', formatter='table.multiBtnFormatter')
+            Column('Gruppe', 'group_name'),
+            Column('Beginn', 'begins_at', formatter='table.dateFormatter'),
+            Column('Ende', 'ends_at', formatter='table.dateFormatter'),
+            Column('Aktionen', 'actions', formatter='table.multiBtnFormatter')
         ], **kw)
         self.user_id = user_id
 
@@ -75,11 +77,11 @@ class HostTable(BootstrapTable):
     """
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
-            Column('name', 'Name'),
-            Column('switch', 'Switch'),
-            Column('port', 'Switchport'),
-            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
-            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
+            Column('Name', 'name'),
+            Column('Switch', 'switch'),
+            Column('Switchport', 'port'),
+            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
+            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
         ], **kw)
 
         self.user_id = user_id
@@ -104,11 +106,11 @@ class InterfaceTable(BootstrapTable):
     """
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, columns=[
-            Column('host', 'Host'),
-            Column('mac', 'MAC'),
-            Column('ips', 'IPs'),
-            Column('edit_link', 'Editieren', formatter='table.btnFormatter'),
-            Column('delete_link', 'Löschen', formatter='table.btnFormatter')
+            Column('Host', 'host'),
+            Column('MAC', 'mac'),
+            Column('IPs', 'ips'),
+            Column('Editieren', 'edit_link', formatter='table.btnFormatter'),
+            Column('Löschen', 'delete_link', formatter='table.btnFormatter')
         ], **kw)
         self.user_id = user_id
 
@@ -131,7 +133,7 @@ class SearchTable(BootstrapTable):
     """A table for displaying search results"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column('id', 'ID'),
-            Column('url', 'Name', formatter='table.linkFormatter'),
-            Column('login', 'Login'),
+            Column('ID', 'id'),
+            Column('Name', 'url', formatter='table.linkFormatter'),
+            Column('Login', 'login'),
         ], **kw)

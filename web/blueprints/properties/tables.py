@@ -10,12 +10,13 @@ class TrafficGroupTable(BootstrapTable):
     """A table for displaying traffic groups"""
     def __init__(self, *a, **kw):
         super().__init__(*a, columns=[
-            Column(name='name', title='Bezeichnung'),
-            Column(name='credit_amount', title='Gutschrift'),
-            Column(name='credit_interval', title='Intervall'),
-            Column(name='credit_limit', title='Anspargrenze'),
-            Column(name='initial_credit', title='Initialer Credit'),
-            Column(name='delete', title='Löschen', formatter='table.btnFormatter'),
+            Column(title='Bezeichnung', name='name'),
+            Column(title='Gutschrift', name='credit_amount'),
+            Column(title='Intervall', name='credit_interval'),
+            Column(title='Anspargrenze', name='credit_limit'),
+            Column(title='Initialer Credit', name='initial_credit'),
+            Column(title='Löschen', name='delete',
+                   formatter='table.btnFormatter'),
         ], **kw)
 
     def generate_toolbar(self):
