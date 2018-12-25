@@ -95,6 +95,27 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         self.assertEqual(len(re.findall(HEADER_RE, markup)), 1)
 
 
+class DeclarativeTableTestCase(TestCase):
+    class Table(BootstrapTable):
+        a = Column(name=None, title="Column 1")
+        b = Column(name='bar', title="Column 2")
+
+        def toolbar(self):
+            yield "<span>"
+            yield "Hasta la vista, baby!"
+            yield "</span>"
+
+    def test_columns_are_collected(self):
+        Table = type(self).Table
+        t = Table(data_url="", columns=[])
+        self.assertEqual(t.columns, [Table.a, Table.b])
+
+    def test_column_names_are_undeferred(self):
+        Table = type(self).Table
+        self.assertEqual(Table.a.name, "a")
+        self.assertEqual(Table.b.name, "bar")
+
+
 class SplittedTableTestCase(TestCase):
     def setUp(self):
         super().setUp()

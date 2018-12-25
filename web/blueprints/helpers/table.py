@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import List
 
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
@@ -83,7 +84,21 @@ class Column:
     __html__ = render
 
 
-class BootstrapTable:
+# TODO what about column inheritance? → add an acceptance test!
+class BootstrapTableMeta(type):
+    """Provides a list of all attribute names bound to columns"""
+    def __new__(mcls, name, bases, dct):
+        columns_by_attrname: List[str] = []
+        for attrname, col in dct.items():
+            if isinstance(col, Column):
+                if not hasattr(col, 'name') or not col.name:
+                    col.name = attrname
+                columns_by_attrname.append(attrname)
+        dct['columns_by_attrname'] = columns_by_attrname
+        return super().__new__(mcls, name, bases, dct)
+
+
+class BootstrapTable(metaclass=BootstrapTableMeta):
     """An extendable, HTML-renderable bootstrap-table
 
     The table's HTML can be rendered using :meth:`render`.  NB:
@@ -101,11 +116,17 @@ class BootstrapTable:
         search, sort, order to make server-side pagination work.
     :param table_args: Additional things to be passed to table_args.
     """
+    columns_by_attrname: List[str]  # provided by BootstrapTableMeta
+
     def __init__(self, columns, data_url, table_args=None):
-        self.columns = columns
+        # self.columns = columns
         self.data_url = data_url
         self.table_args = table_args if table_args is not None else {}
         self._init_table_args()
+
+    @property
+    def columns(self) -> List[Column]:
+        return [getattr(self, a) for a in self.columns_by_attrname]
 
     def __repr__(self):
         return "<{cls} cols={numcols} data_url={data_url!r}>".format(
