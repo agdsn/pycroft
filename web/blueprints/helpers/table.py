@@ -1,5 +1,7 @@
+from collections import OrderedDict
+from copy import copy
 from datetime import date, datetime
-from typing import List
+from typing import List, Dict
 
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
@@ -85,18 +87,22 @@ class Column:
     __html__ = render
 
 
-# TODO what about column inheritance? → add an acceptance test!
 class BootstrapTableMeta(type):
     """Provides a list of all attribute names bound to columns"""
     def __new__(mcls, name, bases, dct):
-        columns_by_attrname: List[str] = []
-        for attrname, col in dct.items():
-            if isinstance(col, Column):
-                if not hasattr(col, 'name') or not col.name:
-                    col.name = attrname
-                columns_by_attrname.append(attrname)
-        dct['columns_by_attrname'] = columns_by_attrname
-        return super().__new__(mcls, name, bases, dct)
+        cls = super().__new__(mcls, name, bases, dct)
+        # we need to copy: else we would reference the superclass's
+        # column_attrname_map and update it as well
+        new_col_attr_map = copy(getattr(cls, 'column_attrname_map', OrderedDict()))
+
+        for attrname, new_col in dct.items():
+            if isinstance(new_col, Column):
+                if not hasattr(new_col, 'name') or not new_col.name:
+                    new_col.name = attrname
+                new_col_attr_map[new_col.name] = attrname
+
+        cls.column_attrname_map = new_col_attr_map
+        return cls
 
 
 class BootstrapTable(metaclass=BootstrapTableMeta):
@@ -115,7 +121,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         search, sort, order to make server-side pagination work.
     :param table_args: Additional things to be passed to table_args.
     """
-    columns_by_attrname: List[str]  # provided by BootstrapTableMeta
+    column_attrname_map: Dict[str, str]  # provided by BootstrapTableMeta
 
     def __init__(self, data_url, table_args=None):
         self.data_url = data_url
@@ -124,7 +130,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @property
     def columns(self) -> List[Column]:
-        return [getattr(self, a) for a in self.columns_by_attrname]
+        return [getattr(self, a) for a in self.column_attrname_map.values()]
 
     def __repr__(self):
         return "<{cls} cols={numcols} data_url={data_url!r}>".format(
