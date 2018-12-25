@@ -323,7 +323,9 @@ Importing the production database into Pycroft is a three-step process:
    `docker-compose exec --user postgres dev-db psql -d pycroft -f /pycroft.sql`
 
 After all that, you should be able to log in into your pycroft
-instance at `0.0.0.0:5000`!  **Congratulations!**
+instance with the username `agdsn` at `localhost:5000`. All users have the password `password`.
+  
+ **Congratulations!**
 
 ## Running the test suite
 
