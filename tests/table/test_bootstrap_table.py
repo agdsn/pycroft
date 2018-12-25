@@ -129,6 +129,28 @@ class DeclarativeTableTestCase(TestCase):
         self.assertEqual(Table.b.name, "bar")
 
 
+class InheritanceTestCase(TestCase):
+    def setUp(self):
+        class A(BootstrapTable):
+            a = Column("Foo")
+            b = Column("Bar")
+
+        class B(A):
+            a = Column("Shizzle")
+            c = Column("Baz")
+
+        self.A = A
+        self.B = B
+
+    def test_inheritance_adds_columns_correctly(self):
+        cols = self.B(data_url="#").columns
+        self.assertEqual([(c.name, c.title) for c in cols],
+                         [('a', "Shizzle"), ('b', "Bar"), ('c', "Baz")])
+
+    def test_superclasses_columns_not_altered(self):
+        self.assertEqual(self.A.column_attrname_map, {'a': 'a', 'b': 'b'})
+
+
 class SplittedTableTestCase(TestCase):
     def setUp(self):
         super().setUp()
