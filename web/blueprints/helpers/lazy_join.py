@@ -14,7 +14,7 @@ def filled_iter(iter, filler):
         yield elem
 
 
-class LazyJoined:
+class LazilyJoined:
     """A string that consists of multiple components
 
     NOTE: Just like a generator, it will be exhausted after the first call!
@@ -49,7 +49,7 @@ class LazyJoined:
 
 
 DecoratedInType = Callable[..., (Generator[str, None, None])]
-DecoratedOutType = Callable[..., LazyJoined]
+DecoratedOutType = Callable[..., LazilyJoined]
 
 @overload
 def lazy_join(func_or_glue: DecoratedInType) -> DecoratedOutType:
@@ -72,6 +72,6 @@ class LazyJoinDecorator:
     def __call__(self, func: DecoratedInType) -> DecoratedOutType:
         @wraps(func)
         def wrapped(*a, **kw):
-            return LazyJoined(func(*a, **kw), glue=self.glue)
+            return LazilyJoined(func(*a, **kw), glue=self.glue)
 
         return wrapped
