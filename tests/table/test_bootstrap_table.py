@@ -1,7 +1,9 @@
 import re
 from unittest import TestCase
 
-from web.blueprints.helpers.table import Column, BootstrapTable, SplittedTable
+from web.blueprints.helpers.table import Column, BootstrapTable, SplittedTable, \
+    BootstrapTableMeta
+
 
 class ColumnTestCase(TestCase):
     def test_init_requires_args(self):
@@ -66,13 +68,13 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         super().setUp()
 
         class Table(BootstrapTable):
+            class Meta:
+                table_args = {'foo': "bar", 'data-cache': "true"}
             col1 = Column("Column 1")
             col2 = Column("Column 2")
 
-        self.table = Table(
-            data_url="http://dummy",
-            table_args={'foo': "bar", 'data-cache': "true"}
-        )
+        self.Table = Table
+        self.table = Table(data_url="http://dummy")
 
     def test_table_header_generation(self):
         elements = list(self.table.generate_table_header())
@@ -86,6 +88,14 @@ class InstantiatedBootstrapTableTestCase(TestCase):
     def test_table_args_passed(self):
         self.assertEqual(self.table.table_args.get('data-cache'), "true")
         self.assertEqual(self.table.table_args.get('foo'), "bar")
+
+    def test_table_args_parameter_take_precedence(self):
+        table = self.Table(data_url="#", table_args={'foo': "new"})
+        self.assertEqual(table.table_args['foo'], "new")
+
+    def test_custom_table_args_will_be_used(self):
+        self.table.table_args['special_arg'] = "someveryspecialargument"
+        self.assertIn("someveryspecialargument", self.table.render("some-id"))
 
     def test_render_uses_the_generators_correctly(self):
         class MockedTable(BootstrapTable):
@@ -149,6 +159,46 @@ class InheritanceTestCase(TestCase):
 
     def test_superclasses_columns_not_altered(self):
         self.assertEqual(self.A.column_attrname_map, {'a': 'a', 'b': 'b'})
+
+    def test_table_args_defaults_set(self):
+        class A(BootstrapTable):
+            pass
+        self.assertTrue(hasattr(A, '_table_args'),
+                        "Attribute _table_args not set after class creation")
+
+        self.assertEqual(dict(A._table_args), {'data-toggle': "table"})
+        self.assertEqual(A("#").table_args,
+                         {'data-toggle': "table", 'data-url': "#"})
+
+
+class TableArgsTestCase(TestCase):
+    def setUp(self):
+        # we only use the metaclass so we don't have to test the defaults again
+        class A(metaclass=BootstrapTableMeta):
+            class Meta:
+                table_args = {'arg1': "Bar", 'arg2': "Value"}
+
+        class B(A):
+            class Meta:
+                table_args = {'arg2': "Antoher value", 'arg3': "x"}
+
+        self.A = A
+        self.B = B
+
+    def test_table_args_inherited(self):
+        self.assertTrue(hasattr(self.B, '_table_args'),
+                        "Attribute _table_args not set after class creation")
+
+        self.assertEqual(dict(self.B._table_args),
+                         {'arg1': "Bar", 'arg2': "Antoher value", 'arg3': "x"})
+
+    def test_table_args_of_superclass_untouched(self):
+        self.assertEqual(dict(self.A._table_args), {'arg1': "Bar", 'arg2': "Value"})
+
+    def test_meta_not_left_in_class(self):
+        self.assertFalse(hasattr(self.A, 'Meta'))
+        self.assertFalse(hasattr(self.B, 'Meta'))
+
 
 
 class SplittedTableTestCase(TestCase):
