@@ -2,11 +2,11 @@ from flask import url_for
 from flask_login import current_user
 from wtforms.widgets import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column
+from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn
 
 
 class SiteTable(BootstrapTable):
-    site = Column("Site", formatter='table.linkFormatter')
+    site = LinkColumn("Site")
     buildings = Column("Buildings", formatter='table.multiBtnFormatter')
 
 
@@ -17,7 +17,7 @@ class BuildingLevelRoomTable(BootstrapTable):
             'data-query-params': 'perhaps_all_users_query_params',
         }
 
-    room = Column("Raum", formatter='table.linkFormatter')
+    room = LinkColumn("Raum")
     inhabitants = Column('Bewohner', formatter='table.multiBtnFormatter')
 
     def generate_toolbar(self):
@@ -31,12 +31,12 @@ class BuildingLevelRoomTable(BootstrapTable):
 
 class RoomLogTable(BootstrapTable):
     created_at = Column("Erstellt um", formatter='table.dateFormatter')
-    user = Column("Nutzer", formatter='table.linkFormatter')
+    user = LinkColumn("Nutzer")
     message = Column("Nachricht")
 
 
 class RoomOvercrowdedTable(BootstrapTable):
-    room = Column("Raum", formatter='table.linkFormatter')
+    room = LinkColumn("Raum")
     inhabitants = Column("Bewohner", formatter='table.multiBtnFormatter')
 
     class Meta:

@@ -89,6 +89,16 @@ class Column:
     __html__ = render
 
 
+class BtnColumn(Column):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, formatter='table.btnFormatter', **kw)
+
+
+class LinkColumn(Column):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, formatter='table.linkFormatter', **kw)
+
+
 UnboundTableArgs = FrozenSet[Tuple[str, Any]]
 TableArgs = Dict[str, str]
 

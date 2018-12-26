@@ -2,7 +2,8 @@ from flask import url_for
 from flask_login import current_user
 from wtforms.widgets.core import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column
+from web.blueprints.helpers.table import BootstrapTable, Column, BtnColumn, \
+    LinkColumn
 
 
 class RefreshableTableMixin:
@@ -69,8 +70,8 @@ class HostTable(BootstrapTable):
     name = Column("Name")
     switch = Column("Switch")
     port = Column("SwitchPort")
-    edit_link = Column("Editieren", formatter='table.btnFormatter')
-    delete_link = Column("Löschen", formatter='table.btnFormatter')
+    edit_link = BtnColumn("Editieren")
+    delete_link = BtnColumn("Löschen")
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
@@ -97,8 +98,8 @@ class InterfaceTable(BootstrapTable):
     host = Column("Host")
     mac = Column("MAC")
     ips = Column("IPs")
-    edit_link = Column("Editieren", formatter='table.btnFormatter')
-    delete_link = Column("Löschen", formatter='table.btnFormatter')
+    edit_link = BtnColumn("Editieren")
+    delete_link = BtnColumn("Löschen")
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
@@ -122,5 +123,5 @@ class InterfaceTable(BootstrapTable):
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""
     id = Column("ID")
-    url = Column("Name", formatter='table.linkFormatter')
+    url = LinkColumn("Name")
     login = Column("Login")

@@ -4,7 +4,7 @@ from flask import url_for
 from flask_babel import gettext
 from wtforms.widgets.core import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column
+from web.blueprints.helpers.table import BootstrapTable, Column, BtnColumn
 
 
 class TrafficGroupTable(BootstrapTable):
@@ -14,7 +14,7 @@ class TrafficGroupTable(BootstrapTable):
     credit_interval = Column("Intervall")
     credit_limit = Column("Anspargrenze")
     initial_credit = Column("Initialer Credit")
-    delete = Column("Löschen", formatter='table.btnFormatter')
+    delete = BtnColumn("Löschen")
 
     def generate_toolbar(self):
         """A “create traffic group” button"""

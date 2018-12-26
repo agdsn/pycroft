@@ -2,7 +2,8 @@ from flask import url_for
 from flask_babel import gettext
 from wtforms.widgets.core import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
+from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable, \
+    BtnColumn, LinkColumn
 from web.template_filters import money_filter
 
 
@@ -38,7 +39,7 @@ class FinanceTable(BootstrapTable):
 
     posted_at = Column("Erstellt um")
     valid_on = Column("Gültig am")
-    description = Column("Beschreibung", formatter='table.linkFormatter')
+    description = LinkColumn("Beschreibung")
     amount = Column("Wert",
                     formatter='table.coloredFormatter',
                     cell_style='table.tdRelativeCellStyle')
@@ -99,9 +100,9 @@ class MembershipFeeTable(BootstrapTable):
     payment_deadline_final = Column("Endgültige Frist")
     begins_on = Column("Beginn", formatter='table.dateFormatter')
     ends_on = Column("Ende", formatter='table.dateFormatter')
-    finance_link = Column("Finanzen", formatter='table.btnFormatter')
-    book_link = Column("Buchen", formatter='table.btnFormatter')
-    edit_link = Column("Bearbeiten", formatter='table.btnFormatter')
+    finance_link = BtnColumn("Finanzen")
+    book_link = BtnColumn("Buchen")
+    edit_link = BtnColumn("Bearbeiten")
 
     def generate_toolbar(self):
         """An “add fee” button"""
@@ -136,7 +137,7 @@ class BankAccountTable(BootstrapTable):
     blz = Column("Bankleitzahl")
     iban = Column("IBAN")
     bic = Column("SWIFT-BIC")
-    kto = Column("Konto", formatter='table.btnFormatter')
+    kto = BtnColumn("Konto")
     last_imported_at = Column("Zuletzt importiert")
 
     def __init__(self, *a, create_account=False, **kw):
@@ -176,7 +177,7 @@ class BankAccountActivityTable(BootstrapTable):
 
 class TransactionTable(BootstrapTable):
     """A table for displaying bank account activities """
-    account = Column("Konto", formatter='table.linkFormatter')
+    account = LinkColumn("Konto")
     amount = Column("Wert")
 
     class Meta:
@@ -189,4 +190,4 @@ class ImportErrorTable(BootstrapTable):
     """A table for displaying buggy mt940 imports"""
     name = Column("Bankkonto")
     imported_at = Column("Importiert am")
-    fix = Column("Importieren", formatter='table.btnFormatter')
+    fix = BtnColumn("Importieren")

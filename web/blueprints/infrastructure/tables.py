@@ -2,7 +2,8 @@ from flask import url_for
 from flask_login import current_user
 from wtforms.widgets import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column
+from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
+    BtnColumn
 
 
 class SubnetTable(BootstrapTable):
@@ -18,7 +19,7 @@ class SubnetTable(BootstrapTable):
 
 class SwitchTable(BootstrapTable):
     id = Column("#")
-    name = Column("Name", formatter='table.linkFormatter')
+    name = LinkColumn("Name")
     ip = Column("Management IP")
     edit_link = Column('Editieren', formatter='table.btnFormatter', width=1)
     delete_link = Column('Löschen', formatter='table.btnFormatter', width=1)
@@ -49,9 +50,9 @@ class PortTable(BootstrapTable):
 
     switchport_name = Column("Name", width=2)
     patchport_name = Column("→ Patchport", width=2)
-    room = Column("→ Raum", formatter='table.linkFormatter', width=10)
-    edit_link = Column('Editieren', formatter='table.btnFormatter')
-    delete_link = Column('Löschen', formatter='table.btnFormatter')
+    room = LinkColumn("→ Raum", width=10)
+    edit_link = BtnColumn('Editieren')
+    delete_link = BtnColumn('Löschen')
 
     def generate_toolbar(self):
         if not current_user.has_property('infrastructure_change'):
