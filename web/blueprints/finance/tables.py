@@ -1,26 +1,9 @@
-from urllib.parse import urlparse, urlunparse, urlencode, parse_qsl
-
 from flask import url_for
 from flask_babel import gettext
 from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable
 from web.template_filters import money_filter
-
-
-def enforce_url_params(url, params):
-    """Safely enforce query values in an url
-
-    :param str url: The url to patch
-    :param dict params: The parameters to enforce in the URL query
-        part
-    """
-    # we need to use a list because of mutability
-    url_parts = list(urlparse(url))
-    query_parts = dict(parse_qsl(url_parts[4]))
-    query_parts.update(params)
-    url_parts[4] = urlencode(query_parts)
-    return urlunparse(url_parts)
 
 
 class FinanceTable(BootstrapTable):
@@ -30,6 +13,9 @@ class FinanceTable(BootstrapTable):
             # 'data-search': 'true',
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
+        }
+        enforced_url_params = {
+            'style': 'inverted',
         }
 
     def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
@@ -41,12 +27,6 @@ class FinanceTable(BootstrapTable):
         :param bool inverted: An optional switch adding
             `style=inverted` to the given `data_url`
         """
-
-        # patch the url to enforce `?style=inverted`
-        if 'data_url' in kw and inverted:
-            kw['data_url'] = enforce_url_params(kw['data_url'],
-                                                params={'style': 'inverted'})
-
         super().__init__(*a, **kw)
 
         if inverted:
@@ -103,13 +83,7 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
             'data-row-style': False,
             'data-sort-name': False,  # the "valid_on" col doesn't exist here
         }
-
-    def __init__(self, *a, **kw):
-        # patch url to enforce `?splitted=yes` at the end
-        if 'data_url' in kw:
-            kw['data_url'] = enforce_url_params(kw['data_url'],
-                                                params={'splitted': True})
-        super().__init__(*a, **kw)
+        enforced_url_params = {'splitted': True}
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 

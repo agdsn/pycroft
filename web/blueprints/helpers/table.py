@@ -3,6 +3,7 @@ from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import List, Dict, Iterable, Tuple, Any, FrozenSet
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
@@ -101,6 +102,15 @@ def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTabl
     return frozenset(args.items())
 
 
+def _infer_enforced_url_params(meta_obj, superclass_params):
+    params = {}
+    params.update(**superclass_params)
+    if meta_obj:
+        params.update(**getattr(meta_obj, 'enforced_url_params', {}))
+
+    return frozenset(params.items())
+
+
 class BootstrapTableMeta(type):
     """Provides a list of all attribute names bound to columns.
 
@@ -115,6 +125,10 @@ class BootstrapTableMeta(type):
         old_table_args = dict(getattr(cls, '_table_args', {}))
         # the type is frozenset for immutability
         cls._table_args = _infer_table_args(meta, old_table_args)
+
+        old_params = dict(getattr(cls, '_enforced_url_params', {}))
+        # frozenset here as well
+        cls._enforced_url_params = _infer_enforced_url_params(meta, old_params)
 
         # we need to copy: else we would reference the superclass's
         # column_attrname_map and update it as well
@@ -148,13 +162,14 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     """
     column_attrname_map: Dict[str, str]  # provided by BootstrapTableMeta
     _table_args: UnboundTableArgs  # provided by BootstrapTableMeta
+    _enforced_url_params: Iterable[Tuple[str, Any]]  # provided by BootstrapTableMeta
     table_args: TableArgs
 
     class Meta:
         table_args = {'data-toggle': "table"}
 
     def __init__(self, data_url, table_args=None):
-        self.data_url = data_url
+        self.data_url = enforce_url_params(data_url, dict(self._enforced_url_params))
         # un-freeze the classes table args so it can be modified on the instance
         self.table_args = dict(self._table_args)
         self.table_args.setdefault('data-url', self.data_url)
@@ -337,3 +352,20 @@ def datetime_format(dt, default=None):
             'formatted': default if default is not None else datetime_filter(None),
             'timestamp': None,
         }
+
+
+def enforce_url_params(url, params):
+    """Safely enforce query values in an url
+
+    :param str url: The url to patch
+    :param dict params: The parameters to enforce in the URL query
+        part
+    """
+    if not params:
+        return url
+    # we need to use a list because of mutability
+    url_parts = list(urlparse(url))
+    query_parts = dict(parse_qsl(url_parts[4]))
+    query_parts.update(params)
+    url_parts[4] = urlencode(query_parts)
+    return urlunparse(url_parts)
