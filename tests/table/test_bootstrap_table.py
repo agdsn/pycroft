@@ -200,6 +200,21 @@ class TableArgsTestCase(TestCase):
         self.assertFalse(hasattr(self.B, 'Meta'))
 
 
+class EnforcedUrlParamsTestCase(TestCase):
+    def setUp(self):
+        class A(BootstrapTable):
+            class Meta:
+                enforced_url_params = {'inverted': 'yes'}
+        self.A = A
+
+    def test_url_param_is_added(self):
+        self.assertEqual(self.A("http://localhost/table").data_url,
+                         "http://localhost/table?inverted=yes")
+
+    def test_url_param_is_overridden(self):
+        self.assertEqual(self.A("http://localhost/table?inverted=no").data_url,
+                         "http://localhost/table?inverted=yes")
+
 
 class SplittedTableTestCase(TestCase):
     def setUp(self):
