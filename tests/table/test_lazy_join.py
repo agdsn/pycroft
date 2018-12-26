@@ -26,9 +26,10 @@ class LazyJoinTest(TestCase):
             yield "a"
             yield 3
             yield False
+            yield None
 
         self.assertEqual(str(foo()), "a3False")
-        self.assertEqual(list(foo()), ["a", "3", "False"])
+        self.assertEqual(list(foo()), ["a", "3", "False", ""])
 
     def test_glue_is_added_in_iterator(self):
         @lazy_join("\n")

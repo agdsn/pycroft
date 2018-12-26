@@ -28,7 +28,7 @@ class LazilyJoined:
 
     @property
     def _stringified_components(self):
-        return (str(c) for c in self._components)
+        return ((str(c) if c is not None else "") for c in self._components)
 
     def __str__(self):
         self._mark_exhausted()
