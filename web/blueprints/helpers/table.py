@@ -2,7 +2,7 @@ from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import List, Dict, Iterable, Tuple
+from typing import List, Dict, Iterable, Tuple, Any, FrozenSet
 
 from jinja2 import Markup
 from wtforms.widgets.core import html_params
@@ -88,10 +88,34 @@ class Column:
     __html__ = render
 
 
+UnboundTableArgs = FrozenSet[Tuple[str, Any]]
+TableArgs = Dict[str, str]
+
+
+def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTableArgs:
+    args = {}
+    args.update(**superclass_table_args)
+    if meta_obj:
+        args.update(**getattr(meta_obj, 'table_args', {}))
+
+    return frozenset(args.items())
+
+
 class BootstrapTableMeta(type):
-    """Provides a list of all attribute names bound to columns"""
-    def __new__(mcls, name, bases, dct):
+    """Provides a list of all attribute names bound to columns.
+
+    In particular, this metaclass provides the following properties:
+    - :py:attr:`column_attrname_map`
+    - :py:attr:`_table_args`
+    """
+    def __new__(mcls, name, bases, dct: Dict[str, Any]):
+        meta = dct.pop('Meta', None)
         cls = super().__new__(mcls, name, bases, dct)
+
+        old_table_args = dict(getattr(cls, '_table_args', {}))
+        # the type is frozenset for immutability
+        cls._table_args = _infer_table_args(meta, old_table_args)
+
         # we need to copy: else we would reference the superclass's
         # column_attrname_map and update it as well
         new_col_attr_map = copy(getattr(cls, 'column_attrname_map', OrderedDict()))
@@ -101,8 +125,8 @@ class BootstrapTableMeta(type):
                 if not hasattr(new_col, 'name') or not new_col.name:
                     new_col.name = attrname
                 new_col_attr_map[new_col.name] = attrname
-
         cls.column_attrname_map = new_col_attr_map
+
         return cls
 
 
@@ -123,11 +147,19 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     :param table_args: Additional things to be passed to table_args.
     """
     column_attrname_map: Dict[str, str]  # provided by BootstrapTableMeta
+    _table_args: UnboundTableArgs  # provided by BootstrapTableMeta
+    table_args: TableArgs
+
+    class Meta:
+        table_args = {'data-toggle': "table"}
 
     def __init__(self, data_url, table_args=None):
         self.data_url = data_url
-        self.table_args = table_args if table_args is not None else {}
-        self._init_table_args()
+        # un-freeze the classes table args so it can be modified on the instance
+        self.table_args = dict(self._table_args)
+        self.table_args.setdefault('data-url', self.data_url)
+        if table_args:
+            self.table_args.update(table_args)
 
     @property
     def _columns(self) -> List[Column]:

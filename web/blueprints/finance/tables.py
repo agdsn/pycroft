@@ -24,6 +24,14 @@ def enforce_url_params(url, params):
 
 
 class FinanceTable(BootstrapTable):
+    class Meta:
+        table_args = {
+            'data-side-pagination': 'server',
+            # 'data-search': 'true',
+            'data-sort-order': 'desc',
+            'data-sort-name': 'valid_on',
+        }
+
     def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
         """Init
 
@@ -33,20 +41,13 @@ class FinanceTable(BootstrapTable):
         :param bool inverted: An optional switch adding
             `style=inverted` to the given `data_url`
         """
-        table_args = {
-            'data-side-pagination': 'server',
-            # 'data-search': 'true',
-            'data-sort-order': 'desc',
-            'data-sort-name': 'valid_on',
-        }
-        original_table_args = kw.pop('table_args', {})
-        table_args.update(original_table_args)
 
+        # patch the url to enforce `?style=inverted`
         if 'data_url' in kw and inverted:
             kw['data_url'] = enforce_url_params(kw['data_url'],
                                                 params={'style': 'inverted'})
 
-        super().__init__(*a, table_args=table_args, **kw)
+        super().__init__(*a, **kw)
 
         if inverted:
             self.saldo = -saldo
@@ -97,16 +98,18 @@ class FinanceTable(BootstrapTable):
 
 
 class FinanceTableSplitted(FinanceTable, SplittedTable):
-    def __init__(self, *a, **kw):
+    class Meta:
         table_args = {
             'data-row-style': False,
             'data-sort-name': False,  # the "valid_on" col doesn't exist here
         }
-        table_args.update(kw.pop('table_args', {}))
+
+    def __init__(self, *a, **kw):
+        # patch url to enforce `?splitted=yes` at the end
         if 'data_url' in kw:
             kw['data_url'] = enforce_url_params(kw['data_url'],
                                                 params={'splitted': True})
-        super().__init__(*a, table_args=table_args, **kw)
+        super().__init__(*a, **kw)
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
@@ -190,11 +193,11 @@ class BankAccountActivityTable(BootstrapTable):
     amount = Column("Betrag")
     actions = Column("Aktionen", formatter='table.multiBtnFormatter')
 
-    def __init__(self, *a, **kw):
-        super().__init__(*a, table_args={
+    class Meta:
+        table_args = {
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
-        }, **kw)
+        }
 
 
 class TransactionTable(BootstrapTable):
@@ -202,10 +205,10 @@ class TransactionTable(BootstrapTable):
     account = Column("Konto", formatter='table.linkFormatter')
     amount = Column("Wert")
 
-    def __init__(self, *a, **kw):
-        super().__init__(*a, table_args={
+    class Meta:
+        table_args = {
             'data-row-style': 'table.financeRowFormatter',
-        }, **kw)
+        }
 
 
 class ImportErrorTable(BootstrapTable):

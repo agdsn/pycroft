@@ -11,11 +11,11 @@ class SiteTable(BootstrapTable):
 
 
 class BuildingLevelRoomTable(BootstrapTable):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, table_args={
+    class Meta:
+        table_args = {
             'data-sort-name': 'room',
             'data-query-params': 'perhaps_all_users_query_params',
-        }, **kw)
+        }
 
     room = Column("Raum", formatter='table.linkFormatter')
     inhabitants = Column('Bewohner', formatter='table.multiBtnFormatter')
@@ -39,8 +39,8 @@ class RoomOvercrowdedTable(BootstrapTable):
     room = Column("Raum", formatter='table.linkFormatter')
     inhabitants = Column("Bewohner", formatter='table.multiBtnFormatter')
 
-    def __init__(self, *a, **kw):
-        super().__init__(*a, table_args={'data-sort-name': 'room'}, **kw)
+    class Meta:
+        table_args = {'data-sort-name': 'room'}
 
 
 class PatchPortTable(BootstrapTable):
