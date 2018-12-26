@@ -77,13 +77,12 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         self.table = Table(data_url="http://dummy")
 
     def test_table_header_generation(self):
-        elements = list(self.table.generate_table_header())
-        header = ''.join(elements)
+        header = self.table.table_header
         self.assertTrue(header.startswith("<thead><tr>"))
         self.assertTrue(header.endswith("</tr></thead>"))
         for col in self.table.columns:
             self.assertTrue(str(col))
-            self.assertIn(str(col), elements)
+            self.assertIn(str(col), header)
 
     def test_table_args_passed(self):
         self.assertEqual(self.table.table_args.get('data-cache'), "true")
@@ -101,9 +100,9 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         class MockedTable(BootstrapTable):
             def __init__(self):
                 super().__init__(data_url="http://dummy")
-            generate_table_header = lambda self: ["HEADER"]
-            generate_table_footer = lambda self: ["FOOTER"]
-            generate_toolbar = lambda self: ["TOOLBAR"]
+            table_header = "HEADER"
+            table_footer = "FOOTER"
+            toolbar = "TOOLBAR"
 
         markup = MockedTable().render(table_id="TABLE_ID")
         TOOLBAR_RE = r'<div .*role="toolbar".*>\s*TOOLBAR\s*</div>'

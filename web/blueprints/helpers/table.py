@@ -6,6 +6,8 @@ from typing import List, Dict, Iterable, Tuple, Any, FrozenSet
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from jinja2 import Markup
+
+from web.blueprints.helpers.lazy_join import lazy_join
 from wtforms.widgets.core import html_params
 
 from pycroft.helpers import utc
@@ -223,6 +225,10 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         yield "</tr>"
         yield "</thead>"
 
+    @property
+    def table_header(self):
+        return "".join(self.generate_table_header())
+
     @staticmethod
     def generate_toolbar():
         """Return an empty iterator.
@@ -232,6 +238,10 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         :rtype: iterator
         """
         return iter(())
+
+    @property
+    def toolbar(self):
+        return "".join(self.generate_toolbar())
 
     @staticmethod
     def generate_table_footer():
@@ -244,19 +254,20 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         """
         return iter(())
 
-    def render(self, table_id):
-        """Render the table
-        """
+    @property
+    def table_footer(self):
+        return "".join(self.generate_table_footer())
+
+    @lazy_join("\n")
+    def _render(self, table_id):
         # NB: in html_args, setting an argument to `False` makes it
         # disappear.
-        html = []
-
         toolbar_args = html_params(id="{}-toolbar".format(table_id),
                                    class_="btn-toolbar",
                                    role="toolbar")
-        html.append("<div {}>".format(toolbar_args))
-        html += list(self.generate_toolbar())
-        html.append("</div>")
+        yield "<div {}>".format(toolbar_args)
+        yield self.toolbar
+        yield "</div>"
 
         table_args = self.table_args
         table_args.update({
@@ -264,12 +275,15 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
             'data-toolbar': "#{}-toolbar".format(table_id),
         })
 
-        html.append("<table {}>".format(html_params(**table_args)))
-        html += list(self.generate_table_header())
-        html += list(self.generate_table_footer())
-        html.append("</table>")
+        yield "<table {}>".format(html_params(**table_args))
+        yield self.table_header
+        yield self.table_footer
+        yield "</table>"
 
-        return Markup("\n".join(html))
+    def render(self, table_id):
+        """Render the table
+        """
+        return Markup(self._render(table_id))
 
 
 @dataclass
