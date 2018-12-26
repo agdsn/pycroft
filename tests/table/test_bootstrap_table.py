@@ -77,7 +77,7 @@ class InstantiatedBootstrapTableTestCase(TestCase):
         self.table = Table(data_url="http://dummy")
 
     def test_table_header_generation(self):
-        header = self.table.table_header
+        header = str(self.table.table_header)
         self.assertTrue(header.startswith("<thead><tr>"))
         self.assertTrue(header.endswith("</tr></thead>"))
         for col in self.table.columns:
@@ -231,8 +231,7 @@ class SplittedTableTestCase(TestCase):
                          ['split1_foo', 'split1_bar', 'split2_foo', 'split2_bar'])
 
     def test_table_header_generation(self):
-        items = list(self.table.generate_table_header())
-        header = ''.join(items)
+        header = str(self.table.table_header)
 
         GLOBAL_RE = r'<thead><tr>(.*)</tr><tr>(.*)</tr></thead>'
         match = re.fullmatch(GLOBAL_RE, header)

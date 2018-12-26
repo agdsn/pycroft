@@ -1,9 +1,9 @@
 from flask import url_for
 from flask_babel import gettext
-from wtforms.widgets.core import html_params
+from web.blueprints.helpers.lazy_join import lazy_join
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable, \
-    BtnColumn, LinkColumn
+    BtnColumn, LinkColumn, button_toolbar
 from web.template_filters import money_filter
 
 
@@ -36,6 +36,7 @@ class FinanceTable(BootstrapTable):
             self.saldo = saldo
 
         self.user_id = user_id
+        self.table_footer_offset = 3
 
     posted_at = Column("Erstellt um")
     valid_on = Column("Gültig am")
@@ -44,7 +45,8 @@ class FinanceTable(BootstrapTable):
                     formatter='table.coloredFormatter',
                     cell_style='table.tdRelativeCellStyle')
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         """Generate a toolbar with a details button
 
         If a user_id was passed in the constructor, this renders a
@@ -52,20 +54,16 @@ class FinanceTable(BootstrapTable):
         """
         if self.user_id is None:
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for("user.user_account", user_id=self.user_id)
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-stats\"></span>"
-        yield "Details"
-        yield "</a>"
+        href = url_for("user.user_account", user_id=self.user_id)
+        return button_toolbar("Details", href, icon="glyphicon-stats")
 
-    def generate_table_footer(self, offset=3):
+    @property
+    @lazy_join
+    def table_footer(self):
         yield "<tfoot>"
         yield "<tr>"
 
-        yield "<td colspan=\"{}\" class=\"text-right\">".format(offset)
+        yield f"<td colspan=\"{self.table_footer_offset}\" class=\"text-right\">"
         yield "<strong>Saldo:</strong>"
         yield "</td>"
 
@@ -88,8 +86,9 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
 
     splits = (('soll', "Soll"), ('haben', "Haben"))
 
-    def generate_table_footer(self, offset=7):
-        return super().generate_table_footer(offset=offset)
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self.table_footer_offset = 7
 
 
 class MembershipFeeTable(BootstrapTable):
@@ -104,16 +103,11 @@ class MembershipFeeTable(BootstrapTable):
     book_link = BtnColumn("Buchen")
     edit_link = BtnColumn("Bearbeiten")
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         """An “add fee” button"""
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".membership_fee_create")
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield gettext("Beitrag erstellen")
-        yield "</a>"
+        href = url_for(".membership_fee_create")
+        return button_toolbar(gettext("Beitrag erstellen"), href)
 
 
 class UsersDueTable(BootstrapTable):
@@ -144,17 +138,13 @@ class BankAccountTable(BootstrapTable):
         self.create_account = create_account
         super().__init__(*a, **kw)
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         """A “create bank account” button"""
-        if self.create_account:
-            args = {
-                'class': "btn btn-primary",
-                'href': url_for(".bank_accounts_create")
-            }
-            yield "<a {}>".format(html_params(**args))
-            yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-            yield gettext("Neues Bankkonto anlegen")
-            yield "</a>"
+        if not self.create_account:
+            return
+        href = url_for(".bank_accounts_create")
+        return button_toolbar(gettext("Neues Bankkonto anlegen"), href)
 
 
 class BankAccountActivityTable(BootstrapTable):

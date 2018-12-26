@@ -1,8 +1,8 @@
 from flask import url_for
 from flask_login import current_user
-from wtforms.widgets import html_params
 
-from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn
+from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
+    button_toolbar
 
 
 class SiteTable(BootstrapTable):
@@ -20,13 +20,8 @@ class BuildingLevelRoomTable(BootstrapTable):
     room = LinkColumn("Raum")
     inhabitants = Column('Bewohner', formatter='table.multiBtnFormatter')
 
-    def generate_toolbar(self):
-        """Generate a toolbar with a "Display all users" button
-        """
-        yield '<a href="#" id="rooms-toggle-all-users" class="btn btn-default" role="button">'
-        yield '<span class="glyphicon glyphicon-user"></span>'
-        yield 'Display all users'
-        yield '</a>'
+    toolbar = button_toolbar("Display all users", href="#",
+                             icon="glyphicon-user")
 
 
 class RoomLogTable(BootstrapTable):
@@ -55,14 +50,9 @@ class PatchPortTable(BootstrapTable):
 
         self.room_id = room_id
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if not current_user.has_property('infrastructure_change'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".patch_port_create", switch_room_id=self.room_id),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Patch-Port"
-        yield "</a>"
+        href = url_for(".patch_port_create", switch_room_id=self.room_id)
+        return button_toolbar("Patch-Port", href)

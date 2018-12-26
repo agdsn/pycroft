@@ -1,9 +1,8 @@
 from flask import url_for
 from flask_login import current_user
-from wtforms.widgets.core import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, BtnColumn, \
-    LinkColumn
+    LinkColumn, button_toolbar
 
 
 class RefreshableTableMixin:
@@ -49,19 +48,15 @@ class MembershipTable(BootstrapTable):
         super().__init__(*a, **kw)
         self.user_id = user_id
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if self.user_id is None:
             return
         if not current_user.has_property('groups_change_membership'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".add_membership", user_id=self.user_id),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Mitgliedschaft"
-        yield "</a>"
+
+        href = url_for(".add_membership", user_id=self.user_id)
+        return button_toolbar("Mitgliedschaft", href)
 
 
 class HostTable(BootstrapTable):
@@ -77,19 +72,15 @@ class HostTable(BootstrapTable):
         super().__init__(*a, **kw)
         self.user_id = user_id
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if self.user_id is None:
             return
         if not current_user.has_property('user_hosts_change'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".host_create", user_id=self.user_id),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Host"
-        yield "</a>"
+
+        href = url_for(".host_create", user_id=self.user_id)
+        return button_toolbar("Host", href)
 
 
 class InterfaceTable(BootstrapTable):
@@ -105,19 +96,15 @@ class InterfaceTable(BootstrapTable):
         super().__init__(*a, **kw)
         self.user_id = user_id
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if self.user_id is None:
             return
         if not current_user.has_property('user_hosts_change'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".interface_create", user_id=self.user_id),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Interface"
-        yield "</a>"
+
+        href = url_for(".interface_create", user_id=self.user_id)
+        return button_toolbar("Interface", href)
 
 
 class SearchTable(BootstrapTable):

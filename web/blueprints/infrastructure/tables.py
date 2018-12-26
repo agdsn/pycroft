@@ -1,9 +1,8 @@
 from flask import url_for
 from flask_login import current_user
-from wtforms.widgets import html_params
 
 from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
-    BtnColumn
+    BtnColumn, button_toolbar
 
 
 class SubnetTable(BootstrapTable):
@@ -24,18 +23,12 @@ class SwitchTable(BootstrapTable):
     edit_link = Column('Editieren', formatter='table.btnFormatter', width=1)
     delete_link = Column('Löschen', formatter='table.btnFormatter', width=1)
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if not current_user.has_property('infrastructure_change'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".switch_create"),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Switch"
-        yield "</a>"
 
+        return button_toolbar("Switch", url_for(".switch_create"))
 
 class VlanTable(BootstrapTable):
     id = Column("#")
@@ -54,14 +47,9 @@ class PortTable(BootstrapTable):
     edit_link = BtnColumn('Editieren')
     delete_link = BtnColumn('Löschen')
 
-    def generate_toolbar(self):
+    @property
+    def toolbar(self):
         if not current_user.has_property('infrastructure_change'):
             return
-        args = {
-            'class': "btn btn-primary",
-            'href': url_for(".switch_port_create", switch_id=self.switch_id),
-        }
-        yield "<a {}>".format(html_params(**args))
-        yield "<span class=\"glyphicon glyphicon-plus\"></span>"
-        yield "Switch-Port"
-        yield "</a>"
+        href = url_for(".switch_port_create", switch_id=self.switch_id)
+        return button_toolbar("Switch-Port", href)

@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from jinja2 import Markup
 
-from web.blueprints.helpers.lazy_join import lazy_join
+from web.blueprints.helpers.lazy_join import lazy_join, LazilyJoined
 from wtforms.widgets.core import html_params
 
 from pycroft.helpers import utc
@@ -213,50 +213,18 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         for key, val in default_args.items():
             self.table_args.setdefault(key, val)
 
-    def generate_table_header(self):
-        """Generate the table header from :py:attr:`columns`.
-
-        :rtype: generator
-        """
+    @property
+    @lazy_join
+    def table_header(self):
         yield "<thead>"
         yield "<tr>"
-        for col in self.columns:
-            yield str(col)
+        yield from self.columns
         yield "</tr>"
         yield "</thead>"
 
-    @property
-    def table_header(self):
-        return "".join(self.generate_table_header())
+    toolbar = ""
 
-    @staticmethod
-    def generate_toolbar():
-        """Return an empty iterator.
-
-        Used to generate the inner HTML contents of the toolbar.
-
-        :rtype: iterator
-        """
-        return iter(())
-
-    @property
-    def toolbar(self):
-        return "".join(self.generate_toolbar())
-
-    @staticmethod
-    def generate_table_footer():
-        """Return an empty iterator.
-
-        Used to generate the outer HTML contents of the footer.  Must
-        yield the ``<tfoot>`` tag as well.
-
-        :rtype: iterator
-        """
-        return iter(())
-
-    @property
-    def table_footer(self):
-        return "".join(self.generate_table_footer())
+    table_footer = ""
 
     @lazy_join("\n")
     def _render(self, table_id):
@@ -322,7 +290,9 @@ class SplittedTable(BootstrapTable):
                 cols.append(prefixed_col)
         return cols
 
-    def generate_table_header(self):
+    @property
+    @lazy_join
+    def table_header(self):
         yield "<thead>"
         yield "<tr>"
         for split in self._iter_typed_splits():
@@ -330,12 +300,8 @@ class SplittedTable(BootstrapTable):
                    .format(len(super().columns), split.title))
         yield "</tr>"
 
-        yield "<tr>"  # that's the same as in BootstrapTable.
-        for col in self.columns:
-            yield "<th {}>{}</th>".format(
-                col.build_col_args(**{'data-field': col.name}),
-                col.title
-            )
+        yield "<tr>"
+        yield from self.columns
         yield "</tr>"
         yield "</thead>"
 
@@ -393,3 +359,13 @@ def enforce_url_params(url, params):
     query_parts.update(params)
     url_parts[4] = urlencode(query_parts)
     return urlunparse(url_parts)
+
+
+@lazy_join
+def button_toolbar(title: str, href: str, icon: str = "glyphicon-plus")\
+        -> LazilyJoined:
+    params = html_params(class_="btn btn-primary", href=href)
+    yield f"<a {params}>"
+    yield f"<span class=\"glyphicon {icon}\"></span>"
+    yield title
+    yield "</a>"
