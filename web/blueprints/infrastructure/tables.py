@@ -53,7 +53,7 @@ class PortTable(BootstrapTable):
 
     @property
     def toolbar(self):
-        if not current_user.has_property('infrastructure_change'):
+        if no_inf_change():
             return
         href = url_for(".switch_port_create", switch_id=self.switch_id)
         return button_toolbar("Switch-Port", href)

@@ -33,6 +33,10 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     message = Column("Nachricht")
 
 
+def no_membership_change():
+    return not current_user.has_property('groups_change_membership')
+
+
 class MembershipTable(BootstrapTable):
     """A table for displaying memberships
 
@@ -42,7 +46,7 @@ class MembershipTable(BootstrapTable):
     group_name = Column("Gruppe")
     begins_at = DateColumn("Beginn")
     ends_at = DateColumn("Ende")
-    actions = MultiBtnColumn("Aktionen")
+    actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
@@ -52,11 +56,15 @@ class MembershipTable(BootstrapTable):
     def toolbar(self):
         if self.user_id is None:
             return
-        if not current_user.has_property('groups_change_membership'):
+        if no_membership_change():
             return
 
         href = url_for(".add_membership", user_id=self.user_id)
         return button_toolbar("Mitgliedschaft", href)
+
+
+def no_userhost_change():
+    return not current_user.has_property('user_hosts_change')
 
 
 class HostTable(BootstrapTable):
@@ -65,8 +73,8 @@ class HostTable(BootstrapTable):
     name = Column("Name")
     switch = Column("Switch")
     port = Column("SwitchPort")
-    edit_link = BtnColumn("Editieren")
-    delete_link = BtnColumn("Löschen")
+    edit_link = BtnColumn("Editieren", hide_if=no_userhost_change)
+    delete_link = BtnColumn("Löschen", hide_if=no_userhost_change)
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
@@ -76,7 +84,7 @@ class HostTable(BootstrapTable):
     def toolbar(self):
         if self.user_id is None:
             return
-        if not current_user.has_property('user_hosts_change'):
+        if no_userhost_change():
             return
 
         href = url_for(".host_create", user_id=self.user_id)
@@ -89,8 +97,8 @@ class InterfaceTable(BootstrapTable):
     host = Column("Host")
     mac = Column("MAC")
     ips = Column("IPs")
-    edit_link = BtnColumn("Editieren")
-    delete_link = BtnColumn("Löschen")
+    edit_link = BtnColumn("Editieren", hide_if=no_userhost_change)
+    delete_link = BtnColumn("Löschen", hide_if=no_userhost_change)
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
@@ -100,7 +108,7 @@ class InterfaceTable(BootstrapTable):
     def toolbar(self):
         if self.user_id is None:
             return
-        if not current_user.has_property('user_hosts_change'):
+        if no_userhost_change():
             return
 
         href = url_for(".interface_create", user_id=self.user_id)

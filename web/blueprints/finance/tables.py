@@ -1,5 +1,7 @@
 from flask import url_for
 from flask_babel import gettext
+from flask_login import current_user
+
 from web.blueprints.helpers.lazy_join import lazy_join
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable, \
@@ -91,6 +93,10 @@ class FinanceTableSplitted(FinanceTable, SplittedTable):
         self.table_footer_offset = 7
 
 
+def no_finance_change():
+    return not current_user.has_property('finance_change')
+
+
 class MembershipFeeTable(BootstrapTable):
     """A table for displaying the current membership fees"""
     name = Column("Name")
@@ -100,8 +106,8 @@ class MembershipFeeTable(BootstrapTable):
     begins_on = DateColumn("Beginn")
     ends_on = DateColumn("Ende")
     finance_link = BtnColumn("Finanzen")
-    book_link = BtnColumn("Buchen")
-    edit_link = BtnColumn("Bearbeiten")
+    book_link = BtnColumn("Buchen", hide_if=no_finance_change)
+    edit_link = BtnColumn("Bearbeiten", hide_if=no_finance_change)
 
     @property
     def toolbar(self):

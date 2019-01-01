@@ -1,5 +1,4 @@
 from flask import url_for
-from flask_login import current_user
 
 from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
     button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
@@ -53,7 +52,7 @@ class PatchPortTable(BootstrapTable):
 
     @property
     def toolbar(self):
-        if not current_user.has_property('infrastructure_change'):
+        if no_inf_change():
             return
         href = url_for(".patch_port_create", switch_room_id=self.room_id)
         return button_toolbar("Patch-Port", href)
