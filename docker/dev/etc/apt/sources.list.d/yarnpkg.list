@@ -1,1 +1,1 @@
-deb http://dl.yarnpkg.com/debian/ stable main
+deb [trusted=yes] http://dl.yarnpkg.com/debian/ stable main
