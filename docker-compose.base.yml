@@ -54,3 +54,11 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=celery
       - RABBITMQ_DEFAULT_PASS=celery
+  dummy-worker:
+    extends:
+      service: dev
+    command: ["python", "helpers/dummy_celery_worker.py", "worker"]
+    environment:
+      - TEST_HADES_BROKER_URI=amqp://celery:celery@mq:5672/
+      - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+

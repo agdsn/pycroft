@@ -15,6 +15,7 @@ services:
       - test-db
       - test-ldap
       - test-mq
+      - test-dummy-worker
     networks:
       - test
   test-db:
@@ -57,6 +58,10 @@ services:
           - mq
     tmpfs:
       - /var/lib/rabbitmq
+  test-dummy-worker:
+    extends:
+      file: docker-compose.base.yml
+      service: dummy-worker
 
 networks:
   test:
