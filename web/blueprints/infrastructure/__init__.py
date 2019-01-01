@@ -109,11 +109,11 @@ def switches_json():
             "edit_link": {"href": url_for(".switch_edit", switch_id=switch.host_id),
                           'title': "Bearbeiten",
                           'icon': 'glyphicon-pencil',
-                          'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
+                          'btn-class': 'btn-link'},
             "delete_link": {"href": url_for(".switch_delete", switch_id=switch.host_id),
                             'title': "Löschen",
                             'icon': 'glyphicon-trash',
-                            'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
+                            'btn-class': 'btn-link'},
         } for switch in Switch.q.all()])
 
 
@@ -154,11 +154,11 @@ def switch_show_json(switch_id):
             "edit_link": {"href": url_for(".switch_port_edit", switch_id=switch.host.id, switch_port_id=port.id),
                           'title': "Bearbeiten",
                           'icon': 'glyphicon-pencil',
-                          'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
+                          'btn-class': 'btn-link'},
             "delete_link": {"href": url_for(".switch_port_delete", switch_id=switch.host.id, switch_port_id=port.id),
                             'title': "Löschen",
                             'icon': 'glyphicon-trash',
-                            'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
+                            'btn-class': 'btn-link'},
         } for port in switch_port_list])
 
 

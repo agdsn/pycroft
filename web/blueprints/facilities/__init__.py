@@ -474,11 +474,11 @@ def room_patchpanel_json(room_id):
         "edit_link": {"href": url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
                       'title': "Bearbeiten",
                       'icon': 'glyphicon-pencil',
-                      'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None,
+                      'btn-class': 'btn-link'},
         "delete_link": {"href": url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
                         'title': "Löschen",
                         'icon': 'glyphicon-trash',
-                        'btn-class': 'btn-link'} if current_user.has_property('infrastructure_change') else None
+                        'btn-class': 'btn-link'},
     } for port in patch_ports])
 
 

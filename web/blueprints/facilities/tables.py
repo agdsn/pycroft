@@ -3,6 +3,7 @@ from flask_login import current_user
 
 from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
     button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
+from web.blueprints.infrastructure.tables import no_inf_change
 
 
 class SiteTable(BootstrapTable):
@@ -42,8 +43,8 @@ class PatchPortTable(BootstrapTable):
     name = Column('Name', width=2)
     room = LinkColumn('→ Raum', width=5)
     switch_port = LinkColumn('→ Switch-Port', width=3)
-    edit_link = BtnColumn('Editieren')
-    delete_link = BtnColumn('Löschen')
+    edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
+    delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
     def __init__(self, *a, room_id=None, **kw):
         super().__init__(*a, **kw)

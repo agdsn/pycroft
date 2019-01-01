@@ -5,6 +5,10 @@ from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
     BtnColumn, button_toolbar
 
 
+def no_inf_change():
+    return not current_user.has_property('infrastructure_change')
+
+
 class SubnetTable(BootstrapTable):
     id = Column("#")
     description = Column("Beschreibung")
@@ -20,8 +24,8 @@ class SwitchTable(BootstrapTable):
     id = Column("#")
     name = LinkColumn("Name")
     ip = Column("Management IP")
-    edit_link = BtnColumn('Editieren', width=1)
-    delete_link = BtnColumn('Löschen', width=1)
+    edit_link = BtnColumn('Editieren', width=1, hide_if=no_inf_change)
+    delete_link = BtnColumn('Löschen', width=1, hide_if=no_inf_change)
 
     @property
     def toolbar(self):
@@ -44,8 +48,8 @@ class PortTable(BootstrapTable):
     switchport_name = Column("Name", width=2)
     patchport_name = Column("→ Patchport", width=2)
     room = LinkColumn("→ Raum", width=10)
-    edit_link = BtnColumn('Editieren')
-    delete_link = BtnColumn('Löschen')
+    edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
+    delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 
     @property
     def toolbar(self):
