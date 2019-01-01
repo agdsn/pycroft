@@ -37,7 +37,7 @@ before_script:
 
 script:
   - $DOCKER_COMPOSE run --rm test-app webpack --mode production
-  - $DOCKER_COMPOSE run --rm test-app test -vv --with-xunit --with-coverage --cover-erase --cover-branches --cover-package=web,pycroft,legacy
+  - $DOCKER_COMPOSE run --rm test-app test
 
 after_success:
   - sudo ./helpers/registry.sh all
