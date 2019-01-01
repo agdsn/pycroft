@@ -3,7 +3,7 @@ from flask_babel import gettext
 from web.blueprints.helpers.lazy_join import lazy_join
 
 from web.blueprints.helpers.table import BootstrapTable, Column, SplittedTable, \
-    BtnColumn, LinkColumn, button_toolbar
+    BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
 from web.template_filters import money_filter
 
 
@@ -97,8 +97,8 @@ class MembershipFeeTable(BootstrapTable):
     regular_fee = Column("Regulär")
     payment_deadline = Column("Frist")
     payment_deadline_final = Column("Endgültige Frist")
-    begins_on = Column("Beginn", formatter='table.dateFormatter')
-    ends_on = Column("Ende", formatter='table.dateFormatter')
+    begins_on = DateColumn("Beginn")
+    ends_on = DateColumn("Ende")
     finance_link = BtnColumn("Finanzen")
     book_link = BtnColumn("Buchen")
     edit_link = BtnColumn("Bearbeiten")
@@ -151,12 +151,12 @@ class BankAccountActivityTable(BootstrapTable):
     """A table for displaying bank account activities """
     bank_account = Column("Bankkonto")
     name = Column("Name")
-    valid_on = Column("Gültig am", formatter='table.dateFormatter')
-    imported_at = Column("Importiert am", formatter='table.dateFormatter')
+    valid_on = DateColumn("Gültig am")
+    imported_at = DateColumn("Importiert am")
     reference = Column("Verwendungszweck")
     iban = Column("IBAN")
     amount = Column("Betrag")
-    actions = Column("Aktionen", formatter='table.multiBtnFormatter')
+    actions = MultiBtnColumn("Aktionen")
 
     class Meta:
         table_args = {

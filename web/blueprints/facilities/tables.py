@@ -2,12 +2,12 @@ from flask import url_for
 from flask_login import current_user
 
 from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
-    button_toolbar, BtnColumn
+    button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
 
 
 class SiteTable(BootstrapTable):
     site = LinkColumn("Site")
-    buildings = Column("Buildings", formatter='table.multiBtnFormatter')
+    buildings = MultiBtnColumn("Buildings")
 
 
 class BuildingLevelRoomTable(BootstrapTable):
@@ -18,21 +18,21 @@ class BuildingLevelRoomTable(BootstrapTable):
         }
 
     room = LinkColumn("Raum")
-    inhabitants = Column('Bewohner', formatter='table.multiBtnFormatter')
+    inhabitants = MultiBtnColumn('Bewohner')
 
     toolbar = button_toolbar("Display all users", href="#",
                              icon="glyphicon-user")
 
 
 class RoomLogTable(BootstrapTable):
-    created_at = Column("Erstellt um", formatter='table.dateFormatter')
+    created_at = DateColumn("Erstellt um")
     user = LinkColumn("Nutzer")
     message = Column("Nachricht")
 
 
 class RoomOvercrowdedTable(BootstrapTable):
     room = LinkColumn("Raum")
-    inhabitants = Column("Bewohner", formatter='table.multiBtnFormatter')
+    inhabitants = MultiBtnColumn("Bewohner")
 
     class Meta:
         table_args = {'data-sort-name': 'room'}

@@ -2,7 +2,7 @@ from flask import url_for
 from flask_login import current_user
 
 from web.blueprints.helpers.table import BootstrapTable, Column, BtnColumn, \
-    LinkColumn, button_toolbar
+    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn
 
 
 class RefreshableTableMixin:
@@ -20,7 +20,7 @@ class RefreshableTableMixin:
 
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
-    created_at = Column("Erstellt um", formatter='table.dateFormatter', width=2)
+    created_at = DateColumn("Erstellt um", width=2)
     type_ = Column("Logtyp", name='type')
     user = Column("Nutzer", formatter='table.userFormatter')
     message = Column("Nachricht")
@@ -28,7 +28,7 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
 
 class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs"""
-    created_at = Column("Erstellt um", formatter='table.dateFormatter', width=2)
+    created_at = DateColumn("Erstellt um", width=2)
     user = Column("Nutzer", formatter='table.userFormatter')
     message = Column("Nachricht")
 
@@ -40,9 +40,9 @@ class MembershipTable(BootstrapTable):
     :py:obj:`current_user` has the ``add_membership`` property.
     """
     group_name = Column("Gruppe")
-    begins_at = Column("Beginn", formatter='table.dateFormatter')
-    ends_at = Column("Ende", formatter='table.dateFormatter')
-    actions = Column("Aktionen", formatter='table.multiBtnFormatter')
+    begins_at = DateColumn("Beginn")
+    ends_at = DateColumn("Ende")
+    actions = MultiBtnColumn("Aktionen")
 
     def __init__(self, *a, user_id=None, **kw):
         super().__init__(*a, **kw)
