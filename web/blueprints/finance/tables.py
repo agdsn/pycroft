@@ -113,7 +113,7 @@ class MembershipFeeTable(BootstrapTable):
 class UsersDueTable(BootstrapTable):
     """A table for displaying the users that """
     user_id = Column("Nutzer-ID")
-    user = Column("Name', formatter='table.linkFormatter")
+    user = LinkColumn("Name")
     valid_on = Column("Gültig am")
     description = Column("Beschreibung")
     amount = Column("Betrag', formatter='table.coloredFormatter")

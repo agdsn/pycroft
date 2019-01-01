@@ -2,7 +2,7 @@ from flask import url_for
 from flask_login import current_user
 
 from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
-    button_toolbar
+    button_toolbar, BtnColumn
 
 
 class SiteTable(BootstrapTable):
@@ -40,10 +40,10 @@ class RoomOvercrowdedTable(BootstrapTable):
 
 class PatchPortTable(BootstrapTable):
     name = Column('Name', width=2)
-    room = Column('→ Raum', formatter='table.linkFormatter', width=5)
-    switch_port = Column('→ Switch-Port', formatter='table.linkFormatter', width=3)
-    edit_link = Column('Editieren', formatter='table.btnFormatter')
-    delete_link = Column('Löschen', formatter='table.btnFormatter')
+    room = LinkColumn('→ Raum', width=5)
+    switch_port = LinkColumn('→ Switch-Port', width=3)
+    edit_link = BtnColumn('Editieren')
+    delete_link = BtnColumn('Löschen')
 
     def __init__(self, *a, room_id=None, **kw):
         super().__init__(*a, **kw)

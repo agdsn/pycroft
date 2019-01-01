@@ -20,8 +20,8 @@ class SwitchTable(BootstrapTable):
     id = Column("#")
     name = LinkColumn("Name")
     ip = Column("Management IP")
-    edit_link = Column('Editieren', formatter='table.btnFormatter', width=1)
-    delete_link = Column('Löschen', formatter='table.btnFormatter', width=1)
+    edit_link = BtnColumn('Editieren', width=1)
+    delete_link = BtnColumn('Löschen', width=1)
 
     @property
     def toolbar(self):
