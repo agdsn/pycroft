@@ -2,7 +2,7 @@ import re
 from unittest import TestCase
 
 from web.blueprints.helpers.table import Column, BootstrapTable, SplittedTable, \
-    BootstrapTableMeta
+    BootstrapTableMeta, custom_formatter_column
 
 
 class ColumnTestCase(TestCase):
@@ -260,3 +260,12 @@ class SplittedTableTestCase(TestCase):
             DATA_FIELD_RE = r'data-field="(\w+)"'
             observed_field_name = re.search(DATA_FIELD_RE, attr_string).group(1)
             self.assertEqual(observed_field_name, expected_field_name)
+
+
+class FormattedColumnTestCase(TestCase):
+    def test_column_formatter_passed(self):
+        @custom_formatter_column('table.myFormatter')
+        class MyCol(Column):
+            pass
+        self.assertEqual(MyCol("Title!").formatter, 'table.myFormatter',
+                         "Formatter not passed by decorator")

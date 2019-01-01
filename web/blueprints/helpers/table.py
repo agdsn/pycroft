@@ -91,14 +91,37 @@ class Column:
     __html__ = render
 
 
+# noinspection PyPep8Naming
+class custom_formatter_column:
+    def __init__(self, formatter_name: str):
+        self.formatter_name = formatter_name
+
+    def __call__(self, cls):
+        """Decorate the classes `__init__` function to inject the formatter"""
+        def __init__(obj, *a, **kw):
+            super(type(obj), obj).__init__(*a, formatter=self.formatter_name, **kw)
+        cls.__init__ = __init__
+        return cls
+
+
+@custom_formatter_column('table.btnFormatter')
 class BtnColumn(Column):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, formatter='table.btnFormatter', **kw)
+    pass
 
 
+@custom_formatter_column('table.multiBtnFormatter')
+class MultiBtnColumn(Column):
+    pass
+
+
+@custom_formatter_column('table.linkFormatter')
 class LinkColumn(Column):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, formatter='table.linkFormatter', **kw)
+    pass
+
+
+@custom_formatter_column('table.dateFormatter')
+class DateColumn(Column):
+    pass
 
 
 UnboundTableArgs = FrozenSet[Tuple[str, Any]]
