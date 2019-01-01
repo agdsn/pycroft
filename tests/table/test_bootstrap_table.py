@@ -23,6 +23,17 @@ class ColumnTestCase(TestCase):
         self.assertIsNone(c.name)
         self.assertEqual(c.title, "Test Title")
 
+    def test_column_is_hidden(self):
+        hide = False
+
+        def hide_if():
+            return hide
+
+        c = Column("Test", name='test_col', hide_if=hide_if)
+        self.assertNotEqual(str(c), "")
+        hide = True
+        self.assertEqual(str(c), "", "Column rendered in spite of hide_if")
+
 
 class InstantiatedColumnTestCase(TestCase):
     def setUp(self):

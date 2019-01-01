@@ -2,7 +2,8 @@ from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import List, Dict, Iterable, Tuple, Any, FrozenSet
+from typing import List, Dict, Iterable, Tuple, Any, FrozenSet, Optional, \
+    Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from jinja2 import Markup
@@ -40,16 +41,20 @@ class Column:
     :param cell_style: Similar to :param:`formatter`, an optional
         javascript function's name to be passed to
         ``data-cell-style``.
+    :param hide_if: When this callable returns true, the column returns
+        an empty string when rendered.
     """
 
     def __init__(self, title, name=None, formatter=None, width=0,
-                 cell_style=None, col_args=None):
+                 cell_style=None, col_args=None,
+                 hide_if: Optional[Callable] = lambda: False):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
         self.cell_style = cell_style if cell_style is not None else False
         self.width = width
         self.col_args = col_args if col_args is not None else {}
+        self.hide_if = hide_if
 
     def __repr__(self):
         return "<{cls} {name!r} title={title!r}>".format(
@@ -85,6 +90,8 @@ class Column:
         This uses the arguments provided by :meth:`build_col_args` and
         the :attr:`title` for the inner HTML.
         """
+        if self.hide_if():
+            return ""
         return "<th {}>{}</th>".format(self.build_col_args(), self.title)
 
     __str__ = render
