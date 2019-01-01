@@ -367,5 +367,6 @@ def button_toolbar(title: str, href: str, icon: str = "glyphicon-plus")\
     params = html_params(class_="btn btn-primary", href=href)
     yield f"<a {params}>"
     yield f"<span class=\"glyphicon {icon}\"></span>"
+    yield " "
     yield title
     yield "</a>"
