@@ -21,7 +21,7 @@ class RefreshableTableMixin:
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
     created_at = DateColumn("Erstellt um", width=2)
-    type_ = Column("Logtyp", name='type')
+    type_ = Column("Logtyp", name='type', sortable=False)
     user = Column("Nutzer", formatter='table.userFormatter')
     message = Column("Nachricht")
 

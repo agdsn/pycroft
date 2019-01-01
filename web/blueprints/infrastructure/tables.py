@@ -14,7 +14,8 @@ class SubnetTable(BootstrapTable):
     description = Column("Beschreibung")
     address = Column("IP")
     gateway = Column("Gateway")
-    reserved = Column("Reservierte Adressen", formatter='table.listFormatter')
+    reserved = Column("Reservierte Adressen", formatter='table.listFormatter',
+                      sortable=False)
     free_ips_formatted = Column("Freie IPs", col_args={
         'data-sort-name': 'free_ips',
     })

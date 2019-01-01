@@ -46,7 +46,7 @@ class Column:
     """
 
     def __init__(self, title, name=None, formatter=None, width=0,
-                 cell_style=None, col_args=None,
+                 cell_style=None, col_args=None, sortable=True,
                  hide_if: Optional[Callable] = lambda: False):
         self.name = name
         self.title = title
@@ -54,6 +54,7 @@ class Column:
         self.cell_style = cell_style if cell_style is not None else False
         self.width = width
         self.col_args = col_args if col_args is not None else {}
+        self.sortable = sortable
         self.hide_if = hide_if
 
     def __repr__(self):
@@ -75,7 +76,7 @@ class Column:
         """
         html_args = {
             'class': "col-sm-{}".format(self.width) if self.width else False,
-            'data-sortable': "true",
+            'data-sortable': "true" if self.sortable else "false",
             'data-field': self.name,
             'data-formatter': self.formatter,
             'data-cell-style': self.cell_style,
@@ -105,20 +106,23 @@ class custom_formatter_column:
 
     def __call__(self, cls):
         """Decorate the classes `__init__` function to inject the formatter"""
+        old_init = cls.__init__
         def __init__(obj, *a, **kw):
-            super(type(obj), obj).__init__(*a, formatter=self.formatter_name, **kw)
+            old_init(obj, *a, formatter=self.formatter_name, **kw)
         cls.__init__ = __init__
         return cls
 
 
 @custom_formatter_column('table.btnFormatter')
 class BtnColumn(Column):
-    pass
+    def __init__(self, *a, **kw):
+        super().__init__(*a, sortable=False, **kw)
 
 
 @custom_formatter_column('table.multiBtnFormatter')
 class MultiBtnColumn(Column):
-    pass
+    def __init__(self, *a, **kw):
+        super().__init__(*a, sortable=False, **kw)
 
 
 @custom_formatter_column('table.linkFormatter')

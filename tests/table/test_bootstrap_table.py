@@ -280,3 +280,10 @@ class FormattedColumnTestCase(TestCase):
             pass
         self.assertEqual(MyCol("Title!").formatter, 'table.myFormatter',
                          "Formatter not passed by decorator")
+
+    def test_column_formatter_respects_init(self):
+        @custom_formatter_column('table.myFormatter')
+        class MyCol(Column):
+            def __init__(self, *a, **kw):
+                super().__init__(*a, sortable=False, **kw)
+        self.assertEqual(MyCol("Title!").sortable, False)
