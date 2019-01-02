@@ -10,7 +10,7 @@ from pycroft.model.session import session
 from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, fetch_groups_to_sync, \
     fetch_properties_to_sync, get_config, establish_and_return_ldap_connection, \
     fetch_current_ldap_users, fetch_current_ldap_groups, fetch_current_ldap_properties, sync_all
-from ldap_sync.record import UserRecord, GroupRecord, RecordState
+from ldap_sync.record import UserRecord, GroupRecord, RecordState, dn_from_username
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase
 from tests.fixtures.dummy.user import UserData
@@ -248,6 +248,9 @@ class LdapSyncerTestBase(LdapTestBase, FixtureDataTestBase):
                  db_properties=self.properties_to_sync,
                  property_base_dn=self.property_base_dn)
 
+    @classmethod
+    def get_by_dn(cls, ldap_entries, dn):
+        return next(u for u in ldap_entries if u['dn'] == dn)
 
 class LdapTestCase(LdapSyncerTestBase):
     def test_connection_works(self):
@@ -372,9 +375,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.sync_all()
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
-        newest_users_correct_dn = [u for u in newest_users if u['dn'] == mod_dn]
-        self.assertEqual(len(newest_users_correct_dn), 1)
-        modified_record = newest_users_correct_dn[0]
+        modified_record = self.get_by_dn(newest_users, mod_dn)
         self.assertNotIn('mail', modified_record)
 
     def test_mail_creation(self):
@@ -398,9 +399,37 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         exporter.execute_all(self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
-        modified_ldap_record = [u for u in newest_users if u['dn'] == mod_dn][0]
+        modified_ldap_record = self.get_by_dn(newest_users, mod_dn)
         self.assertIn('mail', modified_ldap_record['attributes'])
         self.assertEqual(modified_ldap_record['attributes']['mail'], [mod_user.email])
+
+    def test_change_property_membership(self):
+        mail_property =  next(p for p in  self.properties_to_sync if p.name == 'mail')
+        mail_property_dn = GroupRecord.from_db_group(mail_property.name, mail_property.members,
+                                                     self.property_base_dn, self.user_base_dn).dn
+
+        member = self.filter_members(mail_property.members)[0]
+        member_dn = dn_from_username(member, self.user_base_dn)
+
+        self.assertIn(
+            member_dn,
+            self.get_by_dn(self.new_ldap_properties, mail_property_dn)['attributes']['member'])
+
+        mail_property.members.remove(member)
+        self.initial_ldap_properties = self.new_ldap_properties
+        self.sync_all()
+        newest_ldap_properties = fetch_current_ldap_properties(self.conn, self.property_base_dn)
+        self.assertNotIn(
+            member_dn,
+            self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member'])
+
+        mail_property.members.append(member)
+        self.initial_ldap_properties = newest_ldap_properties
+        self.sync_all()
+        newest_ldap_properties = fetch_current_ldap_properties(self.conn, self.property_base_dn)
+        self.assertIn(
+            member_dn,
+            self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member'])
 
     def test_no_desired_records_removes_everything(self):
         exporter = self.build_user_exporter(current_users=self.new_ldap_users, desired_users=[])
