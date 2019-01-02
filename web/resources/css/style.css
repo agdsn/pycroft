@@ -3,6 +3,27 @@
  * This file is part of the Pycroft project and licensed under the terms of
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
+
+/* Colors */
+:root {
+    --green-dark-60: hsl(120, 82%, 17%);
+    --green-dark-40: hsl(120, 78%, 22%);
+    --green-dark-20: hsl(120, 49%, 34%);
+    --green: hsl(120, 39%, 54%);  /* bootstrap `success` */
+    --green-bright-20: hsl(120, 44%, 67%);
+    --green-bright-40: hsl(120, 65%, 85%);
+    --green-bright-60: hsl(120, 85%, 94%);
+
+    --red-dark-60: hsl(2, 94%, 22%);
+    --red-dark-40: hsl(2, 80%, 28%);
+    --red-dark-20: hsl(2, 72%, 42%);
+    --red: hsl(2, 64%, 58%);  /* bootstrap `danger` */
+    --red-bright-20: hsl(2, 76%, 69%);
+    --red-bright-40: hsl(2, 92%, 83%);
+    --red-bright-60: hsl(2, 100%, 92%);
+}
+
+
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;
     margin: 0;
