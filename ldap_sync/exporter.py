@@ -108,12 +108,14 @@ class LdapExporter(object):
             desired.append(
                 GroupRecord.from_db_group(x.Group.name,
                                           (m for m in x.members if m in exported_users),
-                                          group_base_dn, user_base_dn) for x in db_groups)
+                                          group_base_dn, user_base_dn)
+                for x in db_groups)
         if db_properties:
             desired.append(
                 GroupRecord.from_db_group(x.name,
                                           (m for m in x.members if m in exported_users),
-                                          property_base_dn, user_base_dn) for x in db_properties)
+                                          property_base_dn, user_base_dn)
+                for x in db_properties)
 
         return cls(chain.from_iterable(current), chain.from_iterable(desired))
 
