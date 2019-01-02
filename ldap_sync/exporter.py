@@ -23,16 +23,19 @@ logger = logging.getLogger('ldap_sync')
 
 
 class UserProxyType(NamedTuple):
+    """Representation of a user as returned by :func:`fetch_users_to_sync`."""
     User: User
     should_be_blocked: bool
 
 
 class GroupProxyType(NamedTuple):
+    """Representation of a group as returned by :func:`fetch_groups_to_sync`."""
     Group: Group
     members: List[str]
 
 
 class PropertyProxyType(NamedTuple):
+    """Representation of a property as returned by :func:`fetch_properties_to_sync`."""
     name: str
     members: List[str]
 
