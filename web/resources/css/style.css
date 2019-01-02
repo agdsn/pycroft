@@ -298,3 +298,35 @@ input.money-amount {
         vertical-align: middle;
     }
 }
+
+/* Property labels */
+/* `userprop` must be used with `label` from bootstrap */
+.userprop {
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    display: inline-block;  /* To prevent stuff like line breaking */
+}
+
+a.userprop:hover, a.userprop:link {
+    text-decoration: none;
+}
+
+.userprop.userprop-granted {
+    background-color: var(--green-bright-40);
+    color: var(--green-dark-60);
+}
+
+.userprop.userprop-granted:hover{
+    background-color: var(--green-bright-60);
+    color: var(--green-dark-40);
+}
+
+.userprop.userprop-denied {
+    background-color: var(--red-bright-40);
+    color: var(--red-dark-60);
+}
+
+.userprop.userprop-denied:hover {
+    background-color: var(--red-bright-60);
+    color: var(--red-dark-40);
+}
