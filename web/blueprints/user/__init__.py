@@ -263,11 +263,11 @@ def json_search():
 def infoflags(user):
     user_status = lib.user.status(user)
     return [
-        {'title': u"Mitglied", 'val': user_status.member},
-        {'title': u"Netzwerkzugang", 'val': user_status.network_access},
-        {'title': u"Bezahlt", 'val': user_status.account_balanced},
-        {'title': u"Verstoßfrei", 'val': not user_status.violation},
-        {'title': u"LDAP", 'val': user_status.ldap},
+        {'title': u"Mitglied", 'icon': "user", 'val': user_status.member},
+        {'title': u"Netzwerkzugang", 'icon': "globe", 'val': user_status.network_access},
+        {'title': u"Bezahlt", 'icon': "euro", 'val': user_status.account_balanced},
+        {'title': u"Verstoßfrei", 'icon': "alert", 'val': not user_status.violation},
+        {'title': u"LDAP", 'icon': "cloud", 'val': user_status.ldap},
     ]
 
 

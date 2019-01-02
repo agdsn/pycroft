@@ -18,9 +18,9 @@
     --red-dark-40: hsl(2, 80%, 28%);
     --red-dark-20: hsl(2, 72%, 42%);
     --red: hsl(2, 64%, 58%);  /* bootstrap `danger` */
-    --red-bright-20: hsl(2, 76%, 69%);
-    --red-bright-40: hsl(2, 92%, 83%);
-    --red-bright-60: hsl(2, 100%, 92%);
+    --red-bright-20: hsl(2, 80%, 75%);
+    --red-bright-40: hsl(2, 92%, 88%);
+    --red-bright-60: hsl(2, 100%, 95%);
 }
 
 
@@ -297,6 +297,80 @@ input.money-amount {
         width: 70%;
         vertical-align: middle;
     }
+}
+
+
+/* User card */
+.user-card {
+    margin: 0 20px;
+    background-color: hsl(200, 50%, 98%);
+    border-radius: 10px;
+    overflow: hidden;  /* To crop the corners from the children's background */
+    box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.2);
+    color: hsl(0, 0%, 35%)
+}
+
+.user-card .user-card-top {
+    overflow: auto;  /* To set block context */
+    margin-bottom: 10px;
+    background-color: hsl(200, 70%, 95%);
+    padding: 10px;
+}
+
+.user-card .user-card-bottom {
+    background-color: hsl(200, 50%, 99%);
+    padding: 10px;
+}
+
+.user-card section {
+    padding-top: 0;
+    margin: 12px 0;
+}
+
+.user-card .user-name {
+    font-size: 230%;
+}
+
+.user-card .user-flags {
+    float: right;
+}
+
+.user-flag {
+    --radius: 22px;
+    --icon-radius: 8px;
+    display: inline-block;
+    width: calc(2*var(--radius));
+    height: calc(2*var(--radius));
+    border-radius: var(--radius);
+    padding: calc(var(--radius) - var(--icon-radius)) 0;
+}
+
+.user-flag .glyphicon {
+    display: block;  /* necessary to set a width/height */
+    width: calc(var(--icon-radius)*2);
+    height: calc(var(--icon-radius)*2);
+    margin: auto;  /* horiz. centering only works for elements with width */
+    text-align: center;
+}
+
+.user-flag.user-flag-yes {
+    background-color: var(--green);
+    color: var(--green-bright-60);
+}
+
+.user-flag.user-flag-no {
+    background-color: var(--red);
+    color: var(--red-bright-60);
+}
+
+.user-card .user-login {
+    font-family: monospace;
+}
+
+.user-card .footer {
+    font-size: smaller;
+    letter-spacing: 1px;
+    color: hsl(0, 0%, 40%);
 }
 
 /* Property labels */

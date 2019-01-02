@@ -10,73 +10,63 @@
 {%- endmacro %}
 
 <div class="row">
-    <div class="col-xs-6 col-md-4">
-        <dl class="dl-horizontal">
-            {% call info_row("ID") %}
-                {{ user_id_new }} <em class="text-muted">{{ user_id_old }}</em>
-            {% endcall %}
-
-            {% call info_row("Name") %}
-                {% if current_user is privileged_for('user_change') %}
-                {{ user.name }} <a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
+    <div class="col-md-8"><div class="user-card">
+        <div class="user-card-top">
+            <div class="user-flags">
+            {% for flag in flags %}
+                {% if flag['val'] %}
+                    {% set flag_class="user-flag-yes" %}
                 {% else %}
-                {{ user.name }}
+                    {% set flag_class="user-flag-no" %}
                 {% endif %}
-            {% endcall %}
+                <div class="user-flag {{ flag_class }}" title="{{ flag['title'] }}">
+                    <span class="glyphicon glyphicon-{{ flag['icon'] }}"></span>
+                </div>
+            {% endfor %}
+            </div>
+            <span class="user-name">{{ user.name }}</span>
+        </div>
+        <div class="user-card-bottom">
+            <section>
+                <div class="user-room">
+                    {% if user.room is not none %}
+                        {{ misc.room_link(user.room) }}
+                    {% else %}
+                        <span class="text-muted">{{ _("Nicht gesetzt") }}</span>
+                    {% endif %}
+                </div>
+                <div class="user-login">
+                    <span class="glyphicon glyphicon-console"></span>
+                    <span>{{ user.login }}</span></div>
+                <div class="user-id">
+                    <span class="glyphicon glyphicon-tag"></span>
+                    <span>{{ user_id_new }} <em class="text-muted">{{ user_id_old }}</em></span>
+                </div>
+                <div class="user-mail">
+                    <span class="glyphicon glyphicon-envelope"></span>
+                    <span>{{ user.email }}</span>
+                    <a href="mailto:{{ user.email }}" style="font-size: small;">(mailto)</a>
+                </div>
+            </section>
 
-            {% call info_row("Login") %}{{ user.login }}{% endcall %}
+            <section>
 
-            {% call info_row("E-Mail") %}
-                {% if current_user is privileged_for('user_change') %}
-                  <a href="mailto:{{ user.email }}">{{ user.email }}</a> <a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
-                {% else %}
-                {{ user.email }}
-                {% endif %}
-            {% endcall %}
+                <div>
+                    <span class="glyphicon glyphicon-stats"></span>
+                    <span>{{ user.current_credit | filesizeformat(binary=True) }}</span>
+                </div>
+                <div>
+                    <span class="glyphicon glyphicon-euro"></span>
+                    <span>{{ balance | money }}</span>
+                </div>
+            </section>
+            <div class="footer">
+                Angemeldet am <em>{{ user.registered_at|datetime }}</em>,
+                geboren am <em>{{ user.birthdate|date }}</em>
+            </div>
+        </div>
+    </div></div>
 
-            {% call info_row("Anmeldedatum") %}
-                {{ user.registered_at|datetime }}
-            {% endcall %}
-
-            {% if user.room_id is not none %}
-                {% call info_row("Wohnort") %}
-                    {{ misc.room_link(user.room) }}
-                {% endcall %}
-            {% else %}
-                {% call info_row("Wohnort") %}
-                    <span class="text-muted">{{ _("Nicht gesetzt") }}</span>
-                {% endcall %}
-            {% endif %}
-
-            {% call info_row("Geburtsdatum") %}
-                {% if current_user is privileged_for('user_change') %}
-                {{ user.birthdate|date}} <a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
-                {% else %}
-                {{ user.birthdate|date }}
-                {% endif %}
-            {% endcall %}
-
-            {% call info_row("Traffic 7 Tage") %}
-                {{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}
-            {% endcall %}
-
-            {% call info_row("Saldo") %}
-                {% if balance >= 0 %}
-                    {% set balance_class="text-success" %}
-                {% else %}
-                    {% set balance_class="text-danger" %}
-                {% endif %}
-                <strong class="{{ balance_class }}">{{ balance | money }}</strong>
-            {% endcall %}
-        </dl>
-    </div>
-    <div class="col-xs-6 col-md-4">
-        <dl class="dl-horizontal">
-            {% for flag in flags %}{% call info_row(flag['title']) %}
-                {{ misc.yes_no_formatter(flag['val']) }}
-            {% endcall %}{% endfor %}
-        </dl>
-    </div>
     {% if current_user is privileged_for('user_change') %}
     <div class="col-xs-12 col-md-4">
         <div class="user"><div class="btn-group btn-group-justified">
