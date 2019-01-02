@@ -47,8 +47,10 @@ services:
     environment:
       - SLAPD_PASSWORD=password
       - SLAPD_DOMAIN=agdsn.de
-      - SLAPD_ADDITIONAL_SCHEMAS=ppolicy
+      - SLAPD_ADDITIONAL_SCHEMAS=ppolicy,custom/group-of-members
       - SLAPD_ADDITIONAL_MODULES=ppolicy
+    volumes:
+      - ./docker/ldap/schema:/etc/ldap/schema/custom
   mq:
     image: rabbitmq
     environment:
