@@ -639,22 +639,21 @@ def process_transactions(bank_account, statement):
     old_transactions = []  # transactions which are already imported
 
     for transaction in statement:
-        iban = transaction.data['applicant_iban'] if \
-            transaction.data['applicant_iban'] is not None else ''
-        bic = transaction.data['applicant_bin'] if \
-            transaction.data['applicant_bin'] is not None else ''
-        other_name = transaction.data['applicant_name'] if \
-            transaction.data['applicant_name'] is not None else ''
-        purpose = ''
-        prupose = transaction.data['purpose'] if \
-            transaction.data['purpose'] is not None else ''
+        iban = transaction.data.get('applicant_iban', '')
+        if iban is None: iban = ''
+        bic = transaction.data.get('applicant_bin', '')
+        if bic is None: bic = ''
+        other_name = transaction.data.get('applicant_name', '')
+        if other_name is None: other_name = ''
+        purpose = transaction.data.get('purpose', '')
+        if purpose is None: purpose = ''
         if 'end_to_end_reference' in transaction.data and \
                 transaction.data['end_to_end_reference'] is not None:
             purpose = purpose + ' EREF+' + transaction.data['end_to_end_reference']
         new_activity = BankAccountActivity(
             bank_account_id=bank_account.id,
             amount=transaction.data['amount'].amount,
-            reference=prupose,
+            reference=purpose,
             other_account_number=iban,
             other_routing_number=bic,
             other_name=other_name,
