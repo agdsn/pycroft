@@ -7,11 +7,22 @@
 
 {% set page_title = "Überweisungen matchen" %}
 
+{%  block page_css %}
+<style type="text/css">
+table.activities td {
+  padding: 5px;
+}
+table.activities td.purpose {
+  max-width: 500px;
+}
+</style>
+{% endblock %}
 {% block content %}
 
         <div class="row">
             <div class="col-md-12">
-                Folgende Nutzer konnten den Überweisungen zugeordnet werden:
+                Folgende Nutzer konnten den Überweisungen zugeordnet werden:<br>
+                (<i>Verwendungszweck</i> und <i>Absender</i> sind Daten aus der Überweisung.)
             </div>
         </div>
 
@@ -19,9 +30,28 @@
         <div class="row">
             <div class="col-md-12">
                 {{ form.csrf_token }}
-                {% for field in form %}{% if field.type != 'CSRFTokenField' %}
-                    {{ field }} {{ field.label }}<br>
-                {% endif %}{% endfor %}
+                <table border="1" class="activities">
+                  <thead>
+                    <th></th>
+                    <th><i>Verwendungszweck</i></th>
+                    <th>User-ID</th>
+                    <th>Raum</th>
+                    <th><i>Absender</i></th>
+                    <th>Name</th>
+                    <th>Betrag</th>
+                  </thead>
+                  <tbody>
+                    {% for field in form %}{% if field.type != 'CSRFTokenField' %}
+                      <td>{{ field }}</td>
+                      <td class="purpose">{{ activities[field.id]['purpose'] }}</td>
+                      <td>{{ activities[field.id]['user'].id }}</td>
+                      <td>{{ activities[field.id]['user'].room }}</td>
+                      <td>{{ activities[field.id]['name'] }}</td>
+                      <td>{{ activities[field.id]['user'].name }}</td>
+                      <td>{{ activities[field.id]['amount'] }} &euro;</td>
+                    {% endif %}{% endfor %}
+                  </tbody>
+                </table>
             </div>
         </div>
 

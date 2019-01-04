@@ -360,10 +360,16 @@ def bank_account_activities_match():
 
     matching = match_activities()
 
+    matched_activities = {}
     for activity, user in matching.items():
-        FieldList.append((str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
-            activity.reference, activity.amount, user.name, user.id, user.login
-        ), default=True)))
+        matched_activities[str(activity.id)] = {
+            'purpose': activity.reference,
+            'name': activity.other_name,
+            'user': user,
+            'amount': activity.amount
+        }
+        FieldList.append((str(activity.id), BooleanField(str(activity.id),
+                                                         default=True)))
 
     class F(forms.ActivityMatchForm):
         pass
@@ -372,7 +378,8 @@ def bank_account_activities_match():
         setattr(F, name, field)
     form = F()
 
-    return render_template('finance/bank_accounts_match.html', form=form)
+    return render_template('finance/bank_accounts_match.html', form=form,
+                           activities=matched_activities)
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')
