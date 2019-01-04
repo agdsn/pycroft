@@ -163,14 +163,17 @@ def bank_accounts_import():
     (transactions, old_transactions) = ([], [])
     if request.method != 'POST':
         del(form.start_date)
+        form.end_date.data = date.today() - timedelta(days=1)
 
     if form.validate_on_submit():
         bank_account = BankAccount.q.get(form.account.data)
 
-        # set start_date
+        # set start_date, end_date
         if form.start_date.data is None:
             form.start_date.data = map_or_default(bank_account.last_imported_at,
                                         datetime.date, date(2018, 1, 1))
+        if form.end_date.data is None:
+            form.end_date.data = date.today()
 
         # login with fints
         process = True
@@ -189,9 +192,11 @@ def bank_accounts_import():
                     bank_account.iban)
                 )
             start_date = form.start_date.data
-            statement, with_error = fints.get_filtered_transactions(acc, start_date, date.today())
+            end_date = form.end_date.data
+            statement, with_error = fints.get_filtered_transactions(
+                acc, start_date, end_date)
             flash(
-                "Transaktionen vom {} bis {}.".format(start_date, date.today()))
+                "Transaktionen vom {} bis {}.".format(start_date, end_date))
             if len(with_error) > 0:
                 flash("{} Statements enthielten fehlerhafte Daten und müssen "
                       "vor dem Import manuell korrigiert werden.".format(
