@@ -42,13 +42,15 @@ table.activities td.purpose {
                   </thead>
                   <tbody>
                     {% for field in form %}{% if field.type != 'CSRFTokenField' %}
-                      <td>{{ field }}</td>
-                      <td class="purpose">{{ activities[field.id]['purpose'] }}</td>
-                      <td>{{ activities[field.id]['user'].id }}</td>
-                      <td>{{ activities[field.id]['user'].room }}</td>
-                      <td>{{ activities[field.id]['name'] }}</td>
-                      <td>{{ activities[field.id]['user'].name }}</td>
-                      <td>{{ activities[field.id]['amount'] }} &euro;</td>
+                      <tr>
+                        <td>{{ field }}</td>
+                        <td class="purpose">{{ activities[field.id]['purpose'] }}</td>
+                        <td>{{ activities[field.id]['user'].id }}</td>
+                        <td>{{ activities[field.id]['user'].room }}</td>
+                        <td>{{ activities[field.id]['name'] }}</td>
+                        <td>{{ activities[field.id]['user'].name }}</td>
+                        <td>{{ activities[field.id]['amount'] }} &euro;</td>
+                      </tr>
                     {% endif %}{% endfor %}
                   </tbody>
                 </table>
