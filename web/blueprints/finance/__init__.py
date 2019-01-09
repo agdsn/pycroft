@@ -240,8 +240,7 @@ def bank_accounts_import():
 @nav.navigate(u"Fehlerhafter Bankimport")
 def bank_accounts_import_errors():
     error_table = ImportErrorTable(
-        data_url=url_for('.bank_accounts_errors_json'),
-        create_account=privilege_check(current_user, 'finance_change'))
+        data_url=url_for('.bank_accounts_errors_json'))
     return render_template('finance/bank_accounts_import_errors.html',
                            error_table=error_table)
 
