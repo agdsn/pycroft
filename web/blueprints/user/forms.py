@@ -111,6 +111,11 @@ class UserLogEntry(Form):
     message = TextAreaField(u"", [DataRequired()])
 
 
+class OptionallyDirectBeginDateForm(Form):
+    now = BooleanField(u"Sofort", default=False)
+    date = DateField(u"Beginn", [OptionalIf("now")])
+
+
 class OptionallyUnlimitedEndDateForm(Form):
     unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
     date = DateField(u"Ende", [OptionalIf("unlimited")])
@@ -119,7 +124,7 @@ class OptionallyUnlimitedEndDateForm(Form):
 class UserAddGroupMembership(Form):
     group = QuerySelectField(u"Gruppe", get_label='name',
                              query_factory=group_query)
-    begins_at = DateField(u"Beginn", [DataRequired()])
+    begins_at = FormField(OptionallyDirectBeginDateForm)
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
 

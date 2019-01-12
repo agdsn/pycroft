@@ -771,7 +771,7 @@ def add_membership(user_id):
     form = UserAddGroupMembership()
 
     if form.validate_on_submit():
-        if form.begins_at.data is not None:
+        if form.begins_at.date.data:
             begins_at = datetime.combine(form.begins_at.data, utc.time_min())
         else:
             begins_at = session.utcnow()
