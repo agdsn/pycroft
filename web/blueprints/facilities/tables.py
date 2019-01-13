@@ -20,8 +20,9 @@ class BuildingLevelRoomTable(BootstrapTable):
     room = LinkColumn("Raum")
     inhabitants = MultiBtnColumn('Bewohner')
 
-    toolbar = button_toolbar("Display all users", href="#",
-                             icon="glyphicon-user")
+    @property
+    def toolbar(self):
+        return button_toolbar("Display all users", href="#", icon="glyphicon-user")
 
 
 class RoomLogTable(BootstrapTable):
