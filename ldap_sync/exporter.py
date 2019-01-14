@@ -201,8 +201,8 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
         Group.q
         # uids of the members of the group
         .add_column(select([func.array_agg(User.login)])
-                .select_from(join(Group, Membership).join(User))
-                .where(Membership.active())
+                .select_from(join(Membership, User))
+                .where(Membership.group_id == Group.id).where(Membership.active())
                 .group_by(Group.id)
                 .as_scalar().label('members'))
         .all()

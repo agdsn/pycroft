@@ -5,7 +5,6 @@ from fixture import DataSet
 from tests.fixtures.dummy.unixaccount import UnixAccountData
 from tests.fixtures.dummy.facilities import RoomData
 from tests.fixtures.dummy.finance import AccountData
-from tests.fixtures.dummy.property import PropertyGroupData
 
 class UserData(DataSet):
     """Some fixtures interesting for the ldap syncer.
@@ -54,6 +53,14 @@ class UserData(DataSet):
         account = AccountData.dummy_user5
 
 
+class PropertyGroupData(DataSet):
+    class dummy:
+        name = "dummy_property_group"
+
+    class another_dummy:
+        name = "another_dummy_property_group"
+
+
 class PropertyData(DataSet):
     class mail:
         property_group = PropertyGroupData.dummy
@@ -79,6 +86,12 @@ class MembershipData(DataSet):
 
     class inconsistent_membership(active1_membership):
         user = UserData.inconsistent_user1
+
+    class dummy_membership:
+        begins_at = datetime.utcnow() - timedelta(1)
+        ends_at = datetime.utcnow() + timedelta(1)
+        group = PropertyGroupData.another_dummy
+        user = UserData.dummy
 
 # This is a complex fixture providing many users, of which some have a
 # ``unix_account``, and some have the attribute ``mail``.  Every possible
