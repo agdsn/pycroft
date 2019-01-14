@@ -230,14 +230,16 @@ def fetch_properties_to_sync(session) -> List[PropertyProxyType]:
 
     :returns: An iterable of `(property_name, members)` ResultProxies.
     """
-    return session.execute(
-        # Grab all users with the required property
+    properties = session.execute(
         select([CurrentProperty.property_name.label('name'),
                 func.array_agg(User.login).label('members')])
         .select_from(join(CurrentProperty, User, onclause=CurrentProperty.user_id == User.id))
         .where(CurrentProperty.property_name.in_(EXPORTED_PROPERTIES))
         .group_by(CurrentProperty.property_name)
     ).fetchall()
+
+    missing_properties = EXPORTED_PROPERTIES - { p.name for p in properties }
+    return properties + [PropertyProxyType(p, []) for p in missing_properties]
 
 
 def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
