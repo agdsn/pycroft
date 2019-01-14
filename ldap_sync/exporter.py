@@ -10,7 +10,7 @@ from typing import Iterable, List, NamedTuple
 
 import ssl
 import ldap3
-from sqlalchemy import and_, func, select, join
+from sqlalchemy import and_, func, select, join, dialects
 from sqlalchemy.orm import scoped_session, sessionmaker, foreign, joinedload
 
 from pycroft.model import create_engine
@@ -197,14 +197,14 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
     :returns: An iterable of `(Group, members)` ResultProxies.
     """
     return (
-        # Grab all users with the required property
         Group.q
         # uids of the members of the group
-        .add_column(select([func.array_agg(User.login)])
+        .add_column(func.coalesce(select([func.array_agg(User.login)])
                 .select_from(join(Membership, User))
                 .where(Membership.group_id == Group.id).where(Membership.active())
                 .group_by(Group.id)
-                .as_scalar().label('members'))
+                .as_scalar(),
+                func.cast('{}', dialects.postgresql.ARRAY(User.login.type))).label('members'))
         .all()
     )
 
