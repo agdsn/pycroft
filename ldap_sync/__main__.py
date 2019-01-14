@@ -5,7 +5,7 @@ import os
 from .exporter import add_stdout_logging, establish_and_return_ldap_connection, \
     establish_and_return_session, fake_connection, fetch_current_ldap_users, \
     fetch_current_ldap_groups, fetch_current_ldap_properties, fetch_users_to_sync, \
-    fetch_groups_to_sync, get_config_or_exit, logger, sync_all
+    fetch_groups_to_sync, fetch_properties_to_sync, get_config_or_exit, logger, sync_all
 
 
 logger = logging.getLogger('ldap_sync')
@@ -55,7 +55,7 @@ def fetch_and_sync(db_session, connection, base_dn, required_property=None):
     db_groups = fetch_groups_to_sync(db_session)
     logger.info("Fetched %s database groups", len(db_groups))
 
-    db_properties = fetch_groups_to_sync(db_session)
+    db_properties = fetch_properties_to_sync(db_session)
     logger.info("Fetched %s database properties", len(db_properties))
 
     user_base_dn='ou=users,{}'.format(base_dn)
