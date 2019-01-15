@@ -1,13 +1,8 @@
-from unittest import skip
-
 from hades_logs import HadesLogs, HadesTimeout
 from hades_logs.parsing import RadiusLogEntry
 from . import SimpleFlaskWithHadesLogsBase
 
-reason = "Hades logs worker does not run on 3.7 for compat reasons"
 
-
-@skip(reason)
 class ConfiguredHadesLogs(SimpleFlaskWithHadesLogsBase):
     def test_nonexistent_port_has_no_logs(self):
         logs = self.fetch_logs(nasipaddress='', nasportid='')
@@ -42,7 +37,6 @@ class ConfiguredHadesLogs(SimpleFlaskWithHadesLogsBase):
             self.assertEqual(tasks, [])
 
 
-@skip(reason)
 class SpecificLogsTestCase(SimpleFlaskWithHadesLogsBase):
     def setUp(self):
         super().setUp()
