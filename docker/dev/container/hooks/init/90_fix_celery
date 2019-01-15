@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Fix Celery on Python 3.7
+# Adapted from https://github.com/ddliu/dockerfiles/blob/master/special/nc/ns/fix.sh
+# https://github.com/celery/celery/issues/4500
+TARGET=/opt/pycroft/venv/lib/python3.7/site-packages/
+
+cd "$TARGET"/celery/backends
+if [ -e async.py ]
+then
+    mv async.py asynchronous.py
+    sed -i 's/async/asynchronous/g' redis.py
+    sed -i 's/async/asynchronous/g' rpc.py
+
+    find "$TARGET" -type f -iname "*.py" -exec sed -i 's/kombu\.async\b/kombu.asynchronous/g' {} +
+fi
+
+cd "$TARGET"/kombu
+if [ -e async ]
+then
+    mv async asynchronous
+
+    find . -type f -iname "*.py" -exec sed -i 's/\basync\b/asynchronous/g' {} +
+fi
