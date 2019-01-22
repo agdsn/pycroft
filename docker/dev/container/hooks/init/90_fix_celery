@@ -7,19 +7,13 @@ set -euo pipefail
 # https://github.com/celery/celery/issues/4500
 TARGET=/opt/pycroft/venv/lib/python3.7/site-packages/
 
-cd "$TARGET"/celery/backends
-if [ -e async.py ]
-then
-    mv async.py asynchronous.py
-    sed -i 's/async/asynchronous/g' redis.py
-    sed -i 's/async/asynchronous/g' rpc.py
-
-    find "$TARGET" -type f -iname "*.py" -exec sed -i 's/kombu\.async\b/kombu.asynchronous/g' {} +
-fi
+echo "Patching celery to ensure Python 3.7 compatibility"
+find "$TARGET" -type f -iname "*.py" -exec sed -i 's/kombu\.async\b/kombu.asynchronous/g' {} +
 
 cd "$TARGET"/kombu
 if [ -e async ]
 then
+    echo "Patching kombu to ensure Python 3.7 compatibility"
     mv async asynchronous
 
     find . -type f -iname "*.py" -exec sed -i 's/\basync\b/asynchronous/g' {} +
