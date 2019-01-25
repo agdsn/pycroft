@@ -3,21 +3,21 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
 
-from pycroft.model.user import Group, Membership, PropertyGroup, TrafficGroup
-from tests import FixtureDataTestBase, FactoryDataTestBase
 from pycroft.model import session, user
 from pycroft.model.property import current_property
+from pycroft.model.user import Group, Membership, PropertyGroup
+from tests import FixtureDataTestBase, FactoryDataTestBase
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
 from tests.factories.user import UserFactory
 from tests.fixtures.dummy.facilities import (BuildingData, RoomData)
 from tests.fixtures.dummy.user import UserData
 from tests.model.property_fixtures import (
-    PropertyData, PropertyGroupData, TrafficGroupData)
+    PropertyData, PropertyGroupData)
 
 
 class PropertyDataTestBase(FixtureDataTestBase):
     datasets = [BuildingData, RoomData, UserData, PropertyGroupData,
-                TrafficGroupData, PropertyData]
+                PropertyData]
 
     def setUp(self):
         super(PropertyDataTestBase, self).setUp()
@@ -26,10 +26,6 @@ class PropertyDataTestBase(FixtureDataTestBase):
             name=PropertyGroupData.group1.name).one()
         self.property_group2 = PropertyGroup.q.filter_by(
             name=PropertyGroupData.group2.name).one()
-        self.traffic_group1 = TrafficGroup.q.filter_by(
-            name=TrafficGroupData.group1.name).one()
-        self.traffic_group2 = TrafficGroup.q.filter_by(
-            name=TrafficGroupData.group2.name).one()
 
 
 class Test_010_PropertyResolving(PropertyDataTestBase):
@@ -244,82 +240,6 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(len(self.property_group1.users), 1)
         self.assertEqual(len(self.property_group1.active_users()), 0)
 
-    def test_0020_user_traffic_groups(self):
-        # first have no traffic group
-        self.assertEqual(len(self.user.traffic_groups), 0)
-        self.assertEqual(len(self.user.active_traffic_groups()), 0)
-
-        # add one active traffic group
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.traffic_group1)
-        session.session.add(p1)
-        session.session.commit()
-        f = Membership.q.first()
-        self.assertTrue(f.active())
-        self.assertEqual(len(self.user.traffic_groups), 1)
-        self.assertEqual(len(self.user.active_traffic_groups()), 1)
-
-        # adding a property group should not affect the traffic_groups
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 1)
-        self.assertEqual(len(self.user.active_traffic_groups()), 1)
-
-        # add a second active traffic group - count should be 2
-        p2 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.traffic_group2)
-        session.session.add(p2)
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups()), 2)
-
-        # disable the second group. active should be one, all 2
-        p2.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups()), 1)
-
-        res = session.session.query(
-            user.User, TrafficGroup.id
-        ).join(
-            user.User.traffic_groups
-        ).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 2)
-
-        # reenable it - but with a deadline - both counts should be 2
-        p2.ends_at = session.utcnow() + timedelta(days=1)
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups()), 2)
-
-        # Add a second membership to the first group
-        # should not affect the count
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.traffic_group1)
-        session.session.add(p1)
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups()), 2)
-
-        # disabling the new one should also not affect.
-        p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
-        self.assertEqual(len(self.user.traffic_groups), 2)
-        self.assertEqual(len(self.user.active_traffic_groups()), 2)
-
-        res = session.session.query(
-            user.User, TrafficGroup.id
-        ).join(
-            user.User.traffic_groups
-        ).filter(
-            user.User.id == self.user.id
-        ).distinct().count()
-        self.assertEqual(res, 2)
-
     def test_0030_user_property_groups(self):
         # first have no property group
         self.assertEqual(len(self.user.property_groups), 0)
@@ -332,14 +252,6 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         session.session.commit()
         f = Membership.q.first()
         self.assertTrue(f.active())
-        self.assertEqual(len(self.user.property_groups), 1)
-        self.assertEqual(len(self.user.active_property_groups()), 1)
-
-        # adding a traffic group should not affect the property_group
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.traffic_group2)
-        session.session.add(p1)
-        session.session.commit()
         self.assertEqual(len(self.user.property_groups), 1)
         self.assertEqual(len(self.user.active_property_groups()), 1)
 

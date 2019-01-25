@@ -1,23 +1,22 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from itertools import chain
 import re
+from itertools import chain
 
 from sqlalchemy import inspect
-from ipaddr import IPv4Address
 from sqlalchemy.exc import IntegrityError
 
-from pycroft.lib.net import MacExistsException, get_free_ip
+from pycroft.lib.net import get_free_ip
 from pycroft.model import session, host, user
 from pycroft.model.net import Subnet, VLAN
 from pycroft.model.types import InvalidMACAddressException
 from tests import FixtureDataTestBase
-from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.host import IPData, HostData, InterfaceData, \
-     SwitchPortData
+    SwitchPortData
 from tests.fixtures.dummy.net import SubnetData, VLANData
+from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.user import UserData
 
 

@@ -31,12 +31,3 @@ class PropertyData(DataSet):
         property_group = PropertyGroupData.dummy
         name = "denied_property"
         granted = False
-
-
-class TrafficGroupData(DataSet):
-    class dummy:
-        name = "dummy"
-        credit_limit = 7*2**30
-        credit_amount = 2*2**30
-        credit_interval = timedelta(days=1)
-        initial_credit_amount = 3*2**30

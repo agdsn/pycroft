@@ -51,9 +51,7 @@ class UserLogTestBase(LegacyUserFrontendTestBase):
 class UserFrontendTestBase(FrontendWithAdminTestBase):
     def create_factories(self):
         super().create_factories()
-        # To move in a user we need to ensure:
-        # 1. default traffic groups for a building
-        self.room = RoomFactory(building__with_traffic_group=True)
+        self.room = RoomFactory()
         self.subnet = SubnetFactory()
         self.patch_port = PatchPortFactory(room=self.room, patched=True,
                                            switch_port__switch__host__owner=self.admin)

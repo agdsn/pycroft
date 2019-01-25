@@ -8,5 +8,4 @@ from .finance import AccountFactory
 from .host import HostFactory, InterfaceFactory, IPFactory, SwitchFactory, SwitchPortFactory
 from .net import SubnetFactory, VLANFactory
 from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
-from .traffic import TrafficGroupFactory
 from .user import UserFactory, UserWithHostFactory

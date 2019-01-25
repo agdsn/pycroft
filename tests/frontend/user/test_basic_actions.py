@@ -3,11 +3,10 @@ from flask import url_for
 from pycroft import config
 from pycroft.model import session
 from pycroft.model.user import User
-from pycroft.model.facilities import Room
 from pycroft.model.webstorage import WebStorage
 from tests.factories import UserWithHostFactory
 from tests.fixtures import permissions
-from tests.fixtures.dummy import user as dummy_user_fixtures, facilities
+from tests.fixtures.dummy import user as dummy_user_fixtures
 from . import UserFrontendTestBase, LegacyUserFrontendTestBase
 
 
@@ -89,29 +88,6 @@ class UserMovedOutTestCase(LegacyUserFrontendTestBase):
         self.assert_404(response)
         self.assert_message_flashed("Nutzer {} ist aktuell nirgends eingezogen!"
                                     .format(self.user.id), category='error')
-
-    def test_user_can_be_moved_back_in(self):
-        # This test will fail due to unusable fixtures.  I recommend
-        # against trying to fix them (they are “only” missing a
-        # default traffic group for a building), because I tried that
-        # and it takes far too long and far too much code duplication
-        # that we shuold wait until somebody implements usable
-        # factories.
-
-        # user_id = self.user.id
-        # endpoint = url_for('user.move_back_in', user_id=user_id)
-        # # Pick a room, any room
-        # room = Room.q.filter_by(inhabitable=True).limit(1).one()
-        # response = self.client.post(endpoint, data={
-        #     # Will be serialized to str implicitly
-        #     'building': room.building.id,
-        #     'level': room.level,
-        #     'room_number': room.number,
-        #     'mac': "00:de:ad:be:ef:00",
-        # })
-        # self.assert_redirects(response, url_for('user.user_show', user_id=user_id))
-        # self.assert_message_flashed("Nutzer wurde wieder eingezogen", category='success')
-        pass
 
     def test_static_datasheet(self):
         endpoint = url_for('user.static_datasheet', user_id=self.user.id)

@@ -3,18 +3,14 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
-from functools import partial
 
-from pycroft.model.port import PatchPort
-from pycroft.model.user import Membership, PropertyGroup
-from tests import FixtureDataTestBase
 from pycroft import config
-from pycroft.helpers.interval import closedopen, single
-from pycroft.lib import user as UserHelper, traffic, membership
+from pycroft.helpers.interval import closedopen
+from pycroft.lib import user as UserHelper
 from pycroft.model import (
-    user, facilities, session, logging, finance, host)
-from tests import FactoryDataTestBase
-from tests.factories import UserFactory, MembershipFactory, TrafficGroupFactory
+    user, facilities, session, host)
+from pycroft.model.port import PatchPort
+from tests import FixtureDataTestBase
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
@@ -22,15 +18,13 @@ from tests.fixtures.dummy.finance import AccountData, MembershipFeeData
 from tests.fixtures.dummy.host import (
     IPData, PatchPortData, InterfaceData, HostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
-from tests.fixtures.dummy.property import TrafficGroupData
 from tests.fixtures.dummy.user import UserData
-from tests.fixtures import user_with_trafficgroups
 
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
                 PatchPortData, UserData, InterfaceData, HostData,
-                VLANData, TrafficGroupData)
+                VLANData)
 
     def setUp(self):
         super(Test_010_User_Move, self).setUp()
@@ -59,35 +53,25 @@ class Test_010_User_Move(FixtureDataTestBase):
             self.old_room.level, self.old_room.number, self.processing_user)
 
     def test_0020_moves_into_other_building(self):
-        # whether old traffic groups get deleted is untested,
-        # because adding a `default_traffic_group` is hard with our
-        # fixture setup
-
-        traffic_group = user.TrafficGroup.q.first()
         UserHelper.move(
             self.user, self.new_room_other_building.building,
             self.new_room_other_building.level,
             self.new_room_other_building.number, self.processing_user,
-            traffic_group_id=traffic_group.id,
         )
         self.assertEqual(self.user.room, self.new_room_other_building)
         self.assertEqual(self.user.hosts[0].room, self.new_room_other_building)
-        self.assertIn(traffic_group, self.user.active_traffic_groups())
-        #TODO test for changing ip
+        # TODO test for changing ip
 
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
                 RoomData, MembershipFeeData, SubnetData, PatchPortData,
-                TrafficGroupData, UserData, HostData, InterfaceData,
-                VLANData)
+                UserData, HostData, InterfaceData, VLANData)
 
     def setUp(self):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
-        self.traffic_group = user.TrafficGroup.q.first()
-        self.traffic_group_id = self.traffic_group.id
 
     def test_0010_move_in(self):
         test_name = u"Hans"
@@ -113,7 +97,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            traffic_group_id=self.traffic_group_id,
         )
 
         self.assertEqual(new_user.name, test_name)
@@ -130,8 +113,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(user_interface.mac, test_mac)
 
         # checks the initial group memberships
-        active_user_groups = (new_user.active_property_groups() +
-                              new_user.active_traffic_groups())
+        active_user_groups = new_user.active_property_groups()
         for group in {config.member_group, config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
@@ -142,45 +124,11 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account = new_user.unix_account
         self.assertTrue(account.home_directory.endswith(new_user.login))
         self.assertTrue(account.home_directory.startswith('/home/'))
-        credits = new_user.traffic_credits
-        self.assertEqual(len(credits), 1)
-        self.assertEqual(credits[0].amount, self.traffic_group.initial_credit_amount)
-
-    def test_move_in_custom_traffic_group(self):
-        test_name = u"Hans"
-        test_login = u"hans66"
-        test_email = u"hans@hans.de"
-        test_building = facilities.Building.q.first()
-        test_mac = "12:11:11:11:11:11"
-        test_birthdate = "1990-01-01"
-        traffic_group = user.TrafficGroup.q.first()
-
-        new_user, _ = UserHelper.create_user(
-            test_name,
-            test_login,
-            test_email,
-            test_birthdate,
-            processor=self.processing_user,
-            groups = [config.member_group]
-        )
-
-        UserHelper.move_in(
-            new_user,
-            test_building,
-            level=1,
-            room_number="1",
-            mac=test_mac,
-            processor=self.processing_user,
-            traffic_group_id=traffic_group.id
-        )
-
-        self.assertIn(traffic_group, new_user.active_traffic_groups())
-
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
     datasets = (AccountData, ConfigData, IPData, MembershipFeeData,
-                PatchPortData, TrafficGroupData)
+                PatchPortData)
 
     def setUp(self):
         super().setUp()
@@ -193,7 +141,6 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         test_email = u"hans@hans.de"
         test_building = facilities.Building.q.first()
         test_mac = "12:11:11:11:11:11"
-        traffic_group = user.TrafficGroup.q.first()
         test_birthdate = "1990-01-01"
 
         new_user, _ = UserHelper.create_user(
@@ -212,7 +159,6 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
-            traffic_group_id=traffic_group.id
         )
 
         session.session.commit()
@@ -242,7 +188,6 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             mac=test_mac,
             birthdate=test_birthdate,
             processor=self.processing_user,
-            traffic_group_id=traffic_group.id,
         )
 
         session.session.refresh(new_user)
@@ -258,8 +203,6 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         self.assertTrue(new_user.member_of(config.member_group))
         self.assertTrue(new_user.member_of(config.network_access_group))
-        # `member_of` only concerns `PropertyGroup`s!
-        self.assertIn(traffic_group, new_user.active_traffic_groups())
 
 
 class Test_040_User_Edit_Name(FixtureDataTestBase):
@@ -338,114 +281,3 @@ class UserWithNetworkAccessTestCase(FixtureDataTestBase):
 
         self.assertEqual(unblocked_user.log_entries[0].author, unblocked_user)
         self.assert_violation_membership(unblocked_user, subinterval=blocked_during)
-
-
-class TrafficGroupTestCase(FixtureDataTestBase):
-    datasets = frozenset(user_with_trafficgroups.datasets)
-
-    def setUp(self):
-        super().setUp()
-        self.user = user.User.q.filter_by(login='test').one()
-        self.user2 = user.User.q.filter_by(login='test2').one()
-        self.traffic_group = user.TrafficGroup.q.first()
-        self.traffic_group2 = user.TrafficGroup.q.filter_by(name='non_default').one()
-
-    def test_determine_traffic_group_default(self):
-        self.assertEqual(traffic.determine_traffic_group(self.user),
-                         self.traffic_group)
-
-    def test_determine_traffic_group_building_has_no_default(self):
-        group = traffic.determine_traffic_group(self.user2)
-        self.assertEqual(group, None)
-
-    def test_determine_traffic_group_uses_explicit_group(self):
-        group = traffic.determine_traffic_group(self.user2, self.traffic_group2.id)
-        self.assertEqual(group, self.traffic_group2)
-
-    def test_determine_traffic_group_prefers_explicit_group(self):
-        group = traffic.determine_traffic_group(self.user, self.traffic_group2.id)
-        self.assertEqual(group, self.traffic_group2)
-
-    def test_setup_traffic_group(self):
-        setup = partial(traffic.setup_traffic_group, processor=self.user2)
-
-        setup(self.user)
-        session.session.refresh(self.user)
-        groups = self.user.active_traffic_groups()
-        self.assertIn(self.traffic_group, groups)
-        self.assertNotIn(self.traffic_group2, groups)
-
-        setup(self.user, custom_group_id=self.traffic_group2.id)
-        session.session.refresh(self.user)
-        groups = self.user.active_traffic_groups()
-        self.assertIn(self.traffic_group, groups)
-        self.assertIn(self.traffic_group2, groups)
-
-        setup(self.user, custom_group_id=self.traffic_group2.id, terminate_other=True)
-        session.session.refresh(self.user)
-        groups = self.user.active_traffic_groups()
-        self.assertNotIn(self.traffic_group, groups)
-        self.assertIn(self.traffic_group2, groups)
-
-    def test_setup_traffic_group_no_group(self):
-        traffic.setup_traffic_group(self.user2, processor=self.user2)
-        session.session.refresh(self.user2)
-        # expect an empty list
-        self.assertFalse(self.user.active_traffic_groups())
-
-
-class GrantingTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        # ordered by expected precedence
-        self.traffic_groups = [
-            TrafficGroupFactory(
-                credit_limit=63*2**30,
-                # higher initial_credit_amount
-                credit_amount=6*2**30,
-                initial_credit_amount=21*2**30,
-            ),
-            TrafficGroupFactory(
-                credit_limit=63*2**30,
-                credit_amount=3*2**30,
-                initial_credit_amount=21*2**30,
-            ),
-            TrafficGroupFactory(
-                credit_limit=63*2**30,
-                credit_amount=3*2**30,
-                # smaller initial_credit_amount
-                initial_credit_amount=14*2**30,
-            ),
-        ]
-
-    def create_user(self, traffic_groups):
-        with self.session.begin(subtransactions=True):
-            user = UserFactory()
-            if traffic_groups is None:
-                traffic_groups = tuple()
-            for group in traffic_groups:
-                MembershipFactory.create(group=group, user=user)
-        return user
-
-    def test_traffic_group_precedence(self):
-        for i in range(len(self.traffic_groups)):
-            groups = self.traffic_groups[i:]
-            with self.subTest(groups=groups):
-                user = self.create_user(groups)
-
-                self.assertEqual(len(user.memberships), len(groups))
-                g = traffic.effective_traffic_group(user)
-                self.assertEqual(g, groups[0])
-
-    def test_initial_credit_granting(self):
-        user = self.create_user(self.traffic_groups)
-        traffic.grant_initial_credit(user=user)
-        self.assertEqual(len(user.traffic_credits), 1)
-        credit = user.traffic_credits[0]
-        self.assertEqual(credit.amount, self.traffic_groups[0].initial_credit_amount)
-
-    def test_regular_credit_granting(self):
-        user = self.create_user(self.traffic_groups)
-        traffic.grant_regular_credit(user=user)
-        self.assertEqual(len(user.traffic_credits), 1)
-        credit = user.traffic_credits[0]
-        self.assertEqual(credit.amount, self.traffic_groups[0].credit_amount)

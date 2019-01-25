@@ -3,18 +3,18 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from tests.fixtures.dummy import unixaccount
-from pycroft.model import facilities, session, user
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import (
     generate_password, hash_password)
+from pycroft.model import facilities, session, user
 from pycroft.model.finance import Account
 from pycroft.model.user import (
-    IllegalLoginError, Membership, PropertyGroup, TrafficGroup)
+    IllegalLoginError, Membership, PropertyGroup)
 from tests import FixtureDataTestBase
+from tests.fixtures.dummy import unixaccount
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.property import (
-    MembershipData, PropertyData, PropertyGroupData, TrafficGroupData)
+    MembershipData, PropertyData, PropertyGroupData)
 from tests.fixtures.dummy.user import UserData
 
 
@@ -156,15 +156,13 @@ class TestUnixAccounts(FixtureDataTestBase):
 
 
 class TestActiveHybridMethods(FixtureDataTestBase):
-    datasets = [UserData, PropertyGroupData, TrafficGroupData]
+    datasets = [UserData, PropertyGroupData]
 
     def setUp(self):
         super(TestActiveHybridMethods, self).setUp()
         self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
         self.property_group = PropertyGroup.q.filter_by(
             name=PropertyGroupData.dummy.name).one()
-        self.traffic_group = TrafficGroup.q.filter_by(
-            name=TrafficGroupData.dummy.name).one()
 
     def add_membership(self, group):
         m = Membership(user=self.user, group=group)
@@ -228,38 +226,8 @@ class TestActiveHybridMethods(FixtureDataTestBase):
         query = self.create_active_property_groups_query(when)
         self.assertEqual(query.all(), [self.property_group])
 
-    def test_active_traffic_groups(self):
-        self.assertEqual(self.user.active_traffic_groups(), [])
-        self.add_membership(self.traffic_group)
-        self.assertEqual(self.user.active_traffic_groups(),
-                         [self.traffic_group])
-        when = single(session.utcnow() - timedelta(hours=1))
-        self.assertEqual(self.user.active_traffic_groups(when), [])
-        when = single(session.utcnow() + timedelta(hours=1))
-        self.assertEqual(self.user.active_traffic_groups(when),
-                         [self.traffic_group])
-
-    def create_active_traffic_groups_query(self, when=None):
-        return session.session.query(TrafficGroup).from_statement(
-            user.User.active_traffic_groups(when).where(
-                user.User.id == self.user.id))
-
-    def test_active_traffic_groups_expression(self):
-        query = self.create_active_traffic_groups_query()
-        self.assertEqual(query.all(), [])
-        self.add_membership(self.traffic_group)
-        query = self.create_active_traffic_groups_query()
-        self.assertEqual(query.all(), [self.traffic_group])
-        when = single(session.utcnow() - timedelta(hours=1))
-        query = self.create_active_traffic_groups_query(when)
-        self.assertEqual(query.all(), [])
-        when = single(session.utcnow() + timedelta(hours=1))
-        query = self.create_active_traffic_groups_query(when)
-        self.assertEqual(query.all(), [self.traffic_group])
-
 
 class Test_has_property(FixtureDataTestBase):
-
     datasets = [MembershipData, PropertyData, PropertyGroupData, UserData]
 
     def setUp(self):

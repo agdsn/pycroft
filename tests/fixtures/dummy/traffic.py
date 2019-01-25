@@ -40,35 +40,3 @@ class TrafficVolumeData(DataSet):
         amount = int(6.00 * 2**30)
         packets = int(3720)
         timestamp = datetime.utcnow() - timedelta(hours=12)
-
-class TrafficCreditData(DataSet):
-    class dummy_credit:
-        user= UserData.dummy
-        amount = int(5.47 * 2**30)
-        timestamp = datetime.utcnow() - timedelta(days=2)
-
-    class dummy_credit_before_balance:
-        user = UserData.dummy
-        amount = int(62.1 * 2**20)
-        timestamp = datetime.utcnow() - timedelta(days=6)
-
-    class dummy_credit_in_future:
-        user = UserData.dummy
-        amount = int(3 * 2**30)
-        timestamp = datetime.utcnow() + timedelta(days=1)
-
-    class anotheruser_credit:
-        user = UserData.anotheruser
-        amount = int(0.88 * 2**30)
-        timestamp = datetime.utcnow() - timedelta(hours=12)
-
-class TrafficBalanceData(DataSet):
-    class dummy_balance:
-        user = UserData.dummy
-        timestamp = datetime.utcnow() - timedelta(days=3)
-        amount = int(2.73 * 2**20)
-
-    class privileged_balance:
-        user = UserData.privileged
-        timestamp = datetime.utcnow() - timedelta(days=1)
-        amount = int(6.12 * 2**30)

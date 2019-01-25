@@ -50,5 +50,4 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
         'infrastructure_show', 'infrastructure_change',
         'facilities_show', 'facilities_change',
         'groups_show', 'groups_change_membership', 'groups_change',
-        'groups_traffic_show', 'groups_traffic_change',
     ))

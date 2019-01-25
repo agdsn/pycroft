@@ -26,11 +26,6 @@ class BuildingFactory(BaseFactory):
     number = Sequence(lambda n: n)
     street = LazyAttribute(lambda b: b.site.name)
     short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
-    default_traffic_group = None
-    class Params:
-        with_traffic_group = Trait(
-            default_traffic_group=SubFactory('tests.factories.traffic.TrafficGroupFactory')
-        )
 
 
 class RoomFactory(BaseFactory):
