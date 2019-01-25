@@ -17,8 +17,7 @@ from base64 import b64encode, b64decode
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import and_, or_, func, literal, literal_column, union_all, \
-    select
+from sqlalchemy import or_, func, select
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict
@@ -31,12 +30,10 @@ from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
-from pycroft.lib.traffic import setup_traffic_group, grant_initial_credit, \
-    NoTrafficGroup
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, IP, Host, Interface, Interface
+from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount
@@ -236,7 +233,7 @@ def create_user(name, login, email, birthdate, groups, processor):
 
 @with_transaction
 def move_in(user, building, level, room_number, mac, processor, birthdate=None,
-            traffic_group_id=None, host_annex=False, begin_membership=True):
+            host_annex=False, begin_membership=True):
     """Create a new user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -250,8 +247,6 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
     :param str mac: The mac address of the users pc.
     :param User processor: See :py:func:`create_member
     :param Date birthdate: Date of birth`
-    :param int traffic_group_id: the id of the chosen traffic group to
-        be used instead of the building's default one.
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
     :param bool begin_membership: Starts a membership if true
@@ -293,14 +288,6 @@ def move_in(user, building, level, room_number, mac, processor, birthdate=None,
                 session.session.add(new_host)
                 session.session.add(Interface(mac=mac, host=new_host))
                 setup_ipv4_networking(new_host)
-
-        setup_traffic_group(user, processor, traffic_group_id)
-    try:
-        grant_initial_credit(user)
-    except NoTrafficGroup as e:
-        raise ValueError("User {} could not be assigned a traffic group. "
-                         "Please specify one manually."
-                         .format(user)) from e
 
     msg = deferred_gettext(u"Moved in: {room}")
 
@@ -356,7 +343,7 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, building, level, room_number, processor, traffic_group_id=None):
+def move(user, building, level, room_number, processor):
     """Moves the user into another room.
 
     :param user: The user to be moved.
@@ -364,7 +351,6 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
     :param level: The level of the new room.
     :param room_number: The number of the new room.
     :param processor: The user who is currently logged in.
-    :param int traffic_group_id: a custom traffic group to use.
 
     :return: The user object of the moved user.
     :rtype: User
@@ -388,8 +374,6 @@ def move(user, building, level, room_number, processor, traffic_group_id=None):
         message=message.format(str(old_room), str(new_room)).to_json(),
         user=user
     )
-
-    setup_traffic_group(user, processor, traffic_group_id, terminate_other=False)
 
     for user_host in user.hosts:
         if user_host.room == old_room:
@@ -472,10 +456,10 @@ def edit_birthdate(user, birthdate, processor):
     return user
 
 
-def traffic_history(user_id, start, interval, step):
+def traffic_history(user_id, start, interval):
     result = session.session.execute(
         select(['*']).select_from(
-            func.traffic_history(user_id, start, interval, step))).fetchall()
+            func.traffic_history(user_id, start, interval))).fetchall()
     return [TrafficHistoryEntry(**dict(row.items())) for row in result]
 
 
@@ -593,11 +577,10 @@ def move_out(user, comment, processor, when, end_membership=True):
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
     if end_membership:
-        for group in ({config.member_group,
-                       config.network_access_group,
-                       config.external_group,
-                       config.cache_group}
-                      | set(user.traffic_groups)):
+        for group in (config.member_group,
+                      config.network_access_group,
+                      config.external_group,
+                      config.cache_group):
             if user.member_of(group):
                 remove_member_of(user, group, processor, closedopen(when, None))
 
@@ -647,7 +630,6 @@ def status(user):
     """
     return AttrDict({
         'member': user.member_of(config.member_group),
-        'traffic_exceeded': user.current_credit < 0,
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
@@ -661,10 +643,7 @@ def status_query():
     return session.session.query(
         User,
         User.member_of(config.member_group, now).label('member'),
-        # traffic ignored due to pending traffic rework
-        literal_column("false").label('traffic_exceeded'),
         (Account.balance <= 0).label('account_balanced'),
-
         # a User.properties hybrid attribute would be preferrable
         (User.has_property('network_access', now)).label('network_access'),
         (User.has_property('violation', now)).label('violation'),

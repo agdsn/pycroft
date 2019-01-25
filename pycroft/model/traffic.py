@@ -2,11 +2,13 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from datetime import timedelta
+
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
     PrimaryKeyConstraint, func, or_, and_, true, literal, literal_column, \
     union_all, select, cast, TIMESTAMP, TEXT
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql.expression import case
+from sqlalchemy.sql.expression import case, text
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer
 
@@ -17,15 +19,6 @@ from pycroft.model.user import User
 from pycroft.model.host import IP, Host, Interface
 
 ddl = DDLManager()
-
-
-class TrafficBalance(ModelBase):
-    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                     primary_key=True)
-    user = relationship(User,
-                        backref=backref("_traffic_balance", uselist=False))
-    amount = Column(BigInteger, nullable=False)
-    timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
 
 
 class TrafficEvent(object):
@@ -52,8 +45,9 @@ class TrafficVolume(TrafficEvent, ModelBase):
                         uselist=False)
     packets = Column(Integer, CheckConstraint('packets >= 0'),
                      nullable=False)
+
+
 TrafficVolume.__table__.add_is_dependent_on(IP.__table__)
-TrafficBalance.__table__.add_is_dependent_on(TrafficVolume.__table__)
 
 
 pmacct_traffic_egress = View(
@@ -170,178 +164,35 @@ ddl.add_function(TrafficVolume.__table__, pmacct_ingress_upsert)
 ddl.add_trigger(TrafficVolume.__table__, pmacct_ingress_upsert_trigger)
 
 
-class TrafficCredit(TrafficEvent, IntegerIdModel):
-    user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
-                     nullable=False, index=True)
-    user = relationship(User,
-                        backref=backref("traffic_credits",
-                                        cascade="all, delete-orphan"),
-                        uselist=False)
-TrafficBalance.__table__.add_is_dependent_on(TrafficCredit.__table__)
-
-
-recent_volume_q = (
-    Query([func.sum(TrafficVolume.amount).label('amount')])
-    .select_from(TrafficVolume)
-    .filter(and_(User.id==TrafficVolume.user_id,
-                 or_(TrafficBalance.user_id.is_(None),
-                     TrafficBalance.timestamp <= TrafficVolume.timestamp)))
-    .subquery()
-    .lateral('recent_volume')
-)
-
-recent_credit_q = (
-    Query([func.sum(TrafficCredit.amount).label('amount')])
-    .select_from(TrafficCredit)
-    .filter(and_(User.id==TrafficCredit.user_id,
-                 or_(TrafficBalance.user_id.is_(None),
-                     TrafficBalance.timestamp <= TrafficCredit.timestamp)))
-    .subquery()
-    .lateral('recent_credit')
-)
-
-current_traffic_balance_view = View(
-    name='current_traffic_balance',
-    query=(
-        Query([
-            User.id.label('user_id'),
-            (func.coalesce(TrafficBalance.amount, 0) +
-             func.coalesce(recent_credit_q.c.amount, 0) -
-             func.coalesce(recent_volume_q.c.amount, 0)).label('amount'),
-        ])
-        .select_from(User)
-        .outerjoin(TrafficBalance)
-        .outerjoin(recent_credit_q, true())
-        .outerjoin(recent_volume_q, true())
-        .statement
-    )
-)
-ddl.add_view(TrafficBalance.__table__, current_traffic_balance_view)
-
-
-class CurrentTrafficBalance(ModelBase):
-    __table__ = current_traffic_balance_view.table
-    __mapper_args__ = {
-        'primary_key': current_traffic_balance_view.table.c.user_id,
-    }
-
-
 def traffic_history_query():
-    timestamptz = TIMESTAMP(timezone=True)
+    events = (select([func.sum(TrafficVolume.amount).label('amount'),
+                      func.date_trunc('day', TrafficVolume.timestamp).label('day'),
+                      cast(TrafficVolume.type, TEXT).label('type')]
+                     )
+              .where(TrafficVolume.user_id == literal_column('arg_user_id'))
+              .where(and_(TrafficVolume.timestamp >= func.date_trunc('day', literal_column('arg_start')),
+                          TrafficVolume.timestamp < func.date_trunc('day', literal_column('arg_start') + literal_column('arg_interval'))))
+              .group_by(literal_column('day'), literal_column('type'))
+              ).cte()
 
-    events = union_all(
-        select([TrafficCredit.amount,
-                TrafficCredit.timestamp,
-                literal("Credit").label('type')]
-               ).where(TrafficCredit.user_id == literal_column('arg_user_id')),
+    events_ingress = select([events]).where(events.c.type == 'Ingress').cte()
+    events_egress = select([events]).where(events.c.type == 'Egress').cte()
 
-        select([(-TrafficVolume.amount).label('amount'),
-                TrafficVolume.timestamp,
-                cast(TrafficVolume.type, TEXT).label('type')]
-               ).where(TrafficVolume.user_id == literal_column('arg_user_id'))
-    ).cte('traffic_events')
+    hist = (select([func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
+                    events_ingress.c.amount.label('ingress'),
+                    events_egress.c.amount.label('egress')])
+            .select_from(events_ingress.join(events_egress,
+                                             events_ingress.c.day == events_egress.c.day,
+                                             full=true))
+            .order_by(literal_column('timestamp'))
+            )
 
-    def round_time(time_expr, ceil=False):
-        round_func = func.ceil if ceil else func.trunc
-        step_epoch = func.extract('epoch', literal_column('arg_step'))
-        return cast(func.to_timestamp(round_func(func.extract('epoch', time_expr) / step_epoch) * step_epoch), timestamptz)
-
-    balance = select([TrafficBalance.amount, TrafficBalance.timestamp])\
-        .select_from(User.__table__.outerjoin(TrafficBalance))\
-        .where(User.id == literal_column('arg_user_id'))\
-        .cte('balance')
-
-    balance_amount = select([balance.c.amount]).as_scalar()
-    balance_timestamp = select([balance.c.timestamp]).as_scalar()
-
-    # Bucket layout
-    # n = interval / step
-    # 0: Aggregates all prior traffic_events so that the balance value can be calculated
-    # 1 - n: Traffic history entry
-    # n+1: Aggregates all data after the last point in time, will be discarded
-    buckets = select([literal_column('bucket'),
-            (func.row_number().over(order_by=literal_column('bucket')) - 1).label('index')]
-    ).select_from(
-        func.generate_series(
-            round_time(cast(literal_column('arg_start'), timestamptz)) - literal_column('arg_step'),
-            round_time(cast(literal_column('arg_start'), timestamptz) + literal_column('arg_interval')),
-            literal_column('arg_step')
-        ).alias('bucket')
-    ).order_by(
-        literal_column('bucket')
-    ).cte('buckets')
-
-    def cond_sum(condition, label, invert=False):
-        return func.sum(case(
-            [(condition, events.c.amount if not invert else -events.c.amount)],
-            else_=None)).label(label)
-
-
-    hist = select([buckets.c.bucket,
-                   cond_sum(events.c.type == 'Credit', 'credit'),
-                   cond_sum(events.c.type == 'Ingress', 'ingress', invert=True),
-                   cond_sum(events.c.type == 'Egress', 'egress', invert=True),
-                   func.sum(events.c.amount).label('amount'),
-                   cond_sum(and_(balance_timestamp != None, events.c.timestamp < balance_timestamp), 'before_balance'),
-                   cond_sum(or_(balance_timestamp == None, events.c.timestamp >= balance_timestamp), 'after_balance')]
-    ).select_from(buckets.outerjoin(
-        events, func.width_bucket(
-            events.c.timestamp, select([func.array(select([buckets.c.bucket]).select_from(buckets).where(buckets.c.index != 0).label('dummy'))])
-        ) == buckets.c.index
-    )).where(
-        # Discard bucket n+1
-        buckets.c.index < select([func.max(buckets.c.index)])
-    ).group_by(
-        buckets.c.bucket
-    ).order_by(
-        buckets.c.bucket
-    ).cte('traffic_hist')
-
-
-    # Bucket is located before the balance and no traffic_events exist before it
-    first_event_timestamp = select([func.min(events.c.timestamp)]).as_scalar()
-    case_before_balance_no_data = (
-        and_(balance_timestamp != None, hist.c.bucket < balance_timestamp,
-        or_(first_event_timestamp == None,
-            hist.c.bucket < first_event_timestamp
-            )),
-        None
-    )
-
-    # Bucket is located after the balance
-    case_after_balance = (
-        or_(balance_timestamp == None, hist.c.bucket >= balance_timestamp),
-        func.coalesce(balance_amount, 0) + func.coalesce(
-            func.sum(hist.c.after_balance).over(
-                order_by=hist.c.bucket.asc(), rows=(None, 0)),
-            0)
-    )
-
-    # Bucket is located before the balance, but there still exist traffic_events before it
-    else_before_balance = (
-            func.coalesce(balance_amount, 0) +
-            func.coalesce(hist.c.after_balance, 0) -
-            func.coalesce(
-                func.sum(hist.c.before_balance).over(
-                    order_by=hist.c.bucket.desc(), rows=(None, -1)
-                ), 0)
-    )
-
-    agg_hist = select(
-            [hist.c.bucket, hist.c.credit, hist.c.ingress, hist.c.egress, case(
-            [case_before_balance_no_data, case_after_balance],
-            else_=else_before_balance
-        ).label('balance')]).alias('agg_hist')
-
-    # Remove bucket 0
-    result = select([agg_hist]).order_by(agg_hist.c.bucket).offset(1)
-
-    return result
+    return hist
 
 
 traffic_history_function = Function(
-    'traffic_history', ['arg_user_id int', 'arg_start timestamptz', 'arg_interval interval', 'arg_step interval'],
-    'TABLE ("timestamp" timestamptz, credit numeric, ingress numeric, egress numeric, balance numeric)',
+    'traffic_history', ['arg_user_id int', 'arg_start timestamptz', 'arg_interval interval'],
+    'TABLE ("timestamp" timestamptz, ingress numeric, egress numeric)',
     str(
         traffic_history_query().compile(
             dialect=postgresql.dialect(),
@@ -352,20 +203,19 @@ traffic_history_function = Function(
 )
 
 ddl.add_function(
-    TrafficBalance.__table__,
+    TrafficVolume.__table__,
     traffic_history_function
 )
 
 
 class TrafficHistoryEntry:
-    def __init__(self, timestamp, credit, ingress, egress, balance):
+    def __init__(self, timestamp, ingress, egress):
         self.timestamp = timestamp
-        self.credit = credit
         self.ingress = ingress
         self.egress = egress
-        self.balance = balance
 
     def __repr__(self):
         return str(self.__dict__)
+
 
 ddl.register()

@@ -63,23 +63,22 @@ class User(IntegerIdModel, UserMixin):
     room = relationship("Room",
                         backref=backref("users", cascade="all"))
 
-    traffic_groups = relationship("TrafficGroup",
-                                  secondary=lambda: Membership.__table__,
-                                  viewonly=True)
-
     property_groups = relationship("PropertyGroup",
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)
 
-    _current_traffic_balance = relationship(
-        'CurrentTrafficBalance',
-        primaryjoin='User.id == foreign(CurrentTrafficBalance.user_id)',
-        viewonly=True, uselist=False
-    )
+    @hybrid_property
+    def traffic_total(self):
+        from pycroft.model.traffic import TrafficVolume
 
-    @property
-    def current_credit(self):
-        return self._current_traffic_balance.amount
+        return sum(v.amount for v in TrafficVolume.q.filter_by(user_id=self.id))
+
+    @traffic_total.expression
+    def traffic_total(self):
+        from pycroft.model.traffic import TrafficVolume
+
+        return select([func.sum(TrafficVolume.amount).label('amount')])\
+            .where(TrafficVolume.user_id == self.id)
 
     #: This is a relationship to the `current_property` view filtering out
     #: the entries with `denied=True`.
@@ -235,32 +234,11 @@ class User(IntegerIdModel, UserMixin):
         )
 
     @hybrid_method
-    def active_traffic_groups(self, when=None):
-        return object_session(self).query(
-            TrafficGroup
-        ).join(
-            Membership
-        ).filter(
-            Membership.active(when),
-            Membership.user_id == self.id
-        ).all()
-
-    @active_traffic_groups.expression
-    def active_traffic_groups(cls, when=None):
-        return select([TrafficGroup]).select_from(
-            join(TrafficGroup,
-                 Membership).join(cls)
-        ).where(
-            Membership.active(when)
-        )
-
-    @hybrid_method
     def member_of(self, group, when=None):
-        return group in self.active_property_groups(when) or group in self.active_traffic_groups(when)
+        return group in self.active_property_groups(when)
 
     @member_of.expression
     def member_of(cls, group, when=None):
-        # TODO: Add check for TrafficGroup
         return exists(
             select([null()]).select_from(
                 PropertyGroup.__table__.join(
@@ -499,16 +477,6 @@ class Property(IntegerIdModel):
         backref=backref("properties", cascade="all, delete-orphan",
                         collection_class=attribute_mapped_collection("name"))
     )
-
-
-class TrafficGroup(Group):
-    __mapper_args__ = {'polymorphic_identity': 'traffic_group'}
-    id = Column(Integer, ForeignKey(Group.id), primary_key=True,
-                nullable=False)
-    credit_limit = Column(BigInteger, nullable=False)
-    credit_interval = Column(Interval, nullable=False)
-    credit_amount = Column(BigInteger, nullable=False)
-    initial_credit_amount = Column(BigInteger, nullable=False)
 
 
 unix_account_uid_seq = Sequence('unix_account_uid_seq', start=1000,

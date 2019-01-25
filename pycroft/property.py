@@ -41,7 +41,5 @@ property_categories = OrderedDict((
         (u"groups_show",  u"darf Gruppen einsehen"),
         (u"groups_change_membership",  u"darf Gruppenmitgliedschaften bearbeiten"),
         (u"groups_change",  u"darf Gruppen anlegen, bearbeiten, löschen"),
-        (u"groups_traffic_show",  u"darf Trafficgruppen sehen"),
-        (u"groups_traffic_change",  u"darf Trafficgruppen bearbeiten"),
     ))),
 ))
