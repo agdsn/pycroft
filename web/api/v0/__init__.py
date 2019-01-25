@@ -12,7 +12,6 @@ from pycroft.lib.finance import build_transactions_query
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history
 from pycroft.model import session
@@ -77,11 +76,6 @@ def get_interface_or_404(interface_id):
 
 
 def generate_user_data(user):
-    try:
-        traffic_maxmium = effective_traffic_group(user).credit_limit
-    except NoTrafficGroup:
-        traffic_maxmium = None
-
     props = {prop.property_name for prop in user.current_properties}
     user_status = status(user)
 
@@ -89,7 +83,7 @@ def generate_user_data(user):
     step = timedelta(days=1)
     traffic_history = func_traffic_history(user.id,
                                           session.utcnow() - interval + step,
-                                          interval, step)
+                                          interval)
 
     finance_history = [{
         'valid_on': split.transaction.valid_on,
@@ -122,8 +116,6 @@ def generate_user_data(user):
         cache='cache_access' in props,
         # TODO: make `has_property` use `current_property`
         properties=list(props),
-        traffic_balance=user.current_credit,
-        traffic_maximum=traffic_maxmium,
         traffic_history=[e.__dict__ for e in traffic_history],
         # TODO: think about better way for credit
         finance_balance=-user.account.balance,
@@ -209,8 +201,6 @@ class FinanceHistoryResource(Resource):
 
 api.add_resource(FinanceHistoryResource, '/user/<int:user_id>/finance-history')
 
-
-# todo: traffic history
 
 class AuthenticationResource(Resource):
     def post(self):

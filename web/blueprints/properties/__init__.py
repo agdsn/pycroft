@@ -17,91 +17,20 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, url_for,
 
 from pycroft.model import session
 from pycroft.property import property_categories
-from pycroft.model.user import Property, PropertyGroup, TrafficGroup
+from pycroft.model.user import Property, PropertyGroup
 from pycroft.lib.membership import grant_property, deny_property, \
     remove_property
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
-from web.blueprints.properties.forms import PropertyGroupForm, TrafficGroupForm
-from web.template_filters import byte_size_filter
-from .tables import TrafficGroupTable
+from web.blueprints.properties.forms import PropertyGroupForm
 
 bp = Blueprint('properties', __name__)
 access = BlueprintAccess(bp, required_properties=['groups_show'])
-nav = BlueprintNavigation(bp, "Eigenschaften", blueprint_access=access)
-
-
-@bp.route('/traffic_groups')
-@nav.navigate(u"Trafficgruppen")
-@access.require('groups_traffic_show')
-def traffic_groups():
-    traffic_group_table = TrafficGroupTable(
-        data_url=url_for('.traffic_groups_json'))
-
-    return render_template(
-        'properties/traffic_groups_list.html',
-        traffic_group_table=traffic_group_table,
-    )
-
-
-@bp.route('/traffic_groups/json')
-@access.require('groups_traffic_show')
-def traffic_groups_json():
-    return jsonify(items=[{
-            'name': group.name,
-            'credit_limit': byte_size_filter(group.credit_limit),
-            'credit_interval': str(group.credit_interval),
-            'credit_amount': byte_size_filter(group.credit_amount),
-            'initial_credit': byte_size_filter(group.initial_credit_amount),
-            'delete': {
-                'href': url_for(".traffic_group_delete", group_id=group.id),
-                'title': 'Löschen',
-                'btn_class': 'btn-danger',
-                'icon': 'glyphicon-remove'
-            }
-        } for group in TrafficGroup.q.all()])
-
-
-@bp.route('/traffic_group/create', methods=['GET', 'POST'])
-@access.require('groups_traffic_change')
-def traffic_group_create():
-    form = TrafficGroupForm()
-    if form.validate_on_submit():
-        # traffic limit in byte per seven days
-        group = TrafficGroup(
-            name=form.name.data,
-            credit_limit=form.credit_limit.data*1024*1024*1024,
-            credit_amount=form.credit_amount.data*1024*1024*1024,
-            credit_interval=form.credit_interval.data,
-            initial_credit_amount=form.initial_credit.data*1024*1024*1024,
-        )
-        session.session.add(group)
-        session.session.commit()
-        message = u'Trafficgruppe {0} angelegt'
-        flash(message.format(group.name), 'success')
-        return redirect(url_for('.traffic_groups'))
-    return render_template('properties/traffic_group_create.html', form=form,
-    page_title = u"Neue Trafficgruppe")
-
-
-@bp.route('/traffic_group/<group_id>/delete')
-@access.require('groups_traffic_change')
-def traffic_group_delete(group_id):
-    group = TrafficGroup.q.get(group_id)
-
-    if group is None:
-        flash(u"Trafficgruppe mit ID {} existiert nicht!".format(group_id), 'error')
-        abort(404)
-
-    session.session.delete(group)
-    session.session.commit()
-    message = u'Trafficgruppe {0} gelöscht'
-    flash(message.format(group.name), 'success')
-    return redirect(url_for('.traffic_groups'))
+nav = BlueprintNavigation(bp, "Einstellungen", blueprint_access=access)
 
 
 @bp.route('/property_groups')
-@nav.navigate(u"Eigenschaftsgruppen")
+@nav.navigate(u"Gruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
@@ -198,11 +127,6 @@ def property_group_delete(group_id):
     flash(message.format(group.name), 'success')
     return redirect(url_for('.property_groups'))
 
-@bp.route('/json/trafficgroups')
-def json_trafficgroups():
-    groups = [(entry.id, entry.name) for entry in TrafficGroup.q.all()]
-
-    return jsonify(dict(items=groups))\
 
 @bp.route('/json/propertygroups')
 def json_propertygroups():

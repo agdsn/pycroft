@@ -13,8 +13,7 @@ from wtforms.validators import (
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional
-from web.blueprints.properties.forms import traffic_group_query, \
-    property_group_query, property_group_user_create_query
+from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField, \
     QuerySelectMultipleField, SelectMultipleField
@@ -46,11 +45,6 @@ class UserSearchForm(Form):
     login = TextField(u"Unix-Login")
     mac = MacField(u"MAC-Adresse")
     ip_address = TextField(u"IP-Adresse")
-    traffic_group_id = QuerySelectField(u"Trafficgruppe",
-                                get_label='name',
-                                query_factory=traffic_group_query,
-                                allow_blank=True,
-                                blank_text=u"<Trafficgruppe>")
     property_group_id = QuerySelectField(u"Eigenschaftsgruppe",
                                 get_label='name',
                                 query_factory=property_group_query,
@@ -157,17 +151,3 @@ class InterfaceForm(Form):
     host = QuerySelectField(u"Host", get_label='name')
     mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
     ips = SelectMultipleField(u"IPs", validators=[Optional()])
-
-
-class UserSelectGroupForm(Form):
-    group_type = SelectField(u"Typ",
-                             [DataRequired(message=u"Typ?")],
-                             coerce=str,
-                             choices=[('prop', u"Eigenschaft"),
-                                      ('traff', u"Traffic")])
-    group = LazyLoadSelectField(u"Gruppe",
-                                [DataRequired(message=u"Gruppe angeben!")],
-                                coerce=str,
-                                choices=[],
-                                conditions=["group_type"],
-                                data_endpoint="user.json_groups")

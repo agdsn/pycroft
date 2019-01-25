@@ -22,30 +22,25 @@ from flask import (
 import operator
 
 from flask_wtf import FlaskForm
-from sqlalchemy import Text
 import uuid
-from sqlalchemy import Text, and_
+from sqlalchemy import Text
 from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers import utc
-from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex, get_interface_manufacturer
-from pycroft.lib.finance import get_typed_splits
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import SubnetFullException, MacExistsException, \
     get_unused_ips, get_subnets_for_room
 from pycroft.lib.host import change_mac as lib_change_mac
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_history, generate_user_sheet, migrate_user_host, get_blocked_groups
+    traffic_history, generate_user_sheet, get_blocked_groups
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.traffic import effective_traffic_group, NoTrafficGroup
 from pycroft.model import session
-from pycroft.model.traffic import TrafficVolume, TrafficCredit, TrafficBalance
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, Interface, IP, Interface
-from pycroft.model.user import User, Membership, PropertyGroup, TrafficGroup
+from pycroft.model.host import Host, IP, Interface
+from pycroft.model.user import User, Membership, PropertyGroup
 from pycroft.model.finance import Split
 from pycroft.model.types import InvalidMACAddressException
 from sqlalchemy.sql.expression import or_, func, cast
@@ -56,7 +51,7 @@ from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
-    UserEditGroupMembership, UserSelectGroupForm, \
+    UserEditGroupMembership,\
     UserResetPasswordForm, UserMoveInForm, HostForm, InterfaceForm
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.api import json_agg
@@ -161,7 +156,6 @@ def json_search():
     login = request.args.get('login')
     mac = request.args.get('mac')
     ip_address = request.args.get('ip_address')
-    traffic_group_id = request.args.get('traffic_group_id')
     property_group_id = request.args.get('property_group_id')
     building_id = request.args.get('building_id')
     query = request.args.get("query")
@@ -196,10 +190,7 @@ def json_search():
     search_for_pg = property_group_id is not None and property_group_id != "" \
         and property_group_id != "__None"
 
-    search_for_tg = traffic_group_id is not None and traffic_group_id != "" \
-        and traffic_group_id != "__None"
-
-    if search_for_pg or search_for_tg:
+    if search_for_pg:
         result = result.join(Membership)
         result = result.filter(or_(
                             Membership.ends_at.is_(None),
@@ -209,23 +200,10 @@ def json_search():
                             Membership.begins_at < func.current_timestamp()))
 
         try:
-            result_pg, result_tg = None, None
-
             if search_for_pg:
                 pg_id = int(property_group_id)
-                result_pg = result.join(PropertyGroup, PropertyGroup.id == Membership.group_id) \
+                result = result.join(PropertyGroup, PropertyGroup.id == Membership.group_id) \
                                   .filter(PropertyGroup.id == pg_id)
-                if not search_for_tg:
-                    result = result_pg
-            if search_for_tg:
-                tg_id = int(traffic_group_id)
-                result_tg = result.join(TrafficGroup, TrafficGroup.id == Membership.group_id) \
-                                  .filter(TrafficGroup.id == tg_id)
-                if not search_for_pg:
-                    result = result_tg
-
-            if search_for_pg and search_for_tg:
-                result = result_pg.intersect(result_tg)
         except ValueError:
             return abort(400)
     if building_id is not None and building_id != "" and building_id != "__None":
@@ -271,7 +249,6 @@ def infoflags(user):
     return [
         {'title': u"Mitglied", 'val': user_status.member},
         {'title': u"Netzwerkzugang", 'val': user_status.network_access},
-        {'title': u"Traffic übrig", 'val': not user_status.traffic_exceeded},
         {'title': u"Bezahlt", 'val': user_status.account_balanced},
         {'title': u"Verstoßfrei", 'val': not user_status.violation},
         {'title': u"LDAP", 'val': user_status.ldap},
@@ -317,10 +294,7 @@ def user_show(user_id):
             is_blocked = True
 
     user_not_there = not user.member_of(config.member_group)
-    try:
-        traffic_group_name = effective_traffic_group(user).name
-    except NoTrafficGroup:
-        traffic_group_name = None
+
     try:
         if flask_session['user_sheet'] and lib.user.get_user_sheet(flask_session['user_sheet']):
             flash(Markup(u'Es ist ein <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(
@@ -361,7 +335,6 @@ def user_show(user_id):
         flags=infoflags(user),
         json_url=url_for("finance.accounts_show_json",
                          account_id=user.account_id),
-        effective_traffic_group_name=traffic_group_name,
         is_blocked=is_blocked,
         granted_properties=sorted(p.property_name for p in user.current_properties),
         revoked_properties=sorted(
@@ -830,14 +803,11 @@ def json_trafficdata(user_id, days=7):
             "items": {
                 "type": "object",
                 "properties": {
-                    "credit_limit": { "type": "integer" },
                     "traffic": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
-                                "balance": { "type": "integer" },
-                                "credit": { "type": "integer" },
                                 "egress": { "type": "integer" },
                                 "ingress": { "type": "integer" },
                                 "timestamp": { "type": "string" }
@@ -851,17 +821,11 @@ def json_trafficdata(user_id, days=7):
     }
     """
     interval = timedelta(days=days)
-    step = timedelta(days=1)
-    result = traffic_history(user_id, session.utcnow() - interval + step, interval, step)
-
-    credit_limit = session.session.execute(User.active_traffic_groups().where(
-        User.id == user_id).with_only_columns(
-        [func.max(TrafficGroup.credit_limit)])).scalar()
+    result = traffic_history(user_id, session.utcnow() - interval + timedelta(days=1), interval)
 
     return jsonify(
         items={
-            'traffic': [e.__dict__ for e in result],
-            'credit_limit': credit_limit
+            'traffic': [e.__dict__ for e in result]
         }
     )
 
@@ -1226,18 +1190,3 @@ def move_in(user_id):
         form.begin_membership.data = True
 
     return render_template('user/user_move_in.html', form=form, user_id=user_id)
-
-
-@bp.route('/<int:user_id>/reset_credit')
-@access.require('user_change')
-def reset_credit(user_id):
-    user = get_user_or_404(user_id)
-    try:
-        lib.traffic.reset_credit(user, processor=current_user)
-    except ValueError as e:
-        flash(str(e), 'error')
-    else:
-        session.session.commit()
-        flash("Traffic erfolgreich resetted", 'success')
-
-    return redirect(url_for('user.user_show', user_id=user_id))

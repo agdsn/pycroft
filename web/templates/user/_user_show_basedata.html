@@ -56,8 +56,8 @@
                 {% endif %}
             {% endcall %}
 
-            {% call info_row("Aktueller Credit") %}
-                {{ user.current_credit | filesizeformat(binary=True) }}
+            {% call info_row("Traffic Gesamt") %}
+                {{ user.traffic_total | filesizeformat(binary=True) }}
             {% endcall %}
 
             {% call info_row("Saldo") %}

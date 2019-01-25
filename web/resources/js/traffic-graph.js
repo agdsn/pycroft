@@ -55,42 +55,8 @@ $(function() {
                         .transition().duration(0)
                         .call(graph);
                 });
-            },
-        });
-    });
 
-    var creditGraph;
-    d3.select("#traffic-graph").each(function () {
-        creditGraph = {
-            parent: d3.select(this),
-        };
-
-        nv.addGraph({
-            generate: function () {
-                creditGraph.chart = nv.models.lineChart()
-                    .margin({top: 25, right: 75, bottom: 30, left: 60})
-                    .xScale(d3.time.scale())
-                    .yScale(d3.scale.linear());
-                creditGraph.chart.xAxis.tickFormat(dateFormat);
-                creditGraph.chart.yScale(binaryPrefix.linearScale());
-                creditGraph.chart.yAxis.tickFormat(binaryPrefix.format).ticks(5);
-
-                creditGraph.data = creditGraph.parent.append("svg");
-
-                setChartSize(creditGraph);
-
-                return creditGraph.chart;
-            },
-            callback: function (graph) {
-                nv.utils.windowResize(function () {
-                    setChartSize(creditGraph);
-
-                    creditGraph.data
-                        .transition().duration(0)
-                        .call(graph);
-                });
-
-                loadTrafficData(document.getElementById("select-days"));
+                loadTrafficData(document.getElementById('select-days'));
             },
         });
     });
@@ -139,29 +105,6 @@ $(function() {
                 trafficGraph.chart.forceY([0, 1000]);
 
             trafficGraph.data.datum(data).transition().duration(250).call(trafficGraph.chart);
-
-            // Credit graph
-            var binnedCredits = traffic.map(function (d) {
-                return {
-                    x: d.timestamp,
-                    y: d.balance,
-                };
-            });
-
-            var forced = d3.extent(binnedCredits, function (d) {
-                return d.y;
-            }).map(binaryPrefix.ceil);
-            if (resp.items.credit_limit !== null)
-                forced.push(resp.items.credit_limit);
-            creditGraph.chart.forceY(forced);
-
-            creditGraph.data.datum([{
-                key: "Credits",
-                area: true,
-                strokeWidth: 3,
-                color: "#16b520",
-                values: binnedCredits,
-            }]).transition().duration(250).call(creditGraph.chart);
         });
     }
 

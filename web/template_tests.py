@@ -29,12 +29,6 @@ def no_network_access_check(user):
     return not user.has_property("network_access")
 
 
-@template_check("user_with_traffic_exceeded")
-def exceeded_traffic_check(user):
-    """Tests if user has exceeded his traffic
-    """
-    return user.current_credit < 0
-
 @template_check("privileged_for")
 def privilege_check(user, *required_privileges):
     """Tests if the user has one of the required_privileges to view the
