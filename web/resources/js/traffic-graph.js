@@ -75,7 +75,7 @@ $(function() {
 
             // Traffic graph
             var data = [{
-                key: "Egress",
+                key: "Upload",
                 nonStackable: false,
                 values: traffic.map(function (d) {
                     return {
@@ -85,7 +85,7 @@ $(function() {
                 }),
             },
             {
-                key: "Ingress",
+                key: "Download",
                 nonStackable: false,
                 values: traffic.map(function (d) {
                     return {
