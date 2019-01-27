@@ -36,8 +36,9 @@ def upgrade():
         CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)  RETURNS TABLE ("timestamp" timestamptz, ingress numeric, egress numeric) STABLE LANGUAGE sql AS $$
         WITH anon_3 AS 
         (SELECT sum(traffic_volume.amount) AS amount, day, CAST(traffic_volume.type AS TEXT) AS type 
-        FROM generate_series(date_trunc('day', arg_start), date_trunc('day', arg_end), '1 day') AS day LEFT OUTER JOIN traffic_volume ON date_trunc('day', traffic_volume.timestamp) = day 
-        WHERE traffic_volume.user_id = arg_user_id OR traffic_volume.user_id IS NULL GROUP BY day, type), 
+        FROM generate_series(date_trunc('day', arg_start), date_trunc('day', arg_end), '1 day') AS day 
+        LEFT OUTER JOIN traffic_volume ON date_trunc('day', traffic_volume.timestamp) = day AND traffic_volume.user_id = arg_user_id
+        GROUP BY day, type), 
         anon_1 AS 
         (SELECT anon_3.amount AS amount, anon_3.day, anon_3.type AS type 
         FROM anon_3 

@@ -175,10 +175,11 @@ def traffic_history_query():
                         func.date_trunc('day', literal_column('arg_end')),
                         '1 day'
                     ).alias('day')
-                    .outerjoin(TrafficVolume.__table__, func.date_trunc('day', TrafficVolume.timestamp) == literal_column('day'))
+                    .outerjoin(TrafficVolume.__table__, and_(
+                        func.date_trunc('day', TrafficVolume.timestamp) == literal_column('day'),
+                        TrafficVolume.user_id == literal_column('arg_user_id'))
+                    )
               )
-              .where(or_(TrafficVolume.user_id == literal_column('arg_user_id'),
-                         TrafficVolume.user_id == None))
               .group_by(literal_column('day'), literal_column('type'))
               ).cte()
 
