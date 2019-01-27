@@ -30,20 +30,22 @@ def upgrade():
     op.drop_table('traffic_group')
     op.drop_table('traffic_balance')
 
+    op.execute("DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval, arg_step interval)")
+
     op.execute('''
-        CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval) RETURNS TABLE ("timestamp" timestamptz, ingress numeric, egress numeric) STABLE LANGUAGE sql AS $$
+        CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)  RETURNS TABLE ("timestamp" timestamptz, ingress numeric, egress numeric) STABLE LANGUAGE sql AS $$
         WITH anon_3 AS 
-        (SELECT sum(traffic_volume.amount) AS amount, date_trunc('day', traffic_volume.timestamp) AS day, CAST(traffic_volume.type AS TEXT) AS type 
-        FROM traffic_volume 
-        WHERE traffic_volume.user_id = arg_user_id AND traffic_volume.timestamp >= date_trunc('day', arg_start) AND traffic_volume.timestamp < date_trunc('day', arg_start + arg_interval) GROUP BY day, type), 
+        (SELECT sum(traffic_volume.amount) AS amount, day, CAST(traffic_volume.type AS TEXT) AS type 
+        FROM generate_series(date_trunc('day', arg_start), date_trunc('day', arg_end), '1 day') AS day LEFT OUTER JOIN traffic_volume ON date_trunc('day', traffic_volume.timestamp) = day 
+        WHERE traffic_volume.user_id = arg_user_id OR traffic_volume.user_id IS NULL GROUP BY day, type), 
         anon_1 AS 
-        (SELECT anon_3.amount AS amount, anon_3.day AS day, anon_3.type AS type 
+        (SELECT anon_3.amount AS amount, anon_3.day, anon_3.type AS type 
         FROM anon_3 
-        WHERE anon_3.type = 'Ingress'), 
+        WHERE anon_3.type = 'Ingress' OR anon_3.type IS NULL), 
         anon_2 AS 
-        (SELECT anon_3.amount AS amount, anon_3.day AS day, anon_3.type AS type 
+        (SELECT anon_3.amount AS amount, anon_3.day, anon_3.type AS type 
         FROM anon_3 
-        WHERE anon_3.type = 'Egress')
+        WHERE anon_3.type = 'Egress' OR anon_3.type IS NULL)
          SELECT coalesce(anon_1.day, anon_2.day) AS timestamp, anon_1.amount AS ingress, anon_2.amount AS egress 
         FROM anon_1 FULL OUTER JOIN anon_2 ON anon_1.day = anon_2.day ORDER BY timestamp
         $$
@@ -123,6 +125,8 @@ def downgrade():
            FROM traffic_volume
           WHERE (("user".id = traffic_volume.user_id) AND ((traffic_balance.user_id IS NULL) OR (traffic_balance."timestamp" <= traffic_volume."timestamp")))) recent_volume ON (true));
     ''')
+
+    op.execute("DROP FUNCTION IF EXISTS traffic_history (arg_user_id int, arg_start timestamptz, arg_end timestamptz)")
 
     op.execute('''
         CREATE OR REPLACE FUNCTION traffic_history (arg_user_id int, arg_start timestamptz, arg_interval interval, arg_step interval) RETURNS TABLE ("timestamp" timestamptz, credit numeric, ingress numeric, egress numeric, balance numeric) STABLE LANGUAGE sql AS $$

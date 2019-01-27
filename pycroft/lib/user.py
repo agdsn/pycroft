@@ -456,10 +456,10 @@ def edit_birthdate(user, birthdate, processor):
     return user
 
 
-def traffic_history(user_id, start, interval):
+def traffic_history(user_id, start, end):
     result = session.session.execute(
         select(['*']).select_from(
-            func.traffic_history(user_id, start, interval))).fetchall()
+            func.traffic_history(user_id, start, end))).fetchall()
     return [TrafficHistoryEntry(**dict(row.items())) for row in result]
 
 

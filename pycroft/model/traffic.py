@@ -166,17 +166,24 @@ ddl.add_trigger(TrafficVolume.__table__, pmacct_ingress_upsert_trigger)
 
 def traffic_history_query():
     events = (select([func.sum(TrafficVolume.amount).label('amount'),
-                      func.date_trunc('day', TrafficVolume.timestamp).label('day'),
+                      literal_column('day'),
                       cast(TrafficVolume.type, TEXT).label('type')]
                      )
-              .where(TrafficVolume.user_id == literal_column('arg_user_id'))
-              .where(and_(TrafficVolume.timestamp >= func.date_trunc('day', literal_column('arg_start')),
-                          TrafficVolume.timestamp < func.date_trunc('day', literal_column('arg_start') + literal_column('arg_interval'))))
+              .select_from(
+                    func.generate_series(
+                        func.date_trunc('day', literal_column('arg_start')),
+                        func.date_trunc('day', literal_column('arg_end')),
+                        '1 day'
+                    ).alias('day')
+                    .outerjoin(TrafficVolume.__table__, func.date_trunc('day', TrafficVolume.timestamp) == literal_column('day'))
+              )
+              .where(or_(TrafficVolume.user_id == literal_column('arg_user_id'),
+                         TrafficVolume.user_id == None))
               .group_by(literal_column('day'), literal_column('type'))
               ).cte()
 
-    events_ingress = select([events]).where(events.c.type == 'Ingress').cte()
-    events_egress = select([events]).where(events.c.type == 'Egress').cte()
+    events_ingress = select([events]).where(or_(events.c.type == 'Ingress', events.c.type == None)).cte()
+    events_egress = select([events]).where(or_(events.c.type == 'Egress', events.c.type == None)).cte()
 
     hist = (select([func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
                     events_ingress.c.amount.label('ingress'),
@@ -191,7 +198,7 @@ def traffic_history_query():
 
 
 traffic_history_function = Function(
-    'traffic_history', ['arg_user_id int', 'arg_start timestamptz', 'arg_interval interval'],
+    'traffic_history', ['arg_user_id int', 'arg_start timestamptz', 'arg_end timestamptz'],
     'TABLE ("timestamp" timestamptz, ingress numeric, egress numeric)',
     str(
         traffic_history_query().compile(

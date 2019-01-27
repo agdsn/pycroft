@@ -821,7 +821,7 @@ def json_trafficdata(user_id, days=7):
     }
     """
     interval = timedelta(days=days)
-    result = traffic_history(user_id, session.utcnow() - interval + timedelta(days=1), interval)
+    result = traffic_history(user_id, session.utcnow() - interval + timedelta(days=1), session.utcnow())
 
     return jsonify(
         items={
