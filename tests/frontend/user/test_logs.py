@@ -1,3 +1,4 @@
+from hades_logs import HadesLogs
 from pycroft.model._all import User
 from tests import InvalidateHadesLogsMixin
 from tests.fixtures import hades_logs, frontend_logs
@@ -56,7 +57,7 @@ class RoomAndUserLogTestCase(UserLogTestBase):
         self.assertIn(" connected room", item['message'].lower())
 
 
-class IntegrationTestCase(DummyHadesWorkerBase, UserLogTestBase):
+class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLogTestBase):
     """Frontend Tests for the endpoints utilizing live Hades Logs
     """
     datasets = frozenset(hades_logs.datasets)
@@ -68,6 +69,15 @@ class IntegrationTestCase(DummyHadesWorkerBase, UserLogTestBase):
         from tests.fixtures.dummy.host import HostData
         login = HostData.dummy.owner.login
         self.relevant_user = User.q.filter_by(login=login).one()
+
+    def create_app(self):
+        app = super().create_app()
+
+        # Setup dummy_tasks hades logs
+        app.config.update(self.hades_logs_config)
+        HadesLogs(app)
+
+        return app
 
     def test_hades_logs_are_returned(self):
         logs = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
