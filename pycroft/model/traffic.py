@@ -2,17 +2,15 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import timedelta
 
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
-    PrimaryKeyConstraint, func, or_, and_, true, literal, literal_column, \
-    union_all, select, cast, TIMESTAMP, TEXT
+    PrimaryKeyConstraint, func, or_, and_, true, literal_column, \
+    select, cast, TEXT
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql.expression import case, text
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer
 
-from pycroft.model.base import ModelBase, IntegerIdModel
+from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
 from pycroft.model.types import DateTimeTz
 from pycroft.model.user import User
