@@ -82,8 +82,8 @@ def generate_user_data(user):
     interval = timedelta(days=7)
     step = timedelta(days=1)
     traffic_history = func_traffic_history(user.id,
-                                          session.utcnow() - interval + step,
-                                          interval)
+                                           session.utcnow() - interval + step,
+                                           session.utcnow())
 
     finance_history = [{
         'valid_on': split.transaction.valid_on,
