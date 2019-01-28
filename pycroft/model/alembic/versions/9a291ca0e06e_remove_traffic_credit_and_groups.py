@@ -114,7 +114,7 @@ def downgrade():
                     unique=False)
 
     op.execute('''
-        CREATE VIEW current_traffic_balance AS
+        CREATE OR REPLACE VIEW current_traffic_balance AS
  SELECT "user".id AS user_id,
     (((COALESCE(traffic_balance.amount, (0)::bigint))::numeric + COALESCE(recent_credit.amount, (0)::numeric)) - COALESCE(recent_volume.amount, (0)::numeric)) AS amount
    FROM ((("user"
@@ -169,5 +169,3 @@ def downgrade():
          LIMIT ALL OFFSET 1
         $$
     ''')
-
-    # TODO: Recreate current_traffic_balance view
