@@ -21,6 +21,7 @@ def _random_subnet():
         if network.numhosts >= 4:
             return network
 
+
 class SubnetFactory(BaseFactory):
     class Meta:
         model = Subnet
