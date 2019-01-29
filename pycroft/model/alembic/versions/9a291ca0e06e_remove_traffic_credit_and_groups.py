@@ -17,6 +17,10 @@ depends_on = None
 
 
 def upgrade():
+    group = sa.table('group', sa.column('type', sa.String))
+
+    op.execute(group.delete().where(group.c.type == 'traffic_group'))
+
     op.drop_index('ix_traffic_credit_user_id', table_name='traffic_credit')
 
     op.execute("DROP VIEW IF EXISTS current_traffic_balance")
