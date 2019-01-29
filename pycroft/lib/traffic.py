@@ -16,4 +16,6 @@ from pycroft.model.user import User
 
 
 def get_users_with_highest_traffic(limit):
-    return User.q.join(TrafficVolume).order_by(func.sum(TrafficVolume.amount)).desc().limit(limit).all()
+    return User.q.join(TrafficVolume).order_by(func.sum(TrafficVolume.amount).desc())\
+        .filter(TrafficVolume.user_id != 0)\
+        .group_by(User.id).limit(limit).all()

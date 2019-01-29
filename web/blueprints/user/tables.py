@@ -120,3 +120,9 @@ class SearchTable(BootstrapTable):
     id = Column("ID")
     url = LinkColumn("Name")
     login = Column("Login")
+
+
+class TrafficTopTable(BootstrapTable):
+    """A table for displaying the users with the highest traffic usage"""
+    url = LinkColumn("Name")
+    traffic_total = Column("Traffic", formatter='table.byteFormatterBinary')

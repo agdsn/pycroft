@@ -13,14 +13,23 @@
 {% block content %}
   <div class="row">
     <div class="col-sm-6 col-md-5 col-lg-4">
-      <div class="list-group">
-      {%- for entry in entries -%}
-          {{ badge(entry['href'], entry['title'], entry['number']) }}
-      {%- endfor -%}
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="list-group">
+            {%- for entry in entries -%}
+              {{ badge(entry['href'], entry['title'], entry['number']) }}
+            {%- endfor -%}
+          </div>
+        </div>
+        <div class="col-xs-12">
+          <h3>TOP Traffic Verbraucher</h3>
+          {{ traffic_top_table.render('traffic-top-table') }}
+        </div>
       </div>
     </div>
 
-    <div class="col-sm-6 col-md-5 col-lg-4">
+    <div class="col-sm-6 col-md-7 col-lg-8">
     </div>
   </div>
+
 {% endblock %}

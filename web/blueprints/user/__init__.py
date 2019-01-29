@@ -34,6 +34,7 @@ from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import SubnetFullException, MacExistsException, \
     get_unused_ips, get_subnets_for_room
 from pycroft.lib.host import change_mac as lib_change_mac
+from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -61,7 +62,7 @@ from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_hades_log_entry
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     HostTable, SearchTable, InterfaceTable)
+                     HostTable, SearchTable, InterfaceTable, TrafficTopTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 
 bp = Blueprint('user', __name__)
@@ -100,7 +101,12 @@ def overview():
                            .group_by(User.id)
                            .having(func.sum(Split.amount) > 0)
                            .count()}]
-    return render_template("user/user_overview.html", entries=entries)
+    return render_template("user/user_overview.html", entries=entries,
+                           traffic_top_table=TrafficTopTable(
+                                data_url=url_for("user.json_users_highest_traffic"),
+                                table_args={'data-page-size': 10,
+                                            'data-search': 'false'},
+                           ))
 
 
 def make_pdf_response(pdf_data, filename, inline=True):
@@ -147,6 +153,18 @@ def static_datasheet(user_id):
     return make_pdf_response(generate_user_sheet(user, plain_password="********",
                                                  generation_purpose='reprint'),
                              filename='user_sheet_plain_{}.pdf'.format(user_id))
+
+
+@bp.route('/json/traffic-usage')
+def json_users_highest_traffic():
+    return jsonify(items=[{
+        'id': user.id,
+        'name': user.name,
+        'traffic_total': user.traffic_total,
+        'url': {
+            'href': url_for('.user_show', user_id=user.id),
+            'title': user.name
+        }} for user in get_users_with_highest_traffic(50)])
 
 
 @bp.route('/json/search')
