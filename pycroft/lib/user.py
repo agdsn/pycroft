@@ -630,6 +630,7 @@ def status(user):
     """
     return AttrDict({
         'member': user.member_of(config.member_group),
+        'traffic_exceeded': user.member_of(config.traffic_limit_exceeded_group),
         'network_access': user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
