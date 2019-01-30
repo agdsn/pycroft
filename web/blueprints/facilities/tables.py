@@ -22,7 +22,9 @@ class BuildingLevelRoomTable(BootstrapTable):
 
     @property
     def toolbar(self):
-        return button_toolbar("Display all users", href="#", icon="glyphicon-user")
+        return button_toolbar(
+            "Display all users", href="#", id="rooms-toggle-all-users",
+            icon="glyphicon-user")
 
 
 class RoomLogTable(BootstrapTable):
