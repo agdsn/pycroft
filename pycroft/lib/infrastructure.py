@@ -1,3 +1,5 @@
+from ipaddr import IPAddress
+
 from pycroft.lib.logging import log_room_event, log_event
 from pycroft.model.host import SwitchPort, Host, Switch
 from pycroft.model.port import PatchPort
@@ -117,7 +119,7 @@ def edit_switch(switch, name, management_ip, room, processor):
 
         switch.host.room = room
 
-    if switch.management_ip != management_ip:
+    if switch.management_ip != IPAddress(management_ip):
         log_room_event("Changed management IP of switch '{}' from {} to {}."
                        .format(switch.host.name, switch.management_ip, management_ip), processor, switch.host.room)
 
