@@ -122,7 +122,7 @@ class UsersDueTable(BootstrapTable):
     user = LinkColumn("Name")
     valid_on = Column("Gültig am")
     description = Column("Beschreibung")
-    amount = Column("Betrag', formatter='table.coloredFormatter")
+    amount = Column("Betrag", formatter="table.coloredFormatter")
 
 
 class BankAccountTable(BootstrapTable):
