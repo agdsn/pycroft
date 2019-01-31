@@ -104,20 +104,8 @@ def overview():
                            .join(Split)
                            .group_by(User.id)
                            .having(func.sum(Split.amount) > 0)
-                           .count()},
-               {"title": "Cache Nutzer",
-                "href": None,
-                "number": uquery().join(Membership).filter(
-                    Membership.group == config.cache_group,
-                    Membership.active())
-                    .count()},
-               ]
-    return render_template("user/user_overview.html", entries=entries,
-                           traffic_top_table=TrafficTopTable(
-                                data_url=url_for("user.json_users_highest_traffic"),
-                                table_args={'data-page-size': 10,
-                                            'data-search': 'false'},
-                           ))
+                           .count()}]
+    return render_template("user/user_overview.html", entries=entries)
 
 
 def make_pdf_response(pdf_data, filename, inline=True):
