@@ -193,10 +193,10 @@ def create_user_with_all_data(account, building,
 
     new_user, password = lib_user.create_user(name, login, email, None, groups, ru)
 
-    log_user_event("User imported from legacy hoy", ru, new_user)
-
     if account.mycomment:
-        log_user_event(account.mycomment, ru, new_user)
+        log_user_event("User imported from Hoy10. Legacy comment: {}".format(account.mycomment), ru, new_user)
+    else:
+        log_user_event("User imported from Hoy10.", ru, new_user)
 
     log.info("Imported user {}".format(email))
 
