@@ -1,0 +1,14 @@
+# -*- mode: python; coding: utf-8 -*-
+"""
+example conn.py
+
+For additional documentation and tooling, refer to
+`../legacy/conn.py.example`.
+"""
+
+conn_opts = {
+    # The “Input” database
+    'hoy': "postgresql://postgres:password@db/hoy",
+    # The “Output” database
+    'pycroft': "postgresql://postgres:password@db/pycroft",
+}
