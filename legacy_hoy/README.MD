@@ -1,4 +1,4 @@
-docker-compose run -u root dev-app /bin/bash
+docker-compose run dev-app /bin/bash
 
 cd legacy_hoy
 
