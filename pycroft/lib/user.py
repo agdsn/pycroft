@@ -115,12 +115,14 @@ class HostAliasExists(ValueError):
     pass
 
 
-def setup_ipv4_networking(host):
+def setup_ipv4_networking(host, ip_address=None, subnet=None):
     """Add suitable ips for every interface of a host"""
     subnets = get_subnets_for_room(host.room)
 
     for interface in host.interfaces:
-        ip_address, subnet = get_free_ip(subnets)
+        if not (ip_address and subnet):
+            ip_address, subnet = get_free_ip(subnets)
+
         new_ip = IP(interface=interface, address=ip_address,
                     subnet=subnet)
         session.session.add(new_ip)
@@ -253,7 +255,8 @@ def create_user(name, login, email, birthdate, groups, processor, address):
 
 @with_transaction
 def move_in(user, building_id, level, room_number, mac, processor, birthdate=None,
-            host_annex=False, begin_membership=True, when=None):
+            host_annex=False, begin_membership=True, when=None,
+            ip_address=None, subnet=None):
     """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -319,10 +322,12 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
                     else:
                         raise MacExistsException
                 else:
-                    new_host = Host(owner=user, room=room)
-                    session.session.add(new_host)
-                    session.session.add(Interface(mac=mac, host=new_host))
-                    setup_ipv4_networking(new_host)
+                    raise MacExistsException
+            else:
+                new_host = Host(owner=user, room=room)
+                session.session.add(new_host)
+                session.session.add(Interface(mac=mac, host=new_host))
+                setup_ipv4_networking(new_host, ip_address, subnet)
 
         msg = deferred_gettext(u"Moved in: {room}")
 
