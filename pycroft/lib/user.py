@@ -259,9 +259,8 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
             ip_address=None, subnet=None):
     """Move in a user in a given room and do some initialization.
 
-    The user is given a new Host with an interface of the given mac, a
-    UnixAccount, a finance Account, and is made member of important
-    groups.  Networking is set up.
+    The user is given a new Host with an interface of the given mac
+    and maybe is made member of important groups.  Networking is set up.
 
     :param User user: The user to move in
     :param int building_id:
@@ -274,6 +273,8 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
         annex host to new user
     :param bool begin_membership: Starts a membership if true
     :param datetime when: The date at which the user should be moved in
+    :param IPAddress ip_address: A predefined IP address
+    :param Subnet subnet: The corresponding subnet to the predefined IP address
 
     :return: The user object.
     """
