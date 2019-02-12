@@ -20,7 +20,6 @@ log = std_logging.getLogger('import')
 
 from .tools import timed
 
-from sqlalchemy import create_engine, null
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import _request_ctx_stack
 
@@ -33,7 +32,7 @@ except ImportError:
     exit()
 os.environ['PYCROFT_DB_URI'] = conn_opts['pycroft']
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pycroft.model import (session)
+from pycroft.model import (session, create_engine)
 
 ROOT_NAME = "agdsn"
 
