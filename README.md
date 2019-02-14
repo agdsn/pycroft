@@ -310,7 +310,7 @@ our current production database.
 Importing the production database into Pycroft is a three-step process:
 
 1. A regular dump is published in our
-   [internal gitlab](https://git.agdsn.de/team-services/pycroft-data).
+   [internal gitlab](https://git.agdsn.de/AGDSN/pycroft-data).
 
    Clone this repository to your computer.
 
