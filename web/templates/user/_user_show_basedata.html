@@ -56,8 +56,8 @@
                 {% endif %}
             {% endcall %}
 
-            {% call info_row("Traffic Gesamt") %}
-                {{ user.traffic_total | filesizeformat(binary=True) }}
+            {% call info_row("Traffic 7 Tage") %}
+                {{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}
             {% endcall %}
 
             {% call info_row("Saldo") %}

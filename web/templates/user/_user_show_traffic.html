@@ -42,7 +42,7 @@
 <div class="row">
     <div class="col-xs-12">
         <div class="box box-info">
-            Verbrauch insgesamt: <strong>{{ user.traffic_total | filesizeformat(binary=True) }}</strong>.
+            Verbrauch 7 Tage: <strong>{{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}</strong>.
         </div>
 
         <div id="trafficgraph-day-selector" class="col-sm-2 form-group">

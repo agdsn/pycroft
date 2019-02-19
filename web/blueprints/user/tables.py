@@ -125,4 +125,4 @@ class SearchTable(BootstrapTable):
 class TrafficTopTable(BootstrapTable):
     """A table for displaying the users with the highest traffic usage"""
     url = LinkColumn("Name")
-    traffic_total = Column("Traffic", formatter='table.byteFormatterBinary')
+    traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')

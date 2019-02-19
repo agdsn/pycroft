@@ -160,11 +160,11 @@ def json_users_highest_traffic():
     return jsonify(items=[{
         'id': user.id,
         'name': user.name,
-        'traffic_total': user.traffic_total,
+        'traffic_for_days': user.traffic_for_days,
         'url': {
             'href': url_for('.user_show', user_id=user.id),
             'title': user.name
-        }} for user in get_users_with_highest_traffic(50)])
+        }} for user in get_users_with_highest_traffic(7, 50)])
 
 
 @bp.route('/json/search')

@@ -11,6 +11,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
+from datetime import timedelta
 
 from flask_login import UserMixin
 from sqlalchemy import (
@@ -67,18 +68,21 @@ class User(IntegerIdModel, UserMixin):
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)
 
-    @hybrid_property
-    def traffic_total(self):
+    @hybrid_method
+    def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return sum(v.amount for v in TrafficVolume.q.filter_by(user_id=self.id))
+        return sum(v.amount for v in TrafficVolume.q.filter_by(user_id=self.id)
+                   .filter(TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()))
 
-    @traffic_total.expression
-    def traffic_total(self):
+    @traffic_for_days.expression
+    def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return select([func.sum(TrafficVolume.amount).label('amount')])\
-            .where(TrafficVolume.user_id == self.id)
+        return select([func.sum(TrafficVolume.amount).label('amount')]) \
+            .where(
+            TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()
+            .where(TrafficVolume.user_id == self.id))
 
     #: This is a relationship to the `current_property` view filtering out
     #: the entries with `denied=True`.
