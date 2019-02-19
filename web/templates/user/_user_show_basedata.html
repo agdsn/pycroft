@@ -50,7 +50,7 @@
 
             {% call info_row("Geburtsdatum") %}
                 {% if current_user is privileged_for('user_change') %}
-                {{ user.birthdate|date}}<a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
+                {{ user.birthdate|date}} <a href="{{ url_for(".edit_user", user_id=user.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
                 {% else %}
                 {{ user.birthdate|date }}
                 {% endif %}
