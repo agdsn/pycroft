@@ -25,10 +25,11 @@ $(function() {
             .attr('height', height);
     }
 
-    var trafficGraph;
-    d3.select("#traffic-graph").each(function () {
-        trafficGraph = {
+    d3.select(".traffic-graph").each(function () {
+        var trafficGraph = {
             parent: d3.select(this),
+            url: this.dataset.url,
+            days: this.dataset.days,
         };
 
         nv.addGraph({
@@ -56,14 +57,14 @@ $(function() {
                         .call(graph);
                 });
 
-                loadTrafficData(document.getElementById('select-days'));
+                loadTrafficData(trafficGraph);
             },
         });
     });
 
-    function loadTrafficData(sel) {
-        var url = sel.dataset.url;
-        var days = sel.value;
+    function loadTrafficData(trafficGraph) {
+        var days = trafficGraph.days;
+        var url = trafficGraph.url;
         d3.json(url + "/" + days, function (error, resp) {
             if (error) throw error;
 
@@ -108,7 +109,7 @@ $(function() {
         });
     }
 
-    $('#select-days').on("change", function () {
+    $('.select-days').on("change", function () {
         loadTrafficData(this);
     });
 });

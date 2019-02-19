@@ -45,13 +45,9 @@
             Verbrauch 7 Tage: <strong>{{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}</strong>.
         </div>
 
-        <div id="trafficgraph-day-selector" class="col-sm-2 form-group">
-            <label for="select-days">Zeitraum</label>
-            <select id="select-days" class="form-control" data-url="{{ url_for('.json_trafficdata', user_id=user.id) }}">
-                <option value="7" selected>7 Tage</option>
-            </select>
-        </div>
-        <div id="traffic-graph" class="col-sm-10"></div>
+        <div class="traffic-graph col-xs-12"
+             data-url="{{ url_for('.json_trafficdata', user_id=user.id) }}"
+             data-days="7"></div>
     </div>
 </div>
 
