@@ -101,6 +101,7 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
+            'saldo': money_filter(bank_account.account.balance),
             'last_imported_at': '{}'.format(
                 map_or_default(bank_account.last_imported_at, datetime.date,
                                'nie'))
