@@ -138,7 +138,7 @@ class BankAccountTable(BootstrapTable):
     iban = Column("IBAN")
     bic = Column("SWIFT-BIC")
     kto = BtnColumn("Konto")
-    saldo = Column("Saldo")
+    balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")
 
     def __init__(self, *a, create_account=False, **kw):
