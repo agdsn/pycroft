@@ -268,10 +268,13 @@ def switch_port_create(switch_id):
 
     form.patch_port.query = PatchPort.q.filter_by(switch_room=switch.host.room)
 
+    if not form.is_submitted():
+        form.default_vlans.process_data([VLAN.q.filter_by(name=switch.host.room.building.short_name).first()])
+
     if form.validate_on_submit():
         error = False
 
-        switch_port = create_switch_port(switch, form.name.data, current_user)
+        switch_port = create_switch_port(switch, form.name.data, form.default_vlans.data, current_user)
 
         if form.patch_port.data:
             try:
@@ -324,7 +327,7 @@ def switch_port_edit(switch_id, switch_port_id):
     if form.validate_on_submit():
         error = False
 
-        edit_switch_port(switch_port, form.name.data, current_user)
+        edit_switch_port(switch_port, form.name.data, form.default_vlans.data, current_user)
 
         if switch_port.patch_port != form.patch_port.data:
             if switch_port.patch_port:

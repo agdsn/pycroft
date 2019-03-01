@@ -81,23 +81,35 @@ def remove_patch_to_patch_port(patch_port, processor):
 
 
 @with_transaction
-def create_switch_port(switch, name, processor):
-    switch_port = SwitchPort(name=name, switch=switch)
+def create_switch_port(switch, name, default_vlans, processor):
+    switch_port = SwitchPort(name=name, switch=switch, default_vlans=default_vlans)
     session.add(switch_port)
 
-    log_room_event("Created switch-port {} on {}.".format(switch_port.name, switch_port.switch.host.name), processor,
+    log_room_event("Created switch-port {} on {} with default VLANs {}."
+                   .format(switch_port.name, switch_port.switch.host.name,
+                           ', '.join(str(vlan.vid) for vlan in switch_port.default_vlans)),
+                   processor,
                    switch_port.switch.host.room)
 
     return switch_port
 
 
 @with_transaction
-def edit_switch_port(switch_port, name, processor):
+def edit_switch_port(switch_port, name,  default_vlans, processor):
     if switch_port.name != name:
         log_room_event("Changed name of switch-port {} to {}." .format(switch_port.name,name),
                        processor, switch_port.switch.host.room)
 
         switch_port.name = name
+
+    if switch_port.default_vlans != default_vlans:
+        switch_port.default_vlans = default_vlans
+
+        log_room_event(
+            "Changed default VLANs of switch-port {} to {}.".format(
+                switch_port.name,
+                ', '.join(str(vlan.vid) for vlan in switch_port.default_vlans)),
+            processor, switch_port.switch.host.room)
 
 
 @with_transaction
