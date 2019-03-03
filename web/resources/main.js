@@ -12,6 +12,7 @@ import 'd3';
 import 'dc';
 import 'jquery';
 import 'list.js';
+import 'matchheight';
 import 'moment';
 import 'moment/src/locale/de.js';
 import 'nvd3';

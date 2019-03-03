@@ -301,8 +301,8 @@ input.money-amount {
 
 
 /* User card */
-.user-card {
-    margin: 0 20px;
+.card {
+    /*margin: 0 20px;*/
     background-color: hsl(200, 50%, 98%);
     border-radius: 10px;
     overflow: hidden;  /* To crop the corners from the children's background */
@@ -310,28 +310,29 @@ input.money-amount {
     color: hsl(0, 0%, 35%)
 }
 
-.user-card .user-card-top {
+.card .card-top {
     overflow: auto;  /* To set block context */
     margin-bottom: 10px;
     background-color: hsl(200, 70%, 95%);
     padding: 10px;
 }
 
-.user-card .user-card-bottom {
+.card .card-bottom {
     background-color: hsl(200, 50%, 99%);
     padding: 10px;
+    font-weight: bold;
 }
 
-.user-card section {
+.card section {
     padding-top: 0;
     margin: 12px 0;
 }
 
-.user-card .user-name {
+.card .card-title {
     font-size: 230%;
 }
 
-.user-card .user-flags {
+.card .user-flags {
     float: right;
 }
 
@@ -363,11 +364,11 @@ input.money-amount {
     color: var(--red-bright-60);
 }
 
-.user-card .user-login {
+.card .user-login {
     font-family: monospace;
 }
 
-.user-card .footer {
+.card .footer {
     font-size: smaller;
     letter-spacing: 1px;
     color: hsl(0, 0%, 40%);
@@ -404,3 +405,13 @@ a.userprop:hover, a.userprop:link {
     background-color: var(--red-bright-60);
     color: var(--red-dark-40);
 }
+
+/* Action Button */
+
+.action-button > a{
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+
+
