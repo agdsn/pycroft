@@ -744,14 +744,22 @@ def match_activities():
     for activity in activity_q.all():
         # search for user-ID
         user = None
-        search = re.search(r"(([\d]+-[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
+        search = re.search(r"(([\d]{3,7}[-/?:,+.]?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
+
         if search:
             if activity.reference.lower().startswith('gerok38'):
                 user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
+            else:
+                uid = search.group(2).replace('/', '-').replace(' ', '-') \
+                    .replace('?', '-').replace(':', '-').replace(',', '-') \
+                    .replace('+', '-').replace('.', '-')
+                if uid[-2] is not '-' and uid[-3] is not '-':
+                    # interpret as type 2 UID with missing -
+                    uid = uid[:-2] + '-' + uid[-2:]
 
-            elif check_user_id(search.group(2)):
-                uid = search.group(2).split("-")[0]
-                user = User.q.get(uid)
+                if check_user_id(uid):
+                    uid = uid.split("-")[0]
+                    user = User.q.get(uid)
             if user:
                 matching.update({activity: user})
 
