@@ -19,7 +19,7 @@ depends_on = None
 
 def upgrade():
     op.execute("""
-        CREATE OR REPLACE FUNCTION public.split_check_transaction_balanced()
+        CREATE OR REPLACE FUNCTION split_check_transaction_balanced()
          RETURNS trigger
          LANGUAGE plpgsql
          STABLE STRICT
@@ -56,7 +56,7 @@ def upgrade():
     """)
 
     op.execute("""
-        CREATE OR REPLACE FUNCTION public.bank_account_activity_matches_referenced_split()
+        CREATE OR REPLACE FUNCTION bank_account_activity_matches_referenced_split()
          RETURNS trigger
          LANGUAGE plpgsql
          STABLE STRICT
