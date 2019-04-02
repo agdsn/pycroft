@@ -207,7 +207,7 @@ manager.add_function(
             s := COALESCE(NEW, OLD);
           END IF;
           
-          SELECT COUNT(*) = 0 INTO transaction_deleted FROM "transaction" WHERE "id" = s.transaction_id);
+          SELECT COUNT(*) = 0 INTO transaction_deleted FROM "transaction" WHERE "id" = s.transaction_id;
             
           SELECT COUNT(*), SUM(amount) INTO STRICT count, balance FROM split
               WHERE transaction_id = s.transaction_id;
