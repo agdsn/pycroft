@@ -315,7 +315,7 @@ def user_show(user_id):
 
     try:
         if flask_session['user_sheet'] and lib.user.get_user_sheet(flask_session['user_sheet']):
-            flash(Markup(u'Es ist ein <a href="{}">Nutzerdatenblatt</a> verfügbar!'.format(
+            flash(Markup(u'Es ist ein <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'.format(
                 url_for('.user_sheet'))
             ))
     except KeyError:
@@ -939,7 +939,7 @@ def create():
             session.session.commit()
 
             flask_session['user_sheet'] = sheet.id
-            flash(Markup(u'Benutzer angelegt. <a href="{}">Nutzerdatenblatt</a> verfügbar!'
+            flash(Markup(u'Benutzer angelegt. <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'
                          .format(url_for('.user_sheet'))), 'success')
             return redirect(url_for('.user_show', user_id=new_user.id))
 
