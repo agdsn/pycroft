@@ -70,6 +70,8 @@ class Interface(IntegerIdModel):
 
     It has to be bound to a `UserHost`, not another kind of host (like `Switch`)
     """
+    name = Column(String, nullable=True)
+
     mac = Column(MACAddress, nullable=False, unique=True)
 
     host_id = Column(Integer, ForeignKey(Host.id, ondelete="CASCADE"),

@@ -548,6 +548,7 @@ def user_show_interfaces_json(user_id):
             list_items.append({
                 'id': interface.id,
                 'host': host.name,
+                'name': interface.name,
                 'ips': ', '.join(str(ip.address) for ip in interface.ips),
                 'mac': interface.mac,
                 'edit_link': {'href': url_for('.interface_edit', interface_id=interface.id,
@@ -642,7 +643,7 @@ def interface_edit(user_id, interface_id):
     if not unique_mac_error and form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
-        lib.host.interface_edit(interface, form.host.data, form.mac.data, ips,
+        lib.host.interface_edit(interface, form.host.data, form.name.data, form.mac.data, ips,
                                 current_user)
 
         session.session.commit()
@@ -696,7 +697,7 @@ def interface_create(user_id):
     if not unique_mac_error and form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
-        lib.host.interface_create(form.host.data, form.mac.data, ips,
+        lib.host.interface_create(form.host.data, form.name.data, form.mac.data, ips,
                                   current_user)
 
         session.session.commit()

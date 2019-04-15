@@ -109,9 +109,10 @@ def host_delete(host, processor):
 
 
 @with_transaction
-def interface_create(host, mac, ips, processor):
+def interface_create(host, name, mac, ips, processor):
     interface = Interface(host=host,
-                          mac=mac)
+                          mac=mac,
+                          name=name)
 
     session.add(interface)
 
@@ -131,10 +132,11 @@ def interface_create(host, mac, ips, processor):
             session.add(IP(interface=interface, address=ip,
                            subnet=subnet))
 
-    message = deferred_gettext(u"Created interface ({}, {}) for host '{}'."
+    message = deferred_gettext(u"Created interface ({}, {}) with name '{}' for host '{}'."
                                .format(interface.mac,
                                        ', '.join(str(ip.address) for ip in
                                                  interface.ips),
+                                       interface.name,
                                        interface.host.name))
     log_user_event(author=processor,
                    user=host.owner,
@@ -144,7 +146,7 @@ def interface_create(host, mac, ips, processor):
 
 
 @with_transaction
-def interface_edit(interface, host, mac, ips, processor):
+def interface_edit(interface, host, name, mac, ips, processor):
     message = u"Edited interface ({}, {}) of host '{}'." \
         .format(interface.mac,
                 ', '.join(str(ip.address) for ip in
@@ -154,6 +156,10 @@ def interface_edit(interface, host, mac, ips, processor):
     if interface.host != host:
         interface.host = host
         message += " New host: '{}'.".format(interface.host.name)
+
+    if interface.name != name:
+        interface.name = name
+        message += " New name: '{}.".format(interface.name)
 
     if interface.mac != mac:
         interface.mac = mac

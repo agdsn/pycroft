@@ -149,5 +149,6 @@ class HostForm(SelectRoomForm):
 
 class InterfaceForm(Form):
     host = QuerySelectField(u"Host", get_label='name')
+    name = TextField(u"Name",description=u"z.B. eth0, en0 oder enp0s29u1u1u5")
     mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
     ips = SelectMultipleField(u"IPs", validators=[Optional()])

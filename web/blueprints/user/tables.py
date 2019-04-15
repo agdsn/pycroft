@@ -95,6 +95,7 @@ class InterfaceTable(BootstrapTable):
     """A table for displaying interfaces
     """
     host = Column("Host")
+    name = Column("Name")
     mac = Column("MAC")
     ips = Column("IPs")
     edit_link = BtnColumn("Editieren", hide_if=no_userhost_change)
