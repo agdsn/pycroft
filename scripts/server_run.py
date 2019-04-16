@@ -63,11 +63,14 @@ def server_run(args):
 
     @app.teardown_request
     def time_response(exception=None):
-        time_taken = time.time() - g.request_time
-        if time_taken > 0.5:
-            app.logger.warn(
-                "Response took {duration} seconds for request {path}".format(
-                    path=request.full_path, duration=time_taken))
+        request_time = g.pop('request_time', None)
+
+        if request_time:
+            time_taken = time.time() - request_time
+            if time_taken > 0.5:
+                app.logger.warn(
+                    "Response took {duration} seconds for request {path}".format(
+                        path=request.full_path, duration=time_taken))
 
     engine = create_engine(connection_string, echo=args.profile)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
