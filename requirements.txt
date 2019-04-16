@@ -26,7 +26,8 @@ alembic~=0.9.6
 # decimal serialization
 simplejson~=3.11.1
 #usersheet generation
-reportlab~=3.4.0
+pillow~=5.4.1 # pillow >= 6.x.x breaks reportlab <= 3.5.0
+reportlab~=3.5.0
 fints~=2.0.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
