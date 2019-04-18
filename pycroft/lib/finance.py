@@ -14,7 +14,8 @@ from io import StringIO
 import operator
 import re
 
-from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_
+from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
+    text
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
@@ -720,7 +721,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
         else:
             query = query.filter(Split.amount < 0)
 
-    query = query.order_by(ordering).offset(offset).limit(limit)
+    query = query.order_by(text(ordering)).offset(offset).limit(limit)
 
     if eagerload:
         query = query.options(contains_eager(Split.transaction))
