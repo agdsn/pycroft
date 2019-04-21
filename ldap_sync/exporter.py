@@ -239,7 +239,9 @@ def fetch_properties_to_sync(session) -> List[PropertyProxyType]:
     ).fetchall()
 
     missing_properties = EXPORTED_PROPERTIES - { p.name for p in properties }
-    return properties + [PropertyProxyType(p, []) for p in missing_properties]
+    # Return mutable copy instead of SQLAlchemy's immutable RowProxy
+    return [PropertyProxyType(p.name, p.members) for p in properties] \
+           + [PropertyProxyType(p, []) for p in missing_properties]
 
 
 def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
