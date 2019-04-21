@@ -55,6 +55,9 @@ def get_free_ip(subnets):
 
 #TODO: Implement this in the model
 def get_subnets_for_room(room):
+    if not room:
+        return list()
+
     return [s for p in room.connected_patch_ports
                for v in p.switch_port.default_vlans
                for s in v.subnets
