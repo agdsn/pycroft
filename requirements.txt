@@ -9,7 +9,7 @@ Jinja2~=2.10.1
 MarkupSafe~=1.0
 # Needed for the gerok importer
 PyMySQL~=0.7.3
-SQLAlchemy~=1.1.14
+SQLAlchemy~=1.3.3
 WTForms~=2.2.1
 Werkzeug~=0.15.2
 blinker~=1.4
