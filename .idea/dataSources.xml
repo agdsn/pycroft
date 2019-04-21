@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="legacy@localhost" uuid="45a214db-d655-4d99-b7a7-d27302179700">
-      <driver-ref>postgresql</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:55432/legacy</jdbc-url>
-      <user-name>postgres</user-name>
-      <introspection-schemas>legacy:public</introspection-schemas>
-    </data-source>
-    <data-source source="LOCAL" name="pycroft@localhost" uuid="e455b627-0a7e-432f-9d69-cafb01bc5879">
+    <data-source source="LOCAL" name="pycroft@localhost" uuid="0f571816-5fc5-417c-afcc-b711bf699729">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:55432/pycroft</jdbc-url>
-      <user-name>postgres</user-name>
-      <introspection-schemas>pycroft:public,pycroft</introspection-schemas>
     </data-source>
   </component>
 </project>
