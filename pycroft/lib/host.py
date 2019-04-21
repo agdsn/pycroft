@@ -159,7 +159,7 @@ def interface_edit(interface, host, name, mac, ips, processor):
 
     if interface.name != name:
         interface.name = name
-        message += " New name: '{}.".format(interface.name)
+        message += " New name: '{}'.".format(interface.name)
 
     if interface.mac != mac:
         interface.mac = mac
