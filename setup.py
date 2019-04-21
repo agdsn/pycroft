@@ -67,7 +67,6 @@ setup(
         'console_scripts': [
             'pycroft = scripts.server_run:main',
             'pycroft_ldap_sync = ldap_sync.__main__:main',
-            'pycroft_sync_exceeded_traffic_limits = scripts.sync_exceeded_traffic_limits:main',
         ]
     },
     license="Apache Software License",
