@@ -745,10 +745,11 @@ def match_activities():
     for activity in activity_q.all():
         # search for user-ID
         user = None
-        search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
+        reference = activity.reference.replace('AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111', '')
+        search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", reference)
 
         if search is None:
-            search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2}))", activity.reference.replace(' ', ''))
+            search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2}))", reference.replace(' ', ''))
 
         if search:
             if activity.reference.lower().startswith('gerok38'):
