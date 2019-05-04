@@ -745,13 +745,16 @@ def match_activities():
     for activity in activity_q.all():
         # search for user-ID
         user = None
-        search = re.search(r"(([\d]{3,7}[-/?:,+.]?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
+        search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", activity.reference)
+
+        if search is None:
+            search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2}))", activity.reference.replace(' ', ''))
 
         if search:
             if activity.reference.lower().startswith('gerok38'):
                 user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
             else:
-                uid = search.group(2).replace('/', '-').replace(' ', '-') \
+                uid = search.group(2).replace(' ', '').replace('/', '-') \
                     .replace('?', '-').replace(':', '-').replace(',', '-') \
                     .replace('+', '-').replace('.', '-')
                 if uid[-2] is not '-' and uid[-3] is not '-':
