@@ -146,16 +146,12 @@ def interface_create(host, name, mac, ips, processor):
 
 
 @with_transaction
-def interface_edit(interface, host, name, mac, ips, processor):
+def interface_edit(interface, name, mac, ips, processor):
     message = u"Edited interface ({}, {}) of host '{}'." \
         .format(interface.mac,
                 ', '.join(str(ip.address) for ip in
                           interface.ips),
                 interface.host.name)
-
-    if interface.host != host:
-        interface.host = host
-        message += " New host: '{}'.".format(interface.host.name)
 
     if interface.name != name:
         interface.name = name

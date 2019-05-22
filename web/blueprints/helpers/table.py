@@ -282,6 +282,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         yield self.table_footer
         yield "</table>"
 
+
     def render(self, table_id):
         """Render the table
         """

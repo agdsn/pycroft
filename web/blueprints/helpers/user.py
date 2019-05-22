@@ -1,6 +1,8 @@
-from flask import url_for
+from flask import url_for, flash, abort
+from flask_login import current_user
 
 from pycroft.lib.user import status
+from pycroft.model.user import User
 
 
 def user_btn_style(user):
@@ -72,3 +74,19 @@ def user_button(user):
         'btn_class': btn_class,
         'tooltip': tooltip
     }
+
+
+def get_user_or_404(user_id):
+    user = User.q.get(user_id)
+    if user is None:
+        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
+        abort(404)
+    return user
+
+
+def no_membership_change():
+    return not current_user.has_property('groups_change_membership')
+
+
+def no_hosts_change():
+    return not current_user.has_property('hosts_change')

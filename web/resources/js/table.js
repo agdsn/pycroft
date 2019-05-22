@@ -172,6 +172,7 @@ export function multiBtnFormatter(value, row, index) {
     if (!value) {
         return;
     }
+
     return value.map(v => btnFormatter(v, row, index)).join('');
 }
 
@@ -217,18 +218,62 @@ $.extend($.fn.bootstrapTable.defaults, {
     escape: true,
 });
 
+
 /**
- * This bootstrap table extension adds the `data-sort-name` attribute to columns
+ * Adds the expanded attribute to `true` on the first item
+ */
+export function userHostResponseHandler(resp) {
+    let items = resp.items;
+    if (items.length === 1) {
+        let item = items[0];
+
+        if (!item.hasOwnProperty('_data')) {
+            item['_data'] = {};
+        }
+
+        item['_data']['expanded'] = true;
+    }
+    return items;
+}
+
+
+/**
+ * This bootstrap table extension handles multiple extra attributes:
+ *
+ * Adds the `data-sort-name` attribute to columns
  * that are formatted by a `data-formatter`. Therefor a formatter can specify a
  * `sortName`, which is used to derive the column's `data-sort-name` attribute.
+ *
+ * If the `data-expanded` attribute is set to `true` on a row (for example by
+ * adding it to the _data dict of the fetched data), a may available `detailView`
+ * will be expanded by default.
+ *
+ * If the `data-hide-pagination-info` attribute is set to `true` on the table,
+ * the pagination info will be hidden if there is only one page.
+ *
+ * If the `data-load-subtables` attributes is set to `true` on the table,
+ * subtables in the detailView will be loaded.
  */
 !function ($) {
-    var BootstrapTable = $.fn.bootstrapTable.Constructor,
-        _initTable = BootstrapTable.prototype.initTable;
+    let BootstrapTable = $.fn.bootstrapTable.Constructor;
+    let _initTable = BootstrapTable.prototype.initTable;
+    let _initBody = BootstrapTable.prototype.initBody;
+    let _initPagination = BootstrapTable.prototype.initPagination;
 
     BootstrapTable.prototype.initTable = function () {
         // Init sort name
         this.initSortName();
+
+        //Initialize subtables
+        if (this.options.loadSubtables){
+            this.$container.find('table').on('expand-row.bs.table', function(e, index, row, $detail){
+                $detail.find('table').each(function(_, table){
+                    if ($(table).bootstrapTable('getOptions').length === 1){
+                        $(table).bootstrapTable();
+                    }
+                })
+            })
+        }
 
         // Init Body
         _initTable.apply(this, Array.prototype.slice.apply(arguments));
@@ -256,4 +301,35 @@ $.extend($.fn.bootstrapTable.defaults, {
             }
         });
     };
+
+    BootstrapTable.prototype.initBody = function () {
+        _initBody.apply(this, Array.prototype.slice.apply(arguments));
+        this.$body.find('> tr[data-index][data-expanded=true] > td > .detail-icon').click();
+    };
+
+    BootstrapTable.prototype.initPagination = function () {
+        _initPagination.apply(this, Array.prototype.slice.apply(arguments));
+
+        if (this.options.hidePaginationInfo && this.totalPages === 1) {
+            this.$pagination.find('.pagination-info').hide();
+        }
+    }
 }($);
+
+/*
+    detailFormatter for the host table, displaying the related interfaces
+*/
+export function hostDetailFormatter(index, row, element){
+    let html = `<b>Interfaces</b><span class="pull-right"><a href="${row.interface_create_link}" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-plus"></span> Interface</a></span>`;
+
+    $.ajax({
+         async: false,
+         type: 'GET',
+         url: row.interfaces_table_link,
+         success: function(data) {
+              html = html.concat(data)
+         }
+    });
+
+    return html;
+}

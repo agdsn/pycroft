@@ -137,18 +137,3 @@ class UserMoveOutForm(Form):
     # when = DateField(u"Auszug am", [DataRequired()])
     comment = TextAreaField(u"Kommentar")
     end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
-
-
-class HostForm(SelectRoomForm):
-    owner_id = UserIDField(u"Besitzer-ID")
-    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")],
-                     description=u"z.B. TP-LINK WR841, FritzBox 4040 oder MacBook")
-
-    _order = ("name", "owner_id")
-
-
-class InterfaceForm(Form):
-    host = QuerySelectField(u"Host", get_label='name')
-    name = TextField(u"Name",description=u"z.B. eth0, en0 oder enp0s29u1u1u5")
-    mac = MacField(u"MAC", [MacAddress(message=u"MAC ist ungültig!")])
-    ips = SelectMultipleField(u"IPs", validators=[Optional()])

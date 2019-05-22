@@ -1,8 +1,8 @@
 from flask import url_for
-from flask_login import current_user
 
-from web.blueprints.helpers.table import BootstrapTable, Column, BtnColumn, \
+from web.blueprints.helpers.table import BootstrapTable, Column, \
     LinkColumn, button_toolbar, MultiBtnColumn, DateColumn
+from web.blueprints.helpers.user import no_membership_change
 
 
 class RefreshableTableMixin:
@@ -33,10 +33,6 @@ class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     message = Column("Nachricht")
 
 
-def no_membership_change():
-    return not current_user.has_property('groups_change_membership')
-
-
 class MembershipTable(BootstrapTable):
     """A table for displaying memberships
 
@@ -63,59 +59,6 @@ class MembershipTable(BootstrapTable):
         return button_toolbar("Mitgliedschaft", href)
 
 
-def no_userhost_change():
-    return not current_user.has_property('user_hosts_change')
-
-
-class HostTable(BootstrapTable):
-    """A table for displaying hosts
-    """
-    name = Column("Name")
-    switch = Column("Switch")
-    port = Column("SwitchPort")
-    edit_link = BtnColumn("Editieren", hide_if=no_userhost_change)
-    delete_link = BtnColumn("Löschen", hide_if=no_userhost_change)
-
-    def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, **kw)
-        self.user_id = user_id
-
-    @property
-    def toolbar(self):
-        if self.user_id is None:
-            return
-        if no_userhost_change():
-            return
-
-        href = url_for(".host_create", user_id=self.user_id)
-        return button_toolbar("Host", href)
-
-
-class InterfaceTable(BootstrapTable):
-    """A table for displaying interfaces
-    """
-    host = Column("Host")
-    name = Column("Name")
-    mac = Column("MAC")
-    ips = Column("IPs")
-    edit_link = BtnColumn("Editieren", hide_if=no_userhost_change)
-    delete_link = BtnColumn("Löschen", hide_if=no_userhost_change)
-
-    def __init__(self, *a, user_id=None, **kw):
-        super().__init__(*a, **kw)
-        self.user_id = user_id
-
-    @property
-    def toolbar(self):
-        if self.user_id is None:
-            return
-        if no_userhost_change():
-            return
-
-        href = url_for(".interface_create", user_id=self.user_id)
-        return button_toolbar("Interface", href)
-
-
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""
     id = Column("ID")
@@ -127,3 +70,4 @@ class TrafficTopTable(BootstrapTable):
     """A table for displaying the users with the highest traffic usage"""
     url = LinkColumn("Name")
     traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')
+

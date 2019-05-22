@@ -26,7 +26,7 @@ import jQuery from 'jquery';
             var manufacturer_addon = $(e.target).closest('.input-group').find('.mac-manufacturer');
 
             if(e.target.value.length === 17){
-                $.getJSON( $SCRIPT_ROOT + '/user/interface-manufacturer/' + e.target.value, function( data ){
+                $.getJSON( $SCRIPT_ROOT + '/host/interface-manufacturer/' + e.target.value, function( data ){
                     if(data.manufacturer){
                         manufacturer_addon.text(data.manufacturer);
                     }
