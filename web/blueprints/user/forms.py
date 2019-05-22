@@ -16,7 +16,7 @@ from web.blueprints.facilities.forms import building_query, SelectRoomForm, Sele
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from web.form.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, DateField, SelectField, FormField, \
-    QuerySelectMultipleField, SelectMultipleField
+    QuerySelectMultipleField, SelectMultipleField, DateField
 from web.form.fields.custom import LazyLoadSelectField, MacField, UserIDField
 from web.form.fields.filters import empty_to_none, to_lowercase
 from web.form.fields.validators import OptionalIf, MacAddress
@@ -69,6 +69,9 @@ class UserEditForm(Form):
 
 
 class UserMoveForm(SelectRoomForm):
+    now = BooleanField(u"Sofort", default=False)
+    when = DateField(u"Umzug am", [OptionalIf("now")])
+
     pass
 
 
@@ -96,6 +99,8 @@ class UserCreateForm(SelectRoomFormOptional):
 
 
 class UserMoveInForm(UserMoveForm):
+    now = BooleanField(u"Sofort", default=False)
+    when = DateField(u"Einzug am", [OptionalIf("now")])
     birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
     mac = MacField(u"MAC", [Optional()])
     begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
@@ -134,6 +139,7 @@ class UserSuspendForm(Form):
 
 
 class UserMoveOutForm(Form):
-    # when = DateField(u"Auszug am", [DataRequired()])
+    now = BooleanField(u"Sofort", default=False)
+    when = DateField(u"Auszug am", [OptionalIf("now")])
     comment = TextAreaField(u"Kommentar")
     end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])

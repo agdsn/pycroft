@@ -333,3 +333,44 @@ export function hostDetailFormatter(index, row, element){
 
     return html;
 }
+
+/*
+    detailFormatter for the task table, displaying the used parameters
+*/
+export function taskDetailFormatter(index, row, element){
+    let html = '<h5><b>Verwendete Parameter</b></h5>';
+
+    $.each(row.parameters, function(key, value) {
+        html = html.concat(`<code>${key}:</code> ${value}<br/>`);
+    });
+
+    if (row.errors.length) {
+        html = html.concat(`<br/><h5><b>Fehlermeldungen</b></h5>`);
+
+        $.each(row.errors, function(key, value){
+            html = html.concat(`<code>${value}</code><br/>`);
+        });
+    }
+
+
+    return html;
+}
+
+/*
+    rowStyle for the task table, representing the status
+*/
+export function taskRowFormatter(row){
+    let cssclass = "";
+
+    if(row.status == "OPEN"){
+        cssclass = "warning";
+    }else if(row.status == "EXECUTED"){
+        cssclass = "success";
+    }else if(row.status == "FAILED"){
+        cssclass = "danger";
+    }
+
+    return {
+       classes: cssclass
+    }
+}

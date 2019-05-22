@@ -14,6 +14,7 @@
         <ul class="nav nav-pills">
             <li><a href="#master-data">Stammdaten</a></li>
             <li><a href="#hosts">Hosts</a></li>
+            <li><a href="#tasks">Aufgaben</a></li>
             <li><a href="#traffic">Traffic</a></li>
             <li><a href="#logs">Logs</a></li>
             {% if current_user is privileged_for('finance_show') %}
@@ -32,13 +33,26 @@
         </div>
     </section>
 
-    {# Nutzergeräte #}
-    <section id="hosts">
-        <div class="page-header"><h2>Hosts & Interfaces</h2></div>
-        <div id="tbl_devices">
-            {% include "user/_user_show_hosts.html" with context %}
+    <div class="row">
+        <div class="col-md-6">
+            {# Hosts #}
+            <section id="hosts">
+                <div class="page-header"><h2>Hosts & Interfaces</h2></div>
+                <div id="tbl_devices">
+                    {% include "user/_user_show_hosts.html" with context %}
+                </div>
+            </section>
         </div>
-    </section>
+        <div class="col-md-6">
+            <section id="tasks">
+                <div class="page-header"><h2>Aufgaben</h2></div>
+                <div id="tbl_tasks">
+                    {% include "user/_user_show_tasks.html" with context %}
+                </div>
+            </section>
+        </div>
+    </div>
+
 
     {# Traffic #}
     <section id="traffic">

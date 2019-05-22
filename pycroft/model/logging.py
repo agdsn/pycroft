@@ -14,6 +14,7 @@ from sqlalchemy import Column, ForeignKey, func
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer, Text, String
 from pycroft.model.base import IntegerIdModel
+from pycroft.model.task import Task, UserTask
 from pycroft.model.types import DateTimeTz
 
 
@@ -30,6 +31,23 @@ class LogEntry(IntegerIdModel):
     author = relationship("User",
                           backref=backref("authored_log_entries"))
     author_id = Column(Integer, ForeignKey("user.id"), index=True)
+
+
+class TaskLogEntry(LogEntry):
+    __mapper_args__ = {'polymorphic_identity': 'task_log_entry'}
+    id = Column(Integer, ForeignKey(LogEntry.id, ondelete="CASCADE"),
+                primary_key=True)
+
+    task = relationship("Task", backref=backref("log_entries",
+                                                cascade="all, delete-orphan"))
+    task_id = Column(Integer, ForeignKey("task.id", ondelete="CASCADE"),
+                     nullable=False, index=True)
+
+    # many to one from UserLogEntry to User
+    user = relationship("User",
+                        primaryjoin=("TaskLogEntry.task_id == UserTask.id"),
+                        secondary="user_task",
+                        backref=backref("task_log_entries"))
 
 
 class UserLogEntry(LogEntry):

@@ -10,8 +10,18 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+from enum import Enum
+
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
+
+class AutoNumber(Enum):
+    def __new__(cls):
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj

@@ -22,7 +22,7 @@ wrapt~=1.10.11
 # only needed for ldap caching
 ldap3~=2.5.1
 celery~=3.1.25
-alembic~=1.0.9
+alembic~=0.9.6
 # decimal serialization
 simplejson~=3.11.1
 #usersheet generation
@@ -32,3 +32,4 @@ fints~=2.0.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
 manuf~=1.0.0
+marshmallow~=2.19.2

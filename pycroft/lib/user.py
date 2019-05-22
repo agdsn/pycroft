@@ -12,9 +12,7 @@ This module contains.
 """
 
 import re
-
 from base64 import b64encode, b64decode
-
 from datetime import datetime, timedelta
 
 from sqlalchemy import or_, func, select
@@ -30,11 +28,13 @@ from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
+from pycroft.lib.task import schedule_user_task
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
+from pycroft.model.task import TaskType
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount
 from pycroft.model.webstorage import WebStorage
@@ -232,70 +232,85 @@ def create_user(name, login, email, birthdate, groups, processor):
 
 
 @with_transaction
-def move_in(user, building, level, room_number, mac, processor, birthdate=None,
-            host_annex=False, begin_membership=True):
-    """Create a new user in a given room and do some initialization.
+def move_in(user, building_id, level, room_number, mac, processor, birthdate=None,
+            host_annex=False, begin_membership=True, when=None):
+    """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
     UnixAccount, a finance Account, and is made member of important
     groups.  Networking is set up.
 
     :param User user: The user to move in
-    :param Building building: See :py:func:`create_member`
-    :param int level: See :py:func:`create_member`
-    :param str room_number: See :py:func:`create_member`
+    :param int building_id:
+    :param int level:
+    :param str room_number:
     :param str mac: The mac address of the users pc.
-    :param User processor: See :py:func:`create_member
+    :param User processor:
     :param Date birthdate: Date of birth`
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
     :param bool begin_membership: Starts a membership if true
+    :param datetime when: The date at which the user should be moved in
+
     :return: The user object.
     """
 
-    room = Room.q.filter_by(number=room_number,
-                            level=level, building=building).one_or_none()
+    if when and when > session.utcnow():
+        return schedule_user_task(task_type=TaskType.USER_MOVE_IN,
+                                  due=when,
+                                  user=user,
+                                  parameters={'building_id': building_id,
+                                              'level': level,
+                                              'room_number': room_number,
+                                              'mac': mac,
+                                              'birthdate': birthdate,
+                                              'host_annex': host_annex,
+                                              'begin_membership': begin_membership},
+                                  processor=processor)
+    else:
+        room = Room.q.filter_by(number=room_number,
+                                level=level, building_id=building_id).one_or_none()
 
-    if birthdate:
-        user.birthdate = birthdate
+        if birthdate:
+            user.birthdate = birthdate
 
-    if begin_membership:
-        if user.member_of(config.external_group):
-            remove_member_of(user, config.external_group, processor,
-                             closedopen(session.utcnow(), None))
+        if begin_membership:
+            if user.member_of(config.external_group):
+                remove_member_of(user, config.external_group, processor,
+                                 closedopen(session.utcnow(), None))
 
-        for group in {config.member_group, config.network_access_group}:
-            if not user.member_of(group):
-                make_member_of(user, group, processor, closed(session.utcnow(), None))
+            for group in {config.member_group, config.network_access_group}:
+                if not user.member_of(group):
+                    make_member_of(user, group, processor, closed(session.utcnow(), None))
 
-    if room:
-        user.room = room
+        if room:
+            user.room = room
 
-        if mac and user.birthdate:
-            interface_existing = Interface.q.filter_by(mac=mac).first()
+            if mac and user.birthdate:
+                interface_existing = Interface.q.filter_by(mac=mac).first()
 
-            if interface_existing is not None:
-                if host_annex:
-                    host_existing = interface_existing.host
-                    host_existing.owner_id = user.id
+                if interface_existing is not None:
+                    if host_annex:
+                        host_existing = interface_existing.host
+                        host_existing.owner_id = user.id
 
-                    session.session.add(host_existing)
-                    migrate_user_host(host_existing, user.room, processor)
+                        session.session.add(host_existing)
+                        migrate_user_host(host_existing, user.room, processor)
+                    else:
+                        raise MacExistsException
                 else:
-                    raise MacExistsException
-            else:
-                new_host = Host(owner=user, room=room)
-                session.session.add(new_host)
-                session.session.add(Interface(mac=mac, host=new_host))
-                setup_ipv4_networking(new_host)
+                    new_host = Host(owner=user, room=room)
+                    session.session.add(new_host)
+                    session.session.add(Interface(mac=mac, host=new_host))
+                    setup_ipv4_networking(new_host)
 
-    msg = deferred_gettext(u"Moved in: {room}")
+        msg = deferred_gettext(u"Moved in: {room}")
 
-    log_user_event(author=processor,
-                   message=msg.format(room=room.short_name).to_json(),
-                   user=user)
+        log_user_event(author=processor,
+                       message=msg.format(room=room.short_name).to_json(),
+                       user=user)
 
-    return user
+        return user
 
 
 def migrate_user_host(host, new_room, processor):
@@ -343,43 +358,53 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, building, level, room_number, processor):
+def move(user, building_id, level, room_number, processor, when=None):
     """Moves the user into another room.
 
     :param user: The user to be moved.
-    :param building: The new building.
+    :param building_id: The id of the building.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
     :param processor: The user who is currently logged in.
+    :param when: The date at which the user should be moved
 
     :return: The user object of the moved user.
     :rtype: User
     """
 
-    old_room = user.room
-    new_room = Room.q.filter_by(
-        number=room_number,
-        level=level,
-        building_id=building.id
-    ).one()
+    if when and when > session.utcnow():
+        return schedule_user_task(task_type=TaskType.USER_MOVE,
+                                  due=when,
+                                  user=user,
+                                  parameters={'building_id': building_id,
+                                              'level': level,
+                                              'room_number': room_number},
+                                  processor=processor)
+    else:
+        old_room = user.room
+        new_room = Room.q.filter_by(
+            number=room_number,
+            level=level,
+            building_id=building_id
+        ).one()
 
-    assert old_room != new_room,\
-        "A User is only allowed to move in a different room!"
+        assert old_room != new_room,\
+            "A User is only allowed to move in a different room!"
 
-    user.room = new_room
+        user.room = new_room
 
-    message = deferred_gettext(u"Moved from {} to {}.")
-    log_user_event(
-        author=processor,
-        message=message.format(str(old_room), str(new_room)).to_json(),
-        user=user
-    )
+        message = deferred_gettext(u"Moved from {} to {}.")
+        log_user_event(
+            author=processor,
+            message=message.format(str(old_room), str(new_room)).to_json(),
+            user=user
+        )
 
-    for user_host in user.hosts:
-        if user_host.room == old_room:
-            migrate_user_host(user_host, new_room, processor)
+        for user_host in user.hosts:
+            if user_host.room == old_room:
+                migrate_user_host(user_host, new_room, processor)
 
-    return user
+        return user
 
 
 @with_transaction
@@ -492,6 +517,7 @@ def get_blocked_groups():
     return [config.violation_group, config.payment_in_default_group,
                       config.blocked_group]
 
+
 @with_transaction
 def block(user, reason, processor, during=None, violation=True):
     """Suspend a user during a given interval.
@@ -572,50 +598,56 @@ def move_out(user, comment, processor, when, end_membership=True):
     :return: The user that moved out.
     """
     if when > session.utcnow():
-        raise NotImplementedError("Moving out in the future is not supported yet.")
-
-    if end_membership:
-        for group in {config.member_group,
-                      config.network_access_group,
-                      config.external_group,
-                      config.cache_group}:
-            if user.member_of(group):
-                remove_member_of(user, group, processor, closedopen(when, None))
-
-        user.birthdate = None
-
-    deleted_interfaces = list()
-    num_hosts = 0
-    for num_hosts, h in enumerate(user.hosts, 1):
-        if h.room == user.room or end_membership:
-            for interface in h.interfaces:
-                deleted_interfaces.append(interface.mac)
-
-            session.session.delete(h)
-
-    if user.room is not None:
-        message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
-            .format(room=user.room.short_name,
-                    num_hosts=num_hosts,
-                    interfaces=', '.join(deleted_interfaces))
+        return schedule_user_task(task_type=TaskType.USER_MOVE_OUT,
+                                  due=when,
+                                  user=user,
+                                  parameters={'comment': comment,
+                                              'end_membership': end_membership},
+                                  processor=processor)
     else:
-        message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
-            .format(num_hosts=num_hosts,
-                    interfaces=', '.join(deleted_interfaces))
+        if end_membership:
+            for group in {config.member_group,
+                          config.network_access_group,
+                          config.external_group,
+                          config.cache_group}:
+                if user.member_of(group):
+                    remove_member_of(user, group, processor, closedopen(when, None))
 
-    user.room = None
+            user.birthdate = None
 
-    if comment:
-        message += u"\nComment: {}"\
-            .format(comment)
+        deleted_interfaces = list()
+        num_hosts = 0
+        for num_hosts, h in enumerate(user.hosts, 1):
+            if not h.switch and (h.room == user.room or end_membership):
+                for interface in h.interfaces:
+                    deleted_interfaces.append(interface.mac)
 
-    log_user_event(
-        message=deferred_gettext(message).to_json(),
-        author=processor,
-        user=user
-    )
+                session.session.delete(h)
 
-    return user
+        if user.room is not None:
+            message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
+                .format(room=user.room.short_name,
+                        num_hosts=num_hosts,
+                        interfaces=', '.join(deleted_interfaces))
+        else:
+            if num_hosts:
+                message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
+                    .format(num_hosts=num_hosts,
+                            interfaces=', '.join(deleted_interfaces))
+
+        user.room = None
+
+        if comment:
+            message += u"\nComment: {}"\
+                .format(comment)
+
+        log_user_event(
+            message=deferred_gettext(message).to_json(),
+            author=processor,
+            user=user
+        )
+
+        return user
 
 
 admin_properties = property.property_categories[u"Nutzerverwaltung"].keys()

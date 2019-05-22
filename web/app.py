@@ -12,10 +12,12 @@ from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
 from pycroft.model import session
 from web import api
+from web.blueprints import task
 from . import template_filters, template_tests
 from .blueprints import (
-    facilities, finance, infrastructure, login, properties, user,
+    facilities, finance, infrastructure, login, properties, user, host
 )
+
 from .blueprints.login import login_manager
 from .templates import page_resources
 from pycroft.helpers.git_helpers import get_repo_active_branch, get_latest_commits
@@ -81,6 +83,8 @@ def make_app(debug=False):
     app.register_blueprint(infrastructure.bp, url_prefix="/infrastructure")
     app.register_blueprint(properties.bp, url_prefix="/properties")
     app.register_blueprint(finance.bp, url_prefix="/finance")
+    app.register_blueprint(host.bp, url_prefix="/host")
+    app.register_blueprint(task.bp, url_prefix="/task")
     app.register_blueprint(login.bp)
     app.register_blueprint(api.bp, url_prefix="/api/v0")
 
@@ -100,6 +104,7 @@ def make_app(debug=False):
     finance.nav.register_on(app)
     facilities.nav.register_on(app)
     infrastructure.nav.register_on(app)
+    task.nav.register_on(app)
     properties.nav.register_on(app)
 
     @app.errorhandler(403)

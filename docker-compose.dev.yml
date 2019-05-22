@@ -16,6 +16,8 @@ services:
       - dev-db
       - dev-ldap
       - dev-mq
+      - dev-celery-worker
+      - dev-webpack
     networks:
       dev:
         aliases:
@@ -60,6 +62,14 @@ services:
           - mq
     volumes:
       - "mq:/var/lib/rabbitmq"
+  dev-celery-worker:
+    extends:
+      file: docker-compose.base.yml
+      service: celery-worker
+    networks:
+      dev:
+        aliases:
+          - celery-worker
 
 volumes:
   home:

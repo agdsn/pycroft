@@ -36,6 +36,7 @@ def format_log_entry(entry, log_type):
 
 
 format_user_log_entry = partial(format_log_entry, log_type='user')
+format_task_log_entry = partial(format_log_entry, log_type='task')
 format_room_log_entry = partial(format_log_entry, log_type='room')
 
 

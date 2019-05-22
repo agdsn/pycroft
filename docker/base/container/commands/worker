@@ -10,8 +10,9 @@ readonly DESCRIPTION=(
 )
 
 run() {
-	echo "Not implemented yet"
-	exit 1
+    echo "Started celery worker"
+    cd /opt/pycroft/app
+	exec -a celery celery -A pycroft.lib.task worker -B "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

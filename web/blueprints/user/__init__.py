@@ -324,6 +324,7 @@ def user_show(user_id):
         log_table_user=LogTableSpecific(data_url=_log_endpoint(logtype="user")),
         log_table_room=LogTableSpecific(data_url=_log_endpoint(logtype="room")),
         log_table_hades=LogTableSpecific(data_url=_log_endpoint(logtype="hades")),
+        log_table_tasks=LogTableSpecific(data_url=_log_endpoint(logtype="tasks")),
         membership_table_all=MembershipTable(
             user_id=user.id,
             data_url=_membership_endpoint(),
@@ -332,10 +333,10 @@ def user_show(user_id):
             user_id=user.id,
             data_url=_membership_endpoint(group_filter="active"),
         ),
-        host_table=HostTable(data_url=url_for(".user_show_hosts_json", user_id=user.id),
+        host_table=HostTable(data_url=url_for("host.user_hosts_json", user_id=user.id),
                              user_id=user.id),
-        interface_table=InterfaceTable(data_url=url_for(".user_show_interfaces_json", user_id=user.id),
-                                       user_id=user.id),
+        task_table=TaskTable(data_url=url_for("task.json_tasks_for_user", user_id=user.id),
+                             hidden_columns=['user']),
         finance_table_regular=FinanceTable(**_finance_table_kwargs),
         finance_table_splitted=FinanceTableSplitted(**_finance_table_kwargs),
         room=room,
@@ -369,6 +370,8 @@ def user_show_logs_json(user_id, logtype="all"):
         log_sources.append((format_user_log_entry(e) for e in user.log_entries))
     if logtype in ["room", "all"] and user.room:
         log_sources.append((format_room_log_entry(e) for e in user.room.log_entries))
+    if logtype in ["tasks", "all"]:
+        log_sources.append((format_task_log_entry(e) for e in user.task_log_entries))
     if logtype in ["hades", "all"]:
         log_sources.append(formatted_user_hades_logs(user))
 
@@ -537,19 +540,6 @@ def validate_unique_email(form, field):
                               "<a target=\"_blank\" href=\"" +
                               url_for("user.user_show", user_id=user.id) +
                               "\">" + user.name + "</a></div>")
-
-
-def validate_unique_mac(form, field):
-    if re.match(mac_regex, field.data):
-        interface_existing = Interface.q.filter_by(mac=field.data).first()
-
-        if interface_existing is not None and (not hasattr(form, 'annex') or not form.annex.data):
-            owner = interface_existing.host.owner
-
-            return HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
-                              "<a target=\"_blank\" href=\"" +
-                              url_for("user.user_show", user_id=owner.id) +
-                              "#hosts\">" + owner.name + "</a>")
 
 
 @bp.route('/create', methods=['GET', 'POST'])

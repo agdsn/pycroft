@@ -49,12 +49,12 @@ class Test_010_User_Move(FixtureDataTestBase):
 
     def test_0010_moves_into_same_room(self):
         self.assertRaises(
-            AssertionError, UserHelper.move, self.user, self.old_room.building,
+            AssertionError, UserHelper.move, self.user, self.old_room.building.id,
             self.old_room.level, self.old_room.number, self.processing_user)
 
     def test_0020_moves_into_other_building(self):
         UserHelper.move(
-            self.user, self.new_room_other_building.building,
+            self.user, self.new_room_other_building.building.id,
             self.new_room_other_building.level,
             self.new_room_other_building.number, self.processing_user,
         )
@@ -92,7 +92,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
 
         UserHelper.move_in(
             new_user,
-            test_building,
+            building_id=test_building.id,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -154,7 +154,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         UserHelper.move_in(
             new_user,
-            test_building,
+            building_id=test_building.id,
             level=1,
             room_number="1",
             mac=test_mac,
@@ -182,7 +182,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         UserHelper.move_in(
             user=new_user,
-            building=test_building,
+            building_id=test_building.id,
             level=1,
             room_number="1",
             mac=test_mac,
