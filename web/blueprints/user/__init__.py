@@ -10,20 +10,20 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
+import operator
 import re
+from datetime import datetime, timedelta, time, timezone
 from difflib import SequenceMatcher
-from ipaddr import IPv4Address
-from itertools import chain
 from functools import partial
+from itertools import chain
 
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
-import operator
-
-from flask_wtf import FlaskForm
-import uuid
+from flask_login import current_user
 from sqlalchemy import Text
+from sqlalchemy.exc import InternalError
+from sqlalchemy.sql.expression import or_, func, cast
 from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
@@ -31,39 +31,37 @@ from pycroft.helpers import utc
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex, get_interface_manufacturer
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.net import SubnetFullException, MacExistsException, \
-    get_unused_ips, get_subnets_for_room
-from pycroft.lib.host import change_mac as lib_change_mac
+from pycroft.lib.membership import make_member_of, remove_member_of
+from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups
-from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, IP, Interface
-from pycroft.model.user import User, Membership, PropertyGroup
 from pycroft.model.finance import Split
+from pycroft.model.host import Host, IP, Interface
 from pycroft.model.types import InvalidMACAddressException
-from sqlalchemy.sql.expression import or_, func, cast
-
+from pycroft.model.user import User, Membership, PropertyGroup
+from web.blueprints.access import BlueprintAccess
+from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
+from web.blueprints.helpers.host import validate_unique_mac
 from web.blueprints.helpers.table import datetime_format
+from web.blueprints.helpers.user import get_user_or_404
+from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
+from web.blueprints.task.tables import TaskTable
 from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
-    UserEditGroupMembership,\
+    UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm
-from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.api import json_agg
-from datetime import datetime, timedelta
-from flask_login import current_user
-from ..helpers.log import format_user_log_entry, format_room_log_entry, \
-    format_hades_log_entry
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     HostTable, SearchTable, InterfaceTable, TrafficTopTable)
+                     SearchTable, TrafficTopTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
+from ..helpers.log import format_user_log_entry, format_room_log_entry, \
+    format_task_log_entry
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -271,14 +269,6 @@ def infoflags(user):
         {'title': u"Verstoßfrei", 'val': not user_status.violation},
         {'title': u"LDAP", 'val': user_status.ldap},
     ]
-
-
-def get_user_or_404(user_id):
-    user = User.q.get(user_id)
-    if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
-        abort(404)
-    return user
 
 
 @bp.route('/<int:user_id>/', methods=['GET', 'POST'])
@@ -577,48 +567,39 @@ def create():
                                           unique_email_error or
                                           unique_mac_error):
 
-        try:
-            new_user, plain_password = lib.user.create_user(
-                name=form.name.data,
-                login=form.login.data,
-                processor=current_user,
-                email=form.email.data,
-                birthdate=form.birthdate.data,
-                groups=form.property_groups.data
-            )
+        (new_user, plain_password), success = web_execute(lib.user.create_user,
+                                                          None,
+            name=form.name.data,
+            login=form.login.data,
+            processor=current_user,
+            email=form.email.data,
+            birthdate=form.birthdate.data,
+            groups=form.property_groups.data
+        )
 
+        if success:
             # We only have to check if building is present, as the presence
             # of the other fields depends on building
             if form.building.data is not None:
-                lib.user.move_in(
+                _, success = web_execute(lib.user.move_in,
+                                         None,
                     user=new_user,
-                    building=form.building.data, level=form.level.data,
+                    building_id=form.building.data.id, level=form.level.data,
                     room_number=form.room_number.data,
                     mac=form.mac.data,
                     processor=current_user,
                     host_annex=form.annex.data
                 )
 
-            sheet = lib.user.store_user_sheet(new_user, plain_password)
-            session.session.commit()
+            if success:
+                sheet = lib.user.store_user_sheet(new_user, plain_password)
+                session.session.commit()
 
-            flask_session['user_sheet'] = sheet.id
-            flash(Markup(u'Benutzer angelegt. <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'
-                         .format(url_for('.user_sheet'))), 'success')
-            return redirect(url_for('.user_show', user_id=new_user.id))
+                flask_session['user_sheet'] = sheet.id
+                flash(Markup(u'Benutzer angelegt. <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'
+                             .format(url_for('.user_sheet'))), 'success')
 
-        except MacExistsException:
-            flash("MAC-Adresse ist bereits in Verwendung.", 'error')
-
-            session.session.rollback()
-        except SubnetFullException:
-            flash("Das IP-Subnetz ist voll.", 'error')
-
-            session.session.rollback()
-        except InvalidMACAddressException:
-            flash("Die angegebene MAC-Adresse ist ungültig.", 'error')
-
-            session.session.rollback()
+                return redirect(url_for('.user_show', user_id=new_user.id))
 
     if form.is_submitted():
         if unique_name_error:
@@ -648,17 +629,31 @@ def move(user_id):
             flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
             refill_form_data = True
         else:
-            edited_user = lib.user.move(user, form.building.data,
-                form.level.data, form.room_number.data, current_user)
-            session.session.commit()
+            when = session.utcnow() if form.now.data else datetime.combine(form.when.data, utc.time_min())
 
-            flash(u'Benutzer umgezogen', 'success')
-            sheet = lib.user.store_user_sheet(edited_user, '********',
-                                              generation_purpose='user moved')
-            session.session.commit()
+            _, success = web_execute(lib.user.move, None,
+                user=user,
+                building_id=form.building.data.id,
+                level=form.level.data,
+                room_number=form.room_number.data,
+                processor=current_user,
+                when=when
+            )
 
-            flask_session['user_sheet'] = sheet.id
-            return redirect(url_for('.user_show', user_id=edited_user.id))
+            if success:
+                session.session.commit()
+
+                if when > session.utcnow():
+                    flash(u'Der Umzug wurde vorgemerkt.', 'success')
+                else:
+                    flash(u'Benutzer umgezogen', 'success')
+                    sheet = lib.user.store_user_sheet(user, '********',
+                                                      generation_purpose='user moved')
+                    session.session.commit()
+
+                    flask_session['user_sheet'] = sheet.id
+
+                return redirect(url_for('.user_show', user_id=user.id))
 
     if not form.is_submitted() or refill_form_data:
         if user.room is not None:
@@ -832,14 +827,27 @@ def move_out(user_id):
         abort(404)
 
     if form.validate_on_submit():
-        lib.user.move_out(user=user, comment=form.comment.data,
-                          processor=current_user,
-                          # when=datetime.combine(form.when.data, utc.time_min())
-                          when=session.utcnow(),
-                          end_membership=form.end_membership.data)
-        session.session.commit()
-        flash(u'Nutzer wurde ausgezogen', 'success')
-        return redirect(url_for('.user_show', user_id=user.id))
+        when = session.utcnow() if form.now.data else datetime.combine(
+            form.when.data, utc.time_min())
+
+        _, success = web_execute(lib.user.move_out, None,
+            user=user,
+            comment=form.comment.data,
+            processor=current_user,
+            when=session.utcnow() if form.now.data else datetime.combine(
+             form.when.data, utc.time_min()),
+            end_membership=form.end_membership.data
+        )
+
+        if success:
+            session.session.commit()
+
+            if when > session.utcnow():
+                flash("Der Auszug wurde vorgemerkt.", "success")
+            else:
+                flash(u'Benutzer ausgezogen.', 'success')
+
+            return redirect(url_for('.user_show', user_id=user.id))
 
     if not form.is_submitted():
         form.end_membership.data = True
@@ -858,19 +866,30 @@ def move_in(user_id):
         abort(404)
 
     if form.validate_on_submit():
-        lib.user.move_in(
+        when = session.utcnow() if form.now.data else datetime.combine(
+            form.when.data, utc.time_min())
+
+        _, success = web_execute(lib.user.move_in, None,
             user=user,
-            building=form.building.data,
+            building_id=form.building.data.id,
             level=form.level.data,
             room_number=form.room_number.data,
             mac=form.mac.data,
             birthdate=form.birthdate.data,
             begin_membership=form.begin_membership.data,
-            processor=current_user
+            processor=current_user,
+            when=when,
         )
-        session.session.commit()
-        flash("Nutzer wurde eingezogen", 'success')
-        return redirect(url_for('.user_show', user_id=user_id))
+
+        if success:
+            session.session.commit()
+
+            if when > session.utcnow():
+                flash("Der Einzug wurde vorgemerkt.", 'success')
+            else:
+                flash("Benutzer eingezogen.", 'success')
+
+            return redirect(url_for('.user_show', user_id=user_id))
 
     if not form.is_submitted():
         form.birthdate.data = user.birthdate
