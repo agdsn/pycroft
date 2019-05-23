@@ -25,8 +25,8 @@ services:
       - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
       - PYCROFT_LDAP_BIND_PW=password
       - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
-      - PYCROFT_BROKER_URI=amqp://celery:celery@mq:5672/
-      - PYCROFT_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+      - PYCROFT_CELERY_BROKER_URI=amqp://celery:celery@mq:5672/
+      - PYCROFT_CELERY_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
       - HADES_CELERY_APP_NAME=dummy_tasks
       - HADES_BROKER_URI=amqp://celery:celery@mq:5672/
       - HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
