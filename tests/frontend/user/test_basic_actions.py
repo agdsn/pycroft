@@ -59,7 +59,8 @@ class UserMovingOutTestCase(LegacyUserFrontendTestBase):
             'level': self.user.room.level,
             'room_number': self.user.room.number,
             'mac': "00:de:ad:be:ef:00",
-            'birthday': "1990-01-01"
+            'birthday': "1990-01-01",
+            'when': session.utcnow().date()
         })
         self.assert_404(response)
         self.assert_message_flashed("Nutzer {} ist nicht ausgezogen!"
@@ -67,9 +68,15 @@ class UserMovingOutTestCase(LegacyUserFrontendTestBase):
 
     def test_user_moved_out_correctly(self):
         endpoint = url_for('user.move_out', user_id=self.user.id)
-        response = self.client.post(endpoint)
+        response = self.client.post(endpoint, data={
+            # Will be serialized to str implicitly
+            'comment': "Test Comment",
+            'end_membership': True,
+            'now': False,
+            'when': session.utcnow().date()
+        })
         self.assert_redirects(response, url_for('user.user_show', user_id=self.user.id))
-        self.assertMessageFlashed("Nutzer wurde ausgezogen", 'success')
+        self.assertMessageFlashed("Benutzer ausgezogen.", 'success')
         # TODO: Test whether everything has been done on the library side!
 
 
