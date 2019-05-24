@@ -16,7 +16,6 @@ services:
       - dev-db
       - dev-ldap
       - dev-mq
-      - dev-celery-worker
       - dev-webpack
     networks:
       dev:
