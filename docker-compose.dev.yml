@@ -65,11 +65,13 @@ services:
   dev-celery-worker:
     extends:
       file: docker-compose.base.yml
-      service: celery-worker
+      service: dev
     networks:
       dev:
         aliases:
           - celery-worker
+    command: "worker"
+
 
 volumes:
   home:

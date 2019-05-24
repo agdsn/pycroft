@@ -58,8 +58,3 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=celery
       - RABBITMQ_DEFAULT_PASS=celery
-  celery-worker:
-    extends:
-      file: docker-compose.base.yml
-      service: dev
-    command: "worker"

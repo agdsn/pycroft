@@ -18,3 +18,8 @@ services:
     image: agdsn/pycroft-prod:${TAG:-latest}
     ports:
       - "5000:5000"
+  prod-celery-worker:
+    extends:
+      file: docker-compose.base.yml
+      service: base
+    command: "worker"
