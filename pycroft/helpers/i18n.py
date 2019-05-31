@@ -67,8 +67,11 @@ def ignore_options(formatter):
 
 
 @type_specific_options
-def format_number(n):
-    return numbers.format_number(n, locale=get_locale())
+def format_number(n, insert_commas=True):
+    if insert_commas:
+        return numbers.format_number(n, locale=get_locale())
+    else:
+        return n
 
 
 @type_specific_options
@@ -387,7 +390,7 @@ class Message(object):
         self.kwargs = kwargs
         return self
 
-    def localize(self, **options):
+    def localize(self, options):
         msg = self._gettext()
         if not self.args and not self.kwargs:
             return msg
@@ -452,8 +455,8 @@ class NumericalMessage(Message):
             return ngettext(self.singular, self.plural, self.n)
 
 
-def localized(json_string):
-    return Message.from_json(json_string).localize()
+def localized(json_string, options={}):
+    return Message.from_json(json_string).localize(options)
 
 
 def deferred_gettext(message):

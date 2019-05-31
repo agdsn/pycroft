@@ -601,7 +601,7 @@ def transactions_show_json(transaction_id):
         {
             'account': {
                 'href': url_for(".accounts_show", account_id=split.account_id),
-                'title': localized(split.account.name)
+                'title': localized(split.account.name, {int: {'insert_commas': False}})
             },
             'amount': money_filter(split.amount),
             'row_positive': split.amount > 0
