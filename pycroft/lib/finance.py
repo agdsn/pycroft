@@ -769,3 +769,17 @@ def match_activities():
                 matching.update({activity: user})
 
     return matching
+
+@with_transaction
+def transaction_delete(transaction):
+    if transaction.confirmed:
+        raise ValueError("transaction already confirmed")
+
+    session.session.delete(transaction)
+
+@with_transaction
+def transaction_confirm(transaction):
+    if transaction.confirmed:
+        raise ValueError("transaction already confirmed")
+
+    transaction.confirmed = True

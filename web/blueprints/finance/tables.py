@@ -183,6 +183,16 @@ class TransactionTable(BootstrapTable):
         }
 
 
+class UnconfirmedTransactionsTable(BootstrapTable):
+    """A table for displaying unconfirmed transactions """
+    description = LinkColumn("Beschreibung")
+    author = LinkColumn("Ersteller")
+    date = DateColumn("Datum")
+    amount = Column("Wert")
+    details = BtnColumn("Details")
+    actions = MultiBtnColumn("Aktionen")
+
+
 class ImportErrorTable(BootstrapTable):
     """A table for displaying buggy mt940 imports"""
     name = Column("Bankkonto")

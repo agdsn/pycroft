@@ -19,12 +19,13 @@ from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for)
 from flask_login import current_user
+from flask_wtf import FlaskForm
 from sqlalchemy import func, or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms import BooleanField
 
-from pycroft import config
+from pycroft import config, lib
 from pycroft.helpers.i18n import localized
 from pycroft.helpers.util import map_or_default
 from pycroft.lib import finance
@@ -44,10 +45,11 @@ from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
-    HandlePaymentsInDefaultForm, FixMT940Form)
+    HandlePaymentsInDefaultForm, FixMT940Form, BankAccountActivityReadForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
-    BankAccountActivityTable, TransactionTable, ImportErrorTable
+    BankAccountActivityTable, TransactionTable, ImportErrorTable, \
+    UnconfirmedTransactionsTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
@@ -607,6 +609,114 @@ def transactions_show_json(transaction_id):
             'row_positive': split.amount > 0
         } for split in transaction.splits])
 
+
+@bp.route('/transactions/unconfirmed')
+@nav.navigate(u"Unbestätigte Transaktionen")
+def transactions_unconfirmed():
+    return render_template(
+        'finance/transactions_unconfirmed.html',
+        page_title="Unbestätigte Transaktionen",
+        unconfirmed_transactions_table=UnconfirmedTransactionsTable(
+            data_url=url_for(".transactions_unconfirmed_json"))
+    )
+
+
+@bp.route('/transactions/unconfirmed/json')
+def transactions_unconfirmed_json():
+    transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).limit(100).all()
+
+    return jsonify(
+        items=[
+        {
+            'description': {
+                'href': url_for(".transactions_show", transaction_id=transaction.id),
+                'title': transaction.description,
+                'new_tab': True
+            },
+            'author': {
+                'href': url_for("user.user_show",
+                                user_id=transaction.author.id),
+                'title': transaction.author.name,
+                'new_tab': True
+            },
+            'date': date_format(transaction.posted_at),
+            'amount': money_filter(transaction.amount),
+            'details': {
+                'href': url_for(".transactions_show", transaction_id=transaction.id),
+                'title': 'Details',
+                'btn_class': 'btn-primary',
+                'new_tab': True
+            },
+            'actions': [{
+                    'href': url_for(".transaction_confirm",
+                                    transaction_id=transaction.id),
+                    'title': 'Bestätigen',
+                    'icon': 'glyphicon-ok'
+                },{
+                    'href': url_for(".transaction_delete",
+                                    transaction_id=transaction.id),
+                    'title': 'Löschen',
+                    'icon': 'glyphicon-trash'
+                }
+            ],
+        } for transaction in transactions])
+
+
+@bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
+@access.require('finance_change')
+def transaction_confirm(transaction_id):
+    transaction = Transaction.q.get(transaction_id)
+
+    if transaction is None:
+        flash(u"Transaktion existiert nicht.", 'error')
+        abort(404)
+
+    if transaction.confirmed:
+        flash(u"Diese Transaktion wurde bereits bestätigt.", 'error')
+        abort(404)
+
+    lib.finance.transaction_confirm(transaction)
+
+    session.commit()
+
+    flash(u'Transaktion bestätigt.', 'success')
+    return redirect(url_for('.transactions_unconfirmed'))
+
+
+@bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
+@access.require('finance_change')
+def transaction_delete(transaction_id):
+    transaction = Transaction.q.get(transaction_id)
+
+    if transaction is None:
+        flash(u"Transaktion existiert nicht.", 'error')
+        abort(404)
+
+    if transaction.confirmed:
+        flash(u"Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.", 'error')
+        abort(404)
+
+    form = FlaskForm()
+
+    if form.is_submitted():
+        lib.finance.transaction_delete(transaction)
+
+        session.commit()
+
+        flash(u'Transaktion gelöscht.', 'success')
+        return redirect(url_for('.transactions_unconfirmed'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.transactions_unconfirmed'),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Transaktion löschen",
+                           form_args=form_args,
+                           form=form)
 
 @access.require('finance_show')
 @bp.route('/transactions')

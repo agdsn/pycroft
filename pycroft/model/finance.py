@@ -7,7 +7,7 @@ import operator
 
 from math import fabs
 
-from sqlalchemy import Column, ForeignKey, event, func, select
+from sqlalchemy import Column, ForeignKey, event, func, select, Boolean
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref, object_session
 from sqlalchemy.schema import (
@@ -160,6 +160,8 @@ class Transaction(IntegerIdModel):
     valid_on = Column(Date, nullable=False,
                       server_default=func.current_timestamp(), index=True)
     accounts = relationship(Account, secondary="split", backref="transactions")
+
+    confirmed = Column(Boolean(), nullable=False, default=True)
 
     @property
     def is_balanced(self):
