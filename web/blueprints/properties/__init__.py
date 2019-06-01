@@ -15,6 +15,7 @@ import operator
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, abort
 from flask_login import current_user
+from flask_wtf import FlaskForm
 
 from pycroft.model import session
 from pycroft.property import property_categories
@@ -156,11 +157,28 @@ def property_group_delete(group_id):
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
         abort(404)
 
-    session.session.delete(group)
-    session.session.commit()
-    message = u'Eigenschaftengruppe {0} gelöscht'
-    flash(message.format(group.name), 'success')
-    return redirect(url_for('.property_groups'))
+    form = FlaskForm()
+
+    if form.is_submitted():
+        delete_property_group(group, current_user)
+
+        session.session.commit()
+
+        flash(u'Eigenschaftsgruppe gelöscht.', 'success')
+        return redirect(url_for('.property_groups'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.property_groups'),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Eigenschaftsgruppe '{}' löschen"
+                                      .format(group.name),
+                           form_args=form_args,
+                           form=form)
 
 
 @bp.route('/json/propertygroups')
