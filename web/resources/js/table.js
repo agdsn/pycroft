@@ -9,15 +9,15 @@ import $ from 'jquery';
 import 'bootstrap-table';
 
 export var linkTemplate = _.template(
-    '<a href="<%- href %>"><%- title %></a>',
+    '<a target="<%- target %>"  href="<%- href %>"><%- title %></a>',
 );
 
 export var btnTemplate = _.template(
-    '<a href="<%- href %>" class="btn <%- btn_class %>"><%- title %></a>',
+    '<a target="<%- target %>"  href="<%- href %>" class="btn <%- btn_class %>"><%- title %></a>',
 );
 
 export var glyphBtnTemplate = _.template(
-    '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="glyphicon <%- glyphicon %>"></span></a>',
+    '<a target="<%- target %>" href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="glyphicon <%- glyphicon %>"></span></a>',
 );
 
 export var multiGlyphBtnTemplate = _.template(
@@ -66,7 +66,14 @@ export function linkFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    return linkTemplate({'href': value['href'], 'title': value['title']});
+
+    let target = "";
+
+    if(value["new_tab"]){
+        target = "_blank"
+    }
+
+    return linkTemplate({'href': value['href'], 'title': value['title'], 'target': target});
 }
 linkFormatter.attributes = { sortName: 'title' };
 
@@ -91,6 +98,13 @@ export function btnFormatter(value, row, index) {
     if (!value) {
         return;
     }
+
+    let target = "";
+
+    if(value["new_tab"]){
+        target = "_blank"
+    }
+
     if (value['icon']) {
         if (value['icon'] instanceof Array) {
             return multiGlyphBtnTemplate({
@@ -99,6 +113,7 @@ export function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicons': value['icon'],
                 'tooltip': value['tooltip'],
+                'target': target
             });
         } else {
             return glyphBtnTemplate({
@@ -107,6 +122,7 @@ export function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicon': value['icon'],
                 'tooltip': value['tooltip'],
+                'target': target
             });
         }
     } else {
@@ -115,6 +131,7 @@ export function btnFormatter(value, row, index) {
             'title': value['title'],
             'btn_class': value['btn_class'],
             'tooltip': value['tooltip'],
+                'target': target
         });
     }
 }
