@@ -550,8 +550,6 @@ def unblock(user, processor, when=None):
             remove_member_of(user=user, group=group,
                              processor=processor, during=closedopen(when, None))
 
-    message = deferred_gettext(u"User has been unblocked.")
-    log_user_event(message=message.to_json(), author=processor, user=user)
     return user
 
 
