@@ -37,6 +37,6 @@ def downgrade():
     op.drop_column('transaction', 'confirmed')
     # ### end Alembic commands ###
 
-    op.drop_constraint('treasurer_group_id_fkey', 'config',
+    op.drop_constraint('config_treasurer_group_id_fkey', 'config',
                        type_='foreignkey')
     op.drop_column('config', 'treasurer_group_id')
