@@ -764,7 +764,7 @@ def add_membership(user_id):
 
     if form.validate_on_submit():
         if form.begins_at.date.data:
-            begins_at = datetime.combine(form.begins_at.data, utc.time_min())
+            begins_at = datetime.combine(form.begins_at.date.data, utc.time_min())
         else:
             begins_at = session.utcnow()
         if not form.ends_at.unlimited.data:
