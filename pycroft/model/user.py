@@ -310,6 +310,10 @@ class User(IntegerIdModel, UserMixin):
 #    def group_intervals(self, group, when=UnboundedInterval):
 #
 
+    @property
+    def permission_level(self):
+        return max(pg.permission_level for pg in self.active_memberships)
+
     def property_intervals(self, name, when=UnboundedInterval):
         """
         Get the set of intervals in which the user was granted a given property
@@ -460,6 +464,8 @@ class PropertyGroup(Group):
     __mapper_args__ = {'polymorphic_identity': 'property_group'}
     id = Column(Integer, ForeignKey(Group.id), primary_key=True,
                 nullable=False)
+    permission_level = Column(Integer, nullable=False, default=0)
+
     property_grants = association_proxy(
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
