@@ -312,7 +312,6 @@ def bank_accounts_create():
 
 @bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
-@access.require('finance_change')
 def bank_account_activities_edit(activity_id):
     activity = BankAccountActivity.q.get(activity_id)
 
@@ -321,37 +320,61 @@ def bank_account_activities_edit(activity_id):
         abort(404)
 
     if activity.transaction_id is not None:
-        flash(u"Bankbewegung mit ID {} ist bereits zugewiesen!".format(activity_id),
-              'error')
-        abort(404)
+        form = BankAccountActivityReadForm(
+            obj=activity, bank_account_name=activity.bank_account.name)
 
-    form = BankAccountActivityEditForm(
-        obj=activity, bank_account_name=activity.bank_account.name, description=activity.reference)
+        if activity.transaction_id:
+            flash(u"Bankbewegung ist bereits zugewiesen!".format(activity_id),
+                  'warning')
 
-    if form.validate_on_submit():
-        debit_account = Account.q.filter(
-            Account.id == form.account_id.data
-        ).one()
-        credit_account = activity.bank_account.account
+        form_args = {
+            'form': form,
+            'show_submit': False,
+            'show_cancel': False,
+        }
 
-        transaction = finance.simple_transaction(
-            description=form.description.data, debit_account=debit_account,
-            credit_account=credit_account, amount=activity.amount,
-            author=current_user, valid_on=activity.valid_on)
-        activity.split = next(split for split in transaction.splits
-                              if split.account_id == credit_account.id)
-        session.add(activity)
+        return render_template('generic_form.html',
+                               page_title="Bankbewegung",
+                               form_args=form_args,
+                               form=form)
 
-        end_payment_in_default_memberships()
+    else:
+        form = BankAccountActivityEditForm(
+            obj=activity, bank_account_name=activity.bank_account.name, description=activity.reference)
 
-        session.commit()
+        if form.validate_on_submit():
+            debit_account = Account.q.filter(
+                Account.id == form.account_id.data
+            ).one()
+            credit_account = activity.bank_account.account
 
-        flash(u"Transaktion erfolgreich erstellt.", 'success')
+            transaction = finance.simple_transaction(
+                description=form.description.data, debit_account=debit_account,
+                credit_account=credit_account, amount=activity.amount,
+                author=current_user, valid_on=activity.valid_on)
+            activity.split = next(split for split in transaction.splits
+                                  if split.account_id == credit_account.id)
+            session.add(activity)
 
-        return redirect(url_for('.bank_accounts_list'))
+            end_payment_in_default_memberships()
 
-    return render_template('finance/bank_account_activities_edit.html',
-                           form=form)
+            session.commit()
+
+            flash(u"Transaktion erfolgreich erstellt.", 'success')
+
+            return redirect(url_for('.bank_accounts_list'))
+
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('.bank_accounts_list'),
+            'submit_text': 'Zuweisen',
+        }
+
+        return render_template('generic_form.html',
+                               page_title="Bankbewegung zuweisen",
+                               form_args=form_args,
+                               form=form)
+
 
 @bp.route('/bank-account-activities/match/')
 @access.require('finance_change')

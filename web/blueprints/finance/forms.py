@@ -88,21 +88,24 @@ class BankAccountCreateForm(Form):
             raise ValidationError("Konto existiert bereits.")
 
 
-class BankAccountActivityEditForm(Form):
-    account = TypeaheadField(u"Gegenkonto", render_kw={
-        'data_toggle': 'account-typeahead',
-        'data-target': 'account_id'
-    })
-    account_id = HiddenField(validators=[DataRequired()])
+class BankAccountActivityReadForm(Form):
     bank_account_name = static(StringField(u"Bankkonto"))
     amount = disabled(MoneyField(u"Wert"))
-    description = StringField(u"Beschreibung")
     reference = static(StringField(u"Verwendungszweck"))
     other_account_number = static(StringField(u"Kontonummer"))
     other_routing_number = static(StringField(u"Bankleitzahl (BLZ)"))
     other_name = static(StringField(u"Name"))
     valid_on = static(DateField(u"Valutadatum"))
     posted_on = static(DateField(u"Buchungsdatum"))
+
+
+class BankAccountActivityEditForm(BankAccountActivityReadForm):
+    account = TypeaheadField(u"Gegenkonto", render_kw={
+        'data_toggle': 'account-typeahead',
+        'data-target': 'account_id'
+    })
+    account_id = HiddenField(validators=[DataRequired()])
+    description = StringField(u"Beschreibung")
 
 
 class BankAccountActivitiesImportForm(Form):

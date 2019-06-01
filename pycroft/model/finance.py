@@ -164,6 +164,10 @@ class Transaction(IntegerIdModel):
     confirmed = Column(Boolean(), nullable=False, default=True)
 
     @property
+    def amount(self):
+        return sum(max(split.amount, 0) for split in self.splits)
+
+    @property
     def is_balanced(self):
         return sum(split.amount for split in self.splits) == 0
 
