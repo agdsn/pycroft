@@ -32,6 +32,10 @@ class Config(IntegerIdModel):
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     caretaker_group = relationship(
         PropertyGroup, foreign_keys=[caretaker_group_id])
+    treasurer_group_id = Column(
+        Integer, ForeignKey(PropertyGroup.id), nullable=False)
+    treasurer_group = relationship(
+        PropertyGroup, foreign_keys=[treasurer_group_id])
     cache_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     cache_group = relationship(PropertyGroup, foreign_keys=[cache_group_id])
