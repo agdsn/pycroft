@@ -12,7 +12,7 @@ management.
 """
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, closed
-from pycroft.lib.logging import log_user_event
+from pycroft.lib.logging import log_user_event, log_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
 from pycroft.model.user import Membership
@@ -121,3 +121,20 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
+
+
+@with_transaction
+def edit_property_group(group, name, permission_level, processor):
+    log_event("Edited property group {} -> {}.".format((group.name, group.permission_level),
+                                                      (name, permission_level)),
+              processor)
+
+    group.name = name
+    group.permission_level = permission_level
+
+@with_transaction
+def delete_property_group(group, processor):
+    log_event("Deleted property group '{}'.".format(group.name),
+              processor)
+
+    session.session.delete(group)
