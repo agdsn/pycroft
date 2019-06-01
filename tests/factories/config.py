@@ -29,6 +29,7 @@ class ConfigFactory(BaseFactory):
     payment_in_default_group = SubFactory(PropertyGroupFactory)
     blocked_group = SubFactory(PropertyGroupFactory)
     caretaker_group = SubFactory(PropertyGroupFactory)
+    treasurer_group = SubFactory(PropertyGroupFactory)
 
     # `Account`s
     membership_fee_account = SubFactory(AccountFactory)

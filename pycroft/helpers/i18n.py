@@ -390,7 +390,10 @@ class Message(object):
         self.kwargs = kwargs
         return self
 
-    def localize(self, options):
+    def localize(self, options=None):
+        if options is None:
+            options = dict()
+
         msg = self._gettext()
         if not self.args and not self.kwargs:
             return msg
@@ -455,7 +458,7 @@ class NumericalMessage(Message):
             return ngettext(self.singular, self.plural, self.n)
 
 
-def localized(json_string, options={}):
+def localized(json_string, options=None):
     return Message.from_json(json_string).localize(options)
 
 

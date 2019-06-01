@@ -46,6 +46,9 @@ class PropertyGroupData(DataSet):
     class blocked:
         name = "Gesperrt"
 
+    class treasurer:
+        name = "Finanzer"
+
 
 class ConfigData(DataSet):
     class config:
@@ -59,6 +62,7 @@ class ConfigData(DataSet):
         external_group = PropertyGroupData.external
         blocked_group = PropertyGroupData.blocked
         caretaker_group = PropertyGroupData.caretaker
+        treasurer_group = PropertyGroupData.treasurer
         membership_fee_account = AccountData.membership_fee
         membership_fee_bank_account = finance.BankAccountData.dummy
 
