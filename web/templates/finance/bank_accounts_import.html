@@ -12,4 +12,17 @@
     {{ forms.simple_form(form, '', url_for('.bank_accounts_list'), autocomplete="on") }}
 
     {% include "finance/_import_preview.html" with context %}
+
+    <br/>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <h3 class="page-header">Fehlerhafter Import</h3>
+
+            <a class="btn btn-primary" href="{{ url_for('.bank_accounts_import_errors') }}">
+                <span class="glyphicon glyphicon-remove"></span>
+                Fehlerhafter Import
+            </a>
+        </div>
+    </div>
 {% endblock %}
