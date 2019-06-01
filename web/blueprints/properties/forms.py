@@ -8,7 +8,7 @@ from wtforms.validators import DataRequired, Regexp
 
 from pycroft import config
 from pycroft.model.user import PropertyGroup
-from web.form.fields.core import TextField
+from web.form.fields.core import TextField, IntegerField
 
 
 def property_group_query():
@@ -30,3 +30,4 @@ class PropertyGroupForm(Form):
                message=u"Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
                        u" eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
     ])
+    permission_level = IntegerField("Berechtigungslevel")

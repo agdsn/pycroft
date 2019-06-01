@@ -34,6 +34,9 @@
                 {% for property_group in property_groups|sort(attribute="name") -%}
                 <th>
                     <p>{{ property_group.name }}</p>
+                    <a href="{{ url_for(".property_group_edit", group_id=property_group.id) }}">
+                        <span class="glyphicon glyphicon-edit"></span>
+                    </a>
                     <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">
                         <span class="glyphicon glyphicon-trash"></span>
                     </a>

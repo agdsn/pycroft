@@ -14,12 +14,13 @@ from itertools import chain
 import operator
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, abort
+from flask_login import current_user
 
 from pycroft.model import session
 from pycroft.property import property_categories
 from pycroft.model.user import Property, PropertyGroup
 from pycroft.lib.membership import grant_property, deny_property, \
-    remove_property
+    remove_property, edit_property_group, delete_property_group
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm
@@ -54,7 +55,8 @@ def property_groups():
 def property_group_create():
     form = PropertyGroupForm()
     if form.validate_on_submit():
-        group = PropertyGroup(name=form.name.data)
+        group = PropertyGroup(name=form.name.data,
+                              permission_level=form.permission_level.data)
         session.session.add(group)
         session.session.commit()
         message = u'Eigenschaftengruppe {0} angelegt.'
@@ -112,7 +114,40 @@ def property_group_remove_property(group_id, property_name):
     return redirect(url_for('.property_groups'))
 
 
-@bp.route('/property_group/<group_id>/delete')
+@bp.route('/property_group/<group_id>/edit', methods=['GET', 'POST'])
+@access.require('groups_change')
+def property_group_edit(group_id):
+    group = PropertyGroup.q.get(group_id)
+
+    if group is None:
+        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        abort(404)
+
+    form = PropertyGroupForm(obj=group)
+
+    if form.is_submitted():
+        edit_property_group(group, form.name.data, form.permission_level.data,
+                            current_user)
+
+        session.session.commit()
+
+        flash(u'Eigenschaftsgruppe bearbeitet.', 'success')
+        return redirect(url_for('.property_groups'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.property_groups'),
+        'submit_text': 'Speichern'
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Eigenschaftsgruppe '{}' bearbeiten"
+                                      .format(group.name),
+                           form_args=form_args,
+                           form=form)
+
+
+@bp.route('/property_group/<group_id>/delete', methods=['GET', 'POST'])
 @access.require('groups_change')
 def property_group_delete(group_id):
     group = PropertyGroup.q.get(group_id)
