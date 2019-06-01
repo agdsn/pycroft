@@ -74,7 +74,7 @@ def get_first_applied_membership_fee():
 
 @with_transaction
 def simple_transaction(description, debit_account, credit_account, amount,
-                       author, valid_on=None):
+                       author, valid_on=None, confirmed=True):
     """
     Posts a simple transaction.
     A simple transaction is a transaction that consists of exactly two splits,
@@ -97,7 +97,8 @@ def simple_transaction(description, debit_account, credit_account, amount,
     new_transaction = Transaction(
         description=description,
         author=author,
-        valid_on=valid_on)
+        valid_on=valid_on,
+        confirmed=confirmed)
     new_debit_split = Split(
         amount=-amount,
         account=debit_account,
