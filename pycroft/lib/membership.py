@@ -73,6 +73,11 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
     :param User processor: User issuing the addition
     :param Interval during:
     """
+
+    if group.permission_level > processor.permission_level:
+        raise PermissionError("cannot create a membership for a group with a"
+                              " higher permission level")
+
     memberships = session.session.query(Membership).filter(
         Membership.user == user, Membership.group == group,
         Membership.active(during)).all()
@@ -106,6 +111,11 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     :param User processor: User issuing the removal
     :param Interval during:
     """
+
+    if group.permission_level > processor.permission_level:
+        raise PermissionError("cannot delete a membership for a group with a"
+                              " higher permission level")
+
     memberships = session.session.query(Membership).filter(
         Membership.user == user, Membership.group == group,
         Membership.active(during)).all()

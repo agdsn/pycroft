@@ -1014,6 +1014,11 @@ def edit_membership(user_id, membership_id):
         membership_id), 'error')
         abort(404)
 
+    if membership.group.permission_level > current_user.permission_level:
+        flash("Eine Bearbeitung von Gruppenmitgliedschaften für Gruppen mit "
+              "höherem Berechtigungslevel ist nicht möglich.", 'error')
+        abort(403)
+
     membership_data = {}
     if request.method == 'GET':
         membership_data = {
