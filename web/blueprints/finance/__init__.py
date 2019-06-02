@@ -348,16 +348,11 @@ def bank_account_activities_edit(activity_id):
             ).one()
             credit_account = activity.bank_account.account
 
-            confirmed = False
-
-            if current_user.member_of(config.treasurer_group):
-                confirmed = True
-
             transaction = finance.simple_transaction(
                 description=form.description.data, debit_account=debit_account,
                 credit_account=credit_account, amount=activity.amount,
                 author=current_user, valid_on=activity.valid_on,
-                confirmed=confirmed)
+                confirmed=current_user.member_of(config.treasurer_group))
             activity.split = next(split for split in transaction.splits
                                   if split.account_id == credit_account.id)
             session.add(activity)
