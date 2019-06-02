@@ -475,9 +475,13 @@ def accounts_list():
 
 @bp.route('/accounts/<int:account_id>/balance/json')
 def balance_json(account_id):
+    invert = request.args.get('invert', 'False') == 'True'
+
+    factor = -1 if invert else 1
+
     balance_json = (select([Transaction.valid_on,
-                            func.sum(Split.amount).over(
-                                order_by=Transaction.valid_on).label("balance")
+                            (func.sum(Split.amount).over(
+                                order_by=Transaction.valid_on) * factor).label("balance")
                             ])
                     .select_from(
                         Join(Split, Transaction,
@@ -505,15 +509,19 @@ def accounts_show(account_id):
         flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
               u" verbunden sind!", "warning")
 
+    inverted = account.type == "USER_ASSET"
+
     _table_kwargs = {
         'data_url': url_for("finance.accounts_show_json", account_id=account_id),
         'saldo': account.balance,
+        'inverted': inverted
     }
 
     return render_template(
         'finance/accounts_show.html',
         account=account, user=user, balance=account.balance,
-        balance_json_url=url_for('.balance_json', account_id=account_id),
+        balance_json_url=url_for('.balance_json', account_id=account_id,
+                                 invert=inverted),
         finance_table_regular=FinanceTable(**_table_kwargs),
         finance_table_splitted=FinanceTableSplitted(**_table_kwargs),
     )

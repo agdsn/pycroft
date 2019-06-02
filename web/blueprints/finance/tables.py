@@ -17,9 +17,6 @@ class FinanceTable(BootstrapTable):
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
         }
-        enforced_url_params = {
-            'style': 'inverted',
-        }
 
     def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):
         """Init
@@ -30,12 +27,15 @@ class FinanceTable(BootstrapTable):
         :param bool inverted: An optional switch adding
             `style=inverted` to the given `data_url`
         """
-        super().__init__(*a, **kw)
+
+        self.saldo = saldo
 
         if inverted:
+            self._enforced_url_params = [('style', 'inverted')]
             self.saldo = -saldo
-        else:
-            self.saldo = saldo
+
+        super().__init__(*a, **kw)
+
 
         self.user_id = user_id
         self.table_footer_offset = 3
