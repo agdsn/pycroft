@@ -697,7 +697,7 @@ def transaction_confirm(transaction_id):
 
     if transaction.confirmed:
         flash(u"Diese Transaktion wurde bereits bestätigt.", 'error')
-        abort(404)
+        abort(400)
 
     lib.finance.transaction_confirm(transaction)
 
