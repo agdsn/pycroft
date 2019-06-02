@@ -1,7 +1,7 @@
 """Add confirmed status to transaction
 
 Revision ID: ae8f4b63876a
-Revises: ff0dbccdf410
+Revises: 7c1927c937af
 Create Date: 2019-05-31 18:08:19.462983
 
 """
@@ -12,7 +12,7 @@ import pycroft
 
 # revision identifiers, used by Alembic.
 revision = 'ae8f4b63876a'
-down_revision = 'ff0dbccdf410'
+down_revision = '7c1927c937af'
 branch_labels = None
 depends_on = None
 
