@@ -576,8 +576,8 @@ def get_users_with_payment_in_default():
         .filter(CurrentProperty.property_name == 'membership_fee') \
         .join(Account).filter(Account.balance > 0).all()
 
-    users_pid_membership = []
-    users_membership_terminated = []
+    users_pid_membership = set()
+    users_membership_terminated = set()
 
     ts_now = session.utcnow()
     for user in users:
@@ -606,11 +606,13 @@ def get_users_with_payment_in_default():
 
             if not user.has_property('payment_in_default'):
                 # Add user to new payment in default list
-                users_pid_membership.append(user)
+                users_pid_membership.add(user)
 
         if in_default_days >= fee.payment_deadline_final.days:
             # Add user to terminated memberships
-            users_membership_terminated.append(user)
+            users_membership_terminated.add(user)
+
+    users_membership_terminated.difference_update(users_pid_membership)
 
     return users_pid_membership, users_membership_terminated
 
