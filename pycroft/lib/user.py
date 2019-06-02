@@ -575,10 +575,10 @@ def move_out(user, comment, processor, when, end_membership=True):
         raise NotImplementedError("Moving out in the future is not supported yet.")
 
     if end_membership:
-        for group in (config.member_group,
+        for group in {config.member_group,
                       config.network_access_group,
                       config.external_group,
-                      config.cache_group):
+                      config.cache_group}:
             if user.member_of(group):
                 remove_member_of(user, group, processor, closedopen(when, None))
 
