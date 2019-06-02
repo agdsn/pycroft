@@ -34,26 +34,22 @@ class Task(IntegerIdModel):
     status = Column(Enum(TaskStatus), nullable=False, default=TaskStatus.OPEN)
     errors = Column(JSONB, nullable=True)
 
-    @hybrid_property
-    def parameters(self):
-        from pycroft.lib.task import task_type_to_impl
-
-        if not task_type_to_impl[self.type]:
+    @property
+    def schema(self):
+        if not task_type_to_schema[self.type]:
             raise ValueError("cannot find schema for task type")
 
-        parameters_schema = task_type_to_impl[self.type].schema()
+        return task_type_to_schema[self.type]
+
+    @hybrid_property
+    def parameters(self):
+        parameters_schema = self.schema()
 
         return parameters_schema.load(self.parameters_json)
 
-
     @parameters.setter
     def parameters(self, _parameters):
-        from pycroft.lib.task import task_type_to_impl
-
-        if not task_type_to_impl[self.type]:
-            raise ValueError("cannot find schema for task type")
-
-        parameters_schema = task_type_to_impl[self.type].schema()
+        parameters_schema = self.schema()
 
         data, errors = parameters_schema.dump(_parameters)
 
@@ -89,3 +85,11 @@ class UserMoveInSchema(Schema):
     birthdate = fields.Date()
     begin_membership = fields.Bool()
     host_annex = fields.Bool()
+
+task_type_to_schema = {
+    TaskType.USER_MOVE: UserMoveSchema,
+    TaskType.USER_MOVE_IN: UserMoveInSchema,
+    TaskType.USER_MOVE_OUT: UserMoveOutSchema
+}
+
+
