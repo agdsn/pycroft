@@ -43,8 +43,7 @@ class MembershipFeeCreateForm(Form):
     payment_deadline = IntegerField(
         u"Zahlungsfrist (Tage)",
         description=u"Bleibt ein Mitglied mehr Tage als hier angegeben eine "
-                    u"Zahlung schuldig, so fällt die Versäumnisgebühr an. "
-                    u"Der Nutzer wird zudem Mitglied in der "
+                    u"Zahlung schuldig, so wird es Mitglied in der "
                     u"Zahlungsrückstands-Gruppe.",
         validators=[InputRequired(), NumberRange(min=0)]
     )
@@ -52,7 +51,7 @@ class MembershipFeeCreateForm(Form):
     payment_deadline_final = IntegerField(
         u"Endgültige Zahlungsfrist (Tage)",
         description=u"Bleibt ein Mitglied mehr Tage als hier angegeben eine "
-                    u"Zahlung schuldig, so wird die Mitgliedschaft beendet.",
+                    u"Zahlung schuldig, so wird seine Mitgliedschaft beendet.",
         validators=[InputRequired(), NumberRange(min=0)]
     )
 
