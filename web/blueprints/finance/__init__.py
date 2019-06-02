@@ -718,7 +718,7 @@ def transaction_delete(transaction_id):
 
     if transaction.confirmed:
         flash(u"Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.", 'error')
-        abort(404)
+        abort(400)
 
     form = FlaskForm()
 
