@@ -113,7 +113,7 @@ export function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicons': value['icon'],
                 'tooltip': value['tooltip'],
-                'target': target
+                'target': target,
             });
         } else {
             return glyphBtnTemplate({
@@ -122,7 +122,7 @@ export function btnFormatter(value, row, index) {
                 'btn_class': value['btn_class'],
                 'glyphicon': value['icon'],
                 'tooltip': value['tooltip'],
-                'target': target
+                'target': target,
             });
         }
     } else {
@@ -131,7 +131,7 @@ export function btnFormatter(value, row, index) {
             'title': value['title'],
             'btn_class': value['btn_class'],
             'tooltip': value['tooltip'],
-                'target': target
+            'target': target,
         });
     }
 }
