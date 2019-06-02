@@ -312,7 +312,8 @@ class User(IntegerIdModel, UserMixin):
 
     @property
     def permission_level(self):
-        return max(membership.group.permission_level for membership in self.active_memberships())
+        return max((membership.group.permission_level for membership in self.active_memberships()),
+                   default=0)
 
     def property_intervals(self, name, when=UnboundedInterval):
         """
