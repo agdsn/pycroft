@@ -524,6 +524,7 @@ def accounts_show(account_id):
                                  invert=inverted),
         finance_table_regular=FinanceTable(**_table_kwargs),
         finance_table_splitted=FinanceTableSplitted(**_table_kwargs),
+        account_name=localized(account.name, {int: {'insert_commas': False}})
     )
 
 
