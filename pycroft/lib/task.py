@@ -242,7 +242,7 @@ def execute_scheduled_tasks():
 
         repair_session()
 
-        if task_impl.new_status:
+        if task_impl.new_status is not None:
             task.status = task_impl.new_status
 
         if task_impl.errors:
