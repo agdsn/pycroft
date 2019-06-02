@@ -31,7 +31,10 @@ class FinanceTable(BootstrapTable):
         self.saldo = saldo
 
         if inverted:
-            self._enforced_url_params = [('style', 'inverted')]
+            self._enforced_url_params = frozenset(
+                set([('style', 'inverted')])
+                .union(self._enforced_url_params)
+            )
             self.saldo = -saldo
 
         super().__init__(*a, **kw)
