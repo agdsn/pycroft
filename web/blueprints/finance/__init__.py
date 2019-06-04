@@ -517,9 +517,11 @@ def accounts_show(account_id):
         'inverted': inverted
     }
 
+    balance = -account.balance if inverted else account.balance
+
     return render_template(
         'finance/accounts_show.html',
-        account=account, user=user, balance=account.balance,
+        account=account, user=user, balance=balance,
         balance_json_url=url_for('.balance_json', account_id=account_id,
                                  invert=inverted),
         finance_table_regular=FinanceTable(**_table_kwargs),
