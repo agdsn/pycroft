@@ -477,11 +477,13 @@ def accounts_list():
 def balance_json(account_id):
     invert = request.args.get('invert', 'False') == 'True'
 
-    factor = -1 if invert else 1
+    sum_exp = func.sum(Split.amount).over(order_by=Transaction.valid_on)
+
+    if invert:
+        sum_exp = -sum_exp
 
     balance_json = (select([Transaction.valid_on,
-                            (func.sum(Split.amount).over(
-                                order_by=Transaction.valid_on) * factor).label("balance")
+                            sum_exp.label("balance")
                             ])
                     .select_from(
                         Join(Split, Transaction,
