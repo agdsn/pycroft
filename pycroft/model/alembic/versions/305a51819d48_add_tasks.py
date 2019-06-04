@@ -1,7 +1,7 @@
 """Add tasks
 
 Revision ID: 305a51819d48
-Revises: ff0dbccdf410
+Revises: ae8f4b63876a
 Create Date: 2019-05-24 09:38:15.831712
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '305a51819d48'
-down_revision = 'ff0dbccdf410'
+down_revision = 'ae8f4b63876a'
 branch_labels = None
 depends_on = None
 
