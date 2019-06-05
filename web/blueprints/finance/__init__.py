@@ -112,19 +112,15 @@ def bank_accounts_list_json():
 
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
-    if privilege_check(current_user, 'finance_change'):
-        def actions(activity_id):
-            return [{
-                'href': url_for(
-                    '.bank_account_activities_edit',
-                    activity_id=activity_id),
-                'title': '',
-                'btn_class': 'btn-primary',
-                'icon': 'glyphicon-pencil'
-            }]
-    else:
-        def actions(activity_id):
-            return []
+    def actions(activity_id):
+        return [{
+            'href': url_for(
+                '.bank_account_activities_edit',
+                activity_id=activity_id),
+            'title': '',
+            'btn_class': 'btn-primary',
+            'icon': 'glyphicon-pencil'
+        }]
 
     activity_q = (BankAccountActivity.q
             .options(joinedload(BankAccountActivity.bank_account))
@@ -695,7 +691,7 @@ def transactions_unconfirmed_json():
                     'title': 'Löschen',
                     'icon': 'glyphicon-trash'
                 }
-            ],
+            ] if privilege_check(current_user, 'finance_change') else [],
         } for transaction in transactions])
 
 
