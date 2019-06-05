@@ -11,7 +11,7 @@ from web.form.fields.validators import MacAddress
 
 class HostForm(SelectRoomForm):
     owner_id = UserIDField(u"Besitzer-ID")
-    name = TextField(u"Name", [DataRequired(u"Der Host benötigt einen Namen!")],
+    name = TextField(u"Name", validators=[Optional()],
                      description=u"z.B. TP-LINK WR841, FritzBox 4040 oder MacBook")
 
     _order = ("name", "owner_id")
