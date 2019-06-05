@@ -557,7 +557,7 @@ def create():
                                           unique_email_error or
                                           unique_mac_error):
 
-        (new_user, plain_password), success = web_execute(lib.user.create_user,
+        result, success = web_execute(lib.user.create_user,
                                                           None,
             name=form.name.data,
             login=form.login.data,
@@ -568,6 +568,8 @@ def create():
         )
 
         if success:
+            (new_user, plain_password) = result
+
             # We only have to check if building is present, as the presence
             # of the other fields depends on building
             if form.building.data is not None:

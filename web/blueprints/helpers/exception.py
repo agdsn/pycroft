@@ -38,7 +38,7 @@ def web_execute(function, success_message, *args, **kwargs):
     except InternalError as e:
         # Special case: Username already taken in Abe
         # Should be removed after migration
-        if e.message == "Username already taken in Abe!":
+        if "Username already taken in Abe!" in str(e):
             flash("Dieser Benutzername wird bereits in Abe verwendet.", 'error')
 
             session.session.rollback()
