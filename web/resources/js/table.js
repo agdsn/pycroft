@@ -173,7 +173,7 @@ export function multiBtnFormatter(value, row, index) {
         return;
     }
 
-    return value.map(v => btnFormatter(v, row, index)).join('');
+    return value.map(v => btnFormatter(v, row, index)).join('&nbsp;');
 }
 
 export function listFormatter(value, row, index) {
