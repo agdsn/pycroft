@@ -188,11 +188,11 @@ class TransactionTable(BootstrapTable):
 
 class UnconfirmedTransactionsTable(BootstrapTable):
     """A table for displaying unconfirmed transactions """
-    description = LinkColumn("Beschreibung")
-    author = LinkColumn("Ersteller")
+    description = LinkColumn("(Beschreibung)")
+    user = LinkColumn("Nutzer")
     date = DateColumn("Datum")
     amount = Column("Wert")
-    details = BtnColumn("Details")
+    author = LinkColumn("Ersteller")
     actions = MultiBtnColumn("Aktionen")
 
 

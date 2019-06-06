@@ -658,41 +658,49 @@ def transactions_unconfirmed():
 def transactions_unconfirmed_json():
     transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).limit(100).all()
 
-    return jsonify(
-        items=[
-        {
-            'description': {
-                'href': url_for(".transactions_show", transaction_id=transaction.id),
-                'title': transaction.description,
-                'new_tab': True
-            },
-            'author': {
-                'href': url_for("user.user_show",
-                                user_id=transaction.author.id),
-                'title': transaction.author.name,
-                'new_tab': True
-            },
-            'date': date_format(transaction.posted_at),
-            'amount': money_filter(transaction.amount),
-            'details': {
-                'href': url_for(".transactions_show", transaction_id=transaction.id),
-                'title': 'Details',
-                'btn_class': 'btn-primary',
-                'new_tab': True
-            },
-            'actions': [{
+    items = []
+
+    for transaction in transactions:
+        user_account = next((a for a in transaction.accounts if a.type == "USER_ASSET"), None)
+
+        items.append(
+            {
+                'description': {
+                    'href': url_for(".transactions_show",
+                                    transaction_id=transaction.id),
+                    'title': "({})".format(transaction.description),
+                    'new_tab': True,
+                },
+                'user': {
+                    'href': url_for("user.user_show",
+                                    user_id=user_account.user.id),
+                    'title': user_account.user.name,
+                    'new_tab': True
+                } if user_account else None,
+                'author': {
+                    'href': url_for("user.user_show",
+                                    user_id=transaction.author.id),
+                    'title': transaction.author.name,
+                    'new_tab': True,
+                },
+                'date': date_format(transaction.posted_at),
+                'amount': money_filter(transaction.amount),
+                'actions': [{
                     'href': url_for(".transaction_confirm",
                                     transaction_id=transaction.id),
                     'title': 'Bestätigen',
-                    'icon': 'glyphicon-ok'
-                },{
+                    'icon': 'glyphicon-ok',
+                    'btn_class': 'btn-success btn-sm',
+                }, {
                     'href': url_for(".transaction_delete",
                                     transaction_id=transaction.id),
                     'title': 'Löschen',
-                    'icon': 'glyphicon-trash'
-                }
-            ] if privilege_check(current_user, 'finance_change') else [],
-        } for transaction in transactions])
+                    'icon': 'glyphicon-trash',
+                    'btn_class': 'btn-danger btn-sm',
+                }] if privilege_check(current_user, 'finance_change') else [],
+            })
+
+    return jsonify(items=items)
 
 
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
