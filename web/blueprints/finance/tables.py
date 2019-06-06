@@ -190,6 +190,7 @@ class UnconfirmedTransactionsTable(BootstrapTable):
     """A table for displaying unconfirmed transactions """
     description = LinkColumn("(Beschreibung)")
     user = LinkColumn("Nutzer")
+    room = Column("Wohnort")
     date = DateColumn("Datum")
     amount = Column("Wert")
     author = LinkColumn("Ersteller")

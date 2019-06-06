@@ -33,6 +33,7 @@ from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
     match_activities, take_actions_for_payment_in_default_users
+from pycroft.lib.user import encode_type2_user_id
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session
@@ -674,9 +675,11 @@ def transactions_unconfirmed_json():
                 'user': {
                     'href': url_for("user.user_show",
                                     user_id=user_account.user.id),
-                    'title': user_account.user.name,
+                    'title': "{} ({})".format(user_account.user.name,
+                                                encode_type2_user_id(user_account.user.id)),
                     'new_tab': True
                 } if user_account else None,
+                'room': user_account.user.room.short_name if user_account and user_account.user.room else None,
                 'author': {
                     'href': url_for("user.user_show",
                                     user_id=transaction.author.id),
