@@ -18,7 +18,7 @@ from web.blueprints.task.tables import TaskTable
 
 bp = Blueprint('task', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
-nav = BlueprintNavigation(bp, "Aufgaben", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Tasks", blueprint_access=access)
 
 
 def format_parameters(parameters):
@@ -101,7 +101,7 @@ def cancel_user_task(task_id):
 
 
 @bp.route("/user")
-@nav.navigate("Aufgaben")
+@nav.navigate("Tasks")
 def user_tasks():
     return render_template("task/tasks.html",
                            task_table=TaskTable(
