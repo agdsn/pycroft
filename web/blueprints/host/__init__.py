@@ -2,7 +2,7 @@ import re
 import traceback
 
 from flask import Blueprint, flash, abort, redirect, url_for, render_template, \
-    jsonify
+    jsonify, request
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
@@ -109,8 +109,8 @@ def host_edit(host_id):
 
 @bp.route('/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
-def host_create(user_id):
-    user = get_user_or_404(user_id)
+def host_create():
+    user = get_user_or_404(request.args.get('user_id', None))
 
     form = HostForm(owner_id=user.id)
 
