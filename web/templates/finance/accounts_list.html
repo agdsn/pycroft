@@ -31,7 +31,10 @@
     </div>
     {% if current_user is privileged_for('finance_change') -%}
     <p>
-        <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Neues Konto</a>
+      <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">
+        <span class="glyphicon glyphicon-plus"></span>
+        Neues Konto
+      </a>
     </p>
     {%- endif %}
     <hr/>
