@@ -101,6 +101,7 @@ class Account(IntegerIdModel):
                        "REVENUE",     # Ertragskonto
                        name="account_type"),
                   nullable=False)
+    legacy = Column(Boolean, default=False, nullable=False)
 
     @hybrid_property
     def balance(self):

@@ -185,6 +185,7 @@ def account_type_filter(account_type):
         "LIABILITY": gettext("Liability account"),
         "REVENUE": gettext("Revenue account"),
         "EXPENSE": gettext("Expense account"),
+        "LEGACY": gettext("Legacy account"),
     }
 
     return types.get(account_type)

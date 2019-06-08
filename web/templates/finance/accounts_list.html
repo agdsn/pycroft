@@ -34,6 +34,11 @@
         <a class="btn btn-primary" href="{{ url_for('.accounts_create') }}">Neues Konto</a>
     </p>
     {%- endif %}
+    <hr/>
+    <h2>Legacy-Konten</h2>
+    <div class="row">
+        {{ list_accounts("LEGACY"|account_type, accounts.get("LEGACY", [])) }}
+    </div>
 {% endblock %}
 
 {% block page_script %}

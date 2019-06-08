@@ -460,11 +460,14 @@ def accounts_list():
     accounts_by_type = {
         t[0]: list(t[1])
         for t in groupby(
-            Account.q.outerjoin(User).filter(User.id == None)
+            Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id == None)
             .order_by(Account.type).all(),
             lambda a: a.type
         )
     }
+
+    accounts_by_type['LEGACY'] = Account.q.filter_by(legacy=True).all()
+
     return render_template(
         'finance/accounts_list.html', accounts=accounts_by_type
     )
