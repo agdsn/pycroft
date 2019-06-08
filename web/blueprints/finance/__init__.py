@@ -938,21 +938,27 @@ def membership_fees_json():
             'payment_deadline_final': membership_fee.payment_deadline_final.days,
             'begins_on': date_format(membership_fee.begins_on),
             'ends_on': date_format(membership_fee.ends_on),
-            'finance_link': {'href': url_for(".transactions_all",
-                                        filter="all",
-                                        after=membership_fee.begins_on,
-                                        before=membership_fee.ends_on),
-                            'title': 'Finanzübersicht',
-                            'icon': 'glyphicon-euro'},
-            'book_link': {'href': url_for(".membership_fee_book",
-                                          fee_id=membership_fee.id),
-                          'title': 'Buchen',
-                          'icon': 'glyphicon-book'},
-            'edit_link': {'href': url_for(".membership_fee_edit",
-                                        fee_id=membership_fee.id),
-                            'title': 'Bearbeiten',
-                            'icon': 'glyphicon-edit'},
-        } for membership_fee in MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()])
+            'actions': [
+                {'href': url_for(".transactions_all",
+                                 filter="all",
+                                 after=membership_fee.begins_on,
+                                 before=membership_fee.ends_on),
+                 'title': 'Finanzübersicht',
+                 'icon': 'glyphicon-euro',
+                 'btn_class': 'btn-success btn-sm'},
+                {'href': url_for(".membership_fee_book",
+                                 fee_id=membership_fee.id),
+                 'title': 'Buchen',
+                 'icon': 'glyphicon-book',
+                 'btn_class': 'btn-warning btn-sm'},
+                {'href': url_for(".membership_fee_edit",
+                                 fee_id=membership_fee.id),
+                 'title': 'Bearbeiten',
+                 'icon': 'glyphicon-edit',
+                 'btn_class': 'btn-primary btn-sm'}
+            ]
+        } for membership_fee in
+        MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()])
 
 
 @bp.route('/membership_fee/create', methods=("GET", "POST"))

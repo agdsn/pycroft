@@ -108,9 +108,7 @@ class MembershipFeeTable(BootstrapTable):
     payment_deadline_final = Column("Endgültige Frist")
     begins_on = DateColumn("Beginn")
     ends_on = DateColumn("Ende")
-    finance_link = BtnColumn("Finanzen")
-    book_link = BtnColumn("Buchen", hide_if=no_finance_change)
-    edit_link = BtnColumn("Bearbeiten", hide_if=no_finance_change)
+    actions = MultiBtnColumn("Aktionen")
 
     @property
     def toolbar(self):
