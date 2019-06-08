@@ -624,28 +624,30 @@ def move_out(user, comment, processor, when, end_membership=True):
 
                 session.session.delete(h)
 
+        message = None
+
         if user.room is not None:
             message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
                 .format(room=user.room.short_name,
                         num_hosts=num_hosts,
                         interfaces=', '.join(deleted_interfaces))
+
+            user.room = None
         else:
             if num_hosts:
                 message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
                     .format(num_hosts=num_hosts,
                             interfaces=', '.join(deleted_interfaces))
 
-        user.room = None
+        if message is not None:
+            if comment:
+                message += u"\nComment: {}".format(comment)
 
-        if comment:
-            message += u"\nComment: {}"\
-                .format(comment)
-
-        log_user_event(
-            message=deferred_gettext(message).to_json(),
-            author=processor,
-            user=user
-        )
+            log_user_event(
+                message=deferred_gettext(message).to_json(),
+                author=processor,
+                user=user
+            )
 
         return user
 
