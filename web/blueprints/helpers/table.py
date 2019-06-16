@@ -399,7 +399,7 @@ def enforce_url_params(url, params):
 @lazy_join
 def button_toolbar(title: str, href: str, id=False, icon: str = "glyphicon-plus")\
         -> LazilyJoined:
-    params = html_params(class_="btn btn-primary", href=href, id=id)
+    params = html_params(class_="btn btn-default", href=href, id=id)
     yield f"<a {params}>"
     yield f"<span class=\"glyphicon {icon}\"></span>"
     yield " "
