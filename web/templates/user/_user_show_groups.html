@@ -7,12 +7,16 @@
 <div>
     <h3>Resultierende Properties</h3>
     {% for prop in granted_properties %}
-        <a class="label userprop userprop-granted" href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
+        <a class="label userprop userprop-granted"
+           data-property-name="{{ prop }}"
+           href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
           <span title="Granted">{{ prop }}</span>
         </a>
     {% endfor %}
     {% for prop in revoked_properties %}
-      <a class="label userprop userprop-denied" href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
+      <a class="label userprop userprop-denied"
+         data-property-name="{{ prop }}"
+         href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
         <span title="Granted, aber dann Denied">{{ prop }}</span>
       </a>
     {% endfor %}

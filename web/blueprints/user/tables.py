@@ -58,6 +58,12 @@ class MembershipTable(BootstrapTable):
         href = url_for(".add_membership", user_id=self.user_id)
         return button_toolbar("Mitgliedschaft", href)
 
+    class Meta:
+        table_args = {
+            'data-row-attributes': 'table.membershipRowFormatter',
+            'class': 'membership-table'
+        }
+
 
 class SearchTable(BootstrapTable):
     """A table for displaying search results"""

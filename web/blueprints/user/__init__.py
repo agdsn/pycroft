@@ -21,8 +21,9 @@ from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
-from sqlalchemy import Text
+from sqlalchemy import Text, distinct, and_
 from sqlalchemy.exc import InternalError
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import or_, func, cast
 from wtforms.widgets import HTMLString
 
@@ -41,7 +42,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.host import Host, IP, Interface
 from pycroft.model.types import InvalidMACAddressException
-from pycroft.model.user import User, Membership, PropertyGroup
+from pycroft.model.user import User, Membership, PropertyGroup, Property
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -395,10 +396,31 @@ def user_show_groups_json(user_id, group_filter="all"):
                 Membership.ends_at > session.utcnow())
         )
 
+    group = aliased(PropertyGroup)
+    p_granted = aliased(Property)
+    p_denied = aliased(Property)
+    memberships = (
+        memberships
+            .join(group)
+            .outerjoin(p_granted, and_(p_granted.property_group_id == group.id,
+                                       p_granted.granted == True))
+            .add_column(func.array_agg(distinct(p_granted.name))
+                        .label('granted'))
+
+            .outerjoin(p_denied, and_(p_denied.property_group_id == group.id,
+                                      p_denied.granted == False))
+            .add_column(func.array_agg(distinct(p_denied.name))
+                        .label('denied'))
+
+            .group_by(Membership.id)
+    )
+
     return jsonify(items=[{
             'group_name': membership.group.name,
             'begins_at': datetime_format(membership.begins_at, default=''),
             'ends_at': datetime_format(membership.ends_at, default=''),
+            'grants': granted,
+            'denies': denied,
             'actions': [{'href': url_for(".edit_membership",
                                         user_id=user_id,
                                         membership_id=membership.id),
@@ -409,7 +431,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                                          membership_id=membership.id),
                          'title': "Beenden",
                          'icon': 'glyphicon-off'} if membership.active() else {}],
-        } for membership in memberships.all()])
+        } for membership, granted, denied in memberships.all()])
 
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])

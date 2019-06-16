@@ -396,6 +396,7 @@ input.money-amount {
     letter-spacing: 1px;
     padding: 3px 8px;
     display: inline-block;  /* To prevent stuff like line breaking */
+    transition: background-color 150ms ease-out, color 150ms ease-out;
 }
 
 a.userprop:hover, a.userprop:link {
@@ -412,6 +413,16 @@ a.userprop:hover, a.userprop:link {
     color: var(--green-dark-40);
 }
 
+.userprop.userprop-granted.userprop-deemphasized{
+    background-color: var(--green-bright-60);
+    color: var(--green-dark-20);
+}
+
+[data-row-guilty-for=grants] {
+    /* important needed to override the stripe styling*/
+    background-color: var(--green-bright-60) !important;
+}
+
 .userprop.userprop-denied {
     background-color: var(--red-bright-40);
     color: var(--red-dark-60);
@@ -420,6 +431,20 @@ a.userprop:hover, a.userprop:link {
 .userprop.userprop-denied:hover {
     background-color: var(--red-bright-60);
     color: var(--red-dark-40);
+}
+
+.userprop.userprop-denied.userprop-deemphasized{
+    background-color: var(--red-bright-60);
+    color: var(--red-dark-20);
+}
+
+[data-row-guilty-for=denies] {
+    background-color: var(--red-bright-60) !important;
+}
+
+
+tr {
+    transition: background-color 150ms ease-out;
 }
 
 /* Action Button */

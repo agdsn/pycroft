@@ -213,13 +213,76 @@ export function financeRowFormatter(row, index) {
     }
 }
 
+export function membershipRowFormatter(row, index) {
+    return {
+        'data-row-grants': row.grants.join(' '),
+        'data-row-denies': row.denies.join(' '),
+    };
+}
+
+$(function() {
+    let userPropSel = $('.userprop[data-property-name]');
+    userPropSel.mouseenter(function(ev) {
+        let propitem = ev.currentTarget;
+        let propname = propitem.attributes['data-property-name'].value;
+        console.log("hovered " + propname);
+        markGuiltyGroups(propname);
+    });
+    userPropSel.mouseleave(function(ev) {
+        let propitem = ev.currentTarget;
+        let propname = propitem.attributes['data-property-name'].value;
+        console.log("un-hovered " + propname);
+        unmarkGuiltyGroups(propname);
+    });
+
+    let tbodySel = $('.membership-table tbody');
+    tbodySel.on('mouseenter', 'tr', function(ev) {
+        let groupRow = ev.currentTarget;
+        let granted = groupRow.attributes['data-row-grants'].value.split(' ');
+        console.log("granted: " + granted);
+        let denied = groupRow.attributes['data-row-denies'].value.split(' ');
+        console.log("denied: " + denied);
+
+        let userprops = $('.userprop[data-property-name]').toArray();
+        userprops.filter(prop => (
+            prop.classList.contains('userprop-granted')
+            && !granted.includes(prop.attributes['data-property-name'].value)
+        ) || (
+            prop.classList.contains('userprop-denied')
+            && !denied.includes(prop.attributes['data-property-name'].value)
+        )).forEach(prop => prop.classList.add('userprop-deemphasized'));
+    });
+    tbodySel.on('mouseleave', 'tr', function(ev) {
+        $('.userprop[data-property-name]').toArray()
+            .forEach(prop => prop.classList.remove('userprop-deemphasized'));
+    });
+});
+
+
+export function markGuiltyGroups(attrName) {
+    let rows = $('.membership-table tbody tr').toArray();
+    let grantingRows = rows.filter(row => row.attributes['data-row-grants'].value.split(' ').includes(attrName));
+    console.log("Got " + grantingRows.length + " rows granting " + attrName);
+    grantingRows.forEach(row => row.setAttribute('data-row-guilty-for', 'grants'));
+    let denyingRows = rows.filter(row => row.attributes['data-row-denies'].value.split(' ').includes(attrName));
+    console.log("Got " + denyingRows.length + " rows denying " + attrName);
+    denyingRows.forEach(row => row.setAttribute('data-row-guilty-for', 'denies'));
+}
+
+export function unmarkGuiltyGroups(attrName) {
+    let rows = $('.membership-table tbody tr').toArray();
+    console.log("Removing all attributes from all " + rows.length + " rows.");
+    rows.forEach(row => row.removeAttribute('data-row-guilty-for'));
+}
+
+
 $('table').on('load-error.bs.table', function (e, status, res) {
     $("tr.no-records-found > td", this).html("Error: Server returned HTTP " + status + ".");
 });
 
 $.extend($.fn.bootstrapTable.defaults, {
     responseHandler: response => response.items,
-    classes: "table table-striped",
+    classes: "table table-striped table-hover",
     pageSize: 20,
     cache: false,
     search: true,
