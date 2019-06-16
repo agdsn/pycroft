@@ -29,38 +29,38 @@
         <span class="card-title">{{ user.name }}</span>
       </div>
       <div class="card-bottom">
-        <div class="row"></div>
         <section>
-          <div class="user-id">
+          <div class="card-value user-id">
             <span class="glyphicon glyphicon-tag"></span>
-            <span>{{ user_id_new }} <em
-                class="text-muted">{{ user_id_old }}</em></span>
+            <span>{{ user_id_new }}</span>
+            <span class="card-value-secondary">{{ user_id_old }}</span>
           </div>
-          <div class="user-room">
+          <div class="card-value user-room">
             {% if user.room is not none %}
-              {{ misc.room_link(user.room) }}
+              <span>{{ misc.room_link(user.room) }}</span>
             {% else %}
               <span class="glyphicon glyphicon-home"></span>
               <span class="text-muted">{{ _("Nicht gesetzt") }}</span>
             {% endif %}
           </div>
-          <div class="user-login">
+          <div class="card-value user-login">
             <span title="Benutzername" class="glyphicon glyphicon-console"></span>
-            <span>{{ user.login }}</span></div>
-          <div class="user-mail">
+            <span class="user-login-value">{{ user.login }}</span></div>
+          <div class="card-value user-mail">
             <span class="glyphicon glyphicon-envelope"></span>
             <span>{{ user.email }}</span>
-            <a href="mailto:{{ user.email }}"
-               style="font-size: small;">(mailto)</a>
+            <span class="card-value-secondary"><a href="mailto:{{ user.email }}"
+               style="font-size: small;">(mailto)</a></span>
           </div>
         </section>
 
         <section>
-          <div>
+          <div class="card-value">
             <span title="Traffic der letzten 7 Tage" class="glyphicon glyphicon-stats"></span>
             <span>{{ user.traffic_for_days(7) | filesizeformat(binary=True) }}</span>
+            <span class="card-value-secondary">/7d</span>
           </div>
-          <div>
+          <div class="card-value">
             {% if balance >= 0 %}
               {% set balance_class="text-success" %}
             {% else %}
@@ -70,7 +70,7 @@
             <span class="{{ balance_class }}">{{ balance | money }}</span>
           </div>
         </section>
-        <div class="footer">
+        <div class="card-value-secondary">
           Angemeldet am <em>{{ user.registered_at|date }}</em>,
           geboren am <em>{{ user.birthdate|date }}</em>
         </div>

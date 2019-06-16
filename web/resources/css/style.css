@@ -314,13 +314,22 @@ input.money-amount {
     overflow: auto;  /* To set block context */
     margin-bottom: 10px;
     background-color: hsl(200, 70%, 95%);
-    padding: 10px;
+    padding: 10px 15px 5px 20px;
 }
 
 .card .card-bottom {
     background-color: hsl(200, 50%, 99%);
-    padding: 10px;
-    font-weight: bold;
+    padding: 0 20px 6px 20px;
+}
+
+.card .card-bottom .card-value {
+    font-size: 115%;
+    letter-spacing: 0.8px;
+}
+
+.card .card-bottom .card-value-secondary {
+    font-style: italic;
+    color: hsl(200, 20%, 50%);
 }
 
 .card section {
@@ -329,7 +338,7 @@ input.money-amount {
 }
 
 .card .card-title {
-    font-size: 230%;
+    font-size: 250%;
 }
 
 .card .user-flags {
@@ -364,14 +373,14 @@ input.money-amount {
     color: var(--red-bright-60);
 }
 
-.card .user-login {
+.card .user-login-value {
     font-family: monospace;
 }
 
 .card .footer {
     font-size: smaller;
-    letter-spacing: 1px;
-    color: hsl(0, 0%, 40%);
+    letter-spacing: 1.2px;
+    color: hsl(200, 36%, 74%);
 }
 
 /* Property labels */
