@@ -421,6 +421,7 @@ def user_show_groups_json(user_id, group_filter="all"):
             'ends_at': datetime_format(membership.ends_at, default=''),
             'grants': granted,
             'denies': denied,
+            'active': membership.active(),
             'actions': [{'href': url_for(".edit_membership",
                                         user_id=user_id,
                                         membership_id=membership.id),

@@ -447,6 +447,12 @@ tr {
     transition: background-color 150ms ease-out;
 }
 
+tr.row-membership-inactive {
+    font-style: italic;
+    color: #777;
+    text-decoration-style: dashed;
+}
+
 /* Action Button */
 
 .action-button > a{

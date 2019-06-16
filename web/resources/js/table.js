@@ -213,11 +213,18 @@ export function financeRowFormatter(row, index) {
     }
 }
 
-export function membershipRowFormatter(row, index) {
+export function membershipRowAttributes(row, index) {
     return {
         'data-row-grants': row.grants.join(' '),
         'data-row-denies': row.denies.join(' '),
     };
+}
+
+export function membershipRowFormatter(row, index) {
+    if (row && !row.active) {
+        return {classes: 'row-membership-inactive'};
+    }
+    return {};
 }
 
 $(function() {
@@ -238,9 +245,13 @@ $(function() {
     let tbodySel = $('.membership-table tbody');
     tbodySel.on('mouseenter', 'tr', function(ev) {
         let groupRow = ev.currentTarget;
-        let granted = groupRow.attributes['data-row-grants'].value.split(' ');
+        let granted = groupRow.hasAttribute('data-row-grants')
+            ? groupRow.attributes['data-row-grants'].value.split(' ')
+            : [];
         console.log("granted: " + granted);
-        let denied = groupRow.attributes['data-row-denies'].value.split(' ');
+        let denied = groupRow.hasAttribute('data-row-grants')
+            ? groupRow.attributes['data-row-denies'].value.split(' ')
+            : [];
         console.log("denied: " + denied);
 
         let userprops = $('.userprop[data-property-name]').toArray();

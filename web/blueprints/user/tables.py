@@ -60,7 +60,8 @@ class MembershipTable(BootstrapTable):
 
     class Meta:
         table_args = {
-            'data-row-attributes': 'table.membershipRowFormatter',
+            'data-row-attributes': 'table.membershipRowAttributes',
+            'data-row-style': 'table.membershipRowFormatter',
             'class': 'membership-table'
         }
 
