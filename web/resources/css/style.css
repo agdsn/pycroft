@@ -196,6 +196,13 @@ td.grow {
     text-decoration: none;
 }
 
+.no-records-found {
+    text-transform: uppercase;
+    font-size: small;
+    letter-spacing: 2px;
+    color: hsl(200, 20%, 60%);
+}
+
 /* The right stripe (mostly used in the finance tables) */
 .table-stripe-right {
     position: absolute;
