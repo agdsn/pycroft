@@ -672,8 +672,9 @@ def transactions_unconfirmed_json():
                 'description': {
                     'href': url_for(".transactions_show",
                                     transaction_id=transaction.id),
-                    'title': "({})".format(transaction.description),
+                    'title': transaction.description,
                     'new_tab': True,
+                    'glyphicon': 'glyphicon-new-window'
                 },
                 'user': {
                     'href': url_for("user.user_show",
