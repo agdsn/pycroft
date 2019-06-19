@@ -473,6 +473,23 @@ def accounts_list():
     )
 
 
+@bp.route('/account/<int:account_id>/toggle-legacy')
+@access.require('finance_change')
+def account_toggle_legacy(account_id):
+    account = Account.q.get(account_id)
+
+    if not account:
+        abort(404)
+
+    account.legacy = not account.legacy
+
+    session.commit()
+
+    flash("Der Status des Kontos wurde umgeschaltet.", "success")
+
+    return redirect(url_for('.accounts_show', account_id=account_id))
+
+
 @bp.route('/accounts/<int:account_id>/balance/json')
 def balance_json(account_id):
     invert = request.args.get('invert', 'False') == 'True'

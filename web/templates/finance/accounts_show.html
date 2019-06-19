@@ -63,6 +63,16 @@
     </dl>
     <div data-chart="balance" data-url="{{ balance_json_url }}"></div>
     {% include "finance/_transaction_table.html" with context %}
+
+    {% if current_user is privileged_for('finance_change') %}
+      <hr/>
+
+      {% if account.legacy %}
+        <a href="{{ url_for('.account_toggle_legacy', account_id=account.id) }}" class="btn btn-success">Als aktuell markieren</a>
+      {% else %}
+        <a href="{{ url_for('.account_toggle_legacy', account_id=account.id) }}" class="btn btn-warning">Als veraltet markieren</a>
+      {% endif %}
+    {% endif %}
 {% endblock %}
 
 {% block page_script %}
