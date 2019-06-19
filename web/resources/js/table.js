@@ -12,6 +12,10 @@ export var linkTemplate = _.template(
     '<a target="<%- target %>"  href="<%- href %>"><%- title %></a>',
 );
 
+export var glyphLinkTemplate = _.template(
+    '<a target="<%- target %>"  href="<%- href %>"><%- title %> <span class="glyphicon <%- glyphicon %>"></span></a>',
+);
+
 export var btnTemplate = _.template(
     '<a target="<%- target %>"  href="<%- href %>" class="btn <%- btn_class %>"><%- title %></a>',
 );
@@ -73,7 +77,12 @@ export function linkFormatter(value, row, index) {
         target = "_blank"
     }
 
-    return linkTemplate({'href': value['href'], 'title': value['title'], 'target': target});
+    if(value["glyphicon"]){
+        return glyphLinkTemplate({'href': value['href'], 'title': value['title'], 'target': target, 'glyphicon': value['glyphicon']});
+    }else{
+        return linkTemplate({'href': value['href'], 'title': value['title'], 'target': target});
+    }
+
 }
 linkFormatter.attributes = { sortName: 'title' };
 
