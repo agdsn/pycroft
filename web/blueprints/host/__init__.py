@@ -132,7 +132,7 @@ def host_create():
             session.session.commit()
 
             return redirect(
-                url_for('user.interface_create', user_id=host.owner_id,
+                url_for('.interface_create', user_id=host.owner_id,
                         host_id=host.id,
                         _anchor='hosts'))
 
