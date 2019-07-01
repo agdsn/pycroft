@@ -232,8 +232,8 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                           .cte("membership_fee_numbered_users"))
 
         transactions = (Transaction.__table__.insert()
-             .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on],
-                          select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on)]).select_from(users))
+             .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on, Transaction.confirmed],
+                          select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on), True]).select_from(users))
              .returning(Transaction.id)
              .cte('membership_fee_transactions'))
 
