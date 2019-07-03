@@ -35,9 +35,11 @@ print_usage() {
 run_hooks() {
 	local -r hook="$1"
 	shift
+	df -i
 	echo "Running $hook entrypoint hooks"
 	if [[ -d "/container/hooks/$hook" ]]; then
-		run-parts --exit-on-error --verbose "/container/hooks/$hook" "$@"
+		run-parts --exit-on-error --verbose "/container/hooks/$hook" "$@" || (echo "run-parts failed."; df -i; exit)
+		df -i
 	fi
 }
 
