@@ -13,12 +13,9 @@ env:
   global:
     - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.gz
     - DOCKER_COMPOSE="docker-compose -f docker-compose.test.yml"
-    - DOCKER_COMPOSE_VERSION=1.22.0
     - UID=$TRAVIS_UID
 
 before_install:
-  # TODO: Remove when travis has a adequate docker version preinstalled
-  - ./helpers/install_latest_docker.sh
   # list docker-engine versions
   - apt-cache madison docker-engine
   - "docker version"
