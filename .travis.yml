@@ -2,9 +2,9 @@ language: python
 sudo: required
 dist: trusty
 
-cache:
-  directories:
-    - /home/travis/docker
+#cache:
+#  directories:
+#    - /home/travis/docker
 
 services:
   - docker
@@ -21,7 +21,7 @@ before_install:
   - "docker version"
   - "docker-compose version"
   - env
-  - ./helpers/docker_cache.sh load_cache || echo "Cache loading failed"
+  # - ./helpers/docker_cache.sh load_cache || echo "Cache loading failed"
   - "docker images -a"
 
 # skip the builtin pip install
