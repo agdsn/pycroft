@@ -439,6 +439,7 @@ export function taskDetailFormatter(index, row, element){
         });
     }
 
+    html = html.concat(`<br/><i>Erstellt am ${row.created}</i>`);
 
     return html;
 }

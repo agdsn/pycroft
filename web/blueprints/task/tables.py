@@ -13,6 +13,7 @@ class TaskTable(BootstrapTable):
     creator = LinkColumn("Ersteller")
     status = Column("Status")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
+    created = Column(title=None, hide_if=lambda: True)
     parameters = Column(title=None, hide_if=lambda: True)
     exception_message = Column(title=None, hide_if=lambda: True)
     type = Column("Typ", hide_if=lambda: True)
