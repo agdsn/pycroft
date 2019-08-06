@@ -49,7 +49,7 @@ def task_object(task):
         "type": task.type.name,
         "status": task.status.name,
         "parameters": format_parameters(task.parameters.data),
-        "errors": json.loads(task.errors) if task.errors else list(),
+        "errors": task.errors if task.errors is not None else list(),
         "due": datetime_format(task.due, default=''),
         "creator": {
             'href': url_for('user.user_show', user_id=task.creator.id),
