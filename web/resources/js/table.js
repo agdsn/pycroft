@@ -182,7 +182,11 @@ export function multiBtnFormatter(value, row, index) {
         return;
     }
 
-    return value.map(v => btnFormatter(v, row, index)).join('&nbsp;');
+    if (Array.isArray(value)){
+        return value.map(v => btnFormatter(v, row, index)).join('&nbsp;');
+    }else{
+        return btnFormatter(value, row, index);
+    }
 }
 
 export function listFormatter(value, row, index) {
