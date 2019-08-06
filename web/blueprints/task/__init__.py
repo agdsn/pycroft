@@ -73,7 +73,14 @@ def json_tasks_for_user(user_id):
 
 @bp.route("/user/json")
 def json_user_tasks():
-    tasks = Task.q.order_by(Task.status.desc(), Task.due.asc()).all()
+    failed_only = bool(request.args.get("failed_only", False))
+
+    tasks = Task.q.order_by(Task.status.desc(), Task.due.asc())\
+
+    if failed_only:
+        tasks = tasks.filter_by(status=TaskStatus.FAILED).all()
+    else:
+        tasks = tasks.all()
 
     return jsonify(items=[task_object(task) for task in tasks])
 
@@ -106,4 +113,7 @@ def user_tasks():
     return render_template("task/tasks.html",
                            task_table=TaskTable(
                                data_url=url_for('.json_user_tasks')),
+                           task_failed_table=TaskTable(
+                               data_url=url_for('.json_user_tasks',
+                                                failed_only=1)),
                            page_title="Aufgaben (Nutzer)")
