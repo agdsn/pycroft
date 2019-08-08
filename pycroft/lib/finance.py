@@ -758,16 +758,19 @@ def match_activities():
             if activity.reference.lower().startswith('gerok38'):
                 user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
             else:
-                uid = search.group(2).replace(' ', '').replace('/', '-') \
-                    .replace('?', '-').replace(':', '-').replace(',', '-') \
-                    .replace('+', '-').replace('.', '-')
-                if uid[-2] is not '-' and uid[-3] is not '-':
-                    # interpret as type 2 UID with missing -
-                    uid = uid[:-2] + '-' + uid[-2:]
+                try:
+                    uid = search.group(2).replace(' ', '').replace('/', '-') \
+                        .replace('?', '-').replace(':', '-').replace(',', '-') \
+                        .replace('+', '-').replace('.', '-')
+                    if uid[-2] is not '-' and uid[-3] is not '-':
+                        # interpret as type 2 UID with missing -
+                        uid = uid[:-2] + '-' + uid[-2:]
 
-                if check_user_id(uid):
-                    uid = uid.split("-")[0]
-                    user = User.q.get(uid)
+                    if check_user_id(uid):
+                        uid = uid.split("-")[0]
+                        user = User.q.get(uid)
+                except AttributeError:
+                    user = None
             if user:
                 matching.update({activity: user})
 
