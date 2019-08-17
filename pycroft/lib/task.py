@@ -14,9 +14,11 @@ from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus, \
     UserMoveSchema, UserMoveOutSchema, UserMoveInSchema
+from pycroft.model.traffic import TrafficVolume
 
 app = Celery('tasks', backend=os.environ['PYCROFT_CELERY_RESULT_BACKEND_URI'],
              broker=os.environ['PYCROFT_CELERY_BROKER_URI'])
+
 
 class TaskImpl(ABC):
     @property
@@ -221,6 +223,7 @@ task_type_to_impl = {
     TaskType.USER_MOVE_OUT: UserMoveOutTaskImpl
 }
 
+
 @app.task(base=DBTask)
 def execute_scheduled_tasks():
     tasks = (session.session.query(with_polymorphic(Task, "*"))
@@ -256,11 +259,25 @@ def execute_scheduled_tasks():
 
         session.session.commit()
 
+
+@app.task(base=DBTask)
+def remove_old_traffic_data():
+    TrafficVolume.q.filter(TrafficVolume.timestamp < (session.utcnow() - timedelta(7))).delete()
+
+    session.session.commit()
+
+    print("Deleted old traffic data")
+
+
 app.conf.update(
     CELERYBEAT_SCHEDULE={
         'execute-scheduled-tasks': {
             'task': 'pycroft.lib.task.execute_scheduled_tasks',
             'schedule': timedelta(hours=1)
+        },
+        'remove-old-traffic-data': {
+            'task': 'pycroft.lib.task.remove_old_traffic_data',
+            'schedule': timedelta(days=1)
         },
     },
     CELERY_TIMEZONE='UTC')
