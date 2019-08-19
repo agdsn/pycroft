@@ -29,6 +29,11 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     margin: 0;
 }
 
+.navbar {
+    position: sticky;
+    top: 0;
+}
+
 .navbar-right{
     margin-right: 0 !important;
 }
@@ -459,6 +464,3 @@ tr.row-membership-inactive {
     width: 100%;
     margin-bottom: 5px;
 }
-
-
-
