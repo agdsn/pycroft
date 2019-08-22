@@ -9,6 +9,8 @@ from sqlalchemy.types import Boolean, Integer, String
 
 from pycroft.model.address import Address
 from pycroft.model.base import IntegerIdModel
+from pycroft.model.finance import Account
+
 
 class Site(IntegerIdModel):
     name = Column(String(), nullable=False)
@@ -22,6 +24,10 @@ class Building(IntegerIdModel):
     street = Column(String(), nullable=False)
     wifi_available = Column(Boolean(), nullable=False, default=False)
 
+    fee_account_id = Column(Integer, ForeignKey(Account.id), nullable=False)
+    fee_account = relationship(Account, backref=backref("building",
+                                                        uselist=False))
+    
     __table_args__ = (UniqueConstraint("street", "number", name="building_address"),)
 
 
