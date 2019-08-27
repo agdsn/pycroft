@@ -12,7 +12,7 @@ readonly DESCRIPTION=(
 run() {
     echo "Started celery worker"
     cd /opt/pycroft/app
-	exec -a celery celery -A pycroft.lib.task worker -B "$@"
+	exec -a celery celery -A pycroft.task worker -B "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
