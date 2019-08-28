@@ -246,7 +246,7 @@ class UserInterfaceResource(Resource):
                   .format(user_id, interface_id))
 
         try:
-            if args.host_name is not None:
+            if args.host_name:
                 host_edit(interface.host, interface.host.owner, interface.host.room,
                           args.host_name, user)
             change_mac(interface, args.mac, user)
@@ -283,10 +283,12 @@ class ActivateNetworkAccessResource(Resource):
         host = Host.q.filter_by(owner_id=user.id).one_or_none()
 
         try:
+            host_name = args.host_name if args.host_name else None
+
             if host is None:
-                host = host_create(user, user.room, args.host_name, user)
+                host = host_create(user, user.room, host_name, user)
             else:
-                host.room = user.room
+                host_edit(host, host.owner, user.room, host_name, user)
 
             interface_create(host, None, args.mac, None, user)
 
