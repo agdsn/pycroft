@@ -67,6 +67,16 @@ def host_create(owner, room, name, processor):
 
 @with_transaction
 def host_edit(host, owner, room, name, processor):
+    if host.name != name:
+        message = deferred_gettext(
+            u"Changed name of host '{}' to '{}'.".format(host.name,
+                                                         name))
+        host.name = name
+
+        log_user_event(author=processor,
+                       user=owner,
+                       message=message.to_json())
+        
     if host.owner_id != owner.id:
         message = deferred_gettext(
             u"Transferred Host '{}' to {}.".format(host.name,
@@ -87,15 +97,7 @@ def host_edit(host, owner, room, name, processor):
     if host.room != room:
         migrate_user_host(host, room, processor)
 
-    if host.name != name:
-        message = deferred_gettext(
-            u"Changed name of host '{}' to '{}'.".format(host.name,
-                                                         name))
-        host.name = name
 
-        log_user_event(author=processor,
-                       user=owner,
-                       message=message.to_json())
 
 
 @with_transaction
