@@ -288,7 +288,7 @@ class ActivateNetworkAccessResource(Resource):
             else:
                 host.room = user.room
 
-            interface_create(host, args.mac, None, user)
+            interface_create(host, None, args.mac, None, user)
 
             session.session.commit()
         except InvalidMACAddressException:
