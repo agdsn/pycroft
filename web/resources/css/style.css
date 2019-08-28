@@ -465,3 +465,16 @@ tr.row-membership-inactive {
     width: 100%;
     margin-bottom: 5px;
 }
+
+@media print {
+    div.main footer,
+    .search, .nav-tabs, .btn,
+    .page-list, .pagination {
+        display: none !important;
+    }
+
+    a:link:after,
+    a:visited:after {
+        content: "" !important;
+    }
+}
