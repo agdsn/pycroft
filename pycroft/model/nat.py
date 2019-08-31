@@ -17,8 +17,8 @@ class NATDomain(IntegerIdModel):
 
 
 class DHCPHostReservation(ModelBase):
-    nat_domain_id = Column(ForeignKey(NATDomain.id), primary_key=True,
-                           nullable=False)
+    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+                           primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
     ip = Column(IPAddress, primary_key=True, nullable=False)
@@ -30,22 +30,17 @@ class DHCPHostReservation(ModelBase):
 
 
 class InsideNetwork(ModelBase):
-    nat_domain_id = Column(ForeignKey(NATDomain.id), primary_key=True,
-                           nullable=False)
+    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+                           primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
     ip_network = Column(IPNetwork, primary_key=True, nullable=False)
     gateway = Column(IPAddress, nullable=False)
 
-    __table_args__ = (
-        CheckConstraint(''),
-        CheckConstraint('')
-    )
-
 
 class OutsideIPAddress(ModelBase):
-    nat_domain_id = Column(ForeignKey(NATDomain.id), primary_key=True,
-                           nullable=False)
+    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+                           primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
     ip_address = Column(IPAddress, primary_key=True, nullable=False)
@@ -57,8 +52,8 @@ class OutsideIPAddress(ModelBase):
 
 
 class Translation(ModelBase):
-    nat_domain_id = Column(ForeignKey(NATDomain.id), primary_key=True,
-                           nullable=False)
+    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+                           primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
@@ -75,8 +70,7 @@ class Translation(ModelBase):
 
 
 class Forwarding(ModelBase):
-    nat_domain_id = Column(ForeignKey(NATDomain.id, ondelete="CASCADE"),
-                           primary_key=True,
+    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id, ondelete="CASCADE"),
                            nullable=False)
     nat_domain = relationship(NATDomain, backref=backref("forwardings",
                                                          cascade="all, delete-orphan"))
@@ -96,6 +90,10 @@ class Forwarding(ModelBase):
     owner = relationship(User, backref=backref("forwardings",
                                                cascade="all, delete-orphan"))
 
+    __mapper_args__ = {
+        'primary_key': (nat_domain_id, outside_address, protocol, outside_port),
+    }
+
     __table_args__ = (
-        UniqueConstraint(nat_domain, outside_address, protocol, outside_port)
+        UniqueConstraint(nat_domain_id, outside_address, protocol, outside_port),
     )
