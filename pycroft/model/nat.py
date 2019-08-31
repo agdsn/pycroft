@@ -48,7 +48,8 @@ class OutsideIPAddress(ModelBase):
     nat_domain = relationship(NATDomain)
 
     ip_address = Column(IPAddress, primary_key=True, nullable=False)
-    owner = Column(Integer, ForeignKey(User))
+    owner_id = Column(Integer, ForeignKey(User.id))
+    owner = relationship(User, backref="outside_ip_addresses")
 
     __table_args__ = (
         single_ipv4_constraint(col=ip_address),
@@ -66,11 +67,9 @@ class Translation(ModelBase):
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
     inside_network = Column(IPNetwork, nullable=False)
-
-    owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
-                      nullable=False)
-    owner = relationship(User, backref=backref("translations",
-                                               cascade="all, delete-orphan"))
+    owner = relationship(User,
+                         secondary=OutsideIPAddress.__table__,
+                         backref="translations")
 
     __table_args__ = (
         single_ipv4_constraint(col=outside_address),
