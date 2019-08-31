@@ -3,9 +3,9 @@ from sqlalchemy import CheckConstraint, Column, ForeignKey, \
     UniqueConstraint, func, and_, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, backref, remote, foreign
 
-from pycroft.model.base import IntegerIdModel, ModelBase
-from pycroft.model.types import IPAddress, MACAddress, IPNetwork
-from pycroft.model.user import User
+from .base import IntegerIdModel, ModelBase
+from .types import IPAddress, MACAddress, IPNetwork
+from .user import User
 
 
 def single_ipv4_constraint(col: Column):
