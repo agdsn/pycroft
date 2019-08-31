@@ -66,6 +66,7 @@ class Translation(ModelBase):
     )
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
+    outside_ip_address = relationship(OutsideIPAddress)
     inside_network = Column(IPNetwork, nullable=False)
     owner = relationship(User,
                          secondary=OutsideIPAddress.__table__,
