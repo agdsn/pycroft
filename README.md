@@ -324,7 +324,7 @@ Importing the production database into Pycroft is a three-step process:
 
 After all that, you should be able to log in into your pycroft
 instance with the username `agdsn` at `localhost:5000`. All users have the password `password`.
-  
+
  **Congratulations!**
 
 ## Running the test suite
@@ -364,4 +364,35 @@ Alembic also has the really convenient feature to
 by comparing the current status of the database against the table metadata of the application.
 ```
 docker-compose run --rm dev-app alembic revision --autogenerate -m "add complex test table"
+```
+
+## Troubleshooting
+
+Due to laziness, prefix every bash-snippet with
+```sh
+alias drc=docker-compose
+```
+
+### Webpack appears to be missing a library
+
+Re-Install everything using yarn, and re-run the webpack entrypoint.
+
+```sh
+drc run --rm dev-app shell yarn install
+drc run --rm dev-app webpack
+```
+
+
+### Pip appears to be missing a dependency
+
+Reinstall the pip requirements
+
+```sh
+drc run --rm dev-app pip install -r requirements.txt
+```
+
+### I need to downgrade the schema
+
+```
+drc run --rm dev-app alembic downgrade $hash
 ```
