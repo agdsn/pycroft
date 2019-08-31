@@ -16,8 +16,12 @@ class NATDomain(IntegerIdModel):
     name = Column(String, nullable=False)
 
 
+def nat_domain_fkey():
+    return ForeignKey(NATDomain.id, ondelete="CASCADE", onupdate="CASCADE")
+
+
 class DHCPHostReservation(ModelBase):
-    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+    nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
@@ -30,7 +34,7 @@ class DHCPHostReservation(ModelBase):
 
 
 class InsideNetwork(ModelBase):
-    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+    nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
@@ -39,12 +43,12 @@ class InsideNetwork(ModelBase):
 
 
 class OutsideIPAddress(ModelBase):
-    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+    nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
     ip_address = Column(IPAddress, primary_key=True, nullable=False)
-    owner = Column(Integer)
+    owner = Column(Integer, ForeignKey(User))
 
     __table_args__ = (
         single_ipv4_constraint(col=ip_address),
@@ -52,7 +56,7 @@ class OutsideIPAddress(ModelBase):
 
 
 class Translation(ModelBase):
-    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id),
+    nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
 
@@ -70,10 +74,9 @@ class Translation(ModelBase):
 
 
 class Forwarding(ModelBase):
-    nat_domain_id = Column(Integer, ForeignKey(NATDomain.id, ondelete="CASCADE"),
+    nat_domain_id = Column(Integer, nat_domain_fkey(),
                            nullable=False)
-    nat_domain = relationship(NATDomain, backref=backref("forwardings",
-                                                         cascade="all, delete-orphan"))
+    nat_domain = relationship(NATDomain)
 
     outside_address = Column(IPAddress, nullable=False)
     outside_port = Column(Integer)
