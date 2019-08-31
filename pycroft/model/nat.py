@@ -1,7 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, ForeignKey, \
     Integer, SmallInteger, String, Text, \
-    UniqueConstraint, func, and_
-from sqlalchemy.orm import relationship, backref
+    UniqueConstraint, func, and_, ForeignKeyConstraint
+from sqlalchemy.orm import relationship, backref, remote, foreign
 
 from pycroft.model.base import IntegerIdModel, ModelBase
 from pycroft.model.types import IPAddress, MACAddress, IPNetwork
@@ -56,9 +56,13 @@ class OutsideIPAddress(ModelBase):
 
 
 class Translation(ModelBase):
-    nat_domain_id = Column(Integer, nat_domain_fkey(),
-                           primary_key=True, nullable=False)
-    nat_domain = relationship(NATDomain)
+    nat_domain_id = Column(Integer, primary_key=True, nullable=False)
+    # careful: we don't have a FKey to NATDomain, only to OutsideIPAddress.
+    # therefore, `relationship(NATDomain)` does not quite work.
+    nat_domain = relationship(
+        NATDomain,
+        primaryjoin=(remote(NATDomain.id) == foreign(nat_domain_id))
+    )
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
     inside_network = Column(IPNetwork, nullable=False)
@@ -70,6 +74,11 @@ class Translation(ModelBase):
 
     __table_args__ = (
         single_ipv4_constraint(col=outside_address),
+        ForeignKeyConstraint(
+            (nat_domain_id, outside_address),
+            (OutsideIPAddress.nat_domain_id, OutsideIPAddress.ip_address),
+            ondelete="CASCADE", onupdate="CASCADE"
+        ),
     )
 
 
