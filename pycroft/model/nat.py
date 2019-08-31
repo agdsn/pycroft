@@ -21,6 +21,11 @@ def nat_domain_fkey():
 
 
 class DHCPHostReservation(ModelBase):
+    """An assignment of a mac to an internal IP
+
+    A constraint trigger verifies that an InsideNetwork exists for a given value
+    for `ip`
+    """
     nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
@@ -34,6 +39,12 @@ class DHCPHostReservation(ModelBase):
 
 
 class InsideNetwork(ModelBase):
+    """An internal network, not necessarily assigned to a user.
+
+    Unique only up to NAT Domain (hence the composite primary key).
+
+    The `ip_network` typically is in a range below 100.64.x.x
+    """
     nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
@@ -43,6 +54,7 @@ class InsideNetwork(ModelBase):
 
 
 class OutsideIPAddress(ModelBase):
+    """A natted, public IP address (unique only up to NatDomain)"""
     nat_domain_id = Column(Integer, nat_domain_fkey(),
                            primary_key=True, nullable=False)
     nat_domain = relationship(NATDomain)
@@ -57,6 +69,16 @@ class OutsideIPAddress(ModelBase):
 
 
 class Translation(ModelBase):
+    """A translation between an internal network and an outside ip.
+
+    Translation has a composite foreign key only(!) to OutsideIPAddress
+    (on nat_domain and outside_address), and therefore transitively a
+    relationship to a NatDomain.
+
+    It is weakly coupled (i.e., not by a ForeignKeyConstraint) to
+    an InsideIPNetwork by a function verifying that an InsideNetwork tuple
+    with the same ip network and NatDomain exists.
+    """
     nat_domain_id = Column(Integer, primary_key=True, nullable=False)
     # careful: we don't have a FKey to NATDomain, only to OutsideIPAddress.
     # therefore, `relationship(NATDomain)` does not quite work.
@@ -102,6 +124,8 @@ class Forwarding(ModelBase):
     owner = relationship(User, backref=backref("forwardings",
                                                cascade="all, delete-orphan"))
 
+    # This is not actually a PKEY in the database, it is just convenient for
+    # sqlalchemy for technical reasons.
     __mapper_args__ = {
         'primary_key': (nat_domain_id, outside_address, protocol, outside_port),
     }
