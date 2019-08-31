@@ -1,12 +1,15 @@
 from sqlalchemy import CheckConstraint, Column, ForeignKey, \
-    ForeignKeyConstraint, Integer, SmallInteger, String, Table, Text, \
-    UniqueConstraint, text, func, and_
+    Integer, SmallInteger, String, Text, \
+    UniqueConstraint, func, and_
 from sqlalchemy.orm import relationship, backref
 
 from pycroft.model.base import IntegerIdModel, ModelBase
-from pycroft.model.net import Subnet
-from pycroft.model.types import IPAddress, MACAddress
+from pycroft.model.types import IPAddress, MACAddress, IPNetwork
 from pycroft.model.user import User
+
+
+def single_ipv4_constraint(col: Column):
+    return CheckConstraint(and_(func.family(col) == 4, func.masklen(col) == 32))
 
 
 class NATDomain(IntegerIdModel):
@@ -22,7 +25,7 @@ class DHCPHostReservation(ModelBase):
     mac = Column(MACAddress, nullable=False)
 
     __table_args__ = (
-        CheckConstraint(and_(func.family(ip) == 4, func.masklen(ip) == 32)),
+        single_ipv4_constraint(col=ip),
     )
 
 
@@ -31,7 +34,7 @@ class InsideNetwork(ModelBase):
                            nullable=False)
     nat_domain = relationship(NATDomain)
 
-    ip_network = Column(Subnet, primary_key=True, nullable=False)
+    ip_network = Column(IPNetwork, primary_key=True, nullable=False)
     gateway = Column(IPAddress, nullable=False)
 
     __table_args__ = (
@@ -49,8 +52,7 @@ class OutsideIPAddress(ModelBase):
     owner = Column(Integer)
 
     __table_args__ = (
-        CheckConstraint(
-            '(family(ip_address) = 4) AND (masklen(ip_address) = 32)'),
+        single_ipv4_constraint(col=ip_address),
     )
 
 
@@ -60,7 +62,7 @@ class Translation(ModelBase):
     nat_domain = relationship(NATDomain)
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
-    inside_network = Column(Subnet, nullable=False)
+    inside_network = Column(IPNetwork, nullable=False)
 
     owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                       nullable=False)
@@ -68,7 +70,7 @@ class Translation(ModelBase):
                                                cascade="all, delete-orphan"))
 
     __table_args__ = (
-        CheckConstraint(and_(func.family(ip) == 4, func.masklen(ip) == 32)),
+        single_ipv4_constraint(col=outside_address),
     )
 
 
