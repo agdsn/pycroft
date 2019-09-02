@@ -10,18 +10,23 @@ from io import StringIO
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
+from pycroft import config
+from pycroft.helpers.date import last_day_of_month
+from tests.factories import MembershipFactory, ConfigFactory
+
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
 from pycroft.lib.finance import (
     cleanup_description,
     import_bank_account_activities_csv, simple_transaction,
     transferred_amount,
-    is_ordered, get_last_applied_membership_fee)
+    is_ordered, get_last_applied_membership_fee, estimate_balance)
 from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction)
 from pycroft.model.user import PropertyGroup, User, Membership
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
+from tests.factories.finance import MembershipFeeFactory, TransactionFactory
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
     AccountData, BankAccountData, MembershipData, UserData,
@@ -29,7 +34,6 @@ from tests.lib.finance_fixtures import (
 
 
 class Test_010_BankAccount(FixtureDataTestBase):
-
     datasets = [AccountData, BankAccountData, MembershipFeeData, UserData]
 
     def setUp(self):
@@ -51,7 +55,8 @@ class Test_010_BankAccount(FixtureDataTestBase):
         data = pkgutil.get_data(__package__, "data_test_finance.csv")
         f = StringIO(data.decode('utf-8'))
 
-        import_bank_account_activities_csv(f, Decimal('43.42'), date(2015, 1, 1))
+        import_bank_account_activities_csv(f, Decimal('43.42'),
+                                           date(2015, 1, 1))
 
         bank_account = BankAccount.q.filter(
             BankAccount.iban == BankAccountData.dummy.iban
@@ -134,19 +139,19 @@ class Test_010_BankAccount(FixtureDataTestBase):
             transferred_amount(
                 self.fee_account, self.user_account, closedopen(today, None)
             ),
-            2*amount
+            2 * amount
         )
         self.assertEqual(
             transferred_amount(
                 self.fee_account, self.user_account, openclosed(None, today)
             ),
-            2*amount
+            2 * amount
         )
         self.assertEqual(
             transferred_amount(
                 self.fee_account, self.user_account
             ),
-            3*amount
+            3 * amount
         )
         Transaction.q.delete()
         session.session.commit()
@@ -154,7 +159,8 @@ class Test_010_BankAccount(FixtureDataTestBase):
     def test_0050_cleanup_non_sepa_description(self):
         non_sepa_description = u"1234-0 Dummy, User, with " \
                                u"a- space at postition 28"
-        self.assertEqual(cleanup_description(non_sepa_description), non_sepa_description)
+        self.assertEqual(cleanup_description(non_sepa_description),
+                         non_sepa_description)
 
     def test_0060_cleanup_sepa_description(self):
         clean_sepa_description = u"EREF+Long EREF 1234567890 with a parasitic " \
@@ -163,7 +169,8 @@ class Test_010_BankAccount(FixtureDataTestBase):
         sepa_description = u"EREF+Long EREF 1234567890 w ith a parasitic space " \
                            u"SVWZ+A reference with paras itic spaces at " \
                            u"multiples of  28"
-        self.assertEqual(cleanup_description(sepa_description), clean_sepa_description)
+        self.assertEqual(cleanup_description(sepa_description),
+                         clean_sepa_description)
 
 
 # TODO: Rework tests for new membership fee implementation
@@ -304,3 +311,93 @@ class TestIsOrdered(unittest.TestCase):
         self.assertTrue(is_ordered((1, 2, 3)))
         self.assertFalse(is_ordered((1, 3, 2)))
         self.assertTrue(is_ordered((3, 2, 1), relation=operator.gt))
+
+
+class BalanceEstimationTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        ConfigFactory.create()
+
+        self.user = UserFactory.create()
+
+        self.user_membership = MembershipFactory.create(
+            begins_at=session.utcnow() - timedelta(weeks=52),
+            ends_at=None,
+            user=self.user,
+            group=config.member_group
+        )
+
+        last_month_last = session.utcnow().date().replace(day=1) - timedelta(1)
+
+        self.membership_fee_current = MembershipFeeFactory.create()
+        self.membership_fee_last = MembershipFeeFactory.create(
+            begins_on=last_month_last.replace(day=1),
+            ends_on=last_month_last
+        )
+
+    def create_transaction_current(self):
+        # Membership fee booking for current month
+        TransactionFactory.create(
+            valid_on=self.membership_fee_current.ends_on,
+            split_1__account=self.user.account
+        )
+
+    def create_transaction_last(self):
+        # Membership fee booking for last month
+        TransactionFactory.create(
+            valid_on=self.membership_fee_last.ends_on,
+            split_1__account=self.user.account
+        )
+
+    def check_current_and_next_month(self, base):
+        # End in grace-period in current month
+        end_date = session.utcnow().date().replace(
+            day=self.membership_fee_current.booking_begin.days - 1)
+        self.assertEquals(base, estimate_balance(self.user, end_date))
+
+        # End after grace-period in current month
+        end_date = self.membership_fee_current.ends_on
+        self.assertEquals(base - 5.00, estimate_balance(self.user, end_date))
+
+        # End in the middle of next month
+        end_date = session.utcnow().date().replace(day=14) + timedelta(weeks=4)
+        self.assertEquals(base - 10.00, estimate_balance(self.user, end_date))
+
+        # End in grace-period of next month
+        end_date = end_date.replace(
+            day=self.membership_fee_current.booking_begin.days - 1)
+        self.assertEquals(base - 5.00, estimate_balance(self.user, end_date))
+
+    def test_last_booked__current_not_booked(self):
+        self.assertTrue(self.user.has_property('member'))
+
+        self.create_transaction_last()
+
+        self.check_current_and_next_month(-5.00)
+
+    def test_last_booked__current_booked(self):
+        self.assertTrue(self.user.has_property('member'))
+
+        self.create_transaction_last()
+        self.create_transaction_current()
+
+        self.check_current_and_next_month(-5.00)
+
+    def test_last_not_booked__current_not_booked(self):
+        self.assertTrue(self.user.has_property('member'))
+
+        self.check_current_and_next_month(-5.00)
+
+    def test_last_not_due__current_not_booked(self):
+        self.user_membership.begins_at = self.membership_fee_current.begins_on
+
+        self.assertTrue(self.user.has_property('member'))
+
+        self.check_current_and_next_month(0.00)
+
+    def test_free_membership(self):
+        self.user_membership.begins_at = session.utcnow().replace(
+            day=self.membership_fee_current.booking_end.days + 1)
+
+        end_date = last_day_of_month(session.utcnow().date())
+
+        self.assertEquals(0.00, estimate_balance(self.user, end_date))
