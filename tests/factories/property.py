@@ -51,3 +51,11 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
         'facilities_show', 'facilities_change',
         'groups_show', 'groups_change_membership', 'groups_change',
     ))
+
+
+class MemberPropertyGroupFactory(PropertyGroupFactory):
+    name = factory.Sequence(partial(_maybe_append_seq, prefix="Mitglied-Gruppe"))
+    granted = frozenset((
+        'ldap', 'ldap_login_enabled', 'mail', 'member', 'membership_fee',
+        'network_access', 'userdb', 'userwww'
+    ))

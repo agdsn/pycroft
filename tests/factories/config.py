@@ -7,7 +7,7 @@ from factory import SubFactory
 from pycroft.model.config import Config
 from .base import BaseFactory
 from .finance import AccountFactory, BankAccountFactory
-from .property import PropertyGroupFactory
+from .property import PropertyGroupFactory, MemberPropertyGroupFactory
 
 
 class ConfigFactory(BaseFactory):
@@ -20,7 +20,7 @@ class ConfigFactory(BaseFactory):
     id = 1
 
     # `PropertyGroup`s
-    member_group = SubFactory(PropertyGroupFactory)
+    member_group = SubFactory(MemberPropertyGroupFactory)
     network_access_group = SubFactory(PropertyGroupFactory)
     violation_group = SubFactory(PropertyGroupFactory)
     cache_group = SubFactory(PropertyGroupFactory)
