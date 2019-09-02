@@ -267,11 +267,15 @@ class User(IntegerIdModel, UserMixin):
         if when is None:
             now = session.utcnow()
             when = single(now)
+
         prop_granted_flags = [
             group.property_grants[property_name]
             for group in self.active_property_groups(when)
             if property_name in group.property_grants
         ]
+
+        # In case of prop_granted_flags = []: Return False
+        # Else: Return True if all elements of prop_granted_flags are True
         return all(prop_granted_flags) and any(prop_granted_flags)
 
     @has_property.expression
