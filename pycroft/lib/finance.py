@@ -22,14 +22,14 @@ from sqlalchemy import func, between, Integer, cast
 
 from pycroft import config, model
 from pycroft.helpers.i18n import deferred_gettext, gettext, Message
+from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
-    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen,
-    PositiveInfinity)
+    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction
@@ -776,6 +776,7 @@ def match_activities():
 
     return matching
 
+
 @with_transaction
 def transaction_delete(transaction):
     if transaction.confirmed:
@@ -783,9 +784,69 @@ def transaction_delete(transaction):
 
     session.session.delete(transaction)
 
+
 @with_transaction
 def transaction_confirm(transaction):
     if transaction.confirmed:
         raise ValueError("transaction already confirmed")
 
     transaction.confirmed = True
+
+
+def estimate_balance(user, end_date):
+    """
+    :param user: The member
+    :param end_date: Date of the end of the membership
+    :return: Estimated balance at the end_date
+    """
+
+    now = session.utcnow().date() + timedelta(1)
+
+    last_fee = MembershipFee.q.order_by(MembershipFee.ends_on.desc()).first()
+
+    if last_fee is None:
+        raise ValueError("no fee information available")
+
+    end_date_justified = end_date - timedelta(last_fee.booking_begin.days - 1)
+
+    months_to_pay = diff_month(end_date_justified, now)
+
+    # If the user has to pay a fee for the current month
+    if user.has_property('membership_fee',
+                         single(now.replace(day=last_fee.booking_end.days))):
+        months_to_pay += 1
+
+    last_month_last = now.replace(day=1) - timedelta(1)
+
+    split_last_month = (Split.q
+                        .filter_by(account=user.account)
+                        .join(Transaction)
+                        .filter(Split.amount > 0)
+                        .filter(Transaction.valid_on == last_month_last)
+                        ).first()
+
+    # If there was no fee booked yet for the last month and the user has to pay
+    # a fee for the last month, increment months_to_pay
+    if split_last_month is None:
+        if user.has_property('membership_fee',
+                             single(last_month_last
+                                    .replace(day=last_fee.booking_end.days))):
+            months_to_pay += 1
+
+    # Calculate last day of the current month
+    current_month_last = last_day_of_month(now)
+
+    # Get the split for a maybe existent membership fee booking in the current
+    # month
+    split_current_month = (Split.q
+                           .filter_by(account=user.account)
+                           .join(Transaction)
+                           .filter(Split.amount > 0)
+                           .filter(Transaction.valid_on == current_month_last)
+                           ).first()
+
+    # If there is already a fee booked for this month, decrement months_to_pay
+    if split_current_month is not None:
+        months_to_pay -= 1
+
+    return (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
