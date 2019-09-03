@@ -8,6 +8,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from io import StringIO
 
+from factory import Iterator
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from pycroft import config
@@ -26,7 +27,8 @@ from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction)
 from pycroft.model.user import PropertyGroup, User, Membership
 from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
-from tests.factories.finance import MembershipFeeFactory, TransactionFactory
+from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
+    AccountFactory
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
     AccountData, BankAccountData, MembershipData, UserData,
@@ -338,14 +340,16 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         # Membership fee booking for current month
         TransactionFactory.create(
             valid_on=self.membership_fee_current.ends_on,
-            split_1__account=self.user.account
+            splits__account=Iterator(
+                [self.user.account, AccountFactory.create()])
         )
 
     def create_transaction_last(self):
         # Membership fee booking for last month
         TransactionFactory.create(
             valid_on=self.membership_fee_last.ends_on,
-            split_1__account=self.user.account
+            splits__account=Iterator(
+                [self.user.account, AccountFactory.create()])
         )
 
     def check_current_and_next_month(self, base):

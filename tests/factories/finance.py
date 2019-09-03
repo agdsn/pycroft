@@ -4,7 +4,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from factory import SubFactory, LazyAttribute, RelatedFactory
+from factory import SubFactory, LazyAttribute, RelatedFactory, Iterator, \
+    RelatedFactoryList
 from factory.faker import Faker
 
 from pycroft.helpers.date import last_day_of_month
@@ -84,10 +85,7 @@ class TransactionFactory(BaseFactory):
 
     confirmed = True
 
-    split_1 = RelatedFactory(SplitFactory,
-                             factory_related_name='transaction',
-                             amount=5)
-
-    split_2 = RelatedFactory(SplitFactory,
-                             factory_related_name='transaction',
-                             amount=-5)
+    splits = RelatedFactoryList(SplitFactory,
+                                factory_related_name='transaction',
+                                size=2,
+                                amount=Iterator([5, -5]))
