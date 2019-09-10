@@ -106,7 +106,7 @@ def generate_user_data(user):
             'account_balanced': user_status.account_balanced,
             'violation': user_status.violation
         },
-        room=str(user.room),
+        room=user.room.short_name if user.room is not None else None,
         interfaces=[
             {'id': i.id, 'mac': str(i.mac),
              'ips': [str(ip.address) for ip in i.ips]}
