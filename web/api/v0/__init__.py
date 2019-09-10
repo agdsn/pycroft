@@ -1,19 +1,22 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import wraps
 
 from flask import jsonify, request, current_app
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from ipaddr import IPAddress
+from pycroft.helpers import utc
 from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
-from pycroft.lib.finance import build_transactions_query
+from pycroft.lib.finance import build_transactions_query, estimate_balance
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
+from pycroft.lib.task import cancel_task
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
-    status, traffic_history as func_traffic_history
+    status, traffic_history as func_traffic_history, membership_end_date, \
+    move_out, membership_ending_task
 from pycroft.model import session
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
@@ -120,7 +123,8 @@ def generate_user_data(user):
         # TODO: think about better way for credit
         finance_balance=-user.account.balance,
         finance_history=finance_history,
-        last_finance_update=last_finance_update
+        last_finance_update=last_finance_update,
+        membership_end_date=membership_end_date(user)
     )
 
 
@@ -309,3 +313,84 @@ class ActivateNetworkAccessResource(Resource):
 api.add_resource(ActivateNetworkAccessResource,
                  '/user/<int:user_id>/activate-network-access')
 
+
+class TerminateMembershipResource(Resource):
+    def get(self, user_id):
+        """
+        :param user_id: The ID of the user
+        :return: The estimated balance of the given end_date
+        """
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('end_date',
+                            dest='end_date',
+                            required=True,
+                            type=lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+        args = parser.parse_args()
+
+        user = get_user_or_404(user_id)
+
+        estimated_balance = estimate_balance(user, args.end_date)
+
+        return jsonify(estimated_balance=estimated_balance)
+
+    def post(self, user_id):
+        """
+        Terminate the membership on the given date
+        :param user_id: The ID of the user
+        :return:
+        """
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('end_date',
+                            dest='end_date',
+                            required=True,
+                            type=lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+        parser.add_argument('comment', dest='comment', required=False)
+        args = parser.parse_args()
+
+        user = get_user_or_404(user_id)
+
+        if membership_ending_task(user) is not None:
+            abort(400, message="The termination of the membership has already"
+                               " been scheduled.")
+
+        if not user.has_property('member'):
+            abort(400, message="User is not a member.")
+
+        move_out(user=user,
+                 comment=args.comment if args.comment is not None else "Move-out over API",
+                 processor=user,
+                 when=datetime.combine(args.end_date, utc.time_min()),
+                 end_membership=True)
+
+        session.session.commit()
+
+        return "Membership termination scheduled."
+
+    def delete(self, user_id):
+        """
+        Cancel termination of a membership
+        :param user_id: The ID of the user
+        :return:
+        """
+
+        user = get_user_or_404(user_id)
+
+        task = membership_ending_task(user)
+
+        if task is None:
+            abort(400, message="There is no termination scheduled")
+
+        if not user.has_property('member'):
+            abort(400, message="User is not a member.")
+
+        cancel_task(task, user)
+
+        session.session.commit()
+
+        return "Membership termination cancelled."
+
+
+api.add_resource(TerminateMembershipResource,
+                 '/user/<int:user_id>/terminate-membership')
