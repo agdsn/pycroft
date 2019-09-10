@@ -15,7 +15,7 @@ import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta
 
-from sqlalchemy import or_, func, select
+from sqlalchemy import or_, func, select, Boolean
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict
@@ -34,7 +34,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
-from pycroft.model.task import TaskType
+from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount
 from pycroft.model.webstorage import WebStorage
@@ -700,3 +700,31 @@ def generate_user_sheet(user, plain_password, generation_purpose=''):
     :param generation_purpose: Optional purpose why this usersheet was printed
     """
     return generate_pdf(user, encode_type2_user_id(user.id), plain_password, generation_purpose)
+
+
+def membership_ending_task(user):
+    """
+    :return: Next task that will end the membership of the user
+    """
+
+    task = (UserTask.q
+            .filter_by(user_id=user.id,
+                       status=TaskStatus.OPEN,
+                       type=TaskType.USER_MOVE_OUT)
+            .filter(UserTask.parameters_json['end_membership'].cast(Boolean) == True)
+            .order_by(UserTask.due.asc())).first()
+
+    return task
+
+
+def membership_end_date(user):
+    """
+    :return: The due date of the task that will end the membership; None if not
+             existent
+    """
+
+    ending_task = membership_ending_task(user)
+
+    end_date = None if ending_task is None else ending_task.due.date()
+
+    return end_date

@@ -350,23 +350,6 @@ class User(IntegerIdModel, UserMixin):
         )
         return (granted_intervals - denied_intervals).intersect(when)
 
-    @property
-    def membership_ending_task(self):
-        """
-        :return: Next task that will end the membership
-        """
-
-        from pycroft.model.task import UserTask, TaskStatus, TaskType
-
-        task = (UserTask.q
-                .filter_by(user_id=self.id,
-                           status=TaskStatus.OPEN,
-                           type=TaskType.USER_MOVE_OUT)
-                .filter(UserTask.parameters_json['end_membership'].cast(Boolean) == True)
-                .order_by(UserTask.due.asc())).first()
-
-        return task
-
 
 class Group(IntegerIdModel):
     name = Column(String(255), nullable=False)
