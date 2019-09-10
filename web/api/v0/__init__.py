@@ -274,9 +274,15 @@ class ActivateNetworkAccessResource(Resource):
 
         user = get_authenticated_user(user_id, args.password)
 
+        if user.room is None:
+            abort(424, message="User is not living in a dormitory.")
+
+        if not user.has_property('network_access'):
+            abort(403, message="User has no network access.")
+
         interfaces = Interface.q.join(Host).filter(Host.owner_id == user.id).all()
         if len(interfaces) > 0:
-            abort(412, message="User {} already has a host with interface.")
+            abort(412, message="User already has a host with interface.")
 
         user.birthdate = args.birthdate
 
