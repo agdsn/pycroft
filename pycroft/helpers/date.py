@@ -1,4 +1,4 @@
-from datetime import timedelta
+from calendar import monthrange
 from datetime import date
 
 
@@ -10,6 +10,6 @@ def diff_month(d1: date, d2: date) -> int:
     return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 
-def last_day_of_month(d):
-    next_month = d.replace(day=28) + timedelta(4)
-    return d.replace(day=(next_month - timedelta(days=next_month.day)).day)
+def last_day_of_month(d: date) -> date:
+    _, num_days = monthrange(d.year, d.month)
+    return d.replace(day=num_days)
