@@ -1,7 +1,12 @@
 from datetime import timedelta
+from datetime import date
 
 
-def diff_month(d1, d2):
+def diff_month(d1: date, d2: date) -> int:
+    """Calculate the difference in months ignoring the days
+
+    If d1 > d2, the result is positive.
+    """
     return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 
