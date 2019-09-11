@@ -13,6 +13,7 @@ from itertools import chain, islice, starmap, tee, zip_longest
 from io import StringIO
 import operator
 import re
+from typing import Optional
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
     text
@@ -793,6 +794,17 @@ def transaction_confirm(transaction):
     transaction.confirmed = True
 
 
+def fee_from_valid_date(valid_on: date, account: Account) -> Optional[Split]:
+    """If existent, get the membership fee split for a given date"""
+    return (
+        Split.q
+             .filter_by(account=account)
+             .join(Transaction)
+             .filter(Split.amount > 0)
+             .filter(Transaction.valid_on == valid_on)
+    ).first()
+
+
 def estimate_balance(user, end_date):
     """
     :param user: The member
@@ -816,37 +828,25 @@ def estimate_balance(user, end_date):
                          single(now.replace(day=last_fee.booking_end.days))):
         months_to_pay += 1
 
-    last_month_last = now.replace(day=1) - timedelta(1)
-
-    split_last_month = (Split.q
-                        .filter_by(account=user.account)
-                        .join(Transaction)
-                        .filter(Split.amount > 0)
-                        .filter(Transaction.valid_on == last_month_last)
-                        ).first()
-
     # If there was no fee booked yet for the last month and the user has to pay
     # a fee for the last month, increment months_to_pay
-    if split_last_month is None:
-        if user.has_property('membership_fee',
-                             single(last_month_last
-                                    .replace(day=last_fee.booking_end.days))):
+    last_month_last = now.replace(day=1) - timedelta(1)
+    last_month_fee_outstanding = (
+        fee_from_valid_date(last_month_last, user.account) is None
+    )
+    if last_month_fee_outstanding:
+        had_to_pay_last_month = user.has_property(
+            'membership_fee',
+            single(last_month_last.replace(day=last_fee.booking_end.days))
+        )
+        if had_to_pay_last_month:
             months_to_pay += 1
 
-    # Calculate last day of the current month
-    current_month_last = last_day_of_month(now)
-
-    # Get the split for a maybe existent membership fee booking in the current
-    # month
-    split_current_month = (Split.q
-                           .filter_by(account=user.account)
-                           .join(Transaction)
-                           .filter(Split.amount > 0)
-                           .filter(Transaction.valid_on == current_month_last)
-                           ).first()
-
     # If there is already a fee booked for this month, decrement months_to_pay
-    if split_current_month is not None:
+    this_month_fee_outstanding = (
+        fee_from_valid_date(last_day_of_month(now), user.account) is None
+    )
+    if not this_month_fee_outstanding:
         months_to_pay -= 1
 
     return (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
