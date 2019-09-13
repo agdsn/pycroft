@@ -812,28 +812,34 @@ def estimate_balance(user, end_date):
     :return: Estimated balance at the end_date
     """
 
-    now = session.utcnow().date() + timedelta(1)
+    now = session.utcnow().date()
+
+    # Use tomorrow in case that it is the last of the month, the fee for the
+    # current month will be added later
+    tomorrow = now + timedelta(1)
 
     last_fee = MembershipFee.q.order_by(MembershipFee.ends_on.desc()).first()
 
     if last_fee is None:
         raise ValueError("no fee information available")
 
+    # Bring end_date to previous month if the end_date is in grace period
     end_date_justified = end_date - timedelta(last_fee.booking_begin.days - 1)
 
-    months_to_pay = diff_month(end_date_justified, now)
+    months_to_pay = diff_month(end_date_justified, tomorrow)
 
     # If the user has to pay a fee for the current month
     if user.has_property('membership_fee',
-                         single(now.replace(day=last_fee.booking_end.days))):
+                         single(tomorrow.replace(day=last_fee.booking_end.days))):
         months_to_pay += 1
 
     # If there was no fee booked yet for the last month and the user has to pay
     # a fee for the last month, increment months_to_pay
-    last_month_last = now.replace(day=1) - timedelta(1)
+    last_month_last = tomorrow.replace(day=1) - timedelta(1)
     last_month_fee_outstanding = (
         fee_from_valid_date(last_month_last, user.account) is None
     )
+
     if last_month_fee_outstanding:
         had_to_pay_last_month = user.has_property(
             'membership_fee',
@@ -844,7 +850,7 @@ def estimate_balance(user, end_date):
 
     # If there is already a fee booked for this month, decrement months_to_pay
     this_month_fee_outstanding = (
-        fee_from_valid_date(last_day_of_month(now), user.account) is None
+        fee_from_valid_date(last_day_of_month(tomorrow), user.account) is None
     )
     if not this_month_fee_outstanding:
         months_to_pay -= 1
