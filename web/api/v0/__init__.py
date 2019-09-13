@@ -337,6 +337,7 @@ class TerminateMembershipResource(Resource):
     def post(self, user_id):
         """
         Terminate the membership on the given date
+
         :param user_id: The ID of the user
         :return:
         """
@@ -371,6 +372,7 @@ class TerminateMembershipResource(Resource):
     def delete(self, user_id):
         """
         Cancel termination of a membership
+
         :param user_id: The ID of the user
         :return:
         """
