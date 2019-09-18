@@ -15,7 +15,7 @@ import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta
 
-from sqlalchemy import or_, func, select, Boolean
+from sqlalchemy import or_, func, select, Boolean, String
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict
@@ -711,7 +711,8 @@ def membership_ending_task(user):
             .filter_by(user_id=user.id,
                        status=TaskStatus.OPEN,
                        type=TaskType.USER_MOVE_OUT)
-            .filter(UserTask.parameters_json['end_membership'].cast(Boolean) == True)
+            # Casting jsonb -> bool directly is only supported since PG v11
+            .filter(UserTask.parameters_json['end_membership'].cast(String).cast(Boolean) == True)
             .order_by(UserTask.due.asc())).first()
 
     return task
