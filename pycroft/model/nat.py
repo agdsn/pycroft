@@ -1,7 +1,7 @@
 from sqlalchemy import CheckConstraint, Column, ForeignKey, \
     Integer, SmallInteger, String, Text, \
     UniqueConstraint, func, and_, ForeignKeyConstraint
-from sqlalchemy.orm import relationship, backref, remote, foreign
+from sqlalchemy.orm import relationship, backref, foreign
 
 from .base import IntegerIdModel, ModelBase
 from .types import IPAddress, MACAddress, IPNetwork
@@ -81,17 +81,26 @@ class Translation(ModelBase):
     an InsideIPNetwork by a function verifying that an InsideNetwork tuple
     with the same ip network and NatDomain exists.
     """
-    # careful: we don't have a FKey to NATDomain, only to OutsideIPAddress.
-    # therefore, `relationship(NATDomain)` does not quite work.
-    nat_domain = relationship(
-        NATDomain,
-        primaryjoin=(remote(NATDomain.id) == foreign(nat_domain_id))
-    )
     nat_domain_id = nat_domain_id_column()
+    # nat_domain implicitly set via `outside_address_rel`
+    nat_domain = relationship(NATDomain, viewonly=True)
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
-    outside_ip_address = relationship(OutsideIPAddress)
+    outside_address_rel = relationship(OutsideIPAddress)
+
+    # CAREFUL: this is NOT a (composite, w_ domain) FKey,
+    # but instead WEAKLY coupled, because we want inet-containment
+    # instead of equality!
     inside_network = Column(IPNetwork, nullable=False)
+    inside_network_rel = relationship(
+        InsideNetwork,
+        primaryjoin=and_(
+            foreign(nat_domain_id) == InsideNetwork.nat_domain_id,
+            foreign(inside_network).op("<<=")(InsideNetwork.ip_network),
+        ),
+        viewonly=True,
+    )
+
     owner = relationship(User,
                          secondary=OutsideIPAddress.__table__,
                          backref="translations")
@@ -107,13 +116,16 @@ class Translation(ModelBase):
 
 
 class Forwarding(ModelBase):
-    nat_domain = relationship(NATDomain)
     nat_domain_id = nat_domain_id_column(pkey=False)
+    # implicitly set by `outside_address_rel`
+    nat_domain = relationship(NATDomain, viewonly=True)
 
     outside_address = Column(IPAddress, nullable=False)
+    outside_address_rel = relationship(OutsideIPAddress)
     outside_port = Column(Integer)
 
     inside_address = Column(IPAddress, nullable=False)
+    # TODO FKey to DHCP Host Reservation
     inside_port = Column(Integer)
 
     protocol = Column(SmallInteger, nullable=False)
@@ -133,4 +145,9 @@ class Forwarding(ModelBase):
 
     __table_args__ = (
         UniqueConstraint(nat_domain_id, outside_address, protocol, outside_port),
+        ForeignKeyConstraint(
+            (nat_domain_id, outside_address),
+            (OutsideIPAddress.nat_domain_id, OutsideIPAddress.ip_address),
+            ondelete="CASCADE", onupdate="CASCADE"
+        )
     )
