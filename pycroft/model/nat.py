@@ -16,8 +16,13 @@ class NATDomain(IntegerIdModel):
     name = Column(String, nullable=False)
 
 
-def nat_domain_fkey():
-    return ForeignKey(NATDomain.id, ondelete="CASCADE", onupdate="CASCADE")
+def nat_domain_id_column(pkey=True):
+    return Column(
+        Integer,
+        ForeignKey(NATDomain.id, ondelete="CASCADE", onupdate="CASCADE"),
+        primary_key=pkey,
+        nullable=False
+    )
 
 
 class DHCPHostReservation(ModelBase):
@@ -26,8 +31,7 @@ class DHCPHostReservation(ModelBase):
     A constraint trigger verifies that an InsideNetwork exists for a given value
     for `ip`
     """
-    nat_domain_id = Column(Integer, nat_domain_fkey(),
-                           primary_key=True, nullable=False)
+    nat_domain_id = nat_domain_id_column()
     nat_domain = relationship(NATDomain)
 
     ip = Column(IPAddress, primary_key=True, nullable=False)
@@ -45,8 +49,7 @@ class InsideNetwork(ModelBase):
 
     The `ip_network` typically is in a range below 100.64.x.x
     """
-    nat_domain_id = Column(Integer, nat_domain_fkey(),
-                           primary_key=True, nullable=False)
+    nat_domain_id = nat_domain_id_column()
     nat_domain = relationship(NATDomain)
 
     ip_network = Column(IPNetwork, primary_key=True, nullable=False)
@@ -55,8 +58,7 @@ class InsideNetwork(ModelBase):
 
 class OutsideIPAddress(ModelBase):
     """A natted, public IP address (unique only up to NatDomain)"""
-    nat_domain_id = Column(Integer, nat_domain_fkey(),
-                           primary_key=True, nullable=False)
+    nat_domain_id = nat_domain_id_column()
     nat_domain = relationship(NATDomain)
 
     ip_address = Column(IPAddress, primary_key=True, nullable=False)
@@ -79,13 +81,13 @@ class Translation(ModelBase):
     an InsideIPNetwork by a function verifying that an InsideNetwork tuple
     with the same ip network and NatDomain exists.
     """
-    nat_domain_id = Column(Integer, primary_key=True, nullable=False)
     # careful: we don't have a FKey to NATDomain, only to OutsideIPAddress.
     # therefore, `relationship(NATDomain)` does not quite work.
     nat_domain = relationship(
         NATDomain,
         primaryjoin=(remote(NATDomain.id) == foreign(nat_domain_id))
     )
+    nat_domain_id = nat_domain_id_column()
 
     outside_address = Column(IPAddress, primary_key=True, nullable=False)
     outside_ip_address = relationship(OutsideIPAddress)
@@ -105,9 +107,8 @@ class Translation(ModelBase):
 
 
 class Forwarding(ModelBase):
-    nat_domain_id = Column(Integer, nat_domain_fkey(),
-                           nullable=False)
     nat_domain = relationship(NATDomain)
+    nat_domain_id = nat_domain_id_column(pkey=False)
 
     outside_address = Column(IPAddress, nullable=False)
     outside_port = Column(Integer)
