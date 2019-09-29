@@ -10,7 +10,7 @@ from reportlab.lib.colors import black
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import StyleSheet1, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, Spacer
 from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.rl_config import defaultPageSize
@@ -256,6 +256,181 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
             '<i>Generated on {date}{purpose}</i>'.format(
                 date=datetime.date.today(),
                 purpose=generation_purpose
+            ),
+            ParagraphStyle(name='SmallRightText',
+                           parent=style['Normal'],
+                           alignment=TA_RIGHT,
+                           fontSize=8,
+                           spaceBefore=15))
+    )
+
+    # PDF generieren und speichern
+    pdf.build(story)
+
+    return buf.getvalue()
+
+
+def generate_wifi_user_sheet(user, user_id, plain_password):
+    """Create a „wifi“ datasheet for the given user
+
+    :param User user: A pycroft user
+    :param str user_id: The user's ID.  It has to be given extra,
+        because the user_id is not appearent given the ORM object
+        itself; encoding is done in the library.
+    :param str plain_password: The password
+    """
+    # Anlegen des PDF Dokuments, Seitengröße DIN A4 Hochformat)
+    buf = BytesIO()
+    pdf = SimpleDocTemplate(buf, pagesize=A4,
+                            rightMargin=2 * cm,
+                            leftMargin=2 * cm,
+                            topMargin=0.5 * cm,
+                            bottomMargin=0.5 * cm)
+    style = getStyleSheet()
+    story = []
+
+    PAGE_WIDTH = defaultPageSize[0]
+    PAGE_HEIGHT = defaultPageSize[1]
+
+    # HEADER
+    im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_house = Image(ASSETS_HOUSE_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_email = Image(ASSETS_EMAIL_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_logo = Image(ASSETS_LOGO_FILENAME, 3.472 * cm, 1 * cm)
+
+    if user.room:
+        shortinfo = Paragraph('{dorm}<br/>{name}<br/>{level}/{room}'.format(
+            dorm=str(user.room.building.short_name),
+            name=user.name,
+            level=str(user.room.level),
+            room=str(user.room.number)
+        ), style['RightText'])
+    else:
+        shortinfo = Paragraph('{name}'.format(
+            name=user.name
+        ), style['RightText'])
+
+    data = [
+        [im_web, 'https://agdsn.de', im_t, '/ag_dsn'],
+        [im_email, 'support@agdsn.de', im_fb, '/DresdnerStudentenNetz']
+    ]
+    social = Table(data, colWidths=[0.5 * cm, 3.5 * cm, 0.5 * cm],
+                   rowHeights=[0.5 * cm] * 2)
+
+    data = [[im_logo, social, shortinfo]]
+    t = Table(data, colWidths=[3.972 * cm, 9.5 * cm, 4 * cm],
+              style=[
+                  ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+              ])
+    story.append(t)
+    ######################
+
+    story.append(HRFlowable(width="100%",
+                            thickness=1,
+                            color=black,
+                            spaceBefore=0.0 * cm,
+                            spaceAfter=0.8 * cm))
+
+    story.append(
+        Paragraph('Hello {},'
+                  .format(user.name),
+                  style['BodyText']))
+
+    story.append(
+        Paragraph("We've been working on provisioning Wi-Fi for all members lately. "
+                  "To gain experience with operating an Wi-Fi in larger scale, "
+                  "we are putting it into test operation at the Gret-Palucca-Strasse dormitory. "
+                  "With this test operation we want to find out, among other things, "
+                  "how good the coverage of the signal is in different parts of the building and "
+                  "whether the underlying services for managing the networks and "
+                  "the conversion to the public IP address work. ",
+                  style['BodyText']))
+
+    story.append(
+        Paragraph(
+            'You can find instructions to connect, further information and data protection notices at: '
+            'https://agdsn.de/sipa/pages/service/wlan-test',
+            style['BodyText'])
+    )
+
+    story.append(
+        Paragraph(
+            'We would really like, if you try our wifi. '
+            'If you have any questions, feedback or problems, please come to our office or write to us.',
+            style['BodyText'])
+    )
+
+    data = [
+        ['Username:', user.login],
+        ['Password:', plain_password],
+        ['SSID:', 'agdsn-gps-test'],
+    ]
+    credential_table = Table(data, colWidths=[3 * cm, 4 * cm],
+                          style=[
+                              ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                          ])
+
+    qr_size = 4 * cm
+    qr_code = qr.QrCodeWidget('https://agdsn.de/sipa/pages/service/wlan-test')
+    bounds = qr_code.getBounds()
+    width = bounds[2] - bounds[0]
+    height = bounds[3] - bounds[1]
+    qrcode = Drawing(qr_size, qr_size,
+                       transform=[qr_size / width, 0, 0, qr_size / height, 0,
+                                  0])
+    qrcode.add(qr_code)
+
+    data = [[credential_table, qrcode]]
+    t = Table(data, colWidths=[13 * cm, 4 * cm],
+              style=[
+                  ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+              ])
+    story.append(t)
+
+    story.append(Paragraph('Best regards,', style['BodyText']))
+    story.append(Paragraph('Your AG DSN', style['BodyText']))
+
+    s = Spacer(width=1 * cm, height=10 * cm)
+    story.append(s)
+
+    story.append(HRFlowable(width="100%",
+                            thickness=3,
+                            color=black,
+                            spaceBefore=0.4 * cm,
+                            spaceAfter=0.4 * cm))
+    # offices
+    im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_house = Image(ASSETS_HOUSE_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_email = Image(ASSETS_EMAIL_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
+    im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
+    data = [
+        ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 46', im_house,
+         'Borsbergstr. 34'],
+        ['', '', 'Doorbell 0100', '', 'Basement', '', '7th floor'],
+        ['', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
+        ['', '', '', '', '', '', ''],
+        ['Office hours:', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '',
+         'Mon, 8pm - 9pm'],
+        ['', '', 'Thu, 7pm - 8pm', '', 'Thu, 7pm - 7.30pm', '',
+         'Thu, 8pm - 9pm']
+    ]
+
+    rowHeight = 0.4 * cm
+    t = Table(data, colWidths=[2.5 * cm, 0.5 * cm, 3.5 * cm, 0.5 * cm, 3.5 * cm,
+                               0.5 * cm, 3.5 * cm],
+              rowHeights=[rowHeight, rowHeight, rowHeight, rowHeight, rowHeight,
+                          rowHeight],
+              hAlign='CENTER'
+              )
+    story.append(t)
+
+    story.append(
+        Paragraph(
+            '<i>Generated on {date}</i>'.format(
+                date=datetime.date.today(),
             ),
             ParagraphStyle(name='SmallRightText',
                            parent=style['Normal'],

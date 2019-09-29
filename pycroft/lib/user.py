@@ -23,6 +23,7 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
+from pycroft.helpers.printing import generate_wifi_user_sheet as generate_wifi_pdf
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -124,7 +125,7 @@ def setup_ipv4_networking(host):
         session.session.add(new_ip)
 
 
-def store_user_sheet(new_user, plain_password, timeout=15, generation_purpose=''):
+def store_user_sheet(new_user, plain_password, timeout=15, generation_purpose='', wifi=False):
     """Generate a user sheet and store it in the WebStorage.
 
     Returns the generated `WebStorage` object holding the pdf.
@@ -133,14 +134,17 @@ def store_user_sheet(new_user, plain_password, timeout=15, generation_purpose=''
     :param str plain_password:
     :param str generation_purpose:
     :param int timeout: The lifetime in minutes
+    :param bool wifi: Generate a user sheet for wifi access instead of the generic one
     """
-    pdf_data = b64encode(generate_user_sheet(new_user, plain_password, generation_purpose)).decode('ascii')
+    if wifi is True:
+        pdf_data = b64encode(generate_wifi_user_sheet(new_user, plain_password)).decode('ascii')
+    else:
+        pdf_data = b64encode(generate_user_sheet(new_user, plain_password, generation_purpose)).decode('ascii')
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=session.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
 
     return pdf_storage
-
 
 def get_user_sheet(sheet_id):
     """Fetch the storage object given an id.
@@ -166,6 +170,19 @@ def reset_password(user, processor):
     user.password = plain_password
 
     message = deferred_gettext(u"Password was reset")
+    log_user_event(author=processor,
+                   user=user,
+                   message=message.to_json())
+
+    return plain_password
+
+
+@with_transaction
+def reset_wifi_password(user, processor):
+    plain_password = user_helper.generate_password(12)
+    user.wifi_password = plain_password
+
+    message = deferred_gettext(u"WIFI-Password was reset")
     log_user_event(author=processor,
                    user=user,
                    message=message.to_json())
@@ -663,6 +680,7 @@ def status(user):
         'member': user.member_of(config.member_group),
         'traffic_exceeded': user.member_of(config.traffic_limit_exceeded_group),
         'network_access': user.has_property('network_access'),
+        'wifi_access': user.has_wifi_access,
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
         'ldap': user.has_property('ldap'),
@@ -701,6 +719,21 @@ def generate_user_sheet(user, plain_password, generation_purpose=''):
     """
     return generate_pdf(user, encode_type2_user_id(user.id), plain_password, generation_purpose)
 
+def generate_wifi_user_sheet(user, plain_password):
+    """Create a „wifi“ datasheet for the given user
+
+    This is a wrapper for
+    :py:func:`pycroft.helpers.printing.generate_user_sheet` equipping
+    it with the correct user id.
+
+    This function cannot be exported to a `wrappers` module because it
+    depends on `encode_type2_user_id` and is required by
+    `(store|get)_user_sheet`, both in this module.
+
+    :param User user: A pycroft user
+    :param str plain_password: The password
+    """
+    return generate_wifi_pdf(user, encode_type2_user_id(user.id), plain_password)
 
 def membership_ending_task(user):
     """
