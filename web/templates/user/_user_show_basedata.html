@@ -157,6 +157,16 @@
             <br/>Passwort zurücks.
           </a>
         </div>
+        <div class="col-md-12 action-button">
+          <a role="button" class="btn btn-info btn-sq"
+             href="{{ url_for(".reset_wifi_password", user_id=user.id) }}"
+             hint="WIFI-Passwort zurücksetzen">
+            <span class="badge"><span
+                class="glyphicon glyphicon-signal"></span><span
+                class="glyphicon"></span></span>
+            <br/>WLAN-Passwort neu setzen
+          </a>
+        </div>
       </div>
     </div>
     </div>

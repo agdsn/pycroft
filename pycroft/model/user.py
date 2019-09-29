@@ -47,6 +47,7 @@ class User(IntegerIdModel, UserMixin):
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTimeTz, nullable=False)
     passwd_hash = Column(String)
+    wifi_passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
     birthdate = Column(Date, nullable=True)
 
@@ -191,6 +192,21 @@ class User(IntegerIdModel, UserMixin):
     @password.setter
     def password(self, value):
         self.passwd_hash = hash_password(value)
+
+    @hybrid_property
+    def wifi_password(self):
+        """Store a hash of a given plaintext passwd for the user.
+
+        """
+        raise RuntimeError("Password can not be read, only set")
+
+    @hybrid_property
+    def has_wifi_access(self):
+        return self.wifi_passwd_hash is not None
+
+    @password.setter
+    def wifi_password(self, value):
+        self.wifi_passwd_hash = hash_password(value)
 
     @staticmethod
     def verify_and_get(login, plaintext_password):

@@ -266,6 +266,7 @@ def infoflags(user):
     return [
         {'title': u"Mitglied", 'icon': "user", 'val': user_status.member},
         {'title': u"Netzwerkzugang", 'icon': "globe", 'val': user_status.network_access},
+        {'title': u"WLAN-Zugang", 'icon': "signal", 'val': user_status.wifi_access},
         {'title': u"Bezahlt", 'icon': "euro", 'val': user_status.account_balanced},
         {'title': u"Verstoßfrei", 'icon': "alert", 'val': not user_status.violation},
         {'title': u"LDAP", 'icon': "cloud", 'val': user_status.ldap},
@@ -783,6 +784,23 @@ def reset_password(user_id):
               'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
+
+
+@bp.route('/<int:user_id>/reset_wifi_password', methods=['GET', 'POST'])
+@access.require('user_change')
+def reset_wifi_password(user_id):
+    form = UserResetPasswordForm()
+    myUser = User.q.get(user_id)
+    if form.validate_on_submit():
+        plain_password = lib.user.reset_wifi_password(myUser, processor=current_user)
+        sheet = lib.user.store_user_sheet(myUser, plain_password, generation_purpose='password reset', wifi=True)
+        session.session.commit()
+
+        flask_session['user_sheet'] = sheet.id
+        flash(Markup(u'WIFI-Passwort erfolgreich zurückgesetzt.'),
+              'success')
+        return redirect(url_for('.user_show', user_id=user_id))
+    return render_template('user/user_reset_wifi_password.html', form=form, user_id=user_id)
 
 
 @bp.route('/<int:user_id>/block', methods=['GET', 'POST'])
