@@ -146,9 +146,9 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
     im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
     data = [
-        ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 46', im_house,
+        ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 50', im_house,
          'Borsbergstr. 34'],
-        ['', '', 'Doorbell 0100', '', 'Basement', '', '7th floor'],
+        ['', '', 'Doorbell 0100', '', 'ground floor', '', '7th floor'],
         ['', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
         ['', '', '', '', '', '', ''],
         ['Office hours:', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '',
@@ -195,7 +195,7 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     bank = BankAccount.q.filter_by(account_number='3120219540').first()
     bank = config.membership_fee_bank_account
 
-    recipient = 'Studentenrat TUD - AG DSN'
+    recipient = 'Studierendenrat TUD - AG DSN'
 
     if user.room:
         purpose = '{id}, {name}, {dorm} {level} {room}'.format(
@@ -363,11 +363,16 @@ def generate_wifi_user_sheet(user, user_id, plain_password):
     )
 
     data = [
-        ['Username:', user.login],
-        ['Password:', plain_password],
         ['SSID:', 'agdsn-gps-test'],
+        ['Outer authentication:', 'TTLS'],
+        ['Inner authentication:', 'PAP'],
+        ['CA certificate:', 'Use system certificate (when unavailable download\nfrom our website)'],
+        ['Domain:', 'radius.agdsn.de'],
+        ['Anonymous identity:', 'anonymous@agdsn.de'],
+        ['Username:', user.login],
+        ['Password:', plain_password]
     ]
-    credential_table = Table(data, colWidths=[3 * cm, 4 * cm],
+    credential_table = Table(data, colWidths=[4 * cm, 4 * cm],
                           style=[
                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                           ])
@@ -392,7 +397,7 @@ def generate_wifi_user_sheet(user, user_id, plain_password):
     story.append(Paragraph('Best regards,', style['BodyText']))
     story.append(Paragraph('Your AG DSN', style['BodyText']))
 
-    s = Spacer(width=1 * cm, height=10 * cm)
+    s = Spacer(width=1 * cm, height=8.8 * cm)
     story.append(s)
 
     story.append(HRFlowable(width="100%",
@@ -407,9 +412,9 @@ def generate_wifi_user_sheet(user, user_id, plain_password):
     im_fb = Image(ASSETS_FACEBOOK_FILENAME, 0.4 * cm, 0.4 * cm)
     im_t = Image(ASSETS_TWITTER_FILENAME, 0.4 * cm, 0.4 * cm)
     data = [
-        ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 46', im_house,
+        ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 50', im_house,
          'Borsbergstr. 34'],
-        ['', '', 'Doorbell 0100', '', 'Basement', '', '7th floor'],
+        ['', '', 'Doorbell 0100', '', 'ground floor', '', '7th floor'],
         ['', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
         ['', '', '', '', '', '', ''],
         ['Office hours:', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '',
