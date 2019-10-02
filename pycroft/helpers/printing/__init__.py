@@ -148,7 +148,7 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     data = [
         ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 50', im_house,
          'Borsbergstr. 34'],
-        ['', '', 'Doorbell 0100', '', 'ground floor', '', '7th floor'],
+        ['', '', 'Doorbell 0100', '', 'Ground floor', '', '7th floor'],
         ['', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
         ['', '', '', '', '', '', ''],
         ['Office hours:', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '',
@@ -414,7 +414,7 @@ def generate_wifi_user_sheet(user, user_id, plain_password):
     data = [
         ['', im_house, 'Wundtstraße 5', im_house, 'Hochschulstr. 50', im_house,
          'Borsbergstr. 34'],
-        ['', '', 'Doorbell 0100', '', 'ground floor', '', '7th floor'],
+        ['', '', 'Doorbell 0100', '', 'Ground floor', '', '7th floor'],
         ['', '', '01217 Dresden', '', '01069 Dresden', '', '01309 Dresden'],
         ['', '', '', '', '', '', ''],
         ['Office hours:', '', 'Mon, 7pm - 8pm', '', 'Mon, 7pm - 7.30pm', '',
