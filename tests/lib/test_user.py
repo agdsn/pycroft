@@ -4,7 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory
+from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, RoomFactory
 
 from pycroft import config
 from pycroft.helpers.i18n import localized
@@ -185,11 +185,19 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.user = UserWithHostFactory.create()
         self.membership = MembershipFactory.create(user=self.user,
                                                    group=self.config.member_group)
+        self.other_room = RoomFactory.create()
 
     def move_out(self, user, comment=None):
         UserHelper.move_out(user, comment=comment or "", processor=self.processor,
                             when=session.utcnow())
         session.session.refresh(user)
+
+    def customize_address(self, user):
+        self.user.address = address = AddressFactory.create(city="Bielefeld")
+        session.session.add(user)
+        session.session.commit()
+        self.assertTrue(user.has_custom_address)
+        return address
 
     def test_move_out_removes_address(self):
         self.assertFalse(self.user.has_custom_address)
@@ -199,13 +207,22 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.assertEqual(self.user.address, config.dummy_address)
 
     def test_custom_address_kept(self):
-        self.user.address = address = AddressFactory.create(city="Bielefeld")
-        session.session.add(self.user)
-        session.session.commit()
-        self.assertTrue(self.user.has_custom_address)
-
+        address = self.customize_address(self.user)
         self.move_out(self.user)
+        self.assertEqual(self.user.address, address)
 
+    def move(self, user, room):
+        UserHelper.move(user, processor=self.processor,
+                        building_id=room.building_id, level=room.level, room_number=room.number)
+        session.session.refresh(user)
+
+    def test_move_changes_address(self):
+        self.move(self.user, self.other_room)
+        self.assertEqual(self.user.address, self.other_room.address)
+
+    def test_move_keeps_custom_address(self):
+        address = self.customize_address(self.user)
+        self.move(self.user, self.other_room)
         self.assertEqual(self.user.address, address)
 
 
