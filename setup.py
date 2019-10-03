@@ -67,6 +67,7 @@ setup(
         'console_scripts': [
             'pycroft = scripts.server_run:main',
             'pycroft_ldap_sync = ldap_sync.__main__:main',
+            'alembic_wrapper = scripts.alembic_wrapper:cli'
         ]
     },
     license="Apache Software License",
