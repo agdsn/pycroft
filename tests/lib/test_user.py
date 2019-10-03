@@ -4,6 +4,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
+from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory
+
 from pycroft import config
 from pycroft.helpers.i18n import localized
 from pycroft.helpers.interval import closedopen
@@ -11,7 +13,7 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, session, host)
 from pycroft.model.port import PatchPort
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, FactoryWithConfigDataTestBase
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
@@ -172,6 +174,28 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         account = new_user.unix_account
         self.assertTrue(account.home_directory.endswith(new_user.login))
         self.assertTrue(account.home_directory.startswith('/home/'))
+
+
+class MovedInUserTestCase(FactoryWithConfigDataTestBase):
+    def create_factories(self):
+        # We want a user who lives somewhere with a membership!
+        super().create_factories()
+        self.processor = UserFactory.create()
+        self.user = UserWithHostFactory.create()
+        self.membership = MembershipFactory.create(user=self.user,
+                                                   group=self.config.member_group)
+
+    def test_move_out_removes_address(self):
+        out_time = session.utcnow()
+
+        UserHelper.move_out(self.user, comment="", processor=self.processor, when=out_time)
+        session.session.refresh(self.user)
+        self.assertEqual(self.user.active_memberships(), [])
+        self.assertIsNone(self.user.room)
+        self.assertEqual(self.user.address, config.dummy_address)
+
+    def test_changing_address_keeps_it(self):
+        pass
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):

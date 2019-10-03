@@ -198,6 +198,11 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
         pass
 
 
+class FactoryWithConfigDataTestBase(FactoryDataTestBase):
+    def create_factories(self):
+        self.config = ConfigFactory.create()
+
+
 class FrontendDataTestBase(testing.TestCase):
     """A TestCase baseclass that handles frontend tests.
 
