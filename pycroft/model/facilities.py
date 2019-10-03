@@ -21,7 +21,7 @@ class Building(IntegerIdModel):
     short_name = Column(String(), unique=True, nullable=False)
     street = Column(String(), nullable=False)
 
-    __table_args__ = (UniqueConstraint("street", "number", name="address"),)
+    __table_args__ = (UniqueConstraint("street", "number", name="building_address"),)
 
 
 class Room(IntegerIdModel):
