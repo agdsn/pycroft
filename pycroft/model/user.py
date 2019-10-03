@@ -69,6 +69,10 @@ class User(IntegerIdModel, UserMixin):
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
 
+    @hybrid_property
+    def has_custom_address(self):
+        return self.address != self.room.address
+
     property_groups = relationship("PropertyGroup",
                                    secondary=lambda: Membership.__table__,
                                    viewonly=True)

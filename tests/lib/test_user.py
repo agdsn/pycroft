@@ -192,6 +192,7 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         session.session.refresh(user)
 
     def test_move_out_removes_address(self):
+        self.assertFalse(self.user.has_custom_address)
         self.move_out(self.user)
         self.assertEqual(self.user.active_memberships(), [])
         self.assertIsNone(self.user.room)
@@ -201,6 +202,7 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.user.address = address = AddressFactory.create(city="Bielefeld")
         session.session.add(self.user)
         session.session.commit()
+        self.assertTrue(self.user.has_custom_address)
 
         self.move_out(self.user)
 
