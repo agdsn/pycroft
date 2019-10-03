@@ -42,5 +42,12 @@ def upgrade(obj: ContextObject, revision: str):
     obj.alembic_helper.upgrade(revision)
 
 
+@cli.command()
+@click.pass_obj
+@click.argument('revision')
+def downgrade(obj: ContextObject, revision: str):
+    obj.alembic_helper.downgrade(revision)
+
+
 if __name__ == '__main__':
     cli()
