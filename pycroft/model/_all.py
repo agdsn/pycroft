@@ -24,3 +24,4 @@ from .user import *
 from .property import *
 from .hades import *
 from .webstorage import *
+from .address import *
