@@ -3,6 +3,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+
+from pycroft.model.address import Address
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.finance import Account, BankAccount
 from pycroft.model.user import PropertyGroup
@@ -54,4 +56,8 @@ class Config(IntegerIdModel):
         Integer, ForeignKey(BankAccount.id), nullable=False)
     membership_fee_bank_account = relationship(
         BankAccount, foreign_keys=[membership_fee_bank_account_id])
+
+    dummy_address_id = Column(Integer, ForeignKey(Address.id), nullable=False)
+    dummy_address = relationship(Address)
+
     __table_args__ = (CheckConstraint("id = 1"),)
