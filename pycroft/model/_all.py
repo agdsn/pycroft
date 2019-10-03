@@ -12,16 +12,17 @@ This is necessary for things like sqlalchemy-schemadisplay.
 :copyright: (c) 2011 by AG DSN.
 """
 
-from .traffic import *
+from .address import *
 from .config import *
 from .facilities import *
 from .finance import *
-from .logging import *
-from .host import *
-from .port import *
-from .net import *
-from .user import *
-from .property import *
 from .hades import *
+from .host import *
+from .logging import *
+from .net import *
+from .port import *
+from .property import *
+from .task import *
+from .traffic import *
+from .user import *
 from .webstorage import *
-from .address import *
