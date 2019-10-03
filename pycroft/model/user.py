@@ -30,6 +30,7 @@ from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password
 from pycroft.model import session, functions
+from pycroft.model.address import Address
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.types import DateTimeTz
 
@@ -64,6 +65,9 @@ class User(IntegerIdModel, UserMixin):
                      nullable=True, index=True)
     room = relationship("Room",
                         backref=backref("users", cascade="all"))
+
+    address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
+    address = relationship(Address, backref=backref("inhabitants"))
 
     property_groups = relationship("PropertyGroup",
                                    secondary=lambda: Membership.__table__,
