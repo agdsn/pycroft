@@ -14,6 +14,7 @@ from pycroft.model import (
     user, facilities, session, host)
 from pycroft.model.port import PatchPort
 from tests import FixtureDataTestBase, FactoryWithConfigDataTestBase
+from tests.factories.address import AddressFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
@@ -185,17 +186,25 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.membership = MembershipFactory.create(user=self.user,
                                                    group=self.config.member_group)
 
-    def test_move_out_removes_address(self):
-        out_time = session.utcnow()
+    def move_out(self, user, comment=None):
+        UserHelper.move_out(user, comment=comment or "", processor=self.processor,
+                            when=session.utcnow())
+        session.session.refresh(user)
 
-        UserHelper.move_out(self.user, comment="", processor=self.processor, when=out_time)
-        session.session.refresh(self.user)
+    def test_move_out_removes_address(self):
+        self.move_out(self.user)
         self.assertEqual(self.user.active_memberships(), [])
         self.assertIsNone(self.user.room)
         self.assertEqual(self.user.address, config.dummy_address)
 
-    def test_changing_address_keeps_it(self):
-        pass
+    def test_custom_address_kept(self):
+        self.user.address = address = AddressFactory.create(city="Bielefeld")
+        session.session.add(self.user)
+        session.session.commit()
+
+        self.move_out(self.user)
+
+        self.assertEqual(self.user.address, address)
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
