@@ -226,7 +226,8 @@ def create_user(name, login, email, birthdate, groups, processor):
         registered_at=now,
         account=Account(name="", type="USER_ASSET"),
         password=plain_password,
-        birthdate=birthdate
+        birthdate=birthdate,
+        address=config.dummy_address
     )
 
     account = UnixAccount(home_directory="/home/{}".format(login))
@@ -341,7 +342,7 @@ def migrate_user_host(host, new_room, processor):
     """
     old_room = host.room
     host.room = new_room
-    
+
     subnets_old = get_subnets_for_room(old_room)
     subnets = get_subnets_for_room(new_room)
 

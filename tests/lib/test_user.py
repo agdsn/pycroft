@@ -5,6 +5,7 @@
 from datetime import timedelta
 
 from pycroft import config
+from pycroft.helpers.i18n import localized
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import (
@@ -72,6 +73,52 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         super(Test_020_User_Move_In, self).setUp()
         self.processing_user = user.User.q.filter_by(
             login=UserData.privileged.login).one()
+
+        class _UserData:
+            name = u"Hans"
+            login = u"hans66"
+            email = u"hans@hans.de"
+            mac = "12:11:11:11:11:11"
+            birthdate = "1990-01-01"
+        self.user = _UserData
+        self.room = facilities.Room.q.first()
+
+    def create_some_user(self):
+        new_user, _ = UserHelper.create_user(
+            self.user.name,
+            self.user.login,
+            self.user.email,
+            self.user.birthdate,
+            processor=self.processing_user,
+            groups=[config.member_group],
+        )
+        return new_user
+
+    def assert_account_name(self, account, expected_name):
+        self.assertEqual(localized(account.name, {int: {'insert_commas': False}}),
+                         expected_name)
+
+    def assert_membership_groups(self, memberships, expected_groups):
+        self.assertEqual(len(memberships), len(expected_groups))
+        self.assertEqual({m.group for m in memberships},
+                         set(expected_groups))
+
+    def assert_logmessage_startswith(self, logentry, expected_start: str):
+        self.assertTrue(localized(logentry.message), expected_start)
+
+    def test_user_create(self):
+        new_user = self.create_some_user()
+        self.assertEqual(new_user.name, self.user.name)
+        self.assertEqual(new_user.login, self.user.login)
+        self.assertEqual(new_user.email, self.user.email)
+        self.assertEqual(new_user.address, config.dummy_address)
+        self.assert_account_name(new_user.account, f"User {new_user.id}")
+        self.assert_membership_groups(new_user.active_memberships(), [config.member_group])
+        self.assertEqual(new_user.unix_account.home_directory, f"/home/{new_user.login}")
+        self.assertEqual(len(new_user.log_entries), 2)
+        first, second = new_user.log_entries
+        self.assert_logmessage_startswith(first, "Added to group Mitglied")
+        self.assert_logmessage_startswith(second, "User created")
 
     def test_0010_move_in(self):
         test_name = u"Hans"
