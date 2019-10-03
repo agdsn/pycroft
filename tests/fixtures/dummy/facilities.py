@@ -3,6 +3,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from fixture import DataSet
 
+from .address import AddressData
+
 
 class SiteData(DataSet):
     class dummy:
@@ -29,21 +31,27 @@ class RoomData(DataSet):
         level = 1
         inhabitable = True
         building = BuildingData.dummy_house1
+        address = AddressData.dummy_address1
 
     class dummy_room2:
         number = "2"
         level = 2
         inhabitable = True
         building = BuildingData.dummy_house2
+        address = AddressData.dummy_address2
 
     class dummy_room3:
         number = "2"
         level = 2
         inhabitable = True
         building = BuildingData.dummy_house1
+        address = AddressData.dummy_address3
 
     class dummy_room4(dummy_room1):
         number = "2"
+        address = AddressData.dummy_address4
 
     class dummy_room5(dummy_room1):
         number = "2"
+        address = AddressData.dummy_address5
+

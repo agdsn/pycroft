@@ -16,6 +16,7 @@ class BaseUser():
     passwd_hash = hash_password(password)
     registered_at = datetime.utcnow()
     room = RoomData.dummy_room1  # yes, they all live in the same room
+    address = room.address
     account = AccountData.dummy_asset
 
 
