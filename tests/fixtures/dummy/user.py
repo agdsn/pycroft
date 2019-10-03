@@ -16,6 +16,7 @@ class UserData(DataSet):
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
+        address = room.address
         account = AccountData.dummy_user1
 
     class privileged:
@@ -23,6 +24,7 @@ class UserData(DataSet):
         name = "BOfH"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room3
+        address = room.address
         account = AccountData.dummy_user2
 
     class anotheruser:
@@ -30,4 +32,5 @@ class UserData(DataSet):
         name = "Thomas Jefferson"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room2
+        address = room.address
         account = AccountData.dummy_user3
