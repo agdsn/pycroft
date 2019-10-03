@@ -400,6 +400,7 @@ def move(user, building_id, level, room_number, processor, when=None):
                                   processor=processor)
     else:
         old_room = user.room
+        had_custom_address = user.has_custom_address
         new_room = Room.q.filter_by(
             number=room_number,
             level=level,
@@ -410,7 +411,8 @@ def move(user, building_id, level, room_number, processor, when=None):
             "A User is only allowed to move in a different room!"
 
         user.room = new_room
-        user.address = new_room.address
+        if not had_custom_address:
+            user.address = new_room.address
 
         message = deferred_gettext(u"Moved from {} to {}.")
         log_user_event(
