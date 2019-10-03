@@ -32,6 +32,7 @@ class AlembicHelper:
 
     def upgrade(self, revision='head', **kwargs):
         def upgrade(rev, context):
+            # noinspection PyProtectedMember
             return self.scr._upgrade_revs(destination=revision, current_rev=rev)
         # early binding of the upgrade function (i.e., in self.ctx) is not possible because it is
         # bound to the target revision.
@@ -40,6 +41,16 @@ class AlembicHelper:
         with Operations.context(upgrade_bound_ctx):
             with upgrade_bound_ctx.begin_transaction():
                 upgrade_bound_ctx.run_migrations(**kwargs)
+
+    def downgrade(self, revision, **kwargs):
+        def downgrade(rev, context):
+            # noinspection PyProtectedMember
+            return self.scr._downgrade_revs(destination=revision, current_rev=rev)
+
+        downgrade_bound_ctx = self._new_context(opts={'fn': downgrade})
+        with Operations.context(downgrade_bound_ctx):
+            with downgrade_bound_ctx.begin_transaction():
+                downgrade_bound_ctx.run_migrations(**kwargs)
 
 
 def db_has_nontrivial_objects(connection):
