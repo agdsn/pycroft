@@ -303,6 +303,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
 
         if room:
             user.room = room
+            user.address = room.address
 
             if mac and user.birthdate:
                 interface_existing = Interface.q.filter_by(mac=mac).first()
@@ -409,6 +410,7 @@ def move(user, building_id, level, room_number, processor, when=None):
             "A User is only allowed to move in a different room!"
 
         user.room = new_room
+        user.address = new_room.address
 
         message = deferred_gettext(u"Moved from {} to {}.")
         log_user_event(
@@ -650,6 +652,7 @@ def move_out(user, comment, processor, when, end_membership=True):
                         interfaces=', '.join(deleted_interfaces))
 
             user.room = None
+            user.address = config.dummy_address
         else:
             if num_hosts:
                 message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
