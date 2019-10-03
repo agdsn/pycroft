@@ -7,6 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
+from pycroft.model.address import Address
 from pycroft.model.base import IntegerIdModel
 
 class Site(IntegerIdModel):
@@ -34,6 +35,9 @@ class Room(IntegerIdModel):
         index=True,
     )
     building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
+
+    address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
+    address = relationship(Address, backref=backref("rooms"))
 
     connected_patch_ports = relationship(
         'PatchPort',
