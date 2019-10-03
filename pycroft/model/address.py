@@ -18,9 +18,9 @@ class Address(IntegerIdModel):
     # Sometimes, zipcodes can contain things like dashes, so rather take String().
     # we could probably impose some format by a check but that would be over engineering
     zip_code = Column(String(), nullable=False)
-    city = Column(String(), nullable=False, default=DEFAULT_CITY)
-    state = Column(String(), nullable=False, default=DEFAULT_STATE)
-    country = Column(String(), nullable=False, default=DEFAULT_COUNTRY)
+    city = Column(String(), nullable=False, server_default=DEFAULT_CITY)
+    state = Column(String(), nullable=False, server_default=DEFAULT_STATE)
+    country = Column(String(), nullable=False, server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (
         UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),

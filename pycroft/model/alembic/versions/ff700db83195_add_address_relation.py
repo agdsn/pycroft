@@ -27,9 +27,9 @@ def upgrade():
         sa.Column('number', sa.String(), nullable=False),
         sa.Column('addition', sa.String(), nullable=True),
         sa.Column('zip_code', sa.String(), nullable=False),
-        sa.Column('city', sa.String(), nullable=False),
-        sa.Column('state', sa.String(), nullable=False),
-        sa.Column('country', sa.String(), nullable=False),
+        sa.Column('city', sa.String(), nullable=False, server_default="Dresden"),
+        sa.Column('state', sa.String(), nullable=False, server_default="Sachsen"),
+        sa.Column('country', sa.String(), nullable=False, server_default="Germany"),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city',
                             'state', 'country')
