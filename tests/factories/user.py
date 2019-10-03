@@ -21,6 +21,7 @@ class UserFactory(BaseFactory):
     email = Faker('email')
     account = factory.SubFactory(AccountFactory, type="USER_ASSET")
     room = factory.SubFactory(RoomFactory)
+    address = factory.LazyAttribute(lambda o: o.room.address)
 
 
 class UserWithHostFactory(UserFactory):

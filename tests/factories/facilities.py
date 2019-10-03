@@ -8,6 +8,7 @@ from factory.faker import Faker
 from pycroft.model.facilities import Site, Building, Room
 from pycroft.model.port import PatchPort
 from .base import BaseFactory
+from .address import AddressFactory
 
 
 class SiteFactory(BaseFactory):
@@ -38,6 +39,7 @@ class RoomFactory(BaseFactory):
     inhabitable = True
 
     building = SubFactory(BuildingFactory)
+    address = SubFactory(AddressFactory)
 
 
 class PatchPortFactory(BaseFactory):
