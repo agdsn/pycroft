@@ -2,6 +2,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import logging
 from contextlib import contextmanager
 from functools import partial
 import os
@@ -185,8 +186,10 @@ class SQLiteTestCase(DialectSpecificTestCase):
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
     session = session.session
+
     def setUp(self):
         super().setUp()
+        logging.getLogger('factory').setLevel(logging.INFO)
         with self.session.begin(subtransactions=True):
             self.create_factories()
 
