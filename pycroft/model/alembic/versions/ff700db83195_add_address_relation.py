@@ -200,13 +200,11 @@ def add_room_addresses(session):
         .where(_Room.inhabitable)
         .column(_Building.street)
         .column(_Building.number)
-        .column(_Building.id)
         .alias('inhabitable_room_info')
     )
     session.execute(
         sa.insert(_Address)
-        .from_select([_Address.tmp_room_id, _Address.addition,
-                      _Address.street, _Address.number, _Address.tmp_building_id],
+        .from_select([_Address.tmp_room_id, _Address.addition, _Address.street, _Address.number],
                      room_select)
     )
 
