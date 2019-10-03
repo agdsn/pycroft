@@ -105,6 +105,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.building, test_building)
         self.assertEqual(new_user.room.number, "1")
         self.assertEqual(new_user.room.level, 1)
+        self.assertEqual(new_user.address, new_user.room.address)
 
         user_host = host.Host.q.filter_by(owner=new_user).one()
         self.assertEqual(len(user_host.interfaces), 1)
@@ -176,6 +177,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
 
         self.assertFalse(new_user.hosts)
         self.assertIsNone(new_user.room)
+        self.assertEquals(new_user.address, config.dummy_address)
 
         # check if users finance account still exists
         self.assertIsNotNone(new_user.account)
@@ -194,6 +196,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         self.assertEqual(new_user.room.building, test_building)
         self.assertEqual(new_user.room.level, 1)
         self.assertEqual(new_user.room.number, "1")
+        self.assertEqual(new_user.address, new_user.room.address)
 
         self.assertEqual(len(new_user.hosts), 1)
         user_host = new_user.hosts[0]
