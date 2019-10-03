@@ -233,16 +233,14 @@ def add_dummy_address(session):
 
 
 def downgrade():
-    op.drop_constraint(None, 'user', type_='foreignkey')
+    op.drop_constraint('user_address_id_fkey', 'user', type_='foreignkey')
     op.drop_index(op.f('ix_user_address_id'), table_name='user')
     op.drop_column('user', 'address_id')
-    op.drop_constraint(None, 'room', type_='foreignkey')
+    op.drop_constraint('room_address_id_fkey', 'room', type_='foreignkey')
     op.drop_index(op.f('ix_room_address_id'), table_name='room')
     op.drop_column('room', 'address_id')
-    op.drop_constraint(None, 'config', type_='foreignkey')
+    op.drop_constraint('config_dummy_address_id_fkey', 'config', type_='foreignkey')
     op.drop_column('config', 'dummy_address_id')
-    op.drop_index(op.f('ix_patch_port_switch_room_id'), table_name='patch_port')
-    op.drop_index(op.f('ix_patch_port_room_id'), table_name='patch_port')
     op.drop_table('address')
     op.create_unique_constraint('address', 'building', ['street', 'number'])
     op.drop_constraint('building_address', 'building', type_='unique')
