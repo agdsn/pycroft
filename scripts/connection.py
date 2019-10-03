@@ -10,8 +10,9 @@ from sqlalchemy.exc import OperationalError
 from pycroft.model import create_engine
 
 
-def try_create_connection(connection_string, wait_for_db, logger) -> Connection:
-    engine = create_engine(connection_string)
+def try_create_connection(connection_string, wait_for_db, logger,
+                          echo: bool = False) -> Connection:
+    engine = create_engine(connection_string, echo=echo)
     if wait_for_db == 0:
         max_wait = float('inf')
     else:
