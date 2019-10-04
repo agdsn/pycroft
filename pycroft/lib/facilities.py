@@ -90,3 +90,8 @@ def edit_room(room, number, inhabitable, processor):
         room.inhabitable = inhabitable
 
     return room
+
+
+def get_room(building_id, level, room_number):
+    return Room.q.filter_by(number=room_number,
+                            level=level, building_id=building_id).one_or_none()

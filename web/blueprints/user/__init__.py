@@ -31,6 +31,7 @@ from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex, get_interface_manufacturer
+from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import SubnetFullException, MacExistsException
@@ -581,14 +582,21 @@ def create():
                                           unique_email_error or
                                           unique_mac_error):
 
-        result, success = web_execute(lib.user.create_user,
-                                                          None,
+        room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
+                        room_number=form.room_number.data)
+        if not room:
+            flash("Raum scheint nicht zu existieren…", 'error')
+            return
+        result, success = web_execute(
+            lib.user.create_user,
+            None,
             name=form.name.data,
             login=form.login.data,
             processor=current_user,
             email=form.email.data,
             birthdate=form.birthdate.data,
-            groups=form.property_groups.data
+            groups=form.property_groups.data,
+            address=room.address,
         )
 
         if success:
