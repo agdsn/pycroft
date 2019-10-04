@@ -35,5 +35,3 @@ class ConfigFactory(BaseFactory):
     # `Account`s
     membership_fee_account = SubFactory(AccountFactory)
     membership_fee_bank_account = SubFactory(BankAccountFactory)
-
-    dummy_address = SubFactory(AddressFactory)

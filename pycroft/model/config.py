@@ -57,7 +57,4 @@ class Config(IntegerIdModel):
     membership_fee_bank_account = relationship(
         BankAccount, foreign_keys=[membership_fee_bank_account_id])
 
-    dummy_address_id = Column(Integer, ForeignKey(Address.id), nullable=False)
-    dummy_address = relationship(Address)
-
     __table_args__ = (CheckConstraint("id = 1"),)
