@@ -227,7 +227,7 @@ def create_user(name, login, email, birthdate, groups, processor):
         account=Account(name="", type="USER_ASSET"),
         password=plain_password,
         birthdate=birthdate,
-        address=config.dummy_address
+        # address=config.dummy_address
     )
 
     account = UnixAccount(home_directory="/home/{}".format(login))

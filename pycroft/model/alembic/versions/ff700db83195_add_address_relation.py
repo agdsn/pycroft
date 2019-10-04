@@ -123,12 +123,6 @@ def upgrade():
     dummy_id = add_dummy_address(session)
     dummy_default_cause = sa.schema.DefaultClause(f"{dummy_id}")
 
-    # FURTHER SCHEMA MIGRATION…
-    op.add_column('config', sa.Column('dummy_address_id', sa.Integer(), nullable=False,
-                                      server_default=dummy_default_cause))
-    cleanups.append(lambda: op.alter_column('config', 'dummy_address_id', server_default=None))
-    op.create_foreign_key(None, 'config', 'address', ['dummy_address_id'], ['id'])
-
     # DATA MIGRATION II: add building addresses
     add_building_addresses(session)
 
@@ -237,8 +231,6 @@ def downgrade():
     op.drop_constraint('room_address_id_fkey', 'room', type_='foreignkey')
     op.drop_index(op.f('ix_room_address_id'), table_name='room')
     op.drop_column('room', 'address_id')
-    op.drop_constraint('config_dummy_address_id_fkey', 'config', type_='foreignkey')
-    op.drop_column('config', 'dummy_address_id')
     op.drop_table('address')
     op.create_unique_constraint('address', 'building', ['street', 'number'])
     op.drop_constraint('building_address', 'building', type_='unique')
