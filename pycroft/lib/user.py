@@ -24,6 +24,7 @@ from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.printing import generate_wifi_user_sheet as generate_wifi_pdf
+from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -201,7 +202,7 @@ def change_password(user, password):
                    message=message.to_json())
 
 
-def create_user(name, login, email, birthdate, groups, processor):
+def create_user(name, login, email, birthdate, groups, processor, address):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -213,6 +214,7 @@ def create_user(name, login, email, birthdate, groups, processor):
     :param Date birthdate: Date of birth
     :param PropertyGroup groups: The initial groups of the new user
     :param User processor: The processor
+    :param Address address: Where the user lives. May or may not come from a room.
     :return:
     """
 
@@ -227,7 +229,7 @@ def create_user(name, login, email, birthdate, groups, processor):
         account=Account(name="", type="USER_ASSET"),
         password=plain_password,
         birthdate=birthdate,
-        # address=config.dummy_address
+        address=address
     )
 
     account = UnixAccount(home_directory="/home/{}".format(login))
@@ -286,8 +288,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
                                               'begin_membership': begin_membership},
                                   processor=processor)
     else:
-        room = Room.q.filter_by(number=room_number,
-                                level=level, building_id=building_id).one_or_none()
+        room = get_room(building_id, level, room_number)
 
         if birthdate:
             user.birthdate = birthdate
@@ -654,8 +655,6 @@ def move_out(user, comment, processor, when, end_membership=True):
                         interfaces=', '.join(deleted_interfaces))
             had_custom_address = user.has_custom_address
             user.room = None
-            if not had_custom_address:
-                user.address = config.dummy_address
         else:
             if num_hosts:
                 message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \

@@ -4,6 +4,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
+from pycroft.lib.facilities import get_room
 from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, RoomFactory
 
 from pycroft import config
@@ -94,6 +95,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             self.user.birthdate,
             processor=self.processing_user,
             groups=[config.member_group],
+            address=self.room.address,
         )
         return new_user
 
@@ -132,13 +134,15 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"
 
+        address = get_room(building_id=test_building.id, level=1, room_number="1").address
         new_user, _ = UserHelper.create_user(
             test_name,
             test_login,
             test_email,
             test_birthdate,
             processor=self.processing_user,
-            groups=[config.member_group]
+            groups=[config.member_group],
+            address=address
         )
 
         UserHelper.move_in(
@@ -246,7 +250,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"
 
-        address = None # TODO infer from room
+        address = get_room(building_id=test_building.id, level=1, room_number="1").address
 
         new_user, _ = UserHelper.create_user(
             test_name,
@@ -254,7 +258,8 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             test_email,
             test_birthdate,
             processor=self.processing_user,
-            groups = [config.member_group]
+            groups=[config.member_group],
+            address=address
         )
 
         UserHelper.move_in(
