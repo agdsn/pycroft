@@ -27,7 +27,7 @@
         <h2 class="page-header">Überblick</h2>
         <div class="row">
             <div class="col-sm-6 col-md-5 col-lg-4">
-                <h3>Stammdaten</h3>
+                <h3>Details</h3>
                 <dl class="dl-horizontal">
                     <dt>Wohnheim</dt>
                     <dd>{{ room.building.street }} {{ room.building.number }}</dd>
@@ -37,6 +37,8 @@
                     <dd>{{ room.level }}</dd>
                     <dt>Bewohnbar</dt>
                     <dd>{{ misc.yes_no_formatter(room.inhabitable) }}</dd>
+                    <dt>Postanschrift</dt>
+                    <dd>{{ room.address }}</dd>
                 </dl>
             </div>
             {% if room.inhabitable -%}
