@@ -10,7 +10,6 @@ from pycroft.model.base import IntegerIdModel
 
 
 DEFAULT_CITY = "Dresden"
-DEFAULT_STATE = "Sachsen"
 DEFAULT_COUNTRY = "Germany"
 
 class Address(IntegerIdModel):
@@ -21,7 +20,7 @@ class Address(IntegerIdModel):
     # we could probably impose some format by a check but that would be over engineering
     zip_code = Column(String(), nullable=False)
     city = Column(String(), nullable=False, server_default=DEFAULT_CITY)
-    state = Column(String(), nullable=False, server_default=DEFAULT_STATE)
+    state = Column(String(), nullable=True)
     country = Column(String(), nullable=False, server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (

@@ -22,7 +22,6 @@ depends_on = None
 Base = declarative_base()
 
 DEFAULT_CITY = "Dresden"
-DEFAULT_STATE = "Sachsen"
 DEFAULT_COUNTRY = "Germany"
 
 
@@ -35,7 +34,7 @@ class _Address(Base):
     addition = sa.Column(sa.String())
     zip_code = sa.Column(sa.String(), nullable=False, default="01217")
     city = sa.Column(sa.String(), nullable=False, default=DEFAULT_CITY)
-    state = sa.Column(sa.String(), nullable=False, default=DEFAULT_STATE)
+    state = sa.Column(sa.String(), nullable=True)
     country = sa.Column(sa.String(), nullable=False, default=DEFAULT_COUNTRY)
 
     # temporary columns for easier data migration
@@ -102,7 +101,7 @@ def upgrade():
         sa.Column('addition', sa.String(), nullable=True),
         sa.Column('zip_code', sa.String(), nullable=False),
         sa.Column('city', sa.String(), nullable=False, server_default=DEFAULT_CITY),
-        sa.Column('state', sa.String(), nullable=False, server_default=DEFAULT_STATE),
+        sa.Column('state', sa.String(), nullable=True),
         sa.Column('country', sa.String(), nullable=False, server_default=DEFAULT_COUNTRY),
 
         # Temporary columns
