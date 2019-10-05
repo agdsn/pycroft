@@ -32,6 +32,6 @@ class Address(IntegerIdModel):
                             else f"{self.street} {self.number}", f"{self.zip_code} {self.city}"]
         if self.state:
             items.append(f"{self.state}")
-        if self.country:
+        if self.country and self.country != DEFAULT_COUNTRY:
             items.append(f"{self.country}")
         return ", ".join(items)
