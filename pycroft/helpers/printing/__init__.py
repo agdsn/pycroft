@@ -123,11 +123,15 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
         for ip in user_host.ips:
             macs.append(ip.interface.mac)
 
+    need_explicit_address = not user.room or user.room.address != user.address
     data = [['Name:', user.name, 'User-ID:', user_id],
             ['Username:', user.login, 'MAC-Address:', ', '.join(macs)],
-            ['Password:', plain_password, 'Location:',
+            ['Password:', plain_password,
+             'Dorm Location:' if need_explicit_address else 'Location:',
              str(user.room) if user.room else ""],
             ['E-Mail:', user.email, "", ""]]
+    if need_explicit_address:
+        data.append(['Address:', user.address])
     t = Table(data,
               style=[
                   ('FONTNAME', (1, 2), (1, 2), 'Courier'),
