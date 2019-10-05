@@ -38,6 +38,14 @@
           <div class="card-value user-room">
             {% if user.room is not none %}
               <span>{{ misc.room_link(user.room) }}</span>
+              {% if user.room.address != user.address %}
+                </div><div class="card-value user-room">
+                <span class="glyphicon glyphicon-home"></span>
+                <span>{{ user.address }}</span>
+              {% endif %}
+            {% elif user.address is not none %}
+              <span class="glyphicon glyphicon-home"></span>
+              <span>{{ user.address }}</span>
             {% else %}
               <span class="glyphicon glyphicon-home"></span>
               <span class="text-muted">{{ _("Nicht gesetzt") }}</span>
