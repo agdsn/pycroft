@@ -70,9 +70,11 @@ class Test_040_User_Login(FixtureDataTestBase):
 
     def test_0010_user_login_validator(self):
         account = Account(name='', type='ASSET')
+        room = facilities.Room.q.first()
         u = user.User(name="John Doe",
                       registered_at=session.utcnow(),
-                      room=facilities.Room.q.first(),
+                      room=room,
+                      address=room.address,
                       account=account)
 
         for length in range(1, 30):

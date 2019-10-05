@@ -34,6 +34,7 @@ class UserData(DataSet):
         name = "John Doe"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
+        address = room.address
         account = AccountData.dummy_user1
 
     class withldap(dummy):
@@ -41,5 +42,6 @@ class UserData(DataSet):
         # name = "Ldap User"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room2
+        address = room.address
         account = AccountData.dummy_user2
         unix_account = UnixAccountData.dummy_account_1

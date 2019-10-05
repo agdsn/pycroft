@@ -22,12 +22,14 @@ class UserData(DataSet):
         name = "Black Hat"
         registered_at = datetime.utcnow()
         room = RoomData.dummy_room1
+        address = room.address
         account = AccountData.dummy_user1
 
     class moved_out_user1(dummy):
         """unix_account, but no 'mail'"""
         login = "moved-out"
         room = RoomData.dummy_room2
+        address = room.address
         account = AccountData.dummy_user2
         unix_account = UnixAccountData.dummy_account_1
 
@@ -35,6 +37,7 @@ class UserData(DataSet):
         """unix_account and 'mail'"""
         login = "active1"
         room = RoomData.dummy_room3
+        address = room.address
         account = AccountData.dummy_user3
         unix_account = UnixAccountData.dummy_account_2
         email = 'ich-liebe-die@agdsn.de'
@@ -43,6 +46,7 @@ class UserData(DataSet):
         """unix_account and 'mail'"""
         login = "active2"
         room = RoomData.dummy_room4
+        address = room.address
         account = AccountData.dummy_user4
         unix_account = UnixAccountData.dummy_account_3
 
@@ -50,6 +54,7 @@ class UserData(DataSet):
         """'mail' but no unix_account"""
         login = 'inconsistent'
         room = RoomData.dummy_room5
+        address = room.address
         account = AccountData.dummy_user5
 
 
