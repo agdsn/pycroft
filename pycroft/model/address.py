@@ -2,6 +2,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from typing import List
+
 from sqlalchemy import Column, String, UniqueConstraint
 
 from pycroft.model.base import IntegerIdModel
@@ -25,3 +27,12 @@ class Address(IntegerIdModel):
     __table_args__ = (
         UniqueConstraint('street', 'number', 'addition', 'zip_code', 'city', 'state', 'country'),
     )
+
+    def __str__(self):
+        items: List[str] = [f"{self.street} {self.number} / {self.addition}" if self.addition
+                            else f"{self.street} {self.number}", f"{self.zip_code} {self.city}"]
+        if self.state:
+            items.append(f"{self.state}")
+        if self.country:
+            items.append(f"{self.country}")
+        return ", ".join(items)
