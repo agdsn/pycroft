@@ -334,45 +334,11 @@ class User(IntegerIdModel, UserMixin):
                 )
             )
         ).self_group().label("has_property_" + prop)
-#
-#    def group_intervals(self, group, when=UnboundedInterval):
-#
 
     @property
     def permission_level(self):
         return max((membership.group.permission_level for membership in self.active_memberships()),
                    default=0)
-
-    def property_intervals(self, name, when=UnboundedInterval):
-        """
-        Get the set of intervals in which the user was granted a given property
-        :param str name:
-        :param Interval when:
-        :returns: The set of intervals in which the user was granted the
-        property
-        :rtype: IntervalSet
-        """
-        property_assignments = object_session(self).query(
-            Property.granted,
-            Membership.begins_at,
-            Membership.ends_at
-        ).filter(
-            Property.name == name,
-            Property.property_group_id == PropertyGroup.id,
-            PropertyGroup.id == Membership.group_id,
-            Membership.user_id == self.id
-        ).all()
-        granted_intervals = IntervalSet(
-            closed(begins_at, ends_at)
-            for granted, begins_at, ends_at in property_assignments
-            if granted
-        )
-        denied_intervals = IntervalSet(
-            closed(begins_at, ends_at)
-            for granted, begins_at, ends_at in property_assignments
-            if not granted
-        )
-        return (granted_intervals - denied_intervals).intersect(when)
 
 
 class Group(IntegerIdModel):
