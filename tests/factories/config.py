@@ -6,7 +6,6 @@ from factory import SubFactory
 
 from pycroft.model.config import Config
 from .base import BaseFactory
-from .address import AddressFactory
 from .finance import AccountFactory, BankAccountFactory
 from .property import PropertyGroupFactory, MemberPropertyGroupFactory
 
