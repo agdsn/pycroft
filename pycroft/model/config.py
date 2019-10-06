@@ -4,7 +4,6 @@
 from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
-from pycroft.model.address import Address
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.finance import Account, BankAccount
 from pycroft.model.user import PropertyGroup
