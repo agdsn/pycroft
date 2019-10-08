@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, distinct
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.lib.logging import log_room_event, log_event
@@ -31,7 +31,7 @@ def get_overcrowded_rooms(building_id=None):
         Room.q.join(User)
             .join(Host).filter(User.room_id == Host.room_id)
             .filter(*oc_rooms_filter)
-            .group_by(Room.id).having(func.count(User.id) > 1)
+            .group_by(Room.id).having(func.count(distinct(User.id)) > 1)
             .subquery()
     )
 
