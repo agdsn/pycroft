@@ -56,8 +56,9 @@ class User(IntegerIdModel, UserMixin):
     account = relationship("Account", backref=backref("user", uselist=False))
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
 
-    unix_account = relationship('UnixAccount')  # backref not really needed.
-    unix_account_id = Column(Integer, ForeignKey('unix_account.id'),
+    unix_account = relationship('UnixAccount', cascade="all")  # backref not really needed.
+    unix_account_id = Column(Integer, ForeignKey('unix_account.id',
+                                                 ondelete="SET NULL"),
                              nullable=True, unique=True)
 
     # many to one from User to Room
