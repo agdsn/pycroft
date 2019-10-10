@@ -222,18 +222,20 @@ def import_users(session_ext, building, subnet, root_user):
 
     importcount = 0
     for location in locations:
-        split = location.room.split('.')
+        # split = location.room.split('.')
 
-        rnumber = location.room
+        rnumber = location.room.replace(".", " ")
 
         create = True
 
+        """
         if len(split) > 1:
             if split[1].isnumeric():
                 rnumber = split[0]
 
                 if split[1] != '1':
                     create = False
+        """
 
         if create:
             if create_user_with_all_data(rnumber, building,
@@ -295,7 +297,7 @@ def create_user_with_all_data(room_name, building,
 
     if mac is not None:
         new_user, password = lib_user.create_user(name, login, None, None,
-                                                  groups, ru)
+                                                  groups, ru, address=room.address)
 
         log_user_event("User imported from Güntz/Mar.", ru, new_user)
 
