@@ -67,5 +67,7 @@ class RoomLogEntry(LogEntry):
     id = Column(Integer, ForeignKey('log_entry.id'), primary_key=True)
 
     # many to one from RoomLogEntry to Room
-    room = relationship("Room", backref=backref("log_entries"))
-    room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
+    room = relationship("Room", backref=backref("log_entries",
+                                                cascade="all, delete-orphan"))
+    room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
+                     nullable=False, index=True)

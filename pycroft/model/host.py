@@ -27,10 +27,11 @@ class Host(IntegerIdModel):
                                                cascade="all, delete-orphan"))
 
     # many to one from Host to Room
-    room = relationship(Room, backref=backref("hosts"))
+    room = relationship(Room, backref=backref("hosts", cascade="all"))
     # We don't want to `ONDELETE CASCADE` because deleting a room
     # should not delete a host being there
-    room_id = Column(Integer, ForeignKey(Room.id), index=True)
+    room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
+                     index=True)
 
 
 class Switch(ModelBase):
