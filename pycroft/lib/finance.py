@@ -583,7 +583,6 @@ def get_users_with_payment_in_default():
     ts_now = session.utcnow()
     for user in users:
         in_default_days = user.account.in_default_days
-
         try:
             fee_date = ts_now - timedelta(days=in_default_days)
 

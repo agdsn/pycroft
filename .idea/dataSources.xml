@@ -7,5 +7,11 @@
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:55432/pycroft</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="pycroft@localhost/gnzmar" uuid="2a190044-a1fd-4152-9e42-bc6bf18e2fa7">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:55432/gnzmar</jdbc-url>
+    </data-source>
   </component>
 </project>

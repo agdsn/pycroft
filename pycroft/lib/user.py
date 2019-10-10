@@ -256,7 +256,7 @@ def create_user(name, login, email, birthdate, groups, processor, address):
 @with_transaction
 def move_in(user, building_id, level, room_number, mac, processor, birthdate=None,
             host_annex=False, begin_membership=True, when=None,
-            ip_address=None, subnet=None):
+            ip_address=None, subnet=None, no_birthday_required=False):
     """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac
@@ -310,7 +310,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
             user.room = room
             user.address = room.address
 
-            if mac and user.birthdate:
+            if mac and (user.birthdate or no_birthday_required):
                 interface_existing = Interface.q.filter_by(mac=mac).first()
 
                 if interface_existing is not None:
@@ -323,12 +323,10 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
                     else:
                         raise MacExistsException
                 else:
-                    raise MacExistsException
-            else:
-                new_host = Host(owner=user, room=room)
-                session.session.add(new_host)
-                session.session.add(Interface(mac=mac, host=new_host))
-                setup_ipv4_networking(new_host, ip_address, subnet)
+                    new_host = Host(owner=user, room=room)
+                    session.session.add(new_host)
+                    session.session.add(Interface(mac=mac, host=new_host))
+                    setup_ipv4_networking(new_host, ip_address, subnet)
 
         msg = deferred_gettext(u"Moved in: {room}")
 
