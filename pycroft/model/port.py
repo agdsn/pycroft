@@ -17,9 +17,9 @@ class PatchPort(IntegerIdModel):
     id = Column(Integer, primary_key=True)
     name = Column(String(8), nullable=False)
 
-    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id), unique=True)
+    switch_port_id = Column(Integer, ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True)
     switch_port = relationship(SwitchPort,
-                               backref=backref("patch_port", uselist=False))
+                               backref=backref("patch_port", uselist=False, cascade="all"))
 
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
                      nullable=False, index=True)
