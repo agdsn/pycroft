@@ -104,7 +104,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
     def _rollback_with_context(self, context):
         with context:
             try:
-                yield
+                yield context
             except:
                 # Check if the session is in “partial rollback” state
                 if not session.session.is_active:
