@@ -14,6 +14,7 @@ import flask_testing as testing
 from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from fixture.util import start_debug, stop_debug
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import SingletonThreadPool
 import sys
@@ -126,6 +127,12 @@ class SQLAlchemyTestCase(unittest.TestCase):
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
             callable_obj(*args, **kwargs)
+
+    @contextmanager
+    def assertUniqueViolation(self, message):
+        pattern = 'duplicate key value violates unique constraint ".+_key"'
+        with self.assertRaisesRegexp(IntegrityError, pattern, msg=message) as cm:
+            yield cm
 
 
 class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
