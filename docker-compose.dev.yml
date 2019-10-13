@@ -70,7 +70,20 @@ services:
         aliases:
           - celery-worker
     command: "worker"
-
+  dev-dummy-worker:
+    extends:
+      file: docker-compose.base.yml
+      service: dev
+    command: "dummy-worker worker --loglevel=debug"
+    environment:
+      - TEST_HADES_BROKER_URI=amqp://celery:celery@mq:5672/
+      - TEST_HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+    depends_on:
+      - dev-mq
+    networks:
+      dev:
+        aliases:
+          - dummy-worker
 
 volumes:
   home:
