@@ -12,15 +12,16 @@ from pycroft.model.base import IntegerIdModel
 DEFAULT_CITY = "Dresden"
 DEFAULT_COUNTRY = "Germany"
 
+
 class Address(IntegerIdModel):
     street = Column(String(), nullable=False)
     number = Column(String(), nullable=False)
-    addition = Column(String())
+    addition = Column(String(), nullable=False, server_default="")
     # Sometimes, zipcodes can contain things like dashes, so rather take String().
     # we could probably impose some format by a check but that would be over engineering
     zip_code = Column(String(), nullable=False)
     city = Column(String(), nullable=False, server_default=DEFAULT_CITY)
-    state = Column(String(), nullable=True)
+    state = Column(String(), nullable=False, server_default="")
     country = Column(String(), nullable=False, server_default=DEFAULT_COUNTRY)
 
     __table_args__ = (
