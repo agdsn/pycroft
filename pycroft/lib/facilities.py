@@ -60,14 +60,16 @@ def get_overcrowded_rooms(building_id=None):
 
 
 @with_transaction
-def create_room(building, level, number, processor, inhabitable=True):
+def create_room(building, level, number, processor, address, inhabitable=True):
+    """Create a new room in a given building location"""
     if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
         raise RoomAlreadyExistsException()
 
     room = Room(number=number,
                 level=level,
                 inhabitable=inhabitable,
-                building=building)
+                building=building,
+                address=address)
 
     log_room_event("Room created.", processor, room)
 
