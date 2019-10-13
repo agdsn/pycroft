@@ -605,14 +605,16 @@ def create():
             # We only have to check if building is present, as the presence
             # of the other fields depends on building
             if form.building.data is not None:
-                _, success = web_execute(lib.user.move_in,
-                                         None,
+                _, success = web_execute(
+                    lib.user.move_in,
+                    None,
                     user=new_user,
                     building_id=form.building.data.id, level=form.level.data,
                     room_number=form.room_number.data,
                     mac=form.mac.data,
                     processor=current_user,
-                    host_annex=form.annex.data
+                    host_annex=form.annex.data,
+                    begin_membership=False,
                 )
 
             if success:
