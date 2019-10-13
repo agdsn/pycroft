@@ -330,14 +330,19 @@ class FrontendDataTestBase(testing.TestCase):
         return _all.User.q.filter_by(login=self.login).one().id
 
 
-class FrontendWithAdminTestBase(FrontendDataTestBase, FactoryDataTestBase):
+class AdminMixin(FactoryDataTestBase):
     def create_factories(self):
+        super().create_factories()
         self.login = 'hans-der-nette-admin'
         self.password = 'This is 1 strong testpassword!!'
         self.admin = UserFactory(login=self.login, password=self.password)
         admin_group = AdminPropertyGroupFactory()
         MembershipFactory.create(user=self.admin, group=admin_group)
         self.config = ConfigFactory()
+
+
+class FrontendWithAdminTestBase(AdminMixin, FrontendDataTestBase):
+    pass
 
 
 class InvalidateHadesLogsMixin(testing.TestCase):
