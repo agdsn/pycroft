@@ -4,9 +4,16 @@ web.blueprints.user.log
 This module contains functions that provide certain types of logs for
 a user.
 """
-from hades_logs import hades_logs
+from sqlalchemy import select
+from sqlalchemy.orm import Query
+
+from hades_logs import hades_logs, HadesLogs
 from hades_logs.exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from pycroft.model import session
+from pycroft.model.facilities import Room
+from pycroft.model.host import SwitchPort
+from pycroft.model.port import PatchPort
+from pycroft.model.user import User
 
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
     format_user_not_connected, format_hades_error, format_hades_timeout
@@ -37,19 +44,26 @@ def get_user_hades_logs(user):
 
     :param User user: the user whose logs to display
 
-    :returns: an iterator over duples (interface, logentry).
+    :returns: an iterator over duples (interface, log_entry).
     :rtype: Iterator[SwitchPort, RadiusLogEntry]
     """
     # Accessing the `hades_logs` proxy early ensures the exception is
     # raised even if there's no SwitchPort
+
     do_fetch = hades_logs.fetch_logs
-    for host in user.hosts:
-        for patch_port in host.room.connected_patch_ports:
-            port = patch_port.switch_port
-            nasportid = port.name
-            nasipaddress = str(port.switch.management_ip)
-            for logentry in do_fetch(nasipaddress, nasportid):
-                yield port, logentry
+    q: Query = session.session.query(SwitchPort)
+    ports = (
+        q
+        .join(PatchPort)
+        .join(PatchPort.room)
+        .join(User)
+        .filter(User.id == user.id)
+        .distinct()
+     )
+    for port in ports:
+        for log_entry in do_fetch(str(port.switch.management_ip), port.name):
+            yield port, log_entry
+
 
 def is_user_connected(user):
     try:

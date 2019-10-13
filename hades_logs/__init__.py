@@ -99,7 +99,7 @@ class HadesLogs:
         full_task_name = '{}.{}'.format(self.celery.main, name)
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
-    def fetch_logs(self, nasipaddress, nasportid, limit=100, reduced=True):
+    def fetch_logs(self, nasipaddress: str, nasportid: str, limit=100, reduced=True):
         """Fetch the auth logs of the given port
 
         :param ipaddr nasipaddress: The IP address of the NAS
@@ -148,4 +148,5 @@ def _get_extension():
     except KeyError:
         raise HadesConfigError("No HadesLogs instance registered to current Flask app")
 
-hades_logs = LocalProxy(_get_extension)
+hades_logs: HadesLogs = LocalProxy(_get_extension)
+
