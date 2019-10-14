@@ -12,7 +12,7 @@ import pycroft
 
 # revision identifiers, used by Alembic.
 revision = 'ce8c8cebcbf4'
-down_revision = '38fa5154b920'
+down_revision = '5b6f5a33e426'
 branch_labels = None
 depends_on = None
 
