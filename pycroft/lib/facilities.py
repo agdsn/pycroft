@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Dict, List
 
 from sqlalchemy import func, and_, distinct
 from sqlalchemy.orm import aliased, contains_eager, joinedload
@@ -15,11 +16,10 @@ class RoomAlreadyExistsException(Exception):
     pass
 
 
-def get_overcrowded_rooms(building_id=None):
+def get_overcrowded_rooms(building_id=None) -> Dict[int, List[User]]:
     """
     :param building_id: Limit to rooms of the building.
     Returns a dict of overcrowded rooms with their inhabitants
-    :return: dict
     """
 
     oc_rooms_filter = []
