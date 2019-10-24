@@ -11,7 +11,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import StyleSheet1, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, Spacer
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import HRFlowable, PageBreak
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.rl_config import defaultPageSize
 from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
@@ -41,8 +41,8 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     # Anlegen des PDF Dokuments, Seitengröße DIN A4 Hochformat)
     buf = BytesIO()
     pdf = SimpleDocTemplate(buf, pagesize=A4,
-                            rightMargin=2 * cm,
-                            leftMargin=2 * cm,
+                            rightMargin=1.5 * cm,
+                            leftMargin=1.5 * cm,
                             topMargin=0.5 * cm,
                             bottomMargin=0.5 * cm)
     style = getStyleSheet()
@@ -84,39 +84,40 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
                   ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
               ])
     story.append(t)
-    ######################
 
     story.append(HRFlowable(width="100%",
                             thickness=1,
                             color=black,
                             spaceBefore=0.0 * cm,
-                            spaceAfter=0.8 * cm))
+                            spaceAfter=0.5 * cm))
 
-    story.append(
-        Paragraph('Welcome as a member of the AG DSN, {}!'
+    welcome = Paragraph('''Welcome as a member of the AG DSN, {}!
+We are proud to announce that your network access has been activated. If you encounter any problems, drop us a mail or visit us during our office hours. You can find contact information below on this page.'''
                   .format(user.name),
-                  style['BodyText']))
+                  style['BodyText'])
+
+    return_notice = Paragraph(
+        '''<font size="9pt">Nicht nachsenden!</font>''',
+        style['Normal'])
+    sender = Paragraph(
+        '''<font size="9pt">AG DSN • BuS • Wundtstraße 5 • 01217 Dresden</font>''',
+        style['Normal'])
+    address = f"{user.name}\n{user.address.postal()}"
+    data = [
+        [None, None],
+        [return_notice, None],
+        [sender, None],
+        [address, welcome]
+    ]
+    addressTable = Table(data, colWidths=[9 * cm, pdf.width - 9*cm],
+                   rowHeights=[1*cm, 0.3*cm, 0.8*cm, 3.5 * cm], style=[
+                  ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+              ])
+    story.append(addressTable)
 
     story.append(
-        Paragraph('We are proud to announce that your network access has been '
-                  'activated. If you encounter any problems, drop us a mail or '
-                  'visit us during our office hours. You can find contact '
-                  'information below on this page.',
-                  style['BodyText']))
-
-    story.append(
-        Paragraph(
-            'Please make sure to pay your membership contribution in time.'
-            ' You can find further details on the bottom of this sheet.',
-            style['Bold']))
-
-    story.append(Paragraph('Wishing you all the best,', style['BodyText']))
-    story.append(Paragraph('Your AG DSN', style['BodyText']))
-    story.append(HRFlowable(width="100%",
-                            thickness=3,
-                            color=black,
-                            spaceBefore=0.4 * cm,
-                            spaceAfter=0.4 * cm))
+        HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.4 * cm,
+                   spaceAfter=0.6 * cm))
 
     macs = []
     for user_host in user.hosts:
@@ -136,7 +137,7 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
               style=[
                   ('FONTNAME', (1, 2), (1, 2), 'Courier'),
               ],
-              colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2,)
+              colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2, )
 
     story.append(t)
     story.append(
@@ -172,16 +173,16 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
 
     story.append(
         Paragraph('''<b>Interested in our work?</b>
-            In the podcast MultiCast you can hear about the latest developments and
-            our day-to-day work in the students network: https://podcast.agdsn.de/''', \
+                In the podcast MultiCast you can hear about the latest developments and
+                our day-to-day work in the students network: https://podcast.agdsn.de/''', \
                   style['JustifyText']))
 
     story.append(Paragraph('''<b>Join us:</b>\nThe student network was created and is run by students like yourself. If you are interested in our work don’t 
-    hesitate to visit us at our office. There are many ways of contribution to our cause without the need of being a 
-    computer science engineer. Just to mention some possible contributions: Administration and finances, network
-    maintenance, software development and many more. Besides, you can add some extra extracurricular 
-    activity to your CV and have the opportunity to see and work with usually hidden technology. We would be 
-    happy to welcome you with us. Be our guest at our office hours.''',
+        hesitate to visit us at our office. There are many ways of contribution to our cause without the need of being a 
+        computer science engineer. Just to mention some possible contributions: Administration and finances, network
+        maintenance, software development and many more. Besides, you can add some extra extracurricular 
+        activity to your CV and have the opportunity to see and work with usually hidden technology. We would be 
+        happy to welcome you with us. Be our guest at our office hours.''',
                            style['JustifyText']))
 
     story.append(
@@ -191,9 +192,9 @@ def generate_user_sheet(user, user_id, plain_password, generation_purpose=''):
     # Payment details
     contribution = 500  # monthly membership contribution in EUR
     story.append(Paragraph('''<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {0:1.2f}€ to our bank account.
-    Paying cash is not possible. The contribution is due at the end of each month. You can pay as much in advance as you want, we will simply subtract
-    the monthly contribution at the end of each month. We recommend that you pay at the beginning of each semester in advance, meaning you transact
-    six monthly contributions at once.'''.format(
+        Paying cash is not possible. The contribution is due at the end of each month. You can pay as much in advance as you want, we will simply subtract
+        the monthly contribution at the end of each month. We recommend that you pay at the beginning of each semester in advance, meaning you transact
+        six monthly contributions at once.'''.format(
         (contribution / 100)), style['JustifyText']))
 
     bank = BankAccount.q.filter_by(account_number='3120219540').first()

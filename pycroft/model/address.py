@@ -36,3 +36,12 @@ class Address(IntegerIdModel):
         if self.country and self.country != DEFAULT_COUNTRY:
             items.append(f"{self.country}")
         return ", ".join(items)
+
+    def postal(self):
+        items: List[str] = [f"{self.street} {self.number}\n{self.addition}" if self.addition
+                            else f"{self.street} {self.number}", f"{self.zip_code} {self.city}"]
+        if self.state:
+            items.append(f"{self.state}")
+        if self.country and self.country != DEFAULT_COUNTRY:
+            items.append(f"{self.country}")
+        return "\n".join(items)
