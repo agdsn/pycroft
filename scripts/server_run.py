@@ -19,7 +19,7 @@ from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
 from scripts.schema import AlembicHelper, SchemaStrategist
 from web import make_app
-from .connection import try_create_connection, get_connection_string
+from scripts.connection import try_create_connection, get_connection_string
 
 
 def server_run(args):
