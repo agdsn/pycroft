@@ -110,7 +110,7 @@ We are proud to announce that your network access has been activated. If you enc
         [address, welcome]
     ]
     addressTable = Table(data, colWidths=[9 * cm, pdf.width - 9*cm],
-                   rowHeights=[1*cm, 0.3*cm, 0.8*cm, 3.5 * cm], style=[
+                   rowHeights=[1*cm, 0.3*cm, 0.8*cm, 3 * cm], style=[
                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
               ])
     story.append(addressTable)
