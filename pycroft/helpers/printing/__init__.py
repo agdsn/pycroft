@@ -100,7 +100,7 @@ We are proud to announce that your network access has been activated. If you enc
         '''<font size="9pt">Nicht nachsenden!</font>''',
         style['Normal'])
     sender = Paragraph(
-        '''<font size="9pt">AG DSN • BuS • Wundtstraße 5 • 01217 Dresden</font>''',
+        '''<font size="9pt">AG DSN • Support • Wundtstraße 5 • 01217 Dresden</font>''',
         style['Normal'])
     address = f"{user.name}\n{user.address:long}"
     data = [
