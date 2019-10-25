@@ -29,19 +29,18 @@ class Address(IntegerIdModel):
     )
 
     def __str__(self):
-        items: List[str] = [f"{self.street} {self.number} / {self.addition}" if self.addition
-                            else f"{self.street} {self.number}", f"{self.zip_code} {self.city}"]
-        if self.state:
-            items.append(f"{self.state}")
-        if self.country and self.country != DEFAULT_COUNTRY:
-            items.append(f"{self.country}")
-        return ", ".join(items)
+        return f"{self:short}"
 
-    def postal(self):
-        items: List[str] = [f"{self.street} {self.number}\n{self.addition}" if self.addition
-                            else f"{self.street} {self.number}", f"{self.zip_code} {self.city}"]
+    def __format__(self, spec="short"):
+        """Return the address items separated by the format specifier"""
+        city = self.city.upper() if self.country and self.country != DEFAULT_COUNTRY else self.city
+        items: List[str] = [f"{self.street} {self.number} // {self.addition}" if self.addition
+                            else f"{self.street} {self.number}", f"{self.zip_code} {city}"]
         if self.state:
-            items.append(f"{self.state}")
+            state = self.state.upper() if self.country and self.country != DEFAULT_COUNTRY else self.state
+            items.append(f"{state}")
         if self.country and self.country != DEFAULT_COUNTRY:
-            items.append(f"{self.country}")
-        return "\n".join(items)
+            items.append(f"{self.country.upper()}")
+
+        glue = ", " if spec == "short" else "\n" if spec == "long" else spec
+        return glue.join(items)

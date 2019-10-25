@@ -102,7 +102,7 @@ We are proud to announce that your network access has been activated. If you enc
     sender = Paragraph(
         '''<font size="9pt">AG DSN • BuS • Wundtstraße 5 • 01217 Dresden</font>''',
         style['Normal'])
-    address = f"{user.name}\n{user.address.postal()}"
+    address = f"{user.name}\n{user.address:long}"
     data = [
         [None, None],
         [return_notice, None],
