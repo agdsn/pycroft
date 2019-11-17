@@ -44,7 +44,7 @@ setup(
         'jsonschema',
         'ipaddr >= 2.2.0',
         'passlib',
-        'psycopg2 >= 2.7.0',
+        'psycopg2-binary >= 2.7.0',
         'reportlab',
         'simplejson',
         'wrapt',
