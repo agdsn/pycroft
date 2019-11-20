@@ -155,3 +155,4 @@ def delete_switch(switch, processor):
     log_room_event("Deleted switch {}.".format(switch.host.name), processor, switch.host.room)
 
     session.delete(switch)
+    session.delete(switch.host)
