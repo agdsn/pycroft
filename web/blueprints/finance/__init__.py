@@ -46,7 +46,8 @@ from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
     MembershipFeeCreateForm, MembershipFeeEditForm, FeeApplyForm,
-    HandlePaymentsInDefaultForm, FixMT940Form, BankAccountActivityReadForm)
+    HandlePaymentsInDefaultForm, FixMT940Form, BankAccountActivityReadForm,
+    BankAccountActivitiesImportManualForm)
 from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
     BankAccountActivityTable, TransactionTable, ImportErrorTable, \
@@ -234,6 +235,31 @@ def bank_accounts_import():
     return render_template('finance/bank_accounts_import.html', form=form,
                            transactions=transactions,
                            old_transactions=old_transactions)
+
+@bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
+@access.require('finance_change')
+def bank_accounts_import_manual():
+    form = BankAccountActivitiesImportManualForm()
+    form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
+
+    if form.validate_on_submit():
+        bank_account = BankAccount.q.get(form.account.data)
+
+        if form.file.data:
+            mt940 = form.file.data.read().decode()
+
+            mt940_entry = MT940Error(mt940=mt940, exception="manual import",
+                                   author=current_user,
+                                   bank_account=bank_account)
+            session.add(mt940_entry)
+
+            session.commit()
+            flash(u'Datensatz wurde importiert. Buchungen können jetzt importiert werden.')
+            return redirect(url_for(".fix_import_error", error_id=mt940_entry.id))
+        else:
+            flash(u"Kein MT940 hochgeladen.", 'error')
+
+    return render_template('finance/bank_accounts_import_manual.html', form=form)
 
 @bp.route('/bank-accounts/importerrors', methods=['GET', 'POST'])
 @access.require('finance_change')

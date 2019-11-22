@@ -116,6 +116,11 @@ class BankAccountActivitiesImportForm(Form):
     do_import = BooleanField(u"Import durchführen", default=False)
 
 
+class BankAccountActivitiesImportManualForm(Form):
+    account = SelectField(u"Bankkonto", coerce=int)
+    file = FileField(u'MT940 Datei')
+
+
 class AccountCreateForm(Form):
     name = TextField(u"Name", validators=[DataRequired()])
     type = SelectField(
