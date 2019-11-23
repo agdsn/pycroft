@@ -240,10 +240,10 @@ def bank_accounts_import():
 @access.require('finance_change')
 def bank_accounts_import_manual():
     form = BankAccountActivitiesImportManualForm()
-    form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
+    form.account.query = BankAccount.q.all()
 
     if form.validate_on_submit():
-        bank_account = BankAccount.q.get(form.account.data)
+        bank_account = form.account.data
 
         if form.file.data:
             mt940 = form.file.data.read().decode()

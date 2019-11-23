@@ -11,7 +11,7 @@ from wtforms.validators import DataRequired, NumberRange, Optional, \
 from web.form.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
     FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField,
-    BooleanField, SelectMultipleField, QuerySelectMultipleField, TextAreaField)
+    BooleanField, SelectMultipleField, QuerySelectMultipleField, TextAreaField, QuerySelectField)
 from web.form.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
 from pycroft.model.finance import BankAccount
@@ -117,8 +117,8 @@ class BankAccountActivitiesImportForm(Form):
 
 
 class BankAccountActivitiesImportManualForm(Form):
-    account = SelectField(u"Bankkonto", coerce=int)
-    file = FileField(u'MT940 Datei')
+    account = QuerySelectField('Bankkonto', get_label="name")
+    file = FileField('MT940 Datei')
 
 
 class AccountCreateForm(Form):
