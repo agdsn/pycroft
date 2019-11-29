@@ -856,3 +856,14 @@ def estimate_balance(user, end_date):
         months_to_pay -= 1
 
     return (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
+
+
+def get_pid_csv():
+    users_pid_membership, users_membership_terminated = get_users_with_payment_in_default()
+
+    f = StringIO()
+
+    writer = csv.writer(f)
+    writer.writerows(("{}@wh2.tu-dresden.de".format(u.login), u.name, str(-u.account.balance)) for u in users_pid_membership)
+
+    return f.getvalue()

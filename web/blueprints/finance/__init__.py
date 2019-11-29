@@ -17,7 +17,7 @@ from io import StringIO
 
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
-    url_for)
+    url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from sqlalchemy import func, or_, and_, Text, cast
@@ -32,7 +32,7 @@ from pycroft.lib import finance
 from pycroft.lib.finance import get_typed_splits, \
     end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
-    match_activities, take_actions_for_payment_in_default_users
+    match_activities, take_actions_for_payment_in_default_users, get_pid_csv
 from pycroft.lib.user import encode_type2_user_id
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
@@ -1161,3 +1161,15 @@ def json_accounts_user_search():
         for account_id, user_id, user_login, user_name in results
     ]
     return jsonify(accounts=accounts)
+
+
+@bp.route('/membership_fees/payments_in_default_csv')
+@access.require('finance_change')
+def csv_payments_in_default():
+    csv_str = get_pid_csv()
+
+    output = make_response(csv_str)
+    output.headers["Content-Disposition"] = "attachment; filename=payments_in_default.csv"
+    output.headers["Content-type"] = "text/csv"
+
+    return output
