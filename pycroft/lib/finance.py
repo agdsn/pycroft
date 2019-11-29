@@ -864,6 +864,7 @@ def get_pid_csv():
     f = StringIO()
 
     writer = csv.writer(f)
+    writer.writerow(('email', 'name', 'balance'))
     writer.writerows(("{}@wh2.tu-dresden.de".format(u.login), u.name, str(-u.account.balance)) for u in users_pid_membership)
 
     return f.getvalue()
