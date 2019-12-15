@@ -23,6 +23,11 @@ from scripts.connection import try_create_connection, get_connection_string
 
 
 def server_run(args):
+    if args.echo:
+        import logging, sys
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+        logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
     app = make_app(args.debug)
     wait_for_db: bool = args.wait_for_database
 
@@ -78,6 +83,8 @@ def main():
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
                         help="run in debug mode")
+    parser.add_argument("--echo", action="store_true",
+                        help="log sqlalchemy actions")
     parser.add_argument("--profile", action="store_true",
                         help="profile and log sql queries")
     parser.add_argument("--exposed", action="store_const", const='0.0.0.0',
