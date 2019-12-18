@@ -125,20 +125,20 @@ def bank_accounts_activities_json():
         }]
 
     activity_q = (BankAccountActivity.q
-            .options(joinedload(BankAccountActivity.bank_account))
-            .filter(BankAccountActivity.transaction_id == None))
+                  .options(joinedload(BankAccountActivity.bank_account))
+                  .filter(BankAccountActivity.transaction_id == None))
 
     return jsonify(items=[{
-            'bank_account': activity.bank_account.name,
-            'name': activity.other_name,
-            'valid_on': date_format(activity.valid_on),
-            'imported_at': date_format(activity.imported_at),
-            'reference': activity.reference,
-            'amount': activity.amount,
-            'iban': activity.other_account_number,
-            'actions': actions(activity.id),
-            'row_positive': activity.amount >= 0,
-        } for activity in activity_q.all()])
+        'bank_account': activity.bank_account.name,
+        'name': activity.other_name,
+        'valid_on': date_format(activity.valid_on),
+        'imported_at': date_format(activity.imported_at),
+        'reference': activity.reference,
+        'amount': activity.amount,
+        'iban': activity.other_account_number,
+        'actions': actions(activity.id),
+        'row_positive': activity.amount >= 0,
+    } for activity in activity_q.all()])
 
 
 @bp.route('/bank-accounts/import/errors/json')
@@ -162,10 +162,10 @@ def bank_accounts_errors_json():
 @nav.navigate(u"Bankkontobewegungen importieren")
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
-    form.account.choices = [ (acc.id, acc.name) for acc in BankAccount.q.all()]
-    (transactions, old_transactions) = ([], [])
+    form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
+    (transactions, old_transactions, doubtful_transactions) = ([], [], [])
     if request.method != 'POST':
-        del(form.start_date)
+        del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
 
     if form.validate_on_submit():
@@ -174,7 +174,7 @@ def bank_accounts_import():
         # set start_date, end_date
         if form.start_date.data is None:
             form.start_date.data = map_or_default(bank_account.last_imported_at,
-                                        datetime.date, date(2018, 1, 1))
+                                                  datetime.date, date(2018, 1, 1))
         if form.end_date.data is None:
             form.end_date.data = date.today()
 
@@ -214,10 +214,10 @@ def bank_accounts_import():
             process = False
 
         if process:
-            (transactions, old_transactions) = finance.process_transactions(
+            (transactions, old_transactions, doubtful_transactions) = finance.process_transactions(
                 bank_account, statement)
         else:
-            (transactions, old_transactions) = ([], [])
+            (transactions, old_transactions, doubtful_transactions) = ([], [], [])
 
         if process and form.do_import.data is True:
             # save errors to database
@@ -233,10 +233,11 @@ def bank_accounts_import():
             return redirect(url_for(".accounts_show",
                                     account_id=bank_account.account_id))
 
-
     return render_template('finance/bank_accounts_import.html', form=form,
                            transactions=transactions,
-                           old_transactions=old_transactions)
+                           old_transactions=old_transactions,
+                           doubtful_transactions=doubtful_transactions)
+
 
 @bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
 @access.require('finance_change')
@@ -251,8 +252,8 @@ def bank_accounts_import_manual():
             mt940 = form.file.data.read().decode()
 
             mt940_entry = MT940Error(mt940=mt940, exception="manual import",
-                                   author=current_user,
-                                   bank_account=bank_account)
+                                     author=current_user,
+                                     bank_account=bank_account)
             session.add(mt940_entry)
 
             session.commit()
@@ -263,6 +264,7 @@ def bank_accounts_import_manual():
 
     return render_template('finance/bank_accounts_import_manual.html', form=form)
 
+
 @bp.route('/bank-accounts/importerrors', methods=['GET', 'POST'])
 @access.require('finance_change')
 def bank_accounts_import_errors():
@@ -272,12 +274,13 @@ def bank_accounts_import_errors():
                            page_title="Fehlerhafter Bankimport",
                            error_table=error_table)
 
+
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
 def fix_import_error(error_id):
     error = MT940Error.q.get(error_id)
     form = FixMT940Form()
-    (transactions, old_transactions) = ([], [])
+    (transactions, old_transactions, doubtful_transactions) = ([], [], [])
     new_exception = None
 
     if request.method != 'POST':
@@ -292,7 +295,7 @@ def fix_import_error(error_id):
 
         if new_exception is None:
             flash('MT940 ist jetzt valide.', 'success')
-            (transactions, old_transactions) = finance.process_transactions(
+            (transactions, old_transactions, doubtful_transactions) = finance.process_transactions(
                 error.bank_account, statement)
 
             if form.do_import.data is True:
@@ -306,9 +309,10 @@ def fix_import_error(error_id):
             flash('Es existieren weiterhin Fehler.', 'error')
 
     return render_template('finance/bank_accounts_error_fix.html',
-                    error_id=error_id, exception=error.exception,
-                    new_exception=new_exception, form=form,
-                    transactions=transactions, old_transactions=old_transactions)
+                           error_id=error_id, exception=error.exception,
+                           new_exception=new_exception, form=form,
+                           transactions=transactions, old_transactions=old_transactions,
+                           doubtful_transactions=doubtful_transactions)
 
 
 @bp.route('/bank-accounts/create', methods=['GET', 'POST'])
@@ -365,7 +369,8 @@ def bank_account_activities_edit(activity_id):
 
     else:
         form = BankAccountActivityEditForm(
-            obj=activity, bank_account_name=activity.bank_account.name, description=activity.reference)
+            obj=activity, bank_account_name=activity.bank_account.name,
+            description=activity.reference)
 
         if form.validate_on_submit():
             debit_account = Account.q.filter(
@@ -406,7 +411,7 @@ def bank_account_activities_edit(activity_id):
 @access.require('finance_change')
 def bank_account_activities_match():
     FieldList = [
-        #("Field-Name",BooleanField('Text')),
+        # ("Field-Name",BooleanField('Text')),
     ]
 
     matching = match_activities()
@@ -436,7 +441,6 @@ def bank_account_activities_match():
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')
 def bank_account_activities_do_match():
-
     # Generate form again
     matching = match_activities()
 
@@ -482,6 +486,7 @@ def bank_account_activities_do_match():
 
     return render_template('finance/bank_accounts_matched.html', matched=matched)
 
+
 @bp.route('/accounts/')
 @bp.route('/accounts/list')
 @nav.navigate(u"Konten")
@@ -490,7 +495,7 @@ def accounts_list():
         t[0]: list(t[1])
         for t in groupby(
             Account.q.filter_by(legacy=False).outerjoin(User).filter(User.id == None)
-            .order_by(Account.type).all(),
+                .order_by(Account.type).all(),
             lambda a: a.type
         )
     }
@@ -532,8 +537,8 @@ def balance_json(account_id):
                             sum_exp.label("balance")
                             ])
                     .select_from(
-                        Join(Split, Transaction,
-                             Split.transaction_id==Transaction.id))
+        Join(Split, Transaction,
+             Split.transaction_id == Transaction.id))
                     .where(Split.account_id == account_id))
 
     res = session.execute(json_agg_core(balance_json)).first()[0]
@@ -581,17 +586,18 @@ def accounts_show(account_id):
 def _format_row(split, style, prefix=None):
     row = {
         'posted_at': datetime_filter(split.transaction.posted_at),
-        #'posted_by': (split.transaction.author.id, split.transaction.author.name),
+        # 'posted_by': (split.transaction.author.id, split.transaction.author.name),
         'valid_on': date_filter(split.transaction.valid_on),
         'description': {
             'href': url_for(
                 "finance.transactions_show",
                 transaction_id=split.transaction_id
-                ),
+            ),
             'title': localized(split.transaction.description)
         },
         'amount': {
-            'value': money_filter(-split.amount) if (style == "inverted") else money_filter(split.amount),
+            'value': money_filter(-split.amount) if (style == "inverted") else money_filter(
+                split.amount),
             'is_positive': (split.amount > 0) ^ (style == "inverted"),
         },
         'row_positive': (split.amount > 0) ^ (style == "inverted"),
@@ -640,8 +646,8 @@ def accounts_show_json(account_id):
         rows_neg = rows_from_query(build_this_query(positive=False))
 
         _keys = ['posted_at', 'valid_on', 'description', 'amount']
-        _filler = {key: None for key in chain(('soll_'+key for key in _keys),
-                                              ('haben_'+key for key in _keys))}
+        _filler = {key: None for key in chain(('soll_' + key for key in _keys),
+                                              ('haben_' + key for key in _keys))}
 
         rows = [
             _prefixed_merge(split_pos, 'soll', split_neg, 'haben')
@@ -683,14 +689,14 @@ def transactions_show_json(transaction_id):
     return jsonify(
         description=transaction.description,
         items=[
-        {
-            'account': {
-                'href': url_for(".accounts_show", account_id=split.account_id),
-                'title': localized(split.account.name, {int: {'insert_commas': False}})
-            },
-            'amount': money_filter(split.amount),
-            'row_positive': split.amount > 0
-        } for split in transaction.splits])
+            {
+                'account': {
+                    'href': url_for(".accounts_show", account_id=split.account_id),
+                    'title': localized(split.account.name, {int: {'insert_commas': False}})
+                },
+                'amount': money_filter(split.amount),
+                'row_positive': split.amount > 0
+            } for split in transaction.splits])
 
 
 @bp.route('/transactions/unconfirmed')
@@ -706,7 +712,8 @@ def transactions_unconfirmed():
 
 @bp.route('/transactions/unconfirmed/json')
 def transactions_unconfirmed_json():
-    transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).limit(100).all()
+    transactions = Transaction.q.filter_by(confirmed=False).order_by(Transaction.posted_at).limit(
+        100).all()
 
     items = []
 
@@ -726,7 +733,7 @@ def transactions_unconfirmed_json():
                     'href': url_for("user.user_show",
                                     user_id=user_account.user.id),
                     'title': "{} ({})".format(user_account.user.name,
-                                                encode_type2_user_id(user_account.user.id)),
+                                              encode_type2_user_id(user_account.user.id)),
                     'new_tab': True
                 } if user_account else None,
                 'room': user_account.user.room.short_name if user_account and user_account.user.room else None,
@@ -787,7 +794,8 @@ def transaction_delete(transaction_id):
         abort(404)
 
     if transaction.confirmed:
-        flash(u"Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.", 'error')
+        flash(u"Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.",
+              'error')
         abort(400)
 
     form = FlaskForm()
@@ -812,6 +820,7 @@ def transaction_delete(transaction_id):
                            form_args=form_args,
                            form=form)
 
+
 @access.require('finance_show')
 @bp.route('/transactions')
 def transactions_all():
@@ -829,9 +838,9 @@ def transactions_all_json():
     if filter == "nonuser":
         non_user_transactions = (select([Split.transaction_id])
                                  .select_from(
-                                    Join(Split, User,
-                                         (User.account_id == Split.account_id),
-                                         isouter=True))
+            Join(Split, User,
+                 (User.account_id == Split.account_id),
+                 isouter=True))
                                  .group_by(Split.transaction_id)
                                  .having(func.bool_and(User.id == None))
                                  .alias("nut"))
@@ -913,7 +922,6 @@ def accounts_create():
 
     return render_template('finance/accounts_create.html', form=form,
                            page_title=u"Konto erstellen")
-
 
 
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
@@ -1142,7 +1150,7 @@ def json_accounts_system():
             "account_type": account.type
         } for account in Account.q.outerjoin(User).filter(
             and_(User.account == None,
-            Account.type != "USER_ASSET")
+                 Account.type != "USER_ASSET")
         ).all()])
 
 

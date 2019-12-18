@@ -1,42 +1,64 @@
 {% if transactions %}
-    Folgende Bewegungen werden importiert:
-    <table class="table table-striped">
+  Folgende Bewegungen werden importiert:
+  <table class="table table-striped">
     <tr>
-        <th>Betrag</th>
-        <th>Verwendungszweck</th>
-        <th>IBAN</th>
-        <th>Name</th>
-        <th>Datum</th>
+      <th>Betrag</th>
+      <th>Verwendungszweck</th>
+      <th>IBAN</th>
+      <th>Name</th>
+      <th>Datum</th>
     </tr>
     {% for transaction in transactions %}
-        <tr>
-            <td>{{ transaction.amount }}</td>
-            <td>{{ transaction.reference }}</td>
-            <td>{{ transaction.other_account_number }}</td>
-            <td>{{ transaction.other_name }}</td>
-            <td>{{ transaction.valid_on }}</td>
-        </tr>
+      <tr>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.reference }}</td>
+        <td>{{ transaction.other_account_number }}</td>
+        <td>{{ transaction.other_name }}</td>
+        <td>{{ transaction.valid_on }}</td>
+      </tr>
     {% endfor %}
-    </table>
+  </table>
 {% endif %}
 {% if old_transactions %}
-    Folgende Bewegungen wurden bereits früher importiert:
-    <table class="table table-striped">
+  Folgende Bewegungen wurden bereits früher importiert:
+  <table class="table table-striped">
     <tr>
-        <th>Betrag</th>
-        <th>Verwendungszweck</th>
-        <th>IBAN</th>
-        <th>Name</th>
-        <th>Datum</th>
+      <th>Betrag</th>
+      <th>Verwendungszweck</th>
+      <th>IBAN</th>
+      <th>Name</th>
+      <th>Datum</th>
     </tr>
     {% for transaction in old_transactions %}
-        <tr>
-            <td>{{ transaction.amount }}</td>
-            <td>{{ transaction.reference }}</td>
-            <td>{{ transaction.other_account_number }}</td>
-            <td>{{ transaction.other_name }}</td>
-            <td>{{ transaction.valid_on }}</td>
-        </tr>
+      <tr>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.reference }}</td>
+        <td>{{ transaction.other_account_number }}</td>
+        <td>{{ transaction.other_name }}</td>
+        <td>{{ transaction.valid_on }}</td>
+      </tr>
     {% endfor %}
-    </table>
+  </table>
+{% endif %}
+{% if doubtful_transactions %}
+  Folgende Bewegungen werden nicht importiert, da die Verwendungszwecke noch von
+  der Bank geändert werden können:
+  <table class="table table-striped">
+    <tr>
+      <th>Betrag</th>
+      <th>Verwendungszweck</th>
+      <th>IBAN</th>
+      <th>Name</th>
+      <th>Datum</th>
+    </tr>
+    {% for transaction in doubtful_transactions %}
+      <tr>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.reference }}</td>
+        <td>{{ transaction.other_account_number }}</td>
+        <td>{{ transaction.other_name }}</td>
+        <td>{{ transaction.valid_on }}</td>
+      </tr>
+    {% endfor %}
+  </table>
 {% endif %}

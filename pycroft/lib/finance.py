@@ -642,6 +642,7 @@ def take_actions_for_payment_in_default_users(users_pid_membership,
 def process_transactions(bank_account, statement):
     transactions = []  # new transactions which would be imported
     old_transactions = []  # transactions which are already imported
+    doubtful_transactions = [] # transactions which may be changed by the bank because they are to new
 
     for transaction in statement:
         iban = transaction.data.get('applicant_iban', '')
@@ -666,7 +667,9 @@ def process_transactions(bank_account, statement):
             posted_on=transaction.data['entry_date'],
             valid_on=transaction.data['date'],
         )
-        if BankAccountActivity.q.filter(and_(
+        if new_activity.posted_on == date.today():
+            doubtful_transactions.append(new_activity)
+        elif BankAccountActivity.q.filter(and_(
                 BankAccountActivity.bank_account_id ==
                 new_activity.bank_account_id,
                 BankAccountActivity.amount == new_activity.amount,
@@ -683,7 +686,7 @@ def process_transactions(bank_account, statement):
         else:
             old_transactions.append(new_activity)
 
-    return (transactions, old_transactions)
+    return (transactions, old_transactions, doubtful_transactions)
 
 
 def build_transactions_query(account, search=None, sort_by='valid_on', sort_order=None,
