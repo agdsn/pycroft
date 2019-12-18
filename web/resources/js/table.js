@@ -12,6 +12,10 @@ export var linkTemplate = _.template(
     '<a target="<%- target %>"  href="<%- href %>"><%- title %></a>',
 );
 
+export var emptyLinkTemplate = _.template(
+    '<a target="<%- target %>"  href="<%- href %>"><span class="text-muted"><%- empty_title %></span></a>',
+);
+
 export var glyphLinkTemplate = _.template(
     '<a target="<%- target %>"  href="<%- href %>"><%- title %> <span class="glyphicon <%- glyphicon %>"></span></a>',
 );
@@ -79,8 +83,10 @@ export function linkFormatter(value, row, index) {
 
     if(value["glyphicon"]){
         return glyphLinkTemplate({'href': value['href'], 'title': value['title'], 'target': target, 'glyphicon': value['glyphicon']});
-    }else{
+    } else if (value['empty'] !== true) {
         return linkTemplate({'href': value['href'], 'title': value['title'], 'target': target});
+    } else {
+        return emptyLinkTemplate({'href': value['href'], 'empty_title': value['title'], 'target': target});
     }
 
 }

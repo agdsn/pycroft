@@ -592,8 +592,10 @@ def _format_row(split, style, prefix=None):
             'href': url_for(
                 "finance.transactions_show",
                 transaction_id=split.transaction_id
-            ),
-            'title': localized(split.transaction.description)
+                ),
+            'title': localized(split.transaction.description) if split.transaction.description
+                     else 'Keine Beschreibung',
+            **({'empty': True} if not split.transaction.description else {}),
         },
         'amount': {
             'value': money_filter(-split.amount) if (style == "inverted") else money_filter(
