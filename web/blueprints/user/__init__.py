@@ -622,8 +622,7 @@ def create():
                 session.session.commit()
 
                 flask_session['user_sheet'] = sheet.id
-                flash(Markup(u'Benutzer angelegt. <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'
-                             .format(url_for('.user_sheet'))), 'success')
+                flash(Markup(u'Benutzer angelegt.'), 'success')
 
                 return redirect(url_for('.user_show', user_id=new_user.id))
 
