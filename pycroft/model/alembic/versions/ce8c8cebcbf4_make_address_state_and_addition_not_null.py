@@ -18,13 +18,15 @@ depends_on = None
 
 
 def upgrade():
+    op.execute("update address set addition = '' where addition is NULL;")
+    op.execute("update address set state = '' where state is NULL;")
     op.alter_column('address', 'addition',
                     existing_type=sa.VARCHAR(),
-                    nullable=False,
+                    nullable=True,
                     server_default="")
     op.alter_column('address', 'state',
                     existing_type=sa.VARCHAR(),
-                    nullable=False,
+                    nullable=True,
                     server_default="")
 
 
