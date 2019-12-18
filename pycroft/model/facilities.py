@@ -20,6 +20,7 @@ class Building(IntegerIdModel):
     number = Column(String(), nullable=False)
     short_name = Column(String(), unique=True, nullable=False)
     street = Column(String(), nullable=False)
+    wifi_available = Column(Boolean(), nullable=False, default=False)
 
     __table_args__ = (UniqueConstraint("street", "number", name="building_address"),)
 
