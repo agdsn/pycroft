@@ -209,6 +209,12 @@ export function dateFormatter(value, row, index) {
 }
 dateFormatter.attributes = { sortName: 'timestamp' };
 
+export function euroFormatter(value, row, index){
+    value = value.toFixed(2).replace('.', ',')
+
+    return `${value} €`;
+}
+
 export function financeRowFormatter(row, index) {
     if (row && row['row_positive']) {
         return {classes: 'success'};
@@ -421,6 +427,7 @@ export function hostDetailFormatter(index, row, element){
     return html;
 }
 
+
 /*
     detailFormatter for the task table, displaying the used parameters
 */
@@ -461,4 +468,17 @@ export function taskRowFormatter(row){
     return {
        classes: cssclass
     }
+}
+
+/*
+    detailFormatter for the unmatched bank_account_activities table
+ */
+
+export function bankAccountActivitiesDetailFormatter(index, row, element){
+    let html = `
+        <b>IBAN:</b> ${row.iban}<br/>
+        <b>Importiert am:</b> ${row.imported_at.formatted}
+    `;
+
+    return html;
 }

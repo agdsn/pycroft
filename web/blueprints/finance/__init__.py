@@ -105,7 +105,7 @@ def bank_accounts_list_json():
                 'title': 'Konto anzeigen',
                 'btn_class': 'btn-primary'
             },
-            'balance': money_filter(bank_account.account.balance),
+            'balance': money_filter(bank_account.balance),
             'last_imported_at': '{}'.format(
                 map_or_default(bank_account.last_imported_at, datetime.date,
                                'nie'))
@@ -134,9 +134,10 @@ def bank_accounts_activities_json():
             'valid_on': date_format(activity.valid_on),
             'imported_at': date_format(activity.imported_at),
             'reference': activity.reference,
-            'amount': money_filter(activity.amount),
+            'amount': activity.amount,
             'iban': activity.other_account_number,
             'actions': actions(activity.id),
+            'row_positive': activity.amount >= 0,
         } for activity in activity_q.all()])
 
 
@@ -154,6 +155,7 @@ def bank_accounts_errors_json():
             'imported_at': '{}'.format(
                 map_or_default(error.imported_at, datetime.date, 'nie'))
         } for error in MT940Error.q.all()])
+
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
@@ -429,6 +431,7 @@ def bank_account_activities_match():
 
     return render_template('finance/bank_accounts_match.html', form=form,
                            activities=matched_activities)
+
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')

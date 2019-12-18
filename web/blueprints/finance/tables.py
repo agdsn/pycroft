@@ -138,9 +138,9 @@ class BankAccountTable(BootstrapTable):
     blz = Column("Bankleitzahl")
     iban = Column("IBAN")
     bic = Column("SWIFT-BIC")
-    kto = BtnColumn("Konto")
     balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")
+    kto = BtnColumn("Konto")
 
     def __init__(self, *a, create_account=False, **kw):
         self.create_account = create_account
@@ -157,14 +157,23 @@ class BankAccountTable(BootstrapTable):
 
 class BankAccountActivityTable(BootstrapTable):
     """A table for displaying bank account activities """
-    bank_account = Column("Bankkonto")
-    name = Column("Name")
-    valid_on = DateColumn("Gültig am")
-    imported_at = DateColumn("Importiert am")
+    bank_account = Column("Bankkonto", width=1)
+    name = Column("Name", width=2)
+    valid_on = DateColumn("Gültig am", width=1)
+    imported_at = DateColumn("Importiert am", hide_if=lambda: True)
     reference = Column("Verwendungszweck")
-    iban = Column("IBAN")
-    amount = Column("Betrag")
-    actions = MultiBtnColumn("Aktionen")
+    iban = Column("IBAN", hide_if=lambda: True)
+    amount = Column("Betrag", width=1, formatter="table.euroFormatter")
+    actions = MultiBtnColumn("Aktionen", width=1)
+
+    def __init__(self, *a, **kw):
+        table_args = kw.pop('table_args', {})
+        table_args.setdefault('data-detail-view', "true")
+        table_args.setdefault('data-row-style', "table.financeRowFormatter")
+        table_args.setdefault('data-detail-formatter', "table.bankAccountActivitiesDetailFormatter")
+        kw['table_args'] = table_args
+
+        super().__init__(*a, **kw)
 
     class Meta:
         table_args = {

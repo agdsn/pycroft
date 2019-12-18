@@ -299,6 +299,18 @@ class BankAccount(IntegerIdModel):
     )
 
     @hybrid_property
+    def balance(self):
+        return sum(baa.amount for baa in self.activities)
+
+    @balance.expression
+    def balance(cls):
+        return select(
+            [func.coalesce(func.sum(BankAccountActivity.amount), 0)]
+        ).where(
+            BankAccountActivity.bank_account_id == cls.id
+        ).label("balance")
+
+    @hybrid_property
     def last_imported_at(self):
         return object_session(self).execute(
                     select([func.max(BankAccountActivity.imported_at)])
