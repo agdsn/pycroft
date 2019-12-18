@@ -23,7 +23,6 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
-from pycroft.helpers.printing import generate_wifi_user_sheet as generate_wifi_pdf
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
@@ -125,22 +124,37 @@ def setup_ipv4_networking(host):
                     subnet=subnet)
         session.session.add(new_ip)
 
-
-def store_user_sheet(new_user, plain_password, timeout=15, generation_purpose='', wifi=False):
+def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=None,
+                     generation_purpose='', plain_wifi_password=''):
     """Generate a user sheet and store it in the WebStorage.
 
     Returns the generated `WebStorage` object holding the pdf.
 
-    :param User new_user:
-    :param str plain_password:
-    :param str generation_purpose:
+    :param bool new_user: generate page with user details
+    :param bool wifi: generate page with wifi credantials
     :param int timeout: The lifetime in minutes
-    :param bool wifi: Generate a user sheet for wifi access instead of the generic one
+
+    Necessary in every case:
+    :param User user: A pycroft user
+
+    Only necessary if new_user=True:
+    :param str plain_user_password:
+
+    Only necessary if wifi=True:
+    :param str plain_wifi_password: The password for wifi
+
+    Optional:
+    :param str generation_purpose:
+
+
     """
-    if wifi is True:
-        pdf_data = b64encode(generate_wifi_user_sheet(new_user, plain_password)).decode('ascii')
-    else:
-        pdf_data = b64encode(generate_user_sheet(new_user, plain_password, generation_purpose)).decode('ascii')
+
+    pdf_data = b64encode(generate_user_sheet(new_user, wifi, user,
+                                             plain_user_password=plain_user_password,
+                                             generation_purpose=generation_purpose,
+                                             plain_wifi_password=plain_wifi_password)
+                         ).decode('ascii')
+
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=session.utcnow() + timedelta(minutes=timeout))
     session.session.add(pdf_storage)
@@ -708,8 +722,10 @@ def status_query():
     ).join(Account)
 
 
-def generate_user_sheet(user, plain_password, generation_purpose=''):
-    """Create a „new member“ datasheet for the given user
+def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, generation_purpose='',
+                        plain_wifi_password=''):
+    """Create a new datasheet for the given user.
+    This usersheet can hold information about a user or about the wifi credentials of a user.
 
     This is a wrapper for
     :py:func:`pycroft.helpers.printing.generate_user_sheet` equipping
@@ -719,27 +735,22 @@ def generate_user_sheet(user, plain_password, generation_purpose=''):
     depends on `encode_type2_user_id` and is required by
     `(store|get)_user_sheet`, both in this module.
 
+    :param bool new_user: Generate a page for a new created user
+    :param bool wifi: Generate a page with the wifi credantials
+
+    Necessary in every case:
     :param User user: A pycroft user
-    :param str plain_password: The password
+
+    Only necessary if new_user=True:
+    :param str plain_user_password: The password
+
+    Only necessary if wifi=True:
     :param generation_purpose: Optional purpose why this usersheet was printed
     """
-    return generate_pdf(user, encode_type2_user_id(user.id), plain_password, generation_purpose)
-
-def generate_wifi_user_sheet(user, plain_password):
-    """Create a „wifi“ datasheet for the given user
-
-    This is a wrapper for
-    :py:func:`pycroft.helpers.printing.generate_user_sheet` equipping
-    it with the correct user id.
-
-    This function cannot be exported to a `wrappers` module because it
-    depends on `encode_type2_user_id` and is required by
-    `(store|get)_user_sheet`, both in this module.
-
-    :param User user: A pycroft user
-    :param str plain_password: The password
-    """
-    return generate_wifi_pdf(user, encode_type2_user_id(user.id), plain_password)
+    return generate_pdf(new_user, wifi, user, user_id=encode_type2_user_id(user.id),
+                        plain_user_password=plain_user_password,
+                        generation_purpose=generation_purpose,
+                        plain_wifi_password=plain_wifi_password)
 
 def membership_ending_task(user):
     """
