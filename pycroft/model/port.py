@@ -15,7 +15,7 @@ manager = ddl.DDLManager()
 class PatchPort(IntegerIdModel):
     """A patch panel port that may or not be connected to a switch"""
     id = Column(Integer, primary_key=True)
-    name = Column(String(8), nullable=False)
+    name = Column(String, nullable=False)
 
     switch_port_id = Column(Integer, ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True)
     switch_port = relationship(SwitchPort,
