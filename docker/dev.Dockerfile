@@ -10,8 +10,11 @@ COPY etc/apt /etc/apt
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
+# the curl is necessary because yarn devs are fancy enough to use a CI
+# but the don't care for updating their keys. I'm raging.
 RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
     && apt-key add /etc/apt/keys/yarnpkg.gpg.key \
+    && ( curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - ) \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
