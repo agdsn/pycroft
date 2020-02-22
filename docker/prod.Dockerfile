@@ -12,7 +12,7 @@ RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requiremen
 
 # Download JS/CSS dependencies
 COPY --chown=pycroft:pycroft package.json .
-RUN yarn install --network-concurrency 1
+RUN yarn install --mutex network --network-concurrency 1
 
 # Build Pycroft wheel
 COPY --chown=pycroft:pycroft . .
