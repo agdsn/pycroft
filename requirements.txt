@@ -19,6 +19,7 @@ ipaddr~=2.2.0
 jsonschema~=2.6.0
 passlib~=1.7.1
 psycopg2~=2.7.0 --no-binary psycopg2
+psycopg2-binary~=2.7.0
 wrapt~=1.10.11
 # only needed for ldap caching
 ldap3~=2.5.1
