@@ -1,1 +1,1 @@
-CREATE DATABASE "legacy";
+/* CREATE DATABASE "legacy"; */
