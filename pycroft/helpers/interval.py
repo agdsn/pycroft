@@ -6,6 +6,13 @@ from itertools import tee, chain, filterfalse
 import operator
 from functools import reduce
 
+from sqlalchemy import Column, func, CheckConstraint, or_, literal, and_, null
+from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.orm import validates, object_session
+
+from pycroft.model import session
+from pycroft.model.base import IntegerIdModel
+from pycroft.model.types import DateTimeTz
 
 __all__ = (
     'Interval', 'closed', 'closedopen', 'openclosed', 'open', 'single', 'empty',
@@ -739,3 +746,74 @@ def _intersect(left, right):
                 b = next(right)
     except StopIteration:
         return
+
+
+class IntervalModel:
+    begins_at = Column(DateTimeTz, nullable=True, index=True, server_default=func.current_timestamp())
+    ends_at = Column(DateTimeTz, nullable=True, index=True)
+
+    __table_args = (
+        CheckConstraint("begins_at IS NULL OR "
+                        "ends_at IS NULL OR "
+                        "begins_at <= moved_out")
+    )
+
+    @hybrid_method
+    def active(self, when=None):
+        """
+        Tests if overlaps with a given interval. If no interval is
+        given, it tests if active right now.
+        :param Interval when: interval to test
+        :rtype: bool
+        """
+        if when is None:
+            now = object_session(self).query(func.current_timestamp()).scalar()
+            when = single(now)
+
+        return when.overlaps(closed(self.begins_at, self.ends_at))
+
+    @active.expression
+    def active(cls, when=None):
+        """
+        Tests if overlaps with a given interval. If no interval is
+        given, it tests if active right now.
+        :param Interval when:
+        :return:
+        """
+        if when is None:
+            now = session.utcnow()
+            when = single(now)
+
+        return and_(
+            or_(cls.begins_at == null(), literal(when.end) == null(),
+                cls.begins_at <= literal(when.end)),
+            or_(literal(when.begin) == null(), cls.ends_at == null(),
+                literal(when.begin) <= cls.ends_at)
+        ).label("active")
+
+    @validates('ends_at')
+    def validate_ends_at(self, _, value):
+        if value is None:
+            return value
+        if self.begins_at is not None:
+            assert value >= self.begins_at,\
+                "begins_at must be before ends_at"
+        return value
+
+    @validates('begins_at')
+    def validate_begins_at(self, _, value):
+        if value is None:
+            return value
+        if self.ends_at is not None:
+            assert value <= self.ends_at,\
+                "begins_at must be before ends_at"
+        return value
+
+    def disable(self, ends_at=None):
+        if ends_at is None:
+            ends_at = object_session(self).query(func.current_timestamp()).scalar()
+
+        if self.begins_at is not None and self.begins_at > ends_at:
+            self.ends_at = self.begins_at
+        else:
+            self.ends_at = ends_at
