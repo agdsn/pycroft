@@ -302,6 +302,9 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
                                               'begin_membership': begin_membership},
                                   processor=processor)
     else:
+        if user.room is not None:
+            raise ValueError("user is already living in a room.")
+
         room = get_room(building_id, level, room_number)
 
         if birthdate:
