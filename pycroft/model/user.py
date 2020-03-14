@@ -25,14 +25,17 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
-
 from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
 from pycroft.helpers.user import hash_password, verify_password
-from pycroft.model import session, functions
+from pycroft.model import session, functions, ddl
 from pycroft.model.address import Address
 from pycroft.model.base import ModelBase, IntegerIdModel
+from pycroft.helpers.interval import IntervalModel
+from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz
+
+manager = ddl.DDLManager()
 
 
 class IllegalLoginError(ValueError):
@@ -371,10 +374,7 @@ class Group(IntegerIdModel):
         )
 
 
-class Membership(IntegerIdModel):
-    begins_at = Column(DateTimeTz, nullable=True, index=True, server_default=func.current_timestamp())
-    ends_at = Column(DateTimeTz, nullable=True, index=True)
-
+class Membership(IntegerIdModel, IntervalModel):
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
                       nullable=False, index=True)
@@ -387,72 +387,6 @@ class Membership(IntegerIdModel):
                      nullable=False, index=True)
     user = relationship(User, backref=backref("memberships",
                                               cascade="all, delete-orphan"))
-
-    __table_args = (
-        CheckConstraint("begins_at IS NULL OR "
-                        "ends_at IS NULL OR "
-                        "begins_at <= ends_at")
-    )
-
-    @hybrid_method
-    def active(self, when=None):
-        """
-        Tests if the membership overlaps with a given interval. If no interval
-        is given, it tests if the membership is active right now.
-        :param Interval when: interval in which the membership
-        :rtype: bool
-        """
-        if when is None:
-            now = object_session(self).query(func.current_timestamp()).scalar()
-            when = single(now)
-
-        return when.overlaps(closed(self.begins_at, self.ends_at))
-
-    @active.expression
-    def active(cls, when=None):
-        """
-        Tests if memberships overlap with a given interval. If no interval is
-        given, it tests if the memberships are active right now.
-        :param Interval when:
-        :return:
-        """
-        if when is None:
-            now = session.utcnow()
-            when = single(now)
-
-        return and_(
-            or_(cls.begins_at == null(), literal(when.end) == null(),
-                cls.begins_at <= literal(when.end)),
-            or_(literal(when.begin) == null(), cls.ends_at == null(),
-                literal(when.begin) <= cls.ends_at)
-        ).label("active")
-
-    @validates('ends_at')
-    def validate_ends_at(self, _, value):
-        if value is None:
-            return value
-        if self.begins_at is not None:
-            assert value >= self.begins_at,\
-                "begins_at must be before ends_at"
-        return value
-
-    @validates('begins_at')
-    def validate_begins_at(self, _, value):
-        if value is None:
-            return value
-        if self.ends_at is not None:
-            assert value <= self.ends_at,\
-                "begins_at must be before ends_at"
-        return value
-
-    def disable(self, ends_at=None):
-        if ends_at is None:
-            ends_at = object_session(self).query(func.current_timestamp()).scalar()
-
-        if self.begins_at is not None and self.begins_at > ends_at:
-            self.ends_at = self.begins_at
-        else:
-            self.ends_at = ends_at
 
 
 class PropertyGroup(Group):
@@ -494,3 +428,59 @@ class UnixAccount(IntegerIdModel):
     gid = Column(Integer, nullable=False, default=100)
     login_shell = Column(String, nullable=False, default="/bin/bash")
     home_directory = Column(String, nullable=False, unique=True)
+
+
+class RoomHistoryEntry(IntegerIdModel, IntervalModel):
+    room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
+                     nullable=False, index=True)
+    room = relationship(Room, backref=backref(name="room_history_entries",
+                                              order_by='RoomHistoryEntry.id'))
+
+    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
+                     nullable=False, index=True)
+    user = relationship(User, backref=backref("room_history_entries",
+                                              order_by='RoomHistoryEntry.id'))
+
+    __table_args = (
+        CheckConstraint("ends_at IS NULL OR "
+                        "ends_at <= NOW()")
+    )
+
+
+manager.add_function(
+    User.__table__,
+    ddl.Function(
+        'user_room_change_update_history', [],
+        'trigger',
+        """
+        BEGIN
+            IF old.room_id IS DISTINCT FROM new.room_id THEN
+                IF old IS NOT NULL AND old.room_id IS NOT NULL THEN
+                    /* User was living in a room before, history entry must be ended */
+                    UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
+                        WHERE user_id = new.id AND ends_at IS NULL;
+                END IF;
+
+                IF new.room_id IS NOT NULL THEN
+                    /* User moved to a new room. history entry must be created */
+                    INSERT INTO "room_history_entry" (user_id, room_id) VALUES(new.id, new.room_id);
+                END IF;
+            END IF;
+            RETURN NULL;
+        END;
+        """,
+        volatility='volatile', strict=True, language='plpgsql'
+    )
+)
+
+manager.add_trigger(
+    User.__table__,
+    ddl.Trigger(
+        'user_room_change_update_history_trigger',
+        User.__table__,
+        ('UPDATE', 'INSERT'),
+        'user_room_change_update_history()'
+    )
+)
+
+manager.register()
