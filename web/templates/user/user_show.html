@@ -10,82 +10,59 @@
 {% import "macros/resources.html" as resources %}
 
 {% block content %}
-    <div class="subnav">
-        <ul class="nav nav-pills">
-            <li><a href="#master-data">Stammdaten</a></li>
-            <li><a href="#hosts">Hosts</a></li>
-            <li><a href="#tasks">Aufgaben</a></li>
-            <li><a href="#traffic">Traffic</a></li>
-            <li><a href="#logs">Logs</a></li>
-            {% if current_user is privileged_for('finance_show') %}
-                <li><a href="#finance">Konto</a></li>
-            {% endif %}
-            <li><a href="#groups">Gruppen</a></li>
-            <li class="pull-right"><a data-toggle="scroll-top" href="#"><span class="glyphicon glyphicon-chevron-up"></span></a></li>
-        </ul>
+  {# Stammdaten #}
+  <section id="master-data">
+    <div class="body">
+      {% include "user/_user_show_basedata.html" with context %}
     </div>
+  </section>
 
-    {# Stammdaten #}
-    <section id="master-data">
-        <div class="body">
-            {% include "user/_user_show_basedata.html" with context %}
-        </div>
-    </section>
+  <br/>
 
-    <div class="row">
-        <div class="col-md-6">
-            {# Hosts #}
-            <section id="hosts">
-                <div class="page-header"><h2>Hosts & Interfaces</h2></div>
-                <div id="tbl_devices">
-                    {% include "user/_user_show_hosts.html" with context %}
-                </div>
-            </section>
+  <div class="row">
+    <div class="col-xs-12">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#hosts" data-toggle="tab">
+          Hosts & Interfaces
+          {% if count['hosts'] %}&nbsp;<span class="badge">{{ count['hosts'] }}</span>{% endif %}
+        </a></li>
+        <li><a href="#tasks" data-toggle="tab">
+          Aufgaben
+          {% if count['tasks'] %}&nbsp;<span style="background-color: #d9534f;" class="badge">{{ count['tasks'] }}</span>{% endif %}
+        </a></li>
+        <li><a href="#traffic" data-toggle="tab">Traffic</a></li>
+        <li><a href="#logs" data-toggle="tab">Logs</a></li>
+        <li><a href="#finances" data-toggle="tab">Finanzen</a></li>
+        <li><a href="#groups" data-toggle="tab">Gruppen</a></li>
+        <li><a href="#room_history" data-toggle="tab">
+          Wohnorte
+          {% if count['rooms'] %}&nbsp;<span class="badge">{{ count['rooms'] }}</span>{% endif %}
+        </a></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade in active" id="hosts">
+          {% include "user/_user_show_hosts.html" with context %}
         </div>
-        <div class="col-md-6">
-            <section id="tasks">
-                <div class="page-header"><h2>Aufgaben</h2></div>
-                <div id="tbl_tasks">
-                    {% include "user/_user_show_tasks.html" with context %}
-                </div>
-            </section>
+        <div class="tab-pane fade" id="tasks">
+          {% include "user/_user_show_tasks.html" with context %}
         </div>
+        <div class="tab-pane fade" id="traffic">
+          {% include "user/_user_show_traffic.html" with context %}
+        </div>
+        <div class="tab-pane fade" id="logs">
+          {% include "user/_user_show_logs.html" with context %}
+        </div>
+        <div class="tab-pane fade" id="finances">
+          {% include "user/_user_show_finance.html" with context %}
+        </div>
+        <div class="tab-pane fade" id="groups">
+          {% include "user/_user_show_groups.html" with context %}
+        </div>
+        <div class="tab-pane fade" id="room_history">
+          {% include "user/_user_show_room_history.html" with context %}
+        </div>
+      </div>
     </div>
-
-
-    {# Traffic #}
-    <section id="traffic">
-        <div class="page-header"><h2>Traffic</h2></div>
-        <div class="body">
-            {% include "user/_user_show_traffic.html" with context %}
-        </div>
-    </section>
-
-    {# Logs zum Nutzers #}
-    <section id="logs">
-        <div class="page-header"><h2>Logs</h2></div>
-        <div class="body">
-            {% include "user/_user_show_logs.html" with context %}
-        </div>
-    </section>
-
-    {# Konto des Nutzers #}
-    {% if current_user is privileged_for('finance_show') %}
-        <section id="finance">
-            <div class="page-header"><h2>Konto</h2></div>
-            <div class="body">
-                {% include "user/_user_show_finance.html" with context %}
-            </div>
-        </section>
-    {% endif %}
-
-    {# Gruppen des Nutzers #}
-    <section id="groups">
-        <div class="page-header"><h2>Gruppen</h2></div>
-        <div id="tbl_groups" class="body">
-            {% include "user/_user_show_groups.html" with context %}
-        </div>
-    </section>
+  </div>
 {% endblock %}
-
-{% do resources.link_script_file('navigation.js' | require) %}

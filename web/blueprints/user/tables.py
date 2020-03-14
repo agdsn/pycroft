@@ -78,3 +78,8 @@ class TrafficTopTable(BootstrapTable):
     url = LinkColumn("Name")
     traffic_for_days = Column("Traffic", formatter='table.byteFormatterBinary')
 
+
+class RoomHistoryTable(BootstrapTable):
+    room = LinkColumn("Wohnort")
+    begins_at = DateColumn("Von")
+    ends_at = DateColumn("Bis")

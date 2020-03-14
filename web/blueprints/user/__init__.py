@@ -48,7 +48,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.host import validate_unique_mac
-from web.blueprints.helpers.table import datetime_format
+from web.blueprints.helpers.table import datetime_format, date_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
@@ -60,7 +60,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserResetPasswordForm, UserMoveInForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     SearchTable, TrafficTopTable)
+                     SearchTable, TrafficTopTable, RoomHistoryTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -352,8 +352,17 @@ def user_show(user_id):
         revoked_properties=sorted(
             p.property_name
             for p in set(user.current_properties_maybe_denied) -set(user.current_properties)
-        )
+        ),
+        room_history_table=RoomHistoryTable(
+            data_url=url_for(".room_history_json", user_id=user.id)
+        ),
+        count={
+            'tasks': len(user.tasks),
+            'rooms': len(user.room_history_entries),
+            'hosts': len(user.hosts),
+        }
     )
+
 
 @bp.route("/<int:user_id>/account")
 def user_account(user_id):
@@ -759,7 +768,6 @@ def edit_user(user_id):
         form.email.data = user.email
         form.birthdate.data = user.birthdate
 
-
     if form.validate_on_submit():
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
         edited_user = lib.user.edit_email(edited_user, form.email.data,
@@ -953,3 +961,16 @@ def move_in(user_id):
         form.begin_membership.data = True
 
     return render_template('user/user_move_in.html', form=form, user_id=user_id)
+
+
+@bp.route('<int:user_id>/json/room-history')
+def room_history_json(user_id):
+    user = get_user_or_404(user_id)
+
+    return jsonify(items=[{
+        'begins_at': date_format(history_entry.begins_at),
+        'ends_at': date_format(history_entry.ends_at),
+        'room': {
+            'href': url_for('facilities.room_show', room_id=history_entry.room_id),
+            'title': history_entry.room.short_name
+        }} for history_entry in user.room_history_entries])
