@@ -13,7 +13,7 @@ class VLAN(IntegerIdModel):
     name = Column(String(127), nullable=False)
     vid = Column(Integer, nullable=False)
 
-    __table_args = (
+    __table_args__ = (
         CheckConstraint(between(vid, 1, 4094)),
     )
     switch_ports = relationship('SwitchPort', secondary='switch_port_default_vlans',
