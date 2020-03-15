@@ -23,11 +23,14 @@ def upgrade():
     op.create_foreign_key('building_fee_account_id_fkey', 'building', 'account',
                           ['fee_account_id'], ['id'])
 
+    # Make beginning of a membership not nullable as it makes no sense
+    op.alter_column('membership', 'begins_at', nullable=False)
+
     op.create_table('room_history_entry',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('room_id', sa.Integer(), nullable=False),
-                    sa.Column('begins_at', DateTimeTz, nullable=True,
+                    sa.Column('begins_at', DateTimeTz, nullable=False,
                               server_default=sa.func.current_timestamp()),
                     sa.Column('ends_at', DateTimeTz, nullable=True),
 
