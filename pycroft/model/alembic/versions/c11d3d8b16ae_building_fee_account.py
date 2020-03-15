@@ -9,6 +9,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
+from pycroft.model.facilities import Building
 from pycroft.model.types import DateTimeTz
 from pycroft.model.user import User, RoomHistoryEntry
 
@@ -22,6 +23,10 @@ def upgrade():
     op.add_column('building', sa.Column('fee_account_id', sa.Integer(), nullable=True))
     op.create_foreign_key('building_fee_account_id_fkey', 'building', 'account',
                           ['fee_account_id'], ['id'])
+
+    op.execute(sa.update(Building).values(fee_account_id=19))
+
+    op.alter_column('building', 'fee_account_id', nullable=False)
 
     # Make beginning of a membership not nullable as it makes no sense
     op.alter_column('membership', 'begins_at', nullable=False)
