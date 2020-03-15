@@ -123,6 +123,7 @@ class UsersDueTable(BootstrapTable):
     user = LinkColumn("Name")
     valid_on = Column("Gültig am")
     description = Column("Beschreibung")
+    fee_account_id = LinkColumn("Beitragsonto")
     amount = Column("Betrag", formatter="table.coloredFormatter")
 
 
