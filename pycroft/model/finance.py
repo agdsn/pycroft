@@ -192,7 +192,7 @@ class Split(IntegerIdModel):
     transaction = relationship(Transaction,
                                backref=backref("splits",
                                                cascade="all, delete-orphan"))
-    __table_args = (
+    __table_args__ = (
         UniqueConstraint(transaction_id, account_id),
     )
 
@@ -343,7 +343,7 @@ class BankAccountActivity(IntegerIdModel):
                          backref=backref("bank_account_activity",
                                          uselist=False))
 
-    __table_args = (
+    __table_args__ = (
         ForeignKeyConstraint((transaction_id, account_id),
                              (Split.transaction_id, Split.account_id),
                              onupdate='CASCADE',

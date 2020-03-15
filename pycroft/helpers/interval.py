@@ -752,10 +752,9 @@ class IntervalModel:
     begins_at = Column(DateTimeTz, nullable=False, index=True, server_default=func.current_timestamp())
     ends_at = Column(DateTimeTz, nullable=True, index=True)
 
-    __table_args = (
-        CheckConstraint("begins_at IS NULL OR "
-                        "ends_at IS NULL OR "
-                        "begins_at <= moved_out")
+    __table_args__ = (
+        CheckConstraint("ends_at IS NULL OR "
+                        "begins_at <= ends_at"),
     )
 
     @hybrid_method
