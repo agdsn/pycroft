@@ -67,7 +67,10 @@ def upgrade():
 
                     IF new.room_id IS NOT NULL THEN
                         /* User moved to a new room. history entry must be created */
-                        INSERT INTO "room_history_entry" (user_id, room_id) VALUES(new.id, new.room_id);
+                        INSERT INTO "room_history_entry" (user_id, room_id, begins_at)
+                            /* We must add one second so that the user doesn't have two entries
+                               for the same timestamp */
+                            VALUES(new.id, new.room_id, CURRENT_TIMESTAMP + INTERVAL '1' second);
                     END IF;
                 END IF;
                 RETURN NULL;
