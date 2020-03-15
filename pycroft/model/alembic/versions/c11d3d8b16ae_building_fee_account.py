@@ -86,6 +86,48 @@ def upgrade():
         execute procedure user_room_change_update_history();
     ''')
 
+    # Constraint trigger to make sure that no overlapping room history entries exist
+
+    op.execute('''
+        create function room_history_entry_uniqueness() returns trigger
+            stable
+            strict
+            language plpgsql
+        as
+        $$
+        DECLARE
+          rhe_id integer;
+          count integer;
+        BEGIN
+            SELECT COUNT(*), MAX(rhe.id) INTO STRICT count, rhe_id FROM "room_history_entry" rhe
+              WHERE
+              (NEW.begins_at
+                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp)
+               OR COALESCE(new.ends_at, 'infinity'::timestamp)
+                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp))
+              AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
+
+            IF count > 0 THEN
+                RAISE EXCEPTION 'entry overlaps with entry %',
+                rhe_id
+                USING ERRCODE = 'integrity_constraint_violation';
+            END IF;
+
+            RETURN NULL;
+        END;
+        $$;
+    ''')
+
+    op.execute('''
+        create trigger room_history_entry_uniqueness_trigger
+        after insert or update
+        on room_history_entry
+        for each row
+        execute procedure room_history_entry_uniqueness();
+    ''')
+
+    # Insert room history entries for all users living in a dorm beginning with their registration
+
     op.execute(
         RoomHistoryEntry.__table__.insert().from_select(
             [RoomHistoryEntry.user_id, RoomHistoryEntry.room_id, RoomHistoryEntry.begins_at],
@@ -104,3 +146,4 @@ def downgrade():
     op.drop_constraint('membership_check', 'membership', type_='check')
 
     op.drop_table("room_history_entry")
+    op.execute('drop function if exists room_history_entry_uniqueness();')
