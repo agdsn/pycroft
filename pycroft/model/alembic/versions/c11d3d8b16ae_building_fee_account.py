@@ -45,11 +45,12 @@ def upgrade():
                     sa.Column('begins_at', DateTimeTz, nullable=False,
                               server_default=sa.func.current_timestamp()),
                     sa.Column('ends_at', DateTimeTz, nullable=True),
+                    sa.ForeignKeyConstraint(('user_id',), ['user.id'], ),
+                    sa.ForeignKeyConstraint(('room_id',), ['room.id'], ),
+                    sa.PrimaryKeyConstraint('id'),
+                    sa.CheckConstraint("ends_at IS NULL OR begins_at <= ends_at"), )
 
-                    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-                    sa.ForeignKeyConstraint(['room_id'], ['room.id'], ),
-                    sa.PrimaryKeyConstraint('id')
-                    )
+    # Trigger to keep room history up-to-date
 
     op.execute('''
             create or replace function user_room_change_update_history() returns trigger
