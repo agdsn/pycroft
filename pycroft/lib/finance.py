@@ -16,7 +16,7 @@ import re
 from typing import Optional
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
-    text
+    text, DateTime
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
@@ -27,6 +27,7 @@ from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
+from pycroft.model.facilities import Room, Building
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
@@ -35,7 +36,7 @@ from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction
 from pycroft.model.types import Money
-from pycroft.model.user import User, Membership, PropertyGroup
+from pycroft.model.user import User, Membership, RoomHistoryEntry
 
 
 def get_membership_fee_for_date(target_date):
@@ -202,20 +203,60 @@ def post_transactions_for_membership_fee(membership_fee, processor,
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
-    users = (select([User.id.label('user_id'), User.name.label('user_name'), User.account_id.label('account_id')])
+    rhe_end = RoomHistoryEntry.__table__.alias()
+    rhe_begin = RoomHistoryEntry.__table__.alias()
+
+    fee_accounts = Account.q.join(Building).distinct(Account.id).all()
+    fee_accounts_ids = set([acc.id for acc in fee_accounts] + [config.membership_fee_account_id])
+
+    users = (select([User.id.label('id'),
+                     User.name.label('name'),
+                     User.account_id.label('account_id'),
+                     # Select fee_account_id of the building or the default
+                     # fee_account_id if user was not living in a room at booking time
+                     func.coalesce(Building.fee_account_id,
+                                   literal(config.membership_fee_account_id)).label('fee_account_id')])
             .select_from(User.__table__
-                .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_begin - timedelta(1))
-                .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
-                .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_end - timedelta(1))
-                .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
+                 .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_begin - timedelta(1))
+                 .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
+                 .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_end - timedelta(1))
+                 .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
+                 # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
+                 .outerjoin(rhe_end,
+                            and_(rhe_end.c.user_id == User.id,
+                                 # Only join RoomHistoryEntry that is relevant
+                                 # on the fee interval end date
+                                 literal(membership_fee.ends_on)
+                                 .between(rhe_end.c.begins_at,
+                                          func.coalesce(rhe_end.c.ends_at,
+                                                        literal('infinity')
+                                                        .cast(DateTime)))
+                                 ))
+                 # Join RoomHistoryEntry, Room and Building of the user at membership_fee.begins_on
+                 # As second option if user moved out within the month
+                 .outerjoin(rhe_begin,
+                            and_(rhe_begin.c.user_id == User.id,
+                                 # Only join RoomHistoryEntry that is relevant
+                                 # on the fee interval begin date
+                                 literal(membership_fee.begins_on)
+                                 .between(rhe_begin.c.begins_at,
+                                          func.coalesce(rhe_begin.c.ends_at,
+                                                        literal('infinity')
+                                                        .cast(DateTime)))
+                                 ))
+                 # Join with Room from membership_fee.ends_on if available,
+                 # if not, join with the Room from membership_fee.begins_on
+                 .outerjoin(Room, Room.id == func.coalesce(rhe_begin.c.room_id, rhe_end.c.room_id))
+                 .outerjoin(Building, Building.id == Room.building_id)
             )
             .where(not_(exists(select([None]).select_from(split_user_account
                     .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
                     .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
                 )
                 .where(and_(split_user_account.c.account_id == User.account_id,
-                            Transaction.valid_on.between(literal(membership_fee.begins_on), literal(membership_fee.ends_on)),
-                            split_fee_account.c.account_id == literal(config.membership_fee_account_id),
+                            Transaction.valid_on.between(literal(membership_fee.begins_on),
+                                                         literal(membership_fee.ends_on)),
+                            split_fee_account.c.account_id.in_(fee_accounts_ids),
                             split_fee_account.c.id != split_user_account.c.id))
             )))
             .where(or_(and_(literal_column('properties_beginning.property_name') == 'membership_fee',
@@ -225,16 +266,29 @@ def post_transactions_for_membership_fee(membership_fee, processor,
             .distinct()
             .cte('membership_fee_users'))
 
-    affected_users_raw = session.session.execute(select([users.c.user_id, users.c.user_name])).fetchall()
+    affected_users_raw = session.session.execute(select([users.c.id,
+                                                         users.c.name,
+                                                         users.c.fee_account_id])).fetchall()
 
     if not simulate:
-        numbered_users = (select([users.c.user_id, users.c.account_id, func.row_number().over().label('index')])
+        numbered_users = (select([users.c.id,
+                                  users.c.fee_account_id.label('fee_account_id'),
+                                  users.c.account_id,
+                                  func.row_number().over().label('index')])
                           .select_from(users)
                           .cte("membership_fee_numbered_users"))
 
         transactions = (Transaction.__table__.insert()
-             .from_select([Transaction.description, Transaction.author_id, Transaction.posted_at, Transaction.valid_on, Transaction.confirmed],
-                          select([literal(description), literal(processor.id), func.current_timestamp(), literal(membership_fee.ends_on), True]).select_from(users))
+             .from_select([Transaction.description,
+                           Transaction.author_id,
+                           Transaction.posted_at,
+                           Transaction.valid_on,
+                           Transaction.confirmed],
+                          select([literal(description),
+                                  literal(processor.id),
+                                  func.current_timestamp(),
+                                  literal(membership_fee.ends_on),
+                                  True]).select_from(users))
              .returning(Transaction.id)
              .cte('membership_fee_transactions'))
 
@@ -244,27 +298,31 @@ def post_transactions_for_membership_fee(membership_fee, processor,
 
         split_insert_fee_account = (Split.__table__.insert()
             .from_select([Split.amount, Split.account_id, Split.transaction_id],
-                         select([literal(-membership_fee.regular_fee, type_=Money), literal(config.membership_fee_account_id),transactions.c.id])
-                         .select_from(transactions))
+                         select([literal(-membership_fee.regular_fee, type_=Money),
+                                 numbered_users.c.fee_account_id,
+                                 numbered_transactions.c.id])
+                         .select_from(numbered_users.join(numbered_transactions,
+                                                          numbered_transactions.c.index == numbered_users.c.index))
+                         )
             .returning(Split.id)
             .cte('membership_fee_split_fee_account'))
 
         split_insert_user = (Split.__table__.insert().from_select(
             [Split.amount, Split.account_id, Split.transaction_id],
-            select([literal(membership_fee.regular_fee, type_=Money), numbered_users.c.account_id, numbered_transactions.c.id])
+            select([literal(membership_fee.regular_fee, type_=Money),
+                    numbered_users.c.account_id,
+                    numbered_transactions.c.id])
             .select_from(numbered_users.join(numbered_transactions,
-                        numbered_transactions.c.index == numbered_users.c.index)))
+                                             numbered_transactions.c.index == numbered_users.c.index)))
             .returning(Split.id)
             .cte('membership_fee_split_user'))
 
-        # TODO: Unite the following two queries into one (the membership_fee_users is called twice currently.
         session.session.execute(select([]).select_from(split_insert_fee_account
-                                           .join(split_insert_user, split_insert_user.c.id == split_insert_fee_account.c.id)))
+                                                       .join(split_insert_user,
+                                                             split_insert_user.c.id ==
+                                                             split_insert_fee_account.c.id)))
 
-    affected_users = []
-
-    for user in affected_users_raw:
-        affected_users.insert(0, {'id': user[0], 'name': user[1]})
+    affected_users = [dict(user) for user in affected_users_raw]
 
     return affected_users
 
