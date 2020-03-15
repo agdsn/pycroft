@@ -31,6 +31,13 @@ def upgrade():
     # Make beginning of a membership not nullable as it makes no sense
     op.alter_column('membership', 'begins_at', nullable=False)
 
+    # Add missing check constraint for memberships
+    op.create_check_constraint(
+        "membership_check",
+        "membership",
+        "ends_at IS NULL OR begins_at <= ends_at",
+    )
+
     op.create_table('room_history_entry',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -89,4 +96,5 @@ def downgrade():
     op.execute('drop trigger if exists "user_room_change_update_history_trigger" on "user"')
     op.execute('drop function if exists user_room_change_update_history();')
 
+    op.drop_constraint('membership_check', 'membership', type_='check')
     op.drop_table("room_history_entry")
