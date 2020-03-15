@@ -441,11 +441,6 @@ class RoomHistoryEntry(IntegerIdModel, IntervalModel):
     user = relationship(User, backref=backref("room_history_entries",
                                               order_by='RoomHistoryEntry.id'))
 
-    __table_args = (
-        CheckConstraint("ends_at IS NULL OR "
-                        "ends_at <= NOW()")
-    )
-
 
 manager.add_function(
     User.__table__,
