@@ -344,6 +344,46 @@ class User(IntegerIdModel, UserMixin):
                    default=0)
 
 
+manager.add_function(
+    User.__table__,
+    ddl.Function(
+        'user_room_change_update_history', [],
+        'trigger',
+        """
+        BEGIN
+            IF old.room_id IS DISTINCT FROM new.room_id THEN
+                IF old IS NOT NULL AND old.room_id IS NOT NULL THEN
+                    /* User was living in a room before, history entry must be ended */
+                    UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
+                        WHERE user_id = new.id AND ends_at IS NULL;
+                END IF;
+
+                IF new.room_id IS NOT NULL THEN
+                    /* User moved to a new room. history entry must be created */
+                    INSERT INTO "room_history_entry" (user_id, room_id, begins_at)
+                        /* We must add one second so that the user doesn't have two entries
+                           for the same timestamp */
+                        VALUES(new.id, new.room_id, CURRENT_TIMESTAMP + INTERVAL '1' second);
+                END IF;
+            END IF;
+            RETURN NULL;
+        END;
+        """,
+        volatility='volatile', strict=True, language='plpgsql'
+    )
+)
+
+manager.add_trigger(
+    User.__table__,
+    ddl.Trigger(
+        'user_room_change_update_history_trigger',
+        User.__table__,
+        ('UPDATE', 'INSERT'),
+        'user_room_change_update_history()'
+    )
+)
+
+
 class Group(IntegerIdModel):
     name = Column(String(255), nullable=False)
     discriminator = Column('type', String(17), nullable=False)
@@ -445,37 +485,44 @@ class RoomHistoryEntry(IntegerIdModel, IntervalModel):
 manager.add_function(
     User.__table__,
     ddl.Function(
-        'user_room_change_update_history', [],
+        'room_history_entry_uniqueness', [],
         'trigger',
         """
+        DECLARE
+          rhe_id integer;
+          count integer;
         BEGIN
-            IF old.room_id IS DISTINCT FROM new.room_id THEN
-                IF old IS NOT NULL AND old.room_id IS NOT NULL THEN
-                    /* User was living in a room before, history entry must be ended */
-                    UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
-                        WHERE user_id = new.id AND ends_at IS NULL;
-                END IF;
+            SELECT COUNT(*), MAX(rhe.id) INTO STRICT count, rhe_id FROM "room_history_entry" rhe
+              WHERE
+              (NEW.begins_at
+                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp)
+               OR COALESCE(new.ends_at, 'infinity'::timestamp)
+                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp))
+              AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
 
-                IF new.room_id IS NOT NULL THEN
-                    /* User moved to a new room. history entry must be created */
-                    INSERT INTO "room_history_entry" (user_id, room_id) VALUES(new.id, new.room_id);
-                END IF;
+            IF count > 0 THEN
+                RAISE EXCEPTION 'entry overlaps with entry %%',
+                rhe_id
+                USING ERRCODE = 'integrity_constraint_violation';
             END IF;
+
             RETURN NULL;
         END;
         """,
-        volatility='volatile', strict=True, language='plpgsql'
+        volatility='stable', strict=True, language='plpgsql'
     )
 )
 
-manager.add_trigger(
-    User.__table__,
-    ddl.Trigger(
-        'user_room_change_update_history_trigger',
-        User.__table__,
+manager.add_constraint_trigger(
+    RoomHistoryEntry.__table__,
+    ddl.ConstraintTrigger(
+        'room_history_entry_uniqueness_trigger',
+        RoomHistoryEntry.__table__,
         ('UPDATE', 'INSERT'),
-        'user_room_change_update_history()'
+        'room_history_entry_uniqueness()',
+        deferrable=True, initially_deferred=True,
     )
 )
+
 
 manager.register()
