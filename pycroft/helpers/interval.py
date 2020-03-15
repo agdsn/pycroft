@@ -753,8 +753,7 @@ class IntervalModel:
     ends_at = Column(DateTimeTz, nullable=True, index=True)
 
     __table_args__ = (
-        CheckConstraint("ends_at IS NULL OR "
-                        "begins_at <= ends_at"),
+        CheckConstraint("ends_at IS NULL OR begins_at <= ends_at"),
     )
 
     @hybrid_method
