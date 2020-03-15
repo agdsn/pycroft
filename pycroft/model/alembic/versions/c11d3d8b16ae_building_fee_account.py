@@ -96,5 +96,7 @@ def downgrade():
     op.execute('drop trigger if exists "user_room_change_update_history_trigger" on "user"')
     op.execute('drop function if exists user_room_change_update_history();')
 
+    op.alter_column('membership', 'begins_at', nullable=True)
     op.drop_constraint('membership_check', 'membership', type_='check')
+
     op.drop_table("room_history_entry")
