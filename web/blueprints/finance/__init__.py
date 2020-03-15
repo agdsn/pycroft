@@ -972,7 +972,11 @@ def membership_fee_users_due_json(fee_id):
                  'href': url_for("user.user_show", user_id=user['id'])},
         'amount': fee_amount,
         'description': fee_description,
-        'valid_on': fee.ends_on
+        'valid_on': fee.ends_on,
+        'fee_account_id':{
+            'title': str(user['fee_account_id']),
+            'href': url_for(".accounts_show", account_id=user['fee_account_id'])
+        },
     } for user in affected_users])
 
 
