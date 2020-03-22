@@ -4,6 +4,7 @@
 from fixture import DataSet
 
 from .address import AddressData
+from .finance import AccountData
 
 
 class SiteData(DataSet):
@@ -17,12 +18,14 @@ class BuildingData(DataSet):
         street = "dummy"
         number = "01"
         short_name = "abc"
+        fee_account = AccountData.dummy_revenue
 
     class dummy_house2:
         site = SiteData.dummy
         street = "dummy"
         number = "02"
         short_name = "def"
+        fee_account = AccountData.dummy_revenue
 
 
 class RoomData(DataSet):
