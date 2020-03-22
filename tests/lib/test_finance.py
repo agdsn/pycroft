@@ -20,15 +20,17 @@ from pycroft.lib.finance import (
     cleanup_description,
     import_bank_account_activities_csv, simple_transaction,
     transferred_amount,
-    is_ordered, get_last_applied_membership_fee, estimate_balance)
+    is_ordered, get_last_applied_membership_fee, estimate_balance,
+    post_transactions_for_membership_fee)
 from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Transaction)
+    Account, BankAccount, BankAccountActivity, Transaction, Split)
 from pycroft.model.user import PropertyGroup, User, Membership
 from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory
+from tests.factories.user import UserWithMembershipFactory
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
     AccountData, BankAccountData, MembershipData, UserData)
@@ -174,137 +176,147 @@ class Test_010_BankAccount(FixtureDataTestBase):
                          clean_sepa_description)
 
 
-# TODO: Rework tests for new membership fee implementation
-'''
-class FeeTestBase(FixtureDataTestBase):
-    fee_account_name = None
+class MembershipFeeTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        ConfigFactory.create()
 
-    def setUp(self):
-        super(FeeTestBase, self).setUp()
-        self.user = User.q.first()
-        self.processor = self.user
-        self.fee_account = Account.q.filter_by(
-            name=self.fee_account_name
-        ).one()
+        self.processor = UserFactory.create()
 
-    def assertFeesPosted(self, user, expected_transactions):
-        actual_transactions = [
-            (t.description,
-             t.valid_on,
-             t.splits[0].amount if t.splits[0].account == user.account
-             else t.splits[1].amount)
-            for t in user.account.transactions]
-        self.assertEqual(expected_transactions, actual_transactions)
+        self.user_until_1st = UserFactory.create()
+        self.user_until_13th = UserFactory.create()
+        self.user_from_13th = UserFactory.create()
+        self.user_from_14th = UserFactory.create()
 
+        self.last_month_last = session.utcnow().replace(day=1) - timedelta(1)
+        self.last_month_last_date = self.last_month_last.date()
 
-class TestMembershipFee(FeeTestBase):
-    datasets = (AccountData, ConfigData, MembershipData, PropertyData,
-                PropertyGroupData, MembershipFeeData, UserData)
-    fee_account_name = ConfigData.config.membership_fee_account.name
-
-    payment_deadline = timedelta(14)
-    valid_on = MembershipFeeData.with_registration_fee.ends_on
-    description = u"Fee description"
-    amount = Decimal(20.00)
-
-    def setUp(self):
-        super(TestMembershipFee, self).setUp()
-        self.away_group = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.away.name
-        ).one()
-        self.bank_account = Account.q.filter_by(
-            name=AccountData.bank_account.name).one()
-
-    def expected_debt(self, fee):
-        description = memvership_fee_description.format(fee_name=fee.name).to_json()
-
-        valid_on = fee.ends_on
-
-        amount = fee.regular_fee
-
-        return description, valid_on, amount
-
-    def set_registered_at(self, when):
-        registered_at = datetime.combine(when, time.min)
-        self.user.registered_at = registered_at
-        for membership in self.user.memberships:
-            membership.begins_at = registered_at
-
-    def test_membership_fee(self):
-        self.assertEqual(self.fee.compute(self.user), [
-            self.expected_debt(MembershipFeeData.with_registration_fee),
-            self.expected_debt(MembershipFeeData.without_registration_fee)
-        ])
-
-    def test_property_absent(self):
-        self.user.memberships = []
-        self.assertEqual(self.fee.compute(self.user), [])
-
-    def test_grace_period(self):
-        fee = MembershipFeeData.with_registration_fee
-        self.set_registered_at(
-            fee.ends_on - fee.grace_period)
-        self.assertEqual(self.fee.compute(self.user), [self.expected_debt(
-            MembershipFeeData.without_registration_fee)])
-
-    def test_away(self):
-        fee = MembershipFeeData.without_registration_fee
-        begin = datetime.combine(
-            fee.begins_on, time.min
+        self.membership_fee_current = MembershipFeeFactory.create()
+        self.membership_fee_last = MembershipFeeFactory.create(
+            begins_on=self.last_month_last_date.replace(day=1),
+            ends_on=self.last_month_last_date
         )
-        end = datetime.combine(
-            fee.ends_on, time.min
+
+    def create_user_from1y(self):
+        reg_date = session.utcnow() - timedelta(weeks=52),
+
+        return UserWithMembershipFactory(
+            registered_at=reg_date,
+            membership__begins_at=reg_date,
+            membership__ends_at=None,
+            membership__group=config.member_group
         )
-        make_member_of(self.user, self.away_group, self.processor, closed(
-            begin, end - fee.reduced_fee_threshold))
-        self.assertEqual(self.fee.compute(self.user), [
-            self.expected_debt(MembershipFeeData.with_registration_fee),
-            self.expected_debt(fee, False)
-        ])
 
-    def test_payment_in_default_group(self):
-        handle_payments_in_default()
-        self.assertFalse(self.user.has_property('payment_in_default'))
-        membership_fee = MembershipFee(self.fee_account)
-        post_fees([self.user], [membership_fee], self.user)
-        self.assertFalse(self.user.has_property('payment_in_default'))
-        handle_payments_in_default()
-        self.assertTrue(self.user.has_property('payment_in_default'))
-        simple_transaction(
-            self.description, self.user.account, self.bank_account,
-            self.amount, self.user, self.valid_on)
-        end_payment_in_default_memberships()
-        handle_payments_in_default()
-        self.assertFalse(self.user.has_property('payment_in_default'))
+    def create_user_move_in_grace(self):
+        reg_date = self.last_month_last.replace(day=self.membership_fee_last.booking_end.days) + timedelta(1)
 
-    def test_payment_in_default_membership_end(self):
-        user = User.q.all()[1]
+        return UserWithMembershipFactory(
+            registered_at=reg_date,
+            membership__begins_at=reg_date,
+            membership__ends_at=None,
+            membership__group=config.member_group
+        )
 
-        self.assertFalse(user.has_property('payment_in_default'))
-        self.assertTrue(user.has_property('member'))
+    def create_user_move_in_no_grace(self):
+        reg_date = self.last_month_last.replace(day=self.membership_fee_last.booking_end.days)
 
-        membership_fee = MembershipFee(self.fee_account)
-        post_fees([user], [membership_fee], self.user)
+        return UserWithMembershipFactory(
+            registered_at=reg_date,
+            membership__begins_at=reg_date,
+            membership__ends_at=None,
+            membership__group=config.member_group
+        )
 
-        handle_payments_in_default()
+    def create_user_move_out_grace(self):
+        reg_date = session.utcnow() - timedelta(weeks=52)
 
-        self.assertTrue(user.has_property('payment_in_default'))
-        self.assertFalse(user.has_property('member'))
+        return UserWithMembershipFactory(
+            registered_at=reg_date,
+            membership__begins_at=reg_date,
+            membership__ends_at=self.last_month_last.replace(day=self.membership_fee_last.booking_begin.days) - timedelta(1),
+            membership__group=config.member_group
+        )
 
-    def test_grace(self):
-        user = User.q.all()[2]
+    def create_user_move_out_no_grace(self):
+        reg_date = session.utcnow() - timedelta(weeks=52)
 
-        membership_fee = MembershipFee(self.fee_account)
+        return UserWithMembershipFactory(
+            registered_at=reg_date,
+            membership__begins_at=reg_date,
+            membership__ends_at=self.last_month_last.replace(day=self.membership_fee_last.booking_begin.days),
+            membership__group=config.member_group
+        )
 
-        self.assertEqual(post_fees([user], [membership_fee], self.user), [])
+    def grace_check(self, user_grace, user_no_grace):
+        self.assertEqual(user_grace.account.balance, 0.00,
+                         "Initial user grace account balance not zero")
+        self.assertEqual(user_no_grace.account.balance, 0.00,
+                         "Initial user no grace account balance not zero")
 
-    def test_no_grace(self):
-        user = User.q.all()[3]
+        affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
 
-        membership_fee = MembershipFeeData.fee_three
+        session.session.refresh(user_grace.account)
+        session.session.refresh(user_no_grace.account)
 
-        self.assertEqual(len(post_fees([user], [membership_fee], self.user)), 1)
-'''
+        self.assertEqual(len(affected), 1, "Wrong affected user count")
+
+        self.assertEqual(user_grace.account.balance, 0.00, "User grace balance not zero")
+        self.assertEqual(user_no_grace.account.balance, self.membership_fee_last.regular_fee,
+                         "User no grace balance wrong")
+
+    def test_basic_from1y(self):
+        user1y = self.create_user_from1y()
+
+        self.assertEqual(user1y.account.balance, 0.00,
+                         "Initial user account balance not zero")
+
+        affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
+
+        session.session.refresh(user1y.account)
+
+        self.assertEqual(len(affected), 1,
+                         "Wrong affected user count")
+
+        self.assertEqual(user1y.account.balance, self.membership_fee_last.regular_fee,
+                         "User balance incorrect")
+
+        transaction = Transaction.q.filter_by(valid_on=self.membership_fee_last.ends_on)\
+            .filter(Transaction.description.contains(self.membership_fee_last.name)).first()
+
+        self.assertIsNotNone(transaction, "Transaction not found")
+
+        split_user = Split.q.filter_by(transaction=transaction, account=user1y.account,
+                                       amount=self.membership_fee_last.regular_fee).first()
+
+        self.assertIsNotNone(split_user, "User split not found")
+
+        split_fee_account = Split.q.filter_by(transaction=transaction,
+                                              account=user1y.room.building.fee_account,
+                                              amount=-self.membership_fee_last.regular_fee).first()
+
+        self.assertIsNotNone(split_fee_account, "Fee account split not found")
+
+        affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
+
+        session.session.refresh(user1y.account)
+
+        self.assertEqual(len(affected), 0, "Affected users not zero")
+
+        self.assertEqual(user1y.account.balance, self.membership_fee_last.regular_fee,
+                         "User balance changed")
+
+    def test_membership_begin_grace(self):
+        user_grace = self.create_user_move_in_grace()
+        user_no_grace = self.create_user_move_in_no_grace()
+
+        self.grace_check(user_grace, user_no_grace)
+
+    def test_membership_end_grace(self):
+        user_grace = self.create_user_move_out_grace()
+        user_no_grace = self.create_user_move_out_no_grace()
+
+        self.grace_check(user_grace, user_no_grace)
+
+    # ToDo: Test payment in default / in default days
 
 
 class TestIsOrdered(unittest.TestCase):
