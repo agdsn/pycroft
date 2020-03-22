@@ -24,6 +24,7 @@ from sqlalchemy import func, between, Integer, cast
 from pycroft import config, model
 from pycroft.helpers.i18n import deferred_gettext, gettext, Message
 from pycroft.helpers.date import diff_month, last_day_of_month
+from pycroft.helpers.utc import time_max, time_min
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
@@ -190,6 +191,7 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                  Conditions: User has `membership_fee` property on
                              begins_on + booking_begin - 1 day or
                              begins_on + booking_end - 1 day
+                             and no transaction exists on the user account int the fee timespan
 
     :param membership_fee: The membership fee which should be posted
     :param processor:
@@ -209,6 +211,17 @@ def post_transactions_for_membership_fee(membership_fee, processor,
     fee_accounts = Account.q.join(Building).distinct(Account.id).all()
     fee_accounts_ids = set([acc.id for acc in fee_accounts] + [config.membership_fee_account_id])
 
+    properties_beginning_timestamp = datetime.combine((membership_fee.begins_on
+                                                       + membership_fee.booking_begin
+                                                       - timedelta(1)),
+                                                      time_min())
+
+    properties_end_timestamp = datetime.combine((membership_fee.begins_on
+                                                   + membership_fee.booking_end
+                                                   - timedelta(1)),
+                                                  time_max())
+
+    # Select all users who fulfill the requirements for the fee in the fee timespan
     users = (select([User.id.label('id'),
                      User.name.label('name'),
                      User.account_id.label('account_id'),
@@ -216,11 +229,15 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                      # fee_account_id if user was not living in a room at booking time
                      func.coalesce(Building.fee_account_id,
                                    literal(config.membership_fee_account_id)).label('fee_account_id')])
-            .select_from(User.__table__
-                 .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_begin - timedelta(1))
-                 .alias('properties_beginning'), literal_column('properties_beginning.user_id') == User.id)
-                 .outerjoin(func.evaluate_properties(membership_fee.begins_on + membership_fee.booking_end - timedelta(1))
-                 .alias('properties_grace'), literal_column('properties_grace.user_id') == User.id)
+             .select_from(User.__table__
+                 # Join the users properties at `booking_begin`
+                 .outerjoin(func.evaluate_properties(properties_beginning_timestamp)
+                            .alias('properties_beginning'),
+                            literal_column('properties_beginning.user_id') == User.id)
+                 # Join the users properties at `booking_end`
+                 .outerjoin(func.evaluate_properties(properties_end_timestamp)
+                            .alias('properties_end'),
+                            literal_column('properties_end.user_id') == User.id)
                  # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
                  .outerjoin(rhe_end,
                             and_(rhe_end.c.user_id == User.id,
@@ -249,6 +266,7 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                  .outerjoin(Room, Room.id == func.coalesce(rhe_begin.c.room_id, rhe_end.c.room_id))
                  .outerjoin(Building, Building.id == Room.building_id)
             )
+            # Check if a booking already exists on the user account in the fee timespan
             .where(not_(exists(select([None]).select_from(split_user_account
                     .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
                     .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
@@ -259,10 +277,12 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                             split_fee_account.c.account_id.in_(fee_accounts_ids),
                             split_fee_account.c.id != split_user_account.c.id))
             )))
+            # Only those users who had the `membership_fee` property on `booking_begin` or
+            # `booking_end`
             .where(or_(and_(literal_column('properties_beginning.property_name') == 'membership_fee',
                             not_(literal_column('properties_beginning.denied'))),
-                       and_(literal_column('properties_grace.property_name') == 'membership_fee',
-                            not_(literal_column('properties_grace.denied')))))
+                       and_(literal_column('properties_end.property_name') == 'membership_fee',
+                            not_(literal_column('properties_end.denied')))))
             .distinct()
             .cte('membership_fee_users'))
 
