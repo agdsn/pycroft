@@ -7,6 +7,7 @@ from factory.faker import Faker
 
 from pycroft.model.facilities import Site, Building, Room
 from pycroft.model.port import PatchPort
+from .finance import AccountFactory
 from .base import BaseFactory
 from .address import AddressFactory
 
@@ -27,6 +28,7 @@ class BuildingFactory(BaseFactory):
     number = Sequence(lambda n: n)
     street = LazyAttribute(lambda b: b.site.name)
     short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
+    fee_account = SubFactory(AccountFactory, type='REVENUE')
 
 
 class RoomFactory(BaseFactory):
