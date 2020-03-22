@@ -5,10 +5,11 @@
 import factory
 from factory.faker import Faker
 
-from pycroft.model.user import User
+from pycroft.model.user import User, RoomHistoryEntry
 from .base import BaseFactory
 from .facilities import RoomFactory
 from .finance import AccountFactory
+
 
 class UserFactory(BaseFactory):
     class Meta:
@@ -22,6 +23,15 @@ class UserFactory(BaseFactory):
     account = factory.SubFactory(AccountFactory, type="USER_ASSET")
     room = factory.SubFactory(RoomFactory)
     address = factory.SelfAttribute('room.address')
+
+    @factory.post_generation
+    def room_history_entries(self, create, extracted, **kwargs):
+        if self.room is not None:
+            # Set room history entry begin to registration date
+
+            rhe = RoomHistoryEntry.q.filter_by(user=self, room=self.room).one()
+
+            rhe.begins_at = self.registered_at
 
 
 class UserWithHostFactory(UserFactory):
