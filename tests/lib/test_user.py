@@ -19,7 +19,7 @@ from tests.factories.address import AddressFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.finance import AccountData, MembershipFeeData
+from tests.fixtures.dummy.finance import AccountData
 from tests.fixtures.dummy.host import (
     IPData, PatchPortData, InterfaceData, HostData)
 from tests.fixtures.dummy.net import SubnetData, VLANData
@@ -70,7 +70,7 @@ class Test_010_User_Move(FixtureDataTestBase):
 
 class Test_020_User_Move_In(FixtureDataTestBase):
     datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
-                RoomData, MembershipFeeData, SubnetData, PatchPortData,
+                RoomData, SubnetData, PatchPortData,
                 UserData, HostData, InterfaceData, VLANData)
 
     def setUp(self):
@@ -234,8 +234,7 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
 
 
 class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
-    datasets = (AccountData, ConfigData, IPData, MembershipFeeData,
-                PatchPortData)
+    datasets = (AccountData, ConfigData, IPData, PatchPortData)
 
     def setUp(self):
         super().setUp()

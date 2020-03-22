@@ -8,23 +8,6 @@ from fixture import DataSet
 today = datetime.utcnow().date()
 
 
-class MembershipFeeData(DataSet):
-    class dummy_fee1:
-        name = u"first fee"
-        registration_fee = 5.00
-        regular_fee = 5.00
-        reduced_fee = 1.00
-        late_fee = 2.50
-        booking_begin = timedelta(2)
-        booking_end = timedelta(14)
-        reduced_fee_threshold = timedelta(10)
-        payment_deadline = timedelta(14)
-        payment_deadline_final = timedelta(62)
-        not_allowed_overdraft_late_fee = 2.00
-        begins_on = today - timedelta(days=31)
-        ends_on = today
-
-
 class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 1020304050"
