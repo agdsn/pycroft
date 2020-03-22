@@ -3,6 +3,7 @@ from itertools import chain
 
 import factory
 
+from pycroft.model import session
 from pycroft.model.user import Membership, PropertyGroup
 
 from .base import BaseFactory
@@ -12,7 +13,6 @@ from .user import UserFactory
 class MembershipFactory(BaseFactory):
     class Meta:
         model = Membership
-    begins_at = None
     ends_at = None
 
     user = factory.SubFactory(UserFactory)
