@@ -36,3 +36,7 @@ class UserFactory(BaseFactory):
 
 class UserWithHostFactory(UserFactory):
     host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner')
+
+
+class UserWithMembershipFactory(UserFactory):
+    membership = factory.RelatedFactory('tests.factories.property.MembershipFactory', 'user')
