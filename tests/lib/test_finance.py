@@ -31,12 +31,11 @@ from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
-    AccountData, BankAccountData, MembershipData, UserData,
-    MembershipFeeData)
+    AccountData, BankAccountData, MembershipData, UserData)
 
 
 class Test_010_BankAccount(FixtureDataTestBase):
-    datasets = [AccountData, BankAccountData, MembershipFeeData, UserData]
+    datasets = [AccountData, BankAccountData, UserData]
 
     def setUp(self):
         super(Test_010_BankAccount, self).setUp()

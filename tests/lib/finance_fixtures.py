@@ -12,39 +12,6 @@ from tests.fixtures.dummy.facilities import RoomData
 
 today = datetime.utcnow().date()
 
-
-class MembershipFeeData(DataSet):
-    class fee_one:
-        name = u"first fee"
-        regular_fee = 5.00
-        booking_begin = timedelta(2)
-        booking_end = timedelta(14)
-        payment_deadline = timedelta(14)
-        payment_deadline_final = timedelta(62)
-        begins_on = today - timedelta(days=90)
-        ends_on = today - timedelta(days=61)
-
-    class fee_two:
-        name = u"seconds fee"
-        regular_fee = 5.00
-        booking_begin = timedelta(2)
-        booking_end = timedelta(14)
-        payment_deadline = timedelta(14)
-        payment_deadline_final = timedelta(62)
-        begins_on = today - timedelta(days=60)
-        ends_on = today - timedelta(days=31)
-
-    class fee_three:
-        name = u"third fee"
-        regular_fee = 5.00
-        booking_begin = timedelta(2)
-        booking_end = timedelta(14)
-        payment_deadline = timedelta(14)
-        payment_deadline_final = timedelta(62)
-        begins_on = today - timedelta(days=30)
-        ends_on = today
-
-
 class AccountData(DataSet):
     class bank_account:
         name = u"Bankkonto 3120219540"
@@ -75,7 +42,7 @@ class UserData(DataSet):
     class dummy_1:
         login = u"dummy1"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=1), time.min)
+        registered_at = datetime(2019, 1, 1)
         room = RoomData.dummy_room1
         address = room.address
         account = AccountData.user_account
@@ -83,7 +50,7 @@ class UserData(DataSet):
     class dummy_2:
         login = u"dummy2"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.fee_three.begins_on + timedelta(days=2), time.min)
+        registered_at = datetime(2019, 1, 1)
         room = RoomData.dummy_room1
         address = room.address
         account = AccountData.user_account_early
@@ -91,7 +58,7 @@ class UserData(DataSet):
     class dummy_14:
         login = u"dummy14"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.fee_one.begins_on + timedelta(days=14), time.min)
+        registered_at = datetime(2019, 1, 1)
         room = RoomData.dummy_room1
         address = room.address
         account = AccountData.user_account_grace
@@ -99,7 +66,7 @@ class UserData(DataSet):
     class dummy_15:
         login = u"dummy15"
         name = u"Dummy Dummy"
-        registered_at = datetime.combine(MembershipFeeData.fee_two.begins_on - timedelta(days=15), time.min)
+        registered_at = datetime(2019, 1, 1)
         room = RoomData.dummy_room1
         address = room.address
         account = AccountData.user_account_no_grace
