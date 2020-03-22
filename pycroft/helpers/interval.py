@@ -800,8 +800,8 @@ class IntervalModel:
 
     @validates('begins_at')
     def validate_begins_at(self, _, value):
-        if value is None:
-            return value
+        assert value is not None, "begins_at cannot be None"
+
         if self.ends_at is not None:
             assert value <= self.ends_at,\
                 "begins_at must be before ends_at"
