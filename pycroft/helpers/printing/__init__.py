@@ -137,25 +137,31 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
             for ip in user_host.ips:
                 macs.append(ip.interface.mac)
 
+        email = "{}@agdsn.me".format(user.login)
+        email_redirect = ""
+        if user.email is not None:
+            email_redirect = "Your mails are redirected to: {}".format(user.email)
         need_explicit_address = not user.room or user.room.address != user.address
         data = [['Name:', user.name, 'User-ID:', user_id],
                 ['Username:', user.login, 'MAC-Address:', ', '.join(macs)],
                 ['Password:', plain_user_password,
                  'Dorm Location:' if need_explicit_address else 'Location:',
                  str(user.room) if user.room else ""],
-                ['E-Mail:', user.email, "", ""]]
+                ['E-Mail:', email, "", ""],
+                ["", email_redirect, "", ""]]
         if need_explicit_address:
             data.append(['Address:', user.address])
         t = Table(data,
                   style=[
                       ('FONTNAME', (1, 2), (1, 2), 'Courier'),
+                      ('FONTSIZE', (1, 4), (1, 4), 8),
                   ],
                   colWidths=[pdf.width * 0.15, pdf.width * 0.34] * 2, )
 
         story.append(t)
         story.append(
-            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.4 * cm,
-                       spaceAfter=0.6 * cm))
+            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.3 * cm,
+                       spaceAfter=0.4 * cm))
 
         # offices
         im_web = Image(ASSETS_WEB_FILENAME, 0.4 * cm, 0.4 * cm)
@@ -199,8 +205,8 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                                style['JustifyText']))
 
         story.append(
-            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.4 * cm,
-                       spaceAfter=0.4 * cm))
+            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.3 * cm,
+                       spaceAfter=0.3 * cm))
 
         # Payment details
         contribution = 500  # monthly membership contribution in EUR
@@ -210,7 +216,6 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
             six monthly contributions at once.'''.format(
             (contribution / 100)), style['JustifyText']))
 
-        bank = BankAccount.q.filter_by(account_number='3120219540').first()
         bank = config.membership_fee_bank_account
 
         recipient = 'Studierendenrat TUD - AG DSN'
