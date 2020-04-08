@@ -700,7 +700,7 @@ def status(user):
         'member': user.member_of(config.member_group),
         'traffic_exceeded': user.member_of(config.traffic_limit_exceeded_group),
         'network_access': user.has_property('network_access'),
-        'wifi_access': user.has_wifi_access,
+        'wifi_access': user.has_wifi_access and user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),
         'ldap': user.has_property('ldap'),
