@@ -16,7 +16,7 @@ from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.task import cancel_task
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history, membership_end_date, \
-    move_out, membership_ending_task
+    move_out, membership_ending_task, reset_wifi_password
 from pycroft.model import session
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
@@ -396,3 +396,24 @@ class TerminateMembershipResource(Resource):
 
 api.add_resource(TerminateMembershipResource,
                  '/user/<int:user_id>/terminate-membership')
+
+
+class ResetWifiPasswordResource(Resource):
+    def patch(self, user_id):
+        """
+        Reset the wifi password
+
+        :return: new password
+        """
+
+        user = get_user_or_404(user_id)
+
+        new_password = reset_wifi_password(user, user)
+
+        session.session.commit()
+
+        return new_password
+
+
+api.add_resource(ResetWifiPasswordResource,
+                 '/user/<int:user_id>/reset-wifi-password')
