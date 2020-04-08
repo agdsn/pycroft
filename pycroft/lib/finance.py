@@ -664,7 +664,7 @@ def process_transactions(bank_account, statement):
             other_routing_number=bic,
             other_name=other_name,
             imported_at=session.utcnow(),
-            posted_on=transaction.data['entry_date'],
+            posted_on=transaction.data['guessed_entry_date'],
             valid_on=transaction.data['date'],
         )
         if new_activity.posted_on == date.today():

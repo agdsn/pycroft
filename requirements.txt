@@ -31,8 +31,7 @@ simplejson~=3.11.1
 pillow~=5.4.1 # pillow >= 6.x.x breaks reportlab <= 3.5.0
 reportlab~=3.5.0
 fints~=2.0.0
-# this version fixes https://github.com/WoLpH/mt940/issues/78
-mt-940~=4.18.0
+mt-940~=4.19.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
 manuf~=1.0.0
