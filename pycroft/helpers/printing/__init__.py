@@ -320,20 +320,33 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                                 spaceBefore=0.0 * cm,
                                 spaceAfter=0.8 * cm))
 
-        story.append(
-            Paragraph('Hello {},'
-                      .format(user.name),
-                      style['BodyText']))
+        welcome = Paragraph("Hello {},<br/>"
+                      "In some dormitories we're providing Wi-Fi as an adition to the wired connection. "
+                      "All of our members can use this Wi-Fi in all of our dormitories, independently "
+                      "from their residence. "
+                      " "
+                      "If you spot any coverage problems, it would be nice if you could inform us "
+                      "on support@agdsn.de. ".format(user.name),
+                      style['BodyText'])
 
-        story.append(
-            Paragraph("We've been working on provisioning Wi-Fi for all members lately. "
-                      "To gain experience with operating an Wi-Fi in larger scale, "
-                      "we are putting it into test operation at the Gret-Palucca-Strasse dormitory. "
-                      "With this test operation we want to find out, among other things, "
-                      "how good the coverage of the signal is in different parts of the building and "
-                      "whether the underlying services for managing the networks and "
-                      "the conversion to the public IP address work. ",
-                      style['BodyText']))
+        return_notice = Paragraph(
+            '''<font size="9pt">Nicht nachsenden!</font>''',
+            style['Normal'])
+        sender = Paragraph(
+            '''<font size="9pt">AG DSN • Support • Wundtstraße 5 • 01217 Dresden</font>''',
+            style['Normal'])
+        address = f"{user.name}\n{user.address:long}"
+        data = [
+            [None, None],
+            [return_notice, welcome],
+            [sender, None],
+            [address, None]
+        ]
+        addressTable = Table(data, colWidths=[9 * cm, pdf.width - 9 * cm],
+                             rowHeights=[1 * cm, 0.3 * cm, 0.8 * cm, 3 * cm], style=[
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ])
+        story.append(addressTable)
 
         story.append(
             Paragraph(
@@ -385,7 +398,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         story.append(Paragraph('Best regards,', style['BodyText']))
         story.append(Paragraph('Your AG DSN', style['BodyText']))
 
-        s = Spacer(width=1 * cm, height=8.8 * cm)
+        s = Spacer(width=1 * cm, height=6.8 * cm)
         story.append(s)
 
         story.append(HRFlowable(width="100%",
