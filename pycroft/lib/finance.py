@@ -667,7 +667,7 @@ def process_transactions(bank_account, statement):
             posted_on=transaction.data['guessed_entry_date'],
             valid_on=transaction.data['date'],
         )
-        if new_activity.posted_on == date.today():
+        if new_activity.posted_on >= date.today():
             doubtful_transactions.append(new_activity)
         elif BankAccountActivity.q.filter(and_(
                 BankAccountActivity.bank_account_id ==
