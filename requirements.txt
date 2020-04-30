@@ -34,5 +34,5 @@ fints~=2.0.0
 mt-940~=4.19.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
-manuf~=1.0.0
+mac-vendor-lookup~=0.1.11
 marshmallow~=2.19.2

@@ -6,7 +6,7 @@ import re
 import ipaddr
 
 # Byte represented by 2 hexadecimal digits
-from manuf import manuf
+from mac_vendor_lookup import MacLookup
 
 BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
 # Pattern for the most significant byte
@@ -105,9 +105,4 @@ def reverse_pointer(ip_address):
 
 
 def get_interface_manufacturer(mac):
-    try:
-        p = manuf.MacParser()
-    except FileNotFoundError:
-        p = manuf.MacParser(update=True)
-
-    return p.get_manuf(mac)
+    return MacLookup().lookup(mac)

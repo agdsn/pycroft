@@ -35,7 +35,7 @@ setup(
         'Flask-WTF',
         'fints',
         'Jinja2',
-        'manuf',
+        'mac-vendor-lookup',
         'MarkupSafe',
         'Marshmallow',
         'SQLAlchemy >= 1.1',
