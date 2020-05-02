@@ -24,26 +24,79 @@ from werkzeug.routing import IntegerConverter, UnicodeConverter
 from pycroft.model import session, create_engine
 from pycroft.model import _all, drop_db_model, create_db_model
 
+from sqlalchemy import event
 
 engine = None
 connection = None
 _setup_stack = 0
 
+import logging
+logger = logging.getLogger('pyctest')
+import traceback
 
+
+OUR_FILES_PREFIX = "/opt/pycroft/app/"
 def setup():
     global engine, connection, _setup_stack
     _setup_stack += 1
     if _setup_stack > 1:
         return
+
+    logger.setLevel(logging.DEBUG)
+    # logging.getLogger('sqlalchemy').setLevel(logging.INFO)
+    # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    # logging.getLogger('sqlalchemy.orm').setLevel(logging.INFO)
+
     try:
         uri = os.environ['PYCROFT_DB_URI']
     except KeyError:
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
                            "set to an SQLalchemy connection string.")
     engine = create_engine(uri, poolclass=SingletonThreadPool)
+
     connection = engine.connect()
-    drop_db_model(connection)
+    drop_db_model(connection)  # TODO do they use a session here?
     create_db_model(connection)
+    # standard decorator style
+    @event.listens_for(engine, 'do_execute')
+    def receive_do_execute(_cursor, statement: str, _parameters, _context):
+        "listen for the 'do_execute' event"
+        logger.debug("EXECUTE '%s'. Stack info: %s", statement.split()[0], stack_info())
+
+def add_session_event_listeners(session):
+    @event.listens_for(_all.RoomHistoryEntry.room_id, 'set', propagate=True)
+    @event.listens_for(_all.RoomHistoryEntry.room, 'set', propagate=True)
+    def trace_room_id_set(target, value, initiator, *args, **kwargs):
+        logger.debug("SET %s=%s by %s. Stack info: %s",
+                     target, value, initiator, stack_info())
+        if kwargs:
+            logger.debug("  KWARGS: %s", kwargs)
+
+        if args:
+            logger.debug("  ARGS: %s", args)
+
+    for ev in ['transient_to_pending',
+               'pending_to_persistent',
+               'deleted_to_persistent',
+               'detached_to_persistent',
+               'loaded_as_persistent',
+            ]:
+        @event.listens_for(session, ev)
+        def tracer(session, obj):
+            logger.debug("SESSION_EVENT %s: %r", ev, obj)
+
+
+def stack_info():
+    our_frames = [
+        f for f in traceback.extract_stack()
+        if f.filename.startswith(OUR_FILES_PREFIX)
+    ]
+
+    if not our_frames:
+        return '(now owned stackframe)'
+    f = our_frames[0]
+    filename = f.filename.split(OUR_FILES_PREFIX, 1)[-1]
+    return f"{f.name} in {filename}:{f.lineno}"
 
 
 def get_engine_and_connection():
@@ -81,22 +134,31 @@ class SQLAlchemyTestCase(unittest.TestCase):
         super(SQLAlchemyTestCase, self).setUp()
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
+        logger.debug(f"SETTING SESSION {s}")
         session.set_scoped_session(s)
+        add_session_event_listeners(s)
         self.addCleanup(self.cleanup)
 
     def _rollback(self):
+        logger.debug("_ROLLBACK")
         # Rollback the session
         session.session.rollback()
+        logger.debug("  -> calling Session.remove()")
         session.Session.remove()
         # Rollback the outer transaction to the savepoint
+        logger.debug("  -> calling transaction.rollback()")
         self.transaction.rollback()
+        logger.debug("  -> done calling transaction.rollback()")
         self.transaction = None
+        # breakpoint()
 
     def tearDown(self):
+        logger.debug("TEARDOWN")
         self._rollback()
         super(SQLAlchemyTestCase, self).tearDown()
 
     def cleanup(self):
+        logger.debug("CLEANUP")
         if self.transaction is None:
             return
         self._rollback()
@@ -108,6 +170,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
                 yield context
             except:
                 # Check if the session is in “partial rollback” state
+                logger.debug("_rollback_with_context: EXCEPT")
                 if not session.session.is_active:
                     session.session.rollback()
                 raise

@@ -29,6 +29,7 @@ class BuildingData(DataSet):
 
 
 class RoomData(DataSet):
+    # TODO add refs to a roomhistoryentry
     class dummy_room1:
         number = "1"
         level = 1

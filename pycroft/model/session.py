@@ -33,6 +33,8 @@ session = LocalProxy(lambda: Session())
 
 
 def set_scoped_session(scoped_session):
+    import logging
+    logging.getLogger('pyctest').debug("#### ADDING SESSION: " + str(scoped_session))
     Session.remove()
     # noinspection PyCallByClass
     object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)

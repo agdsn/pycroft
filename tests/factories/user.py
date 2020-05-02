@@ -29,6 +29,9 @@ class UserFactory(BaseFactory):
         if self.room is not None:
             # Set room history entry begin to registration date
 
+            # TODO is it guaranteed that the room history entries already exist?
+            # It appears that the first execution is triggered by this command,
+            # although in an `autoflush` stack.
             rhe = RoomHistoryEntry.q.filter_by(user=self, room=self.room).one()
 
             rhe.begins_at = self.registered_at
