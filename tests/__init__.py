@@ -16,6 +16,7 @@ from fixture import SQLAlchemyFixture, DataTestCase
 from fixture.util import start_debug, stop_debug
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.pool import SingletonThreadPool
 import sys
 
@@ -155,6 +156,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
     def tearDown(self):
         logger.debug("TEARDOWN")
         self._rollback()
+        close_all_sessions()
         super(SQLAlchemyTestCase, self).tearDown()
 
     def cleanup(self):
@@ -217,13 +219,14 @@ class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        SQLAlchemyTestCase.setUpClass()
+        super().setUpClass()
         cls.fixture = SQLAlchemyFixture(
             env=_all, style=NamedDataStyle(),
             engine=connection
         )
 
     def cleanup(self):
+        """Override of SQLAlchemyTestCase.cleanup"""
         self.data.teardown()
         super(FixtureDataTestBase, self).cleanup()
 
