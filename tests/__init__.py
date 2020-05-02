@@ -224,8 +224,8 @@ class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
         )
 
     def cleanup(self):
-        super(FixtureDataTestBase, self).cleanup()
         self.data.teardown()
+        super(FixtureDataTestBase, self).cleanup()
 
 
 class DialectSpecificTestCase(FixtureDataTestBase):
