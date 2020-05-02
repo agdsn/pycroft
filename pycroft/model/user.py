@@ -474,12 +474,14 @@ class RoomHistoryEntry(IntegerIdModel, IntervalModel):
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
                      nullable=False, index=True)
     room = relationship(Room, backref=backref(name="room_history_entries",
-                                              order_by='RoomHistoryEntry.id'))
+                                              order_by='RoomHistoryEntry.id',
+                                              passive_deletes=True))
 
     user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                      nullable=False, index=True)
     user = relationship(User, backref=backref("room_history_entries",
-                                              order_by='RoomHistoryEntry.id'))
+                                              order_by='RoomHistoryEntry.id',
+                                              passive_deletes=True))
 
 
 manager.add_function(
