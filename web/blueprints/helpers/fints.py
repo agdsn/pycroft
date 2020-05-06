@@ -8,6 +8,7 @@ from fints.utils import mt940_to_array
 logger = logging.getLogger(__name__)
 
 class FinTS3Client(FinTS3PinTanClient):
+    with_error = []
 
     def get_filtered_transactions(self, account: SEPAAccount,
                          start_date: datetime.date = None,
@@ -23,13 +24,13 @@ class FinTS3Client(FinTS3PinTanClient):
         :return: A tuple with list of mt940.models.Transaction objects and another
         list with tuples of mt940-data and error messages.
         """
-
+        with_error = []
         with self._get_dialog() as dialog:
             hkkaz = self._find_highest_supported_command(HKKAZ5, HKKAZ6, HKKAZ7)
 
             logger.info(
                 'Start fetching from {} to {}'.format(start_date, end_date))
-            responses = self._fetch_with_touchdowns(
+            statement = self._fetch_with_touchdowns(
                 dialog,
                 lambda touchdown: hkkaz(
                     account=hkkaz._fields['account'].type.from_sepa_account(
@@ -39,12 +40,20 @@ class FinTS3Client(FinTS3PinTanClient):
                     date_end=end_date,
                     touchdown_point=touchdown,
                 ),
+                self.decode_response,
                 'HIKAZ'
             )
             logger.info('Fetching done.')
 
+
+
+        logger.debug('Statement: {}'.format(statement))
+
+
+        return statement, self.with_error
+
+    def decode_response(self, responses):
         statement = []
-        with_error = []
         for seg in responses:
             # Note: MT940 messages are encoded in the S.W.I.F.T character set,
             # which is a subset of ISO 8859. There are no character in it that
@@ -53,9 +62,5 @@ class FinTS3Client(FinTS3PinTanClient):
                 statement += mt940_to_array(
                     seg.statement_booked.decode('iso-8859-1'))
             except Exception as e:
-                with_error.append((seg.statement_booked.decode('iso-8859-1'), str(e)))
-
-        logger.debug('Statement: {}'.format(statement))
-
-
-        return statement, with_error
+                self.with_error.append((seg.statement_booked.decode('iso-8859-1'), str(e)))
+        return statement

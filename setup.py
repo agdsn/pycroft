@@ -33,7 +33,7 @@ setup(
         'Flask-Babel',
         'Flask-Login',
         'Flask-WTF',
-        'fints',
+        'fints ~= 3.0.0',
         'Jinja2',
         'mac-vendor-lookup',
         'MarkupSafe',

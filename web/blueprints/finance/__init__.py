@@ -185,7 +185,8 @@ def bank_accounts_import():
                 bank_account.routing_number,
                 form.user.data,
                 form.pin.data,
-                bank_account.fints_endpoint
+                bank_account.fints_endpoint,
+                product_id=config.fints_product_id
             )
 
             acc = next((a for a in fints.get_sepa_accounts()

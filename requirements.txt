@@ -30,7 +30,7 @@ simplejson~=3.11.1
 #usersheet generation
 pillow~=5.4.1 # pillow >= 6.x.x breaks reportlab <= 3.5.0
 reportlab~=3.5.0
-fints~=2.0.0
+fints~=3.0.0
 mt-940~=4.19.0
 uwsgi~=2.0.14
 GitPython~=2.1.7
