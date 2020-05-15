@@ -1187,3 +1187,9 @@ def csv_payments_in_default():
     output.headers["Content-type"] = "text/csv"
 
     return output
+
+@bp.route('/fints/tan')
+def fints_tan():
+    return render_template('finance/fints_tan.html',
+                           page_title='TAN-Eingabe erforderlich!',
+                           flickercode='11 04 871 49552 05 123456789F 14 302C3031 07')
