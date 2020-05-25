@@ -665,8 +665,7 @@ def get_users_with_payment_in_default():
         try:
             fee_date = ts_now - timedelta(days=in_default_days)
 
-            # datetime not working as datetime type
-            fee = get_membership_fee_for_date(str(fee_date))
+            fee = get_membership_fee_for_date(fee_date)
         except NoResultFound:
             fee = get_last_applied_membership_fee()
 
