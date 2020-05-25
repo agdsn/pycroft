@@ -1,7 +1,7 @@
 """building_fee_account
 
 Revision ID: c11d3d8b16ae
-Revises: 37b57e0baa3a
+Revises: 3ec1d29bfd10
 Create Date: 2020-02-26 23:05:46.376751
 
 """
@@ -14,7 +14,7 @@ from pycroft.model.types import DateTimeTz
 from pycroft.model.user import User, RoomHistoryEntry
 
 revision = 'c11d3d8b16ae'
-down_revision = '37b57e0baa3a'
+down_revision = '3ec1d29bfd10'
 branch_labels = None
 depends_on = None
 
@@ -134,6 +134,10 @@ def upgrade():
             sa.select([User.id, User.room_id, User.registered_at]).select_from(User).where(User.room_id.isnot(None)))
     )
 
+    # Update membership_fee constraint
+    op.execute("alter table membership_fee drop constraint membership_fee_check")
+    op.execute("alter table membership_fee add constraint membership_fee_check check (begins_on <= ends_on)")
+
 
 def downgrade():
     op.drop_constraint('building_fee_account_id_fkey', 'building', type_='foreignkey')
@@ -147,3 +151,6 @@ def downgrade():
 
     op.drop_table("room_history_entry")
     op.execute('drop function if exists room_history_entry_uniqueness();')
+
+    op.execute("alter table membership_fee drop constraint membership_fee_check")
+    op.execute("alter table membership_fee add constraint membership_fee_check check (begins_on < ends_on)")
