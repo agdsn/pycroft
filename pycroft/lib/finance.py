@@ -644,7 +644,7 @@ def end_payment_in_default_memberships():
     for user in users:
         if user.member_of(config.payment_in_default_group):
             remove_member_of(user, config.payment_in_default_group, processor,
-                             closedopen(session.utcnow(), None))
+                             closedopen(session.utcnow() - timedelta(seconds=1), None))
 
     return users
 
@@ -711,7 +711,7 @@ def take_actions_for_payment_in_default_users(users_pid_membership,
 
     for user in users_membership_terminated:
         if user.member_of(config.member_group):
-            move_out(user, "Zahlungsrückstand", processor, ts_now, True)
+            move_out(user, "Zahlungsrückstand", processor, ts_now - timedelta(seconds=1), True)
 
             log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand.",
                            processor, user)
