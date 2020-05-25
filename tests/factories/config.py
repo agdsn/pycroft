@@ -26,7 +26,9 @@ class ConfigFactory(BaseFactory):
     cache_group = SubFactory(PropertyGroupFactory)
     traffic_limit_exceeded_group = SubFactory(PropertyGroupFactory)
     external_group = SubFactory(PropertyGroupFactory)
-    payment_in_default_group = SubFactory(PropertyGroupFactory)
+    payment_in_default_group = SubFactory(PropertyGroupFactory,
+                                          granted=frozenset(("payment_in_default",)),
+                                          denied=frozenset(("network_access", "userwww", "userdb")))
     blocked_group = SubFactory(PropertyGroupFactory)
     caretaker_group = SubFactory(PropertyGroupFactory)
     treasurer_group = SubFactory(PropertyGroupFactory)
