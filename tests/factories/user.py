@@ -33,6 +33,9 @@ class UserFactory(BaseFactory):
 
             rhe.begins_at = self.registered_at
 
+            for key, value in kwargs.items():
+                setattr(rhe, key, value)
+
 
 class UserWithHostFactory(UserFactory):
     host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner')
