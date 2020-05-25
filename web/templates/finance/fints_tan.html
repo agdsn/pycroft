@@ -191,7 +191,7 @@
         this.reset();
       }
 
-      createCanvas(205, 100);
+      createCanvas(width, height);
     }
 
     function startFlicker() {
@@ -219,16 +219,43 @@
     function setup() {
       inputbox = document.getElementById('code');
       canvas = new flickerCanvas();
+      document.getElementById('flickercontainer').innerHTML = '';
       document.getElementById('flickercontainer').appendChild(canvas.getCanvas());
+    }
+
+    function bigger() {
+      stopFlicker();
+      width = width + width*0.1;
+      height = height + height*0.1;
+      setup();
+      setNewCode();
+    }
+
+    function smaller() {
+      stopFlicker();
+      width = width - width*0.1;
+      height = height - height*0.1;
+      setup();
+      setNewCode();
     }
 
     window.addEventListener('load', setup, false);
     window.addEventListener('load', function () {
       setTimeout(setNewCode, 1000)
     }, false)
+    width = 323;
+    height = 157;
   </script>
   <p>Placeholder Text from FinTS</p>
-  <input type="text" name="code" id="code" style="visibility: hidden" value="{{ flickercode }}">
+
+  <input type="text" name="code" id="code" style="visibility: hidden"
+         value="{{ flickercode }}">
+  <p>
+    <input class="btn btn-primary" type="button" value="Make it bigger!"
+           onclick="bigger()"/>
+    <input class="btn btn-primary" type="button" value="Make it smaller!"
+           onclick="smaller()"/>
+  </p>
   <div id="flickercontainer">
   </div>
 {% endblock %}
