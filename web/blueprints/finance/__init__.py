@@ -388,7 +388,7 @@ def bank_account_activities_edit(activity_id):
                                   if split.account_id == credit_account.id)
             session.add(activity)
 
-            end_payment_in_default_memberships()
+            end_payment_in_default_memberships(current_user)
 
             session.commit()
 
@@ -480,7 +480,7 @@ def bank_account_activities_do_match():
 
                 matched.append((activity, user))
 
-        end_payment_in_default_memberships()
+        end_payment_in_default_memberships(current_user)
 
         session.flush()
         session.commit()
@@ -900,7 +900,7 @@ def transactions_create():
             valid_on=form.valid_on.data,
         )
 
-        end_payment_in_default_memberships()
+        end_payment_in_default_memberships(current_user)
 
         session.commit()
 
@@ -1108,7 +1108,7 @@ def membership_fee_edit(fee_id):
 @bp.route('/membership_fees/handle_payments_in_default', methods=("GET", "POST"))
 @access.require('finance_change')
 def handle_payments_in_default():
-    finance.end_payment_in_default_memberships()
+    finance.end_payment_in_default_memberships(current_user)
 
     users_pid_membership_all, users_membership_terminated_all = finance.get_users_with_payment_in_default()
 

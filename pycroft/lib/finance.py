@@ -634,9 +634,7 @@ def get_transaction_type(transaction):
 
 
 @with_transaction
-def end_payment_in_default_memberships():
-    processor = User.q.get(0)
-
+def end_payment_in_default_memberships(processor):
     users = User.q.join(User.current_properties) \
                 .filter(CurrentProperty.property_name == 'payment_in_default') \
                 .join(Account).filter(Account.balance <= 0).all()
