@@ -213,9 +213,9 @@ manager.add_function(
           ELSE
             s := COALESCE(NEW, OLD);
           END IF;
-          
+
           SELECT COUNT(*) = 0 INTO transaction_deleted FROM "transaction" WHERE "id" = s.transaction_id;
-            
+
           SELECT COUNT(*), SUM(amount) INTO STRICT count, balance FROM split
               WHERE transaction_id = s.transaction_id;
           IF count < 2 AND NOT transaction_deleted THEN
@@ -391,7 +391,7 @@ manager.add_function(
           ELSE
             v_activity := COALESCE(NEW, OLD);
           END IF;
-          
+
           SELECT bank_account.account_id INTO v_bank_account_account_id FROM bank_account
               WHERE bank_account.id = v_activity.bank_account_id;
           SELECT * INTO v_split FROM split
