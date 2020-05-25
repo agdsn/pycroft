@@ -51,7 +51,7 @@ class MembershipFee(IntegerIdModel):
         return date in closed(self.begins_on, self.ends_on)
 
     __table_args__ = (
-        CheckConstraint('begins_on < ends_on'),
+        CheckConstraint('begins_on <= ends_on'),
     )
 
 
