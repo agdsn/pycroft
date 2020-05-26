@@ -59,7 +59,7 @@ def upgrade():
             as $$
             BEGIN
                 IF old.room_id IS DISTINCT FROM new.room_id THEN
-                    IF old IS NOT NULL AND old.room_id IS NOT NULL THEN
+                    IF old.room_id IS NOT NULL THEN
                         /* User was living in a room before, history entry must be ended */
                         UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
                             WHERE user_id = new.id AND ends_at IS NULL;
@@ -80,7 +80,7 @@ def upgrade():
 
     op.execute('''
         create trigger user_room_change_update_history_trigger
-        after update
+        after insert or update
         on "user"
         for each row
         execute procedure user_room_change_update_history();
@@ -101,10 +101,14 @@ def upgrade():
         BEGIN
             SELECT COUNT(*), MAX(rhe.id) INTO STRICT count, rhe_id FROM "room_history_entry" rhe
               WHERE
-              (NEW.begins_at
-                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp)
-               OR COALESCE(new.ends_at, 'infinity'::timestamp)
-                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp))
+              (tstzrange(NEW.begins_at,
+                               COALESCE(new.ends_at, 'infinity'::timestamp),
+                               '()')
+              &&
+              tstzrange(rhe.begins_at,
+                           COALESCE(rhe.ends_at, 'infinity'::timestamp),
+                           '()')
+              )
               AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
 
             IF count > 0 THEN
@@ -136,8 +140,12 @@ def upgrade():
 
     # Update membership_fee constraint
     op.execute("alter table membership_fee drop constraint membership_fee_check")
-    op.execute("alter table membership_fee add constraint membership_fee_check check (begins_on <= ends_on)")
 
+    op.create_check_constraint(
+        "membership_fee_check",
+        "membership_fee",
+        "begins_on <= ends_on",
+    )
 
 def downgrade():
     op.drop_constraint('building_fee_account_id_fkey', 'building', type_='foreignkey')
@@ -153,4 +161,8 @@ def downgrade():
     op.execute('drop function if exists room_history_entry_uniqueness();')
 
     op.execute("alter table membership_fee drop constraint membership_fee_check")
-    op.execute("alter table membership_fee add constraint membership_fee_check check (begins_on < ends_on)")
+    op.create_check_constraint(
+        "membership_fee_check",
+        "membership_fee",
+        "begins_on < ends_on",
+    )

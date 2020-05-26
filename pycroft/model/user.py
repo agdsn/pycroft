@@ -352,10 +352,10 @@ manager.add_function(
         """
         BEGIN
             IF old.room_id IS DISTINCT FROM new.room_id THEN
-                IF old IS NOT NULL AND old.room_id IS NOT NULL THEN
+                IF old.room_id IS NOT NULL THEN
                     /* User was living in a room before, history entry must be ended */
                     UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
-                        WHERE user_id = new.id AND ends_at IS NULL;
+                        WHERE room_id = old.room_id AND user_id = new.id AND ends_at IS NULL;
                 END IF;
 
                 IF new.room_id IS NOT NULL THEN
@@ -363,7 +363,7 @@ manager.add_function(
                     INSERT INTO "room_history_entry" (user_id, room_id, begins_at)
                         /* We must add one second so that the user doesn't have two entries
                            for the same timestamp */
-                        VALUES(new.id, new.room_id, CURRENT_TIMESTAMP + INTERVAL '1' second);
+                        VALUES(new.id, new.room_id, CURRENT_TIMESTAMP);
                 END IF;
             END IF;
             RETURN NULL;
@@ -495,15 +495,18 @@ manager.add_function(
           count integer;
         BEGIN
             SELECT COUNT(*), MAX(rhe.id) INTO STRICT count, rhe_id FROM "room_history_entry" rhe
-              WHERE
-              (NEW.begins_at
-                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp)
-               OR COALESCE(new.ends_at, 'infinity'::timestamp)
-                BETWEEN rhe.begins_at AND COALESCE(rhe.ends_at, 'infinity'::timestamp))
+              WHERE (tstzrange(NEW.begins_at,
+                               COALESCE(new.ends_at, 'infinity'::timestamp),
+                               '()')
+                  &&
+                  tstzrange(rhe.begins_at,
+                               COALESCE(rhe.ends_at, 'infinity'::timestamp),
+                               '()')
+                  )
               AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
 
             IF count > 0 THEN
-                RAISE EXCEPTION 'entry overlaps with entry %%',
+                RAISE EXCEPTION 'entry overlaps with entry %',
                 rhe_id
                 USING ERRCODE = 'integrity_constraint_violation';
             END IF;
