@@ -506,7 +506,7 @@ manager.add_function(
               AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
 
             IF count > 0 THEN
-                RAISE EXCEPTION 'entry overlaps with entry %',
+                RAISE EXCEPTION 'entry overlaps with entry %%',
                 rhe_id
                 USING ERRCODE = 'integrity_constraint_violation';
             END IF;
