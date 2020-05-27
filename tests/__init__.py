@@ -164,8 +164,8 @@ class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
 
     def cleanup(self):
         """Override of SQLAlchemyTestCase.cleanup"""
-        self.data.teardown()
         super(FixtureDataTestBase, self).cleanup()
+        self.data.teardown()
 
 
 class DialectSpecificTestCase(FixtureDataTestBase):
