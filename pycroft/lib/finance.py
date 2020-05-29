@@ -181,8 +181,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 @with_transaction
-def post_transactions_for_membership_fee(membership_fee, processor,
-                                         simulate=False):
+def post_transactions_for_membership_fee(membership_fee, processor, simulate=False):
     """
     Posts transactions (and splits) for users where the specified membership fee
     was not posted yet.
@@ -199,8 +198,7 @@ def post_transactions_for_membership_fee(membership_fee, processor,
     :return: A list of name of all affected users
     """
 
-    description = membership_fee_description.format(
-        fee_name=membership_fee.name).to_json()
+    description = membership_fee_description.format(fee_name=membership_fee.name).to_json()
 
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
@@ -220,6 +218,9 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                                                    + membership_fee.booking_end
                                                    - timedelta(1)),
                                                   time_max())
+
+    begin_tstz = datetime.combine(membership_fee.begins_on, time_min())
+    end_tstz = datetime.combine(membership_fee.ends_on, time_max())
 
     # Select all users who fulfill the requirements for the fee in the fee timespan
     users = (select([User.id.label('id'),
@@ -243,27 +244,29 @@ def post_transactions_for_membership_fee(membership_fee, processor,
                             and_(rhe_end.c.user_id == User.id,
                                  # Only join RoomHistoryEntry that is relevant
                                  # on the fee interval end date
-                                 literal(membership_fee.ends_on)
-                                 .between(rhe_end.c.begins_at,
-                                          func.coalesce(rhe_end.c.ends_at,
-                                                        literal('infinity')
-                                                        .cast(DateTime)))
-                                 ))
+                                 literal(end_tstz).op("<@")(
+                                    func.tstzrange(rhe_end.c.begins_at,
+                                                   func.coalesce(rhe_end.c.ends_at,
+                                                                 literal('infinity').cast(DateTime)
+                                                                 )
+                                                   , '[)')
+                                 )))
                  # Join RoomHistoryEntry, Room and Building of the user at membership_fee.begins_on
                  # As second option if user moved out within the month
                  .outerjoin(rhe_begin,
                             and_(rhe_begin.c.user_id == User.id,
                                  # Only join RoomHistoryEntry that is relevant
-                                 # on the fee interval begin date
-                                 literal(membership_fee.begins_on)
-                                 .between(rhe_begin.c.begins_at,
-                                          func.coalesce(rhe_begin.c.ends_at,
-                                                        literal('infinity')
-                                                        .cast(DateTime)))
-                                 ))
+                                 # on the fee interval end date
+                                 literal(begin_tstz).op("<@")(
+                                    func.tstzrange(rhe_begin.c.begins_at,
+                                                   func.coalesce(rhe_begin.c.ends_at,
+                                                                 literal('infinity').cast(DateTime)
+                                                                 )
+                                                   , '[)')
+                                 )))
                  # Join with Room from membership_fee.ends_on if available,
                  # if not, join with the Room from membership_fee.begins_on
-                 .outerjoin(Room, Room.id == func.coalesce(rhe_begin.c.room_id, rhe_end.c.room_id))
+                 .outerjoin(Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id))
                  .outerjoin(Building, Building.id == Room.building_id)
             )
             # Check if a booking already exists on the user account in the fee timespan
