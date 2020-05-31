@@ -374,6 +374,10 @@ def user_show(user_id):
                 'badge': len(user.log_entries)
             },
             {
+                'id': 'traffic',
+                'name': 'Traffic',
+            },
+            {
                 'id': 'finance',
                 'name': 'Finanzen',
             },
