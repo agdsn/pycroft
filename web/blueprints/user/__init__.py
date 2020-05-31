@@ -356,11 +356,38 @@ def user_show(user_id):
         room_history_table=RoomHistoryTable(
             data_url=url_for(".room_history_json", user_id=user.id)
         ),
-        count={
-            'tasks': len(user.tasks),
-            'rooms': len(user.room_history_entries),
-            'hosts': len(user.hosts),
-        }
+        tabs=[
+            {
+                'id': 'hosts',
+                'name': 'Hosts & Interfaces',
+                'badge': len(user.hosts)
+            },
+            {
+                'id': 'tasks',
+                'name': 'Aufgaben',
+                'badge': len(user.tasks),
+                'badge_color': '#d9534f' if len(user.tasks) > 0 else None
+            },
+            {
+                'id': 'logs',
+                'name': 'Logs',
+                'badge': len(user.log_entries)
+            },
+            {
+                'id': 'finance',
+                'name': 'Finanzen',
+            },
+            {
+                'id': 'groups',
+                'name': 'Gruppen',
+                'badge': len(user.active_memberships())
+            },
+            {
+                'id': 'room_history',
+                'name': 'Wohnorte',
+                'badge': len(user.room_history_entries)
+            },
+        ]
     )
 
 

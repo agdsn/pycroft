@@ -22,47 +22,34 @@
   <div class="row">
     <div class="col-xs-12">
       <ul class="nav nav-tabs">
-        <li class="active"><a href="#hosts" data-toggle="tab">
-          Hosts & Interfaces
-          {% if count['hosts'] %}&nbsp;<span class="badge">{{ count['hosts'] }}</span>{% endif %}
-        </a></li>
-        <li><a href="#tasks" data-toggle="tab">
-          Aufgaben
-          {% if count['tasks'] %}&nbsp;<span style="background-color: #d9534f;" class="badge">{{ count['tasks'] }}</span>{% endif %}
-        </a></li>
-        <li><a href="#traffic" data-toggle="tab">Traffic</a></li>
-        <li><a href="#logs" data-toggle="tab">Logs</a></li>
-        <li><a href="#finances" data-toggle="tab">Finanzen</a></li>
-        <li><a href="#groups" data-toggle="tab">Gruppen</a></li>
-        <li><a href="#room_history" data-toggle="tab">
-          Wohnorte
-          {% if count['rooms'] %}&nbsp;<span class="badge">{{ count['rooms'] }}</span>{% endif %}
-        </a></li>
+        {% for tab in tabs %}
+          <li class="{{ "active" if tab.id == 'hosts' else "" }}">
+            <a href="#{{ tab.id }}" data-toggle="tab">
+              {{ tab.name }}
+              {% if 'badge' in tab and tab.badge %}
+                &nbsp;
+                <span class="badge" style="{{ "background-color: " + tab.badge_color if 'badge_color' in tab else "" }}">
+                  {{ tab.badge }}
+                </span>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
       </ul>
 
       <div class="tab-content">
-        <div class="tab-pane fade in active" id="hosts">
-          {% include "user/_user_show_hosts.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="tasks">
-          {% include "user/_user_show_tasks.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="traffic">
-          {% include "user/_user_show_traffic.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="logs">
-          {% include "user/_user_show_logs.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="finances">
-          {% include "user/_user_show_finance.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="groups">
-          {% include "user/_user_show_groups.html" with context %}
-        </div>
-        <div class="tab-pane fade" id="room_history">
-          {% include "user/_user_show_room_history.html" with context %}
-        </div>
+        {% for tab in tabs %}
+          <div class="tab-pane fade {{ "in active" if tab.id == 'hosts' else "" }}" id="{{ tab.id }}">
+            {% include "user/_user_show_" + tab.id + ".html" with context %}
+          </div>
+        {% endfor %}
       </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>Traffic</h2>
+      {% include "user/_user_show_traffic.html" with context %}
     </div>
   </div>
 {% endblock %}
