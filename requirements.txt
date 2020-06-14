@@ -36,3 +36,4 @@ uwsgi~=2.0.14
 GitPython~=2.1.7
 mac-vendor-lookup~=0.1.11
 marshmallow~=2.19.2
+email-validator~=1.1.1
