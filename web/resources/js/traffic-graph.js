@@ -16,6 +16,8 @@ $(function() {
         var width = graph.parent.node().getBoundingClientRect().width;
         var height = 200;
 
+        console.log(width);
+
         graph.chart
             .width(width)
             .height(height);
@@ -25,40 +27,42 @@ $(function() {
             .attr('height', height);
     }
 
-    d3.select(".traffic-graph").each(function () {
-        var trafficGraph = {
-            parent: d3.select(this),
-            url: this.dataset.url,
-            days: this.dataset.days,
-        };
+    $("#tab-traffic").on('shown.bs.tab', function () {
+        d3.select(".traffic-graph").each(function () {
+            var trafficGraph = {
+                parent: d3.select(this),
+                url: this.dataset.url,
+                days: this.dataset.days,
+            };
 
-        nv.addGraph({
-            generate: function () {
-                trafficGraph.chart = nv.models.multiBarChart()
-                    .margin({top: 25, right: 75, bottom: 30, left: 60})
-                    .stacked(true)
-                    .groupSpacing(0.4)
-                    .color(["#b55d1f", "#1f77b4"]);
-                trafficGraph.chart.yScale(binaryPrefix.linearScale());
-                trafficGraph.chart.yAxis.tickFormat(binaryPrefix.format);
+            nv.addGraph({
+                generate: function () {
+                    trafficGraph.chart = nv.models.multiBarChart()
+                        .margin({top: 25, right: 75, bottom: 30, left: 60})
+                        .stacked(true)
+                        .groupSpacing(0.4)
+                        .color(["#b55d1f", "#1f77b4"]);
+                    trafficGraph.chart.yScale(binaryPrefix.linearScale());
+                    trafficGraph.chart.yAxis.tickFormat(binaryPrefix.format);
 
-                trafficGraph.data = trafficGraph.parent.append("svg");
+                    trafficGraph.data = trafficGraph.parent.append("svg");
 
-                setChartSize(trafficGraph);
-
-                return trafficGraph.chart;
-            },
-            callback: function (graph) {
-                nv.utils.windowResize(function () {
                     setChartSize(trafficGraph);
 
-                    trafficGraph.data
-                        .transition().duration(0)
-                        .call(graph);
-                });
+                    return trafficGraph.chart;
+                },
+                callback: function (graph) {
+                    nv.utils.windowResize(function () {
+                        setChartSize(trafficGraph);
 
-                loadTrafficData(trafficGraph);
-            },
+                        trafficGraph.data
+                            .transition().duration(0)
+                            .call(graph);
+                    });
+
+                    loadTrafficData(trafficGraph);
+                },
+            });
         });
     });
 

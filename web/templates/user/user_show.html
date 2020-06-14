@@ -24,7 +24,7 @@
       <ul class="nav nav-tabs">
         {% for tab in tabs %}
           <li class="{{ "active" if tab.id == 'hosts' else "" }}">
-            <a href="#{{ tab.id }}" data-toggle="tab">
+            <a id="tab-{{ tab.id }}" href="#{{ tab.id }}" data-toggle="tab">
               {{ tab.name }}
               {% if 'badge' in tab and tab.badge %}
                 &nbsp;
