@@ -24,8 +24,7 @@ class Building(IntegerIdModel):
     street = Column(String(), nullable=False)
     wifi_available = Column(Boolean(), nullable=False, default=False)
 
-    # TODO: Change nullable to false and create new fee accounts
-    fee_account_id = Column(Integer, ForeignKey(Account.id), nullable=True)
+    fee_account_id = Column(Integer, ForeignKey(Account.id), nullable=False)
     fee_account = relationship(Account, backref=backref("building",
                                                         uselist=False))
 
