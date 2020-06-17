@@ -105,4 +105,4 @@ def reverse_pointer(ip_address):
 
 
 def get_interface_manufacturer(mac):
-    return MacLookup().lookup(mac)
+    return MacLookup().lookup(mac)[:8]  # display only most significant part of vendor name
