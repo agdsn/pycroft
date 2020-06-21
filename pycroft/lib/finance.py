@@ -25,7 +25,7 @@ from pycroft import config, model
 from pycroft.helpers.i18n import deferred_gettext, gettext, Message
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.utc import time_max, time_min
-from pycroft.lib.logging import log_user_event
+from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
 from pycroft.model.facilities import Room, Building
@@ -865,19 +865,35 @@ def match_activities():
 
 
 @with_transaction
-def transaction_delete(transaction):
+def transaction_delete(transaction, processor):
     if transaction.confirmed:
         raise ValueError("transaction already confirmed")
 
     session.session.delete(transaction)
 
+    message = deferred_gettext(u"Deleted transaction {}.").format(transaction.id)
+    log_event(message.to_json(), author=processor)
+
 
 @with_transaction
-def transaction_confirm(transaction):
+def transaction_confirm(transaction, processor):
     if transaction.confirmed:
         raise ValueError("transaction already confirmed")
 
     transaction.confirmed = True
+
+    message = deferred_gettext(u"Confirmed transaction {}.").format(transaction.id)
+    log_event(message.to_json(), author=processor)
+
+
+@with_transaction
+def transaction_confirm_all(processor):
+    # Confirm all transactions older than one hour that are not confirmed yet
+    transactions = Transaction.q.filter_by(confirmed=False)\
+        .filter(Transaction.posted_at < session.utcnow() - timedelta(hours=1))
+
+    for transaction in transactions:
+        transaction_confirm(transaction, processor)
 
 
 def fee_from_valid_date(valid_on: date, account: Account) -> Optional[Split]:

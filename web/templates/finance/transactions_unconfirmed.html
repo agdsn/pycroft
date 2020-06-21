@@ -2,4 +2,11 @@
 
 {% block content %}
     {{ unconfirmed_transactions_table.render(table_id='transactions_unconfirmed') }}
+
+    <hr/>
+
+    <a class="btn btn-success" href="{{ url_for('.transaction_confirm_all') }}">
+        <span class="glyphicon glyphicon-check"></span>
+        Alle bestätigen
+    </a>
 {% endblock %}

@@ -40,6 +40,7 @@ from pycroft.model.session import session
 from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.fints import FinTS3Client
 from bs_table_py.table import date_format
 from web.blueprints.finance.forms import (
@@ -779,12 +780,39 @@ def transaction_confirm(transaction_id):
         flash(u"Diese Transaktion wurde bereits bestätigt.", 'error')
         abort(400)
 
-    lib.finance.transaction_confirm(transaction)
+    lib.finance.transaction_confirm(transaction, current_user)
 
     session.commit()
 
     flash(u'Transaktion bestätigt.', 'success')
     return redirect(url_for('.transactions_unconfirmed'))
+
+
+@bp.route('/transaction/confirm', methods=['GET', 'POST'])
+@access.require('finance_change')
+def transaction_confirm_all():
+    form = FlaskForm()
+
+    if form.is_submitted():
+        _, success = web_execute(lib.finance.transaction_confirm_all,
+                                 "Alle Transaktionen wurden bestätigt.",
+                                 current_user)
+
+        session.commit()
+
+        return redirect(url_for('.transactions_unconfirmed'))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.transactions_unconfirmed'),
+        'submit_text': 'Alle Bestätigen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Alle Transaktionen (älter als 1h) bestätigen",
+                           form_args=form_args,
+                           form=form)
 
 
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
@@ -804,7 +832,7 @@ def transaction_delete(transaction_id):
     form = FlaskForm()
 
     if form.is_submitted():
-        lib.finance.transaction_delete(transaction)
+        lib.finance.transaction_delete(transaction, current_user)
 
         session.commit()
 
