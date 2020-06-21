@@ -693,6 +693,9 @@ def get_users_with_payment_in_default():
 
     users_membership_terminated.difference_update(users_pid_membership)
 
+    users_pid_membership = sorted(users_pid_membership, key=lambda u: u.account.balance)
+    users_membership_terminated = sorted(users_membership_terminated, key=lambda u: u.account.balance)
+
     return users_pid_membership, users_membership_terminated
 
 
