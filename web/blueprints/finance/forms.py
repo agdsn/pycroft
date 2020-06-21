@@ -8,11 +8,11 @@ from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
 
-from web.form.fields.core import (
+from wtforms_widgets.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
     FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField,
     BooleanField, SelectMultipleField, QuerySelectMultipleField, TextAreaField, QuerySelectField)
-from web.form.fields.custom import TypeaheadField, static, disabled
+from wtforms_widgets.fields.custom import TypeaheadField, static, disabled
 from pycroft.helpers.i18n import gettext
 from pycroft.model.finance import BankAccount
 
@@ -170,12 +170,16 @@ def get_user_name_with_id(user):
     return "{} ({})".format(user.name, user.id)
 
 
+def get_user_name_with_id_and_balance(user):
+    return "{} ({}) | {}€".format(user.name, user.id, -user.account.balance)
+
+
 class HandlePaymentsInDefaultForm(Form):
     new_pid_memberships = QuerySelectMultipleField(u"Neue Mitgliedschaften in der 'Zahlungsrückstand' Gruppe",
-                                                   get_label=get_user_name_with_id,
+                                                   get_label=get_user_name_with_id_and_balance,
                                                    render_kw={'size': 20})
     terminated_member_memberships = QuerySelectMultipleField(u"Beendete Mitgliedschaften/Auszüge",
-                                                             get_label=get_user_name_with_id,
+                                                             get_label=get_user_name_with_id_and_balance,
                                                              render_kw={'size': 20})
 
 class FixMT940Form(Form):

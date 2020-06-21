@@ -8,7 +8,7 @@ from wtforms.validators import DataRequired, Regexp
 
 from pycroft import config
 from pycroft.model.user import PropertyGroup
-from web.form.fields.core import TextField, IntegerField
+from wtforms_widgets.fields.core import TextField, IntegerField
 
 
 def property_group_query():

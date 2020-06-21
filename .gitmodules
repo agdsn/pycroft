@@ -1,0 +1,6 @@
+[submodule "dev_deps/wtforms-widgets"]
+	path = dev_deps/wtforms-widgets
+	url = git@github.com:agdsn/wtforms-widgets.git
+[submodule "dev_deps/bootstrap-table-py"]
+	path = dev_deps/bootstrap-table-py
+	url = git@github.com:agdsn/bootstrap-table-py.git

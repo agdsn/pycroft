@@ -3,9 +3,9 @@ from wtforms.validators import DataRequired, IPAddress
 
 from pycroft.model.net import VLAN
 from web.blueprints.facilities.forms import SelectRoomForm
-from web.form.fields.core import TextField, QuerySelectField, \
+from wtforms_widgets.fields.core import TextField, QuerySelectField, \
     QuerySelectMultipleField
-from web.form.fields.filters import to_uppercase, to_lowercase
+from wtforms_widgets.fields.filters import to_uppercase, to_lowercase
 
 
 def vlan_query():

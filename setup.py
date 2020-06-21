@@ -48,6 +48,7 @@ setup(
         'reportlab',
         'simplejson',
         'wrapt',
+        'wtforms-widgets',
     ],
     dependency_links=[
         'git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git'

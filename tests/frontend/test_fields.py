@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import string
 from unittest import TestCase
-from web.form.fields.core import DateField
+from wtforms_widgets.fields.core import DateField
 
 __author__ = 'shreyder'
 

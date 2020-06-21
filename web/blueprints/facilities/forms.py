@@ -2,19 +2,19 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-
-
+from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import Length, DataRequired, NumberRange, Optional
 from pycroft.model.facilities import Building
-from web.form.base_form import BaseForm
-from web.form.fields.core import TextField, BooleanField, TextAreaField, \
+from wtforms_widgets.base_form import BaseForm
+from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField, IntegerField
 
+
 from pycroft.helpers.facilities import sort_buildings
-from web.form.fields.custom import LazyLoadSelectField, static
-from web.form.fields.filters import to_uppercase
-from web.form.fields.validators import OptionalIf
+from wtforms_widgets.fields.custom import LazyLoadSelectField, static
+from wtforms_widgets.fields.filters import to_uppercase
+from wtforms_widgets.fields.validators import OptionalIf
 
 
 def building_query():

@@ -1,12 +1,13 @@
+from web.form.widgets import UserIDField
 from wtforms.validators import DataRequired, Optional
 
 from web.blueprints.facilities.forms import SelectRoomForm
-from web.form.fields.core import TextField, QuerySelectField, \
+from wtforms_widgets.fields.core import TextField, QuerySelectField, \
     SelectMultipleField
-from web.form.fields.custom import UserIDField, MacField
+from wtforms_widgets.fields.custom import MacField
 from flask_wtf import FlaskForm as Form
 
-from web.form.fields.validators import MacAddress
+from wtforms_widgets.fields.validators import MacAddress
 
 
 class HostForm(SelectRoomForm):

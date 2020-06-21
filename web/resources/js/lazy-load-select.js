@@ -9,7 +9,7 @@ import jQuery from 'jquery';
 /**
  * The LazyLoadSelect plugin!
  *
- * This Plugin is used with the LazyLoadSelectField from web.form.fields.
+ * This Plugin is used with the LazyLoadSelectField from wtforms_widgets.fields.
  * It fetches new option values if one of the dependencies changes.
  */
 !function ($) {

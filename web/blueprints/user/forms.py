@@ -8,18 +8,18 @@ from difflib import SequenceMatcher
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import (
-    Regexp, NumberRange, ValidationError, DataRequired, Email, Optional)
+    Regexp, ValidationError, DataRequired, Email, Optional)
 
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
 from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
-from web.form.fields.core import TextField, TextAreaField, BooleanField, \
-    QuerySelectField, DateField, SelectField, FormField, \
-    QuerySelectMultipleField, SelectMultipleField, DateField
-from web.form.fields.custom import LazyLoadSelectField, MacField, UserIDField
-from web.form.fields.filters import empty_to_none, to_lowercase
-from web.form.fields.validators import OptionalIf, MacAddress
+from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
+    QuerySelectField, FormField, \
+    QuerySelectMultipleField, DateField
+from wtforms_widgets.fields.custom import MacField
+from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
+from wtforms_widgets.fields.validators import OptionalIf, MacAddress
 
 
 def user_query():
