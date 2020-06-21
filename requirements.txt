@@ -38,3 +38,4 @@ mac-vendor-lookup~=0.1.11
 marshmallow~=2.19.2
 wtforms-widgets==1.0.4
 email-validator~=1.1.1
+bootstrap-table-py~=1.0.0

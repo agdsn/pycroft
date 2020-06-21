@@ -8,9 +8,9 @@ network.  It is based on [Flask](http://flask.pocoo.org) and expects a
 # Cloning this directory #
 
 A basic understanding of [git](https://git-scm.com/) is advisable.
-The first step should be to clone this repository via `git clone
+The first step should be to clone this repository via `git clone --recursive
 <url>`, using what clone url shows you above
-[this very readme](https://github.com/agdsn/pycroft)
+[this very readme](https://github.com/agdsn/pycroft).
 
 # Setup #
 
@@ -365,6 +365,34 @@ by comparing the current status of the database against the table metadata of th
 ```
 docker-compose run --rm dev-app alembic revision --autogenerate -m "add complex test table"
 ```
+
+## Related dependencies
+Pycroft has dependencies that are not part of the Pycroft project, but are
+maintained by the Pycroft team. Those are:
+
+- [wtforms-widgets](https://github.com/agdsn/wtforms-widgets),
+for rendering forms
+- [bootstrap-table-py](https://github.com/agdsn/bootstrap-table-py),
+for declaring bootstrap-tables in python
+
+To make it easier to make changes on these dependencies, they are added as
+submodule in the `dev_deps` folder. You need to recursively clone this repo
+in order to have them.
+
+You can make changes in these sudmodules and deploy them (in your dev
+environment) with:
+
+```
+docker-compose run --rm dev-app pip install -r requirements.dev.txt
+```
+
+If your changes are ready for a release, follow these steps:
+
+- Adjust to setup.py (new version number, etc.) and requirements.txt
+- Commit and push the changes in the submodules to a branch
+- Create a pull request
+- (After merging the changes), run the `deploy.sh` script afterwards in order to
+upload the new version to PyPi
 
 ## Troubleshooting
 

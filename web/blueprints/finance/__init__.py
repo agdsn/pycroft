@@ -41,7 +41,7 @@ from pycroft.model.user import User
 from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.fints import FinTS3Client
-from web.blueprints.helpers.table import date_format
+from bs_table_py.table import date_format
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
@@ -131,8 +131,8 @@ def bank_accounts_activities_json():
     return jsonify(items=[{
         'bank_account': activity.bank_account.name,
         'name': activity.other_name,
-        'valid_on': date_format(activity.valid_on),
-        'imported_at': date_format(activity.imported_at),
+        'valid_on': date_format(activity.valid_on, formatter=date_filter),
+        'imported_at': date_format(activity.imported_at, formatter=date_filter),
         'reference': activity.reference,
         'amount': activity.amount,
         'iban': activity.other_account_number,
@@ -746,7 +746,7 @@ def transactions_unconfirmed_json():
                     'title': transaction.author.name,
                     'new_tab': True,
                 },
-                'date': date_format(transaction.posted_at),
+                'date': date_format(transaction.posted_at, formatter=date_filter),
                 'amount': money_filter(transaction.amount),
                 'actions': [{
                     'href': url_for(".transaction_confirm",
@@ -998,8 +998,8 @@ def membership_fees_json():
                 membership_fee.regular_fee),
             'payment_deadline': membership_fee.payment_deadline.days,
             'payment_deadline_final': membership_fee.payment_deadline_final.days,
-            'begins_on': date_format(membership_fee.begins_on),
-            'ends_on': date_format(membership_fee.ends_on),
+            'begins_on': date_format(membership_fee.begins_on, formatter=date_filter),
+            'ends_on': date_format(membership_fee.ends_on, formatter=date_filter),
             'actions': [
                 {'href': url_for(".transactions_all",
                                  filter="all",

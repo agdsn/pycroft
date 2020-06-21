@@ -1,4 +1,4 @@
-from web.blueprints.helpers.table import BootstrapTable, Column, DateColumn, \
+from bs_table_py.table import BootstrapTable, Column, DateColumn, \
     MultiBtnColumn, LinkColumn
 from web.blueprints.helpers.user import no_membership_change
 

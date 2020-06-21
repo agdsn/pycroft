@@ -1,7 +1,7 @@
 import re
 from unittest import TestCase
 
-from web.blueprints.helpers.table import Column, BootstrapTable, SplittedTable, \
+from bs_table_py.table import Column, BootstrapTable, SplittedTable, \
     BootstrapTableMeta, custom_formatter_column
 
 

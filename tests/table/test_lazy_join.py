@@ -1,5 +1,5 @@
 from unittest import TestCase
-from web.blueprints.helpers.lazy_join import lazy_join
+from bs_table_py.table import lazy_join
 
 
 class LazyJoinTest(TestCase):

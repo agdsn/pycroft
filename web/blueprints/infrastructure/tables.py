@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_login import current_user
 
-from web.blueprints.helpers.table import BootstrapTable, Column, LinkColumn, \
+from bs_table_py.table import BootstrapTable, Column, LinkColumn, \
     BtnColumn, button_toolbar
 
 

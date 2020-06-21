@@ -48,7 +48,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.host import validate_unique_mac
-from web.blueprints.helpers.table import datetime_format, date_format
+from bs_table_py.table import datetime_format, date_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
@@ -64,6 +64,7 @@ from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
+from ...template_filters import date_filter, datetime_filter
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -459,8 +460,10 @@ def user_show_groups_json(user_id, group_filter="all"):
 
     return jsonify(items=[{
             'group_name': membership.group.name,
-            'begins_at': datetime_format(membership.begins_at, default=''),
-            'ends_at': datetime_format(membership.ends_at, default=''),
+            'begins_at': datetime_format(membership.begins_at,
+                                         default='',
+                                         formatter=datetime_filter),
+            'ends_at': datetime_format(membership.ends_at, default='', formatter=datetime_filter),
             'grants': granted,
             'denies': denied,
             'active': membership.active(),
@@ -999,8 +1002,8 @@ def room_history_json(user_id):
     user = get_user_or_404(user_id)
 
     return jsonify(items=[{
-        'begins_at': date_format(history_entry.begins_at),
-        'ends_at': date_format(history_entry.ends_at),
+        'begins_at': date_format(history_entry.begins_at, formatter=date_filter),
+        'ends_at': date_format(history_entry.ends_at, formatter=date_filter),
         'room': {
             'href': url_for('facilities.room_show', room_id=history_entry.room_id),
             'title': history_entry.room.short_name

@@ -11,7 +11,7 @@ from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.table import datetime_format
+from bs_table_py.table import datetime_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
@@ -50,7 +50,7 @@ def task_object(task):
         "status": task.status.name,
         "parameters": format_parameters(task.parameters.data),
         "errors": task.errors if task.errors is not None else list(),
-        "due": datetime_format(task.due, default=''),
+        "due": datetime_format(task.due, default='', formatter=datetime_filter),
         "created": task.created.strftime("%Y-%m-%d %H:%M:%S"),
         "creator": {
             'href': url_for('user.user_show', user_id=task.creator.id),

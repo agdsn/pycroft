@@ -12,7 +12,9 @@ from functools import partial
 from flask import url_for
 
 from pycroft.helpers.i18n import Message
-from web.blueprints.helpers.table import datetime_format
+from bs_table_py.table import datetime_format
+
+from web.template_filters import datetime_filter
 
 
 def format_log_entry(entry, log_type):
@@ -23,7 +25,7 @@ def format_log_entry(entry, log_type):
         ``'room'``.
     """
     return {
-        'created_at': datetime_format(entry.created_at),
+        'created_at': datetime_format(entry.created_at, formatter=datetime_filter),
         'raw_created_at': entry.created_at,
         'user': {
             'type': 'native',  # parses it as a link
@@ -73,7 +75,7 @@ def format_hades_log_entry(interface, entry):
     date = entry.time
     desc = radius_description(interface, entry)
     return {
-        'created_at': datetime_format(date),
+        'created_at': datetime_format(date, formatter=datetime_filter),
         'raw_created_at': date,
         'user': {
             'type': 'plain',  # (w/o link) vs. 'native' (w/ link)
@@ -87,7 +89,7 @@ def format_hades_log_entry(interface, entry):
 def format_custom_hades_message(message):
     date = datetime.now(tz=timezone.utc)
     return {
-        'created_at': datetime_format(date),
+        'created_at': datetime_format(date, formatter=datetime_filter),
         'raw_created_at': date,
         'user': {
             'type': 'plain',
