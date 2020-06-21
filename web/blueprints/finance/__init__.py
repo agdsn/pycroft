@@ -723,6 +723,7 @@ def transactions_unconfirmed_json():
 
     for transaction in transactions:
         user_account = next((a for a in transaction.accounts if a.type == "USER_ASSET"), None)
+        bank_acc_act = BankAccountActivity.q.filter_by(transaction_id=transaction.id).first()
 
         items.append(
             {
@@ -750,12 +751,19 @@ def transactions_unconfirmed_json():
                 'date': date_format(transaction.posted_at, formatter=date_filter),
                 'amount': money_filter(transaction.amount),
                 'actions': [{
+                    'href': url_for(".bank_account_activities_edit",
+                                    activity_id=bank_acc_act.id),
+                    'title': 'Bankbewegung',
+                    'icon': 'glyphicon-credit-card',
+                    'btn_class': 'btn-info btn-sm',
+                    'new_tab': True
+                }, {
                     'href': url_for(".transaction_confirm",
                                     transaction_id=transaction.id),
                     'title': 'Bestätigen',
                     'icon': 'glyphicon-ok',
                     'btn_class': 'btn-success btn-sm',
-                }, {
+                },{
                     'href': url_for(".transaction_delete",
                                     transaction_id=transaction.id),
                     'title': 'Löschen',
