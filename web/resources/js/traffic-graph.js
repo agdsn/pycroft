@@ -27,7 +27,7 @@ $(function() {
             .attr('height', height);
     }
 
-    $("#tab-traffic").on('shown.bs.tab', function () {
+    $("#tab-traffic").one('shown.bs.tab', function () {
         d3.select(".traffic-graph").each(function () {
             var trafficGraph = {
                 parent: d3.select(this),

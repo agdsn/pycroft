@@ -16,6 +16,7 @@ class FinanceTable(BootstrapTable):
             # 'data-search': 'true',
             'data-sort-order': 'desc',
             'data-sort-name': 'valid_on',
+            'data-page-list': '[5, 10, 25, 50, 100]'
         }
 
     def __init__(self, *a, saldo=None, user_id=None, inverted=False, **kw):

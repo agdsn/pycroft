@@ -47,3 +47,7 @@
     </div>
   </div>
 {% endblock %}
+
+{% block page_script %}
+    {{ resources.link_script_file('tab-anchor.js' | require) }}
+{% endblock %}

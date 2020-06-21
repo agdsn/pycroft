@@ -32,6 +32,7 @@ export default {
         'transaction-form': './js/transaction-form.js',
         'unlimited-end-date': './js/unlimited-end-date.js',
         'select-multiple-improvement': './js/select-multiple-improvement.js',
+        'tab-anchor': './js/tab-anchor.js',
     },
     output: {
         path: dst,
