@@ -961,12 +961,17 @@ def estimate_balance(user, end_date):
 
 
 def get_pid_csv():
+    from pycroft.lib.user import encode_type2_user_id
+    
     users_pid_membership, users_membership_terminated = get_users_with_payment_in_default()
 
     f = StringIO()
 
     writer = csv.writer(f)
-    writer.writerow(('email', 'name', 'balance'))
-    writer.writerows(("{}@wh2.tu-dresden.de".format(u.login), u.name, str(-u.account.balance)) for u in users_pid_membership)
+    writer.writerow(('id', 'email', 'name', 'balance'))
+    writer.writerows((encode_type2_user_id(u.id),
+                      "{}@agdsn.me".format(u.login),
+                      u.name,
+                      str(-u.account.balance)) for u in users_pid_membership)
 
     return f.getvalue()
