@@ -15,6 +15,7 @@ from bs_table_py.table import datetime_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
+from web.template_filters import datetime_filter
 
 bp = Blueprint('task', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
