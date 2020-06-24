@@ -27,7 +27,8 @@ from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 from pycroft.helpers.interval import (
     IntervalSet, UnboundedInterval, closed, single)
-from pycroft.helpers.user import hash_password, verify_password
+from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
+    clear_password_prefix
 from pycroft.model import session, functions, ddl
 from pycroft.model.address import Address
 from pycroft.model.base import ModelBase, IntegerIdModel
@@ -209,15 +210,19 @@ class User(IntegerIdModel, UserMixin):
         """Store a hash of a given plaintext passwd for the user.
 
         """
-        raise RuntimeError("Password can not be read, only set")
+
+        if self.wifi_passwd_hash.startswith(clear_password_prefix):
+            return self.wifi_passwd_hash.replace(clear_password_prefix, '', 1)
+
+        raise ValueError("Cleartext password not available.")
 
     @hybrid_property
     def has_wifi_access(self):
         return self.wifi_passwd_hash is not None
 
-    @password.setter
+    @wifi_password.setter
     def wifi_password(self, value):
-        self.wifi_passwd_hash = hash_password(value)
+        self.wifi_passwd_hash = cleartext_password(value)
 
     @staticmethod
     def verify_and_get(login, plaintext_password):

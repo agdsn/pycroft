@@ -97,6 +97,11 @@ def generate_user_data(user):
     last_finance_update = finance_history[-1]['valid_on'] if finance_history \
         else None
 
+    try:
+        wifi_password = user.wifi_password
+    except ValueError:
+        wifi_password = None
+
     return jsonify(
         id=user.id,
         user_id=encode_type2_user_id(user.id),
@@ -124,7 +129,8 @@ def generate_user_data(user):
         finance_balance=-user.account.balance,
         finance_history=finance_history,
         last_finance_update=last_finance_update,
-        membership_end_date=membership_end_date(user)
+        membership_end_date=membership_end_date(user),
+        wifi_password=wifi_password,
     )
 
 

@@ -10,6 +10,7 @@ crypt_context = ldap_context.copy(
     deprecated=["ldap_plaintext", "ldap_md5", "ldap_sha1", "ldap_salted_md5",
                 "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
 
+clear_password_prefix = '{clear}'
 
 def generate_password(length):
     """Generate a password of a certain length.
@@ -36,6 +37,15 @@ def hash_password(plaintext_passwd):
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
     return crypt_context.encrypt(plaintext_passwd)
+
+
+def cleartext_password(plaintext_passwd):
+    """Generate a RFC 2307 complaint hash from given plaintext.
+
+    The passlib CryptContext is configured to generate the very secure
+    ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
+    """
+    return "{}{}".format(clear_password_prefix, plaintext_passwd)
 
 
 def verify_password(plaintext_password, hash):
