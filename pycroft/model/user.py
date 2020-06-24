@@ -211,7 +211,7 @@ class User(IntegerIdModel, UserMixin):
 
         """
 
-        if self.wifi_passwd_hash.startswith(clear_password_prefix):
+        if self.wifi_passwd_hash is not None and self.wifi_passwd_hash.startswith(clear_password_prefix):
             return self.wifi_passwd_hash.replace(clear_password_prefix, '', 1)
 
         raise ValueError("Cleartext password not available.")
