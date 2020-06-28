@@ -17,6 +17,7 @@ from pycroft.helpers.date import last_day_of_month
 from tests.factories import MembershipFactory, ConfigFactory
 
 from pycroft.helpers.interval import closed, closedopen, openclosed, single
+from pycroft.lib import finance
 from pycroft.lib.finance import (
     cleanup_description,
     import_bank_account_activities_csv, simple_transaction,
@@ -599,3 +600,21 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         end_date = last_day_of_month(session.utcnow().date())
 
         self.assertEquals(0.00, estimate_balance(self.user, end_date))
+
+
+class MatchingTestCase(unittest.TestCase):
+    cases = [
+        ("11111-36, Hans Wurst, HSS46/A 01 B", "pyc-11111"),
+        ("11111-36, JustOneName, /My fancy room", "pyc-11111"),
+        ("12345-65465, Hans Wurst, HSS46/A 01 B", None),  # checksum too long
+        ("12345-65, Hans Wurst, HSS46/A 01 B", None),  # bad checksum
+        ("12345-20, Hans Wurst, HSS46/A 01 B", "pyc-12345"),
+        ("1, Hans Wurst, HSS46/A 01 B", None),
+    ]
+
+    def test_matching(self):
+        for reference, expected in self.cases:
+            with self.subTest(reference=reference, expected=expected):
+                result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
+                                                 lambda ger_name: f"ger-{ger_name}")
+                self.assertEqual(result, expected)

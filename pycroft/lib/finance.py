@@ -13,7 +13,7 @@ from itertools import chain, islice, starmap, tee, zip_longest
 from io import StringIO
 import operator
 import re
-from typing import Optional
+from typing import Optional, Callable, TypeVar
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
     text, DateTime
@@ -864,6 +864,33 @@ def match_activities():
     return matching
 
 
+TUser = TypeVar('TUser')
+
+
+def match_reference(reference: str,
+                    fetch_normal: Callable[[int], Optional[TUser]],
+                    fetch_gerok: Callable[[str], Optional[TUser]]) -> Optional[TUser]:
+    """Try to return a user fitting a given bank reference string.
+
+    :param reference: the bank reference
+    :param fetch_normal: If we found a pycroft user id, use this to fetch the user.
+    :param fetch_gerok: If we found a gerok username, use this to fetch the user.
+
+    Passing lambdas allows us to write fast, db-independent tests.
+    """
+    return None
+
+
+def match_ger_reference(reference: str) -> Optional[str]:
+    """Given a bank reference, return the token that should be interpreted as a uid"""
+    return None
+
+
+def match_pycroft_reference(reference: str) -> Optional[int]:
+    """Given a bank reference, return the user id"""
+    return None
+
+
 @with_transaction
 def transaction_delete(transaction, processor):
     if transaction.confirmed:
@@ -962,7 +989,7 @@ def estimate_balance(user, end_date):
 
 def get_pid_csv():
     from pycroft.lib.user import encode_type2_user_id
-    
+
     users_pid_membership, users_membership_terminated = get_users_with_payment_in_default()
 
     f = StringIO()
