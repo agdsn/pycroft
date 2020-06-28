@@ -3,7 +3,6 @@ from itertools import chain
 
 import factory
 
-from pycroft.model import session
 from pycroft.model.user import Membership, PropertyGroup
 
 from .base import BaseFactory
