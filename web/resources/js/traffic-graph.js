@@ -5,7 +5,6 @@
  */
 
 import $ from 'jquery';
-import d3 from 'd3';
 import nv from 'nvd3';
 import * as binaryPrefix from './binary-prefix';
 

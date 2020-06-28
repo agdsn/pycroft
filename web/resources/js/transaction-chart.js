@@ -5,8 +5,6 @@
  */
 
 import $ from 'jquery';
-import d3 from 'd3';
-import dc from 'dc';
 
 $(function () {
     var dateFormat = d3.time.format('%Y-%m-%d');

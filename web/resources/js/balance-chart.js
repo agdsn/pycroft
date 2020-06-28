@@ -4,7 +4,6 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-import d3 from 'd3';
 import {de, timeFormat} from './d3locale.js';
 
 d3.selectAll('[data-chart="balance"]').each(function(d, i) {

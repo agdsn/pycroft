@@ -3,7 +3,7 @@ import process from 'process';
 import webpack from "webpack";
 import ManifestPlugin from "webpack-manifest-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import CleanWebpackPlugin from "clean-webpack-plugin";
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 import TerserPlugin from "terser-webpack-plugin";
 
 // Check for production mode
@@ -77,7 +77,7 @@ export default {
     },
     plugins: [
         // Clean the destination
-        new CleanWebpackPlugin([dst]),
+        new CleanWebpackPlugin(),
         // Create stable module IDs
         new webpack.HashedModuleIdsPlugin({
             hashFunction: 'md5',
@@ -93,6 +93,10 @@ export default {
         // Generate a manifest file, that maps entries and assets to their
         // output file.
         new ManifestPlugin(),
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery"
+        }),
     ].concat(PROD ? [
         // PROD plugins
     ] : [
@@ -112,12 +116,6 @@ export default {
             // be shimmed and their dependencies need to be declared manually.
             {
                 test: /\.js$/,
-                use: {
-                    loader: "imports-loader",
-                    options: {
-                        jQuery: "jquery",
-                    },
-                },
                 include: [
                     'bootstrap',
                     'bootstrap-datepicker',
@@ -132,14 +130,18 @@ export default {
                 test: path.join(src, 'js', 'table.js'),
                 use: {
                     loader: "expose-loader",
-                    options: "table",
+                    options: {
+                        exposes: "table",
+                    },
                 },
             },
             {
                 test: path.join(dep, 'jquery'),
                 use: {
                     loader: "expose-loader",
-                    options: "$",
+                    options: {
+                        exposes: "$",
+                    },
                 },
             },
             // Inject bootstrap-table import into its locales
@@ -148,7 +150,7 @@ export default {
                 use: {
                     loader: "imports-loader",
                     options: {
-                        bootstrapTable: "bootstrap-table",
+                        imports: ['bootstrapTable bootstrap-table'],
                     },
                 },
                 include: path.join(dep, "bootstrap-table", "dist", "locale"),
@@ -181,9 +183,7 @@ export default {
                         plugins: [
                             ['@babel/plugin-transform-runtime', {
                                 helpers: false,
-                                polyfill: false,
                                 regenerator: true,
-                                useBuiltIns: true,
                                 useESModules: true,
                             }],
                         ],
@@ -196,9 +196,6 @@ export default {
                 use: [
                     {
                         loader: "style-loader",
-                        options: {
-                            sourceMap: true,
-                        },
                     },
                     {
                         loader: MiniCssExtractPlugin.loader,
