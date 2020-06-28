@@ -614,11 +614,14 @@ class MatchingTestCase(unittest.TestCase):
         (" Gerok38/Hänsel Gretelson/room5A  Internet bill", "ger-Hänsel Gretelson"),
         (" Gerok38/Foo Bar", "ger-Foo Bar"),
         ("gerok38/name/(moved out)", "ger-name"),
+        ("n1colas, Nicolas Bourbaki, HSS48 76-3", "hss-n1colas"),
+        ("  admin,Ich Bin Hier der Admin , ficticous location , garbage", "hss-admin"),
     ]
 
     def test_matching(self):
         for reference, expected in self.cases:
             with self.subTest(reference=reference, expected=expected):
                 result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
-                                                 lambda ger_name: f"ger-{ger_name}")
+                                                 lambda ger_name: f"ger-{ger_name}",
+                                                 lambda hss_login: f"hss-{hss_login}")
                 self.assertEqual(result, expected)
