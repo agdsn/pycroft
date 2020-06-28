@@ -4,8 +4,9 @@ set -euo pipefail
 
 cd /opt/pycroft/app
 
+rm -r node_modules
 if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*); (( ${#files[@]} > 0 )) ); then
 	exit
 fi
 
-yarn install --network-concurrency 1
+yarn install --verbose --network-concurrency 1
