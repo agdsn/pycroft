@@ -4,8 +4,6 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-import d3 from "d3";
-
 const de = d3.locale({
     decimal: ",",
     thousands: ".",

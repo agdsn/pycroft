@@ -4,8 +4,6 @@
  * the Apache License, Version 2.0. See the LICENSE file for details.
  */
 
-import d3 from 'd3';
-
     export function format(value) {
         const exponent = Math.abs(value) > 1 ? Math.floor(Math.log(Math.abs(value)) / Math.log(1024)) : 0;
         const prefix = exponent ? "KMGTPEZY"[exponent - 1] + "iB" : "B";
