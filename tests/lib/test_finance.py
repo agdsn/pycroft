@@ -611,6 +611,9 @@ class MatchingTestCase(unittest.TestCase):
         ("12345-65, Hans Wurst, HSS46/A 01 B", None),  # bad checksum
         ("12345-20, Hans Wurst, HSS46/A 01 B", "pyc-12345"),
         ("1, Hans Wurst, HSS46/A 01 B", None),
+        (" Gerok38/Hänsel Gretelson/room5A  Internet bill", "ger-Hänsel Gretelson"),
+        (" Gerok38/Foo Bar", "ger-Foo Bar"),
+        ("gerok38/name/(moved out)", "ger-name"),
     ]
 
     def test_matching(self):

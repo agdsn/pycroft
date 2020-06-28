@@ -902,7 +902,7 @@ def match_reference(reference: str,
 
 def match_ger_reference(reference: str) -> Optional[str]:
     """Given a bank reference, return the token that should be interpreted as a uid"""
-    search = re.search(r"(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+)", reference)
+    search = re.search(r"(gerok38|GEROK38|Gerok38)/((\w*\s?)+)", reference)
     if search:
         return search.group(2)
     return None
