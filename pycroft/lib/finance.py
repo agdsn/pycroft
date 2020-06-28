@@ -864,7 +864,14 @@ def match_activities():
     return matching
 
 
+
+T = TypeVar('T')
+U = TypeVar('U')
 TUser = TypeVar('TUser')
+
+
+def _and_then(thing: Optional[T], f: Callable[[T], Optional[U]]) -> Optional[U]:
+    return None if thing is None else f(thing)
 
 
 def match_reference(reference: str,
@@ -878,16 +885,53 @@ def match_reference(reference: str,
 
     Passing lambdas allows us to write fast, db-independent tests.
     """
+    # preprocessing
+    reference = reference\
+        .replace('AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111', '')\
+        .strip()
+    ger_user = _and_then(match_ger_reference(reference), fetch_gerok)
+    if ger_user:
+        return ger_user
+
+    pyc_user = _and_then(match_pycroft_reference(reference), fetch_normal)
+    if pyc_user:
+        return pyc_user
+
     return None
 
 
 def match_ger_reference(reference: str) -> Optional[str]:
     """Given a bank reference, return the token that should be interpreted as a uid"""
+    search = re.search(r"(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+)", reference)
+    if search:
+        return search.group(2)
     return None
 
 
 def match_pycroft_reference(reference: str) -> Optional[int]:
     """Given a bank reference, return the user id"""
+    from pycroft.lib.user import check_user_id
+    search = re.search(r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(' ', ''))
+    if not search:
+        return None
+    for group in search.groups():
+        try:
+            uid = group.replace(' ', '').replace('/', '-') \
+                .replace('?', '-').replace(':', '-').replace(',', '-') \
+                .replace('+', '-').replace('.', '-')
+            if uid[-2] is not '-' and uid[-3] is not '-':
+                # interpret as type 2 UID with missing -
+                uid = uid[:-2] + '-' + uid[-2:]
+
+            if check_user_id(uid):
+                uid = uid.split("-")[0]
+                try:
+                    return int(uid)
+                except ValueError:
+                    continue
+        except AttributeError:
+            continue
+
     return None
 
 

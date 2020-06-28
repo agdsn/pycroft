@@ -603,6 +603,7 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
 
 
 class MatchingTestCase(unittest.TestCase):
+    # noinspection SpellCheckingInspection
     cases = [
         ("11111-36, Hans Wurst, HSS46/A 01 B", "pyc-11111"),
         ("11111-36, JustOneName, /My fancy room", "pyc-11111"),
