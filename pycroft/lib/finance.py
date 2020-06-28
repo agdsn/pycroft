@@ -816,6 +816,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
 
     return query
 
+
 def match_activities():
     """Get a dict of all unmatched transactions and a user they should be matched with
 
@@ -824,45 +825,27 @@ def match_activities():
     :returns: Dictionary with transaction and user
     :rtype: Dict
     """
-    from pycroft.lib.user import check_user_id
     matching = {}
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
                   .filter(BankAccountActivity.transaction_id == None))
 
+    def _fetch_gerok(name: str) -> Optional[User]:
+        return User.q.filter(func.lower(User.name) == func.lower(name)).first()
+
+    def _fetch_normal(uid: int) -> Optional[User]:
+        return User.q.get(uid)
+
     for activity in activity_q.all():
-        # search for user-ID
-        user = None
-        reference = activity.reference.replace('AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111', '')
-        search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})|(gerok38|GEROK38|Gerok38)/(([a-zA-Z]*\s?)+))", reference)
 
-        if search is None:
-            search = re.search(r"(([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2}))", reference.replace(' ', ''))
+        user = match_reference(activity.reference,
+                               fetch_normal=_fetch_normal,
+                               fetch_gerok=_fetch_gerok)
 
-        if search:
-            if activity.reference.lower().startswith('gerok38'):
-                user = User.q.filter(func.lower(User.name)==func.lower(search.group(4))).first()
-            else:
-                for group in search.groups():
-                    try:
-                        uid = group.replace(' ', '').replace('/', '-') \
-                            .replace('?', '-').replace(':', '-').replace(',', '-') \
-                            .replace('+', '-').replace('.', '-')
-                        if uid[-2] is not '-' and uid[-3] is not '-':
-                            # interpret as type 2 UID with missing -
-                            uid = uid[:-2] + '-' + uid[-2:]
-
-                        if check_user_id(uid):
-                            uid = uid.split("-")[0]
-                            user = User.q.get(uid)
-                            break
-                    except AttributeError:
-                        user = None
-            if user:
-                matching.update({activity: user})
+        if user:
+            matching.update({activity: user})
 
     return matching
-
 
 
 T = TypeVar('T')
