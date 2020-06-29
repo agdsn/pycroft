@@ -62,7 +62,7 @@ def task_object(task):
                                                       user_id=task.user.id,
                                                       _anchor='tasks')),
                      'title': "Abbrechen",
-                     'icon': 'glyphicon-remove',
+                     'icon': 'fa-times',
                      'btn-class': 'btn-link'}] if task.status == TaskStatus.OPEN else None,
     }
 

@@ -473,11 +473,11 @@ def room_patchpanel_json(room_id):
         } if port.switch_port else None,
         "edit_link": {"href": url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
                       'title': "Bearbeiten",
-                      'icon': 'glyphicon-pencil',
+                      'icon': 'fa-edit',
                       'btn-class': 'btn-link'},
         "delete_link": {"href": url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
                         'title': "Löschen",
-                        'icon': 'glyphicon-trash',
+                        'icon': 'fa-trash',
                         'btn-class': 'btn-link'},
     } for port in patch_ports])
 

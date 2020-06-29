@@ -268,9 +268,9 @@ def infoflags(user):
     return [
         {'title': u"Mitglied", 'icon': "user", 'val': user_status.member},
         {'title': u"Netzwerkzugang", 'icon': "globe", 'val': user_status.network_access},
-        {'title': u"WLAN-Zugang", 'icon': "signal", 'val': user_status.wifi_access},
-        {'title': u"Bezahlt", 'icon': "euro", 'val': user_status.account_balanced},
-        {'title': u"Verstoßfrei", 'icon': "alert", 'val': not user_status.violation},
+        {'title': u"WLAN-Zugang", 'icon': "wifi", 'val': user_status.wifi_access},
+        {'title': u"Bezahlt", 'icon': "euro-sign", 'val': user_status.account_balanced},
+        {'title': u"Verstoßfrei", 'icon': "exclamation-triangle", 'val': not user_status.violation},
         {'title': u"LDAP", 'icon': "cloud", 'val': user_status.ldap},
     ]
 
@@ -471,12 +471,12 @@ def user_show_groups_json(user_id, group_filter="all"):
                                         user_id=user_id,
                                         membership_id=membership.id),
                         'title': 'Bearbeiten',
-                        'icon': 'glyphicon-edit'},
+                        'icon': 'fa-edit'},
                         {'href': url_for(".end_membership",
                                          user_id=user_id,
                                          membership_id=membership.id),
                          'title': "Beenden",
-                         'icon': 'glyphicon-off'} if membership.active() else {}],
+                         'icon': 'fa-off'} if membership.active() else {}],
         } for membership, granted, denied in memberships.all()])
 
 

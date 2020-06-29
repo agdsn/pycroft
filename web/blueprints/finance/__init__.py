@@ -122,7 +122,7 @@ def bank_accounts_activities_json():
                 activity_id=activity_id),
             'title': '',
             'btn_class': 'btn-primary',
-            'icon': 'glyphicon-pencil'
+            'icon': 'fa-edit'
         }]
 
     activity_q = (BankAccountActivity.q
@@ -732,7 +732,7 @@ def transactions_unconfirmed_json():
                                     transaction_id=transaction.id),
                     'title': transaction.description,
                     'new_tab': True,
-                    'glyphicon': 'glyphicon-new-window'
+                    'glyphicon': 'fa-new-window'
                 },
                 'user': {
                     'href': url_for("user.user_show",
@@ -754,20 +754,20 @@ def transactions_unconfirmed_json():
                     'href': url_for(".bank_account_activities_edit",
                                     activity_id=bank_acc_act.id),
                     'title': 'Bankbewegung',
-                    'icon': 'glyphicon-credit-card',
+                    'icon': 'fa-credit-card',
                     'btn_class': 'btn-info btn-sm',
                     'new_tab': True
                 }, {
                     'href': url_for(".transaction_confirm",
                                     transaction_id=transaction.id),
                     'title': 'Bestätigen',
-                    'icon': 'glyphicon-ok',
+                    'icon': 'fa-check',
                     'btn_class': 'btn-success btn-sm',
                 },{
                     'href': url_for(".transaction_delete",
                                     transaction_id=transaction.id),
                     'title': 'Löschen',
-                    'icon': 'glyphicon-trash',
+                    'icon': 'fa-trash',
                     'btn_class': 'btn-danger btn-sm',
                 }] if privilege_check(current_user, 'finance_change') else [],
             })
@@ -1042,17 +1042,17 @@ def membership_fees_json():
                                  after=membership_fee.begins_on,
                                  before=membership_fee.ends_on),
                  'title': 'Finanzübersicht',
-                 'icon': 'glyphicon-euro',
+                 'icon': 'fa-euro-sign',
                  'btn_class': 'btn-success btn-sm'},
                 {'href': url_for(".membership_fee_book",
                                  fee_id=membership_fee.id),
                  'title': 'Buchen',
-                 'icon': 'glyphicon-book',
+                 'icon': 'fa-book',
                  'btn_class': 'btn-warning btn-sm'},
                 {'href': url_for(".membership_fee_edit",
                                  fee_id=membership_fee.id),
                  'title': 'Bearbeiten',
-                 'icon': 'glyphicon-edit',
+                 'icon': 'fa-edit',
                  'btn_class': 'btn-primary btn-sm'}
             ]
         } for membership_fee in

@@ -28,36 +28,36 @@ def user_btn_style(user):
     props = set(p.property_name for p in user.current_properties)
 
     if 'network_access' not in props:
-        glyphicons.append('glyphicon-remove')
+        glyphicons.append('fa-times')
         tooltips.append('Zugang gesperrt')
 
     if 'payment_in_default' in props:
-        glyphicons.append('glyphicon-euro')
+        glyphicons.append('fa-euro-sign')
         btn_class = 'btn-warning'
         tooltips.append('nicht bezahlt')
 
     if 'member' in props:
         if 'traffic_limit_exceeded' in props:
-            glyphicons.append('glyphicon-stats')
+            glyphicons.append('fa-chart-area')
             btn_class = 'btn-warning'
             tooltips.append('Traffic')
         if 'violation' in props:
-            glyphicons.append('glyphicon-alert')
+            glyphicons.append('fa-exclamation-triangle')
             btn_class = 'btn-danger'
             tooltips.append('Verstoß')
     else:
         btn_class = 'btn-info'
         tooltips.append('Kein Mitglied')
 
-    glyphicons = glyphicons or ['glyphicon-ok']
+    glyphicons = glyphicons or ['fa-check']
     btn_class = btn_class or 'btn-success'
 
     if 'user_show' in props:
-        glyphicons.append('glyphicon-wrench')
+        glyphicons.append('fa-wrench')
         tooltips.append('Admin')
 
     if 'member' not in props and 'ldap' in props:
-        glyphicons.append('glyphicon-cloud')
+        glyphicons.append('fa-cloud')
         tooltips.append('Eintrag im LDAP')
 
     tooltip = ', '.join(tooltips)
