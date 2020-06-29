@@ -3,5 +3,5 @@ factory-boy~=2.12.0
 nose~=1.3.7
 pydot~=1.2.3
 git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
-./dev_deps/wtforms-widgets/
-./dev_deps/bootstrap-table-py/
+-e ./dev_deps/wtforms-widgets/
+-e ./dev_deps/bootstrap-table-py/
