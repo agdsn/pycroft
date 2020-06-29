@@ -61,7 +61,7 @@ class FinanceTable(BootstrapTable):
         if self.user_id is None:
             return
         href = url_for("user.user_account", user_id=self.user_id)
-        return button_toolbar("Details", href, icon="glyphicon-stats")
+        return button_toolbar("Details", href, icon="fa-chart-area")
 
     @property
     @lazy_join

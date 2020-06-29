@@ -169,12 +169,12 @@ def host_interfaces_json(host_id):
                     'href': url_for('.interface_edit',
                                     interface_id=interface.id),
                     'title': "Bearbeiten",
-                    'icon': 'glyphicon-pencil',
+                    'icon': 'fa-edit',
                     'btn-class': 'btn-link'},
                 {'href': url_for('.interface_delete',
                                  interface_id=interface.id),
                  'title': "Löschen",
-                 'icon': 'glyphicon-trash',
+                 'icon': 'fa-trash',
                  'btn-class': 'btn-link'}
             ]
         })
@@ -369,11 +369,11 @@ def user_hosts_json(user_id):
             'actions': [{'href': url_for('.host_edit', host_id=host.id,
                                          user_id=user_id),
                          'title': "Bearbeiten",
-                         'icon': 'glyphicon-pencil',
+                         'icon': 'fa-edit',
                          'btn-class': 'btn-link'},
                         {'href': url_for('.host_delete', host_id=host.id),
                          'title': "Löschen",
-                         'icon': 'glyphicon-trash',
+                         'icon': 'fa-trash',
                          'btn-class': 'btn-link'}],
             'interfaces_table_link': url_for('.interface_table',
                                              host_id=host.id),

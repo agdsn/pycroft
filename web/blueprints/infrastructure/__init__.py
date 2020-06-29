@@ -108,11 +108,11 @@ def switches_json():
             'ip': str(switch.management_ip),
             "edit_link": {"href": url_for(".switch_edit", switch_id=switch.host_id),
                           'title': "Bearbeiten",
-                          'icon': 'glyphicon-pencil',
+                          'icon': 'fa-edit',
                           'btn-class': 'btn-link'},
             "delete_link": {"href": url_for(".switch_delete", switch_id=switch.host_id),
                             'title': "Löschen",
-                            'icon': 'glyphicon-trash',
+                            'icon': 'fa-trash',
                             'btn-class': 'btn-link'},
         } for switch in Switch.q.all()])
 
@@ -153,11 +153,11 @@ def switch_show_json(switch_id):
             } if port.patch_port else None,
             "edit_link": {"href": url_for(".switch_port_edit", switch_id=switch.host.id, switch_port_id=port.id),
                           'title': "Bearbeiten",
-                          'icon': 'glyphicon-pencil',
+                          'icon': 'fa-edit',
                           'btn-class': 'btn-link'},
             "delete_link": {"href": url_for(".switch_port_delete", switch_id=switch.host.id, switch_port_id=port.id),
                             'title': "Löschen",
-                            'icon': 'glyphicon-trash',
+                            'icon': 'fa-trash',
                             'btn-class': 'btn-link'},
         } for port in switch_port_list])
 

@@ -22,7 +22,7 @@
               {% set flag_class="user-flag-no" %}
             {% endif %}
             <div class="user-flag {{ flag_class }}" title="{{ flag['title'] }}">
-              <span class="glyphicon glyphicon-{{ flag['icon'] }}"></span>
+              <span class="fa fa-{{ flag['icon'] }}"></span>
             </div>
           {% endfor %}
         </div>
@@ -52,7 +52,7 @@
             {% endif %}
           </div>
           <div class="card-value user-login">
-            <span title="Benutzername" class="fa fa-console"></span>
+            <span title="Benutzername" class="fa fa-terminal"></span>
             <span class="user-login-value">{{ user.login }}</span></div>
           <div class="card-value user-mail">
             <span class="fa fa-envelope"></span>
@@ -64,7 +64,7 @@
 
         <section>
           <div class="card-value">
-            <span title="Traffic der letzten 7 Tage" class="fa fa-stats"></span>
+            <span title="Traffic der letzten 7 Tage" class="fa fa-chart-area"></span>
             <span>{{ user.traffic_for_days(7) | filesizeformat(binary=True) }}</span>
             <span class="card-value-secondary">/7d</span>
           </div>
@@ -74,7 +74,7 @@
             {% else %}
               {% set balance_class="text-danger" %}
             {% endif %}
-            <span title="Kontostand" class="fa fa-euro"></span>
+            <span title="Kontostand" class="fa fa-euro-sign"></span>
             <span class="{{ balance_class }}">{{ balance | money }}</span>
           </div>
         </section>
@@ -96,7 +96,7 @@
         <div class="col-md-6 action-button">
           <a class="btn btn-info btn-sq"
              href="{{ url_for(".edit_user", user_id=user.id) }}">
-            <span class="badge badge-pill badge-light"><span class="fa fa-pencil"></span></span>
+            <span class="badge badge-pill badge-light"><span class="fa fa-edit"></span></span>
             <br/>Ändern
           </a>
         </div>
@@ -115,7 +115,7 @@
                href="{{ url_for(".move", user_id=user.id) }}">
             <span class="badge badge-pill badge-light"><span
                 class="fa fa-home"></span><span
-                class="fa fa-resize-horizontal"></span><span
+                class="fa fa-arrows-h"></span><span
                 class="fa fa-home"></span></span>
               <br/>Umziehen
             </a>
@@ -151,7 +151,7 @@
             <a class="btn btn-warning btn-sq"
                href="{{ url_for(".block", user_id=user.id) }}">
               <span class="badge badge-pill badge-light"><span
-                  class="fa fa-remove"></span><span
+                  class="fa fa-times"></span><span
                   class="glyphicon"></span></span><br/>Sperren</a>
           </div>
         {% endif %}

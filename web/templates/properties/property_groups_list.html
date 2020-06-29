@@ -47,7 +47,8 @@
         <tbody>
             {% for category, properties in property_categories.items() -%}
             <tr>
-                <th colspan="{{ property_groups|length + 1 }}">{{ category }}</th>
+                <th>{{ category }}</th>
+                <th colspan="{{ property_groups|length }}">{{ category }}</th>
             </tr>
             {% for property_name, property_description in properties.items() -%}
             <tr id="property-{{ property_name }}">
@@ -56,17 +57,20 @@
                 <td>
                     {% if property_name in property_group.properties -%}
                     {% if property_group.property_grants[property_name] %}
-                    <a href="{{ url_for(".property_group_deny_property", group_id=property_group.id, property_name=property_name) }}" title="Verbieten">
-                        <span class="fa fa-ok"></span>
+                    <a href="{{ url_for(".property_group_deny_property", group_id=property_group.id, property_name=property_name) }}"
+                       title="„{{ property_description }}“ verbieten">
+                        <span class="fa fa-check"></span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for(".property_group_remove_property", group_id=property_group.id, property_name=property_name) }}" title="Entfernen">
-                        <span class="fa fa-remove"></span>
+                    <a href="{{ url_for(".property_group_remove_property", group_id=property_group.id, property_name=property_name) }}"
+                       title="„{{ property_description }}“ zurücksetzen">
+                        <span class="fa fa-times"></span>
                     </a>
                     {% endif %}
                     {% else -%}
-                    <a href="{{ url_for(".property_group_grant_property", group_id=property_group.id, property_name=property_name) }}" title="Erlauben">
-                        <span class="fa fa-unchecked"></span>
+                    <a href="{{ url_for(".property_group_grant_property", group_id=property_group.id, property_name=property_name) }}"
+                       title="„{{ property_description }}“ erlauben">
+                        <span class="far fa-square"></span>
                     </a>
                     {%- endif %}
                 </td>

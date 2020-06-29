@@ -17,7 +17,7 @@ export var emptyLinkTemplate = _.template(
 );
 
 export var glyphLinkTemplate = _.template(
-    '<a target="<%- target %>"  href="<%- href %>"><%- title %> <span class="glyphicon <%- glyphicon %>"></span></a>',
+    '<a target="<%- target %>"  href="<%- href %>"><%- title %> <span class="fa <%- glyphicon %>"></span></a>',
 );
 
 export var btnTemplate = _.template(
@@ -25,14 +25,14 @@ export var btnTemplate = _.template(
 );
 
 export var glyphBtnTemplate = _.template(
-    '<a target="<%- target %>" href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="glyphicon <%- glyphicon %>"></span></a>',
+    '<a target="<%- target %>" href="<%- href %>" class="btn <%- btn_class %>" title="<%- title %>"><span class="fa <%- glyphicon %>"></span></a>',
 );
 
 export var multiGlyphBtnTemplate = _.template(
     '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- tooltip %>">' +
     '<span class="badge badge-pill badge-light">' +
-    '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
-    '<span class="glyphicon <%- glyphicons[i] %>"></span>' +
+    '<% for (var i = 0; i < glyphicons.length; i++) { %>' +
+    '<span class="fa <%- glyphicons[i] %>"></span>' +
     '<% } %>' +
     '</span>' +
     '<%- title %>' +

@@ -24,7 +24,7 @@ class BuildingLevelRoomTable(BootstrapTable):
     def toolbar(self):
         return button_toolbar(
             "Display all users", href="#", id="rooms-toggle-all-users",
-            icon="glyphicon-user")
+            icon="fa-user")
 
 
 class RoomLogTable(BootstrapTable):
