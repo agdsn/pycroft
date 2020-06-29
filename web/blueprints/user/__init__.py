@@ -476,7 +476,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                                          user_id=user_id,
                                          membership_id=membership.id),
                          'title': "Beenden",
-                         'icon': 'fa-off'} if membership.active() else {}],
+                         'icon': 'fa-power-off'} if membership.active() else {}],
         } for membership, granted, denied in memberships.all()])
 
 
