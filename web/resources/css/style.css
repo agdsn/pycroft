@@ -23,6 +23,9 @@
     --red-bright-60: hsl(2, 100%, 95%);
 }
 
+.navbar {
+    z-index: 1;
+}
 
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;
