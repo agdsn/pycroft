@@ -28,7 +28,7 @@
     </div>
 {%- endmacro %}
 
-{% macro advanced_form(form, submit_to="", cancel_to="", form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=5, first_autofocus=true, autocomplete="off") -%}
+{% macro advanced_form(form, submit_to="", cancel_to="", form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=4, first_autofocus=true, autocomplete="off") -%}
     <form method="{{ method }}" action="{{ submit_to }}" enctype="{{ enctype }}" class="form-{{ form_render_mode }}" role="form">
         <div class="row">
             {# Namespace required because jinja2 does not save changes done in a loop #}
@@ -46,12 +46,8 @@
     </form>
 {%- endmacro %}
 
-{% macro simple_form(form, submit_to="", cancel_to="", form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=5, first_autofocus=true, autocomplete="off") -%}
-    <div class="row">
-        <div class="col-sm-6">
-            {{ advanced_form(form, submit_to, cancel_to, form_render_mode, field_render_mode, submit_text, enctype, method, show_cancel, show_submit, col_width, actions_offset, first_autofocus, autocomplete) }}
-        </div>
-    </div>
+{% macro simple_form(form, submit_to="", cancel_to="", form_render_mode="horizontal", field_render_mode="horizontal", submit_text="Übernehmen", enctype="application/x-www-form-urlencoded", method="POST", show_cancel=true, show_submit=true, col_width=12, actions_offset=4, first_autofocus=true, autocomplete="off") -%}
+    {{ advanced_form(form, submit_to, cancel_to, form_render_mode, field_render_mode, submit_text, enctype, method, show_cancel, show_submit, col_width, actions_offset, first_autofocus, autocomplete) }}
 {%- endmacro %}
 
 {% macro upload_form(form, submit_to, cancel_to) -%}
