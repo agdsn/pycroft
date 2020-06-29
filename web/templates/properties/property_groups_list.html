@@ -19,7 +19,7 @@
 {% block content %}
     <p>
         <a class="btn btn-primary" href="{{ url_for(".property_group_create") }}">
-            <span class="glyphicon glyphicon-plus"></span>
+            <span class="fa fa-plus"></span>
             {{ _("Neue Eigenschaftsgruppe") }}
         </a>
     </p>
@@ -29,16 +29,16 @@
             <tr>
                 <th>
                     <p>Eigenschaft</p>
-                    <span class="glyphicon glyphicon-trash invisible"></span>
+                    <span class="fa fa-trash invisible"></span>
                 </th>
                 {% for property_group in property_groups|sort(attribute="name") -%}
                 <th>
                     <p>{{ property_group.name }}</p>
                     <a href="{{ url_for(".property_group_edit", group_id=property_group.id) }}">
-                        <span class="glyphicon glyphicon-edit"></span>
+                        <span class="fa fa-edit"></span>
                     </a>
                     <a href="{{ url_for(".property_group_delete", group_id=property_group.id) }}">
-                        <span class="glyphicon glyphicon-trash"></span>
+                        <span class="fa fa-trash"></span>
                     </a>
                 </th>
                 {%- endfor %}
@@ -57,16 +57,16 @@
                     {% if property_name in property_group.properties -%}
                     {% if property_group.property_grants[property_name] %}
                     <a href="{{ url_for(".property_group_deny_property", group_id=property_group.id, property_name=property_name) }}" title="Verbieten">
-                        <span class="glyphicon glyphicon-ok"></span>
+                        <span class="fa fa-ok"></span>
                     </a>
                     {% else %}
                     <a href="{{ url_for(".property_group_remove_property", group_id=property_group.id, property_name=property_name) }}" title="Entfernen">
-                        <span class="glyphicon glyphicon-remove"></span>
+                        <span class="fa fa-remove"></span>
                     </a>
                     {% endif %}
                     {% else -%}
                     <a href="{{ url_for(".property_group_grant_property", group_id=property_group.id, property_name=property_name) }}" title="Erlauben">
-                        <span class="glyphicon glyphicon-unchecked"></span>
+                        <span class="fa fa-unchecked"></span>
                     </a>
                     {%- endif %}
                 </td>
