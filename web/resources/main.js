@@ -47,3 +47,5 @@ import './css/autocomplete.css';
 import './css/style.css';
 
 import './xml/opensearch.en.xml'
+
+import '@fortawesome/fontawesome-free/js/all'

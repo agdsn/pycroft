@@ -21,14 +21,11 @@
 
 <body>
     {% block navbar -%}
-        <nav class="navbar navbar-default navbar-static-top navbar-inverse" role="navigation">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-static-top navbar-inverse" role="navigation">
             <div class="container">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-                        <span class="sr-only">Navigation umschalten</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
                     </button>
                     <a class="navbar-left" href="/">
                         <img src="{{ "img/pycroft.svg" | require }}" onerror="this.src='{{ "img/pycroft.png" | require }}'" alt="Pycroft" />
@@ -46,7 +43,7 @@
                     <ul class="nav navbar-nav navbar-right">
                         {% if current_user.is_authenticated %}
                             <li>
-                                <form class="navbar-form" method="get">
+                                <form class="form-inline" method="get">
                                     <input type="text" class="form-control" id="nav_search" name="nav_search"
                                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                                            placeholder="Nutzer suchen…">
@@ -114,7 +111,7 @@
             <footer class="footer">
                 <small>You've seen everything. We're finished.</small>
                 <small><a href="{{ url_for('version') }}">Version Info</a></small>
-                <small class="pull-right">But while you're at it, check <a href="https://twitter.com/hashtag/justagdsnthings">THIS</a> out!</small>
+                <small class="float-right">But while you're at it, check <a href="https://twitter.com/hashtag/justagdsnthings">THIS</a> out!</small>
             </footer>
          {%- endblock %}
     </div> <!-- /container -->

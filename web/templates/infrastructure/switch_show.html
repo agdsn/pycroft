@@ -8,17 +8,17 @@
 
 {% block content %}
     <ul class="breadcrumb">
-        <li><a href="{{ url_for('.switches') }}">Switche</a></li>
-        <li class="active">{{ switch.host.name }}</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('.switches') }}">Switche</a></li>
+        <li class="breadcrumb-item active">{{ switch.host.name }}</li>
 
         {% if current_user is privileged_for('infrastructure_change') %}
-            <div class="pull-right">
-                <a class="btn btn-primary btn-xs" href="{{ url_for('.switch_edit', switch_id=switch.host.id) }}">
+            <div class="float-right">
+                <a class="btn btn-primary btn-sm" href="{{ url_for('.switch_edit', switch_id=switch.host.id) }}">
                     <span class="glyphicon glyphicon-pencil"></span>
                     Bearbeiten
                 </a>
 
-                 <a class="btn btn-danger btn-xs" href="{{ url_for('.switch_delete', switch_id=switch.host.id) }}">
+                 <a class="btn btn-danger btn-sm" href="{{ url_for('.switch_delete', switch_id=switch.host.id) }}">
                     <span class="glyphicon glyphicon-trash"></span>
                     Löschen
                 </a>

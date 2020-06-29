@@ -156,7 +156,7 @@ class BlueprintNavigation(object):
 
         :return: A list of strings.
         """
-        classes = []
+        classes = ['nav-item']
         if self.dropdown:
             classes.append("dropdown")
         if self.is_active:

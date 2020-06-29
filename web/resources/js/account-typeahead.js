@@ -53,7 +53,7 @@ import Bloodhound from 'typeahead.js/dist/bloodhound';
         templates: {
             empty: '<span class="disabled">Keine Ergebnisse</span>',
             header: '<span class="dropdown-header">Systemkonten</span>',
-            footer: '<span class="divider"></span>',
+            footer: '<span class="dropdown-divider"></span>',
         },
     };
 

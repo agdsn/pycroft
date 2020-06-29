@@ -6,8 +6,8 @@
 {# cf. web/resources/js/table.js multiGlyphBtnTemplate #}
 
 {% macro multiGlyphBtnMacro(btn) %}
-    <a href={{ btn['href'] }} class="btn {{ btn['btn_class'] }}" title="{{ btn['tooltip'] }}">
-        <span class="badge">
+    <a href="{{ btn['href'] }}" class="btn {{ btn['btn_class'] }}" title="{{ btn['tooltip'] }}">
+        <span class="badge badge-pill badge-light">
         {%  for glyphicon in btn['icon'] %}
             <span class="glyphicon {{ glyphicon }}"></span>
         {% endfor %}

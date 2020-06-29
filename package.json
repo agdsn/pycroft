@@ -15,8 +15,9 @@
   "homepage": "https://github.com/agdsn/pycroft#readme",
   "dependencies": {
     "@babel/runtime": "^7.10.3",
+    "@fortawesome/fontawesome-free": "^5.13.1",
     "autocomplete.js": "^0.37.1",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^4.5.0",
     "bootstrap-3-typeahead": "^4.0.2",
     "bootstrap-datepicker": "^1.7.1",
     "bootstrap-table": "~1.16.0",
@@ -28,6 +29,7 @@
     "matchheight": "^0.1.2",
     "moment": "^2.27.0",
     "nvd3": "^1.8.6",
+    "popper.js": "^1.16.1",
     "regenerator-runtime": "^0.13.5",
     "typeahead.js": "^0.11.1",
     "underscore": "^1.8.3",

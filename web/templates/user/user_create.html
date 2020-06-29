@@ -28,12 +28,13 @@
         var form_group_force = $('#form-group-force');
         var force = $('#force');
 
+        // TODO use constraint validation instead, `has-error` is ignored in BSv4
         if (!form_group_mac.hasClass('has-error') || mac.val().length !== 17 && !annex.prop('checked')) {
             form_group_annex.hide();
             annex.prop('checked', false);
         }
 
-        if (!$('.help-block').find('.optional-error').length && !force.prop('checked')) {
+        if (!$('.form-text').find('.optional-error').length && !force.prop('checked')) {
             form_group_force.hide();
             force.prop('checked', false);
         }

@@ -36,13 +36,13 @@
             <div class="col-sm-3">{{ split_form_field['account'](render_mode='inline') }}</div>
             <div class="col-sm-3">{{ split_form_field['amount'](render_mode='inline') }}</div>
             <div class="col-sm-2">
-                <button class="btn btn-default split-add-button hidden" type="button"><span class="glyphicon glyphicon-plus"></span></button>
-                <button class="btn btn-default split-remove-button hidden" type="button"><span class="glyphicon glyphicon-minus"></span></button>
+                <button class="btn btn-secondary split-add-button hidden" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                <button class="btn btn-secondary split-remove-button hidden" type="button"><span class="glyphicon glyphicon-minus"></span></button>
             </div>
         </div>
         {%- endfor %}
         <div class="row">
-            <div class="col-sm-offset-3 col-sm-3">
+            <div class="offset-sm-3 col-sm-3">
                 {{ forms.form_actions(url_for('.accounts_list'), 'Erstellen') }}
             </div>
         </div>

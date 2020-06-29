@@ -40,7 +40,7 @@
               <span>{{ misc.room_link(user.room) }}</span>
               {% if user.room.address != user.address %}
                 </div><div class="card-value user-room">
-                <span class="glyphicon glyphicon-home"></span>
+                <span class="fa fa-home glyphicon glyphicon-home"></span>
                 <span>{{ user.address }}</span>
               {% endif %}
             {% elif user.address is not none %}
@@ -96,14 +96,14 @@
         <div class="col-md-6 action-button">
           <a class="btn btn-info btn-sq"
              href="{{ url_for(".edit_user", user_id=user.id) }}">
-            <span class="badge"><span class="glyphicon glyphicon-pencil"></span></span>
+            <span class="badge badge-pill badge-light"><span class="glyphicon glyphicon-pencil"></span></span>
             <br/>Ändern
           </a>
         </div>
         <div class="col-md-6 action-button">
           <a role="button" class="btn btn-success btn-sq"
              href="{{ url_for(".static_datasheet", user_id=user.id) }}">
-            <span class="badge"><span
+            <span class="badge badge-pill badge-light"><span
                 class="glyphicon glyphicon-file"></span><span
                 class="glyphicon"></span></span>
             <br/>Datenblatt
@@ -113,7 +113,7 @@
           <div class="col-md-6 action-button">
             <a class="btn btn-info btn-sq"
                href="{{ url_for(".move", user_id=user.id) }}">
-            <span class="badge"><span
+            <span class="badge badge-pill badge-light"><span
                 class="glyphicon glyphicon-home"></span><span
                 class="glyphicon glyphicon-resize-horizontal"></span><span
                 class="glyphicon glyphicon-home"></span></span>
@@ -123,7 +123,7 @@
           <div class="col-md-6 action-button">
             <a class="btn btn-info btn-sq"
                href="{{ url_for(".move_out", user_id=user.id) }}">
-              <span class="badge"><span
+              <span class="badge badge-pill badge-light"><span
                   class="glyphicon glyphicon-chevron-left"></span><span
                   class="glyphicon glyphicon-home"></span></span>
               <br/>Ausziehen
@@ -133,7 +133,7 @@
           <div class="col-md-6 action-button">
             <a class="btn btn-info btn-sq"
                href="{{ url_for(".move_in", user_id=user.id) }}">
-              <span class="badge"><span
+              <span class="badge badge-pill badge-light"><span
                   class="glyphicon glyphicon-chevron-right"></span><span
                   class="glyphicon glyphicon-home"></span></span><br/>Einziehen</a>
           </div>
@@ -142,7 +142,7 @@
           <div class="col-md-6 action-button">
             <a class="btn btn-warning btn-sq"
                href="{{ url_for(".unblock", user_id=user.id) }}">
-              <span class="badge"><span
+              <span class="badge badge-pill badge-light"><span
                   class="glyphicon glyphicon-ok"></span><span
                   class="glyphicon"></span></span><br/>Entsperren</a>
           </div>
@@ -150,7 +150,7 @@
           <div class="col-md-6 action-button">
             <a class="btn btn-warning btn-sq"
                href="{{ url_for(".block", user_id=user.id) }}">
-              <span class="badge"><span
+              <span class="badge badge-pill badge-light"><span
                   class="glyphicon glyphicon-remove"></span><span
                   class="glyphicon"></span></span><br/>Sperren</a>
           </div>
@@ -159,7 +159,7 @@
           <a role="button" class="btn btn-danger btn-sq"
              href="{{ url_for(".reset_password", user_id=user.id) }}"
              hint="Passwort zurücksetzen">
-            <span class="badge"><span
+            <span class="badge badge-pill badge-light"><span
                 class="glyphicon glyphicon-asterisk"></span><span
                 class="glyphicon"></span></span>
             <br/>Passwort zurücks.
@@ -169,7 +169,7 @@
           <a role="button" class="btn btn-info btn-sq"
              href="{{ url_for(".reset_wifi_password", user_id=user.id) }}"
              hint="WIFI-Passwort zurücksetzen">
-            <span class="badge"><span
+            <span class="badge badge-pill badge-light"><span
                 class="glyphicon glyphicon-signal"></span><span
                 class="glyphicon"></span></span>
             <br/>WLAN-Passwort neu setzen

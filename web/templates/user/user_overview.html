@@ -7,7 +7,7 @@
 {% set page_title = "Nutzerübersicht" %}
 
 {% macro badge(href, title, number) %}
-  <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }}<span class="badge">{{ number }}</span></a>
+  <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }} <span class="badge badge-pill badge-secondary">{{ number }}</span></a>
 {% endmacro %}
 
 {% block content %}
@@ -24,7 +24,7 @@
         <div class="col-xs-12">
           <h3>TOP Traffic Verbraucher</h3>
           <h6 class="text-muted">7 Tage</h6>
-          
+
           {{ traffic_top_table.render('traffic-top-table') }}
         </div>
       </div>
