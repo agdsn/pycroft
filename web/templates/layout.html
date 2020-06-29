@@ -40,32 +40,27 @@
                             {{ navigation.blueprint_element(element) }}
                         {%- endfor %}
                     </ul>
-                    <ul class="nav navbar-nav navbar-right">
-                        {% if current_user.is_authenticated %}
-                            <li>
-                                <form class="form-inline" method="get">
-                                    <input type="text" class="form-control" id="nav_search" name="nav_search"
-                                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                                           placeholder="Nutzer suchen…">
-                                </form>
-                            </li>
-                            <li>
-                                <p class="navbar-text navbar-right">
-                                    <a class="navbar-link" href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a>
-                                    &nbsp;
-                                    <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="fa fa-off"></span></a>
-                                </p>
-                            </li>
-                        {% else %}
-                            <li>
-                                <a class="navbar-link" href="{{ url_for("login.login") }}">
-                                    Anmelden
-                                    &nbsp;
-                                    <span style="color: white;" class="fa fa-off"></span>
+                    {% if current_user.is_authenticated %}
+                      <form class="form-inline ml-auto" method="get">
+                        <label for="nav_search"><input type="text" class="form-control" id="nav_search" name="nav_search"
+                                                               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                                               placeholder="Nutzer suchen…" /></label>
+                      </form>
+                      <span class="nav navbar-nav">
+                          <a class="nav-link" style="display: inline-block; padding-right: 0; margin-right: 0;"
+                             href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a>
+                          &nbsp;
+                          <a class="nav-link" href="{{ url_for("login.logout") }}"><span style="color: white;" class="fa fa-power-off"></span></a>
+                      </span>
+                    {% else %}
+                      <ul class="nav navbar-nav ml-auto">
+                            <li class="nav-item">
+                                <a class="nav-link ml-auto" href="{{ url_for("login.login") }}">
+                                    Anmelden&nbsp;<span style="color: white;" class="fa fa-power-off"></span>
                                 </a>
                             </li>
-                        {% endif %}
-                    </ul>
+                      </ul>
+                    {% endif %}
                 </div><!--/.nav-collapse -->
             </div>
         </nav>
