@@ -19,7 +19,7 @@
             <dd>{{ transaction.valid_on|date }}</dd>
             <dt>Erstellt von</dt>
             <dd><a href="{{ url_for("user.user_show", user_id=transaction.author.id) }}">
-                <span class="glyphicon glyphicon-user"
+                <span class="fa fa-user"
                       aria-hidden="true"></span>
                 {{ transaction.author.name }}
             </a></dd>
@@ -29,7 +29,7 @@
                 {% for activity in transaction.bank_account_activities %}
                   <a href="{{ url_for('.bank_account_activities_edit', activity_id=activity.id) }}">
                     {{ activity.reference }}
-                    <span class="glyphicon glyphicon-new-window"></span>
+                    <span class="fa fa-new-window"></span>
                   </a>
                 {% endfor %}
                 </dd>

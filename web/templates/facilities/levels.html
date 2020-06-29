@@ -12,12 +12,12 @@
         <div class="float-right">
             {% if current_user is privileged_for('facilities_change') %}
                 <a class="btn btn-success btn-sm" href="{{ url_for('.room_create', building_id=building.id) }}">
-                    <span class="glyphicon glyphicon-plus"></span>
+                    <span class="fa fa-plus"></span>
                     Raum
                 </a>
             {% endif %}
             <a class="btn btn-primary btn-sm" href="{{ url_for('.overcrowded', building_id=building.id) }}">
-                <span class="glyphicon glyphicon-fire"></span>
+                <span class="fa fa-fire"></span>
                 Mehrfachbelegungen
             </a>
         </div>

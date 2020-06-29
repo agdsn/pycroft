@@ -419,7 +419,7 @@ export function userHostResponseHandler(resp) {
     detailFormatter for the host table, displaying the related interfaces
 */
 export function hostDetailFormatter(index, row, element){
-    let html = `<b>Interfaces</b><span class="float-right"><a href="${row.interface_create_link}" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus"></span> Interface</a></span>`;
+    let html = `<b>Interfaces</b><span class="float-right"><a href="${row.interface_create_link}" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span> Interface</a></span>`;
 
     $.ajax({
          async: false,

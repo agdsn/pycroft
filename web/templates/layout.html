@@ -53,7 +53,7 @@
                                 <p class="navbar-text navbar-right">
                                     <a class="navbar-link" href="{{ url_for("user.user_show", user_id = current_user.id) }}">{{ current_user.name }}</a>
                                     &nbsp;
-                                    <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="glyphicon glyphicon-off"></span></a>
+                                    <a href="{{ url_for("login.logout") }}"><span style="color: white;" class="fa fa-off"></span></a>
                                 </p>
                             </li>
                         {% else %}
@@ -61,7 +61,7 @@
                                 <a class="navbar-link" href="{{ url_for("login.login") }}">
                                     Anmelden
                                     &nbsp;
-                                    <span style="color: white;" class="glyphicon glyphicon-off"></span>
+                                    <span style="color: white;" class="fa fa-off"></span>
                                 </a>
                             </li>
                         {% endif %}

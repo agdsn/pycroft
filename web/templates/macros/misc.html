@@ -6,7 +6,7 @@
 {% macro room_link(room) %}
     {% if room %}
         <a href="{{ url_for("facilities.room_show", room_id=room.id) }}">
-            <span class="glyphicon glyphicon-home"></span>
+            <span class="fa fa-home"></span>
             {{ room }}
         </a>
     {% else %}
