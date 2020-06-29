@@ -5,8 +5,14 @@
 #}
 
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#report-form" data-toggle="tab">Kontenform</a></li>
-    {% if typed_splits is not none%}<li><a href="#account-form" data-toggle="tab">Staffelform</a></li>{% endif %}
+    <li class="nav-item active">
+      <a class="nav-link" href="#report-form" data-toggle="tab">Kontenform</a>
+    </li>
+    {% if typed_splits is not none%}
+      <li class="nav-item">
+        <a class="nav-link" href="#account-form" data-toggle="tab">Staffelform</a>
+      </li>
+    {% endif %}
 </ul>
 <div class="tab-content">
     <div id="report-form"  class="tab-pane active">

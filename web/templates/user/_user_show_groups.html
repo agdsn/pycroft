@@ -7,14 +7,14 @@
 <div>
     <h3>Resultierende Properties</h3>
     {% for prop in granted_properties %}
-        <a class="label userprop userprop-granted"
+        <a class="badge userprop userprop-granted"
            data-property-name="{{ prop }}"
            href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
           <span title="Granted">{{ prop }}</span>
         </a>
     {% endfor %}
     {% for prop in revoked_properties %}
-      <a class="label userprop userprop-denied"
+      <a class="badge userprop userprop-denied"
          data-property-name="{{ prop }}"
          href="{{ url_for('properties.property_groups', _anchor="property-"+prop) }}">
         <span title="Granted, aber dann Denied">{{ prop }}</span>
@@ -25,8 +25,8 @@
 
 
 <ul class="nav nav-tabs">
-    <li class="active"><a href="#memberships-active" data-toggle="tab">Aktiv</a></li>
-    <li><a href="#memberships-all" data-toggle="tab">Alle</a></li>
+    <li class="nav-item active"><a class="nav-link" href="#memberships-active" data-toggle="tab">Aktiv</a></li>
+    <li class="nav-item"><a class="nav-link" href="#memberships-all" data-toggle="tab">Alle</a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade in active" id="memberships-active">

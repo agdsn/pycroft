@@ -19,16 +19,16 @@
 
   <br/>
 
-  <div class="row">
-    <div class="col-xs-12">
+  <div class="container-fluid">
+    <!--<div class="col-lg-12">-->
       <ul class="nav nav-tabs">
         {% for tab in tabs %}
-          <li class="{{ "active" if tab.id == 'hosts' else "" }}">
-            <a id="tab-{{ tab.id }}" href="#{{ tab.id }}" data-toggle="tab">
+          <li class="nav-item {{ "active" if tab.id == 'hosts' else "" }}">
+            <a class="nav-link" id="tab-{{ tab.id }}" href="#{{ tab.id }}" data-toggle="tab">
               {{ tab.name }}
               {% if 'badge' in tab and tab.badge %}
                 &nbsp;
-                <span class="badge" style="{{ "background-color: " + tab.badge_color if 'badge_color' in tab else "" }}">
+                <span class="badge badge-pill badge-secondary" style="{{ "background-color: " + tab.badge_color if 'badge_color' in tab else "" }}">
                   {{ tab.badge }}
                 </span>
               {% endif %}
@@ -39,12 +39,12 @@
 
       <div class="tab-content">
         {% for tab in tabs %}
-          <div class="tab-pane fade {{ "in active" if tab.id == 'hosts' else "" }}" id="{{ tab.id }}">
+          <div class="tab-pane fade {{ "in active show" if tab.id == 'hosts' else "" }}" id="{{ tab.id }}">
             {% include "user/_user_show_" + tab.id + ".html" with context %}
           </div>
         {% endfor %}
       </div>
-    </div>
+    <!--</div>-->
   </div>
 {% endblock %}
 

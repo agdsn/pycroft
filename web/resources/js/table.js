@@ -30,7 +30,7 @@ export var glyphBtnTemplate = _.template(
 
 export var multiGlyphBtnTemplate = _.template(
     '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- tooltip %>">' +
-    '<span class="badge">' +
+    '<span class="badge badge-pill badge-light">' +
     '<% for (var i = 0; i <= glyphicons.length; i++) { %>' +
     '<span class="glyphicon <%- glyphicons[i] %>"></span>' +
     '<% } %>' +
@@ -419,7 +419,7 @@ export function userHostResponseHandler(resp) {
     detailFormatter for the host table, displaying the related interfaces
 */
 export function hostDetailFormatter(index, row, element){
-    let html = `<b>Interfaces</b><span class="pull-right"><a href="${row.interface_create_link}" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-plus"></span> Interface</a></span>`;
+    let html = `<b>Interfaces</b><span class="float-right"><a href="${row.interface_create_link}" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus"></span> Interface</a></span>`;
 
     $.ajax({
          async: false,

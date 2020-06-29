@@ -9,14 +9,14 @@
     <ul class="breadcrumb">
         <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="active">{{ building.short_name }}</li>
-        <div class="pull-right">
+        <div class="float-right">
             {% if current_user is privileged_for('facilities_change') %}
-                <a class="btn btn-success btn-xs" href="{{ url_for('.room_create', building_id=building.id) }}">
+                <a class="btn btn-success btn-sm" href="{{ url_for('.room_create', building_id=building.id) }}">
                     <span class="glyphicon glyphicon-plus"></span>
                     Raum
                 </a>
             {% endif %}
-            <a class="btn btn-primary btn-xs" href="{{ url_for('.overcrowded', building_id=building.id) }}">
+            <a class="btn btn-primary btn-sm" href="{{ url_for('.overcrowded', building_id=building.id) }}">
                 <span class="glyphicon glyphicon-fire"></span>
                 Mehrfachbelegungen
             </a>
@@ -25,7 +25,7 @@
     <div class="row">
         <div class="col-xs-12 text-center">
             {% for level in levels -%}
-            <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-default btn-large">{{ level }}</a></div>
+            <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-secondary btn-large">{{ level }}</a></div>
             {%- endfor %}
         </div>
     </div>

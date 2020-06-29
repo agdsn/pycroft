@@ -39,17 +39,13 @@
 </style>
 {% endblock %}
 
-<div class="row">
-    <div class="col-xs-12">
-        <div class="box box-info">
-            Verbrauch 7 Tage: <strong>{{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}</strong>.
-        </div>
-
-        <div class="traffic-graph col-xs-12"
-             data-url="{{ url_for('.json_trafficdata', user_id=user.id) }}"
-             data-days="7"></div>
-    </div>
+<div class="box box-info">
+    Verbrauch 7 Tage: <strong>{{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}</strong>.
 </div>
+
+<div class="traffic-graph col-xs-12"
+     data-url="{{ url_for('.json_trafficdata', user_id=user.id) }}"
+     data-days="7"></div>
 
 {% block page_script %}
     {{ resources.link_script_file('traffic-graph.js' | require) }}
