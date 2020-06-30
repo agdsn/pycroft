@@ -837,7 +837,7 @@ def match_activities():
         return User.q.get(uid)
 
     def _fetch_hss(login: str) -> Optional[User]:
-        return User.q.filter_by(login=login).one_or_None
+        return User.q.filter_by(login=login).one_or_none()
 
     for activity in activity_q.all():
 
