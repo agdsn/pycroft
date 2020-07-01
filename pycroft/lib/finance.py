@@ -930,7 +930,7 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
 
 def match_hss_reference(reference: str) -> Optional[str]:
     """Given a bank reference, return the hss username"""
-    search = re.match(r"^\s*(?P<login>[a-z](?:[.-]?[a-z0-9])+) ?,+", reference)
+    search = re.match(r"^\s*(?P<login>[a-zA-Z](?:[.-]?\w)+) ?,+", reference)
     return search.group('login') if search else None
 
 

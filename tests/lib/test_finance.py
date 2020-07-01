@@ -616,6 +616,7 @@ class MatchingTestCase(unittest.TestCase):
         ("gerok38/name/(moved out)", "ger-name"),
         ("n1colas, Nicolas Bourbaki, HSS48 76-3", "hss-n1colas"),
         ("  admin,Ich Bin Hier der Admin , ficticous location , garbage", "hss-admin"),
+        ("FOO, FOO BAR, HSS46 16-11", "hss-FOO"),
     ]
 
     def test_matching(self):
