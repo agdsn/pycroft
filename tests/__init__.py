@@ -168,51 +168,6 @@ class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
         self.data.teardown()
 
 
-class DialectSpecificTestCase(FixtureDataTestBase):
-    """
-    This is a database test that will only run on a specific SQLAlchemy dialect.
-    """
-    dialect = None
-
-    def setUp(self):
-        global connection
-        if connection is None:
-            raise AssertionError("A database connection should already have "
-                                 "been initialized with setupClass or "
-                                 "module/package-level setup function.")
-        if connection.dialect.name != self.dialect:
-            self.skipTest("This test runs only on the '{}' dialect"
-                          .format(self.dialect))
-        super(DialectSpecificTestCase, self).setUp()
-
-
-class PostgreSQLTestCase(DialectSpecificTestCase):
-    dialect = 'postgresql'
-
-
-class SQLiteTestCase(DialectSpecificTestCase):
-    dialect = 'sqlite'
-
-
-class FactoryDataTestBase(SQLAlchemyTestCase):
-    session = session.session
-
-    def setUp(self):
-        super().setUp()
-        logging.getLogger('factory').setLevel(logging.INFO)
-        with self.session.begin(subtransactions=True):
-            self.create_factories()
-
-    @staticmethod
-    def create_factories():
-        pass
-
-
-class FactoryWithConfigDataTestBase(FactoryDataTestBase):
-    def create_factories(self):
-        self.config = ConfigFactory.create()
-
-
 class FrontendDataTestBase(testing.TestCase):
     """A TestCase baseclass that handles frontend tests.
 
