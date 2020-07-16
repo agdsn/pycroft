@@ -10,7 +10,7 @@ import time
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request
 from sqlalchemy.orm import scoped_session, sessionmaker
-from werkzeug.contrib.profiler import ProfilerMiddleware
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 import pycroft
 import web
