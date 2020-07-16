@@ -15,7 +15,7 @@ class FinanceTable(BootstrapTable):
             'data-side-pagination': 'server',
             # 'data-search': 'true',
             'data-sort-order': 'desc',
-            'data-sort-name': 'valid_on',
+            # 'data-sort-name': 'valid_on',
             'data-page-list': '[5, 10, 25, 50, 100]'
         }
 

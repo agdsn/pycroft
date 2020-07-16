@@ -223,9 +223,9 @@ export function euroFormatter(value, row, index){
 
 export function financeRowFormatter(row, index) {
     if (row && row['row_positive']) {
-        return {classes: 'success'};
+        return {classes: 'table-success'};
     } else {
-        return {classes: 'danger'};
+        return {classes: 'table-danger'};
     }
 }
 
