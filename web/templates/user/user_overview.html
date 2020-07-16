@@ -7,21 +7,27 @@
 {% set page_title = "Nutzerübersicht" %}
 
 {% macro badge(href, title, number) %}
-  <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }} <span class="badge badge-pill badge-secondary">{{ number }}</span></a>
+  <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }}
+    <span class="float-right badge badge-pill badge-secondary">{{ number }}</span></a>
 {% endmacro %}
 
 {% block content %}
   <div class="row">
     <div class="col-sm-6 col-md-5 col-lg-4">
       <div class="row">
-        <div class="col-xs-12">
+        <div class="col-12">
           <div class="list-group">
             {%- for entry in entries -%}
               {{ badge(entry['href'], entry['title'], entry['number']) }}
             {%- endfor -%}
           </div>
         </div>
-        <div class="col-xs-12">
+
+        <div class="col-12">
+          <hr/>
+        </div>
+
+        <div class="col-12">
           <h3>TOP Traffic Verbraucher</h3>
           <h6 class="text-muted">7 Tage</h6>
 

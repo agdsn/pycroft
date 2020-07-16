@@ -43,7 +43,7 @@
     Verbrauch 7 Tage: <strong>{{ user.traffic_for_days(days=7) | filesizeformat(binary=True) }}</strong>.
 </div>
 
-<div class="traffic-graph col-xs-12"
+<div class="traffic-graph col-12"
      data-url="{{ url_for('.json_trafficdata', user_id=user.id) }}"
      data-days="7"></div>
 

@@ -20,16 +20,16 @@
     <form method="POST" action="{{ url_for('.fix_import_error', error_id=error_id) }}" role="form">
         {{ form.csrf_token() }}
         <div class="row">
-            <div class="col-xs-12">
+            <div class="col-12">
               {{ form.mt940(class="form-control",rows="20") }}
             </div>
         </div>
         <br>
         <div class="row">
-          <div class="col-xs-6">
+          <div class="col-6">
             {{ form.do_import() }}
           </div>
-         <div class="col-xs-6">
+         <div class="col-6">
             <input type="submit" class="btn btn-primary" value="übernehmen">
          </div>
         </div>

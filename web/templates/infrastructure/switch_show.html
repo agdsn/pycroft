@@ -7,12 +7,12 @@
 {% import "macros/misc.html" as misc %}
 
 {% block content %}
-    <ul class="breadcrumb">
+    <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ url_for('.switches') }}">Switche</a></li>
         <li class="breadcrumb-item active">{{ switch.host.name }}</li>
 
         {% if current_user is privileged_for('infrastructure_change') %}
-            <div class="float-right">
+            <div class="ml-auto">
                 <a class="btn btn-primary btn-sm" href="{{ url_for('.switch_edit', switch_id=switch.host.id) }}">
                     <span class="fa fa-edit"></span>
                     Bearbeiten
@@ -24,7 +24,7 @@
                 </a>
             </div>
         {% endif %}
-    </ul>
+    </ol>
 
     <section>
         <h2 class="page-header">Überblick</h2>

@@ -9,19 +9,19 @@
 {% import "macros/misc.html" as misc %}
 
 {% block content %}
-    <ul class="breadcrumb">
+    <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ url_for('.overview') }}">Wohnheime</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('.building_levels', building_id=room.building.id) }}">{{ room.building.short_name }}</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('.building_level_rooms', building_id=room.building_id, level=room.level) }}">Etage {{ "{0:2d}".format(room.level) }}</a></li>
         <li class="breadcrumb-item active">Zimmer {{ room.number }}</li>
 
         {% if current_user is privileged_for('facilities_change') %}
-            <a class="btn btn-primary btn-sm float-right" href="{{ url_for('.room_edit', room_id=room.id) }}">
+            <a class="btn btn-primary btn-sm ml-auto" href="{{ url_for('.room_edit', room_id=room.id) }}">
                 <span class="fa fa-edit"></span>
                 Bearbeiten
             </a>
         {% endif %}
-    </ul>
+    </ol>
 
     <section id="overview">
         <h2 class="page-header">Überblick</h2>
@@ -99,7 +99,7 @@
         <h2 class="page-header">Patchpanel</h2>
         <section id="patchpanel">
             <div class="row">
-                <div class="col-xs-12">
+                <div class="col-12">
                     {{ patch_port_table.render("patch_ports") }}
                 </div>
             </div>
@@ -109,13 +109,13 @@
     <section id="logs">
         <h2 class="page-header">Logs</h2>
         <div class="row">
-            <div class="col-xs-12">
+            <div class="col-12">
                 {{ room_log_table.render("logs") }}
             </div>
         </div>
 
         <div class="row">
-            <div class="col-xs-12">
+            <div class="col-12">
                 <h3>Raum-Log erstellen</h3>
 
                 {{ forms.simple_form(form, '', '#', show_cancel=False, first_autofocus=False, field_render_mode='basic', form_render_mode='basic', actions_offset=0) }}

@@ -24,7 +24,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-static-top navbar-inverse" role="navigation">
             <div class="container">
                 <div class="navbar-header">
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <a class="navbar-left" href="/">
@@ -72,7 +72,7 @@
                 {% with messages = get_flashed_messages(with_categories=true) -%}
                     {% if messages -%}
                         <div class="row">
-                            <div class="col-xs-12">
+                            <div class="col-12">
                                 <div class="flash-messages">
                                 {% for category, message in messages -%}
                                     {% set cat = category %}
@@ -90,13 +90,11 @@
                 {%- endwith %}
             {%- endblock %}
             {% block page_header -%}
-                <div class="page-header">
-                    <h1>{{ navigation.get_page_title(config, page_title) }}</h1>
-                </div>
+                <h1 class="pb-2 mt-4 mb-2 border-bottom">{{ navigation.get_page_title(config, page_title) }}</h1>
             {%- endblock %}
             {% block content -%}
             <div class="row">
-                <div class="col-xs-12">
+                <div class="col-12">
                     {% block single_row_content %}{% endblock %}
                 </div>
             </div>

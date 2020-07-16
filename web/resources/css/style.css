@@ -109,6 +109,7 @@ section > .body {
 }
 */
 
+
 .subnav {
     left: 0;
 }
@@ -334,7 +335,7 @@ input.money-amount {
 }
 
 .card .card-bottom {
-    background-color: hsl(200, 50%, 99%);
+    /*background-color: hsl(200, 50%, 99%);*/
     padding: 0 20px 6px 20px;
 }
 
@@ -372,7 +373,7 @@ input.money-amount {
     padding: calc(var(--radius) - var(--icon-radius)) 0;
 }
 
-.user-flag .glyphicon {
+.user-flag .fa {
     display: block;  /* necessary to set a width/height */
     width: calc(var(--icon-radius)*2);
     height: calc(var(--icon-radius)*2);

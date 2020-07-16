@@ -6,10 +6,10 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <ul class="breadcrumb">
-        <li><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
-        <li class="active">{{ building.short_name }}</li>
-        <div class="float-right">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
+        <li class="breadcrumb-item active">{{ building.short_name }}</li>
+        <div class="ml-auto">
             {% if current_user is privileged_for('facilities_change') %}
                 <a class="btn btn-success btn-sm" href="{{ url_for('.room_create', building_id=building.id) }}">
                     <span class="fa fa-plus"></span>
@@ -21,9 +21,9 @@
                 Mehrfachbelegungen
             </a>
         </div>
-    </ul>
+    </ol>
     <div class="row">
-        <div class="col-xs-12 text-center">
+        <div class="col-12 text-center">
             {% for level in levels -%}
             <div class="level"><a href="{{ url_for('.building_level_rooms', building_shortname=building.short_name, level=level) }}" class="btn btn-secondary btn-large">{{ level }}</a></div>
             {%- endfor %}

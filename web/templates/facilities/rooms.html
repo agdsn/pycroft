@@ -6,11 +6,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <ul class="breadcrumb">
+    <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('facilities.building_levels', building_shortname=building.short_name) }}">{{ building.short_name }}</a></li>
         <li class="breadcrumb-item active">Etage {{ level }}</li>
-    </ul>
+    </ol>
     {{ room_table.render("rooms") }}
 {% endblock %}
 

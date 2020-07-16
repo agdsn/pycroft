@@ -464,11 +464,11 @@ export function taskRowFormatter(row){
     let cssclass = "";
 
     if(row.status == "OPEN"){
-        cssclass = "warning";
+        cssclass = "table-warning";
     }else if(row.status == "EXECUTED"){
-        cssclass = "success";
+        cssclass = "table-success";
     }else if(row.status == "FAILED"){
-        cssclass = "danger";
+        cssclass = "table-danger";
     }
 
     return {
