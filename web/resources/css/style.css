@@ -364,7 +364,8 @@ input.money-amount {
 .user-flag {
     --radius: 22px;
     --icon-radius: 8px;
-    display: inline-block;
+    display: inline-flex;
+    justify-content: center;
     width: calc(2*var(--radius));
     height: calc(2*var(--radius));
     border-radius: var(--radius);
