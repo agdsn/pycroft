@@ -217,6 +217,7 @@ export default {
                     options: {
                         name: "[path][name].[hash].[ext]",
                         publicPath: './',
+                        esModule: false,
                     },
                 },
             },
