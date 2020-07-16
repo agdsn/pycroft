@@ -391,7 +391,7 @@ If your changes are ready for a release, follow these steps:
 - Adjust to setup.py (new version number, etc.) and requirements.txt
 - Commit and push the changes in the submodules to a branch
 - Create a pull request
-- (After merging the changes), run the `deploy.sh` script afterwards in order to
+- (After merging the changes), run the `distribute.sh` script afterwards in order to
 upload the new version to PyPi
 
 ## Troubleshooting
