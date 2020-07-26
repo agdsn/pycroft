@@ -382,6 +382,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         credential_table = Table(data, colWidths=[4 * cm, 4 * cm],
                                  style=[
                                      ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                     ('FONTNAME', (1, 7), (1, 7), 'Courier'),
                                  ])
 
         qr_size = 4 * cm
