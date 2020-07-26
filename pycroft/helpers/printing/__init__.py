@@ -196,11 +196,11 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                     our day-to-day work in the students network: https://podcast.agdsn.de/''', \
                       style['JustifyText']))
 
-        story.append(Paragraph('''<b>Join us:</b>\nThe student network was created and is run by students like yourself. If you are interested in our work don’t 
-            hesitate to visit us at our office. There are many ways of contribution to our cause without the need of being a 
+        story.append(Paragraph('''<b>Join us:</b>\nThe student network was created and is run by students like yourself. If you are interested in our work don’t
+            hesitate to visit us at our office. There are many ways of contribution to our cause without the need of being a
             computer science engineer. Just to mention some possible contributions: Administration and finances, network
-            maintenance, software development and many more. Besides, you can add some extra extracurricular 
-            activity to your CV and have the opportunity to see and work with usually hidden technology. We would be 
+            maintenance, software development and many more. Besides, you can add some extra extracurricular
+            activity to your CV and have the opportunity to see and work with usually hidden technology. We would be
             happy to welcome you with us. Be our guest at our office hours.''',
                                style['JustifyText']))
 
@@ -356,7 +356,8 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         story.append(
             Paragraph(
                 'You can find instructions to connect, further information and data protection notices at: '
-                'https://agdsn.de/sipa/pages/service/wlan-test',
+                'https://agdsn.de/sipa/pages/service/wlan (Scan the QR-Code to visit the page conveniently.) '
+                'There you can download configuration assistants for all popular plattforms.',
                 style['BodyText'])
         )
 
@@ -384,7 +385,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                                  ])
 
         qr_size = 4 * cm
-        qr_code = qr.QrCodeWidget('https://agdsn.de/sipa/pages/service/wlan-test')
+        qr_code = qr.QrCodeWidget('https://agdsn.de/sipa/pages/service/wlan')
         bounds = qr_code.getBounds()
         width = bounds[2] - bounds[0]
         height = bounds[3] - bounds[1]
