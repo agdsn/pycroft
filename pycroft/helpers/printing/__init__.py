@@ -369,7 +369,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         )
 
         data = [
-            ['SSID:', 'agdsn-gps-test'],
+            ['SSID:', 'agdsn'],
             ['Outer authentication:', 'TTLS'],
             ['Inner authentication:', 'PAP'],
             ['CA certificate:',
