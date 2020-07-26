@@ -130,7 +130,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
 
         story.append(
             HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.4 * cm,
-                       spaceAfter=0.6 * cm))
+                       spaceAfter=0.4 * cm))
 
         macs = []
         for user_host in user.hosts:
@@ -160,7 +160,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
 
         story.append(t)
         story.append(
-            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.3 * cm,
+            HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.0 * cm,
                        spaceAfter=0.4 * cm))
 
         # offices
@@ -284,7 +284,8 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                                parent=style['Normal'],
                                alignment=TA_RIGHT,
                                fontSize=8,
-                               spaceBefore=15))
+                               spaceBefore=10,
+                               spaceAfter=0))
         )
 
     if new_user is True and wifi is True:
@@ -484,7 +485,7 @@ def getStyleSheet():
     stylesheet.add(ParagraphStyle(name='CenterText',
                                   parent=stylesheet['Normal'],
                                   alignment=TA_CENTER,
-                                  spaceBefore=14))
+                                  spaceBefore=5))
 
     stylesheet.add(ParagraphStyle(name='Bold',
                                   parent=stylesheet['BodyText'],
