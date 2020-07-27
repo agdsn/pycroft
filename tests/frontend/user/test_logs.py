@@ -1,3 +1,5 @@
+import unittest
+
 from hades_logs import HadesLogs
 from pycroft.model._all import User
 from tests import InvalidateHadesLogsMixin
@@ -88,7 +90,12 @@ class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLo
             self.assertIn("– groups: ", log['message'].lower())
             self.assertIn("tagged)", log['message'].lower())
 
+    @unittest.skip("This test should be replaced by a factory-style test.")
     def test_disconnected_user_emits_warning(self):
+        # TODO this uses `testadmin2`, which is not “disconnected” in the sense of this test.
+        # That user lives in the default room – and thus gets the example logs.
+        # however, debugging our complicated implicit fixture construction is probably
+        # harder than just writing this test in a factory-based way.
         logs = self.get_logs(logtype='hades')
         self.assertEqual(len(logs), 1)
         self.assertIn("are in a connected room", logs[0]['message'].lower())
