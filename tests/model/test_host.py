@@ -9,20 +9,23 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import get_free_ip
 from pycroft.model import session, host, user
-from pycroft.model.net import Subnet, VLAN
+from pycroft.model.net import VLAN
 from pycroft.model.types import InvalidMACAddressException
-from tests import FixtureDataTestBase
-from tests.fixtures.dummy.facilities import BuildingData, RoomData
+from tests import FixtureDataTestBase, FactoryDataTestBase
 from tests.fixtures.dummy.host import IPData, HostData, InterfaceData, \
     SwitchPortData
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.traffic import TrafficVolumeData
 from tests.fixtures.dummy.user import UserData
+from .. import factories
 
 
-class Test_010_InterfaceValidators(FixtureDataTestBase):
-    datasets = [UserData, InterfaceData, HostData]
+class TestInterfaceValidators(FactoryDataTestBase):
     mac_regex = re.compile(r"^[a-f0-9]{2}(:[a-f0-9]{2}){5}$")
+
+    def create_factories(self):
+        super().create_factories()
+        self.host = factories.host.HostFactory()
 
     def assertSetMAC(self, interface, mac):
         parts = mac.split(":")
@@ -40,9 +43,8 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
             return
         interface.mac = mac
 
-    def test_0010_mac_validate(self):
-
-        interface = host.Interface(host=host.Host.q.first())
+    def test_mac_validation(self):
+        interface = host.Interface(host=self.host)
 
         # Try some bad macs
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff")
@@ -67,19 +69,24 @@ class Test_010_InterfaceValidators(FixtureDataTestBase):
         session.session.delete(interface)
         session.session.commit()
 
+class IpModelTestBase(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.subnets = factories.net.SubnetFactory.create_batch(5)
+        self.subnet = self.subnets[0]
+        self.interface = factories.host.InterfaceFactory()
 
-class Test_030_IpModel(FixtureDataTestBase):
-    datasets = (BuildingData, RoomData, SubnetData, UserData, HostData,
-                InterfaceData, VLANData)
-
-    def test_0030_delete_address(self):
-        subnet = Subnet.q.first()
-        interface = host.Interface.q.first()
-        ip, _ = get_free_ip((subnet, ))
-        ip_addr = host.IP(interface=interface, address=ip, subnet=subnet)
-
-        session.session.add(ip_addr)
+    def pick_ip(self):
+        ip, _ = get_free_ip((self.subnet,))
+        addr = host.IP(interface=self.interface, address=ip, subnet=self.subnet)
+        session.session.add(addr)
         session.session.commit()
+        return addr
+
+
+class TestIpModel(IpModelTestBase):
+    def test_0030_delete_address(self):
+        ip_addr = self.pick_ip()
 
         with self.assertRaises(IntegrityError):
             ip_addr.address = None
@@ -87,13 +94,7 @@ class Test_030_IpModel(FixtureDataTestBase):
             session.session.commit()
 
     def test_0040_delete_subnet(self):
-        subnet = Subnet.q.first()
-        interface = host.Interface.q.first()
-        ip, _ = get_free_ip((subnet, ))
-        ip_addr = host.IP(interface=interface, address=ip, subnet=subnet)
-
-        session.session.add(ip_addr)
-        session.session.commit()
+        ip_addr = self.pick_ip()
 
         with self.assertRaises(IntegrityError):
             ip_addr.subnet = None
@@ -101,73 +102,52 @@ class Test_030_IpModel(FixtureDataTestBase):
             session.session.commit()
 
 
-class Test_040_IpEvents(FixtureDataTestBase):
-    datasets = (BuildingData, VLANData, SubnetData, RoomData, UserData,
-                HostData, InterfaceData)
-
+class TestIpEvents(IpModelTestBase):
     def test_0010_correct_subnet_and_ip(self):
-        subnet = Subnet.q.first()
-        interface = host.Interface.q.first()
+        ip_address, _ = get_free_ip((self.subnet, ))
 
-        ip_address, _ = get_free_ip((subnet, ))
-
-        ip = host.IP(interface=interface)
-        ip.address = ip_address
-        ip.subnet = subnet
+        ip = host.IP(interface=self.interface, address=ip_address, subnet=self.subnet)
         session.session.add(ip)
         session.session.commit()
 
-        interface = host.Interface.q.first()
-        ip_address, _ = get_free_ip((subnet, ))
-        ip = host.IP(address=ip_address, subnet=subnet, interface=interface)
+        ip_address, _ = get_free_ip((self.subnet, ))
+        ip = host.IP(address=ip_address, subnet=self.subnet, interface=self.interface)
         session.session.add(ip)
         session.session.commit()
 
-        host.IP.q.filter(host.IP.interface == interface).delete()
+        host.IP.q.filter(host.IP.interface == self.interface).delete()
         session.session.commit()
 
     def test_0020_missing_subnet(self):
-        subnet = Subnet.q.first()
-        interface = host.Interface.q.first()
+        ip_address, _ = get_free_ip((self.subnet, ))
+        ip = host.IP(interface=self.interface, address=ip_address)
 
-        ip_address, _ = get_free_ip((subnet, ))
-        ip = host.IP(interface=interface)
-        ip.address = ip_address
-
-        def commit():
+        with self.assertRaises(IntegrityError):
             session.session.add(ip)
             session.session.commit()
-        self.assertRaises(IntegrityError, commit)
 
     def test_0030_missing_ip(self):
-        subnet = Subnet.q.first()
-        interface = host.Interface.q.first()
+        ip = host.IP(interface=self.interface, subnet=self.subnet)
 
-        ip = host.IP(interface=interface)
-        ip.subnet = subnet
-
-        def commit():
+        with self.assertRaises(IntegrityError):
             session.session.add(ip)
             session.session.commit()
-        self.assertRaises(IntegrityError, commit)
 
     def test_0040_wrong_subnet(self):
-        subnets = Subnet.q.all()
-        interface = host.Interface.q.first()
-        ip_address, _ = get_free_ip((subnets[0], ))
+        ip_address, _ = get_free_ip((self.subnets[0], ))
 
-        ip = host.IP(interface=interface, address=ip_address)
+        ip = host.IP(interface=self.interface, address=ip_address)
 
         with self.assertRaises(ValueError):
-            ip.subnet = subnets[1]
+            ip.subnet = self.subnets[1]
 
-        ip = host.IP(interface=interface, subnet=subnets[1])
+        ip = host.IP(interface=self.interface, subnet=self.subnets[1])
 
         with self.assertRaises(ValueError):
             ip.address = ip_address
 
         with self.assertRaises(ValueError):
-            host.IP(interface=interface, subnet=subnets[1], address=ip_address)
+            host.IP(interface=self.interface, subnet=self.subnets[1], address=ip_address)
 
 
 class Test_060_Cascades(FixtureDataTestBase):

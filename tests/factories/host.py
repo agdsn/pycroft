@@ -24,6 +24,7 @@ class IPFactory(BaseFactory):
         model = IP
         exclude = ('str_address',)
 
+    # TODO is there a way to ensure that the IP address we generate is in the given subnet?
     str_address = factory.Faker('ipv4', network=False)
     address = factory.LazyAttribute(lambda o: IPv4Address(o.str_address))
     # interface = factory.SubFactory(InterfaceFactory)
@@ -34,16 +35,20 @@ class InterfaceFactory(BaseFactory):
     class Meta:
         model = Interface
     mac = factory.Faker('unicast_mac_address')
-    # host = factory.SubFactory('HostFactory')
+    host = factory.SubFactory('tests.factories.host.BareHostFactory')
     ip = factory.RelatedFactory(IPFactory, 'interface')
 
 
-class HostFactory(BaseFactory):
+class BareHostFactory(BaseFactory):
+    """A host without owner or interface."""
     class Meta:
         model = Host
 
+    room = factory.SubFactory(RoomFactory)  # the only mandatory property
+
+
+class HostFactory(BareHostFactory):
     owner = factory.SubFactory(UserFactory)
-    room = factory.SubFactory(RoomFactory)
     interface = factory.RelatedFactory(InterfaceFactory, 'host')
 
 
