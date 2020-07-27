@@ -34,20 +34,20 @@ class FinanceModelTest(FactoryDataTestBase):
 
 
 class TestTransactionSplits(FinanceModelTest):
-    def test_0010_empty_transaction(self):
+    def test_empty_transaction(self):
         t = self.create_transaction()
         session.session.add(t)
         self.assertRaises(IllegalTransactionError, session.session.commit)
         session.session.rollback()
 
-    def test_0020_fail_on_unbalanced(self):
+    def test_fail_on_unbalanced(self):
         t = self.create_transaction()
         s = self.create_split(t, self.asset_account, 100)
         session.session.add_all([t, s])
         self.assertRaises(IllegalTransactionError, session.session.commit)
         session.session.rollback()
 
-    def test_0030_insert_balanced(self):
+    def test_insert_balanced(self):
         t = self.create_transaction()
         s1 = self.create_split(t, self.asset_account, 100)
         s2 = self.create_split(t, self.revenue_account, -100)
@@ -58,7 +58,7 @@ class TestTransactionSplits(FinanceModelTest):
             session.session.rollback()
             self.fail()
 
-    def test_0040_delete_cascade(self):
+    def test_delete_cascade(self):
         t = self.create_transaction()
         s1 = self.create_split(t, self.asset_account, 100)
         s2 = self.create_split(t, self.revenue_account, -100)
@@ -68,7 +68,7 @@ class TestTransactionSplits(FinanceModelTest):
         session.session.commit()
         self.assertEqual(finance.Split.q.count(), 0)
 
-    def test_0050_fail_on_self_transaction(self):
+    def test_fail_on_self_transaction(self):
         t = self.create_transaction()
         s1 = self.create_split(t, self.asset_account, 100)
         s2 = self.create_split(t, self.asset_account, -100)
@@ -76,7 +76,7 @@ class TestTransactionSplits(FinanceModelTest):
         self.assertRaises(IntegrityError, session.session.commit)
         session.session.rollback()
 
-    def test_0050_fail_on_multiple_split_same_account(self):
+    def test_fail_on_multiple_split_same_account(self):
         t = self.create_transaction()
         s1 = self.create_split(t, self.asset_account, 100)
         s2 = self.create_split(t, self.revenue_account, -50)
