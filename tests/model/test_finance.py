@@ -5,28 +5,18 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, IllegalTransactionError)
-from pycroft.model.user import User
-from tests import FixtureDataTestBase
 from pycroft.model import finance, session
-from tests.fixtures.dummy.finance import AccountData, BankAccountData
-from tests.fixtures.dummy.user import UserData
+from pycroft.model.finance import BankAccountActivity, IllegalTransactionError
+from .. import factories, FactoryDataTestBase
 
 
-class FinanceModelTest(FixtureDataTestBase):
-    def setUp(self):
-        super(FinanceModelTest, self).setUp()
-        self.author = User.q.filter_by(login=UserData.privileged.login).one()
-        self.asset_account = Account.q.filter_by(
-            name=AccountData.dummy_asset.name
-        ).one()
-        self.revenue_account = Account.q.filter_by(
-            name=AccountData.dummy_revenue.name
-        ).one()
-        self.liability_account = Account.q.filter_by(
-            name=AccountData.dummy_liability.name
-        ).one()
+class FinanceModelTest(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.author = factories.user.UserFactory()
+        self.asset_account = factories.finance.AccountFactory(type='ASSET')
+        self.revenue_account = factories.finance.AccountFactory(type='REVENUE')
+        self.liability_account = factories.finance.AccountFactory(type='LIABILITY')
 
     def create_transaction(self):
         return finance.Transaction(
@@ -34,7 +24,8 @@ class FinanceModelTest(FixtureDataTestBase):
             author=self.author
         )
 
-    def create_split(self, transaction, account, amount):
+    @staticmethod
+    def create_split(transaction, account, amount):
         return finance.Split(
             amount=amount,
             account=account,
@@ -43,8 +34,6 @@ class FinanceModelTest(FixtureDataTestBase):
 
 
 class TestTransactionSplits(FinanceModelTest):
-    datasets = (AccountData, UserData)
-
     def test_0010_empty_transaction(self):
         t = self.create_transaction()
         session.session.add(t)
@@ -126,13 +115,12 @@ class TestTransactionSplits(FinanceModelTest):
 
 
 class TestBankAccountActivity(FinanceModelTest):
-    datasets = (AccountData, BankAccountData, UserData)
+    def create_factories(self):
+        super().create_factories()
+        self.bank_account = factories.finance.BankAccountFactory()
 
     def setUp(self):
-        super(TestBankAccountActivity, self).setUp()
-        self.bank_account = BankAccount.q.filter_by(
-            iban=BankAccountData.dummy.iban
-        ).one()
+        super().setUp()
         session.session.execute("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger IMMEDIATE")
 
     def tearDown(self):
