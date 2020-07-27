@@ -5,11 +5,11 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from pycroft.model import finance, session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, IllegalTransactionError)
 from pycroft.model.user import User
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, PostgreSQLTestCase
+from pycroft.model import finance, session
 from tests.fixtures.dummy.finance import AccountData, BankAccountData
 from tests.fixtures.dummy.user import UserData
 
@@ -125,7 +125,7 @@ class TestTransactionSplits(FinanceModelTest):
         self.assertRaises(IllegalTransactionError, session.session.commit)
 
 
-class TestBankAccountActivity(FinanceModelTest):
+class TestBankAccountActivity(FinanceModelTest, PostgreSQLTestCase):
     datasets = (AccountData, BankAccountData, UserData)
 
     def setUp(self):
