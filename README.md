@@ -71,7 +71,7 @@ glance:
   entrypoint.
 * A `dev-app` service/container based on `agdsn/pycroft-dev` derived from
   `agdsn/pycroft-base`. The development image contains additional packages
-  for development, e.g. `gcc`, `yarn`. The service uses two persistent volumes:
+  for development, e.g. `gcc`, `npm`. The service uses two persistent volumes:
   * the home directory `/opt/pycroft` of the `pycroft` user, that contains among
     other things, the virtual environment, the pip cache, and the
     `.bash_history`.
@@ -81,7 +81,7 @@ glance:
   optimized in-memory database.
 * A `prod-app` service/container based on `agdsn/pycroft-prod`, which is based on
   `agdsn/pycroft-base` that contains only the basics that are required for
-  running Pycroft without development tools, such as `gcc` or `yarn`.
+  running Pycroft without development tools, such as `gcc` or `npm`.
   Pycroft and its dependencies are build using an instance of the
   `agdsn/pycroft-develop` image using the
   [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/)
@@ -403,10 +403,10 @@ alias drc=docker-compose
 
 ### Webpack appears to be missing a library
 
-Re-Install everything using yarn, and re-run the webpack entrypoint.
+Re-Install everything using npm, and re-run the webpack entrypoint.
 
 ```sh
-drc run --rm dev-app shell yarn install
+drc run --rm dev-app shell npm install
 drc run --rm dev-app webpack
 ```
 

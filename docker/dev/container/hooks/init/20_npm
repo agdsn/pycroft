@@ -8,4 +8,4 @@ if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*);
 	exit
 fi
 
-yarn install --network-concurrency 1
+npm install

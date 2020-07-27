@@ -37,7 +37,7 @@
     "vis": "^4.21.0"
   },
   "engines": {
-    "yarn": ">= 1.0.0"
+    "yarn": "YARN NO LONGER USED - use npm instead."
   },
   "devDependencies": {
     "@babel/core": "^7.10.3",
@@ -57,11 +57,12 @@
     "shim-loader": "^1.0.1",
     "source-map-loader": "^1.0.0",
     "style-loader": "^1.2.1",
-    "webpack": "^4.26.1",
+    "webpack": "^4.44.0",
     "webpack-cli": "^3.1.0",
     "webpack-manifest-plugin": "^2.0.3"
   },
   "scripts": {
+    "webpack": "webpack",
     "build": "webpack --require @babel/register --config webpack.config.babel.js"
   }
 }

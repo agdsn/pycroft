@@ -11,7 +11,7 @@ readonly DESCRIPTION=(
 
 run() {
 	cd /opt/pycroft/app
-	exec yarn run webpack --require @babel/register --config webpack.config.babel.js "$@"
+	exec npm run -- webpack --require @babel/register --config webpack.config.babel.js "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

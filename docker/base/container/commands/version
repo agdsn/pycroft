@@ -25,7 +25,6 @@ run() {
 			EOF
 	fi
 	[[ -x nodejs ]] && echo "NodeJS: $(nodejs --version)" || :
-	[[ -x yarn ]] && echo "yarn: $(yarn --version)" || :
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
