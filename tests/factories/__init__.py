@@ -9,3 +9,4 @@ from .host import HostFactory, InterfaceFactory, IPFactory, SwitchFactory, Switc
 from .net import SubnetFactory, VLANFactory
 from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
 from .user import UserFactory, UserWithHostFactory
+from .traffic import TrafficDataFactory, TrafficVolumeFactory

@@ -8,15 +8,9 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.net import get_free_ip
-from pycroft.model import session, host, user
-from pycroft.model.net import VLAN
+from pycroft.model import host
 from pycroft.model.types import InvalidMACAddressException
-from tests import FixtureDataTestBase, FactoryDataTestBase
-from tests.fixtures.dummy.host import IPData, HostData, InterfaceData, \
-    SwitchPortData
-from tests.fixtures.dummy.net import SubnetData, VLANData
-from tests.fixtures.dummy.traffic import TrafficVolumeData
-from tests.fixtures.dummy.user import UserData
+from tests import FactoryDataTestBase
 from .. import factories
 
 
@@ -150,13 +144,21 @@ class TestIpEvents(IpModelTestBase):
             host.IP(interface=self.interface, subnet=self.subnets[1], address=ip_address)
 
 
-class test_Cascades(FixtureDataTestBase):
-    datasets = (SubnetData, UserData, HostData, InterfaceData, IPData,
-                TrafficVolumeData, SwitchPortData)
+class TestVariousCascades(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = factories.UserWithHostFactory()
+        self.host = self.user.hosts[0]
+        self.interface = self.host.interfaces[0]
+        ips = factories.IPFactory.create_batch(3, interface=self.interface)
+        # there's probably a better way to do this, e.g. by introducing an `IpWithTrafficFactory`
+        for ip in ips:
+            factories.TrafficVolumeFactory.create_batch(4, ip=ip)
+        self.ip = self.interface.ips[0]
+
 
     def test_traffic_volume_cascade_on_delete_ip(self):
-        test_ip = host.IP.q.filter_by(
-            address=IPData.dummy_user_ipv4.address).one()
+        test_ip = self.ip
         tv_of_test_ip = test_ip.traffic_volumes
         session.session.delete(test_ip)
         session.session.commit()
@@ -164,8 +166,7 @@ class test_Cascades(FixtureDataTestBase):
                             for o in tv_of_test_ip))
 
     def test_traffic_volume_cascade_on_delete_interface(self):
-        test_interface = host.Interface.q.filter_by(
-            mac=InterfaceData.dummy.mac).one()
+        test_interface = self.interface
         ips = test_interface.ips
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         session.session.delete(test_interface)
@@ -174,7 +175,7 @@ class test_Cascades(FixtureDataTestBase):
                             for o in chain(ips, traffic_volumes)))
 
     def test_traffic_volume_cascade_on_delete_host(self):
-        test_host = host.Host.q.first()
+        test_host = self.host
         interfaces = test_host.interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
@@ -185,7 +186,7 @@ class test_Cascades(FixtureDataTestBase):
 
     def test_all_cascades_on_delete_user(self):
         """Test that hosts, interfaces, ips, and traffic_volumes of a host are cascade deleted"""
-        test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
+        test_user = self.user
         hosts = test_user.hosts
         interfaces = tuple(chain(*(h.interfaces for h in hosts)))
         ips = tuple(chain(*(d.ips for d in interfaces)))
@@ -227,11 +228,13 @@ class TestDefaultVlanCascades(FactoryDataTestBase):
         self.assertEqual(associations_query.count(), 0)
 
 
-class TestVLANAssociations(FixtureDataTestBase):
-    datasets = (SwitchPortData,)
+class TestVLANAssociations(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.vlans = factories.VLANFactory.create_batch(2)
+        self.port1 = factories.SwitchPortFactory(default_vlans=self.vlans[:1])
+        self.port2 = factories.SwitchPortFactory(default_vlans=self.vlans)
 
     def test_secondary_relationship_works(self):
-        port = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port1.name).one()
-        self.assertEqual(len(port.default_vlans), 1)
-        port4 = host.SwitchPort.q.filter_by(name=SwitchPortData.dummy_port4.name).one()
-        self.assertEqual(len(port4.default_vlans), 2)
+        self.assertEqual(len(self.port1.default_vlans), 1)
+        self.assertEqual(len(self.port2.default_vlans), 2)
