@@ -2,27 +2,18 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import unittest
-from itertools import islice
 from random import randint
 
 import ipaddr
 
-from pycroft.model.user import User
-from tests import FixtureDataTestBase
-from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.helpers.net import sort_ports
+from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.lib.net import SubnetFullException, get_free_ip
-from pycroft.model import session, user, logging
-from pycroft.model.host import Interface, IP, Host
-from pycroft.model.net import Subnet
-from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.host import (
-    HostData, InterfaceData)
-from tests.fixtures.dummy.net import SubnetData, VLANData
-from tests.fixtures.dummy.user import UserData
+from pycroft.model.host import IP
+from tests import FactoryDataTestBase, factories
 
 
-class Test_010_SimpleHostsHelper(unittest.TestCase):
+class TestSimpleHostsHelper(unittest.TestCase):
     def test_sort_ports(self):
         ports = [f"{let}{num}" for let in "ABCDEFG" for num in range(1, 24)]
 
@@ -49,9 +40,11 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
             self.assertEqual(generated, expected)
 
 
-class Test_020_IpHelper(FixtureDataTestBase):
-    datasets = [BuildingData, VLANData, SubnetData, RoomData, UserData,
-                HostData, InterfaceData]
+class TestIpHelper(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.subnets = factories.SubnetFactory.create_batch(10)
+        self.host = factories.HostFactory()
 
     @staticmethod
     def calculate_usable_ips(net):
@@ -60,30 +53,25 @@ class Test_020_IpHelper(FixtureDataTestBase):
         return ips - reserved - 2
 
     def test_get_free_ip_simple(self):
-        subnets = Subnet.q.all()
-        for subnet in subnets:
+        for subnet in self.subnets:
             ip, subnet = get_free_ip((subnet,))
             self.assertIn(ip, subnet.address)
 
     def fill_net(self, net, interface):
         for num in range(0, self.calculate_usable_ips(net)):
             ip, _ = get_free_ip((net,))
-            session.session.add(IP(address=ip, subnet=net,
-                                   interface=interface))
-        session.session.commit()
+            self.session.add(IP(address=ip, subnet=net, interface=interface))
+        self.session.commit()
 
     def test_get_free_ip_next_to_full(self):
-        first_net = Subnet.q.filter_by(
-            address=SubnetData.user_ipv4.address).one()
-        second_net = Subnet.q.filter_by(
-            address=SubnetData.dummy_subnet2.address).one()
+        first_net = self.subnets[0]
+        second_net = self.subnets[1]
         subnets = (first_net, second_net)
-        owner = User.q.filter_by(login=HostData.dummy.owner.login).one()
-        host = Host.q.filter_by(owner=owner).one()
+        host = self.host
 
         interface = host.interfaces[0]
         self.fill_net(first_net, interface)
-        session.session.refresh(first_net)
+        self.session.refresh(first_net)
         self.assertRaises(SubnetFullException, get_free_ip, (first_net,))
         try:
             get_free_ip(subnets)
@@ -92,19 +80,16 @@ class Test_020_IpHelper(FixtureDataTestBase):
         self.fill_net(subnets[1], interface)
         self.assertRaises(SubnetFullException, get_free_ip, subnets)
 
-        session.session.delete(host)
-        session.session.commit()
+        self.session.delete(host)
+        self.session.commit()
 
 
-class Test_030_change_mac_interface(FixtureDataTestBase):
-    datasets = [InterfaceData, UserData]
-
-    def setUp(self):
-        super(Test_030_change_mac_interface, self).setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
-        self.interface = Interface.q.filter_by(
-            mac=InterfaceData.dummy.mac).one()
+# TODO this is actually a lib test
+class TestChangeMacInterface(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.processing_user = factories.UserFactory()
+        self.interface = factories.InterfaceFactory()
 
     def test_change_mac(self):
         new_mac = "20:00:00:00:00:00"
