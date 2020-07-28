@@ -195,27 +195,34 @@ class test_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(hosts, interfaces, ips, traffic_volumes)))
 
+
+class TestDefaultVlanCascades(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        # We need: SwitchPort <- `switch_port_default_vlans` -> Vlan
+        self.vlans = factories.net.VLANFactory.create_batch(2)
+        self.vlan = self.vlans[0]
+        self.ports = factories.host.SwitchPortFactory\
+            .create_batch(2, default_vlans=self.vlans)
+        self.port = self.ports[0]
+
     def test_default_vlan_associations_cascade_on_delete_vlan(self):
-        # TODO: delete a vlan
-        vlan = VLAN.q.filter_by(vid=VLANData.vlan_dummy1.vid).one()
         associations_query = session.session.query(host.switch_port_default_vlans)\
-            .filter_by(vlan_id=vlan.id)
+            .filter_by(vlan_id=self.vlan.id)
 
         self.assertEqual(associations_query.count(), 2)
-        for subnet in vlan.subnets:
+        for subnet in self.vlan.subnets:
             session.session.delete(subnet)
-        session.session.delete(vlan)
+        session.session.delete(self.vlan)
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
     def test_default_vlan_associations_cascade_on_delete_switch_port(self):
-        port_name = SwitchPortData.dummy_port4.name
-        port = host.SwitchPort.q.filter_by(name=port_name).one()
         associations_query = session.session.query(host.switch_port_default_vlans)\
-            .filter_by(switch_port_id=port.id)
+            .filter_by(switch_port_id=self.port.id)
 
         self.assertEqual(associations_query.count(), 2)
-        session.session.delete(port)
+        session.session.delete(self.port)
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
