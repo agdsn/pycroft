@@ -53,7 +53,8 @@ class Test_020_IpHelper(FixtureDataTestBase):
     datasets = [BuildingData, VLANData, SubnetData, RoomData, UserData,
                 HostData, InterfaceData]
 
-    def calculate_usable_ips(self, net):
+    @staticmethod
+    def calculate_usable_ips(net):
         ips = ipaddr.IPNetwork(net.address).numhosts
         reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
         return ips - reserved - 2
