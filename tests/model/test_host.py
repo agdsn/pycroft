@@ -154,7 +154,7 @@ class test_Cascades(FixtureDataTestBase):
     datasets = (SubnetData, UserData, HostData, InterfaceData, IPData,
                 TrafficVolumeData, SwitchPortData)
 
-    def test_cascade_on_delete_ip(self):
+    def test_traffic_volume_cascade_on_delete_ip(self):
         test_ip = host.IP.q.filter_by(
             address=IPData.dummy_user_ipv4.address).one()
         tv_of_test_ip = test_ip.traffic_volumes
@@ -163,7 +163,7 @@ class test_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in tv_of_test_ip))
 
-    def test_cascade_on_delete_interface(self):
+    def test_traffic_volume_cascade_on_delete_interface(self):
         test_interface = host.Interface.q.filter_by(
             mac=InterfaceData.dummy.mac).one()
         ips = test_interface.ips
@@ -173,7 +173,7 @@ class test_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(ips, traffic_volumes)))
 
-    def test_cascade_on_delete_host(self):
+    def test_traffic_volume_cascade_on_delete_host(self):
         test_host = host.Host.q.first()
         interfaces = test_host.interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
@@ -183,7 +183,8 @@ class test_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(interfaces, ips, traffic_volumes)))
 
-    def test_cascade_on_delete_user(self):
+    def test_all_cascades_on_delete_user(self):
+        """Test that hosts, interfaces, ips, and traffic_volumes of a host are cascade deleted"""
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
         hosts = test_user.hosts
         interfaces = tuple(chain(*(h.interfaces for h in hosts)))
@@ -194,7 +195,7 @@ class test_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(hosts, interfaces, ips, traffic_volumes)))
 
-    def test_cascade_on_delete_vlan(self):
+    def test_default_vlan_associations_cascade_on_delete_vlan(self):
         # TODO: delete a vlan
         vlan = VLAN.q.filter_by(vid=VLANData.vlan_dummy1.vid).one()
         associations_query = session.session.query(host.switch_port_default_vlans)\
@@ -207,7 +208,7 @@ class test_Cascades(FixtureDataTestBase):
         session.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
-    def test_cascade_on_delete_switch_port(self):
+    def test_default_vlan_associations_cascade_on_delete_switch_port(self):
         port_name = SwitchPortData.dummy_port4.name
         port = host.SwitchPort.q.filter_by(name=port_name).one()
         associations_query = session.session.query(host.switch_port_default_vlans)\
