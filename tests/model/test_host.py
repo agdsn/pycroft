@@ -48,20 +48,20 @@ class TestInterfaceValidators(FactoryDataTestBase):
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff:ff:ff")
 
         # Assert that we have no mac assigned
-        session.session.add(interface)
-        self.assertRaises(IntegrityError, session.session.commit)
-        session.session.rollback()
+        self.session.add(interface)
+        self.assertRaises(IntegrityError, self.session.commit)
+        self.session.rollback()
 
         # Assert a correct mac
         self.assertSetMAC(interface, "00:00:00:01:00:00")
 
         # Assert that we have the mac assigned
-        session.session.add(interface)
-        session.session.commit()
+        self.session.add(interface)
+        self.session.commit()
 
         # Wipe the instance
-        session.session.delete(interface)
-        session.session.commit()
+        self.session.delete(interface)
+        self.session.commit()
 
 class IpModelTestBase(FactoryDataTestBase):
     def create_factories(self):
@@ -73,8 +73,8 @@ class IpModelTestBase(FactoryDataTestBase):
     def pick_ip(self):
         ip, _ = get_free_ip((self.subnet,))
         addr = host.IP(interface=self.interface, address=ip, subnet=self.subnet)
-        session.session.add(addr)
-        session.session.commit()
+        self.session.add(addr)
+        self.session.commit()
         return addr
 
 
@@ -85,7 +85,7 @@ class TestIpModel(IpModelTestBase):
         with self.assertRaises(IntegrityError):
             ip_addr.address = None
             self.assertIsNone(ip_addr.address)
-            session.session.commit()
+            self.session.commit()
 
     def test_delete_subnet(self):
         ip_addr = self.pick_ip()
@@ -93,7 +93,7 @@ class TestIpModel(IpModelTestBase):
         with self.assertRaises(IntegrityError):
             ip_addr.subnet = None
             self.assertIsNone(ip_addr.subnet)
-            session.session.commit()
+            self.session.commit()
 
 
 class TestIpEvents(IpModelTestBase):
@@ -101,31 +101,31 @@ class TestIpEvents(IpModelTestBase):
         ip_address, _ = get_free_ip((self.subnet, ))
 
         ip = host.IP(interface=self.interface, address=ip_address, subnet=self.subnet)
-        session.session.add(ip)
-        session.session.commit()
+        self.session.add(ip)
+        self.session.commit()
 
         ip_address, _ = get_free_ip((self.subnet, ))
         ip = host.IP(address=ip_address, subnet=self.subnet, interface=self.interface)
-        session.session.add(ip)
-        session.session.commit()
+        self.session.add(ip)
+        self.session.commit()
 
         host.IP.q.filter(host.IP.interface == self.interface).delete()
-        session.session.commit()
+        self.session.commit()
 
     def test_missing_subnet(self):
         ip_address, _ = get_free_ip((self.subnet, ))
         ip = host.IP(interface=self.interface, address=ip_address)
 
         with self.assertRaises(IntegrityError):
-            session.session.add(ip)
-            session.session.commit()
+            self.session.add(ip)
+            self.session.commit()
 
     def test_missing_ip(self):
         ip = host.IP(interface=self.interface, subnet=self.subnet)
 
         with self.assertRaises(IntegrityError):
-            session.session.add(ip)
-            session.session.commit()
+            self.session.add(ip)
+            self.session.commit()
 
     def test_wrong_subnet(self):
         ip_address, _ = get_free_ip((self.subnets[0], ))
@@ -160,8 +160,8 @@ class TestVariousCascades(FactoryDataTestBase):
     def test_traffic_volume_cascade_on_delete_ip(self):
         test_ip = self.ip
         tv_of_test_ip = test_ip.traffic_volumes
-        session.session.delete(test_ip)
-        session.session.commit()
+        self.session.delete(test_ip)
+        self.session.commit()
         self.assertTrue(all(inspect(o).was_deleted
                             for o in tv_of_test_ip))
 
@@ -169,8 +169,8 @@ class TestVariousCascades(FactoryDataTestBase):
         test_interface = self.interface
         ips = test_interface.ips
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
-        session.session.delete(test_interface)
-        session.session.commit()
+        self.session.delete(test_interface)
+        self.session.commit()
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(ips, traffic_volumes)))
 
@@ -179,8 +179,8 @@ class TestVariousCascades(FactoryDataTestBase):
         interfaces = test_host.interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
-        session.session.delete(test_host)
-        session.session.commit()
+        self.session.delete(test_host)
+        self.session.commit()
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(interfaces, ips, traffic_volumes)))
 
@@ -191,8 +191,8 @@ class TestVariousCascades(FactoryDataTestBase):
         interfaces = tuple(chain(*(h.interfaces for h in hosts)))
         ips = tuple(chain(*(d.ips for d in interfaces)))
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
-        session.session.delete(test_user)
-        session.session.commit()
+        self.session.delete(test_user)
+        self.session.commit()
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(hosts, interfaces, ips, traffic_volumes)))
 
@@ -208,23 +208,23 @@ class TestDefaultVlanCascades(FactoryDataTestBase):
         self.port = self.ports[0]
 
     def test_default_vlan_associations_cascade_on_delete_vlan(self):
-        associations_query = session.session.query(host.switch_port_default_vlans)\
+        associations_query = self.session.query(host.switch_port_default_vlans)\
             .filter_by(vlan_id=self.vlan.id)
 
         self.assertEqual(associations_query.count(), 2)
         for subnet in self.vlan.subnets:
-            session.session.delete(subnet)
-        session.session.delete(self.vlan)
-        session.session.commit()
+            self.session.delete(subnet)
+        self.session.delete(self.vlan)
+        self.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
     def test_default_vlan_associations_cascade_on_delete_switch_port(self):
-        associations_query = session.session.query(host.switch_port_default_vlans)\
+        associations_query = self.session.query(host.switch_port_default_vlans)\
             .filter_by(switch_port_id=self.port.id)
 
         self.assertEqual(associations_query.count(), 2)
-        session.session.delete(self.port)
-        session.session.commit()
+        self.session.delete(self.port)
+        self.session.commit()
         self.assertEqual(associations_query.count(), 0)
 
 
