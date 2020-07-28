@@ -24,9 +24,7 @@ from tests.fixtures.dummy.user import UserData
 
 class Test_010_SimpleHostsHelper(unittest.TestCase):
     def test_0010_sort_ports(self):
-        ports = ["{0}{1:d}".format(letter, number)
-                 for letter in ["A", "B", "C", "D", "E", "F", "G"]
-                 for number in range(1, 24)]
+        ports = [f"{let}{num}" for let in "ABCDEFG" for num in range(1, 24)]
 
         class fake_port(object):
             def __init__(self, name):
