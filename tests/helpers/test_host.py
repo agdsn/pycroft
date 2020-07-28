@@ -23,7 +23,7 @@ from tests.fixtures.dummy.user import UserData
 
 
 class Test_010_SimpleHostsHelper(unittest.TestCase):
-    def test_0010_sort_ports(self):
+    def test_sort_ports(self):
         ports = [f"{let}{num}" for let in "ABCDEFG" for num in range(1, 24)]
 
         class fake_port(object):
@@ -39,7 +39,7 @@ class Test_010_SimpleHostsHelper(unittest.TestCase):
         resorted = [p.name for p in sort_ports(shuffled)]
         self.assertEqual(resorted, ports)
 
-    def test_0020_generate_hostname(self):
+    def test_generate_hostname(self):
         ips = [(141, 30, 228, 10), (10, 10, 10, 1)]
         for ip in ips:
             byte1, byte2, byte3, byte4 = ip
@@ -58,7 +58,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
         reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
         return ips - reserved - 2
 
-    def test_0010_get_free_ip_simple(self):
+    def test_get_free_ip_simple(self):
         subnets = Subnet.q.all()
         for subnet in subnets:
             ip, subnet = get_free_ip((subnet,))
@@ -71,7 +71,7 @@ class Test_020_IpHelper(FixtureDataTestBase):
                                    interface=interface))
         session.session.commit()
 
-    def test_0030_get_free_ip_next_to_full(self):
+    def test_get_free_ip_next_to_full(self):
         first_net = Subnet.q.filter_by(
             address=SubnetData.user_ipv4.address).one()
         second_net = Subnet.q.filter_by(
@@ -105,7 +105,7 @@ class Test_030_change_mac_interface(FixtureDataTestBase):
         self.interface = Interface.q.filter_by(
             mac=InterfaceData.dummy.mac).one()
 
-    def test_0010_change_mac(self):
+    def test_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         change_mac(self.interface, new_mac, self.processing_user)
         self.assertEqual(self.interface.mac, new_mac)
