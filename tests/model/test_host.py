@@ -19,7 +19,7 @@ class TestInterfaceValidators(FactoryDataTestBase):
 
     def create_factories(self):
         super().create_factories()
-        self.host = factories.host.HostFactory()
+        self.host = factories.HostFactory()
 
     def assertSetMAC(self, interface, mac):
         parts = mac.split(":")
@@ -66,9 +66,9 @@ class TestInterfaceValidators(FactoryDataTestBase):
 class IpModelTestBase(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
-        self.subnets = factories.net.SubnetFactory.create_batch(5)
+        self.subnets = factories.SubnetFactory.create_batch(5)
         self.subnet = self.subnets[0]
-        self.interface = factories.host.InterfaceFactory()
+        self.interface = factories.InterfaceFactory()
 
     def pick_ip(self):
         ip, _ = get_free_ip((self.subnet,))
@@ -201,10 +201,9 @@ class TestDefaultVlanCascades(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
         # We need: SwitchPort <- `switch_port_default_vlans` -> Vlan
-        self.vlans = factories.net.VLANFactory.create_batch(2)
+        self.vlans = factories.VLANFactory.create_batch(2)
         self.vlan = self.vlans[0]
-        self.ports = factories.host.SwitchPortFactory\
-            .create_batch(2, default_vlans=self.vlans)
+        self.ports = factories.SwitchPortFactory.create_batch(2, default_vlans=self.vlans)
         self.port = self.ports[0]
 
     def test_default_vlan_associations_cascade_on_delete_vlan(self):
