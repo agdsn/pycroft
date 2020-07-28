@@ -177,8 +177,7 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
         with self.session.begin(subtransactions=True):
             self.create_factories()
 
-    @staticmethod
-    def create_factories():
+    def create_factories(self):
         pass
 
 
