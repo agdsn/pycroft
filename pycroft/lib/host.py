@@ -25,7 +25,8 @@ def change_mac(interface, mac, processor):
     interface.mac = mac
     message = deferred_gettext(u"Changed MAC address from {} to {}.").format(
         old_mac, mac)
-    log_user_event(message.to_json(), processor, interface.host.owner)
+    if interface.host.owner:
+        log_user_event(message.to_json(), processor, interface.host.owner)
     return interface
 
 
@@ -76,7 +77,7 @@ def host_edit(host, owner, room, name, processor):
         log_user_event(author=processor,
                        user=owner,
                        message=message.to_json())
-        
+
     if host.owner_id != owner.id:
         message = deferred_gettext(
             u"Transferred Host '{}' to {}.".format(host.name,
