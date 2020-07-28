@@ -148,7 +148,8 @@ class TestUnixAccounts(FactoryDataTestBase):
         self.assertEqual(self.custom_account.gid, 27)
 
     def test_account_reference(self):
-        self.assertIsNotNone(self.ldap_user.unix_account)
+        self.assertIsInstance(self.ldap_user.unix_account, user.UnixAccount)
+        self.assertTrue(self.ldap_user.unix_account.home_directory.startswith('/home/'))
         self.assertIsNone(self.dummy_user.unix_account)
 
 
