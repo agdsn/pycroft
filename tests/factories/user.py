@@ -5,7 +5,7 @@
 import factory
 from factory.faker import Faker
 
-from pycroft.model.user import User, RoomHistoryEntry
+from pycroft.model.user import User, RoomHistoryEntry, UnixAccount
 from .base import BaseFactory
 from .facilities import RoomFactory
 from .finance import AccountFactory
@@ -23,6 +23,13 @@ class UserFactory(BaseFactory):
     account = factory.SubFactory(AccountFactory, type="USER_ASSET")
     room = factory.SubFactory(RoomFactory)
     address = factory.SelfAttribute('room.address')
+    unix_account = None
+
+    class Params:
+        with_unix_account = factory.Trait(
+            unix_account=factory.SubFactory('tests.factories.user.UnixAccountFactory',
+                                            login=factory.SelfAttribute('..login'))
+        )
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):
@@ -43,3 +50,18 @@ class UserWithHostFactory(UserFactory):
 
 class UserWithMembershipFactory(UserFactory):
     membership = factory.RelatedFactory('tests.factories.property.MembershipFactory', 'user')
+
+class UnixAccountFactory(BaseFactory):
+    class Meta:
+        model = UnixAccount
+
+    class Params:
+        login = Faker('user_name')
+
+    uid = None
+    gid = None
+    login_shell = None
+
+    @factory.lazy_attribute
+    def home_directory(self):
+        return f"/home/{self.login}"
