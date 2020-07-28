@@ -85,7 +85,7 @@ class IpModelTestBase(FactoryDataTestBase):
 
 
 class TestIpModel(IpModelTestBase):
-    def test_0030_delete_address(self):
+    def test_delete_address(self):
         ip_addr = self.pick_ip()
 
         with self.assertRaises(IntegrityError):
@@ -93,7 +93,7 @@ class TestIpModel(IpModelTestBase):
             self.assertIsNone(ip_addr.address)
             session.session.commit()
 
-    def test_0040_delete_subnet(self):
+    def test_delete_subnet(self):
         ip_addr = self.pick_ip()
 
         with self.assertRaises(IntegrityError):
@@ -103,7 +103,7 @@ class TestIpModel(IpModelTestBase):
 
 
 class TestIpEvents(IpModelTestBase):
-    def test_0010_correct_subnet_and_ip(self):
+    def test_correct_subnet_and_ip(self):
         ip_address, _ = get_free_ip((self.subnet, ))
 
         ip = host.IP(interface=self.interface, address=ip_address, subnet=self.subnet)
@@ -118,7 +118,7 @@ class TestIpEvents(IpModelTestBase):
         host.IP.q.filter(host.IP.interface == self.interface).delete()
         session.session.commit()
 
-    def test_0020_missing_subnet(self):
+    def test_missing_subnet(self):
         ip_address, _ = get_free_ip((self.subnet, ))
         ip = host.IP(interface=self.interface, address=ip_address)
 
@@ -126,14 +126,14 @@ class TestIpEvents(IpModelTestBase):
             session.session.add(ip)
             session.session.commit()
 
-    def test_0030_missing_ip(self):
+    def test_missing_ip(self):
         ip = host.IP(interface=self.interface, subnet=self.subnet)
 
         with self.assertRaises(IntegrityError):
             session.session.add(ip)
             session.session.commit()
 
-    def test_0040_wrong_subnet(self):
+    def test_wrong_subnet(self):
         ip_address, _ = get_free_ip((self.subnets[0], ))
 
         ip = host.IP(interface=self.interface, address=ip_address)
@@ -150,11 +150,11 @@ class TestIpEvents(IpModelTestBase):
             host.IP(interface=self.interface, subnet=self.subnets[1], address=ip_address)
 
 
-class Test_060_Cascades(FixtureDataTestBase):
+class test_Cascades(FixtureDataTestBase):
     datasets = (SubnetData, UserData, HostData, InterfaceData, IPData,
                 TrafficVolumeData, SwitchPortData)
 
-    def test_0010_cascade_on_delete_ip(self):
+    def test_cascade_on_delete_ip(self):
         test_ip = host.IP.q.filter_by(
             address=IPData.dummy_user_ipv4.address).one()
         tv_of_test_ip = test_ip.traffic_volumes
@@ -163,7 +163,7 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in tv_of_test_ip))
 
-    def test_0010_cascade_on_delete_interface(self):
+    def test_cascade_on_delete_interface(self):
         test_interface = host.Interface.q.filter_by(
             mac=InterfaceData.dummy.mac).one()
         ips = test_interface.ips
@@ -173,7 +173,7 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(ips, traffic_volumes)))
 
-    def test_0010_cascade_on_delete_host(self):
+    def test_cascade_on_delete_host(self):
         test_host = host.Host.q.first()
         interfaces = test_host.interfaces
         ips = tuple(chain(*(d.ips for d in interfaces)))
@@ -183,7 +183,7 @@ class Test_060_Cascades(FixtureDataTestBase):
         self.assertTrue(all(inspect(o).was_deleted
                             for o in chain(interfaces, ips, traffic_volumes)))
 
-    def test_0010_cascade_on_delete_user(self):
+    def test_cascade_on_delete_user(self):
         test_user = user.User.q.filter_by(login=UserData.dummy.login).one()
         hosts = test_user.hosts
         interfaces = tuple(chain(*(h.interfaces for h in hosts)))
