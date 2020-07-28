@@ -10,7 +10,7 @@ from pycroft.model import facilities, session, user
 from pycroft.model.finance import Account
 from pycroft.model.user import (
     IllegalLoginError, Membership, PropertyGroup)
-from tests import FixtureDataTestBase
+from tests import FixtureDataTestBase, FactoryDataTestBase, factories
 from tests.fixtures.dummy import unixaccount
 from tests.fixtures.dummy.facilities import BuildingData, RoomData
 from tests.fixtures.dummy.property import (
@@ -130,19 +130,14 @@ class Test_040_User_Login(FixtureDataTestBase):
         self.assertEqual(
             user.User.verify_and_get(u.login.upper(), password), u)
 
-class TestUnixAccounts(FixtureDataTestBase):
-    datasets = [unixaccount.UserData]
+class TestUnixAccounts(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.ldap_user = factories.UserFactory(with_unix_account=True)
+        self.dummy_user = factories.UserFactory()
 
-    def setUp(self):
-        super(TestUnixAccounts, self).setUp()
-        self.dummy_account = user.UnixAccount.q.filter_by(
-            home_directory=unixaccount.UnixAccountData.dummy_account_1.home_directory
-        ).one()
-        self.custom_account = user.UnixAccount.q.filter_by(
-            home_directory=unixaccount.UnixAccountData.explicit_gid.home_directory
-        ).one()
-        self.dummy_user = user.User.q.filter_by(login=unixaccount.UserData.dummy.login).one()
-        self.ldap_user = user.User.q.filter_by(login=unixaccount.UserData.withldap.login).one()
+        self.custom_account = factories.UnixAccountFactory(gid=27)
+        self.dummy_account = factories.UnixAccountFactory()
 
     def test_correct_default_values(self):
         self.assertEqual(self.dummy_account.gid, 100)
@@ -153,8 +148,8 @@ class TestUnixAccounts(FixtureDataTestBase):
         self.assertEqual(self.custom_account.gid, 27)
 
     def test_account_reference(self):
-        self.assertEqual(self.ldap_user.unix_account, self.dummy_account)
-        self.assertTrue(self.dummy_user.unix_account == None)
+        self.assertIsNotNone(self.ldap_user.unix_account)
+        self.assertIsNone(self.dummy_user.unix_account)
 
 
 class TestActiveHybridMethods(FixtureDataTestBase):
