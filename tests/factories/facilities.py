@@ -2,7 +2,7 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from factory import SubFactory, LazyAttribute, Sequence, Trait
+from factory import SubFactory, LazyAttribute, Sequence, Trait, RelatedFactoryList
 from factory.faker import Faker
 
 from pycroft.model.facilities import Site, Building, Room
@@ -42,6 +42,16 @@ class RoomFactory(BaseFactory):
 
     building = SubFactory(BuildingFactory)
     address = SubFactory(AddressFactory)
+    patch_ports = []
+
+    class Params:
+        # Adds a patched PatchPort with a subnet
+        patched_with_subnet = Trait(
+            patch_ports=RelatedFactoryList('tests.factories.facilities.PatchPortFactory', 'room',
+                                           size=1,
+                                           patched=True,
+                                           switch_port__default_vlans__create_subnet=True)
+        )
 
 
 class PatchPortFactory(BaseFactory):

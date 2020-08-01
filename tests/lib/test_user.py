@@ -77,10 +77,7 @@ class Test_User_Move_In(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
         self.config = factories.ConfigFactory()
-        self.room = factories.RoomFactory(level=1, number="1")
-        # our room needs to be patched!
-        factories.PatchPortFactory(room=self.room, patched=True,
-                                   switch_port__default_vlans__create_subnet=True)
+        self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
         self.processing_user = UserFactory()
 
     def setUp(self):
