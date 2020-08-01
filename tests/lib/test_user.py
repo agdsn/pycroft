@@ -65,7 +65,6 @@ class Test_User_Move(FactoryDataTestBase):
         # TODO test for changing ip
 
 
-
 class Test_User_Move_In(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
@@ -229,23 +228,22 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.assertEqual(self.user.address, address)
 
 
-class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
-    datasets = (AccountData, ConfigData, IPData, PatchPortData)
+class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.config = factories.ConfigFactory()
+        self.room = factories.RoomFactory(patched_with_subnet=True, number="1", level=1)
+        self.processing_user = UserFactory()
 
-    def setUp(self):
-        super().setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-
-    def test_0030_move_out(self):
+    def test_move_out(self):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_building = facilities.Building.q.first()
+        test_building = self.room.building
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"
 
-        address = get_room(building_id=test_building.id, level=1, room_number="1").address
+        address = self.room.address
 
         new_user, _ = UserHelper.create_user(
             test_name,
@@ -253,7 +251,7 @@ class Test_030_User_Move_Out_And_Back_In(FixtureDataTestBase):
             test_email,
             test_birthdate,
             processor=self.processing_user,
-            groups=[config.member_group],
+            groups=[self.config.member_group],
             address=address
         )
 
