@@ -65,12 +65,15 @@ class Test_030_User_Passwords(FixtureDataTestBase):
                 self.assertIsNone(user.User.verify_and_get(self.user.login, pw))
 
 
-class Test_040_User_Login(FixtureDataTestBase):
-    datasets = [BuildingData, RoomData, UserData]
+class Test_User_Login(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.room = factories.RoomFactory()
+        self.user = factories.UserFactory()
 
-    def test_0010_user_login_validator(self):
+    def test_user_login_validator(self):
         account = Account(name='', type='ASSET')
-        room = facilities.Room.q.first()
+        room = self.room
         u = user.User(name="John Doe",
                       registered_at=session.utcnow(),
                       room=room,
@@ -111,13 +114,13 @@ class Test_040_User_Login(FixtureDataTestBase):
             with self.assertRaises(IllegalLoginError):
                 u.login = login
 
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
+    def test_login_cannot_be_changed(self):
         with self.assertRaisesRegexp(AssertionError,
                 "user already in the database - cannot change login anymore!"):
-            u.login = "abc"
+            self.user.login = "abc"
 
     def test_0020_user_login_case_insensitive(self):
-        u = user.User.q.filter_by(login=UserData.dummy.login).one()
+        u = self.user
 
         password = 'secret'
         u.password = password
