@@ -153,14 +153,11 @@ class TestUnixAccounts(FactoryDataTestBase):
         self.assertIsNone(self.dummy_user.unix_account)
 
 
-class TestActiveHybridMethods(FixtureDataTestBase):
-    datasets = [UserData, PropertyGroupData]
-
-    def setUp(self):
-        super(TestActiveHybridMethods, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.property_group = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.dummy.name).one()
+class TestActiveHybridMethods(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = factories.UserFactory()
+        self.property_group = factories.PropertyGroupFactory()
 
     def add_membership(self, group):
         m = Membership(user=self.user, group=group)
