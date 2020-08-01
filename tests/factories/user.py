@@ -46,7 +46,8 @@ class UserFactory(BaseFactory):
 
 
 class UserWithHostFactory(UserFactory):
-    host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner')
+    host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
+                                  room=factory.SelfAttribute('..room'))
 
 
 class UserWithMembershipFactory(UserFactory):

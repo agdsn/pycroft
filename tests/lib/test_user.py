@@ -30,31 +30,24 @@ from tests.fixtures.dummy.user import UserData
 from .. import factories
 
 
-class Test_010_User_Move(FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
-                PatchPortData, UserData, InterfaceData, HostData,
-                VLANData)
-
-    def setUp(self):
-        super(Test_010_User_Move, self).setUp()
-        self.user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-        self.old_room = self.user.room #building.Room.q.get(1)
-        self.same_building = facilities.Building.q.filter_by(
-            short_name=BuildingData.dummy_house1.short_name).one()
-        assert self.same_building == self.old_room.building
-        self.other_building = facilities.Building.q.filter_by(
-            short_name=BuildingData.dummy_house2.short_name).one()
-
-        self.new_room_other_building = facilities.Room.q.filter_by(
-            building=self.other_building).one()
-        self.new_room_same_building = facilities.Room.q.filter_by(
-            building=self.same_building, number=RoomData.dummy_room3.number,
-            level=RoomData.dummy_room3.level, inhabitable=True).one()
-        self.new_switch_patch_port = PatchPort.q.filter_by(
-            name=PatchPortData.dummy_patch_port2.name).one()
+class Test_User_Move(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        # we just create the subnet to ensure it stays the same when in the same building
+        subnet = factories.SubnetFactory()
+        self.user = UserWithHostFactory(
+            room__patched_with_subnet=True,
+            room__patch_ports__switch_port__default_vlans__subnets=[subnet]
+        )
+        self.processing_user = UserFactory()
+        self.old_room = self.user.room
+        assert all(h.room == self.old_room for h in self.user.hosts)
+        self.new_room_other_building = factories.RoomFactory(patched_with_subnet=True)
+        self.new_room_same_building = factories.RoomFactory(
+            building=self.old_room.building,
+            patched_with_subnet=True,
+            patch_ports__switch_port__default_vlans__subnets=[subnet],
+        )
 
     def test_0010_moves_into_same_room(self):
         self.assertRaises(
