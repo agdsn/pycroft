@@ -4,18 +4,11 @@
 from datetime import timedelta
 
 from pycroft.helpers.interval import single, closed
-from pycroft.helpers.user import (
-    generate_password, hash_password)
-from pycroft.model import facilities, session, user
+from pycroft.helpers.user import generate_password, hash_password
+from pycroft.model import session, user
 from pycroft.model.finance import Account
-from pycroft.model.user import (
-    IllegalLoginError, Membership, PropertyGroup)
-from tests import FixtureDataTestBase, FactoryDataTestBase, factories
-from tests.fixtures.dummy import unixaccount
-from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.property import (
-    MembershipData, PropertyData, PropertyGroupData)
-from tests.fixtures.dummy.user import UserData
+from pycroft.model.user import IllegalLoginError, Membership, PropertyGroup
+from tests import FactoryDataTestBase, factories
 
 
 class Test_User_Passwords(FactoryDataTestBase):
