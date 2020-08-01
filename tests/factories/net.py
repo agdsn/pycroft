@@ -12,6 +12,11 @@ class VLANFactory(BaseFactory):
     name = factory.Sequence(lambda n: "vlan{}".format(n+1))
     vid = factory.Sequence(lambda n: n+1)
 
+    class Params:
+        create_subnet = factory.Trait(
+            subnets=factory.RelatedFactoryList('tests.factories.net.SubnetFactory', 'vlan', size=1)
+        )
+
 
 def _random_subnet():
     ipv4_factory = factory.Faker('ipv4', network=True)

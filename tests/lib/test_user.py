@@ -27,6 +27,8 @@ from tests.fixtures.dummy.host import (
 from tests.fixtures.dummy.net import SubnetData, VLANData
 from tests.fixtures.dummy.user import UserData
 
+from .. import factories
+
 
 class Test_010_User_Move(FixtureDataTestBase):
     datasets = (ConfigData, BuildingData, IPData, RoomData, SubnetData,
@@ -70,16 +72,19 @@ class Test_010_User_Move(FixtureDataTestBase):
         # TODO test for changing ip
 
 
-class Test_020_User_Move_In(FixtureDataTestBase):
-    datasets = (AccountData, BuildingData, ConfigData, IPData, PropertyData,
-                RoomData, SubnetData, PatchPortData,
-                UserData, HostData, InterfaceData, VLANData)
+
+class Test_User_Move_In(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.config = factories.ConfigFactory()
+        self.room = factories.RoomFactory(level=1, number="1")
+        # our room needs to be patched!
+        factories.PatchPortFactory(room=self.room, patched=True,
+                                   switch_port__default_vlans__create_subnet=True)
+        self.processing_user = UserFactory()
 
     def setUp(self):
-        super(Test_020_User_Move_In, self).setUp()
-        self.processing_user = user.User.q.filter_by(
-            login=UserData.privileged.login).one()
-
+        super().setUp()
         class _UserData:
             name = u"Hans"
             login = u"hans66"
@@ -87,7 +92,6 @@ class Test_020_User_Move_In(FixtureDataTestBase):
             mac = "12:11:11:11:11:11"
             birthdate = "1990-01-01"
         self.user = _UserData
-        self.room = facilities.Room.q.first()
 
     def create_some_user(self):
         new_user, _ = UserHelper.create_user(
@@ -132,7 +136,7 @@ class Test_020_User_Move_In(FixtureDataTestBase):
         test_name = u"Hans"
         test_login = u"hans66"
         test_email = u"hans@hans.de"
-        test_building = facilities.Building.q.first()
+        test_building = self.room.building
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"
 
