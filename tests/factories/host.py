@@ -79,4 +79,4 @@ class SwitchPortFactory(BaseFactory):
                 self.default_vlans.append(vlan)
         else:
             # Create a default vlan
-            self.default_vlans.append(VLANFactory())
+            self.default_vlans.append(VLANFactory(**kwargs))
