@@ -311,30 +311,18 @@ class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
         self.assertTrue(new_user.member_of(config.network_access_group))
 
 
-class Test_040_User_Edit_Name(FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, RoomData, UserData)
+class UserEditsTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = UserFactory()
 
-    def setUp(self):
-        super(Test_040_User_Edit_Name, self).setUp()
-        self.user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
-
-    def test_0010_correct_new_name(self):
+    def test_correct_new_name(self):
         new_name = "A new name"
         self.assertNotEqual(new_name, self.user.name)
         UserHelper.edit_name(self.user, new_name, self.user)
         self.assertEqual(self.user.name, new_name)
 
-
-class Test_050_User_Edit_Email(FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, RoomData, UserData)
-
-    def setUp(self):
-        super(Test_050_User_Edit_Email, self).setUp()
-        self.user = user.User.q.filter_by(
-            login=UserData.dummy.login).one()
-
-    def test_0010_correct_new_email(self):
+    def test_correct_new_email(self):
         new_mail = "user@example.net"
         self.assertNotEqual(new_mail, self.user.email)
         UserHelper.edit_email(self.user, new_mail, self.user)
