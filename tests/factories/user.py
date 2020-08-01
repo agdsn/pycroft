@@ -33,7 +33,8 @@ class UserFactory(BaseFactory):
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):
-        if self.room is not None:
+        """Create a room history entry, which is required for consistency reasons."""
+        if create and self.room is not None:
             # Set room history entry begin to registration date
 
             rhe = RoomHistoryEntry.q.filter_by(user=self, room=self.room).one()
