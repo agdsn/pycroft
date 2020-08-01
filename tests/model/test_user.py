@@ -18,14 +18,12 @@ from tests.fixtures.dummy.property import (
 from tests.fixtures.dummy.user import UserData
 
 
-class Test_030_User_Passwords(FixtureDataTestBase):
-    datasets = [BuildingData, RoomData, UserData]
+class Test_User_Passwords(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = factories.UserFactory()
 
-    def setUp(self):
-        super(Test_030_User_Passwords, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-
-    def test_0010_password_hash_validator(self):
+    def test_password_hash_validator(self):
         password = generate_password(4)
         pw_hash = hash_password(password)
 
@@ -43,7 +41,7 @@ class Test_030_User_Passwords(FixtureDataTestBase):
             self.user.passwd_hash = None
         session.session.commit()
 
-    def test_0020_set_and_verify_password(self):
+    def test_set_and_verify_password(self):
         password = generate_password(4)
 
         self.user.password = password
@@ -119,7 +117,7 @@ class Test_User_Login(FactoryDataTestBase):
                 "user already in the database - cannot change login anymore!"):
             self.user.login = "abc"
 
-    def test_0020_user_login_case_insensitive(self):
+    def test_user_login_case_insensitive(self):
         u = self.user
 
         password = 'secret'
