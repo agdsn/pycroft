@@ -6,44 +6,36 @@ from datetime import datetime, timedelta
 from pycroft.model import session, user
 from pycroft.model.property import current_property
 from pycroft.model.user import Group, Membership, PropertyGroup
-from tests import FixtureDataTestBase, FactoryDataTestBase
+from tests import FactoryDataTestBase, factories
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
-from tests.factories.user import UserFactory
-from tests.fixtures.dummy.facilities import (BuildingData, RoomData)
-from tests.fixtures.dummy.user import UserData
-from tests.model.property_fixtures import (
-    PropertyData, PropertyGroupData)
 
 
-class PropertyDataTestBase(FixtureDataTestBase):
-    datasets = [BuildingData, RoomData, UserData, PropertyGroupData,
-                PropertyData]
-
-    def setUp(self):
-        super(PropertyDataTestBase, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
-        self.property_group1 = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.group1.name).one()
-        self.property_group2 = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.group2.name).one()
+class PropertyDataTestBase(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = factories.UserFactory()
+        self.prop1 = 'test1'
+        self.prop2 = 'test2'
+        self.property_group1 = factories.PropertyGroupFactory(granted={self.prop1})
+        self.property_group2 = factories.PropertyGroupFactory(granted={self.prop1, self.prop2})
 
 
-class Test_010_PropertyResolving(PropertyDataTestBase):
-    def test_0010_assert_correct_fixture(self):
+class Test_PropertyResolving(PropertyDataTestBase):
+    def test_assert_correct_fixture(self):
         """simply test that fixtures work
         """
         self.assertEqual(Membership.q.count(), 0)
 
-        self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertFalse(self.user.has_property(self.prop1))
+        self.assertFalse(self.user.has_property(self.prop2))
 
         self.assertEqual(len(self.property_group1.properties), 1)
         self.assertEqual(len(self.property_group2.properties), 2)
-        self.assertIn(PropertyData.prop_test1.name, self.property_group1.properties)
-        self.assertIn(PropertyData.prop_test1.name, self.property_group2.properties)
-        self.assertIn(PropertyData.prop_test2.name, self.property_group2.properties)
+        self.assertIn(self.prop1, self.property_group1.properties)
+        self.assertIn(self.prop1, self.property_group2.properties)
+        self.assertIn(self.prop2, self.property_group2.properties)
 
-    def test_0020_add_membership(self):
+    def test_add_membership(self):
         # add membership to group1
         membership = Membership(
             begins_at=session.utcnow(),
@@ -53,8 +45,8 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertFalse(self.user.has_property(self.prop2))
 
         # add membership to group2
         membership = Membership(
@@ -65,10 +57,10 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertTrue(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertTrue(self.user.has_property(self.prop2))
 
-    def test_0030_add_timed_membership(self):
+    def test_add_timed_membership(self):
         # add membership to group1
         now = session.utcnow()
         membership = Membership(
@@ -80,8 +72,8 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertFalse(self.user.has_property(self.prop2))
 
         # add expired membership to group2
         membership = Membership(
@@ -93,10 +85,10 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertFalse(self.user.has_property(self.prop2))
 
-    def test_0040_disable_membership(self):
+    def test_disable_membership(self):
         # add membership to group1
         membership = Membership(
             begins_at=session.utcnow() - timedelta(hours=2),
@@ -106,14 +98,14 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
+        self.assertTrue(self.user.has_property(self.prop1))
         membership.disable(session.utcnow() - timedelta(hours=1))
         session.session.commit()
         self.assertNotIn(
             self.property_group1,
             self.user.active_property_groups()
         )
-        self.assertFalse(self.user.has_property(PropertyData.prop_test1.name))
+        self.assertFalse(self.user.has_property(self.prop1))
 
         # add membership to group1
         membership = Membership(
@@ -124,7 +116,7 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
+        self.assertTrue(self.user.has_property(self.prop1))
 
         # add membership to group2
         membership = Membership(
@@ -135,18 +127,18 @@ class Test_010_PropertyResolving(PropertyDataTestBase):
         session.session.add(membership)
         session.session.commit()
 
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertTrue(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertTrue(self.user.has_property(self.prop2))
 
         # disables membership in group2
         membership.disable(session.utcnow() - timedelta(hours=1))
         session.session.commit()
-        self.assertTrue(self.user.has_property(PropertyData.prop_test1.name))
-        self.assertFalse(self.user.has_property(PropertyData.prop_test2.name))
+        self.assertTrue(self.user.has_property(self.prop1))
+        self.assertFalse(self.user.has_property(self.prop2))
 
 
-class Test_020_MembershipValidators(PropertyDataTestBase):
-    def test_0010_start_date_default(self):
+class Test_MembershipValidators(PropertyDataTestBase):
+    def test_start_date_default(self):
         # add membership to group1
         p1 = Membership(user=self.user, group=self.property_group1)
         session.session.add(p1)
@@ -157,7 +149,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         self.assertIsNotNone(p.begins_at)
         self.assertIsNone(p.ends_at)
 
-    def test_0020_end_date_before_start(self):
+    def test_end_date_before_start(self):
         # add membership to group1
         p1 = Membership(user=self.user, group=self.property_group1)
         p1.begins_at = session.utcnow()
@@ -173,7 +165,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
             set_old_date
         )
 
-    def test_0030_start_date_after_end(self):
+    def test_start_date_after_end(self):
         # add membership to group1
         now = session.utcnow()
         self.assertRaisesRegexp(
@@ -183,7 +175,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
             begins_at=now + timedelta(days=1), ends_at=now
         )
 
-    def test_0040_set_correct_dates(self):
+    def test_set_correct_dates(self):
         # add membership to group1
         p1 = Membership(user=self.user, group=self.property_group1)
         p1.begins_at = session.utcnow()
@@ -197,7 +189,7 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
 
         session.session.commit()
 
-    def test_0050_clear_end_date(self):
+    def test_clear_end_date(self):
         # add membership to group1
         p1 = Membership(user=self.user, group=self.property_group1)
         p1.begins_at = session.utcnow()
@@ -221,8 +213,8 @@ class Test_020_MembershipValidators(PropertyDataTestBase):
         self.assertIsNone(p1.ends_at)
 
 
-class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
-    def test_0010_group_users(self):
+class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
+    def test_group_users(self):
         self.assertEqual(len(self.property_group1.users), 0)
         self.assertEqual(len(self.property_group1.active_users()), 0)
 
@@ -240,7 +232,7 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(len(self.property_group1.users), 1)
         self.assertEqual(len(self.property_group1.active_users()), 0)
 
-    def test_0030_user_property_groups(self):
+    def test_user_property_groups(self):
         # first have no property group
         self.assertEqual(len(self.user.property_groups), 0)
         self.assertEqual(len(self.user.active_property_groups()), 0)
@@ -307,8 +299,8 @@ class Test_030_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.assertEqual(res, 2)
 
 
-class Test_050_Membership(PropertyDataTestBase):
-    def test_0010_active_instance_property(self):
+class Test_Membership(PropertyDataTestBase):
+    def test_active_instance_property(self):
         p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
                         user=self.user, group=self.property_group1)
         self.assertTrue(p1.active())
@@ -422,7 +414,7 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
                                                             denied=denied)
 
         self.users = dict(zip(['active', 'mail', 'violator', 'former'],
-                              UserFactory.create_batch(4)))
+                              factories.UserFactory.create_batch(4)))
 
         memberships = [
             # user, group, delta_days_start, delta_days_end
