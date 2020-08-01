@@ -100,7 +100,7 @@ class Test_User_Move_In(FactoryDataTestBase):
             self.user.email,
             self.user.birthdate,
             processor=self.processing_user,
-            groups=[config.member_group],
+            groups=[self.config.member_group],
             address=self.room.address,
         )
         return new_user
@@ -125,7 +125,7 @@ class Test_User_Move_In(FactoryDataTestBase):
         # TODO fix signature and check for explicitly supplied address.
         # self.assertEqual(new_user.address, config.dummy_address)
         self.assert_account_name(new_user.account, f"User {new_user.id}")
-        self.assert_membership_groups(new_user.active_memberships(), [config.member_group])
+        self.assert_membership_groups(new_user.active_memberships(), [self.config.member_group])
         self.assertEqual(new_user.unix_account.home_directory, f"/home/{new_user.login}")
         self.assertEqual(len(new_user.log_entries), 2)
         first, second = new_user.log_entries
@@ -147,7 +147,7 @@ class Test_User_Move_In(FactoryDataTestBase):
             test_email,
             test_birthdate,
             processor=self.processing_user,
-            groups=[config.member_group],
+            groups=[self.config.member_group],
             address=address
         )
 
@@ -176,7 +176,7 @@ class Test_User_Move_In(FactoryDataTestBase):
 
         # checks the initial group memberships
         active_user_groups = new_user.active_property_groups()
-        for group in {config.member_group, config.network_access_group}:
+        for group in {self.config.member_group, self.config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
         self.assertIsNotNone(new_user.account)
