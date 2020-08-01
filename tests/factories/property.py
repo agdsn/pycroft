@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from functools import partial
 from itertools import chain
 
@@ -12,11 +13,18 @@ from .user import UserFactory
 class MembershipFactory(BaseFactory):
     class Meta:
         model = Membership
+    begins_at = datetime.utcnow()
     ends_at = None
 
     user = factory.SubFactory(UserFactory)
     # note: group is non-nullable!
     group = None
+
+    class Params:
+        includes_today = factory.Trait(
+            begins_at=datetime.utcnow() - timedelta(1),
+            ends_at=datetime.utcnow() + timedelta(1),
+        )
 
 
 def _maybe_append_seq(n, prefix):

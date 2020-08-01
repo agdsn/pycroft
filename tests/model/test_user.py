@@ -222,27 +222,32 @@ class TestActiveHybridMethods(FactoryDataTestBase):
         self.assertEqual(query.all(), [self.property_group])
 
 
-class Test_has_property(FixtureDataTestBase):
-    datasets = [MembershipData, PropertyData, PropertyGroupData, UserData]
+class Test_has_property(FactoryDataTestBase):
+    GRANTED_NAME = 'granted'
+    DENIED_NAME = 'denied'
 
-    def setUp(self):
-        super(Test_has_property, self).setUp()
-        self.user = user.User.q.filter_by(login=UserData.dummy.login).one()
+    def create_factories(self):
+        super().create_factories()
+        self.user = factories.UserFactory()
+        group = factories.PropertyGroupFactory(granted={self.GRANTED_NAME},
+                                               denied={self.DENIED_NAME})
+        self.membership = factories.MembershipFactory(group=group, user=self.user,
+                                                      includes_today=True)
 
     def test_positive_test(self):
-        self.assertTrue(self.user.has_property(PropertyData.granted.name))
+        self.assertTrue(self.user.has_property(self.GRANTED_NAME))
         self.assertIsNotNone(
             user.User.q.filter(
                 user.User.login == self.user.login,
-                user.User.has_property(PropertyData.granted.name)
+                user.User.has_property(self.GRANTED_NAME)
             ).first())
 
     def test_negative_test(self):
-        self.assertFalse(self.user.has_property(PropertyData.denied.name))
+        self.assertFalse(self.user.has_property(self.DENIED_NAME))
         self.assertIsNone(
             user.User.q.filter(
                 user.User.login == self.user.login,
-                user.User.has_property(PropertyData.denied.name)
+                user.User.has_property(self.DENIED_NAME)
             ).first())
 
     def test_non_existent_test(self):
@@ -254,27 +259,27 @@ class Test_has_property(FixtureDataTestBase):
             ).first())
 
     def test_positive_test_interval(self):
-        interval = closed(MembershipData.dummy_membership.begins_at,
-                          MembershipData.dummy_membership.ends_at)
+        interval = closed(self.membership.begins_at,
+                          self.membership.ends_at)
         self.assertTrue(
-            self.user.has_property(PropertyData.granted.name, interval)
+            self.user.has_property(self.GRANTED_NAME, interval)
         )
         self.assertIsNotNone(
             user.User.q.filter(
                 user.User.login == self.user.login,
-                user.User.has_property(PropertyData.granted.name, interval)
+                user.User.has_property(self.GRANTED_NAME, interval)
             ).first())
 
     def test_negative_test_interval(self):
         interval = closed(
-            MembershipData.dummy_membership.ends_at + timedelta(1),
-            MembershipData.dummy_membership.ends_at + timedelta(2)
+            self.membership.ends_at + timedelta(1),
+            self.membership.ends_at + timedelta(2)
         )
         self.assertFalse(
-            self.user.has_property(PropertyData.granted.name, interval)
+            self.user.has_property(self.GRANTED_NAME, interval)
         )
         self.assertIsNone(
             user.User.q.filter(
                 user.User.login == self.user.login,
-                user.User.has_property(PropertyData.granted.name, interval)
+                user.User.has_property(self.GRANTED_NAME, interval)
             ).first())
