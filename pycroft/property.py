@@ -20,6 +20,7 @@ property_categories = OrderedDict((
         ('userwww', u"hat Zugriff auf das Userhosting"),
         ('cache_access', u"verwendet den Cache"),
         ('traffic_limit_exceeded', u"hat Traffic-Limit überschritten"),
+        ('sipa_login', u"kann sich bei SIPA anmelden"),
     ))),
     (u"Nutzerverwaltung", OrderedDict((
         (u"user_show",  u"darf Nutzerdaten einsehen"),
