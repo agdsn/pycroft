@@ -58,7 +58,7 @@ def db_has_nontrivial_objects(connection):
     num_objects = connection.execute(
         "select count(*) from pg_class c"
         " join pg_namespace s on s.oid = c.relnamespace"
-        " where s.nspname != 'information_schema'"
+        " where (s.nspname = 'public' or s.nspname = 'pycroft')"
         " and s.nspname not like 'pg_%%'"
     ).scalar()
     return num_objects > 0
