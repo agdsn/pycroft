@@ -9,6 +9,8 @@ from sqlalchemy import event as sqla_event, schema, table
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import ClauseElement
 
+from pycroft.model.session import with_transaction, session
+
 
 def _join_tokens(*tokens):
     """
@@ -363,7 +365,8 @@ class View(schema.DDLElement):
                  column_names=None,
                  temporary=False,
                  view_options=None,
-                 check_option=None):
+                 check_option=None,
+                 materialized=False):
         """DDL Element representing a VIEW
 
         :param name: The name of the view
@@ -374,6 +377,7 @@ class View(schema.DDLElement):
             OrderedDict, so a simple dict suffices.
         :param check_option: Must be one of ``None``, ``'local'``,
             ``'cascaded'``.
+        :param materialized: Is materialized view
         """
         self.name = name
         self.query = query
@@ -393,6 +397,7 @@ class View(schema.DDLElement):
             raise ValueError('Parameter "check_option" specified more than '
                              'once')
         self.check_option = check_option
+        self.materialized = materialized
 
     def _init_table_columns(self):
         if self.column_names is not None:
@@ -403,6 +408,16 @@ class View(schema.DDLElement):
                                  .format(set(self.column_names), query_column_names))
         for c in self.query.c:
             c._make_proxy(self.table)
+
+    @with_transaction
+    def refresh(self, concurrently=True):
+        """Refreshes the current materialized view"""
+
+        if not self.materialized:
+            raise ValueError("Cannot refresh a non-materialized view")
+
+        _con = 'CONCURRENTLY ' if concurrently else ''
+        session.execute('REFRESH MATERIALIZED VIEW ' + _con + self.name)
 
 
 class CreateView(schema.DDLElement):
@@ -443,8 +458,11 @@ def visit_create_view(element, compiler, **kw):
             view.check_option.upper())
     else:
         opt_check_option = None
+
+    view_type = "VIEW" if not view.materialized else "MATERIALIZED VIEW"
+
     return _join_tokens(
-        "CREATE", opt_or_replace, opt_temporary, "VIEW", view_name,
+        "CREATE", opt_or_replace, opt_temporary, view_type, view_name,
         opt_column_names, opt_view_options, "AS", compiled_query,
         opt_check_option)
 
@@ -496,8 +514,8 @@ class DDLManager(object):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
                  DropTrigger(constraint_trigger, if_exists=True), dialect=dialect)
 
-    def add_view(self, table, view, dialect=None):
-        self.add(table, CreateView(view, or_replace=True),
+    def add_view(self, table, view, dialect=None, or_replace=True):
+        self.add(table, CreateView(view, or_replace=or_replace),
                  DropView(view, if_exists=True), dialect=dialect)
 
     def register(self):
