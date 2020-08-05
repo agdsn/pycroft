@@ -22,6 +22,7 @@ from .logging import *
 from .net import *
 from .port import *
 from .property import *
+from .swdd import *
 from .task import *
 from .traffic import *
 from .user import *

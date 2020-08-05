@@ -3,6 +3,7 @@ import os
 from datetime import timedelta
 
 from celery import Celery
+from celery.schedules import crontab
 from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.task import DBTask
@@ -10,6 +11,7 @@ from pycroft.lib.logging import log_task_event
 from pycroft.lib.task import task_type_to_impl
 from pycroft.model import session
 from pycroft.model.session import with_transaction
+from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
 from pycroft.model.traffic import TrafficVolume
 
@@ -79,6 +81,17 @@ def remove_old_traffic_data():
     print("Deleted old traffic data")
 
 
+@app.task(base=DBTask)
+def refresh_swdd_views():
+    swdd_vo.refresh()
+    swdd_vv.refresh()
+    swdd_import.refresh()
+
+    session.session.commit()
+
+    print("Refreshed swdd views")
+
+
 app.conf.update(
     CELERYBEAT_SCHEDULE={
         'execute-scheduled-tasks': {
@@ -89,5 +102,9 @@ app.conf.update(
             'task': 'pycroft.task.remove_old_traffic_data',
             'schedule': timedelta(days=1)
         },
+        'refresh_swdd_views':{
+            'task': 'refresh_swdd_views',
+            'schedule': crontab(minute=0, hour=0)
+        }
     },
     CELERY_TIMEZONE='UTC')
