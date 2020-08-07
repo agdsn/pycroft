@@ -28,6 +28,7 @@ from pycroft import config
 connection_string = os.environ['PYCROFT_DB_URI']
 
 engine = create_engine(connection_string, echo=True)
+#DeferredReflection.prepare(engine)
 
 
 def setup():
