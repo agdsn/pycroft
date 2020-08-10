@@ -74,6 +74,9 @@ class User(IntegerIdModel, UserMixin):
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
 
+    #swdd_person_id = Column(Integer, ForeignKey('swdd_vv.person_id'))
+    #swdd_vv = relationship("swdd_vv", backref=backref("inhabitants"))
+
     @hybrid_property
     def has_custom_address(self):
         return self.address != self.room.address

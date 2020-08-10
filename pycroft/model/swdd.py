@@ -14,10 +14,11 @@ swdd_vo = View(
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo, or_replace=False)
 
-# class RentalObject(DeferredReflection, ModelBase):
-#     __tablename__ = 'swdd_vo'
-#
-#     vo_id = Column(Integer, primary_key=True)
+
+class RentalObject(DeferredReflection, ModelBase):
+    __tablename__ = 'swdd_vo'
+    vo_id = Column(Integer, primary_key=True)
+
 
 swdd_vv = View(
     name='swdd_vv',
@@ -33,11 +34,5 @@ swdd_import = View(
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_import, or_replace=False)
 
-
-def reflect_views():
-    ModelBase.metadata.reflect(views=True, only=['swdd_vo', 'swdd_vv', 'swdd_import'])
-
-
-sqla_event.listen(ModelBase.metadata, 'after_create', reflect_views)
 
 swdd_view_ddl.register()
