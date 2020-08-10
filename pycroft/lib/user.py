@@ -26,6 +26,7 @@ from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
+from pycroft.lib.mail import MailTemplate, Mail
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
@@ -39,6 +40,7 @@ from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount
 from pycroft.model.webstorage import WebStorage
+from pycroft.task import send_mails_async
 
 
 def encode_type1_user_id(user_id):
@@ -755,6 +757,7 @@ def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, gen
                         generation_purpose=generation_purpose,
                         plain_wifi_password=plain_wifi_password)
 
+
 def membership_ending_task(user):
     """
     :return: Next task that will end the membership of the user
@@ -782,3 +785,18 @@ def membership_end_date(user):
     end_date = None if ending_task is None else ending_task.due.date()
 
     return end_date
+
+
+def user_send_mail(user: User, template: MailTemplate, **kwargs):
+    if user.email:
+        email = user.email
+    elif user.has_property('mail'):
+        email = user.email_internal
+    else:
+        raise ValueError("No contact email address available.")
+
+    body = template.render(**kwargs)
+
+    mail = Mail(email, template.subject, body)
+
+    send_mails_async([mail])

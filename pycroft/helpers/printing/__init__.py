@@ -137,7 +137,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
             for ip in user_host.ips:
                 macs.append(ip.interface.mac)
 
-        email = "{}@agdsn.me".format(user.login)
+        email = user.email_internal
         email_redirect = ""
         if user.email is not None:
             email_redirect = "Your mails are redirected to: {}".format(user.email)

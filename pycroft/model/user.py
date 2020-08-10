@@ -54,6 +54,7 @@ class User(IntegerIdModel, UserMixin):
     passwd_hash = Column(String)
     wifi_passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
+    email_forwarded = Column(Boolean, server_default='True', nullable=True)
     birthdate = Column(Date, nullable=True)
 
     # one to one from User to Account
@@ -347,6 +348,10 @@ class User(IntegerIdModel, UserMixin):
     def permission_level(self):
         return max((membership.group.permission_level for membership in self.active_memberships()),
                    default=0)
+
+    @property
+    def email_internal(self):
+        return "{}@agdsn.me".format(self.login)
 
 
 manager.add_function(
