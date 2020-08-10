@@ -118,9 +118,10 @@ app.conf.update(
             'task': 'pycroft.task.remove_old_traffic_data',
             'schedule': timedelta(days=1)
         },
-        'refresh_swdd_views':{
-            'task': 'refresh_swdd_views',
-            'schedule': crontab(minute=0, hour=0)
+        'refresh-swdd-views':{
+            'task': 'pycroft.task.refresh_swdd_views',
+            'schedule': timedelta(seconds=10) # crontab(minute=0, hour=0)
         }
     },
-    CELERY_TIMEZONE='UTC')
+    CELERY_ENABLE_UTC=True,
+    CELERY_TIMEZONE='Europe/Berlin')
