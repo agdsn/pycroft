@@ -24,7 +24,7 @@ def cli(ctx, verbose: bool):
     logger.setLevel(logging.INFO)
     logger.addHandler(logging.StreamHandler(sys.stdout))
 
-    conn = try_create_connection(get_connection_string(), logger=logger, wait_for_db=False,
+    conn, engine = try_create_connection(get_connection_string(), logger=logger, wait_for_db=False,
                                  echo=verbose)
     ctx.obj = ContextObject(logger=logger, alembic_helper=AlembicHelper(conn))
 

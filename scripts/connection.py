@@ -3,23 +3,35 @@ import os
 from itertools import chain, repeat
 
 import time
+from typing import Tuple
 
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.declarative import DeferredReflection
 
 from pycroft.model import create_engine
 
 
 def try_create_connection(connection_string, wait_for_db, logger,
-                          echo: bool = False) -> Connection:
+                          echo: bool = False) -> Tuple[Connection, Engine]:
     engine = create_engine(connection_string, echo=echo)
+
+    conn = engine.connect()
+
+    # TODO: Remove this, debugging only
+    print(str(conn.execute("SELECT * FROM information_schema.tables WHERE table_schema = 'public'").fetchall()))
+
+    DeferredReflection.prepare(engine)
+
     if wait_for_db == 0:
         max_wait = float('inf')
     else:
         max_wait = time.clock_gettime(time.CLOCK_MONOTONIC) + wait_for_db
     for timeout in chain([1, 2, 5, 10, 30], repeat(60)):
         try:
-            return engine.connect()
+            conn = engine.connect()
+
+            return conn, engine
         except OperationalError:
             # Important: Use %r to print the URL, passwords are hidden by the
             # __repr__ of sqlalchemy.engine.URL

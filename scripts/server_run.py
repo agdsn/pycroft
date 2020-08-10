@@ -9,6 +9,7 @@ import os
 import time
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request
+from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
@@ -32,7 +33,8 @@ def server_run(args):
     wait_for_db: bool = args.wait_for_database
 
     connection_string = get_connection_string()
-    connection = try_create_connection(connection_string, wait_for_db, app.logger)
+    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
+                                               args.profile)
 
     state = AlembicHelper(connection)
     strategy = SchemaStrategist(state).determine_schema_strategy()
@@ -53,7 +55,6 @@ def server_run(args):
                     "Response took {duration} seconds for request {path}".format(
                         path=request.full_path, duration=time_taken))
 
-    engine = create_engine(connection_string, echo=args.profile)
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
 

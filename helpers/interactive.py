@@ -14,21 +14,21 @@ This automatically imports all ORM classes plus the `config` object,
 and initializes the session.
 
 """
+import logging
 import os
 
 from flask import _request_ctx_stack
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
-from pycroft.model._all import *
-from pycroft import config
+from scripts.connection import try_create_connection, get_connection_string
 
+connection_string = get_connection_string()
 
-connection_string = os.environ['PYCROFT_DB_URI']
-
-engine = create_engine(connection_string, echo=True)
-#DeferredReflection.prepare(engine)
+conn, engine = try_create_connection(connection_string,
+                                     5,
+                                     logger=logging.getLogger("interactive"),
+                                     echo=True)
 
 
 def setup():
