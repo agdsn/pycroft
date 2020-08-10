@@ -410,7 +410,7 @@ class View(schema.DDLElement):
             c._make_proxy(self.table)
 
     @with_transaction
-    def refresh(self, concurrently=True):
+    def refresh(self, concurrently=False):
         """Refreshes the current materialized view"""
 
         if not self.materialized:
