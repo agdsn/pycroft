@@ -60,10 +60,12 @@ def compose_mail(mail: Mail) -> MIMEText:
 
     mime_mail['Message-Id'] = make_msgid()
     mime_mail['From'] = mail_from
-    mime_mail['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
     mime_mail['To'] = mail.to
     mime_mail['Subject'] = mail.subject
     mime_mail['Date'] = formatdate(localtime=True)
+
+    if mail.reply_to is not None or mail.reply_to is not None:
+        mime_mail['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
 
     return mime_mail
 

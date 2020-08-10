@@ -18,18 +18,25 @@ services:
       dockerfile: ../dev.Dockerfile
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
-      - PYCROFT_DB_URI=postgresql://postgres:password@db:5432/pycroft
-      - PYCROFT_API_KEY=secret
-      - PYCROFT_LDAP_HOST=ldap
-      - PYCROFT_LDAP_PORT=389
-      - PYCROFT_LDAP_BIND_DN=cn=admin,dc=agdsn,dc=de
-      - PYCROFT_LDAP_BIND_PW=password
-      - PYCROFT_LDAP_BASE_DN=ou=pycroft,dc=agdsn,dc=de
-      - PYCROFT_CELERY_BROKER_URI=amqp://celery:celery@mq:5672/
-      - PYCROFT_CELERY_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
-      - HADES_CELERY_APP_NAME=dummy_tasks
-      - HADES_BROKER_URI=amqp://celery:celery@mq:5672/
-      - HADES_RESULT_BACKEND_URI=rpc://celery:celery@mq:5672/
+      PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft
+      PYCROFT_API_KEY: secret
+      PYCROFT_LDAP_HOST: ldap
+      PYCROFT_LDAP_PORT: 389
+      PYCROFT_LDAP_BIND_DN: cn=admin,dc=agdsn,dc=de
+      PYCROFT_LDAP_BIND_PW: password
+      PYCROFT_LDAP_BASE_DN: ou=pycroft,dc=agdsn,dc=de
+      PYCROFT_CELERY_BROKER_URI: amqp://celery:celery@mq:5672/
+      PYCROFT_CELERY_RESULT_BACKEND_URI: rpc://celery:celery@mq:5672/
+      PYCROFT_MAIL_ENVELOPE_FROM: pycroft@agdsn.de
+      PYCROFT_MAIL_FROM: support@agdsn.de
+      PYCROFT_SMTP_HOST: smtp.agdsn.de
+      PYCROFT_SMTP_PORT: 465
+      PYCROFT_SMTP_USER: pycroft@agdsn.de
+      PYCROFT_SMTP_PASSWORD:  password
+      PYCROFT_SMTP_SSL: 'ssl'
+      HADES_CELERY_APP_NAME: dummy_tasks
+      HADES_BROKER_URI: amqp://celery:celery@mq:5672/
+      HADES_RESULT_BACKEND_URI: rpc://celery:celery@mq:5672/
   dev:
     extends: dev-base
     volumes:
