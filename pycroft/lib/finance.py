@@ -863,13 +863,11 @@ def _and_then(thing: Optional[T], f: Callable[[T], Optional[U]]) -> Optional[U]:
 
 def match_reference(reference: str,
                     fetch_normal: Callable[[int], Optional[TUser]],
-                    fetch_gerok: Callable[[str], Optional[TUser]],
                     fetch_hss: Callable[[str], Optional[TUser]]) -> Optional[TUser]:
     """Try to return a user fitting a given bank reference string.
 
     :param reference: the bank reference
     :param fetch_normal: If we found a pycroft user id, use this to fetch the user.
-    :param fetch_gerok: If we found a gerok username, use this to fetch the user.
 
     Passing lambdas allows us to write fast, db-independent tests.
     """
@@ -877,10 +875,6 @@ def match_reference(reference: str,
     reference = reference\
         .replace('AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111', '')\
         .strip()
-
-    ger_user = _and_then(match_ger_reference(reference), fetch_gerok)
-    if ger_user:
-        return ger_user
 
     pyc_user = _and_then(match_pycroft_reference(reference), fetch_normal)
     if pyc_user:
@@ -890,14 +884,6 @@ def match_reference(reference: str,
     if hss_user:
         return hss_user
 
-    return None
-
-
-def match_ger_reference(reference: str) -> Optional[str]:
-    """Given a bank reference, return the token that should be interpreted as a uid"""
-    search = re.search(r"(gerok38|GEROK38|Gerok38)/((\w*\s?)+)", reference)
-    if search:
-        return search.group(2)
     return None
 
 

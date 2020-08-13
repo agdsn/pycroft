@@ -611,9 +611,6 @@ class MatchingTestCase(unittest.TestCase):
         ("12345-65, Hans Wurst, HSS46/A 01 B", None),  # bad checksum
         ("12345-20, Hans Wurst, HSS46/A 01 B", "pyc-12345"),
         ("1, Hans Wurst, HSS46/A 01 B", None),
-        (" Gerok38/Hänsel Gretelson/room5A  Internet bill", "ger-Hänsel Gretelson"),
-        (" Gerok38/Foo Bar", "ger-Foo Bar"),
-        ("gerok38/name/(moved out)", "ger-name"),
         ("n1colas, Nicolas Bourbaki, HSS48 76-3", "hss-n1colas"),
         ("  admin,Ich Bin Hier der Admin , ficticous location , garbage", "hss-admin"),
         ("FOO, FOO BAR, HSS46 16-11", "hss-FOO"),
@@ -623,6 +620,5 @@ class MatchingTestCase(unittest.TestCase):
         for reference, expected in self.cases:
             with self.subTest(reference=reference, expected=expected):
                 result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
-                                                 lambda ger_name: f"ger-{ger_name}",
                                                  lambda hss_login: f"hss-{hss_login}")
                 self.assertEqual(result, expected)
