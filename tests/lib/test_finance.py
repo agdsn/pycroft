@@ -8,6 +8,7 @@ import time
 from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
+from unittest.mock import MagicMock
 
 from factory import Iterator
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -24,7 +25,8 @@ from pycroft.lib.finance import (
     transferred_amount,
     is_ordered, get_last_applied_membership_fee, estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
-    end_payment_in_default_memberships, take_actions_for_payment_in_default_users)
+    end_payment_in_default_memberships, take_actions_for_payment_in_default_users,
+    match_hss_lenient)
 from pycroft.lib.membership import make_member_of
 from pycroft.model import session
 from pycroft.model.finance import (
@@ -38,6 +40,8 @@ from tests.factories.user import UserWithMembershipFactory
 from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
 from tests.lib.finance_fixtures import (
     AccountData, BankAccountData, MembershipData, UserData)
+
+from .. import factories
 
 
 class Test_010_BankAccount(FixtureDataTestBase):
@@ -620,5 +624,31 @@ class MatchingTestCase(unittest.TestCase):
         for reference, expected in self.cases:
             with self.subTest(reference=reference, expected=expected):
                 result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
-                                                 lambda hss_login: f"hss-{hss_login}")
+                                                 lambda hss_login: f"hss-{hss_login}",
+                                                 session=MagicMock())
                 self.assertEqual(result, expected)
+
+
+class HssMatchingTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.hss = factories.BuildingFactory(site__name="Hochschulstraße")
+        factories.UserFactory(login='hanssarpei', name="Hans Sarpei", room__building=self.hss)
+        factories.UserFactory(login='franz', name="Franz Wurst", room__building=self.hss)
+        factories.UserFactory(login='hans')  # not living in the HSS
+
+    def test_hss_matching(self):
+        # TODO match something like
+        # - `<username>, <name> Hss foo bar garbage`
+        # - No username at all? Perhaps not
+        self.assert_reference_login("hanssarpei, foo, bar", 'hanssarpei')
+        self.assert_no_match("foo hanssarpei, foo, bar, franz")  # ambiguity 'franz'/'hanssarpei'
+        self.assert_reference_login("foo hanssarpei, foo, bar, hans", 'hanssarpei')
+
+    def assert_no_match(self, reference: str):
+        self.assertIsNone(match_hss_lenient(reference, self.session))
+
+    def assert_reference_login(self, reference: str, expected_login: str):
+        u: User = match_hss_lenient(reference, self.session)
+        self.assertIsNotNone(u)
+        self.assertEqual(u.login, expected_login)

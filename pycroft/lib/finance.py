@@ -17,7 +17,7 @@ from typing import Optional, Callable, TypeVar
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
     text, DateTime
-from sqlalchemy.orm import aliased, contains_eager, joinedload
+from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
 
@@ -28,7 +28,7 @@ from pycroft.helpers.utc import time_max, time_min
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
-from pycroft.model.facilities import Room, Building
+from pycroft.model.facilities import Room, Building, Site
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
@@ -863,11 +863,14 @@ def _and_then(thing: Optional[T], f: Callable[[T], Optional[U]]) -> Optional[U]:
 
 def match_reference(reference: str,
                     fetch_normal: Callable[[int], Optional[TUser]],
-                    fetch_hss: Callable[[str], Optional[TUser]]) -> Optional[TUser]:
+                    fetch_hss: Callable[[str], Optional[TUser]],
+                    session: Session) -> Optional[TUser]:
     """Try to return a user fitting a given bank reference string.
 
     :param reference: the bank reference
     :param fetch_normal: If we found a pycroft user id, use this to fetch the user.
+    :param fetch_hss: A getter for a HSS user, once found
+    :param session: A session (only used for lenient HSS matching)
 
     Passing lambdas allows us to write fast, db-independent tests.
     """
@@ -880,7 +883,8 @@ def match_reference(reference: str,
     if pyc_user:
         return pyc_user
 
-    hss_user = _and_then(match_hss_reference(reference), fetch_hss)
+    hss_user = _and_then(match_hss_reference(reference), fetch_hss) \
+        or match_hss_lenient(reference, session)
     if hss_user:
         return hss_user
 
@@ -919,6 +923,28 @@ def match_hss_reference(reference: str) -> Optional[str]:
     search = re.match(r"^\s*(?P<login>[a-zA-Z](?:[.-]?\w)+) ?,+", reference)
     return search.group('login') if search else None
 
+
+def match_hss_lenient(reference: str, session: Session) -> Optional[TUser]:
+    """Heuristic to match badly-formed HSS usernames
+
+    If there is one unique „part“ of text (delimited by a comma or whitespace) which matches
+    the login of someone living in a Hochschulstraße building, we will allow that to be the user
+    we match against.
+
+    TODO remove this once most people don't use that descrpition (wrongly) anymore
+    """
+    # Yes, this is essentially stupid-ass hard-coding
+    hss = session.query(Site).filter(Site.name.like('Hochsch%')).one_or_none()
+    valid_parts = [p for p in re.split(r"[,\s]", reference) if p]
+
+    users_q = session.query(User).filter(User.login.in_(valid_parts))
+
+    if hss:
+        users_q = users_q.join(User.room).join(Room.building).filter(Building.site == hss)
+
+    users = users_q.all()
+    if len(users) == 1:
+        return users[0]
 
 
 @with_transaction
