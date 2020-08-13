@@ -843,8 +843,8 @@ def match_activities():
 
         user = match_reference(activity.reference,
                                fetch_normal=_fetch_normal,
-                               fetch_gerok=_fetch_gerok,
-                               fetch_hss=_fetch_hss)
+                               fetch_hss=_fetch_hss,
+                               session=session.session)
 
         if user:
             matching.update({activity: user})
