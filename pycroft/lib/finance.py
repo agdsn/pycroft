@@ -921,7 +921,7 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
 def match_hss_reference(reference: str) -> Optional[str]:
     """Given a bank reference, return the hss username"""
     search = re.match(r"^\s*(?P<login>[a-zA-Z](?:[.-]?\w)+) ?,+", reference)
-    return search.group('login') if search else None
+    return search.group('login').lower() if search else None
 
 
 def match_hss_lenient(reference: str, session: Session) -> Optional[TUser]:
@@ -935,7 +935,7 @@ def match_hss_lenient(reference: str, session: Session) -> Optional[TUser]:
     """
     # Yes, this is essentially stupid-ass hard-coding
     hss = session.query(Site).filter(Site.name.like('Hochsch%')).one_or_none()
-    valid_parts = [p for p in re.split(r"[,\s]", reference) if p]
+    valid_parts = [p.lower() for p in re.split(r"[,\s]", reference) if p]
 
     users_q = session.query(User).filter(User.login.in_(valid_parts))
 

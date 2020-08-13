@@ -616,8 +616,9 @@ class MatchingTestCase(unittest.TestCase):
         ("12345-20, Hans Wurst, HSS46/A 01 B", "pyc-12345"),
         ("1, Hans Wurst, HSS46/A 01 B", None),
         ("n1colas, Nicolas Bourbaki, HSS48 76-3", "hss-n1colas"),
+        ("n1cOLAS, Nicolas Bourbaki, HSS48 76-3", "hss-n1colas"),
         ("  admin,Ich Bin Hier der Admin , ficticous location , garbage", "hss-admin"),
-        ("FOO, FOO BAR, HSS46 16-11", "hss-FOO"),
+        ("FOO, FOO BAR, HSS46 16-11", "hss-foo"),
     ]
 
     def test_matching(self):
@@ -642,8 +643,10 @@ class HssMatchingTestCase(FactoryDataTestBase):
         # - `<username>, <name> Hss foo bar garbage`
         # - No username at all? Perhaps not
         self.assert_reference_login("hanssarpei, foo, bar", 'hanssarpei')
+        self.assert_reference_login("haNsSarpei, foo, bar", 'hanssarpei')
         self.assert_no_match("foo hanssarpei, foo, bar, franz")  # ambiguity 'franz'/'hanssarpei'
         self.assert_reference_login("foo hanssarpei, foo, bar, hans", 'hanssarpei')
+        self.assert_reference_login("foo HANSSARPEI, foo, bar, hans", 'hanssarpei')
 
     def assert_no_match(self, reference: str):
         self.assertIsNone(match_hss_lenient(reference, self.session))
