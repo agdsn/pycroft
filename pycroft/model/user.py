@@ -15,21 +15,22 @@ from datetime import timedelta
 
 from flask_login import UserMixin
 from sqlalchemy import (
-    Boolean, BigInteger, CheckConstraint, Column, ForeignKey, Integer,
-    String, and_, exists, join, literal, not_, null, or_, select, Sequence,
-    Interval, Date, func)
+    Boolean, Column, ForeignKey, Integer,
+    String, and_, exists, join, not_, null, select, Sequence,
+    Interval, Date, func, UniqueConstraint)
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
-from pycroft.helpers.interval import (
-    IntervalSet, UnboundedInterval, closed, single)
+
+from pycroft.helpers.interval import (closed, single)
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
-from pycroft.model import session, functions, ddl
+from pycroft.model import session, ddl
 from pycroft.model.address import Address
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.helpers.interval import IntervalModel
@@ -47,35 +48,135 @@ class IllegalEmailError(ValueError):
     pass
 
 
-class User(IntegerIdModel, UserMixin):
+class BaseUser:
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTimeTz, nullable=False)
     passwd_hash = Column(String)
-    wifi_passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
-    email_forwarded = Column(Boolean, server_default='True', nullable=True)
+    email_forwarded = Column(Boolean, server_default='True', nullable=False)
+    email_confirmed = Column(Boolean, server_default="False", nullable=False)
+    email_confirmation_key = Column(String, nullable=True)
     birthdate = Column(Date, nullable=True)
 
-    # one to one from User to Account
-    account = relationship("Account", backref=backref("user", uselist=False))
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
-
-    unix_account = relationship('UnixAccount')  # backref not really needed.
-    unix_account_id = Column(Integer, ForeignKey('unix_account.id'),
-                             nullable=True, unique=True)
+    # ForeignKey to Tenancy.person_id / swdd_vv.person_id, but cannot reference view
+    swdd_person_id = Column(Integer, nullable=True)
 
     # many to one from User to Room
-    room_id = Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
-                     nullable=True, index=True)
-    room = relationship("Room",
-                        backref=backref("users", cascade="all"))
+    @declared_attr
+    def room_id(self):
+        return Column(Integer, ForeignKey("room.id", ondelete="SET NULL"),
+                      nullable=True, index=True)
+
+    login_regex = re.compile(r"""
+            ^
+            # Must begin with a lowercase character
+            [a-z]
+            # Can continue with lowercase characters, numbers and some punctuation
+            # but between punctuation characters must be characters or numbers
+            (?:[.-]?[a-z0-9])+$
+            """, re.VERBOSE)
+    login_regex_ci = re.compile(login_regex.pattern, re.VERBOSE | re.IGNORECASE)
+    email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
+                             r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
+                             r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
+
+    blocked_logins = {"abuse", "admin", "administrator", "autoconfig",
+                      "broadcasthost", "root", "daemon", "bin", "sys", "sync",
+                      "games", "man", "hostmaster", "imap", "info", "is",
+                      "isatap", "it", "localdomain", "localhost",
+                      "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
+                      # ground control to
+                      "majordom", "marketing", "mis", "noc", "website", "api"
+                                                                        "noreply", "no-reply",
+                      "pop", "pop3", "postmaster",
+                      "postgres", "sales", "smtp", "ssladmin", "status",
+                      "ssladministrator", "sslwebmaster", "support",
+                      "sysadmin", "usenet", "webmaster", "wpad", "www",
+                      "wwwadmin", "backup", "msql", "operator", "user",
+                      "ftp", "ftpadmin", "guest", "bb", "nobody", "www-data",
+                      "bacula", "contact", "email", "privacy", "anonymous",
+                      "web", "git", "username", "log", "login", "help", "name"}
+
+    login_character_limit = 22
+
+    @validates('login')
+    def validate_login(self, _, value):
+        assert not has_identity(
+            self), "user already in the database - cannot change login anymore!"
+        if not self.login_regex.match(value):
+            raise IllegalLoginError(
+                "Illegal login '{}': Logins must begin with a lower case "
+                "letter and may be followed by lower case letters, digits or "
+                "punctuation (dash and dot). Punctuation "
+                "characters must be separated by at least on letter or digit."
+                    .format(value)
+            )
+        if value in self.blocked_logins:
+            raise IllegalLoginError(
+                "Illegal login '{}': This login is blocked and may not be used."
+                    .format(value)
+            )
+        if len(value) > self.login_character_limit:
+            raise IllegalLoginError(
+                "Illegal login '{}': Logins are limited to at most {} "
+                "characters.".format(value, self.login_character_limit)
+            )
+        return value
+
+    @validates('email')
+    def validate_email(self, _, value):
+        if value is None:
+            return value
+        if not self.email_regex.match(value):
+            raise IllegalEmailError("Illegal email '{}'".format(value))
+        return value
+
+    @validates('passwd_hash')
+    def validate_passwd_hash(self, _, value):
+        assert value is not None, "Cannot clear the password hash!"
+        assert len(value) > 9, "A password-hash with less than 9 chars is " \
+                               "not correct!"
+        return value
+
+    def check_password(self, plaintext_password):
+        """verify a given plaintext password against the users passwd hash.
+
+        """
+        return verify_password(plaintext_password, self.passwd_hash)
+
+    @hybrid_property
+    def password(self):
+        """Store a hash of a given plaintext passwd for the user.
+
+        """
+        raise RuntimeError("Password can not be read, only set")
+
+    @password.setter
+    def password(self, value):
+        self.passwd_hash = hash_password(value)
+
+
+class User(IntegerIdModel, BaseUser, UserMixin):
+    wifi_passwd_hash = Column(String)
+
+    # one to one from User to Account
+    account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
+    account = relationship("Account", backref=backref("user", uselist=False))
+
+    unix_account_id = Column(Integer, ForeignKey('unix_account.id'), nullable=True, unique=True)
+    unix_account = relationship('UnixAccount')  # backref not really needed.
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
 
-    #swdd_person_id = Column(Integer, ForeignKey('swdd_vv.person_id'))
-    #swdd_vv = relationship("swdd_vv", backref=backref("inhabitants"))
+    room = relationship("Room", backref=backref("users", cascade="all"))
+
+    def __init__(self, **kwargs):
+        password = kwargs.pop('password', None)
+        super(User, self).__init__(**kwargs)
+        if password is not None:
+            self.password = password
 
     @hybrid_property
     def has_custom_address(self):
@@ -116,98 +217,6 @@ class User(IntegerIdModel, UserMixin):
         primaryjoin='User.id == foreign(CurrentProperty.user_id)',
         viewonly=True
     )
-
-    login_regex = re.compile(r"""
-        ^
-        # Must begin with a lowercase character
-        [a-z]
-        # Can continue with lowercase characters, numbers and some punctuation
-        # but between punctuation characters must be characters or numbers
-        (?:[.-]?[a-z0-9])+$
-        """, re.VERBOSE)
-    login_regex_ci = re.compile(login_regex.pattern, re.VERBOSE | re.IGNORECASE)
-    email_regex = re.compile(r"^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+"
-                             r"(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*"
-                             r"@(?:[a-zA-Z0-9]+(?:\.|-))+[a-zA-Z]+$")
-
-    blocked_logins = {"abuse", "admin", "administrator", "autoconfig",
-                      "broadcasthost", "root", "daemon", "bin", "sys", "sync",
-                      "games", "man", "hostmaster", "imap", "info", "is",
-                      "isatap", "it", "localdomain", "localhost",
-                      "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
-                      # ground control to
-                      "majordom", "marketing", "mis", "noc", "website", "api"
-                      "noreply", "no-reply", "pop", "pop3", "postmaster",
-                      "postgres", "sales", "smtp", "ssladmin", "status",
-                      "ssladministrator", "sslwebmaster", "support",
-                      "sysadmin", "usenet", "webmaster", "wpad", "www",
-                      "wwwadmin", "backup", "msql", "operator", "user",
-                      "ftp", "ftpadmin", "guest", "bb", "nobody", "www-data",
-                      "bacula", "contact", "email", "privacy", "anonymous",
-                      "web", "git", "username", "log", "login", "help", "name"}
-
-    login_character_limit = 22
-
-    def __init__(self, **kwargs):
-        password = kwargs.pop('password', None)
-        super(User, self).__init__(**kwargs)
-        if password is not None:
-            self.password = password
-
-    @validates('login')
-    def validate_login(self, _, value):
-        assert not has_identity(self), "user already in the database - cannot change login anymore!"
-        if not self.login_regex.match(value):
-            raise IllegalLoginError(
-                "Illegal login '{}': Logins must begin with a lower case "
-                "letter and may be followed by lower case letters, digits or "
-                "punctuation (dash and dot). Punctuation "
-                "characters must be separated by at least on letter or digit."
-                .format(value)
-            )
-        if value in self.blocked_logins:
-            raise IllegalLoginError(
-                "Illegal login '{}': This login is blocked and may not be used."
-                .format(value)
-            )
-        if len(value) > self.login_character_limit:
-            raise IllegalLoginError(
-                "Illegal login '{}': Logins are limited to at most {} "
-                "characters.".format(value, self.login_character_limit)
-            )
-        return value
-
-    @validates('email')
-    def validate_email(self, _, value):
-        if value is None:
-            return value
-        if not self.email_regex.match(value):
-            raise IllegalEmailError("Illegal email '{}'".format(value))
-        return value
-
-    @validates('passwd_hash')
-    def validate_passwd_hash(self, _, value):
-        assert value is not None, "Cannot clear the password hash!"
-        assert len(value) > 9, "A password-hash with less than 9 chars is " \
-                               "not correct!"
-        return value
-
-    def check_password(self, plaintext_password):
-        """verify a given plaintext password against the users passwd hash.
-
-        """
-        return verify_password(plaintext_password, self.passwd_hash)
-
-    @hybrid_property
-    def password(self):
-        """Store a hash of a given plaintext passwd for the user.
-
-        """
-        raise RuntimeError("Password can not be read, only set")
-
-    @password.setter
-    def password(self, value):
-        self.passwd_hash = hash_password(value)
 
     @hybrid_property
     def wifi_password(self):
@@ -355,6 +364,8 @@ class User(IntegerIdModel, UserMixin):
     @property
     def email_internal(self):
         return "{}@agdsn.me".format(self.login)
+
+    __table_args__ = (UniqueConstraint('swdd_person_id'),)
 
 
 manager.add_function(
@@ -541,6 +552,18 @@ manager.add_constraint_trigger(
         deferrable=True, initially_deferred=True,
     )
 )
+
+
+class PreMember(IntegerIdModel, BaseUser):
+    move_in_date = Column(DateTimeTz, nullable=True)
+
+    room = relationship("Room")
+
+    def __init__(self, **kwargs):
+        password = kwargs.pop('password', None)
+        super(PreMember, self).__init__(**kwargs)
+        if password is not None:
+            self.password = password
 
 
 manager.register()

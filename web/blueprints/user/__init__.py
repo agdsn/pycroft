@@ -640,6 +640,7 @@ def create():
             birthdate=form.birthdate.data,
             groups=form.property_groups.data,
             address=room.address,
+            send_confirm_mail=True,
         )
 
         if success:

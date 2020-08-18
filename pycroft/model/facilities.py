@@ -28,6 +28,8 @@ class Building(IntegerIdModel):
     fee_account = relationship(Account, backref=backref("building",
                                                         uselist=False))
 
+    swdd_haus_id = Column(Integer, nullable=True)
+
     __table_args__ = (UniqueConstraint("street", "number", name="building_address"),)
 
 
@@ -45,6 +47,8 @@ class Room(IntegerIdModel):
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("rooms"))
+
+    swdd_vo_suchname = Column(String, nullable=True)
 
     connected_patch_ports = relationship(
         'PatchPort',
@@ -69,3 +73,5 @@ class Room(IntegerIdModel):
         from pycroft.model.host import Switch
 
         return Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id==self.id).first() is not None
+
+    __table_args__ = (UniqueConstraint('swdd_vo_suchname'),)

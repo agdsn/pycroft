@@ -10,10 +10,11 @@ This module contains.
 
 :copyright: (c) 2012 by AG DSN.
 """
-
+import os
 import re
 from base64 import b64encode, b64decode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from typing import Optional
 
 from sqlalchemy import or_, func, select, Boolean, String
 
@@ -23,10 +24,12 @@ from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
+from pycroft.helpers.user import generate_random_str
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.mail import MailTemplate, Mail
+from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, UserCreatedTemplate, \
+    UserMovedInTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
@@ -38,9 +41,12 @@ from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.traffic import TrafficHistoryEntry
-from pycroft.model.user import User, UnixAccount
+from pycroft.model.user import User, UnixAccount, PreMember, BaseUser
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
+
+
+mail_confirm_url = os.getenv('MAIL_CONFIRM_URL')
 
 
 def encode_type1_user_id(user_id):
@@ -126,6 +132,7 @@ def setup_ipv4_networking(host):
                     subnet=subnet)
         session.session.add(new_ip)
 
+
 def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=None,
                      generation_purpose='', plain_wifi_password=''):
     """Generate a user sheet and store it in the WebStorage.
@@ -162,6 +169,7 @@ def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=
     session.session.add(pdf_storage)
 
     return pdf_storage
+
 
 def get_user_sheet(sheet_id):
     """Fetch the storage object given an id.
@@ -218,7 +226,8 @@ def change_password(user, password):
                    message=message.to_json())
 
 
-def create_user(name, login, email, birthdate, groups, processor, address):
+def create_user(name, login, email, birthdate, groups, processor, address, passwd_hash=None,
+                send_confirm_mail: bool = False):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -231,6 +240,8 @@ def create_user(name, login, email, birthdate, groups, processor, address):
     :param PropertyGroup groups: The initial groups of the new user
     :param User processor: The processor
     :param Address address: Where the user lives. May or may not come from a room.
+    :param passwd_hash: Use password hash instead of generating a new password
+    :param send_confirm_mail: If a confirmation mail should be send to the user
     :return:
     """
 
@@ -248,6 +259,10 @@ def create_user(name, login, email, birthdate, groups, processor, address):
         address=address
     )
 
+    if passwd_hash:
+        new_user.passwd_hash = passwd_hash
+        plain_password = None
+
     account = UnixAccount(home_directory="/home/{}".format(login))
     new_user.unix_account = account
 
@@ -259,6 +274,12 @@ def create_user(name, login, email, birthdate, groups, processor, address):
 
     for group in groups:
         make_member_of(new_user, group, processor, closed(now, None))
+
+    user_send_mail(new_user, UserCreatedTemplate(), True)
+
+    if send_confirm_mail:
+        new_user.email_confirmation_key = generate_random_str(64)
+        send_confirmation_email(new_user, new_user.email_confirmation_key)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),
@@ -280,7 +301,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
     :param int building_id:
     :param int level:
     :param str room_number:
-    :param str mac: The mac address of the users pc.
+    :param Optional[str] mac: The mac address of the users pc.
     :param User processor:
     :param Date birthdate: Date of birth`
     :param bool host_annex: when true: if MAC already in use,
@@ -342,6 +363,8 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
                     session.session.add(new_host)
                     session.session.add(Interface(mac=mac, host=new_host))
                     setup_ipv4_networking(new_host)
+
+        user_send_mail(user, UserMovedInTemplate(), True)
 
         msg = deferred_gettext(u"Moved in: {room}")
 
@@ -444,6 +467,8 @@ def move(user, building_id, level, room_number, processor, when=None):
         for user_host in user.hosts:
             if user_host.room == old_room:
                 migrate_user_host(user_host, new_room, processor)
+
+        user_send_mail(user, UserMovedInTemplate(), True)
 
         return user
 
@@ -787,16 +812,79 @@ def membership_end_date(user):
     return end_date
 
 
-def user_send_mail(user: User, template: MailTemplate, **kwargs):
+def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = False, **kwargs):
     if user.email:
         email = user.email
-    elif user.has_property('mail'):
+    elif type(user) is User and user.has_property('mail'):
         email = user.email_internal
     else:
-        raise ValueError("No contact email address available.")
+        if try_only:
+            return
+        else:
+            raise ValueError("No contact email address available.")
 
-    body = template.render(**kwargs)
+    sender = "{} <{}>".format(user.name, email)
 
-    mail = Mail(email, template.subject, body)
+    body = template.render(user=user, **kwargs)
 
-    send_mails_async([mail])
+    mail = Mail(sender, template.subject, body)
+
+    send_mails_async.delay([mail])
+
+
+def send_confirmation_email(user: BaseUser, key: str):
+    if not mail_confirm_url:
+        raise ValueError("No url specified in MAIL_CONFIRM_URL")
+
+    user_send_mail(user, UserConfirmEmailTemplate(email_confirm_url=mail_confirm_url.format(key)))
+
+
+@with_transaction
+def create_member_request(name: str, birthdate: date, email: str,
+                          password: str, login: str, swdd_person_id: Optional[int],
+                          room: Optional[Room], move_in_date: Optional[date]):
+    mr = PreMember(name=name, birthdate=birthdate, email=email, swdd_person_id=swdd_person_id,
+                   email_confirmation_key=generate_random_str(64), password=password,
+                   room=room, login=login, move_in_date=move_in_date)
+
+    # Send confirmation mail
+    send_confirmation_email(mr, mr.email_confirmation_key)
+
+    return mr
+
+
+@with_transaction
+def finish_member_request(prm: PreMember, processor: User):
+    user, _ = create_user(prm.name, prm.login, prm.email, prm.birthdate, [config.member_group],
+                          processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
+
+    user.swdd_person_id = prm.swdd_person_id
+    user.email_confirmed = prm.email_confirmed
+
+    if prm.room is not None:
+        move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None, processor,
+                when=prm.move_in_date)
+
+    session.session.delete(prm)
+
+    return user
+
+
+@with_transaction
+def confirm_mail_address(key):
+    if not key:
+        raise ValueError("No key given")
+
+    mr = PreMember.q.filter_by(email_confirmation_key=key).one_or_none()
+    user = User.q.filter_by(email_confirmation_key=key).one_or_none()
+
+    if mr is None and user is None:
+        raise ValueError("Unknown confirmation key")
+    elif user is None:
+        mr.email_confirmed = True
+
+        if mr.swdd_person_id is not None:
+            finish_member_request(mr)
+    elif mr is None:
+        user.email_confirmed = True
+
