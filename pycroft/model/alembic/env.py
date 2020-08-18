@@ -41,7 +41,11 @@ def run_migrations_offline():
     """
     # url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=uri, target_metadata=target_metadata, literal_binds=True)
+        url=uri,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -62,11 +66,21 @@ def run_migrations_online():
     with engine.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=target_metadata
+            target_metadata=target_metadata,
+            include_object=include_object,
         )
 
         with context.begin_transaction():
             context.run_migrations()
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    # skip objects marked with "is_view"
+    if object.info.get("is_view", False):
+        return False
+
+    return True
+
 
 if context.is_offline_mode():
     run_migrations_offline()
