@@ -13,15 +13,16 @@ from pycroft.model import create_engine
 
 
 def try_create_connection(connection_string, wait_for_db, logger,
-                          echo: bool = False) -> Tuple[Connection, Engine]:
+                          echo: bool = False, reflections: bool = True) -> Tuple[Connection, Engine]:
     engine = create_engine(connection_string, echo=echo)
 
     conn = engine.connect()
 
     # TODO: Remove this, debugging only
-    print(str(conn.execute("SELECT * FROM information_schema.tables WHERE table_schema = 'public'").fetchall()))
+    # print(str(conn.execute("SELECT * FROM information_schema.tables WHERE table_schema = 'public'").fetchall()))
 
-    DeferredReflection.prepare(engine)
+    if reflections:
+        DeferredReflection.prepare(engine)
 
     if wait_for_db == 0:
         max_wait = float('inf')

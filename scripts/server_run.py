@@ -33,8 +33,7 @@ def server_run(args):
     wait_for_db: bool = args.wait_for_database
 
     connection_string = get_connection_string()
-    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
-                                               args.profile)
+    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger)
 
     state = AlembicHelper(connection)
     strategy = SchemaStrategist(state).determine_schema_strategy()
@@ -54,6 +53,9 @@ def server_run(args):
                 app.logger.warn(
                     "Response took {duration} seconds for request {path}".format(
                         path=request.full_path, duration=time_taken))
+
+    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
+                                               args.profile)
 
     set_scoped_session(scoped_session(sessionmaker(bind=engine),
                                       scopefunc=lambda: _request_ctx_stack.top))
