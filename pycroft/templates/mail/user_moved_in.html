@@ -1,0 +1,40 @@
+<pre>
+English version below!
+
+---
+
+Hallo {{ user.name }},
+
+hiermit teilen wir dir mit, dass der folgende neue Wohnort in deinem Mitgliedskonto
+eingetragen wurde:
+
+{{ user.address.street }} {{ user.address.nunber }} // {{ user.room.number }}
+{{ user.address.zip_code }} {{ user.address.city }}
+{{ user.address.country }}
+
+Du kannst deinen Netzwerkanschluss nach vorherigem Login auf unserer <a href="https://agdsn.de/sipa/usersuite/">Internetseite</a>
+freischalten.
+Falls du deinen Netzwerkanschluss bereits freigeschaltet hast, sollte dieser nun
+mit der korrekten MAC Adresse in dem oben angegebenen Zimmer funktionieren.
+
+Viele Grüße
+Deine AG DSN
+
+--
+
+Hello {{ user.name }},
+
+we hereby inform you that the following new residence has been registered in your
+member account:
+
+{{ user.address.street }} {{ user.address.nunber }} // {{ user.room.number }}
+{{ user.address.zip_code }} {{ user.address.city }}
+{{ user.address.country }}
+
+You can enable your network connection after logging in on our <a href="https://agdsn.de/sipa/usersuite/">webpage</a>.
+If you have already enabled your network connection, it should now
+work with the correct MAC address in the room specified above.
+
+Best Regards
+Your AG DSN
+</pre>
