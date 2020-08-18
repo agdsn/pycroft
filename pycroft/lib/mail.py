@@ -20,8 +20,9 @@ smtp_password = os.environ.get('PYCROFT_SMTP_PASSWORD')
 smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
 
 logger = logging.getLogger('mail')
+logger.setLevel(logging.INFO)
 
-template_loader = jinja2.FileSystemLoader(searchpath="../templates/mail/")
+template_loader = jinja2.FileSystemLoader(searchpath="pycroft/templates/mail/")
 template_env = jinja2.Environment(loader=template_loader)
 
 
@@ -53,6 +54,16 @@ class MailTemplate:
 class UserConfirmEmailTemplate(MailTemplate):
     template = "user_confirm_email.html"
     subject = "Bitte bestätige deine E-Mail Adresse // Please confirm your email address"
+
+
+class UserMovedInTemplate(MailTemplate):
+    template = "user_moved_in.html"
+    subject = "Wohnortänderung // Change of residence"
+
+
+class UserCreatedTemplate(MailTemplate):
+    template = "user_created.html"
+    subject = "Willkommen bei der AG DSN // Welcome to the AG DSN"
 
 
 def compose_mail(mail: Mail) -> MIMEText:
@@ -140,8 +151,7 @@ def send_mails(mails: List[Mail]) -> (bool, int):
         })
         return False
     else:
-        logger.info('Tried to sent mails', extra={
-            'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-            'data': {'total': len(mails), 'failures': failures}
+        logger.info('Tried to send mails (%i/%i failed)', failures, len(mails), extra={
+            'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
         })
         return failures == 0, failures
