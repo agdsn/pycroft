@@ -2,6 +2,9 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import random
+import string
+
 from passlib.apps import ldap_context
 import passlib.utils
 
@@ -11,6 +14,7 @@ crypt_context = ldap_context.copy(
                 "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
 
 clear_password_prefix = '{clear}'
+
 
 def generate_password(length):
     """Generate a password of a certain length.
@@ -58,3 +62,15 @@ def verify_password(plaintext_password, hash):
     # TypeError is required for user entries not having a hash
     except (ValueError, TypeError):
         return False
+
+
+def generate_random_str(length):
+    """
+    Generates an aplhanumeric random string
+
+    """
+    key = ''.join(
+        random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
+        range(length))
+
+    return key
