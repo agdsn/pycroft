@@ -2,7 +2,7 @@ from flask import url_for, flash, abort
 from flask_login import current_user
 
 from pycroft.lib.user import status
-from pycroft.model.user import User
+from pycroft.model.user import User, PreMember
 
 
 def user_btn_style(user):
@@ -82,6 +82,14 @@ def get_user_or_404(user_id):
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
     return user
+
+
+def get_pre_member_or_404(prm_id):
+    prm = PreMember.q.get(prm_id)
+    if prm is None:
+        flash(u"Mitgliedsanfrage mit ID {} existiert nicht!".format(prm_id,), 'error')
+        abort(404)
+    return prm
 
 
 def no_membership_change():

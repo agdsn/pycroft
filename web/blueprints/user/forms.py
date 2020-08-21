@@ -99,6 +99,19 @@ class UserCreateForm(SelectRoomFormOptional):
     _order = ("name", "building", "level", "room_number")
 
 
+class PreMemberEditForm(SelectRoomFormOptional):
+    name = TextField("Name", [DataRequired("Name wird benötigt!")])
+    login = TextField("Login", [
+        DataRequired(message="Login wird benötigt!"),
+        Regexp(regex=User.login_regex_ci, message="Login ist ungültig!"),
+        validate_unique_login],
+                      filters=[to_lowercase])
+    email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
+    move_in_date = DateField("Einzugsdatum", [Optional()])
+
+    _order = ("name", "building", "level", "room_number")
+
+
 class UserMoveInForm(UserMoveForm):
     now = BooleanField(u"Sofort", default=False)
     when = DateField(u"Einzug am", [OptionalIf("now")])

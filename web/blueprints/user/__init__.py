@@ -12,17 +12,18 @@
 """
 import operator
 import re
-from datetime import datetime, timedelta, time, timezone
+from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import chain
 
+from bs_table_py.table import datetime_format, date_format
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
+from flask_wtf import FlaskForm
 from sqlalchemy import Text, distinct, and_
-from sqlalchemy.exc import InternalError
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import or_, func, cast
 from wtforms.widgets import HTMLString
@@ -30,26 +31,24 @@ from wtforms.widgets import HTMLString
 from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.interval import closed, closedopen
-from pycroft.helpers.net import mac_regex, ip_regex, get_interface_manufacturer
+from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
-from pycroft.lib.net import SubnetFullException, MacExistsException
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
-    traffic_history, generate_user_sheet, get_blocked_groups
+    traffic_history, generate_user_sheet, get_blocked_groups, \
+    get_manual_member_requests, finish_member_request
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.host import Host, IP, Interface
-from pycroft.model.types import InvalidMACAddressException
 from pycroft.model.user import User, Membership, PropertyGroup, Property
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.host import validate_unique_mac
-from bs_table_py.table import datetime_format, date_format
-from web.blueprints.helpers.user import get_user_or_404
+from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable
@@ -57,10 +56,11 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
-    UserResetPasswordForm, UserMoveInForm
+    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
-                     SearchTable, TrafficTopTable, RoomHistoryTable)
+                     SearchTable, TrafficTopTable, RoomHistoryTable,
+                     PreMemberTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -1010,3 +1010,119 @@ def room_history_json(user_id):
             'href': url_for('facilities.room_show', room_id=history_entry.room_id),
             'title': history_entry.room.short_name
         }} for history_entry in user.room_history_entries])
+
+
+@bp.route('member-requests')
+@nav.navigate("Mitgliedschaftsanfragen")
+def member_requests():
+    return render_template("user/member_requests.html",
+                           page_title="Mitgliedschaftsanfragen",
+                           pre_member_table=PreMemberTable(
+                               data_url=url_for('.member_requests_json')
+                           ))
+
+
+@bp.route("member-request/<int:pre_member_id>/edit", methods=['GET', 'POST'])
+def member_request_edit(pre_member_id: int):
+    prm = get_pre_member_or_404(pre_member_id)
+
+    form = PreMemberEditForm(
+        name=prm.name,
+        login=prm.login,
+        building=prm.room.building if prm.room else None,
+        level=prm.room.level if prm.room else None,
+        room_number=prm.room.number if prm.room else None,
+        email=prm.email,
+        move_in_date=prm.move_in_date.date(),
+    )
+
+    if form.validate_on_submit():
+        prm.name = form.name.data
+        prm.login = form.login.data
+        prm.email = form.email.data
+        prm.move_in_date = form.move_in_date.data
+
+        room = Room.q.filter_by(building=form.building.data, level=form.level.data,
+                                number=form.room_number.data).first()
+
+        prm.room = room
+
+        session.session.commit()
+
+        flash("Änderungen wurden gespeichert.", "success")
+
+    return render_template("user/member_request_edit.html",
+                           page_title="Mitgliedschaftsanfrage Bearbeiten",
+                           form=form,
+                           prm=prm)
+
+
+@bp.route("member-request/<int:pre_member_id>/delete", methods=['GET', 'POST'])
+@access.require('user_change')
+def member_request_delete(pre_member_id: int):
+    prm = get_pre_member_or_404(pre_member_id)
+
+    form = FlaskForm()
+
+    if form.validate_on_submit():
+        session.session.delete(prm)
+
+        session.session.commit()
+
+        flash("Mitgliedsanfrage gelöscht.", "success")
+
+        return redirect(url_for(".member_requests"))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.member_requests'),
+        'submit_text': 'Löschen',
+        'actions_offset': 0
+    }
+
+    return render_template('generic_form.html',
+                           page_title="Mitgliedschaftsanfrage löschen",
+                           form_args=form_args,
+                           form=form)
+
+
+@bp.route("member-request/<int:pre_member_id>/finish")
+@access.require('user_change')
+def member_request_finish(pre_member_id: int):
+    prm = get_pre_member_or_404(pre_member_id)
+
+    user, success = web_execute(finish_member_request, "Nutzer erfolgreich erstellt.", prm,
+                                current_user)
+
+    if success:
+        session.session.commit()
+
+        return redirect(url_for(".user_show", user_id=user.id))
+    else:
+        return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+
+
+@bp.route('json/member-requests')
+def member_requests_json():
+    prms = get_manual_member_requests()
+
+    return jsonify(items=[{
+        'id': prm.id,
+        'name': prm.name,
+        'login': prm.login,
+        'email': prm.email,
+        'email_confirmed': prm.email_confirmed,
+        'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
+        'actions': [{'href': url_for(".member_request_edit",
+                                     pre_member_id=prm.id),
+                     'title': 'Bearbeiten',
+                     'icon': 'fa-edit',
+                     'btn_class': 'btn-info btn-sm',
+                     'new_tab': True},
+                    {'href': url_for(".member_request_delete",
+                                     pre_member_id=prm.id),
+                     'title': 'Löschen',
+                     'icon': 'fa-trash',
+                     'btn_class': 'btn-danger btn-sm'},
+                    ]
+    } for prm in prms])

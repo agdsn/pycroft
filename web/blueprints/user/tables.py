@@ -83,3 +83,12 @@ class RoomHistoryTable(BootstrapTable):
     room = LinkColumn("Wohnort")
     begins_at = DateColumn("Von")
     ends_at = DateColumn("Bis")
+
+
+class PreMemberTable(BootstrapTable):
+    name = Column("Name")
+    login = Column("Login")
+    email = Column("Email")
+    email_confirmed = Column("✓")
+    move_in_date = DateColumn("Einzug am")
+    actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
