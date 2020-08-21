@@ -54,7 +54,6 @@ class BaseUser:
     registered_at = Column(DateTimeTz, nullable=False)
     passwd_hash = Column(String)
     email = Column(String(255), nullable=True)
-    email_forwarded = Column(Boolean, server_default='True', nullable=False)
     email_confirmed = Column(Boolean, server_default="False", nullable=False)
     email_confirmation_key = Column(String, nullable=True)
     birthdate = Column(Date, nullable=True)
@@ -171,6 +170,8 @@ class User(IntegerIdModel, BaseUser, UserMixin):
     address = relationship(Address, backref=backref("inhabitants"))
 
     room = relationship("Room", backref=backref("users", cascade="all"))
+
+    email_forwarded = Column(Boolean, server_default='True', nullable=False)
 
     def __init__(self, **kwargs):
         password = kwargs.pop('password', None)

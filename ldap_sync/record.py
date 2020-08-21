@@ -156,7 +156,7 @@ class UserRecord(Record):
             'loginShell': user.unix_account.login_shell,  # SV, MAY by posixAccount
             'cn': user.name,  # REQ by posixAccount, inetOrgPerson(person)
             'sn': user.name,  # REQ by inetOrgPerson(person), here same as cn
-            'mail': user.email,  # MAY by inetOrgPerson
+            'mail': user.email if user.email_forwarded else None,  # MAY by inetOrgPerson
         }
         if should_be_blocked:
             # See man slapo-ppolicy

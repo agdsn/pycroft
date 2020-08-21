@@ -65,6 +65,7 @@ class UserEditForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
     email = TextField(u"E-Mail",
                       [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
+    email_forwarded = BooleanField("E-Mail Weiterleitung", default=True)
     birthdate = DateField(u"Geburtsdatum", [Optional()])
 
 

@@ -801,12 +801,13 @@ def edit_user(user_id):
     if not form.is_submitted():
         form.name.data = user.name
         form.email.data = user.email
+        form.email_forwarded.data = user.email_forwarded
         form.birthdate.data = user.birthdate
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
         edited_user = lib.user.edit_email(edited_user, form.email.data,
-                                              current_user)
+                                          form.email_forwarded.data, current_user)
         edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data,
                                               current_user)
         session.session.commit()
