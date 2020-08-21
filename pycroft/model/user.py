@@ -56,7 +56,6 @@ class BaseUser:
     email = Column(String(255), nullable=True)
     email_confirmed = Column(Boolean, server_default="False", nullable=False)
     email_confirmation_key = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=True)
 
     # ForeignKey to Tenancy.person_id / swdd_vv.person_id, but cannot reference view
     swdd_person_id = Column(Integer, nullable=True)
@@ -101,8 +100,6 @@ class BaseUser:
 
     @validates('login')
     def validate_login(self, _, value):
-        assert not has_identity(
-            self), "user already in the database - cannot change login anymore!"
         if not self.login_regex.match(value):
             raise IllegalLoginError(
                 "Illegal login '{}': Logins must begin with a lower case "
@@ -169,6 +166,8 @@ class User(IntegerIdModel, BaseUser, UserMixin):
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
 
+    birthdate = Column(Date, nullable=True)
+
     room = relationship("Room", backref=backref("users", cascade="all"))
 
     email_forwarded = Column(Boolean, server_default='True', nullable=False)
@@ -182,6 +181,13 @@ class User(IntegerIdModel, BaseUser, UserMixin):
     @hybrid_property
     def has_custom_address(self):
         return self.address != self.room.address
+
+    @validates('login')
+    def validate_login(self, _, value):
+        assert not has_identity(
+            self), "user already in the database - cannot change login anymore!"
+
+        return super(User, self).validate_login(_, value)
 
     property_groups = relationship("PropertyGroup",
                                    secondary=lambda: Membership.__table__,
