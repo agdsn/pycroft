@@ -14,6 +14,7 @@ import os
 import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, date
+from difflib import SequenceMatcher
 from typing import Optional
 
 from sqlalchemy import or_, func, select, Boolean, String
@@ -28,7 +29,8 @@ from pycroft.helpers.user import generate_random_str
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, UserCreatedTemplate, \
+from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
+    UserCreatedTemplate, \
     UserMovedInTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
@@ -44,7 +46,6 @@ from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount, PreMember, BaseUser
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
-
 
 mail_confirm_url = os.getenv('MAIL_CONFIRM_URL')
 
@@ -278,8 +279,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
     user_send_mail(new_user, UserCreatedTemplate(), True)
 
     if send_confirm_mail:
-        new_user.email_confirmation_key = generate_random_str(64)
-        send_confirmation_email(new_user, new_user.email_confirmation_key)
+        send_confirmation_email(new_user)
 
     log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),
@@ -498,11 +498,12 @@ def edit_name(user, name, processor):
 
 
 @with_transaction
-def edit_email(user, email, processor):
+def edit_email(user: User, email: str, email_forwarded: bool, processor: User):
     """
     Changes the email address of a user and creates a log entry.
     :param user: User object to change
     :param email: New email address, can be None
+    :param email_forwarded: Boolean if emails should be forwarded
     :param processor:User object of the processor, which issues the change
     :return:Changed user object
     """
@@ -510,12 +511,22 @@ def edit_email(user, email, processor):
     if not email:
         email = None
 
+    if email_forwarded != user.email_forwarded:
+        user.email_forwarded = email_forwarded
+
+        log_user_event(author=processor, user=user,
+                       message=deferred_gettext(
+                           "Set e-mail forwarding to {}.".format(email_forwarded)).to_json())
+
     if email == user.email:
         # email wasn't changed, do nothing
         return user
 
     old_email = user.email
     user.email = email
+
+    send_confirmation_email(user)
+
     message = deferred_gettext(u"Changed e-mail from {} to {}.")
     log_user_event(author=processor, user=user,
                    message=message.format(old_email, email).to_json())
@@ -825,38 +836,97 @@ def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = Fals
 
     sender = "{} <{}>".format(user.name, email)
 
-    body = template.render(user=user, **kwargs)
+    body = template.render(user=user,
+                           user_id=encode_type2_user_id(user.id),
+                           **kwargs)
 
     mail = Mail(sender, template.subject, body)
 
     send_mails_async.delay([mail])
 
 
-def send_confirmation_email(user: BaseUser, key: str):
+@with_transaction
+def send_confirmation_email(user: BaseUser):
+    user.email_confirmed = False
+    user.email_confirmation_key = generate_random_str(64)
+
     if not mail_confirm_url:
         raise ValueError("No url specified in MAIL_CONFIRM_URL")
 
-    user_send_mail(user, UserConfirmEmailTemplate(email_confirm_url=mail_confirm_url.format(key)))
+    user_send_mail(user, UserConfirmEmailTemplate(
+        email_confirm_url=mail_confirm_url.format(user.email_confirmation_key)))
+
+
+class LoginTakenException(Exception):
+    def __init__(self):
+        super().__init__("Login already taken")
+
+
+class EmailTakenException(Exception):
+    def __init__(self):
+        super().__init__("E-Mail Address already in use")
+
+
+class UserExistsInRoomException(Exception):
+    def __init__(self):
+        super().__init__("A user with a similar name already lives in this room")
+
+
+class UserExistsException(Exception):
+    def __init__(self):
+        super().__init__("This user already exists")
+
+
+def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
+                        room: Optional[Room]):
+    user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
+        .filter(User.swdd_person_id != None).first()
+
+    if user_swdd_person_id:
+        raise UserExistsException
+
+    user_login = User.q.filter_by(login=login).first()
+
+    if user_login is not None:
+        raise LoginTakenException
+
+    user_email = User.q.filter_by(email=email).first()
+
+    if user_email is not None:
+        raise EmailTakenException
+
+    # Raise an error if a user with a 75% name match already exists in the room
+    if room is not None:
+        users = User.q.filter_by(room=room).all()
+
+        for user in users:
+            ratio = SequenceMatcher(None, name, user.name).ratio()
+
+            if ratio > 0.75:
+                raise UserExistsInRoomException
 
 
 @with_transaction
-def create_member_request(name: str, birthdate: date, email: str,
-                          password: str, login: str, swdd_person_id: Optional[int],
-                          room: Optional[Room], move_in_date: Optional[date]):
-    mr = PreMember(name=name, birthdate=birthdate, email=email, swdd_person_id=swdd_person_id,
-                   email_confirmation_key=generate_random_str(64), password=password,
-                   room=room, login=login, move_in_date=move_in_date)
+def create_member_request(name: str, email: str, password: str, login: str,
+                          swdd_person_id: Optional[int], room: Optional[Room],
+                          move_in_date: Optional[date]):
+    check_new_user_data(login, email, name, swdd_person_id, room)
+
+    mr = PreMember(name=name, email=email, swdd_person_id=swdd_person_id,
+                   password=password,  room=room, login=login, move_in_date=move_in_date)
 
     # Send confirmation mail
-    send_confirmation_email(mr, mr.email_confirmation_key)
+    send_confirmation_email(mr)
 
     return mr
 
 
 @with_transaction
 def finish_member_request(prm: PreMember, processor: User):
-    user, _ = create_user(prm.name, prm.login, prm.email, prm.birthdate, [config.member_group],
-                          processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
+    check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room)
+
+    user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[config.member_group],
+                          processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
 
     user.swdd_person_id = prm.swdd_person_id
     user.email_confirmed = prm.email_confirmed
@@ -888,3 +958,8 @@ def confirm_mail_address(key):
     elif mr is None:
         user.email_confirmed = True
 
+
+def get_manual_member_requests():
+    prms = PreMember.q.filter_by(swdd_person_id=None).order_by(PreMember.email_confirmed.desc()).all()
+
+    return prms
