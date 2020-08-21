@@ -32,6 +32,5 @@ class DBTask(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo=None):
         session.close()
 
-    def __del__(self):
         if self.connection is not None:
             self.connection.close()
