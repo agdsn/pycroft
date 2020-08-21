@@ -38,6 +38,7 @@ class Tenancy(DeferredReflection, ModelBase):
     persvv_id = Column(Integer, primary_key=True)
     person_id = Column(Integer)
     vo_suchname = Column(String, ForeignKey("room.swdd_vo_suchname"))
+    status_id = Column(Integer)
 
     room = relationship("Room", backref=backref("room", uselist=False))
 
