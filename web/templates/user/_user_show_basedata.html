@@ -59,6 +59,14 @@
             <span>{{ user.email }}</span>
             <span class="card-value-secondary"><a href="mailto:{{ user.name }}<{{ user.email }}>"
                style="font-size: small;">(mailto)</a></span>
+            {% if user.email_forwarded %}
+              <span data-toggle="tooltip" data-placement="bottom" title="E-Mails werden weitergeleitet"
+                    class="fa fa-share-square text-info"></span>
+            {% endif %}
+            {% if user.email_confirmed %}
+              <span data-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse Bestätigt"
+                    class="fa fa-check-square text-success"></span>
+            {% endif %}
           </div>
         </section>
 
