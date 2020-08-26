@@ -66,6 +66,16 @@ class UserCreatedTemplate(MailTemplate):
     subject = "Willkommen bei der AG DSN // Welcome to the AG DSN"
 
 
+class MemberRequestPendingTemplate(MailTemplate):
+    template = "member_request_pending.html"
+    subject = "Deine Mitgliedschaftsanfrage // Your member request"
+
+
+class MemberRequestDeniedTemplate(MailTemplate):
+    template = "member_request_denied.html"
+    subject = "Mitgliedschaftsanfrage abgelehnt // Member request denied"
+
+
 def compose_mail(mail: Mail) -> MIMEText:
     mime_mail = MIMEText(mail.body, _subtype='html', _charset='utf-8')
 

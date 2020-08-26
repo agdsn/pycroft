@@ -31,7 +31,7 @@ from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
     UserCreatedTemplate, \
-    UserMovedInTemplate
+    UserMovedInTemplate, MemberRequestPendingTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
@@ -888,6 +888,20 @@ class MoveInDateInvalidException(Exception):
         super().__init__("The move-in date is invalid")
 
 
+def check_similar_user_in_room(name: str, room: Room):
+    """
+    Raise an error if an user with a 75% name match already exists in the room
+    """
+
+    users = User.q.filter_by(room=room).all()
+
+    for user in users:
+        ratio = SequenceMatcher(None, name, user.name).ratio()
+
+        if ratio > 0.75:
+            raise UserExistsInRoomException
+
+
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
                         room: Optional[Room], move_in_date: Optional[date]):
     user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
@@ -906,15 +920,8 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
     if user_email is not None:
         raise EmailTakenException
 
-    # Raise an error if a user with a 75% name match already exists in the room
     if room is not None:
-        users = User.q.filter_by(room=room).all()
-
-        for user in users:
-            ratio = SequenceMatcher(None, name, user.name).ratio()
-
-            if ratio > 0.75:
-                raise UserExistsInRoomException
+        check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
         if move_in_date > session.utcnow() + timedelta(days=180) or move_in_date < session.utcnow():
@@ -1000,3 +1007,7 @@ def get_manual_member_requests():
     prms = PreMember.q.filter_by(swdd_person_id=None).order_by(PreMember.email_confirmed.desc()).all()
 
     return prms
+
+
+def get_name_from_first_last(first_name: str, last_name: str):
+    return "{} {}".format(first_name, last_name) if last_name else first_name
