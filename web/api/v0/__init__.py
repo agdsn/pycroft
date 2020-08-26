@@ -20,7 +20,8 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     status, traffic_history as func_traffic_history, membership_end_date, \
     move_out, membership_ending_task, reset_wifi_password, create_member_request, \
     NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
-    LoginTakenException, MoveInDateInvalidException
+    LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
+    get_name_from_first_last, confirm_mail_address
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
@@ -440,6 +441,7 @@ class RegistrationResource(Resource):
         no_tenancies: No tenancies could be found for the supplied data
         no_relevant_tenancies: No active or future tenancies could be found
         no_room_for_tenancies: There are tenancies but none of them are connected to a pycroft room
+        similar_user_exists: A similar user already lives in the room
         """
 
         parser = reqparse.RequestParser()
@@ -466,6 +468,14 @@ class RegistrationResource(Resource):
         if newest_tenancy is None:
             abort(404, message="Cannot associate a room with any tenancy",
                   code="no_room_for_tenancies")
+
+        try:
+            name = get_name_from_first_last(args.first_name, args.last_name)
+
+            check_similar_user_in_room(name, newest_tenancy.room)
+        except UserExistsInRoomException:
+            abort(400, message="A user with a similar name already lives in this room",
+                  code="similar_user_exists")
 
         return jsonify({
             'id': newest_tenancy.persvv_id,
@@ -509,7 +519,7 @@ class RegistrationResource(Resource):
             if swdd_person_id != args.person_id:
                 abort(400, message="Person id does not match", code="person_id_mismatch")
 
-        name = "{} {}".format(args.first_name, args.last_name) if args.last_name else args.first_name
+        name = get_name_from_first_last(args.first_name, args.last_name)
 
         try:
             mr = create_member_request(name, args.email, args.password, args.login, swdd_person_id,
@@ -539,4 +549,23 @@ class RegistrationResource(Resource):
 
 
 api.add_resource(RegistrationResource,
-                 '/registration')
+                 '/register')
+
+
+class EmailConfirmResource(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('key', required=True, type=str)
+        args = parser.parse_args()
+
+        try:
+            confirm_mail_address(args.key)
+        except ValueError:
+            abort(400, message="Bad key", code="bad_key")
+
+        session.session.commit()
+
+        return
+
+
+api.add_resource(EmailConfirmResource,  '/register/confirm')
