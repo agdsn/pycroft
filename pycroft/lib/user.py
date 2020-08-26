@@ -981,12 +981,19 @@ def confirm_mail_address(key):
     if mr is None and user is None:
         raise ValueError("Unknown confirmation key")
     elif user is None:
+        if mr.email_confirmed:
+            raise ValueError("E-Mail already confirmed")
+
         mr.email_confirmed = True
+        mr.email_confirmation_key = None
 
         if mr.swdd_person_id is not None and mr.room is not None:
             finish_member_request(mr)
+        else:
+            user_send_mail(mr, MemberRequestPendingTemplate())
     elif mr is None:
         user.email_confirmed = True
+        user.email_confirmation_key = None
 
 
 def get_manual_member_requests():

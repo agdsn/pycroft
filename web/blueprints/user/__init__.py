@@ -38,7 +38,7 @@ from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
-    get_manual_member_requests, finish_member_request
+    get_manual_member_requests, finish_member_request, send_confirmation_email
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -1036,7 +1036,13 @@ def member_request_edit(pre_member_id: int):
         move_in_date=prm.move_in_date.date() if prm.move_in_date is not None else None,
     )
 
-    if form.validate_on_submit():
+    if form.is_submitted():
+        unique_name_error = validate_unique_name(form, form.name)
+        unique_email_error = validate_unique_email(form, form.email)
+
+    if form.validate_on_submit() and not (unique_name_error or unique_email_error):
+        old_email = prm.email
+
         prm.name = form.name.data
         prm.login = form.login.data
         prm.email = form.email.data
@@ -1047,9 +1053,21 @@ def member_request_edit(pre_member_id: int):
 
         prm.room = room
 
+        if old_email != prm.email:
+            send_confirmation_email(prm)
+
+            flash("Es wurde eine neue Bestätigungsmail verschickt!", "warning")
+
         session.session.commit()
 
         flash("Änderungen wurden gespeichert.", "success")
+
+    if form.is_submitted():
+        if unique_name_error:
+            form.name.errors.append(unique_name_error)
+
+        if unique_email_error:
+            form.email.errors.append(unique_email_error)
 
     return render_template("user/member_request_edit.html",
                            page_title="Mitgliedschaftsanfrage Bearbeiten",

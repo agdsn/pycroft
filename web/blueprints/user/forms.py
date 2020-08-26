@@ -109,6 +109,8 @@ class PreMemberEditForm(SelectRoomFormOptional):
     email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
     move_in_date = DateField("Einzugsdatum", [Optional()])
 
+    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+
     _order = ("name", "building", "level", "room_number")
 
 
