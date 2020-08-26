@@ -35,6 +35,7 @@ from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
+from pycroft.lib.swdd import get_relevant_tenancies
 from pycroft.lib.task import schedule_user_task
 from pycroft.model import session
 from pycroft.model.facilities import Room
@@ -912,6 +913,14 @@ def create_member_request(name: str, email: str, password: str, login: str,
                           move_in_date: Optional[date]):
     check_new_user_data(login, email, name, swdd_person_id, room)
 
+    if swdd_person_id is not None and room is not None:
+        tenancies = get_relevant_tenancies(swdd_person_id)
+
+        rooms = [tenancy.room for tenancy in tenancies]
+
+        if room not in rooms:
+            raise ValueError("User has no tenancies in that room")
+
     mr = PreMember(name=name, email=email, swdd_person_id=swdd_person_id,
                    password=password,  room=room, login=login, move_in_date=move_in_date)
 
@@ -923,17 +932,19 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
 @with_transaction
 def finish_member_request(prm: PreMember, processor: User):
+    if prm.room is None:
+        raise ValueError("Room is None")
+
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room)
 
-    user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[config.member_group],
+    user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[],
                           processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
 
     user.swdd_person_id = prm.swdd_person_id
     user.email_confirmed = prm.email_confirmed
 
-    if prm.room is not None:
-        move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None, processor,
-                when=prm.move_in_date)
+    move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None, processor,
+            when=prm.move_in_date)
 
     session.session.delete(prm)
 
@@ -953,7 +964,7 @@ def confirm_mail_address(key):
     elif user is None:
         mr.email_confirmed = True
 
-        if mr.swdd_person_id is not None:
+        if mr.swdd_person_id is not None and mr.room is not None:
             finish_member_request(mr)
     elif mr is None:
         user.email_confirmed = True
