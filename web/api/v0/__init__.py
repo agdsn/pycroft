@@ -18,11 +18,14 @@ from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
 from pycroft.lib.task import cancel_task
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history, membership_end_date, \
-    move_out, membership_ending_task, reset_wifi_password
+    move_out, membership_ending_task, reset_wifi_password, create_member_request, \
+    NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
+    LoginTakenException, MoveInDateInvalidException
 from pycroft.model import session
+from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
-from pycroft.model.user import User, IllegalEmailError
+from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
 from web.api.v0.helpers import parse_iso_date
 
 api = Api()
@@ -481,15 +484,58 @@ class RegistrationResource(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('first_name', required=True, type=str)
-        parser.add_argument('last_name', required=True, type=str)
+        parser.add_argument('last_name', required=False, type=str)
+        parser.add_argument('birthdate', required=True, type=parse_iso_date)
         parser.add_argument('email', required=True, type=str)
         parser.add_argument('password', required=True, type=str)
         parser.add_argument('login', required=True, type=str)
         parser.add_argument('person_id', required=False, type=int)
         parser.add_argument('room_id', required=False, type=int)
         parser.add_argument('move_in_date', required=False, type=parse_iso_date)
-
         args = parser.parse_args()
+
+        room = None
+        swdd_person_id = None
+
+        if args.room_id is not None:
+            room = Room.q.get(args.room_id)
+
+            if room is None:
+                abort(404, message="Invalid room", code="invalid_room")
+
+        if args.person_id is not None:
+            swdd_person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
+
+            if swdd_person_id != args.person_id:
+                abort(400, message="Person id does not match", code="person_id_mismatch")
+
+        name = "{} {}".format(args.first_name, args.last_name) if args.last_name else args.first_name
+
+        try:
+            mr = create_member_request(name, args.email, args.password, args.login, swdd_person_id,
+                                       room, args.move_in_date)
+        except UserExistsException:
+            abort(400, message="User already exists", code="user_exists")
+        except UserExistsInRoomException:
+            abort(400, message="A user with a similar name already lives in this room",
+                  code="similar_user_exists")
+        except EmailTakenException:
+            abort(400, message="E-Mail address already in use", code="email_taken")
+        except LoginTakenException:
+            abort(400, message="Login already in use", code="login_taken")
+        except IllegalEmailError:
+            abort(400, message="Illegal E-Mail address", code="email_illegal")
+        except IllegalLoginError:
+            abort(400, message="Illegal login", code="login_illegal")
+        except NoTenancyForRoomException:
+            abort(400, message="The given person has no tenancy for the room",
+                  code="no_tenancy_in_room")
+        except MoveInDateInvalidException:
+            abort(400, message="The move-in date is invalid", code="move_in_date_invalid")
+        else:
+            session.session.commit()
+
+            return mr.id
 
 
 api.add_resource(RegistrationResource,

@@ -865,7 +865,7 @@ class LoginTakenException(Exception):
 
 class EmailTakenException(Exception):
     def __init__(self):
-        super().__init__("E-Mail Address already in use")
+        super().__init__("E-Mail address already in use")
 
 
 class UserExistsInRoomException(Exception):
@@ -878,8 +878,18 @@ class UserExistsException(Exception):
         super().__init__("This user already exists")
 
 
+class NoTenancyForRoomException(Exception):
+    def __init__(self):
+        super().__init__("This user has no tenancy in that room")
+
+
+class MoveInDateInvalidException(Exception):
+    def __init__(self):
+        super().__init__("The move-in date is invalid")
+
+
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
-                        room: Optional[Room]):
+                        room: Optional[Room], move_in_date: Optional[date]):
     user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
         .filter(User.swdd_person_id != None).first()
 
@@ -906,12 +916,16 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
             if ratio > 0.75:
                 raise UserExistsInRoomException
 
+    if move_in_date is not None:
+        if move_in_date > session.utcnow() + timedelta(days=180) or move_in_date < session.utcnow():
+            raise MoveInDateInvalidException
+
 
 @with_transaction
 def create_member_request(name: str, email: str, password: str, login: str,
                           swdd_person_id: Optional[int], room: Optional[Room],
                           move_in_date: Optional[date]):
-    check_new_user_data(login, email, name, swdd_person_id, room)
+    check_new_user_data(login, email, name, swdd_person_id, room, move_in_date)
 
     if swdd_person_id is not None and room is not None:
         tenancies = get_relevant_tenancies(swdd_person_id)
@@ -919,10 +933,14 @@ def create_member_request(name: str, email: str, password: str, login: str,
         rooms = [tenancy.room for tenancy in tenancies]
 
         if room not in rooms:
-            raise ValueError("User has no tenancies in that room")
+            raise NoTenancyForRoomException
 
     mr = PreMember(name=name, email=email, swdd_person_id=swdd_person_id,
-                   password=password,  room=room, login=login, move_in_date=move_in_date)
+                   password=password,  room=room, login=login, move_in_date=move_in_date,
+                   registered_at=session.utcnow())
+
+    session.session.add(mr)
+    session.session.flush()
 
     # Send confirmation mail
     send_confirmation_email(mr)
@@ -935,7 +953,8 @@ def finish_member_request(prm: PreMember, processor: User):
     if prm.room is None:
         raise ValueError("Room is None")
 
-    check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room)
+    check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
+                        prm.move_in_date)
 
     user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[],
                           processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)

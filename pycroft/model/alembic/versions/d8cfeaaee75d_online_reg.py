@@ -33,7 +33,6 @@ def upgrade():
     sa.Column('room_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['room_id'], ['room.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('login')
     )
     op.create_index(op.f('ix_pre_member_room_id'), 'pre_member', ['room_id'], unique=False)
 
