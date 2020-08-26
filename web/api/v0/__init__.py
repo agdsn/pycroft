@@ -13,6 +13,8 @@ from pycroft.lib.finance import build_transactions_query, estimate_balance
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
+from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
+    get_first_tenancy_with_room
 from pycroft.lib.task import cancel_task
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history, membership_end_date, \
@@ -21,6 +23,7 @@ from pycroft.model import session
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError
+from web.api.v0.helpers import parse_iso_date
 
 api = Api()
 
@@ -331,7 +334,7 @@ class TerminateMembershipResource(Resource):
         parser.add_argument('end_date',
                             dest='end_date',
                             required=True,
-                            type=lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+                            type=parse_iso_date)
         args = parser.parse_args()
 
         user = get_user_or_404(user_id)
@@ -423,3 +426,71 @@ class ResetWifiPasswordResource(Resource):
 
 api.add_resource(ResetWifiPasswordResource,
                  '/user/<int:user_id>/reset-wifi-password')
+
+
+class RegistrationResource(Resource):
+    def get(self):
+        """
+        Get the newest tenancy for the supplied user data, or an error 404 if not found.
+
+        Error codes:
+        no_tenancies: No tenancies could be found for the supplied data
+        no_relevant_tenancies: No active or future tenancies could be found
+        no_room_for_tenancies: There are tenancies but none of them are connected to a pycroft room
+        """
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('first_name', required=True, type=str)
+        parser.add_argument('last_name', required=True, type=str)
+        parser.add_argument('birthdate', required=True, type=parse_iso_date)
+        parser.add_argument('person_id', required=True, type=int)
+        args = parser.parse_args()
+
+        person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
+
+        if person_id is None:
+            abort(404, message="No tenancies found for this data",
+                  code="no_tenancies")
+
+        tenancies = get_relevant_tenancies(person_id)
+
+        if not tenancies:
+            abort(404, message="No active or future tenancies found",
+                  code="no_relevant_tenancies")
+
+        newest_tenancy = get_first_tenancy_with_room(tenancies)
+
+        if newest_tenancy is None:
+            abort(404, message="Cannot associate a room with any tenancy",
+                  code="no_room_for_tenancies")
+
+        return jsonify({
+            'id': newest_tenancy.persvv_id,
+            'vo_suchname': newest_tenancy.vo_suchname,
+            'begin': newest_tenancy.mietbeginn.isoformat(),
+            'end': newest_tenancy.mietende.isoformat(),
+            'room_id': newest_tenancy.room.id,
+            'building': newest_tenancy.room.building.street_and_number,
+            'room': newest_tenancy.room.level_and_number
+        })
+
+    def post(self):
+        """
+        Create a member request
+        """
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('first_name', required=True, type=str)
+        parser.add_argument('last_name', required=True, type=str)
+        parser.add_argument('email', required=True, type=str)
+        parser.add_argument('password', required=True, type=str)
+        parser.add_argument('login', required=True, type=str)
+        parser.add_argument('person_id', required=False, type=int)
+        parser.add_argument('room_id', required=False, type=int)
+        parser.add_argument('move_in_date', required=False, type=parse_iso_date)
+
+        args = parser.parse_args()
+
+
+api.add_resource(RegistrationResource,
+                 '/registration')

@@ -1,4 +1,4 @@
-from sqlalchemy import text, select, Table, Column, Integer, String, ForeignKey
+from sqlalchemy import text, select, Table, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import relationship, backref
 
@@ -39,6 +39,9 @@ class Tenancy(DeferredReflection, ModelBase):
     person_id = Column(Integer)
     vo_suchname = Column(String, ForeignKey("room.swdd_vo_suchname"))
     status_id = Column(Integer)
+
+    mietbeginn = Column(Date)
+    mietende = Column(Date)
 
     room = relationship("Room", backref=backref("room", uselist=False))
 
