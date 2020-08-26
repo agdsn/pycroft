@@ -1033,7 +1033,7 @@ def member_request_edit(pre_member_id: int):
         level=prm.room.level if prm.room else None,
         room_number=prm.room.number if prm.room else None,
         email=prm.email,
-        move_in_date=prm.move_in_date.date(),
+        move_in_date=prm.move_in_date.date() if prm.move_in_date is not None else None,
     )
 
     if form.validate_on_submit():
