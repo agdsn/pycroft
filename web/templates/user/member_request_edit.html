@@ -6,7 +6,11 @@
 
     <hr/>
 
-    <a class="btn btn-success" href="{{ url_for('.member_request_finish', pre_member_id=prm.id) }}">
+    <b class="text-danger">Die Aktion "Abschließen" speichert oben gemachte Änderungen nicht!</b>
+
+    <br/>
+
+    <a id="member_request_finish" class="btn btn-success" href="{{ url_for('.member_request_finish', pre_member_id=prm.id) }}">
       <i class="fa fa-check"></i> Abschließen
     </a>
     <a class="btn btn-danger" href="{{ url_for('.member_request_delete', pre_member_id=prm.id) }}">
@@ -16,4 +20,12 @@
 
 {% block page_script %}
     {{ resources.link_script_file('lazy-load-select.js' | require) }}
+
+  <script type="application/javascript">
+    $(function() {
+      $('.main .form-control').on('change paste keyup', function () {
+        $('#member_request_finish').addClass('disabled');
+      });
+    });
+  </script>
 {% endblock %}
