@@ -2,7 +2,7 @@ import hmac
 import os
 import unicodedata
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import func
 
@@ -38,9 +38,17 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> Optio
 
     person_hash = digest_maker.hexdigest().upper()
 
-    return Tenancy.q.filter_by(person_hash=person_hash, status_id=TenancyStatus.ESTABLISHED.value).first()
+    tenancy = Tenancy.q.filter_by(person_hash=person_hash, status_id=TenancyStatus.ESTABLISHED.value).first()
+
+    return tenancy.person_id if tenancy is not None else None
 
 
 def get_relevant_tenancies(person_id: int):
-    return Tenancy.q.filter_by(person_id=person_id, status=TenancyStatus.ESTABLISHED.value)\
-        .filter(Tenancy.mietende > func.now()).all()
+    return Tenancy.q.filter_by(person_id=person_id, status_id=TenancyStatus.ESTABLISHED.value)\
+        .filter(Tenancy.mietende > func.now()).order_by(Tenancy.mietbeginn.desc()).all()
+
+
+def get_first_tenancy_with_room(tenancies: List[Tenancy]):
+    for tenancy in tenancies:
+        if tenancy.room is not None:
+            return tenancy
