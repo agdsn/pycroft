@@ -32,6 +32,10 @@ class Building(IntegerIdModel):
 
     __table_args__ = (UniqueConstraint("street", "number", name="building_address"),)
 
+    @property
+    def street_and_number(self):
+        return "{} {}".format(self.street, self.number)
+
 
 class Room(IntegerIdModel):
     number = Column(String(), nullable=False)
@@ -56,18 +60,20 @@ class Room(IntegerIdModel):
     )
 
     def __str__(self):
-        return "{} {} {}".format(self.building.short_name, self.level,
-                                 self.number)
+        return self.short_name
 
     def __unicode__(self):
-        return u"{} {} {}".format(self.building.short_name, self.level,
-                                  self.number)
+        return self.short_name
 
-    @hybrid_property
+    @property
     def short_name(self):
-        return "{} {}-{}".format(self.building.short_name, self.level, self.number)
+        return "{} {}".format(self.building.short_name, self.level_and_number)
 
-    @hybrid_property
+    @property
+    def level_and_number(self):
+        return "{}-{}".format(self.level, self.number)
+
+    @property
     def is_switch_room(self):
         from pycroft.model.host import Host
         from pycroft.model.host import Switch
