@@ -1008,8 +1008,8 @@ def confirm_mail_address(key):
         user.email_confirmation_key = None
 
 
-def get_manual_member_requests():
-    prms = PreMember.q.filter_by(swdd_person_id=None).order_by(PreMember.email_confirmed.desc()).all()
+def get_member_requests():
+    prms = PreMember.q.order_by(PreMember.email_confirmed.desc()).all()
 
     return prms
 
