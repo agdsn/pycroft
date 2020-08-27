@@ -890,7 +890,7 @@ class NoTenancyForRoomException(Exception):
 
 class MoveInDateInvalidException(Exception):
     def __init__(self):
-        super().__init__("The move-in date is invalid")
+        super().__init__("The move-in date is invalid (in the past or more than 6 months in the future)")
 
 
 def check_similar_user_in_room(name: str, room: Room):
