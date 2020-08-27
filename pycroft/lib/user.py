@@ -1011,3 +1011,16 @@ def get_manual_member_requests():
 
 def get_name_from_first_last(first_name: str, last_name: str):
     return "{} {}".format(first_name, last_name) if last_name else first_name
+
+
+@with_transaction
+def delete_member_request(prm: PreMember, reason: Optional[str], processor: User):
+    log_event(deferred_gettext("Deleted member request {}.").format(prm.id).to_json(),
+              processor)
+
+    if reason is None:
+        reason = "Keine Begründung angegeben."
+
+    user_send_mail(prm, MemberRequestDeniedTemplate(reason=reason), try_only=True)
+
+    session.session.delete(prm)

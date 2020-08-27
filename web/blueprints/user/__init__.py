@@ -38,7 +38,8 @@ from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
-    get_manual_member_requests, finish_member_request, send_confirmation_email
+    finish_member_request, send_confirmation_email, \
+    delete_member_request, get_member_requests
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -56,7 +57,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
-    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm
+    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
@@ -1080,26 +1081,25 @@ def member_request_edit(pre_member_id: int):
 def member_request_delete(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
 
-    form = FlaskForm()
+    form = PreMemberDenyForm()
 
     if form.validate_on_submit():
-        session.session.delete(prm)
+        delete_member_request(prm, form.reason.data, current_user)
 
         session.session.commit()
 
-        flash("Mitgliedsanfrage gelöscht.", "success")
+        flash("Mitgliedschaftsanfrage gelöscht.", "success")
 
         return redirect(url_for(".member_requests"))
 
     form_args = {
         'form': form,
         'cancel_to': url_for('.member_requests'),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
+        'submit_text': 'Ablehnen'
     }
 
     return render_template('generic_form.html',
-                           page_title="Mitgliedschaftsanfrage löschen",
+                           page_title="Mitgliedschaftsanfrage löschen/ablehnen",
                            form_args=form_args,
                            form=form)
 

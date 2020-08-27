@@ -114,6 +114,10 @@ class PreMemberEditForm(SelectRoomFormOptional):
     _order = ("name", "building", "level", "room_number")
 
 
+class PreMemberDenyForm(Form):
+    reason = TextAreaField("Begründung", [Optional()], filters=[empty_to_none])
+
+
 class UserMoveInForm(UserMoveForm):
     now = BooleanField(u"Sofort", default=False)
     when = DateField(u"Einzug am", [OptionalIf("now")])
