@@ -28,10 +28,10 @@ from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
-from pycroft.lib.logging import log_user_event
+from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
     UserCreatedTemplate, \
-    UserMovedInTemplate, MemberRequestPendingTemplate
+    UserMovedInTemplate, MemberRequestPendingTemplate, MemberRequestDeniedTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
