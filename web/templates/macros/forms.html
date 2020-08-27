@@ -6,7 +6,7 @@
 {% macro form_actions(cancel_to, submit_text="Übernehmen", cancel_text="Abbrechen", show_cancel=true, show_submit=true) -%}
     <div class="form-actions">
         {% if show_submit %}
-            <button type="submit" class="btn btn-secondary btn-primary">{{ submit_text }}</button>
+            <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
         {% endif %}
         {% if show_cancel %}
             <a href="{{ cancel_to }}" class="btn btn-secondary">{{ cancel_text }}</a>
