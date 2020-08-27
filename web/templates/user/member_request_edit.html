@@ -2,6 +2,20 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
+    {% if prm.email_confirmed %}
+      <i class="fa fa-check-circle text-success"></i> E-Mail Adresse bestätigt
+    {% else %}
+      <i class="fa fa-times-circle text-danger"></i> E-Mail Adresse nicht bestätigt
+    {% endif %}
+    <br/>
+    {% if prm.swdd_person_id is not none %}
+      <i class="fas fa-address-card text-success"></i> Identität bestätigt
+    {% else %}
+      <i class="far fa-address-card text-danger"></i> Identität nicht bestätigt
+    {% endif %}
+
+    <hr/>
+
     {{ forms.simple_form(form, '', url_for('.member_requests')  ) }}
 
     <hr/>
