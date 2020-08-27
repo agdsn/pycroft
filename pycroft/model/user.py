@@ -174,9 +174,12 @@ class User(IntegerIdModel, BaseUser, UserMixin):
 
     def __init__(self, **kwargs):
         password = kwargs.pop('password', None)
+        wifi_password = kwargs.pop('password', None)
         super(User, self).__init__(**kwargs)
         if password is not None:
             self.password = password
+        if wifi_password is not None:
+            self.wifi_password = wifi_password
 
     @hybrid_property
     def has_custom_address(self):
@@ -225,7 +228,7 @@ class User(IntegerIdModel, BaseUser, UserMixin):
         viewonly=True
     )
 
-    @hybrid_property
+    @property
     def wifi_password(self):
         """Store a hash of a given plaintext passwd for the user.
 

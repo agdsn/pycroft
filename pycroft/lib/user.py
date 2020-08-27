@@ -206,7 +206,7 @@ def reset_password(user, processor):
 
 @with_transaction
 def reset_wifi_password(user, processor):
-    plain_password = user_helper.generate_password(12)
+    plain_password = generate_wifi_password()
     user.wifi_password = plain_password
 
     message = deferred_gettext(u"WIFI-Password was reset")
@@ -226,6 +226,10 @@ def change_password(user, password):
     log_user_event(author=user,
                    user=user,
                    message=message.to_json())
+
+
+def generate_wifi_password():
+    return user_helper.generate_password(12)
 
 
 def create_user(name, login, email, birthdate, groups, processor, address, passwd_hash=None,
@@ -257,6 +261,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
         registered_at=now,
         account=Account(name="", type="USER_ASSET"),
         password=plain_password,
+        wifi_password=generate_wifi_password(),
         birthdate=birthdate,
         address=address
     )
