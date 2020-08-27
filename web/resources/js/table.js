@@ -221,6 +221,18 @@ export function euroFormatter(value, row, index){
     return `${value} €`;
 }
 
+export function booleanFormatter(value, row, index) {
+    if (value){
+        return '<i class="fa fa-check-circle text-success"></i>';
+    }else{
+        return '<i class="fa fa-times-circle text-danger"></i>';
+    }
+}
+
+export function textWithBooleanFormatter(value, row, index) {
+    return booleanFormatter(value["bool"], row, index) + " " + value["text"];
+}
+
 export function financeRowFormatter(row, index) {
     if (row && row['row_positive']) {
         return {classes: 'table-success'};
@@ -242,6 +254,7 @@ export function membershipRowFormatter(row, index) {
     }
     return {};
 }
+
 
 $(function() {
     let userPropSel = $('.userprop[data-property-name]');

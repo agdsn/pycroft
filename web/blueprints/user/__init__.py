@@ -1122,21 +1122,21 @@ def member_request_finish(pre_member_id: int):
 
 @bp.route('json/member-requests')
 def member_requests_json():
-    prms = get_manual_member_requests()
+    prms = get_member_requests()
 
     return jsonify(items=[{
         'id': prm.id,
+        'prm_id': encode_type2_user_id(prm.id),
         'name': prm.name,
         'login': prm.login,
-        'email': prm.email,
+        'email': {'text': prm.email, 'bool': prm.email_confirmed},
         'email_confirmed': prm.email_confirmed,
         'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
         'actions': [{'href': url_for(".member_request_edit",
                                      pre_member_id=prm.id),
                      'title': 'Bearbeiten',
                      'icon': 'fa-edit',
-                     'btn_class': 'btn-info btn-sm',
-                     'new_tab': True},
+                     'btn_class': 'btn-info btn-sm'},
                     {'href': url_for(".member_request_delete",
                                      pre_member_id=prm.id),
                      'title': 'Löschen',

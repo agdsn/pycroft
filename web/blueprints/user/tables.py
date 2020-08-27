@@ -86,9 +86,9 @@ class RoomHistoryTable(BootstrapTable):
 
 
 class PreMemberTable(BootstrapTable):
+    prm_id = Column("ID")
     name = Column("Name")
     login = Column("Login")
-    email = Column("Email")
-    email_confirmed = Column("✓")
+    email = Column("E-Mail Adresse", formatter="table.textWithBooleanFormatter")
     move_in_date = DateColumn("Einzug am")
-    actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change)
+    actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change, width=1)
