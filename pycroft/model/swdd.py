@@ -21,6 +21,21 @@ class RentalObject(DeferredReflection, ModelBase):
     __table_args__ = {'info': dict(is_view=True)}
 
     vo_id = Column(Integer, primary_key=True)
+    suchname = Column(String)
+    name = Column(String)
+    voart_id = Column(Integer)
+    nutzungsart_id = Column(Integer)
+    nutzbarvon = Column(Date)
+    nutzbarbis = Column(Date)
+    status = Column(Integer)
+    wohneim_id = Column(Integer)
+    wohneim_suchname = Column(Integer)
+    wohneim_name = Column(String)
+    stockwerk_id = Column(Integer)
+    stockwerk = Column(String)
+    stockwerk_name = Column(String)
+    haus_id = Column(Integer)
+    haus_name = Column(String)
 
 
 swdd_vv = View(
@@ -38,17 +53,23 @@ class Tenancy(DeferredReflection, ModelBase):
     persvv_id = Column(Integer, primary_key=True)
     person_id = Column(Integer)
     vo_suchname = Column(String, ForeignKey("room.swdd_vo_suchname"))
-    status_id = Column(Integer)
+
+    person_hash = Column(String)
 
     mietbeginn = Column(Date)
     mietende = Column(Date)
 
-    room = relationship("Room", backref=backref("room", uselist=False))
+    status_id = Column(Integer)
+
+    room = relationship("Room", backref=backref("room", uselist=False),
+                        viewonly=True)
 
     user = relationship("User", backref=backref("tenancies"), uselist=False,
-                        primaryjoin="foreign(Tenancy.person_id) == remote(User.swdd_person_id)")
+                        primaryjoin="foreign(Tenancy.person_id) == remote(User.swdd_person_id)",
+                        viewonly=True)
     pre_member = relationship("PreMember", backref=backref("tenancies"), uselist=False,
-                              primaryjoin="foreign(Tenancy.person_id) == remote(PreMember.swdd_person_id)")
+                              primaryjoin="foreign(Tenancy.person_id) == remote(PreMember.swdd_person_id)",
+                              viewonly=True)
 
 
 swdd_import = View(
