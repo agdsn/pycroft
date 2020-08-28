@@ -13,6 +13,8 @@
     {% else %}
       <i class="far fa-address-card text-danger"></i> Identität nicht bestätigt
     {% endif %}
+    <br>
+    <i class="fa fa-clock"></i> {{ prm.registered_at | datetime }}
 
     <hr/>
 
