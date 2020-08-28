@@ -38,7 +38,7 @@ services:
       HADES_BROKER_URI: amqp://celery:celery@mq:5672/
       HADES_RESULT_BACKEND_URI: rpc://celery:celery@mq:5672/
       SWDD_HASH_KEY: key
-      MAIL_CONFIRM_URL: "https://agdsn.de/sipa/register/confirm-mail/{}"
+      MAIL_CONFIRM_URL: "https://agdsn.de/sipa/register/confirm/{}"
   dev:
     extends: dev-base
     volumes:
