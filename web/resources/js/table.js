@@ -230,7 +230,14 @@ export function booleanFormatter(value, row, index) {
 }
 
 export function textWithBooleanFormatter(value, row, index) {
-    return booleanFormatter(value["bool"], row, index) + " " + value["text"];
+    let icon_true = value['icon_true'] || 'fa fa-check-circle'
+    let icon_false = value['icon_false'] ||'fa fa-times-circle'
+
+    if (value['bool']){
+        return '<i class="' + icon_true + ' text-success"></i> ' + value['text'];
+    }else{
+        return '<i class="' + icon_false + ' text-danger"></i> ' + value['text'];
+    }
 }
 
 export function financeRowFormatter(row, index) {

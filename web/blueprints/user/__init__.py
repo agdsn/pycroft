@@ -1127,7 +1127,9 @@ def member_requests_json():
     return jsonify(items=[{
         'id': prm.id,
         'prm_id': encode_type2_user_id(prm.id),
-        'name': prm.name,
+        'name': {'text': prm.name, 'bool': prm.swdd_person_id is not None,
+                 'icon_true': 'fas fa-address-card',
+                 'icon_false': 'far fa-address-card'},
         'login': prm.login,
         'email': {'text': prm.email, 'bool': prm.email_confirmed},
         'email_confirmed': prm.email_confirmed,

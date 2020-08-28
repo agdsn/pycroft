@@ -87,7 +87,7 @@ class RoomHistoryTable(BootstrapTable):
 
 class PreMemberTable(BootstrapTable):
     prm_id = Column("ID")
-    name = Column("Name")
+    name = Column("Name", formatter="table.textWithBooleanFormatter")
     login = Column("Login")
     email = Column("E-Mail Adresse", formatter="table.textWithBooleanFormatter")
     move_in_date = DateColumn("Einzug am")
