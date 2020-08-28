@@ -908,7 +908,8 @@ def check_similar_user_in_room(name: str, room: Room):
 
 
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
-                        room: Optional[Room], move_in_date: Optional[date]):
+                        room: Optional[Room], move_in_date: Optional[date],
+                        ignore_similar_name: bool = False):
     user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
         .filter(User.swdd_person_id != None).first()
 
@@ -925,7 +926,7 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
     if user_email is not None:
         raise EmailTakenException
 
-    if room is not None:
+    if room is not None and not ignore_similar_name:
         check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
@@ -961,12 +962,12 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
 
 @with_transaction
-def finish_member_request(prm: PreMember, processor: User):
+def finish_member_request(prm: PreMember, processor: User, ignore_similar_name: bool = False):
     if prm.room is None:
         raise ValueError("Room is None")
 
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
-                        prm.move_in_date)
+                        prm.move_in_date, ignore_similar_name)
 
     user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[],
                           processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)

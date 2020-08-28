@@ -1110,7 +1110,7 @@ def member_request_finish(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
 
     user, success = web_execute(finish_member_request, "Nutzer erfolgreich erstellt.", prm,
-                                current_user)
+                                current_user, ignore_similar_name=True)
 
     if success:
         session.session.commit()
