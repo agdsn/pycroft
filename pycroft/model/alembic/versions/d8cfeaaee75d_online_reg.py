@@ -29,7 +29,7 @@ def upgrade():
     sa.Column('email_confirmed', sa.Boolean(), server_default='False', nullable=False),
     sa.Column('email_confirmation_key', sa.String(), nullable=True),
     sa.Column('swdd_person_id', sa.Integer(), nullable=True),
-    sa.Column('move_in_date', pycroft.model.types.DateTimeTz(), nullable=True),
+    sa.Column('move_in_date',sa.Date(), nullable=True),
     sa.Column('room_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['room_id'], ['room.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),

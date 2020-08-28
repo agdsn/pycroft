@@ -566,7 +566,7 @@ manager.add_constraint_trigger(
 
 class PreMember(IntegerIdModel, BaseUser):
     login = Column(String(40), nullable=False, unique=False)
-    move_in_date = Column(DateTimeTz, nullable=True)
+    move_in_date = Column(Date, nullable=True)
 
     room = relationship("Room")
 

@@ -20,7 +20,7 @@ from typing import Optional
 from sqlalchemy import or_, func, select, Boolean, String
 
 from pycroft import config, property
-from pycroft.helpers import user as user_helper, AttrDict
+from pycroft.helpers import user as user_helper, AttrDict, utc
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
@@ -930,7 +930,7 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
         check_similar_user_in_room(name, room)
 
     if move_in_date is not None:
-        if move_in_date > session.utcnow() + timedelta(days=180) or move_in_date < session.utcnow():
+        if move_in_date > (session.utcnow() + timedelta(days=180)).date() or move_in_date < session.utcnow().date():
             raise MoveInDateInvalidException
 
 
@@ -975,8 +975,10 @@ def finish_member_request(prm: PreMember, processor: User, ignore_similar_name: 
     user.swdd_person_id = prm.swdd_person_id
     user.email_confirmed = prm.email_confirmed
 
+    move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+
     move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None, processor,
-            when=prm.move_in_date)
+            when=move_in_datetime)
 
     session.session.delete(prm)
 
@@ -1011,7 +1013,8 @@ def confirm_mail_address(key):
 
 
 def get_member_requests():
-    prms = PreMember.q.order_by(PreMember.email_confirmed.desc()).all()
+    prms = PreMember.q.order_by(PreMember.email_confirmed.desc())\
+        .order_by(PreMember.registered_at.asc()).all()
 
     return prms
 
