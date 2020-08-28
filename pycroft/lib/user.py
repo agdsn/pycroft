@@ -1001,7 +1001,8 @@ def confirm_mail_address(key):
         mr.email_confirmation_key = None
 
         if mr.swdd_person_id is not None and mr.room is not None:
-            finish_member_request(mr)
+            processor = User.q.get(0)
+            finish_member_request(mr, processor)
         else:
             user_send_mail(mr, MemberRequestPendingTemplate())
     elif mr is None:
