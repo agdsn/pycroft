@@ -909,21 +909,21 @@ def check_similar_user_in_room(name: str, room: Room):
 
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
                         room: Optional[Room], move_in_date: Optional[date],
-                        ignore_similar_name: bool = False):
+                        ignore_similar_name: bool = False, allow_existing: bool = False):
     user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
         .filter(User.swdd_person_id != None).first()
 
-    if user_swdd_person_id:
+    if user_swdd_person_id and not allow_existing:
         raise UserExistsException
 
     user_login = User.q.filter_by(login=login).first()
 
-    if user_login is not None:
+    if user_login is not None and not allow_existing:
         raise LoginTakenException
 
     user_email = User.q.filter_by(email=email).first()
 
-    if user_email is not None:
+    if user_email is not None and not allow_existing:
         raise EmailTakenException
 
     if room is not None and not ignore_similar_name:
@@ -938,7 +938,9 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
 def create_member_request(name: str, email: str, password: str, login: str,
                           swdd_person_id: Optional[int], room: Optional[Room],
                           move_in_date: Optional[date], previous_dorm: Optional[str]):
-    check_new_user_data(login, email, name, swdd_person_id, room, move_in_date)
+
+    check_new_user_data(login, email, name, swdd_person_id, room, move_in_date,
+                        allow_existing=previous_dorm is not None)
 
     if swdd_person_id is not None and room is not None:
         tenancies = get_relevant_tenancies(swdd_person_id)
