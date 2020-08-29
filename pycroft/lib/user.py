@@ -980,8 +980,8 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
 
     move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
 
-    move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None, processor,
-            when=move_in_datetime)
+    move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None,
+            processor if processor is not None else user, when=move_in_datetime)
 
     session.session.delete(prm)
 
