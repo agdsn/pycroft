@@ -307,6 +307,8 @@ The unit tests will generate the schema and data automatically,
 but usually you want to run your development instance against a recent copy of
 our current production database.
 
+The password for the `postgres` user is `password`.
+
 Importing the production database into Pycroft is a three-step process:
 
 1. A regular dump is published in our
@@ -314,18 +316,20 @@ Importing the production database into Pycroft is a three-step process:
 
    Clone this repository to your computer.
 
-2. Copy the `pycroft.sql` file to the database container:
+2. Import the dump:
 
-   `docker cp ~/.../pycroft-data/pycroft.sql $(docker ps -aqf "name=pycroft_dev-db"):/pycroft.sql`
-
-3. Import the dump:
-
-   `docker-compose exec --user postgres dev-db psql -d pycroft -f /pycroft.sql`
+   `psql -h 127.0.0.1 -p 55432 -U postgres -d pycroft -f ../pycroft-data/pycroft.sql`
 
 After all that, you should be able to log in into your pycroft
 instance with the username `agdsn` at `localhost:5000`. All users have the password `password`.
 
  **Congratulations!**
+
+To import a table from a CSV file, use:
+
+`psql -h 127.0.0.1 -p 55432 -U postgres -d pycroft`
+
+`\copy [tablename] from 'file.csv' with delimiter ',' csv header;"`
 
 ## Running the test suite
 
