@@ -62,14 +62,14 @@ class Tenancy(DeferredReflection, ModelBase):
     status_id = Column(Integer)
 
     room = relationship("Room", backref=backref("room", uselist=False),
-                        viewonly=True)
+                        viewonly=True, sync_backref=False)
 
     user = relationship("User", backref=backref("tenancies"), uselist=False,
                         primaryjoin="foreign(Tenancy.person_id) == remote(User.swdd_person_id)",
-                        viewonly=True)
+                        viewonly=True, sync_backref=False)
     pre_member = relationship("PreMember", backref=backref("tenancies"), uselist=False,
                               primaryjoin="foreign(Tenancy.person_id) == remote(PreMember.swdd_person_id)",
-                              viewonly=True)
+                              viewonly=True, sync_backref=False)
 
 
 swdd_import = View(

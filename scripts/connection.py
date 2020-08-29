@@ -16,11 +16,6 @@ def try_create_connection(connection_string, wait_for_db, logger,
                           echo: bool = False, reflections: bool = True) -> Tuple[Connection, Engine]:
     engine = create_engine(connection_string, echo=echo)
 
-    conn = engine.connect()
-
-    # TODO: Remove this, debugging only
-    # print(str(conn.execute("SELECT * FROM information_schema.tables WHERE table_schema = 'public'").fetchall()))
-
     if reflections:
         DeferredReflection.prepare(engine)
 

@@ -33,7 +33,8 @@ def server_run(args):
     wait_for_db: bool = args.wait_for_database
 
     connection_string = get_connection_string()
-    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger)
+    connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
+                                               reflections=False)
 
     state = AlembicHelper(connection)
     strategy = SchemaStrategist(state).determine_schema_strategy()
