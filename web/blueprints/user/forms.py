@@ -116,6 +116,7 @@ class PreMemberEditForm(SelectRoomFormOptional):
 
 class PreMemberDenyForm(Form):
     reason = TextAreaField("Begründung", [Optional()], filters=[empty_to_none])
+    inform_user = BooleanField("Nutzer per E-Mail informieren", [Optional()], default=True)
 
 
 class UserMoveInForm(UserMoveForm):

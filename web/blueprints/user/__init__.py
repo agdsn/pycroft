@@ -1084,7 +1084,8 @@ def member_request_delete(pre_member_id: int):
     form = PreMemberDenyForm()
 
     if form.validate_on_submit():
-        delete_member_request(prm, form.reason.data, current_user)
+        delete_member_request(prm, form.reason.data, current_user,
+                              inform_user=form.inform_user.data)
 
         session.session.commit()
 
