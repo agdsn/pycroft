@@ -282,14 +282,14 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
     for group in groups:
         make_member_of(new_user, group, processor, closed(now, None))
 
+    log_user_event(author=processor if processor is not None else new_user,
+                   message=deferred_gettext(u"User created.").to_json(),
+                   user=new_user)
+
     user_send_mail(new_user, UserCreatedTemplate(), True)
 
     if send_confirm_mail:
         send_confirmation_email(new_user)
-
-    log_user_event(author=processor if processor is not None else new_user,
-                   message=deferred_gettext(u"User created.").to_json(),
-                   user=new_user)
 
     return new_user, plain_password
 
@@ -937,7 +937,7 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
 @with_transaction
 def create_member_request(name: str, email: str, password: str, login: str,
                           swdd_person_id: Optional[int], room: Optional[Room],
-                          move_in_date: Optional[date]):
+                          move_in_date: Optional[date], previous_dorm: Optional[str]):
     check_new_user_data(login, email, name, swdd_person_id, room, move_in_date)
 
     if swdd_person_id is not None and room is not None:
@@ -950,7 +950,7 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
     mr = PreMember(name=name, email=email, swdd_person_id=swdd_person_id,
                    password=password,  room=room, login=login, move_in_date=move_in_date,
-                   registered_at=session.utcnow())
+                   registered_at=session.utcnow(), previous_dorm=previous_dorm)
 
     session.session.add(mr)
     session.session.flush()
@@ -1003,7 +1003,7 @@ def confirm_mail_address(key):
         mr.email_confirmed = True
         mr.email_confirmation_key = None
 
-        if mr.swdd_person_id is not None and mr.room is not None:
+        if mr.swdd_person_id is not None and mr.room is not None and mr.previous_dorm is None:
             finish_member_request(mr, None)
         else:
             user_send_mail(mr, MemberRequestPendingTemplate())

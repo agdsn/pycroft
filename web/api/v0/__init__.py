@@ -502,6 +502,7 @@ class RegistrationResource(Resource):
         parser.add_argument('person_id', required=False, type=int)
         parser.add_argument('room_id', required=False, type=int)
         parser.add_argument('move_in_date', required=False, type=parse_iso_date)
+        parser.add_argument('previous_dorm', required=False, type=str)
         args = parser.parse_args()
 
         room = None
@@ -523,7 +524,7 @@ class RegistrationResource(Resource):
 
         try:
             mr = create_member_request(name, args.email, args.password, args.login, swdd_person_id,
-                                       room, args.move_in_date)
+                                       room, args.move_in_date, args.previous_dorm)
         except UserExistsException:
             abort(400, message="User already exists", code="user_exists")
         except UserExistsInRoomException:

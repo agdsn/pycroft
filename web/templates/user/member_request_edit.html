@@ -2,43 +2,57 @@
 {% import "macros/forms.html" as forms %}
 
 {% block content %}
-    {% if prm.email_confirmed %}
-      <i class="fa fa-check-circle text-success"></i> E-Mail Adresse bestätigt
-    {% else %}
-      <i class="fa fa-times-circle text-danger"></i> E-Mail Adresse nicht bestätigt
-    {% endif %}
-    <br/>
-    {% if prm.swdd_person_id is not none %}
-      <i class="fas fa-address-card text-success"></i> Identität bestätigt
-    {% else %}
-      <i class="far fa-address-card text-danger"></i> Identität nicht bestätigt
-    {% endif %}
-    <br>
-    <i class="fa fa-clock"></i> {{ prm.registered_at | datetime }}
+  <div class="row">
+    <div class="col-4">
+      {% if prm.email_confirmed %}
+        <i class="fa fa-check-circle text-success"></i> E-Mail Adresse bestätigt
+      {% else %}
+        <i class="fa fa-times-circle text-danger"></i> E-Mail Adresse nicht
+        bestätigt
+      {% endif %}
+      <br/>
+      {% if prm.swdd_person_id is not none %}
+        <i class="fas fa-address-card text-success"></i> Identität bestätigt
+      {% else %}
+        <i class="far fa-address-card text-danger"></i> Identität nicht
+        bestätigt
+      {% endif %}
+    </div>
+    <div class="col-4">
+      <i class="fa fa-clock"></i> {{ prm.registered_at | datetime }}
+    </div>
+    <div class="col-4">
+      <i class="fa fa-laptop-house"></i> <b>Vorheriges Wohnheim: </b><br/>
+      {{ prm.previous_dorm }}
+    </div>
+  </div>
 
-    <hr/>
+  <hr/>
 
-    {{ forms.simple_form(form, '', url_for('.member_requests')  ) }}
+  {{ forms.simple_form(form, '', url_for('.member_requests')  ) }}
 
-    <hr/>
+  <hr/>
 
-    <b class="text-danger">Die Aktion "Abschließen" speichert oben gemachte Änderungen nicht!</b>
+  <b class="text-danger">Die Aktion "Abschließen" speichert oben gemachte
+    Änderungen nicht!</b>
 
-    <br/>
+  <br/>
 
-    <a id="member_request_finish" class="btn btn-success" href="{{ url_for('.member_request_finish', pre_member_id=prm.id) }}">
-      <i class="fa fa-check"></i> Abschließen
-    </a>
-    <a class="btn btn-danger" href="{{ url_for('.member_request_delete', pre_member_id=prm.id) }}">
-      <i class="fa fa-trash"></i> Ablehnen
-    </a>
+  <a id="member_request_finish" class="btn btn-success"
+     href="{{ url_for('.member_request_finish', pre_member_id=prm.id) }}">
+    <i class="fa fa-check"></i> Abschließen
+  </a>
+  <a class="btn btn-danger"
+     href="{{ url_for('.member_request_delete', pre_member_id=prm.id) }}">
+    <i class="fa fa-trash"></i> Löschen
+  </a>
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('lazy-load-select.js' | require) }}
+  {{ resources.link_script_file('lazy-load-select.js' | require) }}
 
   <script type="application/javascript">
-    $(function() {
+    $(function () {
       $('.main .form-control').on('change paste keyup', function () {
         $('#member_request_finish').addClass('disabled');
       });
