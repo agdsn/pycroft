@@ -333,7 +333,7 @@ class BankAccountActivity(IntegerIdModel):
     transaction_id = Column(Integer, ForeignKey(Transaction.id,
                                                 onupdate='CASCADE',
                                                 ondelete='SET NULL'))
-    transaction = relationship(Transaction, viewonly=True,
+    transaction = relationship(Transaction, viewonly=True, sync_backref=False,
                                backref=backref("bank_account_activities",
                                                uselist=True))
     account_id = Column(Integer, ForeignKey(Account.id, onupdate='CASCADE',

@@ -131,7 +131,7 @@ class IP(IntegerIdModel):
                              backref=backref("ips",
                                              cascade="all, delete-orphan"))
 
-    host = relationship(Host, secondary=Interface.__table__,
+    host = relationship(Host, secondary=Interface.__table__, sync_backref=False,
                         backref=backref("ips", viewonly=True), viewonly=True)
 
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
