@@ -14,6 +14,9 @@ swdd_hmac_key = os.environ.get('SWDD_HASH_KEY')
 class TenancyStatus(Enum):
     PROVISIONAL = 1
     ESTABLISHED = 2
+    UNDO_PROVISIONAL = 3
+    UNDO_FINAL = 4
+    CANCELED = 5
 
 
 def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> Optional[int]:
