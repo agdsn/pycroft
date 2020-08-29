@@ -244,7 +244,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
     :param str email: E-Mail address of the user
     :param Date birthdate: Date of birth
     :param PropertyGroup groups: The initial groups of the new user
-    :param User processor: The processor
+    :param Optional[User] processor: The processor
     :param Address address: Where the user lives. May or may not come from a room.
     :param passwd_hash: Use password hash instead of generating a new password
     :param send_confirm_mail: If a confirmation mail should be send to the user
@@ -287,7 +287,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
     if send_confirm_mail:
         send_confirmation_email(new_user)
 
-    log_user_event(author=processor,
+    log_user_event(author=processor if processor is not None else new_user,
                    message=deferred_gettext(u"User created.").to_json(),
                    user=new_user)
 
@@ -295,7 +295,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
 
 
 @with_transaction
-def move_in(user, building_id, level, room_number, mac, processor, birthdate=None,
+def move_in(user, building_id, level, room_number, mac, processor=None, birthdate=None,
             host_annex=False, begin_membership=True, when=None):
     """Move in a user in a given room and do some initialization.
 
@@ -308,7 +308,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
     :param int level:
     :param str room_number:
     :param Optional[str] mac: The mac address of the users pc.
-    :param User processor:
+    :param Optional[User] processor:
     :param Date birthdate: Date of birth`
     :param bool host_annex: when true: if MAC already in use,
         annex host to new user
@@ -374,7 +374,7 @@ def move_in(user, building_id, level, room_number, mac, processor, birthdate=Non
 
         msg = deferred_gettext(u"Moved in: {room}")
 
-        log_user_event(author=processor,
+        log_user_event(author=processor if processor is not None else user,
                        message=msg.format(room=room.short_name).to_json(),
                        user=user)
 
@@ -962,7 +962,8 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
 
 @with_transaction
-def finish_member_request(prm: PreMember, processor: User, ignore_similar_name: bool = False):
+def finish_member_request(prm: PreMember, processor: Optional[User],
+                          ignore_similar_name: bool = False):
     if prm.room is None:
         raise ValueError("Room is None")
 
@@ -1003,8 +1004,7 @@ def confirm_mail_address(key):
         mr.email_confirmation_key = None
 
         if mr.swdd_person_id is not None and mr.room is not None:
-            processor = User.q.get(0)
-            finish_member_request(mr, processor)
+            finish_member_request(mr, None)
         else:
             user_send_mail(mr, MemberRequestPendingTemplate())
     elif mr is None:
