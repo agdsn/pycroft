@@ -65,7 +65,10 @@ def create_engine(connection_string, **kwargs):
 def create_db_model(bind):
     """Create all models in the database.
     """
-    base.ModelBase.metadata.create_all(bind)
+    # skip objects marked with "is_view"
+    tables = [table for table in base.ModelBase.metadata.tables.values() if
+              not table.info.get("is_view", False)]
+    base.ModelBase.metadata.create_all(bind, tables=tables)
 
 
 def drop_db_model(bind):
