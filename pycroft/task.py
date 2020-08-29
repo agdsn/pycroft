@@ -9,7 +9,7 @@ from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.task import DBTask
 from pycroft.lib.logging import log_task_event
-from pycroft.lib.mail import send_mails, Mail
+from pycroft.lib.mail import send_mails, Mail, RetryableException
 from pycroft.lib.task import task_type_to_impl
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -95,12 +95,15 @@ def refresh_swdd_views():
 
 
 @app.task(ignore_result=True, rate_limit=1)
-def send_mails_async(mails: List[Mail]):
+def send_mails_async(self, mails: List[Mail]):
     success = False
     failures = len(mails)
 
     try:
         success, failures = send_mails(mails)
+    except RetryableException:
+        self.retry(countdown=1800, max_retries=96)
+        print("Retrying mail task in 30min")
     except RuntimeError:
         pass
 

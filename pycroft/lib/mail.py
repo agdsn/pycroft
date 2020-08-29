@@ -91,6 +91,10 @@ def compose_mail(mail: Mail) -> MIMEText:
     return mime_mail
 
 
+class RetryableException(Exception):
+    pass
+
+
 def send_mails(mails: List[Mail]) -> (bool, int):
     """Send MIME text mails
 
@@ -152,14 +156,15 @@ def send_mails(mails: List[Mail]) -> (bool, int):
                 failures += 1
 
         smtp.close()
-    except IOError as e:
+    except (IOError, smtplib.SMTPException) as e:
         # smtp.connect failed to connect
-        logger.critical('Unable to connect to SMTP server', extra={
+        logger.critical('Unable to connect to SMTP server: {}'.format(str(e)), extra={
             'trace': True,
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
             'data': {'exception_arguments': e.args}
         })
-        return False
+
+        raise RetryableException
     else:
         logger.info('Tried to send mails (%i/%i failed)', failures, len(mails), extra={
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
