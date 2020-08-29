@@ -907,11 +907,17 @@ def check_similar_user_in_room(name: str, room: Room):
             raise UserExistsInRoomException
 
 
+def get_user_by_swdd_person_id(swdd_person_id: Optional[int]) -> User:
+    if swdd_person_id is None:
+        return None
+
+    return User.q.filter_by(swdd_person_id=swdd_person_id).first()
+
+
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
                         room: Optional[Room], move_in_date: Optional[date],
                         ignore_similar_name: bool = False, allow_existing: bool = False):
-    user_swdd_person_id = User.q.filter_by(swdd_person_id=swdd_person_id)\
-        .filter(User.swdd_person_id != None).first()
+    user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
 
     if user_swdd_person_id and not allow_existing:
         raise UserExistsException

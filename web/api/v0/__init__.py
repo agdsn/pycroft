@@ -21,7 +21,7 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     move_out, membership_ending_task, reset_wifi_password, create_member_request, \
     NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
     LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
-    get_name_from_first_last, confirm_mail_address
+    get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
@@ -441,6 +441,7 @@ class RegistrationResource(Resource):
         no_tenancies: No tenancies could be found for the supplied data
         no_relevant_tenancies: No active or future tenancies could be found
         no_room_for_tenancies: There are tenancies but none of them are connected to a pycroft room
+        user_exists: A user with this person_id already exists
         similar_user_exists: A similar user already lives in the room
         """
 
@@ -468,6 +469,9 @@ class RegistrationResource(Resource):
         if newest_tenancy is None:
             abort(404, message="Cannot associate a room with any tenancy",
                   code="no_room_for_tenancies")
+
+        if get_user_by_swdd_person_id(person_id) is not None:
+            abort(400, message="User already exists", code="user_exists")
 
         try:
             name = get_name_from_first_last(args.first_name, args.last_name)
