@@ -450,6 +450,7 @@ class RegistrationResource(Resource):
         parser.add_argument('last_name', required=True, type=str)
         parser.add_argument('birthdate', required=True, type=parse_iso_date)
         parser.add_argument('person_id', required=True, type=int)
+        parser.add_argument('previous_dorm', required=False, type=str)
         args = parser.parse_args()
 
         person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
@@ -470,8 +471,9 @@ class RegistrationResource(Resource):
             abort(404, message="Cannot associate a room with any tenancy",
                   code="no_room_for_tenancies")
 
-        if get_user_by_swdd_person_id(person_id) is not None:
-            abort(400, message="User already exists", code="user_exists")
+        if args.previous_dorm is None:
+            if get_user_by_swdd_person_id(person_id) is not None:
+                abort(400, message="User already exists", code="user_exists")
 
         try:
             name = get_name_from_first_last(args.first_name, args.last_name)
@@ -527,8 +529,8 @@ class RegistrationResource(Resource):
         name = get_name_from_first_last(args.first_name, args.last_name)
 
         try:
-            mr = create_member_request(name, args.email, args.password, args.login, swdd_person_id,
-                                       room, args.move_in_date, args.previous_dorm)
+            mr = create_member_request(name, args.email, args.password, args.login, args.birthdate,
+                                       swdd_person_id, room, args.move_in_date, args.previous_dorm)
         except UserExistsException:
             abort(400, message="User already exists", code="user_exists")
         except UserExistsInRoomException:
