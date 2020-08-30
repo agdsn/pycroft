@@ -16,7 +16,7 @@ from web.blueprints.facilities.forms import building_query, SelectRoomForm, Sele
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
-    QuerySelectMultipleField, DateField
+    QuerySelectMultipleField, DateField, IntegerField
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
@@ -107,7 +107,9 @@ class PreMemberEditForm(SelectRoomFormOptional):
         validate_unique_login],
                       filters=[to_lowercase])
     email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
+    birthdate = DateField(u"Geburtsdatum", [DataRequired("Das Geburtsdatum wird benötigt!")])
     move_in_date = DateField("Einzugsdatum", [Optional()])
+    person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
 
     force = BooleanField(u"* Hinweise ignorieren", [Optional()])
 

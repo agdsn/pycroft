@@ -11,7 +11,7 @@
     :copyright: (c) 2011 by AG DSN.
 """
 import re
-from datetime import timedelta
+from datetime import timedelta, date
 
 from flask_login import UserMixin
 from sqlalchemy import (
@@ -56,6 +56,7 @@ class BaseUser:
     email = Column(String(255), nullable=True)
     email_confirmed = Column(Boolean, server_default="False", nullable=False)
     email_confirmation_key = Column(String, nullable=True)
+    birthdate = Column(Date, nullable=True)
 
     # ForeignKey to Tenancy.person_id / swdd_vv.person_id, but cannot reference view
     swdd_person_id = Column(Integer, nullable=True)
@@ -165,8 +166,6 @@ class User(IntegerIdModel, BaseUser, UserMixin):
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
-
-    birthdate = Column(Date, nullable=True)
 
     room = relationship("Room", backref=backref("users", cascade="all"))
 
@@ -568,6 +567,7 @@ class PreMember(IntegerIdModel, BaseUser):
     login = Column(String(40), nullable=False, unique=False)
     move_in_date = Column(Date, nullable=True)
     previous_dorm = Column(String, nullable=True)
+    birthdate = Column(Date, nullable=False)
 
     room = relationship("Room")
 
@@ -576,6 +576,16 @@ class PreMember(IntegerIdModel, BaseUser):
         super(PreMember, self).__init__(**kwargs)
         if password is not None:
             self.password = password
+
+    @property
+    def is_adult(self) -> bool:
+        today = date.today()
+
+        born = self.birthdate
+
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+        return age >= 18
 
 
 manager.register()

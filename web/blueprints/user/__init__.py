@@ -1035,6 +1035,8 @@ def member_request_edit(pre_member_id: int):
         room_number=prm.room.number if prm.room else None,
         email=prm.email,
         move_in_date=prm.move_in_date,
+        birthdate=prm.birthdate,
+        person_id=prm.swdd_person_id,
     )
 
     if form.is_submitted():
@@ -1048,6 +1050,8 @@ def member_request_edit(pre_member_id: int):
         prm.login = form.login.data
         prm.email = form.email.data
         prm.move_in_date = form.move_in_date.data
+        prm.birthdate = form.birthdate.data
+        prm.swdd_person_id = form.person_id.data
 
         room = Room.q.filter_by(building=form.building.data, level=form.level.data,
                                 number=form.room_number.data).first()
@@ -1073,7 +1077,8 @@ def member_request_edit(pre_member_id: int):
     return render_template("user/member_request_edit.html",
                            page_title="Mitgliedschaftsanfrage Bearbeiten",
                            form=form,
-                           prm=prm)
+                           prm=prm,
+                           is_adult=prm.is_adult)
 
 
 @bp.route("member-request/<int:pre_member_id>/delete", methods=['GET', 'POST'])

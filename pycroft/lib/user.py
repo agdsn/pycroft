@@ -942,8 +942,8 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
 
 @with_transaction
 def create_member_request(name: str, email: str, password: str, login: str,
-                          swdd_person_id: Optional[int], room: Optional[Room],
-                          move_in_date: Optional[date], previous_dorm: Optional[str]):
+                          birthdate: date, swdd_person_id: Optional[int], room: Optional[Room],
+                          move_in_date: Optional[date], previous_dorm: Optional[str],):
 
     check_new_user_data(login, email, name, swdd_person_id, room, move_in_date,
                         allow_existing=previous_dorm is not None)
@@ -958,7 +958,8 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
     mr = PreMember(name=name, email=email, swdd_person_id=swdd_person_id,
                    password=password,  room=room, login=login, move_in_date=move_in_date,
-                   registered_at=session.utcnow(), previous_dorm=previous_dorm)
+                   birthdate=birthdate, registered_at=session.utcnow(),
+                   previous_dorm=previous_dorm)
 
     session.session.add(mr)
     session.session.flush()
@@ -1011,10 +1012,11 @@ def confirm_mail_address(key):
         mr.email_confirmed = True
         mr.email_confirmation_key = None
 
-        if mr.swdd_person_id is not None and mr.room is not None and mr.previous_dorm is None:
+        if mr.swdd_person_id is not None and mr.room is not None and mr.previous_dorm is None \
+           and mr.is_adult:
             finish_member_request(mr, None)
         else:
-            user_send_mail(mr, MemberRequestPendingTemplate())
+            user_send_mail(mr, MemberRequestPendingTemplate(is_adult=mr.is_adult))
     elif mr is None:
         user.email_confirmed = True
         user.email_confirmation_key = None

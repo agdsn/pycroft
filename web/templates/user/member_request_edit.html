@@ -23,9 +23,18 @@
     </div>
     <div class="col-4">
       <i class="fa fa-laptop-house"></i> <b>Vorheriges Wohnheim: </b><br/>
-      {{ prm.previous_dorm }}
+      {% if prm.previous_dorm is none %}
+        -
+      {% else %}
+        <b class="text-danger">{{ prm.previous_dorm }}</b>
+      {% endif%}
     </div>
   </div>
+
+  {% if not is_adult %}
+    <hr/>
+    <b class="text-danger">Person ist nicht volljährig, Bestätigung eines Erziehungsberechtigten benötigt!</b>
+  {% endif %}
 
   <hr/>
 
