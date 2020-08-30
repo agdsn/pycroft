@@ -9,8 +9,19 @@ deine Mitgliedschaftsanfrage ist bei uns eingegangen.
 
 Deine Registrierungsnummer lautet: {{ user_id }}
 
+{%- if user.room is none or user.swdd_person_id is none %}
+
 Bitte schicke uns eine Kopie deines Mietvertrages als Antwort auf diese E-Mail,
-damit wir deinen Wohnort in dein Konto eintragen können.
+damit wir deine Registrierung abschließen können.
+{% endif %}
+
+{%- if not is_adult %}
+Da du noch nicht volljährig bist, benötigen wir noch eine schriftliche
+Einverständniserklärung eines Erziehungsberechtigten.
+Bitte lass uns diese als Scan oder in einen unserer Briefkästen zukommen.
+
+{% endif -%}
+
 Denk daran deine Registrierungsnummer mitzuschicken.
 
 Viele Grüße
@@ -24,9 +35,19 @@ we have received your membership request.
 
 Your registration id is: {{ user_id }}
 
+{%- if user.room is none or user.swdd_person_id is none %}
+
 Please send us a copy of your rental contract in response to this e-mail,
-so we can add your place of residence to your account.
-Remember to include your registration number.
+so we can complete your registration.
+{% endif %}
+
+{%- if not is_adult %}
+Since you are not yet of age, we still need a written declaration of consent
+from a parent or guardian.
+Please send this as a scan or in one of our mailboxes.
+{% endif -%}
+
+Remember to include your registration number in your response.
 
 Best Regards
 Your AG DSN
