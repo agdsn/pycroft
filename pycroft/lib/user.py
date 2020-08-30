@@ -840,13 +840,11 @@ def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = Fals
         else:
             raise ValueError("No contact email address available.")
 
-    sender = "{} <{}>".format(user.name, email)
-
     body = template.render(user=user,
                            user_id=encode_type2_user_id(user.id),
                            **kwargs)
 
-    mail = Mail(sender, template.subject, body)
+    mail = Mail(user.name, email, template.subject, body)
 
     send_mails_async.delay([mail])
 

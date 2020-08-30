@@ -94,7 +94,7 @@ def refresh_swdd_views():
     print("Refreshed swdd views")
 
 
-@app.task(ignore_result=True, rate_limit=1)
+@app.task(ignore_result=True, rate_limit=1, bind=True)
 def send_mails_async(self, mails: List[Mail]):
     success = False
     failures = len(mails)

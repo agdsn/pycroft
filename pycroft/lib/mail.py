@@ -2,6 +2,7 @@ import logging
 import os
 import smtplib
 import ssl
+from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
 from typing import List
@@ -28,15 +29,20 @@ template_env = jinja2.Environment(loader=template_loader)
 
 class Mail:
     to: str
+    to_name: str
+    to_address: str
     subject: str
     body: str
     reply_to: str
 
-    def __init__(self, to: str, subject: str, body: str, reply_to: str = None):
-        self.to = to
+    def __init__(self, to_name: str, to_address: str, subject: str, body: str, reply_to: str = None):
+        self.to_name = to_name
+        self.to_address = to_address
         self.subject = subject
         self.body = body
         self.reply_to = reply_to
+
+        self.to = "{} <{}>".format(to_name, to_address)
 
 
 class MailTemplate:
@@ -81,7 +87,7 @@ def compose_mail(mail: Mail) -> MIMEText:
 
     mime_mail['Message-Id'] = make_msgid()
     mime_mail['From'] = mail_from
-    mime_mail['To'] = mail.to
+    mime_mail['To'] = Header(mail.to)
     mime_mail['Subject'] = mail.subject
     mime_mail['Date'] = formatdate(localtime=True)
 
@@ -144,7 +150,7 @@ def send_mails(mails: List[Mail]) -> (bool, int):
         for mail in mails:
             try:
                 mime_mail = compose_mail(mail)
-                smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to,
+                smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
             except smtplib.SMTPException as e:
                 logger.critical('Unable to send mail', extra={
