@@ -1090,15 +1090,17 @@ def confirm_mail_address(key):
         if mr.swdd_person_id is not None and mr.room is not None and mr.previous_dorm is None \
            and mr.is_adult:
             finish_member_request(mr, None)
+            reg_result = 'account_created'
         else:
             user_send_mail(mr, MemberRequestPendingTemplate(is_adult=mr.is_adult))
+            reg_result = 'request_pending'
 
-        return 'user'
+        return 'user', reg_result
     elif mr is None:
         user.email_confirmed = True
         user.email_confirmation_key = None
 
-        return 'pre_member'
+        return 'pre_member', None
 
 
 def get_member_requests():
