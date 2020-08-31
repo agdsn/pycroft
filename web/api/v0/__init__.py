@@ -22,7 +22,7 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
     LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
     get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id, \
-    membership_begin_date
+    membership_begin_date, send_confirmation_email
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
@@ -568,6 +568,22 @@ api.add_resource(RegistrationResource,
 
 
 class EmailConfirmResource(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('user_id', required=True, type=int)
+        args = parser.parse_args()
+
+        user = User.q.get(args.user_id)
+
+        if user is None:
+            abort(404, message='User not found')
+
+        send_confirmation_email(user)
+
+        session.session.commit()
+
+        return jsonify({'success': True})
+
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('key', required=True, type=str)
