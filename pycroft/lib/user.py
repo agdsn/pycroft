@@ -564,6 +564,28 @@ def edit_birthdate(user, birthdate, processor):
     return user
 
 
+@with_transaction
+def edit_person_id(user: User, person_id: int, processor: User):
+    """
+    Changes the swdd_person_id of the user and creates a log entry.
+    :param user: The user object.
+    :param person_id: The new person_id.
+    :return: The changed user object.
+    """
+
+    if person_id == user.swdd_person_id:
+        # name wasn't changed, do nothing
+        return user
+
+    old_person_id = user.swdd_person_id
+    user.swdd_person_id = person_id
+    message = deferred_gettext(u"Changed tenant number from {} to {}.")
+    log_user_event(author=processor, user=user,
+                   message=message.format(str(old_person_id), str(person_id)).to_json())
+
+    return user
+
+
 def traffic_history(user_id, start, end):
     result = session.session.execute(
         select(['*']).select_from(
@@ -849,6 +871,10 @@ def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = Fals
     send_mails_async.delay([mail])
 
 
+def send_member_request_merged_email(user: PreMember):
+    user_send_mail(user, MemberRequestMergedTemplate())
+
+
 @with_transaction
 def send_confirmation_email(user: BaseUser):
     user.email_confirmed = False
@@ -891,18 +917,30 @@ class MoveInDateInvalidException(Exception):
         super().__init__("The move-in date is invalid (in the past or more than 6 months in the future)")
 
 
+def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75):
+    """
+    Get users with a 75% name match already exists in the room
+    """
+
+    users = User.q.filter_by(room=room).all()
+    users_match = []
+
+    for user in users:
+        ratio_is = SequenceMatcher(None, name, user.name).ratio()
+
+        if ratio_is > ratio:
+            users_match.append(user)
+
+    return users_match
+
+
 def check_similar_user_in_room(name: str, room: Room):
     """
     Raise an error if an user with a 75% name match already exists in the room
     """
 
-    users = User.q.filter_by(room=room).all()
-
-    for user in users:
-        ratio = SequenceMatcher(None, name, user.name).ratio()
-
-        if ratio > 0.75:
-            raise UserExistsInRoomException
+    if len(get_similar_users_in_room(name, room)) > 0:
+        raise UserExistsInRoomException
 
 
 def get_user_by_swdd_person_id(swdd_person_id: Optional[int]) -> User:
@@ -1045,3 +1083,17 @@ def delete_member_request(prm: PreMember, reason: Optional[str], processor: User
         user_send_mail(prm, MemberRequestDeniedTemplate(reason=reason), try_only=True)
 
     session.session.delete(prm)
+
+
+def get_possible_existing_users_for_pre_member(prm: PreMember):
+    user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
+    user_login = User.q.filter_by(login=prm.login).first()
+    user_email = User.q.filter_by(email=prm.email).first()
+
+    users_name = User.q.filter_by(name=prm.name).all()
+    users_similar = get_similar_users_in_room(prm.name, prm.room, 0.5)
+
+    users = [user for user in [user_swdd_person_id, user_login, user_email]
+             + users_name + users_similar if user is not None]
+
+    return users

@@ -22,7 +22,6 @@ from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
-from flask_wtf import FlaskForm
 from sqlalchemy import Text, distinct, and_
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import or_, func, cast
@@ -30,6 +29,7 @@ from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers import utc
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.facilities import get_room
@@ -39,11 +39,14 @@ from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
     finish_member_request, send_confirmation_email, \
-    delete_member_request, get_member_requests
+    delete_member_request, get_member_requests, \
+    get_possible_existing_users_for_pre_member, edit_email, edit_name, \
+    edit_person_id, send_member_request_merged_email
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.host import Host, IP, Interface
+from pycroft.model.swdd import Tenancy
 from pycroft.model.user import User, Membership, PropertyGroup, Property
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
@@ -57,7 +60,8 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserLogEntry, UserAddGroupMembership, UserMoveForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
-    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm
+    UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
+    PreMemberMergeForm, PreMemberMergeConfirmForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
@@ -1124,6 +1128,94 @@ def member_request_finish(pre_member_id: int):
         return redirect(url_for(".user_show", user_id=user.id))
     else:
         return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+
+
+@bp.route("member-request/<int:pre_member_id>/merge", methods=['GET', 'POST'])
+@access.require('user_change')
+def member_request_merge(pre_member_id: int):
+    prm = get_pre_member_or_404(pre_member_id)
+
+    form = PreMemberMergeForm()
+
+    possible_users = get_possible_existing_users_for_pre_member(prm)
+
+    if form.validate_on_submit():
+        return redirect(url_for(".member_request_merge_confirm",
+                                pre_member_id=pre_member_id,
+                                user_id=form.user_id.data))
+
+    return render_template("user/member_request_merge.html",
+                           page_title="Mitgliedschaftsanfrage zusammenführen",
+                           form=form,
+                           prm=prm,
+                           possible_users=possible_users)
+
+
+@bp.route("member-request/<int:pre_member_id>/merge/<int:user_id>", methods=['GET', 'POST'])
+@access.require('user_change')
+def member_request_merge_confirm(pre_member_id: int, user_id: int):
+    prm = get_pre_member_or_404(pre_member_id)
+    user = get_user_or_404(user_id)
+
+    form = PreMemberMergeConfirmForm()
+
+    form.merge_name.label.text = f"Name: {user.name} ➡ {prm.name}"
+    form.merge_email.label.text = f"E-Mail: {user.email} ➡ {prm.email}"
+    form.merge_person_id.label.text = f"Debitorennummer: {user.swdd_person_id} ➡ {prm.swdd_person_id}"
+
+    if prm.room is None or prm.room == user.room:
+        form.merge_room.render_kw = {'disabled': True}
+    else:
+        form.merge_room.label.text = "Zimmer: {} ➡ {} am {}".format(
+            user.room.short_name if user.room else None,
+            prm.room.short_name if prm.room else None,
+            prm.move_in_date.isoformat() if prm.move_in_date is not None else "Sofort")
+
+    if form.validate_on_submit():
+        if form.merge_name.data:
+            user = edit_name(user, prm.name, current_user)
+
+        if form.merge_email.data:
+            user = edit_email(user, prm.email, user.email_forwarded, current_user,
+                              is_confirmed=prm.email_confirmed)
+
+        if form.merge_person_id.data:
+            user = edit_person_id(user, prm.swdd_person_id, current_user)
+
+        if form.merge_room.data:
+            if prm.room:
+                move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+
+                if user.room:
+                    lib.user.move(user, prm.room.building_id, prm.room.level, prm.room.number,
+                                  processor=current_user, when=move_in_datetime)
+                else:
+                    lib.user.move_in(user, prm.room.building_id, prm.room.level, prm.room.number,
+                                  mac=None, processor=current_user, when=move_in_datetime)
+
+        log_user_event(deferred_gettext("Merged information from registration {}.").format(
+            encode_type2_user_id(prm.id)
+        ).to_json(), current_user, user)
+
+        send_member_request_merged_email(prm)
+
+        session.session.delete(prm)
+
+        session.session.commit()
+
+        return redirect(url_for(".user_show", user_id=user.id))
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.member_request_edit', pre_member_id=prm.id),
+        'submit_text': 'Zusammenführen',
+        'form_render_mode': 'basic',
+        'field_render_mode': 'basic',
+    }
+
+    return render_template("generic_form.html",
+                           page_title="Mitgliedschaftsanfrage zusammenführen",
+                           form_args=form_args)
 
 
 @bp.route('json/member-requests')

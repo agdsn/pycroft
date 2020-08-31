@@ -51,6 +51,10 @@
      href="{{ url_for('.member_request_finish', pre_member_id=prm.id) }}">
     <i class="fa fa-check"></i> Abschließen
   </a>
+  <a class="btn btn-info"
+     href="{{ url_for('.member_request_merge', pre_member_id=prm.id) }}">
+    <i class="fas fa-people-arrows"></i> Zusammenführen
+  </a>
   <a class="btn btn-danger"
      href="{{ url_for('.member_request_delete', pre_member_id=prm.id) }}">
     <i class="fa fa-trash"></i> Löschen

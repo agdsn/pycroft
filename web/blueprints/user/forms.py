@@ -111,7 +111,7 @@ class PreMemberEditForm(SelectRoomFormOptional):
     move_in_date = DateField("Einzugsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
 
-    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+    force = BooleanField("* Hinweise ignorieren", [Optional()])
 
     _order = ("name", "building", "level", "room_number")
 
@@ -119,6 +119,17 @@ class PreMemberEditForm(SelectRoomFormOptional):
 class PreMemberDenyForm(Form):
     reason = TextAreaField("Begründung", [Optional()], filters=[empty_to_none])
     inform_user = BooleanField("Nutzer per E-Mail informieren", [Optional()], default=True)
+
+
+class PreMemberMergeForm(Form):
+    user_id = UserIDField("User-ID", [DataRequired("Nutzer-ID erforderlich!")])
+
+
+class PreMemberMergeConfirmForm(Form):
+    merge_name = BooleanField("Name", [Optional()], default=False)
+    merge_email = BooleanField("E-Mail", [Optional()], default=True)
+    merge_person_id = BooleanField("Denitorennummer", [Optional()], default=True)
+    merge_room = BooleanField("Einzug/Umzug", [Optional()], default=False)
 
 
 class UserMoveInForm(UserMoveForm):
