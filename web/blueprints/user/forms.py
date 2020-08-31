@@ -66,6 +66,8 @@ class UserSearchForm(Form):
                                 query_factory=building_query,
                                 allow_blank=True,
                                 blank_text=u"<Wohnheim>")
+    email = TextField("E-Mail")
+    person_id = TextField("Debitorennummer")
 
 
 class UserResetPasswordForm(Form):

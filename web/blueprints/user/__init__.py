@@ -182,6 +182,8 @@ def json_search():
     ip_address = request.args.get('ip_address')
     property_group_id = request.args.get('property_group_id')
     building_id = request.args.get('building_id')
+    email = request.args.get('email')
+    person_id = request.args.get('person_id')
     query = request.args.get("query")
     result = User.q
 
@@ -192,6 +194,10 @@ def json_search():
             result = result.filter(User.id == int(user_id))
         except ValueError:
             return abort(400)
+    if email:
+        result = result.filter(User.email.ilike("%{}%".format(email)))
+    if person_id:
+        result = result.filter(User.swdd_person_id == person_id)
     if name:
         result = result.filter(User.name.ilike("%{}%".format(name)))
     if login:
@@ -250,10 +256,12 @@ def json_search():
         else:
             result = result.filter(or_(
                 func.lower(User.name).like(
-                    func.lower(u"%{0}%".format(query))),
+                    func.lower("%{0}%".format(query))),
                 func.lower(User.login).like(
-                    func.lower(u"%{0}%".format(query))),
-                cast(User.id, Text).like(u"{0}%".format(query))
+                    func.lower("%{0}%".format(query))),
+                cast(User.id, Text).like("{0}%".format(query)),
+                cast(User.swdd_person_id, Text) == query,
+                cast(User.email, Text) == query,
             ))
 
     return jsonify(items=[{
