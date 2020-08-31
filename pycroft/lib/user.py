@@ -1095,12 +1095,12 @@ def confirm_mail_address(key):
             user_send_mail(mr, MemberRequestPendingTemplate(is_adult=mr.is_adult))
             reg_result = 'request_pending'
 
-        return 'user', reg_result
+        return 'pre_member', reg_result
     elif mr is None:
         user.email_confirmed = True
         user.email_confirmation_key = None
 
-        return 'pre_member', None
+        return 'user', None
 
 
 def get_member_requests():
