@@ -534,10 +534,14 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
     old_email = user.email
     user.email = email
 
-    if not is_confirmed:
-        send_confirmation_email(user)
+    if email is not None:
+        if not is_confirmed:
+            send_confirmation_email(user)
+        else:
+            user.email_confirmed = True
+            user.email_confirmation_key = None
     else:
-        user.email_confirmed = True
+        user.email_confirmed = False
         user.email_confirmation_key = None
 
     message = deferred_gettext(u"Changed e-mail from {} to {}.")
