@@ -132,6 +132,8 @@ def generate_user_data(user):
             for h in user.hosts for i in h.interfaces
         ],
         mail=user.email,
+        mail_forwarded=user.email_fowarded,
+        mail_confirmed=user.email_confirmed,
         cache='cache_access' in props,
         # TODO: make `has_property` use `current_property`
         properties=list(props),
@@ -158,13 +160,14 @@ api.add_resource(UserResource, '/user/<int:user_id>')
 class ChangeEmailResource(Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('password', dest='password', required=True)
-        parser.add_argument('new_email', dest='new_email', required=False)
+        parser.add_argument('password', type=str, required=True)
+        parser.add_argument('new_email', type=str, required=True)
+        parser.add_argument('forwarded', type=bool, required=False, default=True)
         args = parser.parse_args()
 
         user = get_authenticated_user(user_id, args.password)
         try:
-            edit_email(user, args.new_email, user)
+            edit_email(user, args.new_email, args.forwarded, processor=user)
             session.session.commit()
         except IllegalEmailError as e:
             abort(400, message='Invalid email address.')
