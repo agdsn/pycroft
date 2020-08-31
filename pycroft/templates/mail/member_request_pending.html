@@ -22,7 +22,15 @@ Bitte lass uns diese als Scan oder in einen unserer Briefkästen zukommen.
 
 {% endif -%}
 
-Denk daran deine Registrierungsnummer mitzuschicken.
+{%- if user.previous_dorm is not none %}
+Da du in der Vergangenheit bereits ein Konto bei uns hattest, werden wir versuchen
+deine neuen Informationen mit dem alten Konto zu verknüpfen.
+Wir melden uns bei dir wenn der Vorgang abgeschlossen ist oder wir noch weitere
+Informationen benötigen.
+
+{% endif -%}
+
+Bitte gib bei E-Mails an uns immer deine Registrierungsnummer an.
 
 Viele Grüße
 Deine AG DSN
@@ -42,9 +50,20 @@ so we can complete your registration.
 {% endif %}
 
 {%- if not is_adult %}
+
 Since you are not yet of age, we still need a written declaration of consent
 from a parent or guardian.
 Please send this as a scan or in one of our mailboxes.
+
+{% endif -%}
+
+{%- if user.previous_dorm is not none %}
+
+Since you have already had an account with us in the past, we will try to
+link your new information to the old account.
+We will contact you when the process is complete or when we need more
+information from you.
+
 {% endif -%}
 
 Remember to include your registration number in your response.
