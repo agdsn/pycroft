@@ -82,6 +82,11 @@ class MemberRequestDeniedTemplate(MailTemplate):
     subject = "Mitgliedschaftsanfrage abgelehnt // Member request denied"
 
 
+class MemberRequestMergedTemplate(MailTemplate):
+    template = "member_request_merged.html"
+    subject = "Mitgliedskonto zusammengeführt // Member account merged"
+
+
 def compose_mail(mail: Mail) -> MIMEText:
     mime_mail = MIMEText(mail.body, _subtype='html', _charset='utf-8')
 
