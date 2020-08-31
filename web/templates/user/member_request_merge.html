@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% import "macros/forms.html" as forms %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      Mögliche Nutzer: <br/>
+
+      {% for user in possible_users %}
+        {{ user.id }} - <a href="{{ url_for('.user_show', user_id=user.id) }}">{{ user.name }}</a><br/>
+      {% endfor %}
+    </div>
+  </div>
+
+  <hr/>
+
+  {{ forms.simple_form(form, '', url_for('.member_request_edit', pre_member_id=prm.id), submit_text='Weiter'  ) }}
+{% endblock %}
+
+
