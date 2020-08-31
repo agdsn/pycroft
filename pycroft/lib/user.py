@@ -31,7 +31,8 @@ from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
     UserCreatedTemplate, \
-    UserMovedInTemplate, MemberRequestPendingTemplate, MemberRequestDeniedTemplate
+    UserMovedInTemplate, MemberRequestPendingTemplate, MemberRequestDeniedTemplate, \
+    MemberRequestMergedTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
@@ -504,13 +505,15 @@ def edit_name(user, name, processor):
 
 
 @with_transaction
-def edit_email(user: User, email: str, email_forwarded: bool, processor: User):
+def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
+               is_confirmed: bool = False):
     """
     Changes the email address of a user and creates a log entry.
     :param user: User object to change
     :param email: New email address, can be None
     :param email_forwarded: Boolean if emails should be forwarded
-    :param processor:User object of the processor, which issues the change
+    :param processor: User object of the processor, which issues the change
+    :param is_confirmed: If the email address is already confirmed
     :return:Changed user object
     """
 
@@ -531,7 +534,11 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User):
     old_email = user.email
     user.email = email
 
-    send_confirmation_email(user)
+    if not is_confirmed:
+        send_confirmation_email(user)
+    else:
+        user.email_confirmed = True
+        user.email_confirmation_key = None
 
     message = deferred_gettext(u"Changed e-mail from {} to {}.")
     log_user_event(author=processor, user=user,
