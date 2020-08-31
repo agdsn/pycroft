@@ -163,7 +163,7 @@ class ChangeEmailResource(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('password', type=str, required=True)
         parser.add_argument('new_email', type=str, required=True)
-        parser.add_argument('forwarded', type=bool, required=False, default=True)
+        parser.add_argument('forwarded', type=inputs.boolean, required=False, default=True)
         args = parser.parse_args()
 
         user = get_authenticated_user(user_id, args.password)
