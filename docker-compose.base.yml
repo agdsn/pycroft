@@ -38,7 +38,7 @@ services:
       HADES_BROKER_URI: amqp://celery:celery@mq:5672/
       HADES_RESULT_BACKEND_URI: rpc://celery:celery@mq:5672/
       SWDD_HASH_KEY: key
-      MAIL_CONFIRM_URL: "https://localhost/sipa/register/confirm/{}"
+      MAIL_CONFIRM_URL: "http://localhost/sipa/register/confirm/{}"
   dev:
     extends: dev-base
     volumes:
