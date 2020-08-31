@@ -177,7 +177,7 @@ def send_mails(mails: List[Mail]) -> (bool, int):
 
         raise RetryableException
     else:
-        logger.info('Tried to send mails (%i/%i failed)', failures, len(mails), extra={
+        logger.info('Tried to send mails (%i/%i succeeded)', len(mails) - failures, len(mails), extra={
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
         })
         return failures == 0, failures
