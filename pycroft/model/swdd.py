@@ -1,10 +1,20 @@
+from enum import Enum
+
 from sqlalchemy import text, select, Table, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import relationship, backref
 
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
-from sqlalchemy import event as sqla_event
+
+
+class TenancyStatus(Enum):
+    PROVISIONAL = 1
+    ESTABLISHED = 2
+    UNDO_PROVISIONAL = 3
+    UNDO_FINAL = 4
+    CANCELED = 5
+
 
 swdd_view_ddl = DDLManager()
 
@@ -59,7 +69,7 @@ class Tenancy(DeferredReflection, ModelBase):
     mietbeginn = Column(Date)
     mietende = Column(Date)
 
-    status_id = Column(Integer)
+    status_id = Column(Integer, nullable=False)
 
     room = relationship("Room", backref=backref("room", uselist=False),
                         viewonly=True, sync_backref=False)
@@ -70,6 +80,10 @@ class Tenancy(DeferredReflection, ModelBase):
     pre_member = relationship("PreMember", backref=backref("tenancies"), uselist=False,
                               primaryjoin="foreign(Tenancy.person_id) == remote(PreMember.swdd_person_id)",
                               viewonly=True, sync_backref=False)
+
+    @property
+    def status(self):
+        return TenancyStatus(self.status_id)
 
 
 swdd_import = View(

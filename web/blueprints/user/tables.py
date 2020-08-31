@@ -85,6 +85,13 @@ class RoomHistoryTable(BootstrapTable):
     ends_at = DateColumn("Bis")
 
 
+class TenancyTable(BootstrapTable):
+    room = LinkColumn("Zimmer")
+    begins_at = DateColumn("Von")
+    ends_at = DateColumn("Bis")
+    status = Column("Status")
+
+
 class PreMemberTable(BootstrapTable):
     prm_id = Column("ID")
     name = Column("Name", formatter="table.textWithBooleanFormatter")

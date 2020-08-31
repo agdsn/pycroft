@@ -65,7 +65,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
-                     PreMemberTable)
+                     PreMemberTable, TenancyTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -362,6 +362,9 @@ def user_show(user_id):
         room_history_table=RoomHistoryTable(
             data_url=url_for(".room_history_json", user_id=user.id)
         ),
+        tenancy_table=TenancyTable(
+            data_url=url_for(".tenancies_json", user_id=user.id)
+        ),
         tabs=[
             {
                 'id': 'hosts',
@@ -396,6 +399,12 @@ def user_show(user_id):
                 'id': 'room_history',
                 'name': 'Wohnorte',
                 'badge': len(user.room_history_entries)
+            },
+            {
+                'id': 'tenancies',
+                'name': 'Mietverträge',
+                'badge': len(user.tenancies),
+                'disabled': len(user.tenancies) == 0,
             },
         ]
     )
@@ -1018,6 +1027,21 @@ def room_history_json(user_id):
             'href': url_for('facilities.room_show', room_id=history_entry.room_id),
             'title': history_entry.room.short_name
         }} for history_entry in user.room_history_entries])
+
+
+@bp.route('<int:user_id>/json/tenancies')
+def tenancies_json(user_id):
+    user = get_user_or_404(user_id)
+
+    return jsonify(items=[{
+        'begins_at': date_format(tenancy.mietbeginn, formatter=date_filter),
+        'ends_at': date_format(tenancy.mietende, formatter=date_filter),
+        'room': {
+            'href': url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
+            'title': tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
+        },
+        'status': tenancy.status.name
+    } for tenancy in user.tenancies])
 
 
 @bp.route('member-requests')
