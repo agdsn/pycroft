@@ -132,7 +132,7 @@ def generate_user_data(user):
             for h in user.hosts for i in h.interfaces
         ],
         mail=user.email,
-        mail_forwarded=user.email_fowarded,
+        mail_forwarded=user.email_forwarded,
         mail_confirmed=user.email_confirmed,
         cache='cache_access' in props,
         # TODO: make `has_property` use `current_property`
