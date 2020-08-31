@@ -13,6 +13,7 @@ from pycroft.lib.finance import build_transactions_query, estimate_balance
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
+from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
     get_first_tenancy_with_room
 from pycroft.lib.task import cancel_task
@@ -328,7 +329,10 @@ class ActivateNetworkAccessResource(Resource):
             abort(400, message='Invalid mac address.')
         except IntegrityError:
             abort(400, message='Mac address is already in use.')
-        return "Network access has been activated."
+        except SubnetFullException:
+            abort(422, message='Subnet full.')
+
+        return jsonify({'success': True})
 
 
 api.add_resource(ActivateNetworkAccessResource,
