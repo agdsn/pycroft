@@ -7,6 +7,9 @@ from difflib import SequenceMatcher
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
+
+from pycroft.model.swdd import Tenancy
+from web.form.widgets import UserIDField
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
 
@@ -39,6 +42,14 @@ def validate_unique_login(form, field):
         raise ValidationError(u"Nutzerlogin schon vergeben!")
 
 
+def validate_person_id(form, field):
+    if User.q.filter_by(swdd_person_id=field.data).first():
+        raise ValidationError("Debitorennummer wird bereits verwendet!")
+    #
+    #if not Tenancy.q.filter_by(person_id=field.data).first():
+    #    raise ValidationError("Keine Mietverträge zu dieser Debitorennummer vorhanden!")
+
+
 class UserSearchForm(Form):
     id = TextField(u"Nutzer-ID")
     name = TextField(u"Name")
@@ -67,6 +78,8 @@ class UserEditForm(Form):
                       [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
     email_forwarded = BooleanField("E-Mail Weiterleitung", default=True)
     birthdate = DateField(u"Geburtsdatum", [Optional()])
+    person_id = IntegerField("Debitorennummer", [Optional(), validate_person_id],
+                             filters=[empty_to_none])
 
 
 class UserMoveForm(SelectRoomForm):

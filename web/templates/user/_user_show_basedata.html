@@ -53,7 +53,8 @@
           </div>
           <div class="card-value user-login">
             <span title="Benutzername" class="fa fa-terminal"></span>
-            <span class="user-login-value">{{ user.login }}</span></div>
+            <span class="user-login-value">{{ user.login }}</span>
+          </div>
           <div class="card-value user-mail">
             <span class="fa fa-envelope"></span>
             <span>{{ user.email }}</span>
@@ -67,6 +68,14 @@
               <span data-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse Bestätigt"
                     class="fa fa-check-square text-success"></span>
             {% endif %}
+          </div>
+          <div class="card-value user-person-id">
+            {% if user.swdd_person_id is not none %}
+              <span title="Debitorennummer" class="fas fa-address-card text-success"></span>
+            {% else %}
+              <span title="Debitorennummer" class="far fa-address-card text-danger"></span>
+            {% endif %}
+            <span class="user-person-id-value">{{ user.swdd_person_id }}</span>
           </div>
         </section>
 
@@ -170,7 +179,7 @@
             <span class="badge badge-pill badge-light"><span
                 class="fa fa-asterisk"></span><span
                 class="glyphicon"></span></span>
-            <br/>Passwort zurücks.
+            <br/>Passwort Reset
           </a>
         </div>
         <div class="col-md-12 action-button">

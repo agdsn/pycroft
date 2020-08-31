@@ -801,13 +801,7 @@ def edit_membership(user_id, membership_id):
 @access.require('user_change')
 def edit_user(user_id):
     user = get_user_or_404(user_id)
-    form = UserEditForm()
-
-    if not form.is_submitted():
-        form.name.data = user.name
-        form.email.data = user.email
-        form.email_forwarded.data = user.email_forwarded
-        form.birthdate.data = user.birthdate
+    form = UserEditForm(obj=user, person_id=user.swdd_person_id)
 
     if form.validate_on_submit():
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
@@ -815,9 +809,18 @@ def edit_user(user_id):
                                           form.email_forwarded.data, current_user)
         edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data,
                                               current_user)
+
+        if edited_user.swdd_person_id != form.person_id.data:
+            edited_user = lib.user.edit_person_id(edited_user, form.person_id.data,
+                                                  current_user)
+        if edited_user.swdd_person_id is not None:
+            if not Tenancy.q.filter_by(person_id=edited_user.swdd_person_id).first():
+                flash("Zu der angegebenen Debitorennummer konnten keine Mietverträge gefunden "
+                      "werden!", "warning")
+
         session.session.commit()
 
-        flash(u'Änderungen gespeichert', 'success')
+        flash('Änderungen gespeichert', 'success')
         return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_edit.html', user_id=user_id,
@@ -1055,19 +1058,31 @@ def member_request_edit(pre_member_id: int):
         prm.email = form.email.data
         prm.move_in_date = form.move_in_date.data
         prm.birthdate = form.birthdate.data
-        prm.swdd_person_id = form.person_id.data
+
+        if prm.swdd_person_id != form.person_id.data:
+            if form.person_id.data is None:
+                prm.swdd_person_id = form.person_id.data
+            else:
+                tenancy = Tenancy.q.filter_by(person_id=form.person_id.data).first()
+
+                if tenancy is not None:
+                    prm.swdd_person_id = form.person_id.data
+                else:
+                    form.person_id.errors.append("Zu der angegebenen Debitorennummer konnten keine Verträge gefunden werden!",)
 
         room = Room.q.filter_by(building=form.building.data, level=form.level.data,
                                 number=form.room_number.data).first()
 
         prm.room = room
 
+        session.session.commit()
+
         if old_email != prm.email:
             send_confirmation_email(prm)
 
             flash("Es wurde eine neue Bestätigungsmail verschickt!", "warning")
 
-        session.session.commit()
+            session.session.commit()
 
         flash("Änderungen wurden gespeichert.", "success")
 
