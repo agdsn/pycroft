@@ -858,6 +858,34 @@ def membership_end_date(user):
     return end_date
 
 
+def membership_beginning_task(user):
+    """
+    :return: Next task that will end the membership of the user
+    """
+
+    task = (UserTask.q
+            .filter_by(user_id=user.id,
+                       status=TaskStatus.OPEN,
+                       type=TaskType.USER_MOVE_IN)
+            .filter(UserTask.parameters_json['begin_membership'].cast(Boolean) == True)
+            .order_by(UserTask.due.asc())).first()
+
+    return task
+
+
+def membership_begin_date(user):
+    """
+    :return: The due date of the task that will begin a membership; None if not
+             existent
+    """
+
+    begin_task = membership_beginning_task(user)
+
+    end_date = None if begin_task is None else begin_task.due.date()
+
+    return end_date
+
+
 def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = False, **kwargs):
     if user.email:
         email = user.email

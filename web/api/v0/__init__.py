@@ -21,7 +21,8 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     move_out, membership_ending_task, reset_wifi_password, create_member_request, \
     NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
     LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
-    get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id
+    get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id, \
+    membership_begin_date
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
@@ -109,6 +110,9 @@ def generate_user_data(user):
     except ValueError:
         wifi_password = None
 
+    med = membership_end_date(user)
+    mbd = membership_begin_date(user)
+
     return jsonify(
         id=user.id,
         user_id=encode_type2_user_id(user.id),
@@ -136,7 +140,8 @@ def generate_user_data(user):
         finance_balance=-user.account.balance,
         finance_history=finance_history,
         last_finance_update=last_finance_update,
-        membership_end_date=membership_end_date(user),
+        membership_end_date=med.isoformat() if med else None,
+        membership_begin_date=mbd.isoformat() if mbd else None,
         wifi_password=wifi_password,
     )
 
