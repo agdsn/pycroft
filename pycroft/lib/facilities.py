@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Optional
 
 from sqlalchemy import func, and_, distinct
 from sqlalchemy.orm import aliased, contains_eager, joinedload
@@ -60,14 +61,18 @@ def get_overcrowded_rooms(building_id=None):
 
 
 @with_transaction
-def create_room(building, level, number, processor, inhabitable=True):
+def create_room(building, level, number, processor, inhabitable=True, vo_suchname: Optional[str] = None):
     if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
-        raise RoomAlreadyExistsException()
+        raise RoomAlreadyExistsException
+
+    if Room.q.filter_by(swdd_vo_suchname=vo_suchname).first() is not None:
+        raise  RoomAlreadyExistsException
 
     room = Room(number=number,
                 level=level,
                 inhabitable=inhabitable,
-                building=building)
+                building=building,
+                swdd_vo_suchname=vo_suchname)
 
     log_room_event("Room created.", processor, room)
 

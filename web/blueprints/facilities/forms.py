@@ -70,6 +70,7 @@ class CreateRoomForm(Form):
                                 query_factory=building_query)
     level = IntegerField("Etage")
     number = TextField("Nummer")
+    vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
 
 
@@ -77,8 +78,8 @@ class EditRoomForm(Form):
     building = static(TextField("Wohnheim"))
     level = static(IntegerField("Etage"))
     number = TextField("Nummer")
-    inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
     vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
+    inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
 
 
 class BuildingForm(Form):
