@@ -13,7 +13,7 @@ from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, 
 
 from pycroft.helpers.facilities import sort_buildings
 from wtforms_widgets.fields.custom import LazyLoadSelectField, static
-from wtforms_widgets.fields.filters import to_uppercase
+from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 from wtforms_widgets.fields.validators import OptionalIf
 
 
@@ -78,6 +78,7 @@ class EditRoomForm(Form):
     level = static(IntegerField("Etage"))
     number = TextField("Nummer")
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
+    vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
 
 
 class BuildingForm(Form):

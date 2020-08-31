@@ -39,6 +39,8 @@
                     <dd>{{ misc.yes_no_formatter(room.inhabitable) }}</dd>
                     <dt>Postanschrift</dt>
                     <dd>{{ room.address }}</dd>
+                    <dt>VO Nummer</dt>
+                    <dd>{{ room.swdd_vo_suchname }}</dd>
                 </dl>
             </div>
             {% if room.inhabitable -%}

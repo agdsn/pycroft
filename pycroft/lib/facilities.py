@@ -75,7 +75,7 @@ def create_room(building, level, number, processor, inhabitable=True):
 
 
 @with_transaction
-def edit_room(room, number, inhabitable, processor):
+def edit_room(room, number, inhabitable, vo_suchname: str, processor):
     if room.number != number:
         if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
             raise RoomAlreadyExistsException()
@@ -88,6 +88,12 @@ def edit_room(room, number, inhabitable, processor):
         log_room_event("Changed inhabitable status to {}.".format(str(inhabitable)), processor, room)
 
         room.inhabitable = inhabitable
+
+    if room.swdd_vo_suchname != vo_suchname:
+        log_room_event("Changed VO id from {} to {}.".format(room.swdd_vo_suchname,
+                                                             vo_suchname), processor, room)
+
+        room.swdd_vo_suchname = vo_suchname
 
     return room
 

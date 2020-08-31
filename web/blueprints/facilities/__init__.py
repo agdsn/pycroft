@@ -162,11 +162,12 @@ def room_edit(room_id):
     form = EditRoomForm(building=room.building.short_name,
                         level=room.level,
                         number=room.number,
-                        inhabitable=room.inhabitable)
+                        inhabitable=room.inhabitable,
+                        vo_suchname=room.swdd_vo_suchname)
 
     if form.validate_on_submit():
         try:
-            edit_room(room, form.number.data, form.inhabitable.data, current_user)
+            edit_room(room, form.number.data, form.inhabitable.data, form.vo_suchname.data, current_user)
 
             session.session.commit()
 
