@@ -821,6 +821,8 @@ def edit_user(user_id):
     form = UserEditForm(obj=user, person_id=user.swdd_person_id)
 
     if form.validate_on_submit():
+        success = True
+
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
         edited_user = lib.user.edit_email(edited_user, form.email.data,
                                           form.email_forwarded.data, current_user)
@@ -828,17 +830,23 @@ def edit_user(user_id):
                                               current_user)
 
         if edited_user.swdd_person_id != form.person_id.data:
-            edited_user = lib.user.edit_person_id(edited_user, form.person_id.data,
-                                                  current_user)
+            if User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
+                form.person_id.errors.append("Diese Debitorennummer wird bereits verwendet!")
+                success = False
+            else:
+                edited_user = lib.user.edit_person_id(edited_user, form.person_id.data,
+                                                      current_user)
+
         if edited_user.swdd_person_id is not None:
             if not Tenancy.q.filter_by(person_id=edited_user.swdd_person_id).first():
                 flash("Zu der angegebenen Debitorennummer konnten keine Mietverträge gefunden "
                       "werden!", "warning")
 
-        session.session.commit()
+        if success:
+            session.session.commit()
 
-        flash('Änderungen gespeichert', 'success')
-        return redirect(url_for('.user_show', user_id=edited_user.id))
+            flash('Änderungen gespeichert', 'success')
+            return redirect(url_for('.user_show', user_id=edited_user.id))
 
     return render_template('user/user_edit.html', user_id=user_id,
         form=form)
