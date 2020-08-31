@@ -574,13 +574,13 @@ class EmailConfirmResource(Resource):
         args = parser.parse_args()
 
         try:
-            confirm_mail_address(args.key)
+            user_type = confirm_mail_address(args.key)
         except ValueError:
             abort(400, message="Bad key", code="bad_key")
 
         session.session.commit()
 
-        return
+        return jsonify({'type': user_type})
 
 
 api.add_resource(EmailConfirmResource,  '/register/confirm')

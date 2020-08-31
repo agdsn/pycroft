@@ -1088,9 +1088,13 @@ def confirm_mail_address(key):
             finish_member_request(mr, None)
         else:
             user_send_mail(mr, MemberRequestPendingTemplate(is_adult=mr.is_adult))
+
+        return 'user'
     elif mr is None:
         user.email_confirmed = True
         user.email_confirmation_key = None
+
+        return 'pre_member'
 
 
 def get_member_requests():
