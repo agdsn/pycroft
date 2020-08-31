@@ -568,6 +568,7 @@ class PreMember(IntegerIdModel, BaseUser):
     move_in_date = Column(Date, nullable=True)
     previous_dorm = Column(String, nullable=True)
     birthdate = Column(Date, nullable=False)
+    passwd_hash = Column(String, nullable=False)
 
     room = relationship("Room")
 

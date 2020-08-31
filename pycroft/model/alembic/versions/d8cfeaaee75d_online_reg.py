@@ -24,7 +24,7 @@ def upgrade():
                     sa.Column('login', sa.String(length=40), nullable=False),
                     sa.Column('name', sa.String(length=255), nullable=False),
                     sa.Column('registered_at', pycroft.model.types.DateTimeTz(), nullable=False),
-                    sa.Column('passwd_hash', sa.String(), nullable=True),
+                    sa.Column('passwd_hash', sa.String(), nullable=False),
                     sa.Column('email', sa.String(length=255), nullable=True),
                     sa.Column('email_confirmed', sa.Boolean(), server_default='False',
                               nullable=False),
