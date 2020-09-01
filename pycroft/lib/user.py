@@ -1065,6 +1065,9 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
     move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None,
             processor if processor is not None else user, when=move_in_datetime)
 
+    message = deferred_gettext("Created from registration {}.").format(prm.id).to_json()
+    log_user_event(message, processor, user)
+
     session.session.delete(prm)
 
     return user
