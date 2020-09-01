@@ -280,10 +280,12 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
 
+    processor = processor if processor is not None else new_user
+
     for group in groups:
         make_member_of(new_user, group, processor, closed(now, None))
 
-    log_user_event(author=processor if processor is not None else new_user,
+    log_user_event(author=processor,
                    message=deferred_gettext(u"User created.").to_json(),
                    user=new_user)
 
