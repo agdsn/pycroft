@@ -47,7 +47,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.host import Host, IP, Interface
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, PropertyGroup, Property
+from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMember
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -81,7 +81,10 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 def overview():
     uquery = lambda: session.session.query(User)
 
-    entries = [{"title": "Nutzer in Datenbank",
+    entries = [{"title": "Mitgliedschaftsanfragen",
+                "href": url_for('.member_requests'),
+                "number": len(PreMember.q.all())},
+               {"title": "Nutzer in Datenbank",
                 "href": None,
                 "number": uquery().count()},
                {"title": "Mitglieder",
@@ -98,7 +101,7 @@ def overview():
                            .having(func.sum(Split.amount) > 0)
                            .count()},
                {"title": "Nicht bezahlt (Mitglieder)",
-                "href": "#",
+                "href": None,
                 "number": uquery().join(Membership).filter(
                                 Membership.group == config.member_group,
                                 Membership.active())
