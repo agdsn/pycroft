@@ -19,11 +19,12 @@ smtp_port = os.environ.get('PYCROFT_SMTP_PORT', 465)
 smtp_user = os.environ.get('PYCROFT_SMTP_USER')
 smtp_password = os.environ.get('PYCROFT_SMTP_PASSWORD')
 smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
+template_path = os.environ.get('PYCROFT_TEMPLATE_PATH', 'pycroft/templates')
 
 logger = logging.getLogger('mail')
 logger.setLevel(logging.INFO)
 
-template_loader = jinja2.FileSystemLoader(searchpath="pycroft/templates/mail/")
+template_loader = jinja2.FileSystemLoader(searchpath=f'{template_path}/mail')
 template_env = jinja2.Environment(loader=template_loader)
 
 
