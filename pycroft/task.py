@@ -123,7 +123,7 @@ app.conf.update(
         },
         'refresh-swdd-views':{
             'task': 'pycroft.task.refresh_swdd_views',
-            'schedule': timedelta(minutes=10) # crontab(minute=0, hour=0)
+            'schedule': timedelta(hours=3)
         }
     },
     CELERY_ENABLE_UTC=True,
