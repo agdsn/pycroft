@@ -267,6 +267,8 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
         address=address
     )
 
+    processor = processor if processor is not None else new_user
+
     if passwd_hash:
         new_user.passwd_hash = passwd_hash
         plain_password = None
@@ -279,8 +281,6 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
         session.session.add(account)
     new_user.account.name = deferred_gettext(u"User {id}").format(
         id=new_user.id).to_json()
-
-    processor = processor if processor is not None else new_user
 
     for group in groups:
         make_member_of(new_user, group, processor, closed(now, None))
@@ -1058,6 +1058,8 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
 
     user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[],
                           processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
+
+    processor = processor if processor is not None else user
 
     user.swdd_person_id = prm.swdd_person_id
     user.email_confirmed = prm.email_confirmed
