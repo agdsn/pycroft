@@ -830,7 +830,8 @@ def edit_user(user_id):
                                               current_user)
 
         if edited_user.swdd_person_id != form.person_id.data:
-            if User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
+            if form.person_id.data is not None and \
+               User.q.filter_by(swdd_person_id=form.person_id.data).filter(User.id != user.id).first():
                 form.person_id.errors.append("Diese Debitorennummer wird bereits verwendet!")
                 success = False
             else:
