@@ -12,25 +12,20 @@ class DBTask(Task):
     Base class for tasks which use the database.
     """
 
-    connection = None
+    engine = None
 
-    def __call__(self, *args, **kwargs):
-        connection_string = get_connection_string()
+    def __init__(self, *args, **kwargs):
+        if self.engine is None:
+            print("Created engine")
 
-        self.connection, self.engine = try_create_connection(connection_string,
-                                                             5,
-                                                             logger=logging.getLogger("tasks"),
-                                                             echo=False)
+            connection_string = get_connection_string()
 
-        set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
+            _, self.engine = try_create_connection(connection_string,
+                                                   5,
+                                                   logger=logging.getLogger("tasks"),
+                                                   echo=False)
 
-        return self.run(*args, **kwargs)
+            set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
 
     def run(self, *args, **kwargs):
         pass
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo=None):
-        session.close()
-
-        if self.connection is not None:
-            self.connection.close()
