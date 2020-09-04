@@ -28,7 +28,7 @@ class DBTask(Task):
             set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        session.rollback()
+        session.close()
 
     def run(self, *args, **kwargs):
         pass
