@@ -49,7 +49,7 @@ class Mail:
         self.body = body
         self.reply_to = reply_to
 
-        self.to = "{} <{}>".format(to_name, to_address)
+        self.to = to_address  # "{} <{}>".format(to_name, to_address)
 
 
 class MailTemplate:
