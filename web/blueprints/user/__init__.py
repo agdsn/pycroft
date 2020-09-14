@@ -1256,7 +1256,7 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
             encode_type2_user_id(prm.id)
         ).to_json(), current_user, user)
 
-        send_member_request_merged_email(prm)
+        send_member_request_merged_email(prm, user)
 
         session.session.delete(prm)
 
