@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from celery import Task
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -22,14 +23,19 @@ class DBTask(Task):
         session.close()
 
     def __init__(self):
-        connection_string = get_connection_string()
+        in_celery = sys.argv and sys.argv[0].endswith('celery') \
+                                   and 'worker' in sys.argv
 
-        self.connection, self.engine = try_create_connection(connection_string,
-                                                             5,
-                                                             logger=logging.getLogger("tasks"),
-                                                             echo=False)
+        if in_celery:
+            connection_string = get_connection_string()
 
-        set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
+            self.connection, self.engine = try_create_connection(connection_string,
+                                                                 5,
+                                                                 logger=logging.getLogger("tasks"),
+                                                                 echo=False)
+
+            set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
 
     def __del__(self):
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
