@@ -1023,7 +1023,6 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
 def create_member_request(name: str, email: str, password: str, login: str,
                           birthdate: date, swdd_person_id: Optional[int], room: Optional[Room],
                           move_in_date: Optional[date], previous_dorm: Optional[str],):
-
     check_new_user_data(login, email, name, swdd_person_id, room, move_in_date,
                         allow_existing=previous_dorm is not None)
 
@@ -1054,6 +1053,9 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
                           ignore_similar_name: bool = False):
     if prm.room is None:
         raise ValueError("Room is None")
+
+    if prm.move_in_date is not None and prm.move_in_date < session.utcnow().date():
+        prm.move_in_date = session.utcnow().date()
 
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
                         prm.move_in_date, ignore_similar_name)
