@@ -49,6 +49,7 @@ class IllegalEmailError(ValueError):
 
 
 class BaseUser:
+    id = Column(Integer, primary_key=True)
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTimeTz, nullable=False)
@@ -154,7 +155,7 @@ class BaseUser:
         self.passwd_hash = hash_password(value)
 
 
-class User(IntegerIdModel, BaseUser, UserMixin):
+class User(ModelBase, BaseUser, UserMixin):
     wifi_passwd_hash = Column(String)
 
     # one to one from User to Account
@@ -563,7 +564,7 @@ manager.add_constraint_trigger(
 )
 
 
-class PreMember(IntegerIdModel, BaseUser):
+class PreMember(ModelBase, BaseUser):
     login = Column(String(40), nullable=False, unique=False)
     move_in_date = Column(Date, nullable=True)
     previous_dorm = Column(String, nullable=True)
