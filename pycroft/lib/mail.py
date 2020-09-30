@@ -165,7 +165,7 @@ def send_mails(mails: List[Mail]) -> (bool, int):
                 smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
             except smtplib.SMTPException as e:
-                logger.critical('Unable to send mail', extra={
+                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to}": {str(e)}', extra={
                     'trace': True,
                     'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
                     'data': {'exception_arguments': e.args, 'to': mail.to, 'subject': mail.subject}
