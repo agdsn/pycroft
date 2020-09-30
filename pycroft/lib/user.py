@@ -731,8 +731,6 @@ def move_out(user, comment, processor, when, end_membership=True):
                 if user.member_of(group):
                     remove_member_of(user, group, processor, closedopen(when, None))
 
-            user.birthdate = None
-
         deleted_interfaces = list()
         num_hosts = 0
         for num_hosts, h in enumerate(user.hosts, 1):
@@ -1060,7 +1058,7 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
     check_new_user_data(prm.login, prm.email, prm.name, prm.swdd_person_id, prm.room,
                         prm.move_in_date, ignore_similar_name)
 
-    user, _ = create_user(prm.name, prm.login, prm.email, None, groups=[],
+    user, _ = create_user(prm.name, prm.login, prm.email, prm.birthdate, groups=[],
                           processor=processor, address=prm.room.address, passwd_hash=prm.passwd_hash)
 
     processor = processor if processor is not None else user
