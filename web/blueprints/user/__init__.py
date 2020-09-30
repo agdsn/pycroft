@@ -1291,6 +1291,7 @@ def member_requests_json():
         'email': {'text': prm.email, 'bool': prm.email_confirmed},
         'email_confirmed': prm.email_confirmed,
         'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
+        'action_required': prm.room is not None,
         'actions': [{'href': url_for(".member_request_edit",
                                      pre_member_id=prm.id),
                      'title': 'Bearbeiten',
@@ -1302,7 +1303,7 @@ def member_requests_json():
                      'title': 'Löschen',
                      'icon': 'fa-trash',
                      'btn_class': 'btn-danger btn-sm'},
-                    ]
+                    ],
     } for prm in prms])
 
 

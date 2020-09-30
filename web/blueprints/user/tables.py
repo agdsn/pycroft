@@ -99,3 +99,8 @@ class PreMemberTable(BootstrapTable):
     email = Column("E-Mail Adresse", formatter="table.textWithBooleanFormatter")
     move_in_date = DateColumn("Einzug am")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change, width=1)
+
+    class Meta:
+        table_args = {
+            'data-row-style': 'table.membershipRequestRowFormatter',
+        }

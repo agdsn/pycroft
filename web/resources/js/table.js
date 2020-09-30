@@ -497,6 +497,22 @@ export function taskRowFormatter(row){
 }
 
 /*
+    rowStyle for the membership requests
+*/
+export function membershipRequestRowFormatter(row){
+    let cssclass = "";
+
+    if(row.action_required){
+        cssclass = "table-warning";
+    }
+
+    return {
+       classes: cssclass
+    }
+}
+
+
+/*
     detailFormatter for the unmatched bank_account_activities table
  */
 
