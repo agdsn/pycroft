@@ -963,6 +963,9 @@ def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75):
     Get users with a 75% name match already exists in the room
     """
 
+    if room is None:
+        return []
+
     users = User.q.filter_by(room=room).all()
     users_match = []
 
@@ -1184,7 +1187,7 @@ def get_possible_existing_users_for_pre_member(prm: PreMember):
     users_name = User.q.filter_by(name=prm.name).all()
     users_similar = get_similar_users_in_room(prm.name, prm.room, 0.5)
 
-    users = [user for user in [user_swdd_person_id, user_login, user_email]
-             + users_name + users_similar if user is not None]
+    users = set([user for user in [user_swdd_person_id, user_login, user_email]
+             + users_name + users_similar if user is not None])
 
     return users
