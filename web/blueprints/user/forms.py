@@ -135,8 +135,9 @@ class PreMemberMergeForm(Form):
 class PreMemberMergeConfirmForm(Form):
     merge_name = BooleanField("Name", [Optional()], default=False)
     merge_email = BooleanField("E-Mail", [Optional()], default=True)
-    merge_person_id = BooleanField("Denitorennummer", [Optional()], default=True)
+    merge_person_id = BooleanField("Debitorennummer", [Optional()], default=True)
     merge_room = BooleanField("Einzug/Umzug", [Optional()], default=False)
+    merge_password = BooleanField("Passwort aus der Registrierung", [Optional()], default=False)
 
 
 class UserMoveInForm(UserMoveForm):

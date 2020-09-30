@@ -47,7 +47,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.host import Host, IP, Interface
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMember
+from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMember, BaseUser
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -1231,36 +1231,14 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
             prm.move_in_date.isoformat() if prm.move_in_date is not None else "Sofort")
 
     if form.validate_on_submit():
-        if form.merge_name.data:
-            user = edit_name(user, prm.name, current_user)
-
-        if form.merge_email.data:
-            user = edit_email(user, prm.email, user.email_forwarded, current_user,
-                              is_confirmed=prm.email_confirmed)
-
-        if form.merge_person_id.data:
-            user = edit_person_id(user, prm.swdd_person_id, current_user)
-
-        if form.merge_room.data:
-            if prm.room:
-                move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
-
-                if user.room:
-                    lib.user.move(user, prm.room.building_id, prm.room.level, prm.room.number,
-                                  processor=current_user, when=move_in_datetime)
-                else:
-                    lib.user.move_in(user, prm.room.building_id, prm.room.level, prm.room.number,
-                                  mac=None, processor=current_user, when=move_in_datetime)
-
-        log_user_event(deferred_gettext("Merged information from registration {}.").format(
-            encode_type2_user_id(prm.id)
-        ).to_json(), current_user, user)
-
-        send_member_request_merged_email(prm, user)
-
-        session.session.delete(prm)
+        lib.user.merge_member_request(user, prm, form.merge_name.data, form.merge_email.data,
+                                      form.merge_person_id.data, form.merge_room.data,
+                                      form.merge_password.data,
+                                      processor=current_user)
 
         session.session.commit()
+
+        send_member_request_merged_email(prm, user)
 
         return redirect(url_for(".user_show", user_id=user.id))
 

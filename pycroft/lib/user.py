@@ -1139,6 +1139,43 @@ def delete_member_request(prm: PreMember, reason: Optional[str], processor: User
     session.session.delete(prm)
 
 
+@with_transaction
+def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_email: bool, merge_person_id: bool,
+                         merge_room: bool, merge_password: bool, processor: User):
+    if merge_name:
+        user = edit_name(user, prm.name, processor)
+
+    if merge_email:
+        user = edit_email(user, prm.email, user.email_forwarded, processor,
+                          is_confirmed=prm.email_confirmed)
+
+    if merge_person_id:
+        user = edit_person_id(user, prm.swdd_person_id, processor)
+
+    if merge_room:
+        if prm.room:
+            move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+
+            if user.room:
+                move(user, prm.room.building_id, prm.room.level, prm.room.number,
+                     processor=processor, when=move_in_datetime)
+            else:
+                move_in(user, prm.room.building_id, prm.room.level, prm.room.number,
+                        mac=None, processor=processor, when=move_in_datetime)
+
+    log_msg = "Merged information from registration {}."
+
+    if merge_password:
+        user.passwd_hash = prm.passwd_hash
+
+        log_msg += " Password merged."
+
+    log_user_event(deferred_gettext(log_msg).format(encode_type2_user_id(prm.id)).to_json(),
+                   processor, user)
+
+    session.session.delete(prm)
+
+
 def get_possible_existing_users_for_pre_member(prm: PreMember):
     user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
     user_login = User.q.filter_by(login=prm.login).first()
