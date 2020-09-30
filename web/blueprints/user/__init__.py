@@ -1304,3 +1304,30 @@ def member_requests_json():
                      'btn_class': 'btn-danger btn-sm'},
                     ]
     } for prm in prms])
+
+
+@bp.route('/resend-confirmation-mail')
+def resend_confirmation_mail():
+    user_id = request.args.get('user_id', type=int)
+    is_prm = request.args.get('is_prm', type=bool, default=False)
+
+    user: BaseUser = None
+
+    if is_prm:
+        user = get_pre_member_or_404(user_id)
+        return_url = url_for(".member_request_edit", pre_member_id=user.id)
+    else:
+        user = get_user_or_404(user_id)
+        return_url = url_for(".user_show", user_id=user.id)
+
+    if user.email_confirmed:
+        flash("E-Mail Adresse bereits bestätigt!", "error")
+        return redirect(return_url)
+    else:
+        send_confirmation_email(user)
+
+        flash("Bestätigungsmail erneut versendet.", "success")
+
+        session.session.commit()
+
+        return redirect(return_url)

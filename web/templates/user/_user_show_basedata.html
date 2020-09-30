@@ -65,8 +65,17 @@
                     class="fa fa-share-square text-info"></span>
             {% endif %}
             {% if user.email_confirmed %}
-              <span data-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse Bestätigt"
+              <span data-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse bestätigt"
                     class="fa fa-check-square text-success"></span>
+            {% else %}
+              <span data-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse nicht bestätigt"
+                    class="fa fa-times-circle text-danger"></span>
+
+                  <a href="{{ url_for(".resend_confirmation_mail", user_id=user.id) }}">
+                    <span data-toggle="tooltip" data-placement="bottom" title="Bestätigungsmail erneut senden">
+                      <i class="fas fa-sync"></i>
+                    </span>
+                  </a>
             {% endif %}
           </div>
           <div class="card-value user-person-id">

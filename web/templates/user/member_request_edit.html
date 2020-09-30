@@ -9,6 +9,12 @@
       {% else %}
         <i class="fa fa-times-circle text-danger"></i> E-Mail Adresse nicht
         bestätigt
+
+        <a href="{{ url_for(".resend_confirmation_mail", user_id=prm.id, is_prm=True) }}">
+          <span data-toggle="tooltip" data-placement="bottom" title="Bestätigungsmail erneut senden">
+            <i class="fas fa-sync"></i>
+          </span>
+        </a>
       {% endif %}
       <br/>
       {% if prm.swdd_person_id is not none %}
