@@ -291,7 +291,7 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
 
     user_send_mail(new_user, UserCreatedTemplate(), True)
 
-    if send_confirm_mail:
+    if email is not None and send_confirm_mail:
         send_confirmation_email(new_user)
 
     return new_user, plain_password
