@@ -146,6 +146,7 @@ def generate_user_data(user):
         membership_end_date=med.isoformat() if med else None,
         membership_begin_date=mbd.isoformat() if mbd else None,
         wifi_password=wifi_password,
+        birthdate=user.birthdate.isoformat() if user.birthdate else None,
     )
 
 
