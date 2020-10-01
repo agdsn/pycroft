@@ -474,8 +474,10 @@ def visit_drop_view(element, compiler, **kw):
     opt_if_exists = "IF EXISTS" if element.if_exists else None
     opt_drop_behavior = "CASCADE" if element.cascade else None
     view_name = compiler.preparer.quote(view.name)
+    view_type = "VIEW" if not view.materialized else "MATERIALIZED VIEW"
+
     return _join_tokens(
-        "DROP VIEW", opt_if_exists, view_name, opt_drop_behavior
+        "DROP", view_type, opt_if_exists, view_name, opt_drop_behavior
     )
 
 

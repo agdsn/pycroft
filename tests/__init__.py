@@ -15,6 +15,7 @@ from fixture.style import NamedDataStyle
 from fixture import SQLAlchemyFixture, DataTestCase
 from fixture.util import start_debug, stop_debug
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.pool import SingletonThreadPool
@@ -41,10 +42,15 @@ def setup():
     except KeyError:
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
                            "set to an SQLalchemy connection string.")
+
     engine = create_engine(uri, poolclass=SingletonThreadPool)
+
     connection = engine.connect()
+
     drop_db_model(connection)
     create_db_model(connection)
+
+    DeferredReflection.prepare(engine)
 
 
 def get_engine_and_connection():

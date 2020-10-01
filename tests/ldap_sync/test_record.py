@@ -89,6 +89,7 @@ class RecordFromOrmTestCase(TestCase):
         name = 'foo bar shizzle'
         login = 'shizzle'
         email = 'shizzle@agdsn.de'
+        email_forwarded = True
         class unix_account(object):
             uid = 10006
             gid = 100

@@ -74,4 +74,8 @@ def create_db_model(bind):
 def drop_db_model(bind):
     """Drop all models from the database.
     """
-    base.ModelBase.metadata.drop_all(bind)
+    # skip objects marked with "is_view"
+    tables = [table for table in base.ModelBase.metadata.tables.values() if
+              not table.info.get("is_view", False)]
+
+    base.ModelBase.metadata.drop_all(bind, tables=tables)
