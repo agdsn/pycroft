@@ -1269,7 +1269,7 @@ def member_requests_json():
         'email': {'text': prm.email, 'bool': prm.email_confirmed},
         'email_confirmed': prm.email_confirmed,
         'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
-        'action_required': prm.room is not None,
+        'action_required': prm.room is not None and prm.email_confirmed and prm.is_adult,
         'actions': [{'href': url_for(".member_request_edit",
                                      pre_member_id=prm.id),
                      'title': 'Bearbeiten',
