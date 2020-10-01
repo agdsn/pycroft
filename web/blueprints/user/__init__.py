@@ -1238,7 +1238,7 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
 
         session.session.commit()
 
-        send_member_request_merged_email(prm, user)
+        send_member_request_merged_email(prm, user, form.merge_password.data)
 
         return redirect(url_for(".user_show", user_id=user.id))
 

@@ -910,10 +910,11 @@ def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = Fals
     send_mails_async.delay([mail])
 
 
-def send_member_request_merged_email(user: PreMember, merged_to: User):
+def send_member_request_merged_email(user: PreMember, merged_to: User, password_merged: bool):
     user_send_mail(user, MemberRequestMergedTemplate(merged_to=merged_to,
                                                      merged_to_user_id=encode_type2_user_id(
-                                                         merged_to.id)))
+                                                         merged_to.id),
+                                                     password_merged=password_merged))
 
 
 @with_transaction

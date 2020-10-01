@@ -8,7 +8,13 @@ Hallo {{ user.name }},
 bei deiner Registrierung haben wir festgestellt, dass du bereits ein Nutzerkonto
 in unserem System hast. Daher haben wir deine Informationen mit dem bereits
 vorhandenen Konto zusammengeführt.
+
+{% if password_merged %}
+Der Benutzername deines alten Kontos wird beibehalten, das Passwort wurde auf
+das gesetzt, welches du bei der Registrierung angegeben hast.
+{% else %}
 Die Anmeldedaten des alten Kontos bleiben bestehen.
+{% endif %}
 
 Nutzer-ID:  {{ merged_to_user_id }}
 Nutzername: {{ merged_to.login }}
@@ -22,7 +28,13 @@ Hello {{ user.name }},
 
 during your registration we noticed that you already have a user account in our
 system. Therefore we merged your information with the existing account.
+
+{% if password_merged %}
+The username of your old account is kept, the password has been set to the one
+you entered during registration.
+{% else %}
 The login credentials of the old account remain the same.
+{% endif %}
 
 User-ID : {{ merged_to_user_id }}
 Username: {{ merged_to.login }}
