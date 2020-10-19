@@ -1,7 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import collections
+import collections.abc
 from itertools import tee, chain, filterfalse
 import operator
 from functools import reduce
@@ -537,7 +537,7 @@ def empty(point):
 UnboundedInterval = open(None, None)
 
 
-class IntervalSet(collections.Sequence):
+class IntervalSet(collections.abc.Sequence):
     def __init__(self, intervals=None):
         self._intervals = _mangle_argument(intervals)
 
@@ -626,7 +626,7 @@ def _mangle_argument(arg):
         return arg._intervals
     if isinstance(arg, Interval):
         return (arg,)
-    if isinstance(arg, collections.Iterable):
+    if isinstance(arg, collections.abc.Iterable):
         return tuple(_join(sorted(arg)))
     raise TypeError("Argument may be None, an IntervalSet, an Interval or an "
                     "iterable of Intervals. "
