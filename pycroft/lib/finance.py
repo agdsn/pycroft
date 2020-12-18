@@ -278,6 +278,7 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                             Transaction.valid_on.between(literal(membership_fee.begins_on),
                                                          literal(membership_fee.ends_on)),
                             split_fee_account.c.account_id.in_(fee_accounts_ids),
+                            split_fee_account.c.amount < 0,
                             split_fee_account.c.id != split_user_account.c.id))
             )))
             # Only those users who had the `membership_fee` property on `booking_begin` or
