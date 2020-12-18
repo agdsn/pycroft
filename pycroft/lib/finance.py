@@ -831,9 +831,6 @@ def match_activities():
                   .options(joinedload(BankAccountActivity.bank_account))
                   .filter(BankAccountActivity.transaction_id == None))
 
-    def _fetch_gerok(name: str) -> Optional[User]:
-        return User.q.filter(func.lower(User.name) == func.lower(name)).first()
-
     def _fetch_normal(uid: int) -> Optional[User]:
         return User.q.get(uid)
 
