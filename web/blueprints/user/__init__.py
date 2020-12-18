@@ -520,8 +520,15 @@ def add_membership(user_id):
             ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
         else:
             ends_at = None
-        make_member_of(user, form.group.data, current_user,
+
+        try:
+            make_member_of(user, form.group.data, current_user,
                        closed(begins_at, ends_at))
+        except PermissionError:
+            session.session.rollback()
+            flash("Du hast keine Berechtigung, diese Mitgliedschaft hinzuzufügen.", 'error')
+            return abort(403)
+
         session.session.commit()
         flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
@@ -548,7 +555,13 @@ def end_membership(user_id, membership_id):
         flash(u"Gruppenmitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
         return abort(404)
 
-    remove_member_of(user, membership.group, current_user, closedopen(session.utcnow(), None))
+    try:
+        remove_member_of(user, membership.group, current_user, closedopen(session.utcnow(), None))
+    except PermissionError:
+        session.session.rollback()
+        flash("Du hast keine Berechtigung, diese Mitgliedschaft zu beenden.", 'error')
+        return abort(403)
+
 
     session.session.commit()
     flash(u'Mitgliedschaft in Gruppe beendet', 'success')
