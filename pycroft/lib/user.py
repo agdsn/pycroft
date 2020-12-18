@@ -194,6 +194,10 @@ def get_user_sheet(sheet_id):
 
 @with_transaction
 def reset_password(user, processor):
+    if not can_reset_password(user, processor):
+        raise PermissionError("cannot reset password of a user with a"
+                              " greater or equal permission level.")
+
     plain_password = user_helper.generate_password(12)
     user.password = plain_password
 
@@ -203,6 +207,9 @@ def reset_password(user, processor):
                    message=message.to_json())
 
     return plain_password
+
+def can_reset_password(user, processor):
+    return user.permission_level < processor.permission_level
 
 
 @with_transaction

@@ -29,7 +29,7 @@ from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers import utc
-from pycroft.helpers.i18n import deferred_gettext
+from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import mac_regex, ip_regex
 from pycroft.lib.facilities import get_room
@@ -41,7 +41,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
     get_possible_existing_users_for_pre_member, edit_email, edit_name, \
-    edit_person_id, send_member_request_merged_email
+    edit_person_id, send_member_request_merged_email, can_reset_password
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -885,11 +885,16 @@ def search():
 @access.require('user_change')
 def reset_password(user_id):
     form = UserResetPasswordForm()
-    myUser = User.q.get(user_id)
-    if form.validate_on_submit():
-        plain_password = lib.user.reset_password(myUser, processor=current_user)
+    my_user = get_user_or_404(user_id)
 
-        sheet = lib.user.store_user_sheet(True, False, user=myUser,
+    if not can_reset_password(my_user, current_user):
+        flash(gettext("Keine Berechtigung das Passwort dieses Nutzers zu ändern."))
+        return abort(403)
+
+    if form.validate_on_submit():
+        plain_password = lib.user.reset_password(my_user, processor=current_user)
+
+        sheet = lib.user.store_user_sheet(True, False, user=my_user,
                                           plain_user_password=plain_password,
                                           generation_purpose='password reset')
         session.session.commit()
