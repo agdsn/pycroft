@@ -76,11 +76,14 @@ def json_tasks_for_user(user_id):
 @bp.route("/user/json")
 def json_user_tasks():
     failed_only = bool(request.args.get("failed_only", False))
+    open_only = bool(request.args.get("open_only", False))
 
     tasks = Task.q.order_by(Task.status.desc(), Task.due.asc())\
 
     if failed_only:
         tasks = tasks.filter_by(status=TaskStatus.FAILED).all()
+    elif open_only:
+        tasks = tasks.filter_by(status=TaskStatus.OPEN).all()
     else:
         tasks = tasks.all()
 
@@ -114,8 +117,10 @@ def cancel_user_task(task_id):
 def user_tasks():
     return render_template("task/tasks.html",
                            task_table=TaskTable(
-                               data_url=url_for('.json_user_tasks')),
+                               data_url=url_for('.json_user_tasks',
+                                                open_only=1)),
                            task_failed_table=TaskTable(
                                data_url=url_for('.json_user_tasks',
-                                                failed_only=1)),
+                                                failed_only=1),
+                               sort_order='desc'),
                            page_title="Aufgaben (Nutzer)")

@@ -18,11 +18,11 @@ class TaskTable(BootstrapTable):
     exception_message = Column(title=None, hide_if=lambda: True)
     type = Column("Typ", hide_if=lambda: True)
 
-    def __init__(self, hidden_columns=[], *a, **kw):
+    def __init__(self, hidden_columns=[], sort_order='asc', *a, **kw):
         table_args = kw.pop('table_args', {})
         table_args.setdefault('data-detail-view', "true")
         table_args.setdefault('data-sort-name', "due")
-        table_args.setdefault('data-sort-order', "desc")
+        table_args.setdefault('data-sort-order', sort_order)
         table_args.setdefault('data-row-style', "table.taskRowFormatter")
         table_args.setdefault('data-detail-formatter',
                               "table.taskDetailFormatter")

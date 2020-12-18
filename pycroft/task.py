@@ -9,7 +9,7 @@ from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.task import DBTask
 from pycroft.lib.logging import log_task_event
-from pycroft.lib.mail import send_mails, Mail, RetryableException
+from pycroft.lib.mail import send_mails, Mail, RetryableException, TaskFailedTemplate
 from pycroft.lib.task import task_type_to_impl
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -71,6 +71,11 @@ def execute_scheduled_tasks():
             task.type.name, task.status.name), log=True)
 
         session.session.commit()
+
+        if task.status == TaskStatus.FAILED:
+            from pycroft.lib.user import user_send_mail
+
+            user_send_mail(task.creator, TaskFailedTemplate(), True)
 
 
 @app.task(base=DBTask)
