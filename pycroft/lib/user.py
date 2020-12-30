@@ -896,14 +896,13 @@ def membership_begin_date(user):
 
     return end_date
 
-
-def user_send_mail(user: BaseUser, template: MailTemplate, try_only: bool = False, **kwargs):
+def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False, **kwargs):
     if user.email:
         email = user.email
     elif type(user) is User and user.has_property('mail'):
         email = user.email_internal
     else:
-        if try_only:
+        if soft_fail:
             return
         else:
             raise ValueError("No contact email address available.")
@@ -1145,7 +1144,7 @@ def delete_member_request(prm: PreMember, reason: Optional[str], processor: User
               processor)
 
     if inform_user:
-        user_send_mail(prm, MemberRequestDeniedTemplate(reason=reason), try_only=True)
+        user_send_mail(prm, MemberRequestDeniedTemplate(reason=reason), soft_fail=True)
 
     session.session.delete(prm)
 
