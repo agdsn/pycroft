@@ -84,6 +84,17 @@ services:
       dev:
         aliases:
           - dummy-worker
+  dev-mail:
+    extends:
+      file: docker-compose.base.yml
+      service: mail
+    networks:
+      dev:
+        aliases:
+          - mail
+    ports:
+      - "8080:8080"
+      - "8085:8085"
 
 volumes:
   home:
