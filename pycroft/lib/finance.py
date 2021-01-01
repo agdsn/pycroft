@@ -651,11 +651,16 @@ def end_payment_in_default_memberships(processor):
     return users
 
 
-def get_users_with_payment_in_default():
-    # Add memberships and end "member" membership if threshold met
+def get_negative_members():
     users = User.q.join(User.current_properties) \
         .filter(CurrentProperty.property_name == 'membership_fee') \
         .join(Account).filter(Account.balance > 0).all()
+
+    return users
+
+def get_users_with_payment_in_default():
+    # Add memberships and end "member" membership if threshold met
+    users = get_negative_members()
 
     users_pid_membership = set()
     users_membership_terminated = set()
