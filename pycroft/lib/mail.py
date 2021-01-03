@@ -193,3 +193,7 @@ class MemberRequestMergedTemplate(MailTemplate):
 class TaskFailedTemplate(MailTemplate):
     template = "task_failed.html"
     subject = "Aufgabe fehlgeschlagen // Task failed"
+
+class MemberNegativeBalance(MailTemplate):
+    template = "member_negative_balance.html"
+    subject =  "Deine ausstehenden Zahlungen // Your due payments"

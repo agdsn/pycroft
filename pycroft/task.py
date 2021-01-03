@@ -8,10 +8,13 @@ from celery.schedules import crontab
 from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.task import DBTask
+from pycroft.lib.finance import get_negative_members
 from pycroft.lib.logging import log_task_event
-from pycroft.lib.mail import send_mails, Mail, RetryableException, TaskFailedTemplate
+from pycroft.lib.mail import send_mails, Mail, RetryableException, TaskFailedTemplate, \
+    MemberNegativeBalance
 from pycroft.lib.task import task_type_to_impl
 from pycroft.model import session
+from pycroft.model.finance import BankAccountActivity
 from pycroft.model.session import with_transaction
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
@@ -98,6 +101,21 @@ def refresh_swdd_views():
 
     print("Refreshed swdd views")
 
+@app.task()
+def mail_negative_members():
+    from pycroft.lib.user import user_send_mails
+
+    activity = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).first()
+    if activity.imported_at.date() >= session.utcnow().date() - timedelta(days=2):
+        negative_users = get_negative_members()
+        user_send_mails(negative_users, MemberNegativeBalance())
+    else:
+        mail = Mail("Finanzen",
+                    "finanzen@lists.agdsn.de",
+                    "Automatische Zahlungsrückstands-Mail fehlgeschlagen",
+                    body="Der Import ist nicht aktuell genug.")
+        send_mails_async.delay([mail])
+
 
 @app.task(ignore_result=True, rate_limit=1, bind=True)
 def send_mails_async(self, mails: List[Mail]):
@@ -129,6 +147,10 @@ app.conf.update(
         'refresh-swdd-views':{
             'task': 'pycroft.task.refresh_swdd_views',
             'schedule': timedelta(hours=3)
+        },
+        'mail-negative-members': {
+            'task': 'pycroft.task.mail_negative_members',
+            'schedule': crontab(day_of_month=5)
         }
     },
     CELERY_ENABLE_UTC=True,
