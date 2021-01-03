@@ -15,7 +15,7 @@ import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import or_, func, select, Boolean, String
 
@@ -896,24 +896,32 @@ def membership_begin_date(user):
 
     return end_date
 
-def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False, **kwargs):
-    if user.email:
-        email = user.email
-    elif type(user) is User and user.has_property('mail'):
-        email = user.email_internal
-    else:
-        if soft_fail:
-            return
+def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bool = False, **kwargs):
+    mails = []
+
+    for user in users:
+        if user.email:
+            email = user.email
+        elif type(user) is User and user.has_property('mail'):
+            email = user.email_internal
         else:
-            raise ValueError("No contact email address available.")
+            if soft_fail:
+                return
+            else:
+                raise ValueError("No contact email address available.")
 
-    body = template.render(user=user,
-                           user_id=encode_type2_user_id(user.id),
-                           **kwargs)
+        body = template.render(user=user,
+                               user_id=encode_type2_user_id(user.id),
+                               **kwargs)
 
-    mail = Mail(user.name, email, template.subject, body)
+        mail = Mail(user.name, email, template.subject, body)
+        mails.append(mail)
 
-    send_mails_async.delay([mail])
+    send_mails_async.delay(mails)
+
+
+def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False, **kwargs):
+    user_send_mails([user], template, soft_fail, **kwargs)
 
 
 def send_member_request_merged_email(user: PreMember, merged_to: User, password_merged: bool):
