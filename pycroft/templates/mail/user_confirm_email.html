@@ -1,3 +1,5 @@
+{%- set links = [] -%}
+{%- import "macros/link.html" as link with context -%}
 <pre>
 English version below!
 
@@ -7,23 +9,26 @@ Hallo {{ user.name }},
 
 bitte bestätige deine E-Mail Adresse indem du auf folgenden Link klickst:
 
-<a href="{{ email_confirm_url }}">{{ email_confirm_url }}</a>
+{{ link.render_link(email_confirm_url, email_confirm_url, mode) }}
 
 Falls du dich nicht bei uns registriert hast, kannst du diese E-Mail ignorieren.
 
 Viele Grüße
 Deine AG DSN
 
+{{ link.render_link_list(mode) }}
 --
 
 Hello {{ user.name }},
 
 Please confirm your email address by clicking on the following link:
 
-<a href="{{ email_confirm_url }}">{{ email_confirm_url }}</a>
+{{ link.render_link(email_confirm_url, email_confirm_url, mode) }}
 
 If you have not registered with us, you can ignore this email.
 
 Best Regards
 Your AG DSN
+
+{{ link.render_link_list(mode) }}
 </pre>

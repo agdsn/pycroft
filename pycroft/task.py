@@ -101,7 +101,8 @@ def refresh_swdd_views():
 
     print("Refreshed swdd views")
 
-@app.task()
+
+@app.task(base=DBTask)
 def mail_negative_members():
     from pycroft.lib.user import user_send_mails
 
@@ -113,7 +114,7 @@ def mail_negative_members():
         mail = Mail("Finanzen",
                     "finanzen@lists.agdsn.de",
                     "Automatische Zahlungsrückstands-Mail fehlgeschlagen",
-                    body="Der Import ist nicht aktuell genug.")
+                    body_plain="Der Import ist nicht aktuell genug.")
         send_mails_async.delay([mail])
 
 

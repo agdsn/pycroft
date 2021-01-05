@@ -896,6 +896,7 @@ def membership_begin_date(user):
 
     return end_date
 
+
 def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bool = False, **kwargs):
     mails = []
 
@@ -910,11 +911,11 @@ def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bo
             else:
                 raise ValueError("No contact email address available.")
 
-        body = template.render(user=user,
-                               user_id=encode_type2_user_id(user.id),
-                               **kwargs)
+        body_plain, body_html = template.render(user=user,
+                                                user_id=encode_type2_user_id(user.id),
+                                                **kwargs)
 
-        mail = Mail(user.name, email, template.subject, body)
+        mail = Mail(user.name, email, template.subject, body_plain, body_html)
         mails.append(mail)
 
     send_mails_async.delay(mails)

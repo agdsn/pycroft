@@ -1,3 +1,6 @@
+{%- set links = [] -%}
+{%- import "macros/link.html" as link with context -%}
+
 <pre>
 English version below!
 
@@ -18,31 +21,32 @@ da wir dir gerne auch die nötigen Grundlagen beibrigen.
 Wenn du Interesse hast und mal einen Blick auf Technik werfen willst, die man
 sonst eher nicht zu Gesicht bekommt, würden wir uns freuen dich bei einer unserer
 Teamsitzungen begrüßen zu dürfen.
-Wann, wo und wie die Sitzungen stattfinden, kannst du unserer <a href="https://agdsn.de/sipa/pages/about_us/teams">Teamübersicht</a>
+Wann, wo und wie die Sitzungen stattfinden, kannst du unserer {{ link.render_link("Teamübersicht", "https://agdsn.de/sipa/pages/about_us/teams", mode) }}
 entnehmen.
 
 Deine Mitgliedschaft beginnt je nach gewählter Option entweder sofort oder
 mit deinem Einzug in dein Wohnheimzimmer.
-Den aktuellen Status deiner Mitgliedschaft kannst du in der <a href="https://agdsn.de/sipa/usersuite/">Usersuite</a>
+Den aktuellen Status deiner Mitgliedschaft kannst du in der {{ link.render_link("Usersuite", "https://agdsn.de/sipa/usersuite/", mode) }}
 einsehen.
 
 Deine Nutzer-ID: {{ user_id }}
 Dein Nutzername: {{ user.login }}
 
-Bitte denke daran, den <a href="https://agdsn.de/sipa/pages/membership/membership_contribution">Mitgliedsbeitrag</a> immer pünktlich (vor Ende des Monats)
-mit dem korrkten Verwendungszweck zu überweisen. Es ist auch möglich für mehrere
-Monate aufeinmal zu bezahlen.
+Bitte denke daran, den {{ link.render_link("Mitgliedsbeitrag", "https://agdsn.de/sipa/pages/membership/membership_contribution", mode) }} immer pünktlich
+(vor Ende des Monats) mit dem korrkten Verwendungszweck zu überweisen.
+Es ist auch möglich für mehrere Monate aufeinmal zu bezahlen.
 
 Mit deiner Mitgliedschaft erhälst du ein E-Mail Konto mit der Adresse {{ user.email_internal }}.
 Standardmäßig werden alle E-Mails an deine angegebene Adresse weitergeleietet.
 Diese Weiterleitung kannst du in der Usersuite deaktivieren, wenn du das Konto
-eigenständig nutzen möchtest. Weitere Informationen findest du auf unserer <a href="https://agdsn.de/sipa/pages/service/email">Internetseite</a>.
+eigenständig nutzen möchtest. Weitere Informationen findest du auf unserer {{ link.render_link("Internetseite", "https://agdsn.de/sipa/pages/service/email", mode) }}.
 
-Weitere Schritte (u.a. zur Verwendung des Netzwerkes) findest du <a href="https://agdsn.de/sipa/pages/membership/registration_account_created">hier</a>.
+Weitere Schritte (u.a. zur Verwendung des Netzwerkes) findest du {{ link.render_link("hier", "https://agdsn.de/sipa/pages/membership/registration_account_created", mode) }}.
 
 Viele Grüße
 Deine AG DSN
 
+{{ link.render_link_list(mode) }}
 --
 
 Hello {{ user.name }},
@@ -57,26 +61,28 @@ Just to mention some possible contributions: Administration and finances,
 network maintenance, software development and many more. Besides, you can add
 some extra extracurricular activity to your CV and have the opportunity to see
 and work with usually hidden technology.
-We would be happy to welcome you with us. Be our guest at one of our <a href="https://agdsn.de/sipa/pages/about_us/teams">team meetings</a>.
+We would be happy to welcome you with us. Be our guest at one of our {{ link.render_link("team meetings", "https://agdsn.de/sipa/pages/about_us/teams", mode) }}.
 
 Depending on the chosen option, your membership starts either immediately or
 with you moving into your dorm room.
-You can check the current status of your membership in the <a href="https://agdsn.de/sipa/usersuite/">Usersuite</a>.
+You can check the current status of your membership in the {{ link.render_link("Usersuite", "https://agdsn.de/sipa/usersuite/", mode) }}.
 
 Your User-ID:   {{ user_id }}
 Your Username:  {{ user.login }}
 
-Please remember to transfer the <a href="https://agdsn.de/sipa/pages/membership/membership_contribution">membership contribution</a>
+Please remember to transfer the {{ link.render_link("membership contribution", "https://agdsn.de/sipa/pages/membership/membership_contribution", mode) }}
 always in time (before the end of the month) with the correct payment description.
 It is also possible to pay for multiple months at once.
 
 With your membership you will receive an email account with the address {{ user.email_internal }}.
 By default, all emails will be forwarded to the address you specified.
 You can disable this forwarding in the usersuite if you want to use the standalone.
-For more information, please visit our <a href="https://agdsn.de/sipa/pages/service/email">website</a>.
+For more information, please visit our {{ link.render_link("website", "https://agdsn.de/sipa/pages/service/email", mode) }}.
 
-Further steps (including how to use the network) can be found <a href="https://agdsn.de/sipa/pages/membership/registration_account_created">here</a>.
+Further steps (including how to use the network) can be found {{ link.render_link("here", "https://agdsn.de/sipa/pages/membership/registration_account_created", mode) }}
 
 Best Regards
 Your AG DSN
+
+{{ link.render_link_list(mode) }}
 </pre>

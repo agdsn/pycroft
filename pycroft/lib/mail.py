@@ -3,9 +3,10 @@ import os
 import smtplib
 import ssl
 from email.header import Header
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
-from typing import List
+from typing import List, Optional
 
 import jinja2
 
@@ -39,14 +40,17 @@ class Mail:
     to_name: str
     to_address: str
     subject: str
-    body: str
-    reply_to: str
+    body_plain: str
+    body_html: Optional[str]
+    reply_to: Optional[str]
 
-    def __init__(self, to_name: str, to_address: str, subject: str, body: str, reply_to: str = None):
+    def __init__(self, to_name: str, to_address: str, subject: str, body_plain: str,
+                 body_html: Optional[str] = None, reply_to: str = None):
         self.to_name = to_name
         self.to_address = to_address
         self.subject = subject
-        self.body = body
+        self.body_plain = body_plain
+        self.body_html = body_html
         self.reply_to = reply_to
 
         self.to = to_address  # "{} <{}>".format(to_name, to_address)
@@ -60,23 +64,32 @@ class MailTemplate:
     def __init__(self, **kwargs):
         self.args = kwargs
 
-    def render(self, **kwargs) -> str:
-        return template_env.get_template(self.template).render(**self.args, **kwargs)
+    def render(self, **kwargs) -> (str, str):
+        plain = template_env.get_template(self.template).render(mode='plain', **self.args, **kwargs)
+        html = template_env.get_template(self.template).render(mode='html', **self.args, **kwargs)
+
+        return plain, html
 
 
-def compose_mail(mail: Mail) -> MIMEText:
-    mime_mail = MIMEText(mail.body, _subtype='html', _charset='utf-8')
+def compose_mail(mail: Mail) -> MIMEMultipart:
+    msg = MIMEMultipart('alternative', _charset='utf-8')
+    msg['Message-Id'] = make_msgid()
+    msg['From'] = mail_from
+    msg['To'] = Header(mail.to)
+    msg['Subject'] = mail.subject
+    msg['Date'] = formatdate(localtime=True)
 
-    mime_mail['Message-Id'] = make_msgid()
-    mime_mail['From'] = mail_from
-    mime_mail['To'] = Header(mail.to)
-    mime_mail['Subject'] = mail.subject
-    mime_mail['Date'] = formatdate(localtime=True)
+    msg.attach(MIMEText(mail.body_plain, 'plain'))
+
+    if mail.body_html is not None:
+        msg.attach(MIMEText(mail.body_html, 'html'))
 
     if mail.reply_to is not None or mail.reply_to is not None:
-        mime_mail['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
+        msg['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
 
-    return mime_mail
+    print(msg)
+
+    return msg
 
 
 class RetryableException(Exception):
