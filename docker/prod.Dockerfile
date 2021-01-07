@@ -8,6 +8,7 @@ WORKDIR /opt/pycroft/app
 
 # Download or build wheels of requirements
 COPY --chown=pycroft:pycroft requirements.txt .
+COPY --chown=pycroft:pycroft ./deps .
 RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.txt
 
 # Download JS/CSS dependencies
