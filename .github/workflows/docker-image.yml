@@ -44,5 +44,5 @@ jobs:
       - name: Run webpack
         run: docker-compose -f docker-compose.test.yml run --rm test-app webpack --mode production
       - name: Run tests
-        run: docker-compose -f docker-compose.test.yml run --rm test-app test tests
+        run: docker-compose -f docker-compose.test.yml run --rm test-app test
 
