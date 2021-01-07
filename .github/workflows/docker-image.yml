@@ -1,0 +1,48 @@
+name: Pycroft CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+           submodules: 'true'
+      - name: Fix permissions
+        run: sudo chmod -R a+rw .
+      - name: Build the Docker image
+        run: docker-compose -f docker-compose.prod.yml build
+      - name: Login to GitLab Registry
+        uses: docker/login-action@v1 
+        with:
+          registry: registry.agdsn.de
+          username: "github-actions"
+          password: ${{ secrets.GITLAB_REGISTRY_PASSWORD }}
+      - name: Tag built image
+        run: docker tag agdsn/pycroft-prod:latest registry.agdsn.de/agdsn/coreos/pycroft/pycroft:${GITHUB_REF##*/}
+      - name: Push to GitLab registry
+        run: docker push registry.agdsn.de/agdsn/coreos/pycroft/pycroft:${GITHUB_REF##*/}
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+           submodules: 'true'
+      - name: Fix permissions
+        run: sudo chmod -R a+rw .
+      - name: Build
+        run: docker-compose -f docker-compose.test.yml build
+      - name: Start
+        run: docker-compose -f docker-compose.test.yml up -d
+      - name: Run webpack
+        run: docker-compose -f docker-compose.test.yml run --rm test-app webpack --mode production
+      - name: Run tests
+        run: docker-compose -f docker-compose.test.yml run --rm test-app test tests
+
