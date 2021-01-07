@@ -5,7 +5,7 @@ set -euo pipefail
 readonly USAGE=("[args]")
 
 readonly DESCRIPTION=(
-	"Run unit tests. Optional arguments are passed to the nosetests executable"
+	"Run unit tests. Optional arguments are passed to the unittest module."
 )
 
 run() {

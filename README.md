@@ -339,9 +339,9 @@ For the testing setup, there exists a separate docker-compose file:
 # get the stack up and running
 docker-compose -f docker-compose.test.yml up -d
 # run all the tests
-docker-compose -f docker-compose.testing.yml run --rm web nosetests -v
+docker-compose -f docker-compose.test.yml run --rm test-app test
 # run only the frontend tests
-docker-compose -f docker-compose.testing.yml run --rm web nosetests -v tests.frontend
+docker-compose -f docker-compose.test.yml run --rm test-app test tests.frontend
 ```
 
 ## Making changes to the database schema
