@@ -10,7 +10,7 @@ readonly DESCRIPTION=(
 
 run() {
 	cd /opt/pycroft/app
-	exec /opt/pycroft/venv/bin/python -m unittest -v "$@"
+	exec pytest -v "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :

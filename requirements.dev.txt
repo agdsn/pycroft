@@ -1,4 +1,5 @@
 coverage~=4.4.2
 factory-boy~=2.12.0
 pydot~=1.2.3
+pytest~=6.2.1
 git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
