@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Nosetests docker-compose" type="tests" factoryName="Nosetests">
+  <configuration default="false" name="Pytest" type="tests" factoryName="py.test">
     <module name="pycroft" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -9,15 +9,9 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <PathMappingSettings>
-      <option name="pathMappings">
-        <list>
-          <mapping local-root="$PROJECT_DIR$" remote-root="/opt/pycroft/app" />
-        </list>
-      </option>
-    </PathMappingSettings>
-    <option name="_new_regexPattern" value="&quot;&quot;" />
-    <option name="_new_additionalArguments" value="&quot;-v&quot;" />
+    <option name="_new_keywords" value="&quot;&quot;" />
+    <option name="_new_parameters" value="&quot;&quot;" />
+    <option name="_new_additionalArguments" value="&quot;&quot;" />
     <option name="_new_target" value="&quot;tests&quot;" />
     <option name="_new_targetType" value="&quot;PYTHON&quot;" />
     <method v="2" />
