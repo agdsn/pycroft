@@ -283,7 +283,7 @@ def infoflags(user):
     user_status = lib.user.status(user)
     return [
         {'title': u"Mitglied", 'icon': "user", 'val': user_status.member},
-        {'title': u"Netzwerkzugang", 'icon': "globe", 'val': user_status.network_access},
+        {'title': u"LAN-Zugang", 'icon': "network-wired", 'val': user_status.network_access},
         {'title': u"WLAN-Zugang", 'icon': "wifi", 'val': user_status.wifi_access},
         {'title': u"Bezahlt", 'icon': "euro-sign", 'val': user_status.account_balanced},
         {'title': u"Verstoßfrei", 'icon': "exclamation-triangle", 'val': not user_status.violation},
