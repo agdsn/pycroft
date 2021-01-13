@@ -1159,8 +1159,9 @@ def delete_member_request(prm: PreMember, reason: Optional[str], processor: User
 
 
 @with_transaction
-def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_email: bool, merge_person_id: bool,
-                         merge_room: bool, merge_password: bool, processor: User):
+def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_email: bool,
+                         merge_person_id: bool, merge_room: bool, merge_password: bool,
+                         merge_birthdate: bool, processor: User):
     if merge_name:
         user = edit_name(user, prm.name, processor)
 
@@ -1181,6 +1182,9 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
             else:
                 move_in(user, prm.room.building_id, prm.room.level, prm.room.number,
                         mac=None, processor=processor, when=move_in_datetime)
+
+    if merge_birthdate:
+        user = edit_birthdate(user, prm.birthdate, processor)
 
     log_msg = "Merged information from registration {}."
 

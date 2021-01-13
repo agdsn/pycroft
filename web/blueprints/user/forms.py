@@ -133,11 +133,12 @@ class PreMemberMergeForm(Form):
 
 
 class PreMemberMergeConfirmForm(Form):
-    merge_name = BooleanField("Name", [Optional()], default=False)
+    merge_name = BooleanField("Name", [Optional()], default=True)
     merge_email = BooleanField("E-Mail", [Optional()], default=True)
     merge_person_id = BooleanField("Debitorennummer", [Optional()], default=True)
-    merge_room = BooleanField("Einzug/Umzug", [Optional()], default=False)
+    merge_room = BooleanField("Einzug/Umzug", [Optional()], default=True)
     merge_password = BooleanField("Passwort aus der Registrierung", [Optional()], default=False)
+    merge_birthdate = BooleanField("Geburtsdatum", [Optional()], default=False)
 
 
 class UserMoveInForm(UserMoveForm):

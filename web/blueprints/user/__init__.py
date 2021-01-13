@@ -1239,6 +1239,7 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
     form.merge_name.label.text = f"Name: {user.name} ➡ {prm.name}"
     form.merge_email.label.text = f"E-Mail: {user.email} ➡ {prm.email}"
     form.merge_person_id.label.text = f"Debitorennummer: {user.swdd_person_id} ➡ {prm.swdd_person_id}"
+    form.merge_birthdate.label.text = f"Geburtsdatum: {user.birthdate} ➡ {prm.birthdate}"
 
     if prm.room is None or prm.room == user.room:
         form.merge_room.render_kw = {'disabled': True}
@@ -1251,7 +1252,7 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
     if form.validate_on_submit():
         lib.user.merge_member_request(user, prm, form.merge_name.data, form.merge_email.data,
                                       form.merge_person_id.data, form.merge_room.data,
-                                      form.merge_password.data,
+                                      form.merge_password.data, form.merge_birthdate.data,
                                       processor=current_user)
 
         session.session.commit()
