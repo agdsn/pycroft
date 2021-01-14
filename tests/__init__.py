@@ -303,9 +303,10 @@ class FrontendDataTestBase(testing.TestCase):
             if substring in message and category == _category:
                 return message
 
-        raise AssertionError("No message with substring '{}' in category '{}' "
-                             "has been flashed"
-                             .format(substring, category))
+        raise AssertionError(
+            f"No message with substring '{substring}' in category '{category}' has been flashed."
+            f"Instead, we got:\n{self.flashed_messages}"
+        )
 
     @property
     def user_id(self):
