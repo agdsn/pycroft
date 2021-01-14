@@ -50,9 +50,11 @@ class PropertyGroupData(DataSet):
     # the config.
     class property_group1_admin:
         name = "Admin"
+        permission_level = 50
 
     class property_group2_finance:
         name = "Finanzer"
+        permission_level = 20
 
 
 class PropertyData(DataSet):
