@@ -106,6 +106,11 @@ class MultipleUsersFilterTestCase(FixtureDataTestBase):
 
 
 class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
+    """Base class for test cases which need to talk to LDAP.
+
+    (The LDAP we use is mocked, however.)
+    """
+
     @classmethod
     def setUpClass(cls):
         super(LdapTestBase, cls).setUpClass()
