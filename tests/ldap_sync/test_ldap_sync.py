@@ -13,8 +13,9 @@ from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, fetch_groups_t
 from ldap_sync.record import UserRecord, GroupRecord, RecordState, dn_from_username
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
-import tests.fixtures.ldap_sync.simple as simple_fixtures
 import tests.fixtures.ldap_sync.complex as complex_fixtures
+from tests.factories import PropertyGroupFactory
+from tests.factories.user import UserWithMembershipFactory
 
 
 class ExporterInitializationTestCase(TestCase):
@@ -59,32 +60,37 @@ class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
         self.assertEqual(fetch_users_to_sync(self.session), [])
 
 
-class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FixtureDataTestBase):
-    # These datasets provide two users with `mail` attributes, while only one
-    # of them has a unix account.
-    datasets = simple_fixtures.datasets
+class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
+    PROPNAME = 'mail'
+
+    def create_factories(self):
+        super().create_factories()
+        self.propgroup = PropertyGroupFactory.create(
+            name="my propgroup",
+            granted={self.PROPNAME, 'ldap_login_enabled'}
+        )
+        self.user = UserWithMembershipFactory.create(
+            name="Hans Wurst", login="hans",
+            membership__group=self.propgroup,
+            membership__includes_today=True,
+            with_unix_account=True,
+        )
 
     def test_one_user_fetched(self):
-        users = fetch_users_to_sync(session, required_property='mail')
-        self.assertEqual(len(users), 1)
+        users = fetch_users_to_sync(session, required_property=self.PROPNAME)
+        self.assertEqual(len(users), 1, f"Not a list of length one: {users}")
 
     def test_one_group_fetched(self):
-        groups = [group for group in fetch_groups_to_sync(session) if
-                  group.Group.name == simple_fixtures.MembershipData.dummy_membership.group.name]
+        groups = [group for group in fetch_groups_to_sync(session)
+                  if group.Group.name == self.propgroup.name]
         self.assertEqual(len(groups), 1)
-        expected_members = {
-            simple_fixtures.UserData.withldap.login
-        }
-        self.assertEqual(set(groups[0].members), expected_members)
+        self.assertEqual(set(groups[0].members), {self.user.login})
 
     def test_one_property_fetched(self):
-        properties = [prop for prop in fetch_properties_to_sync(session) if
-                      prop.name == simple_fixtures.PropertyData.mail.name]
+        properties = [prop for prop in fetch_properties_to_sync(session)
+                      if prop.name == self.PROPNAME]
         self.assertEqual(len(properties), 1)
-        expected_members = {
-            simple_fixtures.UserData.withldap.login
-        }
-        self.assertEqual(set(properties[0].members), expected_members)
+        self.assertEqual(set(properties[0].members), {self.user.login})
 
 
 class MultipleUsersFilterTestCase(FixtureDataTestBase):
