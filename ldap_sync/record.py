@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import abc
+from typing import Optional
 
 from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn
@@ -224,10 +225,10 @@ class RecordState(object):
     This class is essentially a duple consisting of a current and
     desired record to represent the difference.
 
-    :param Record current: The current record
-    :param Record desired: The desired record
+    :param current: The current record
+    :param desired: The desired record
     """
-    def __init__(self, current=None, desired=None):
+    def __init__(self, current: Optional[Record] = None, desired: Optional[Record] = None):
         self.current = current
         self.desired = desired
 
