@@ -12,8 +12,7 @@ from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, fetch_groups_t
     fetch_current_ldap_users, fetch_current_ldap_groups, fetch_current_ldap_properties, sync_all
 from ldap_sync.record import UserRecord, GroupRecord, RecordState, dn_from_username
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
-from tests import FixtureDataTestBase
-from tests.fixtures.dummy.user import UserData
+from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
 import tests.fixtures.ldap_sync.simple as simple_fixtures
 import tests.fixtures.ldap_sync.complex as complex_fixtures
 
@@ -47,17 +46,17 @@ class LdapSyncLoggerMutedMixin(object):
         logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
 
 
-class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FixtureDataTestBase):
-    # These datasets provide two users without the `mail` attribute.  One of
-    # them has a unix account.
-    datasets = [UserData]
+class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        UserFactory.create_batch(5)
 
     def setUp(self):
-        super(EmptyDatabaseTestCase, self).setUp()
-        self.users = fetch_users_to_sync(session)
+        super().setUp()
+        self.session = session
 
     def test_no_users_fetched(self):
-        self.assertEqual(self.users, [])
+        self.assertEqual(fetch_users_to_sync(self.session), [])
 
 
 class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FixtureDataTestBase):
