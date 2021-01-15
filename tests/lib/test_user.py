@@ -4,29 +4,19 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from pycroft.lib.facilities import get_room
-from pycroft.lib.user import move, move_out, move_in
-from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, RoomFactory, \
-    ConfigFactory
-
 from pycroft import config
 from pycroft.helpers.i18n import localized
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
+from pycroft.lib.facilities import get_room
+from pycroft.lib.user import move, move_out, move_in
 from pycroft.model import (
-    user, facilities, session, host)
-from pycroft.model.port import PatchPort
+    session, host)
 from tests import FactoryWithConfigDataTestBase, FactoryDataTestBase
+from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, \
+    RoomFactory, \
+    ConfigFactory
 from tests.factories.address import AddressFactory
-from tests.fixtures import network_access
-from tests.fixtures.config import ConfigData, PropertyData
-from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.dummy.finance import AccountData
-from tests.fixtures.dummy.host import (
-    IPData, PatchPortData, InterfaceData, HostData)
-from tests.fixtures.dummy.net import SubnetData, VLANData
-from tests.fixtures.dummy.user import UserData
-
 from .. import factories
 
 
