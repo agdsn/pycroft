@@ -3,25 +3,20 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from pycroft.helpers.interval import IntervalSet ,UnboundedInterval, closed
+from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
 from pycroft.lib.membership import grant_property, deny_property, \
     remove_property, make_member_of, remove_member_of
-from pycroft.model.user import Membership, Property, PropertyGroup, User
 from pycroft.model import session
-from tests import FixtureDataTestBase
-from tests.fixtures.dummy.property import PropertyGroupData, PropertyData
-from tests.fixtures.dummy.user import UserData
+from pycroft.model.user import Membership, Property
+from tests import FactoryDataTestBase
+from tests.factories import PropertyGroupFactory, UserFactory
 
 
-class Test_030_Membership(FixtureDataTestBase):
-    datasets = [PropertyGroupData, UserData]
-
-    def setUp(self):
-        super(Test_030_Membership, self).setUp()
-        self.group = PropertyGroup.q.filter_by(
-            name=PropertyGroupData.dummy.name).one()
-        self.user = User.q.filter_by(login=UserData.dummy.login).one()
-        self.processor = User.q.filter_by(login=UserData.privileged.login).one()
+class Test_030_Membership(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.group = PropertyGroupFactory.create()
+        self.user, self.processor = UserFactory.create_batch(2)
 
     def assertMembershipIntervalsEqual(self, expected):
         memberships = session.session.query(Membership).filter_by(
@@ -86,15 +81,12 @@ class Test_030_Membership(FixtureDataTestBase):
             (closed(t0, t1), closed(t4, t5))))
 
 
-class Test_040_Property(FixtureDataTestBase):
-    datasets = [PropertyGroupData, PropertyData]
-
-    def setUp(self):
-        super(Test_040_Property, self).setUp()
-        self.test_property = Property.q.filter_by(
-            name=PropertyData.granted.name).one()
-        self.property_name = self.test_property.name
-        self.group = self.test_property.property_group
+class Test_040_Property(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.property_name = 'granted_property'
+        self.group = PropertyGroupFactory(granted={self.property_name},
+                                          denied={'denied_property'})
 
     def test_0010_grant_property(self):
         prop = grant_property(self.group, self.property_name)
