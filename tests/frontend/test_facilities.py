@@ -8,7 +8,7 @@ from tests.factories import RoomFactory
 from tests.factories.user import UserWithMembershipFactory
 
 
-class Test_010_Building(FrontendDataTestBase, FactoryWithConfigDataTestBase):
+class TestBuilding(FrontendDataTestBase, FactoryWithConfigDataTestBase):
     login = 'shoot-the-root'
     password = 'password'
 
@@ -22,29 +22,28 @@ class Test_010_Building(FrontendDataTestBase, FactoryWithConfigDataTestBase):
         self.room = RoomFactory()
         self.building = self.room.building
 
-    def test_0010_list_buildings(self):
+    def test_list_buildings(self):
         self.assert_template_get_request("/facilities/sites/",
                                          "facilities/site_overview.html")
 
-    def test_0020_show_building(self):
+    def test_show_building(self):
         self.assert_template_get_request(
-            "/facilities/building/{}/".format(self.building.id),
+            f"/facilities/building/{self.building.id}/",
             "facilities/building_show.html")
 
-    def test_0040_show_room(self):
+    def test_show_room(self):
         self.assert_template_get_request(
-            "/facilities/room/{}".format(self.room.id),
+            f"/facilities/room/{self.room.id}",
             "facilities/room_show.html")
 
-    def test_0070_building_levels(self):
+    def test_building_levels(self):
         self.assert_template_get_request(
-            "/facilities/building/{}/levels/".format(self.building.id),
+            f"/facilities/building/{self.building.id}/levels/",
             "facilities/levels.html")
 
-    def test_0080_building_level_rooms(self):
+    def test_building_level_rooms(self):
         self.assert_template_get_request(
-            "/facilities/building/{}/level/{}/rooms/".format(
-                self.building.id, self.room.level),
+            f"/facilities/building/{self.building.id}/level/{self.room.level}/rooms/",
             "facilities/rooms.html")
 
     def test_overcrowded_rooms(self):
@@ -54,5 +53,5 @@ class Test_010_Building(FrontendDataTestBase, FactoryWithConfigDataTestBase):
 
     def test_per_building_overcrowded_rooms(self):
         self.assert_template_get_request(
-            "/facilities/overcrowded/{}".format(self.building.id),
+            f"/facilities/overcrowded/{self.building.id}",
             "facilities/room_overcrowded.html")
