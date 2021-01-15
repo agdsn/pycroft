@@ -6,15 +6,44 @@
 from flask import url_for, current_app
 from jinja2.runtime import Context
 
-from tests import FrontendDataTestBase, FixtureDataTestBase, FactoryDataTestBase
-from tests.fixtures.permissions import UserData, MembershipData, PropertyData
-from tests.fixtures.config import ConfigData
+from tests import FrontendDataTestBase, FactoryDataTestBase, \
+    FactoryWithConfigDataTestBase, AdminPropertyGroupFactory, MembershipFactory
+from tests.factories.property import FinancePropertyGroupFactory
+from tests.factories.user import UserWithMembershipFactory
 from web.template_filters import require
 
 
-class PermissionsTestBase(FrontendDataTestBase, FixtureDataTestBase):
-    datasets = [MembershipData, PropertyData, ConfigData]
+class PermissionsTestBase(FrontendDataTestBase, FactoryWithConfigDataTestBase):
+    password = 'password'
+    admin_login = 'testadmin2'
+    finance_login = 'finanzer'
+    member_login = 'regular'
 
+    def create_factories(self):
+        super().create_factories()
+        self.admin_group = AdminPropertyGroupFactory.create()
+        self.admin = UserWithMembershipFactory.create(
+            login=self.admin_login,
+            password=self.password,
+            membership__group=self.admin_group,
+            membership__includes_today=True,
+        )
+        self.finance_group = FinancePropertyGroupFactory.create()
+        self.head_of_finance = UserWithMembershipFactory.create(
+            login=self.finance_login,
+            password=self.password,
+            membership__group=self.finance_group,
+            membership__includes_today=True,
+        )
+        # finanzer is also an admin
+        MembershipFactory.create(group=self.admin_group, user=self.head_of_finance,
+                                 includes_today=True)
+        self.member = UserWithMembershipFactory.create(
+            login=self.member_login,
+            password=self.password,
+            membership__group=self.config.member_group,
+            membership__includes_today=True,
+        )
 
 class TestAnonymous(FrontendDataTestBase, FactoryDataTestBase):
     """First test as anonymous user.
@@ -39,8 +68,7 @@ class Test_020_Permissions_Admin(PermissionsTestBase):
     """
 
     def setUp(self):
-        self.login = UserData.user1_admin.login
-        self.password = UserData.user1_admin.password
+        self.login = self.admin_login
         super().setUp()
 
     def test_0010_access_buildings(self):
@@ -52,14 +80,11 @@ class Test_020_Permissions_Admin(PermissionsTestBase):
         self.assert_access_forbidden(url_for('finance.bank_accounts_list'))
 
 
-class Test_030_Permissions_Finance(FrontendDataTestBase, FixtureDataTestBase):
+class Test_030_Permissions_Finance(PermissionsTestBase):
     """Test permissions for finance usergroup (advanced).
     """
-    datasets = [MembershipData, PropertyData, ConfigData]
-
     def setUp(self):
-        self.login = UserData.user2_finance.login
-        self.password = UserData.user2_finance.password
+        self.login = self.finance_login
         super().setUp()
 
     def test_0010_access_buildings(self):
@@ -74,8 +99,7 @@ class Test_040_Permissions_User(PermissionsTestBase):
     """
 
     def setUp(self):
-        self.login = UserData.user3_user.login
-        self.password = UserData.user3_user.password
+        self.login = self.member_login
         super().setUp()
 
     def test_0010_access_user(self):

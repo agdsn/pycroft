@@ -53,11 +53,15 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Admin-Gruppe"))
     granted = frozenset((
         'user_show', 'user_change', 'user_mac_change',
-        'finance_show', 'finance_change',
         'infrastructure_show', 'infrastructure_change',
         'facilities_show', 'facilities_change',
         'groups_show', 'groups_change_membership', 'groups_change',
     ))
+
+
+class FinancePropertyGroupFactory(PropertyGroupFactory):
+    name = factory.Sequence(partial(_maybe_append_seq, prefix="Finanzer-Gruppe"))
+    granted = frozenset(('finance_show', 'finance_change'))
 
 
 class MemberPropertyGroupFactory(PropertyGroupFactory):
