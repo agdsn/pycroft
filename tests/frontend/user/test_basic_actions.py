@@ -4,10 +4,8 @@ from pycroft import config
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.webstorage import WebStorage
-from tests.factories import UserWithHostFactory
-from tests.fixtures import permissions
-from tests.fixtures.dummy import user as dummy_user_fixtures
-from . import UserFrontendTestBase, LegacyUserFrontendTestBase
+from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory
+from . import UserFrontendTestBase
 
 
 class UserViewingPagesTestCase(UserFrontendTestBase):
@@ -22,11 +20,12 @@ class UserViewingPagesTestCase(UserFrontendTestBase):
         self.assert200(self.client.get(url_for('user.search')))
 
 
-class UserBlockingTestCase(LegacyUserFrontendTestBase):
-    def setUp(self):
-        super().setUp()
-        username = permissions.UserData.user3_user.login
-        self.test_user_id = User.q.filter_by(login=username).one().id
+class UserBlockingTestCase(UserFrontendTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.test_user = UserWithHostFactory.create()
+        MembershipFactory.create(user=self.test_user, group=self.config.member_group)
+        self.test_user_id = self.test_user.id
 
     def test_blocking_and_unblocking_works(self):
         user_show_endpoint = url_for("user.user_show", user_id=self.test_user_id)
@@ -44,11 +43,12 @@ class UserBlockingTestCase(LegacyUserFrontendTestBase):
         self.assert_message_flashed("Nutzer entsperrt.", 'success')
 
 
-class UserMovingOutTestCase(LegacyUserFrontendTestBase):
-    def setUp(self):
-        super().setUp()
-        username = permissions.UserData.user3_user.login
-        self.user = User.q.filter_by(login=username).one()
+class UserMovingOutTestCase(UserFrontendTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = UserWithHostFactory.create()
+        MembershipFactory.create(user=self.user, group=self.config.member_group)
+        self.test_user_id = self.user.id
 
     def test_user_cannot_be_moved_back_in(self):
         # attempt to move the user back in
@@ -80,13 +80,10 @@ class UserMovingOutTestCase(LegacyUserFrontendTestBase):
         # TODO: Test whether everything has been done on the library side!
 
 
-class UserMovedOutTestCase(LegacyUserFrontendTestBase):
-    def setUp(self):
-        super().setUp()
-        # Taking the dummy user because the one from the `permission`
-        # fixtures is member in `config.member_group`
-        username = dummy_user_fixtures.UserData.dummy.login
-        self.user = User.q.filter_by(login=username).one()
+class UserMovedOutTestCase(UserFrontendTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user = UserFactory.create()
 
     def test_user_cannot_be_moved_out(self):
         self.user.room = None
