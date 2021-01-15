@@ -2,11 +2,11 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from datetime import timedelta
+from datetime import timedelta, timezone, datetime
 
 from pycroft import config
 from pycroft.helpers.i18n import localized
-from pycroft.helpers.interval import closedopen
+from pycroft.helpers.interval import closedopen, single
 from pycroft.lib import user as UserHelper
 from pycroft.lib.facilities import get_room
 from pycroft.lib.user import move, move_out, move_in
@@ -194,7 +194,10 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         old_address = self.user.address
 
         self.move_out(self.user)
-        self.assertEqual(self.user.active_memberships(), [])
+        self.assertEqual(
+            self.user.active_memberships(when=single(datetime.now(timezone.utc))),
+            []
+        )
         self.assertIsNone(self.user.room)
         self.assertEqual(self.user.address, old_address)
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from itertools import chain
 
@@ -13,7 +13,7 @@ from .user import UserFactory
 class MembershipFactory(BaseFactory):
     class Meta:
         model = Membership
-    begins_at = datetime.utcnow()
+    begins_at = datetime.now(timezone.utc)
     ends_at = None
 
     user = factory.SubFactory(UserFactory)
@@ -22,8 +22,8 @@ class MembershipFactory(BaseFactory):
 
     class Params:
         includes_today = factory.Trait(
-            begins_at=datetime.utcnow() - timedelta(1),
-            ends_at=datetime.utcnow() + timedelta(1),
+            begins_at=datetime.now(timezone.utc) - timedelta(1),
+            ends_at=datetime.now(timezone.utc) + timedelta(1),
         )
 
 
