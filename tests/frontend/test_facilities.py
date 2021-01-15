@@ -3,29 +3,24 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from flask import url_for
-from pycroft.model.facilities import Building, Room
-
-from tests import FrontendDataTestBase, FixtureDataTestBase
-from tests.fixtures.config import ConfigData
-from tests.fixtures.dummy.facilities import BuildingData, RoomData
-from tests.fixtures.permissions import UserData, PropertyData, MembershipData
+from tests import FrontendDataTestBase, FactoryWithConfigDataTestBase, AdminPropertyGroupFactory
+from tests.factories import RoomFactory
+from tests.factories.user import UserWithMembershipFactory
 
 
-class Test_010_Building(FrontendDataTestBase, FixtureDataTestBase):
-    datasets = (ConfigData, BuildingData, MembershipData, PropertyData,
-                RoomData, UserData)
-    login = UserData.user1_admin.login
-    password = UserData.user1_admin.password
+class Test_010_Building(FrontendDataTestBase, FactoryWithConfigDataTestBase):
+    login = 'shoot-the-root'
+    password = 'password'
 
-    def setUp(self):
-        super(Test_010_Building, self).setUp()
-        self.building = Building.q.filter_by(
-            street=BuildingData.dummy_house1.street,
-            number=BuildingData.dummy_house1.number).one()
-        self.room = Room.q.filter_by(building=self.building,
-                                     number=RoomData.dummy_room1.number,
-                                     level=RoomData.dummy_room1.level).one()
+    def create_factories(self):
+        super().create_factories()
+        self.user = UserWithMembershipFactory(
+            login=self.login,
+            password=self.password,
+            membership__group=AdminPropertyGroupFactory.create(),
+        )
+        self.room = RoomFactory()
+        self.building = self.room.building
 
     def test_0010_list_buildings(self):
         self.assert_template_get_request("/facilities/sites/",
