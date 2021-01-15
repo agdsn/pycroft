@@ -127,11 +127,11 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
             cls.config = get_config(required_property='mail', use_ssl='False',
                                     ca_certs_file=None, ca_certs_data=None)
         except KeyError as e:
-            raise RuntimeError("Environment variable {} must be set".format(e.args[0]))
+            raise RuntimeError(f"Environment variable {e.args[0]} must be set")
         cls.base_dn = cls.config.base_dn
-        cls.user_base_dn = 'ou=users,{}'.format(cls.config.base_dn)
-        cls.group_base_dn = 'ou=groups,{}'.format(cls.config.base_dn)
-        cls.property_base_dn = 'ou=properties,{}'.format(cls.config.base_dn)
+        cls.user_base_dn = f'ou=users,{cls.config.base_dn}'
+        cls.group_base_dn = f'ou=groups,{cls.config.base_dn}'
+        cls.property_base_dn = f'ou=properties,{cls.config.base_dn}'
 
     def setUp(self):
         super(LdapTestBase, self).setUp()
@@ -156,20 +156,20 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         for base_dn in (self.base_dn, self.user_base_dn, self.group_base_dn, self.property_base_dn):
             result = self.conn.add(base_dn, 'organizationalUnit')
             if not result:
-                raise RuntimeError("Couldn't create base_dn {} as organizationalUnit"
-                                   .format(base_dn), self.conn.result)
+                raise RuntimeError(f"Couldn't create base_dn {base_dn} as organizationalUnit",
+                                   self.conn.result)
 
         # PASSWORD POLICIES
         # mimicking the LDIF given in https://hub.docker.com/r/dinkel/openldap/
 
-        policies_dn = "ou=policies,{base}".format(base=self.base_dn)
+        policies_dn = f"ou=policies,{self.base_dn}"
         result = self.conn.add(policies_dn, 'organizationalUnit')
 
         if not result:
-            raise RuntimeError("Couldn't create policies_dn {} as organizationalUnit"
-                               .format(policies_dn), self.conn.result)
+            raise RuntimeError(f"Couldn't create policies_dn {policies_dn} as organizationalUnit",
+                               self.conn.result)
 
-        default_ppolicy_dn = "cn=default,{}".format(policies_dn)
+        default_ppolicy_dn = f"cn=default,{policies_dn}"
         policy_attrs = {
             'pwdAllowUserChange': True,
             'pwdAttribute': "userPassword",
@@ -199,14 +199,14 @@ class LdapFunctionalityTestCase(LdapTestBase):
     def test_ldap_base_exists(self):
         success = self.conn.search(self.base_dn, '(objectclass=*)', ldap3.BASE)
         if not success:
-            self.fail("Base DN search failed: {}".format(self.conn.result))
+            self.fail(f"Base DN search failed: {self.conn.result}")
 
     def test_adding_an_entry_works(self):
-        self.conn.add('uid=bar,{}'.format(self.base_dn), ['inetOrgPerson'],
+        self.conn.add(f'uid=bar,{self.base_dn}', ['inetOrgPerson'],
                       {'sn': 'test', 'cn': 'test'})
         success = self.conn.search(self.base_dn, '(objectclass=inetOrgPerson)')
         if not success:
-            self.fail("Base DN subtree search failed: {}".format(self.conn.result))
+            self.fail(f"Base DN subtree search failed: {self.conn.result}")
         relevant_entries = [r for r in self.conn.response if r['dn'] != self.base_dn]
         self.assertEqual(len(relevant_entries), 1)
 
