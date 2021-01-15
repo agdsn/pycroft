@@ -21,6 +21,7 @@ from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.pool import SingletonThreadPool
 import sys
 
+from pycroft import Config
 from tests.factories import ConfigFactory, UserFactory, AdminPropertyGroupFactory, MembershipFactory
 from werkzeug.routing import IntegerConverter, UnicodeConverter
 from pycroft.model import session, create_engine
@@ -189,7 +190,7 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
 
 class FactoryWithConfigDataTestBase(FactoryDataTestBase):
     def create_factories(self):
-        self.config = ConfigFactory.create()
+        self.config: Config = ConfigFactory.create()
 
 
 class FrontendDataTestBase(testing.TestCase):
