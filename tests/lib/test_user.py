@@ -16,7 +16,7 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import (
     user, facilities, session, host)
 from pycroft.model.port import PatchPort
-from tests import FixtureDataTestBase, FactoryWithConfigDataTestBase, FactoryDataTestBase
+from tests import FactoryWithConfigDataTestBase, FactoryDataTestBase
 from tests.factories.address import AddressFactory
 from tests.fixtures import network_access
 from tests.fixtures.config import ConfigData, PropertyData
@@ -329,17 +329,14 @@ class UserEditsTestCase(FactoryDataTestBase):
         self.assertEqual(self.user.email, new_mail)
 
 
-class UserWithNetworkAccessTestCase(FixtureDataTestBase):
-    # config with properties and a dummy user with network access
-    datasets = (ConfigData, PropertyData, network_access.MembershipData)
-
-    def setUp(self):
-        super().setUp()
-        self.user_to_block = user.User.q.filter_by(login=UserData.dummy.login).one()
-        # these asserts verify correct initial state of the fixtures
-        self.assertTrue(self.user_to_block.has_property("network_access"))
-        verstoss = config.violation_group
-        self.assertNotIn(verstoss, self.user_to_block.active_property_groups())
+class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.user_to_block = factories.user.UserWithMembershipFactory.create(
+            membership__includes_today=True,
+            membership__group=self.config.member_group,
+        )
+        self.assertNotIn(self.config.violation_group, self.user_to_block.active_property_groups())
 
     def assert_violation_membership(self, user, subinterval=None):
         if subinterval is None:
