@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 import logging
-import sys
 from unittest import TestCase
 
 import ldap3
 
-from pycroft.model.session import session
-from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, fetch_groups_to_sync, \
-    fetch_properties_to_sync, get_config, establish_and_return_ldap_connection, \
-    fetch_current_ldap_users, fetch_current_ldap_groups, fetch_current_ldap_properties, sync_all
-from ldap_sync.record import UserRecord, GroupRecord, RecordState, dn_from_username
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
-from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
-import tests.fixtures.ldap_sync.complex as complex_fixtures
+from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, \
+    fetch_groups_to_sync, \
+    fetch_properties_to_sync, get_config, establish_and_return_ldap_connection, \
+    fetch_current_ldap_users, fetch_current_ldap_groups, \
+    fetch_current_ldap_properties, sync_all
+from ldap_sync.record import UserRecord, GroupRecord, RecordState, \
+    dn_from_username
+from pycroft.model.session import session
+from tests import FactoryDataTestBase, UserFactory, MembershipFactory
 from tests.factories import PropertyGroupFactory
 from tests.factories.user import UserWithMembershipFactory
 
@@ -93,15 +94,23 @@ class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
         self.assertEqual(set(properties[0].members), {self.user.login})
 
 
-class MultipleUsersFilterTestCase(FixtureDataTestBase):
-    datasets = complex_fixtures.datasets
+class MultipleUsersFilterTestCase(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.propgroup = PropertyGroupFactory.create(
+            name="my property group",
+            granted={'mail', 'ldap_login_enabled'},
+        )
+        self.user1, self.user2 = UserWithMembershipFactory.create_batch(
+            2,
+            membership__group=self.propgroup,
+            membership__includes_today=True,
+            with_unix_account=True,
+        )
 
     def test_correct_users_fetched(self):
         users = fetch_users_to_sync(session, required_property='mail')
-        expected_logins = {
-            complex_fixtures.UserData.active_user1.login,
-            complex_fixtures.UserData.active_user2.login,
-        }
+        expected_logins = {self.user1.login, self.user2.login}
         self.assertEqual({u.User.login for u in users}, expected_logins)
 
 
@@ -202,8 +211,27 @@ class LdapFunctionalityTestCase(LdapTestBase):
         self.assertEqual(len(relevant_entries), 1)
 
 
-class LdapSyncerTestBase(LdapTestBase, FixtureDataTestBase):
-    datasets = complex_fixtures.datasets
+class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        u1, u2 = UserFactory.create_batch(2, with_unix_account=True)
+        inconsistent = UserFactory.create(with_unix_account=True, email=None)
+
+        p_dummy = PropertyGroupFactory.create(name='group_without_grants')
+        pg_member = PropertyGroupFactory.create(name='member',
+                                                granted={'mail', 'ldap_login_enabled'})
+
+        UserWithMembershipFactory.create(membership__group=p_dummy, with_unix_account=True)
+        for user in [u1, u2, inconsistent]:
+            MembershipFactory.create(group=pg_member, user=user)
+
+        MembershipFactory.create(
+            user=inconsistent,
+            group=PropertyGroupFactory.create(
+                name='some_weird_group',
+                granted={'mail'},  # weird, because grants mail, but not ldap_login_enabled
+            ),
+        )
 
     def setUp(self):
         super(LdapSyncerTestBase, self).setUp()
