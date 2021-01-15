@@ -4,20 +4,17 @@
 import operator
 import pkgutil
 import unittest
-import time
 from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
 from unittest.mock import MagicMock
 
 from factory import Iterator
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
 from pycroft.helpers.date import last_day_of_month
-from tests.factories import MembershipFactory, ConfigFactory
-
-from pycroft.helpers.interval import closed, closedopen, openclosed, single
+from pycroft.helpers.interval import closedopen, openclosed, single
 from pycroft.lib import finance
 from pycroft.lib.finance import (
     cleanup_description,
@@ -25,20 +22,18 @@ from pycroft.lib.finance import (
     transferred_amount,
     is_ordered, get_last_applied_membership_fee, estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
-    end_payment_in_default_memberships, take_actions_for_payment_in_default_users,
+    end_payment_in_default_memberships,
+    take_actions_for_payment_in_default_users,
     match_hss_lenient)
-from pycroft.lib.membership import make_member_of
 from pycroft.model import session
-from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Transaction, Split)
-from pycroft.model.user import PropertyGroup, User, Membership
+from pycroft.model.finance import BankAccountActivity, Transaction, Split
+from pycroft.model.user import User
 from tests import FactoryDataTestBase
+from tests.factories import MembershipFactory, ConfigFactory, BuildingFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory, BankAccountFactory
 from tests.factories.user import UserFactory, UserWithMembershipFactory
-
-from .. import factories
 
 
 class Test_010_BankAccount(FactoryDataTestBase):
@@ -628,10 +623,10 @@ class MatchingTestCase(unittest.TestCase):
 class HssMatchingTestCase(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
-        self.hss = factories.BuildingFactory(site__name="Hochschulstraße")
-        factories.UserFactory(login='hanssarpei', name="Hans Sarpei", room__building=self.hss)
-        factories.UserFactory(login='franz', name="Franz Wurst", room__building=self.hss)
-        factories.UserFactory(login='hans')  # not living in the HSS
+        self.hss = BuildingFactory(site__name="Hochschulstraße")
+        UserFactory(login='hanssarpei', name="Hans Sarpei", room__building=self.hss)
+        UserFactory(login='franz', name="Franz Wurst", room__building=self.hss)
+        UserFactory(login='hans')  # not living in the HSS
 
     def test_hss_matching(self):
         # TODO match something like
