@@ -17,32 +17,34 @@ class LogTestBase(FactoryDataTestBase):
         super().create_factories()
         self.user = UserFactory.create()
 
+    def assert_log_entry(self, log_entry, expected_author, expected_created_at, expected_message):
+        self.assertEqual(log_entry.message, expected_message)
+        self.assertAlmostEqual(log_entry.created_at, expected_created_at,
+                               delta=timedelta(seconds=5))
+        self.assertEqual(log_entry.author, expected_author)
+        self.assertIsNotNone(LogEntry.q.get(log_entry.id))
 
-class Test_010_UserLogEntry(LogTestBase):
-    def test_0010_create_user_log_entry(self):
+
+class UserLogEntryTest(LogTestBase):
+    def test_user_log_entry(self):
         user_log_entry = log_user_event(message=self.message,
                                         author=self.user,
                                         user=self.user)
 
-        self.assertEqual(user_log_entry.message, self.message)
-        self.assertAlmostEqual(user_log_entry.created_at, session.utcnow(),
-                               delta=timedelta(seconds=5))
-        self.assertEqual(user_log_entry.author, self.user)
+        self.assert_log_entry(user_log_entry, self.user, session.utcnow(), self.message)
         self.assertEqual(user_log_entry.user, self.user)
 
-        self.assertIsNotNone(LogEntry.q.get(user_log_entry.id))
         session.session.delete(user_log_entry)
         session.session.commit()
         self.assertIsNone(LogEntry.q.get(user_log_entry.id))
 
 
-class Test_020_RoomLogEntry(LogTestBase):
+class RoomLogEntryTest(LogTestBase):
     def create_factories(self):
         super().create_factories()
-
         self.room = RoomFactory.create()
 
-    def test_0010_create_room_log_entry(self):
+    def test_create_room_log_entry(self):
         room_log_entry = log_room_event(message=self.message,
                                         author=self.user,
                                         room=self.room)
@@ -51,10 +53,7 @@ class Test_020_RoomLogEntry(LogTestBase):
 
         db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
 
-        self.assertEqual(db_room_log_entry.message, self.message)
-        self.assertAlmostEqual(db_room_log_entry.created_at, session.utcnow(),
-                               delta=timedelta(seconds=5))
-        self.assertEqual(db_room_log_entry.author, self.user)
+        self.assert_log_entry(db_room_log_entry, self.user, session.utcnow(), self.message)
         self.assertEqual(db_room_log_entry.room, self.room)
 
         self.assertIsNotNone(LogEntry.q.get(db_room_log_entry.id))
