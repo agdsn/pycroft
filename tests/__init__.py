@@ -317,6 +317,7 @@ class FrontendDataTestBase(testing.TestCase):
 
 class FrontendWithAdminTestBase(FrontendDataTestBase, FactoryDataTestBase):
     def create_factories(self):
+        super().create_factories()
         self.login = 'hans-der-nette-admin'
         self.password = 'This is 1 strong testpassword!!'
         self.admin = UserFactory(login=self.login, password=self.password)
