@@ -42,6 +42,7 @@ class PropertyGroupFactory(BaseFactory):
     denied = frozenset()
 
     name = factory.Sequence(lambda n: "Property group %s" % n)
+    permission_level = factory.LazyAttribute(lambda _: 0)
 
     @factory.lazy_attribute
     def property_grants(self):
@@ -57,11 +58,13 @@ class AdminPropertyGroupFactory(PropertyGroupFactory):
         'facilities_show', 'facilities_change',
         'groups_show', 'groups_change_membership', 'groups_change',
     ))
+    permission_level = 10
 
 
 class FinancePropertyGroupFactory(PropertyGroupFactory):
     name = factory.Sequence(partial(_maybe_append_seq, prefix="Finanzer-Gruppe"))
     granted = frozenset(('finance_show', 'finance_change'))
+    permission_level = 80
 
 
 class MemberPropertyGroupFactory(PropertyGroupFactory):
