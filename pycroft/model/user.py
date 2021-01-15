@@ -10,14 +10,16 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from __future__ import annotations
 import re
 from datetime import timedelta, date
+from typing import Optional, List
 
 from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, Column, ForeignKey, Integer,
     String, and_, exists, join, not_, null, select, Sequence,
-    Interval, Date, func, UniqueConstraint)
+    Date, func, UniqueConstraint)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
@@ -27,7 +29,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
-from pycroft.helpers.interval import (closed, single)
+from pycroft.helpers.interval import closed, single, Interval
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
@@ -257,7 +259,7 @@ class User(ModelBase, BaseUser, UserMixin):
             return user if user.check_password(plaintext_password) else None
 
     @hybrid_method
-    def active_memberships(self, when=None):
+    def active_memberships(self, when: Optional[Interval] = None) -> List[Membership]:
         if when is None:
             now = session.utcnow()
             when = single(now)
@@ -273,7 +275,7 @@ class User(ModelBase, BaseUser, UserMixin):
         )
 
     @hybrid_method
-    def active_property_groups(self, when=None):
+    def active_property_groups(self, when: Optional[Interval] = None) -> List[PropertyGroup]:
         return object_session(self).query(
             PropertyGroup
         ).join(
@@ -293,7 +295,7 @@ class User(ModelBase, BaseUser, UserMixin):
         )
 
     @hybrid_method
-    def member_of(self, group, when=None):
+    def member_of(self, group: PropertyGroup, when: Optional[Interval] = None) -> bool:
         return group in self.active_property_groups(when)
 
     @member_of.expression
@@ -314,11 +316,7 @@ class User(ModelBase, BaseUser, UserMixin):
         )
 
     @hybrid_method
-    def has_property(self, property_name, when=None):
-        """
-        :param str property_name: name of a property
-        :param Interval when:
-        """
+    def has_property(self, property_name: str, when: Optional[Interval] = None) -> bool:
         if when is None:
             now = session.utcnow()
             when = single(now)
@@ -367,7 +365,7 @@ class User(ModelBase, BaseUser, UserMixin):
         ).self_group().label("has_property_" + prop)
 
     @property
-    def permission_level(self):
+    def permission_level(self) -> int:
         return max((membership.group.permission_level for membership in self.active_memberships()),
                    default=0)
 
