@@ -318,7 +318,7 @@ class UserEditsTestCase(FactoryDataTestBase):
     def test_correct_new_email(self):
         new_mail = "user@example.net"
         self.assertNotEqual(new_mail, self.user.email)
-        UserHelper.edit_email(self.user, new_mail, self.user)
+        UserHelper.edit_email(self.user, new_mail, False, self.user)
         self.assertEqual(self.user.email, new_mail)
 
 
