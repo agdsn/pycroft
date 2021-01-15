@@ -221,7 +221,8 @@ class FrontendDataTestBase(testing.TestCase):
 
     def setUp(self):
         super(FrontendDataTestBase, self).setUp()
-        self._login(login=self.login, password=self.password)
+        if self.login:
+            self._login(login=self.login, password=self.password)
 
     def create_app(self):
         """

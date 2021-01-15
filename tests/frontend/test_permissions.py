@@ -6,7 +6,7 @@
 from flask import url_for, current_app
 from jinja2.runtime import Context
 
-from tests import FrontendDataTestBase, FixtureDataTestBase
+from tests import FrontendDataTestBase, FixtureDataTestBase, FactoryDataTestBase
 from tests.fixtures.permissions import UserData, MembershipData, PropertyData
 from tests.fixtures.config import ConfigData
 from web.template_filters import require
@@ -16,14 +16,12 @@ class PermissionsTestBase(FrontendDataTestBase, FixtureDataTestBase):
     datasets = [MembershipData, PropertyData, ConfigData]
 
 
-class Test_010_Anonymous(FrontendDataTestBase, FixtureDataTestBase):
+class TestAnonymous(FrontendDataTestBase, FactoryDataTestBase):
     """First test as anonymous user.
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
     """
-    datasets = [UserData]
-
-    def test_0010_access_anonymous(self):
+    def test_access_anonymous(self):
         # Login is OK
         self.assert_response_code(url_for('login.login'), 200)
 
