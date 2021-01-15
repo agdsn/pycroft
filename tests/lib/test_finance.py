@@ -32,32 +32,31 @@ from pycroft.model import session
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Transaction, Split)
 from pycroft.model.user import PropertyGroup, User, Membership
-from tests import FixtureDataTestBase, FactoryDataTestBase, UserFactory
+from tests import FactoryDataTestBase
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
-    AccountFactory
-from tests.factories.user import UserWithMembershipFactory
-from tests.fixtures.config import ConfigData, PropertyGroupData, PropertyData
-from tests.lib.finance_fixtures import (
-    AccountData, BankAccountData, MembershipData, UserData)
+    AccountFactory, BankAccountFactory
+from tests.factories.user import UserFactory, UserWithMembershipFactory
 
 from .. import factories
 
 
-class Test_010_BankAccount(FixtureDataTestBase):
-    datasets = [AccountData, BankAccountData, UserData]
+class Test_010_BankAccount(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.bank_account = BankAccountFactory.create(
+            name="Hauptkonto",
+            bank="Spaßkasse",
+            account__name="Bankkonto 3120219540",
+            account_number='3120219540',
+        )
+        self.fee_account = AccountFactory.create(name="Membership Fees", type='REVENUE')
+        self.user = UserFactory.create(name="Dummy User", account__name="Dummy User")
+        self.author = UserFactory.create()
 
-    def setUp(self):
-        super(Test_010_BankAccount, self).setUp()
-        self.fee_account = Account.q.filter_by(
-            name=AccountData.membership_fee_account.name
-        ).one()
-        self.user_account = Account.q.filter_by(
-            name=AccountData.user_account.name
-        ).one()
-        self.author = User.q.filter_by(
-            login=UserData.dummy_1.login
-        ).one()
+    @property
+    def user_account(self):
+        return self.user.account
 
     def test_0010_import_bank_account_csv(self):
         """
@@ -69,13 +68,9 @@ class Test_010_BankAccount(FixtureDataTestBase):
         import_bank_account_activities_csv(f, Decimal('43.42'),
                                            date(2015, 1, 1))
 
-        bank_account = BankAccount.q.filter(
-            BankAccount.iban == BankAccountData.dummy.iban
-        ).one()
-
         # test for correct dataimport
         activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account,
+            bank_account=self.bank_account,
             reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
         self.assertEqual(activity.other_account_number, "12345678")
@@ -87,7 +82,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
 
         # verify that the right year gets chosen for the transaction
         activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account,
+            bank_account=self.bank_account,
             reference=u"Pauschalen"
         ).first()
         self.assertEqual(activity.posted_on, date(2012, 12, 24))
@@ -99,7 +94,7 @@ class Test_010_BankAccount(FixtureDataTestBase):
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
         activity = BankAccountActivity.q.filter_by(
-            bank_account=bank_account,
+            bank_account=self.bank_account,
             reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
         self.assertEqual(activity.posted_on, date(2013, 12, 29))
