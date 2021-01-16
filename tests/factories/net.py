@@ -1,4 +1,5 @@
 import factory
+import faker
 from ipaddr import IPv4Network
 
 from pycroft.model.net import VLAN, Subnet
@@ -19,9 +20,9 @@ class VLANFactory(BaseFactory):
 
 
 def _random_subnet():
-    ipv4_factory = factory.Faker('ipv4', network=True)
+    f = faker.Faker()
     while True:
-        str_network = ipv4_factory.generate(extra_kwargs={})
+        str_network = f.ipv4(network=True)
         network = IPv4Network(str_network)
         if network.numhosts >= 4:
             return network

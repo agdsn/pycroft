@@ -9,7 +9,7 @@ import logging
 
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from flask.globals import current_app
-from werkzeug import LocalProxy
+from werkzeug.local import LocalProxy
 
 from .app import HadesCelery
 from .exc import HadesConfigError, HadesOperationalError, HadesTimeout
