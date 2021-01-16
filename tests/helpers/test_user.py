@@ -34,7 +34,7 @@ class TestHashing(unittest.TestCase):
         pw = generate_password(8)
         for hash_method in (ldap_des_crypt, ldap_sha512_crypt, ldap_md5,
                             ldap_salted_sha1):
-            encrypted = hash_method.encrypt(pw)
+            encrypted = hash_method.hash(pw)
             self.assertTrue(verify_password(pw, encrypted),
                             "{}: '{}' should verify '{}'"
                             .format(hash_method.name, encrypted, pw))

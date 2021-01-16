@@ -7,6 +7,7 @@ import string
 
 from passlib.apps import ldap_context
 import passlib.utils
+from passlib.pwd import genword
 
 crypt_context = ldap_context.copy(
     default="ldap_sha512_crypt",
@@ -31,7 +32,7 @@ def generate_password(length):
     #without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
               ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
-    return passlib.utils.generate_password(length, charset)
+    return genword(length=length, chars=charset)
 
 
 def hash_password(plaintext_passwd):
@@ -40,7 +41,7 @@ def hash_password(plaintext_passwd):
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return crypt_context.encrypt(plaintext_passwd)
+    return crypt_context.hash(plaintext_passwd)
 
 
 def cleartext_password(plaintext_passwd):
