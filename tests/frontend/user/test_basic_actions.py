@@ -6,6 +6,7 @@ from pycroft.model.user import User
 from pycroft.model.webstorage import WebStorage
 from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory
 from . import UserFrontendTestBase
+from ...factories.address import AddressFactory
 
 
 class UserViewingPagesTestCase(UserFrontendTestBase):
@@ -83,12 +84,12 @@ class UserMovingOutTestCase(UserFrontendTestBase):
 class UserMovedOutTestCase(UserFrontendTestBase):
     def create_factories(self):
         super().create_factories()
-        self.user = UserFactory.create()
+        self.user = UserFactory(room=None, address=AddressFactory())
 
     def test_user_cannot_be_moved_out(self):
         self.user.room = None
         endpoint = url_for('user.move_out', user_id=self.user.id)
-        response = self.client.post(endpoint, data={'comment': "Ist doof"})
+        response = self.client.post(endpoint, data={'now': True, 'comment': "Ist doof"})
         self.assert_404(response)
         self.assert_message_flashed("Nutzer {} ist aktuell nirgends eingezogen!"
                                     .format(self.user.id), category='error')
@@ -125,6 +126,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
 
     def test_user_create_data_sheet(self):
         response = self.client.post(url_for('user.create'), data={
+            'now': True,
             'name': "Test User",
             'building': self.room.building.id,
             'level': self.room.level,
@@ -151,6 +153,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
         self.assertEqual(len(other_user.hosts), 1)
 
         move_in_formdata = {
+            'now': True,
             'name': "Test User",
             'building': str(self.room.building.id),
             'level': str(self.room.level),
@@ -162,7 +165,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
             'property_group': config.member_group.id
         }
         response = self.client.post(url_for('user.create'), data=move_in_formdata)
-        self.assert200(response)
+        self.assertStatus(response, 400)
         self.assertIsNone(response.location)
 
         move_in_formdata.update(annex="y")
