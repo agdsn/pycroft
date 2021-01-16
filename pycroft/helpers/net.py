@@ -3,6 +3,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+from typing import Optional
+
 import ipaddr
 
 # Byte represented by 2 hexadecimal digits
@@ -104,5 +106,8 @@ def reverse_pointer(ip_address):
     raise TypeError()
 
 
-def get_interface_manufacturer(mac):
-    return MacLookup().lookup(mac)[:8]  # display only most significant part of vendor name
+def get_interface_manufacturer(mac) -> Optional[str]:
+    try:
+        return MacLookup().lookup(mac)[:8]
+    except KeyError:
+        return
