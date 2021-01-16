@@ -64,7 +64,7 @@ services:
     volumes:
       - ./docker/ldap/schema:/etc/ldap/schema/custom
   mq:
-    image: rabbitmq
+    image: rabbitmq:3.8.9
     environment:
       - RABBITMQ_DEFAULT_USER=celery
       - RABBITMQ_DEFAULT_PASS=celery
