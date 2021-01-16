@@ -545,20 +545,20 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         # End in grace-period in current month
         end_date = session.utcnow().date().replace(
             day=self.membership_fee_current.booking_begin.days - 1)
-        self.assertEquals(base, estimate_balance(self.user, end_date))
+        self.assertEqual(base, estimate_balance(self.user, end_date))
 
         # End after grace-period in current month
         end_date = self.membership_fee_current.ends_on
-        self.assertEquals(base - 5.00, estimate_balance(self.user, end_date))
+        self.assertEqual(base - 5.00, estimate_balance(self.user, end_date))
 
         # End in the middle of next month
         end_date = session.utcnow().date().replace(day=14) + timedelta(weeks=4)
-        self.assertEquals(base - 10.00, estimate_balance(self.user, end_date))
+        self.assertEqual(base - 10.00, estimate_balance(self.user, end_date))
 
         # End in grace-period of next month
         end_date = end_date.replace(
             day=self.membership_fee_current.booking_begin.days - 1)
-        self.assertEquals(base - 5.00, estimate_balance(self.user, end_date))
+        self.assertEqual(base - 5.00, estimate_balance(self.user, end_date))
 
     def test_last_booked__current_not_booked(self):
         self.assertTrue(self.user.has_property('member'))
@@ -593,7 +593,7 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
 
         end_date = last_day_of_month(session.utcnow().date())
 
-        self.assertEquals(0.00, estimate_balance(self.user, end_date))
+        self.assertEqual(0.00, estimate_balance(self.user, end_date))
 
 
 class MatchingTestCase(unittest.TestCase):

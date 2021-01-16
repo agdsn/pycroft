@@ -273,7 +273,7 @@ class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
         self.assertFalse(new_user.hosts)
         self.assertIsNone(new_user.room)
         # move_out keeps user's address
-        self.assertEquals(new_user.address, address)
+        self.assertEqual(new_user.address, address)
 
         # check if users finance account still exists
         self.assertIsNotNone(new_user.account)
