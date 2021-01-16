@@ -726,7 +726,8 @@ def create():
         if unique_mac_error:
             form.mac.errors.append(unique_mac_error)
 
-    return render_template('user/user_create.html', form=form)
+    # TODO we should do this across the `web` package.  See #417
+    return render_template('user/user_create.html', form=form), 400 if form.is_submitted() else 200
 
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
