@@ -11,9 +11,6 @@ import string
 import unittest
 from flask import url_for, _request_ctx_stack
 import flask_testing as testing
-from fixture.style import NamedDataStyle
-from fixture import SQLAlchemyFixture, DataTestCase
-from fixture.util import start_debug, stop_debug
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -142,37 +139,6 @@ class SQLAlchemyTestCase(unittest.TestCase):
         pattern = 'duplicate key value violates unique constraint ".+_key"'
         with self.assertRaisesRegexp(IntegrityError, pattern, msg=message) as cm:
             yield cm
-
-
-class FixtureDataTestBase(SQLAlchemyTestCase, DataTestCase, unittest.TestCase):
-    """A TestCase baseclass that handles database fixtures.
-
-    You only need to define a `datasets` class member with a list of
-    the fixture DataSets. The type of the fixture element will be taken
-    from the name of the DataSet class. It needs "Data" as suffix. So if
-    you want to provide fixtures for the User model the name of the DataSet
-    has to be "UserData". See also test_property.py for an example.
-
-    If you overwrite the `setUp` or `tearDown` methods don't forget
-    to call super at the beginning or end of your implementation.
-
-    The multiple inheritance is necessary, because the definition of
-    DataTestCase is broken. It does not inherit from unittest.TestCase and it
-    does not call super() in its setUp and tearDown methods. To get the MRO
-    right, we have to resort to this.
-    """
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.fixture = SQLAlchemyFixture(
-            env=_all, style=NamedDataStyle(),
-            engine=connection
-        )
-
-    def cleanup(self):
-        """Override of SQLAlchemyTestCase.cleanup"""
-        self.data.teardown()
-        super(FixtureDataTestBase, self).cleanup()
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
@@ -339,10 +305,3 @@ class InvalidateHadesLogsMixin(testing.TestCase):
         if 'hades_logs' in app.extensions:
             app.extensions.pop('hades_logs')
         return app
-
-
-@contextmanager
-def with_debug(channel="fixture.loadable", **kw):
-    start_debug(channel, **kw)
-    yield
-    stop_debug(channel)

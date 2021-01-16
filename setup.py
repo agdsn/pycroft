@@ -62,7 +62,6 @@ setup(
     tests_require=[
         'factory-boy',
         'Flask-Testing',
-        'fixture',
         'nose',
         'pydot',
     ],
