@@ -18,5 +18,5 @@ class BaseFactory(Factory):
 def copy_factory(factory: Type[Factory], orig):
     return factory.build(**{
         field_name: getattr(orig, field_name)
-        for field_name in factory.declarations()
+        for field_name in factory._meta.pre_declarations
     })
