@@ -17,19 +17,14 @@ crypt_context = ldap_context.copy(
 clear_password_prefix = '{clear}'
 
 
-def generate_password(length):
+def generate_password(length: int) -> str:
     """Generate a password of a certain length.
 
     The password is generated as :param:`length` independent choices
     of a certain charset.  The charset does not include ambiguous
     characters like ``l``, ``1``, ``0`` and ``O``.
-
-    :param int length: The length of the password
-
-    :return: The generated password
-    :rtype: str
     """
-    #without hard to distinguish characters l/1 0/O
+    # without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
               ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
     return genword(length=length, chars=charset)
