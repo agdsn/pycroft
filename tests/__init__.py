@@ -127,8 +127,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
     def assertRaisesRegexp(self, expected_exception, expected_regexp,
                            callable_obj=None, *args, **kwargs):
-        context = super(SQLAlchemyTestCase, self).assertRaisesRegexp(
-            expected_exception, expected_regexp)
+        context = super().assertRaisesRegex(expected_exception, expected_regexp)
         if callable_obj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
