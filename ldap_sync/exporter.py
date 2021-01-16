@@ -178,8 +178,7 @@ def fetch_users_to_sync(session, required_property=None) -> List[UserProxyType]:
 
         # additional info:
         #  absence of `ldap_login_enabled` property → should_be_blocked
-        .add_column(not_blocked_property.c.property_name.is_(None)
-                    .label('should_be_blocked'))
+        .add_columns(not_blocked_property.c.property_name.is_(None).label('should_be_blocked'))
         .outerjoin(
             not_blocked_property,
             and_(User.id == foreign(not_blocked_property.c.user_id),
@@ -199,7 +198,7 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
     return (
         Group.q
         # uids of the members of the group
-        .add_column(func.coalesce(select([func.array_agg(User.login)])
+        .add_columns(func.coalesce(select([func.array_agg(User.login)])
                 .select_from(join(Membership, User))
                 .where(Membership.group_id == Group.id).where(Membership.active())
                 .group_by(Group.id)
