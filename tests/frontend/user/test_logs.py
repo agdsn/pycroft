@@ -1,9 +1,10 @@
 import unittest
 
+from tests.factories import UserFactory, RoomLogEntryFactory, UserLogEntryFactory, \
+    UserWithHostFactory
+
 from hades_logs import HadesLogs
-from pycroft.model._all import User
 from tests import InvalidateHadesLogsMixin
-from tests.fixtures import hades_logs, frontend_logs
 
 from . import UserLogTestBase
 from ...hades_logs import DummyHadesWorkerBase
@@ -23,33 +24,25 @@ class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
 
 
 class RoomAndUserLogTestCase(UserLogTestBase):
-    datasets = frozenset(frontend_logs.datasets)
+    def create_factories(self):
+        super().create_factories()
+        self.relevant_user = UserFactory.create()
+        self.room_log_entry = RoomLogEntryFactory(author=self.admin, room=self.relevant_user.room)
+        self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)
 
-    def setUp(self):
-        super().setUp()
-        self.UserLogEntryData = frontend_logs.logging.UserLogEntryData
-        self.RoomLogEntryData = frontend_logs.logging.RoomLogEntryData
-        login = self.UserLogEntryData.dummy_log_entry1.user.login
-        # This is the user who has log entries
-        self.relevant_user = User.q.filter_by(login=login).one()
+    def assert_one_log(self, got_logs, expected_entry):
+        self.assertEqual(len(got_logs), 1)
+        item = got_logs[0]
+        self.assertEqual(item['message'], expected_entry.message)
+        self.assertEqual(item['user']['title'], expected_entry.author.name)
 
     def test_room_log_exists(self):
-        entry = self.RoomLogEntryData.dummy_log_entry1
         items = self.get_logs(user_id=self.relevant_user.id, logtype='room')
-        self.assertEqual(len(items), 1)
-        item = items[0]
-        desired_message = self.RoomLogEntryData.dummy_log_entry1.message
-        self.assertEqual(item['message'], desired_message)
-        self.assertEqual(item['user']['title'], entry.author.name)
+        self.assert_one_log(items, self.room_log_entry)
 
     def test_user_log_exists(self):
-        entry = self.UserLogEntryData.dummy_log_entry1
         items = self.get_logs(user_id=self.relevant_user.id, logtype='user')
-        self.assertEqual(len(items), 1)
-        item = items[0]
-        desired_message = self.UserLogEntryData.dummy_log_entry1.message
-        self.assertEqual(item['message'], desired_message)
-        self.assertEqual(item['user']['title'], entry.author.name)
+        self.assert_one_log(items, self.user_log_entry)
 
     def test_no_hades_log_exists(self):
         items = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
@@ -62,15 +55,12 @@ class RoomAndUserLogTestCase(UserLogTestBase):
 class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLogTestBase):
     """Frontend Tests for the endpoints utilizing live Hades Logs
     """
-    datasets = frozenset(hades_logs.datasets)
-
-    def setUp(self):
-        super().setUp()
-        # We want the user from the UserHostData, not the dummy user
-        # (which has no hosts)
-        from tests.fixtures.dummy.host import HostData
-        login = HostData.dummy.owner.login
-        self.relevant_user = User.q.filter_by(login=login).one()
+    def create_factories(self):
+        super().create_factories()
+        self.relevant_user = UserWithHostFactory(patched=True)
+        self.other_user = UserFactory.create()
+        self.room_log_entry = RoomLogEntryFactory(author=self.admin, room=self.relevant_user.room)
+        self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)
 
     def create_app(self):
         app = super().create_app()
@@ -90,13 +80,8 @@ class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLo
             self.assertIn("– groups: ", log['message'].lower())
             self.assertIn("tagged)", log['message'].lower())
 
-    @unittest.skip("This test should be replaced by a factory-style test.")
     def test_disconnected_user_emits_warning(self):
-        # TODO this uses `testadmin2`, which is not “disconnected” in the sense of this test.
-        # That user lives in the default room – and thus gets the example logs.
-        # however, debugging our complicated implicit fixture construction is probably
-        # harder than just writing this test in a factory-based way.
-        logs = self.get_logs(logtype='hades')
+        logs = self.get_logs(self.other_user.id, logtype='hades')
         self.assertEqual(len(logs), 1)
         self.assertIn("are in a connected room", logs[0]['message'].lower())
         self.assertIn("logs cannot be displayed", logs[0]['message'].lower())

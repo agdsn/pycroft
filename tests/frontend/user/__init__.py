@@ -1,8 +1,9 @@
 from flask import url_for
 
 from tests import FrontendDataTestBase, FixtureDataTestBase, \
-    FrontendWithAdminTestBase
-from tests.factories import RoomFactory, SubnetFactory, PatchPortFactory
+    FrontendWithAdminTestBase, UserFactory
+from tests.factories import RoomFactory, SubnetFactory, PatchPortFactory, \
+    RoomLogEntryFactory, UserLogEntryFactory
 from tests.fixtures import permissions
 from tests.fixtures.dummy import net
 from tests.fixtures.dummy import port
@@ -23,7 +24,7 @@ class LegacyUserFrontendTestBase(FrontendDataTestBase, FixtureDataTestBase):
         super().setUp()
 
 
-class UserLogTestBase(LegacyUserFrontendTestBase):
+class UserLogTestBase(FrontendWithAdminTestBase):
     def get_logs(self, user_id=None, **kw):
         """Request the logs, assert validity, and return the response.
 

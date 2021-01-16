@@ -58,6 +58,9 @@ class UserWithHostFactory(UserFactory):
     host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
                                   room=factory.SelfAttribute('..room'))
 
+    class Params:
+        patched = factory.Trait(room__patched_with_subnet=True)
+
 
 class UserWithMembershipFactory(UserFactory):
     membership = factory.RelatedFactory('tests.factories.property.MembershipFactory', 'user')

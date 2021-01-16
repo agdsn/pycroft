@@ -10,3 +10,4 @@ from .net import SubnetFactory, VLANFactory
 from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
 from .user import UserFactory, UserWithHostFactory, UnixAccountFactory
 from .traffic import TrafficDataFactory, TrafficVolumeFactory
+from .log import RoomLogEntryFactory, UserLogEntryFactory
