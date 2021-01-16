@@ -83,7 +83,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
         teardown()
 
     def setUp(self):
-        super(SQLAlchemyTestCase, self).setUp()
+        super().setUp()
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
@@ -100,7 +100,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
     def tearDown(self):
         self._rollback()
         close_all_sessions()
-        super(SQLAlchemyTestCase, self).tearDown()
+        super().tearDown()
 
     def cleanup(self):
         if self.transaction is None:
@@ -119,7 +119,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
                 raise
 
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
-        context = super(SQLAlchemyTestCase, self).assertRaises(excClass)
+        context = super().assertRaises(excClass)
         if callableObj is None:
             return self._rollback_with_context(context)
         with self._rollback_with_context(context):
@@ -183,10 +183,10 @@ class FrontendDataTestBase(testing.TestCase):
 
     def tearDown(self):
         self.client.get("/logout")
-        super(FrontendDataTestBase, self).tearDown()
+        super().tearDown()
 
     def setUp(self):
-        super(FrontendDataTestBase, self).setUp()
+        super().setUp()
         if self.login:
             self._login(login=self.login, password=self.password)
 
