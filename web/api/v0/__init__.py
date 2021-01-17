@@ -23,7 +23,8 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
     LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
     get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id, \
-    membership_begin_date, send_confirmation_email
+    membership_begin_date, send_confirmation_email, get_user_by_id_or_login, \
+    send_password_reset_mail, change_password_from_token
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import IP, Interface, Host
@@ -605,3 +606,43 @@ class EmailConfirmResource(Resource):
 
 
 api.add_resource(EmailConfirmResource,  '/register/confirm')
+
+
+class ResetPasswordResource(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('ident', required=True, type=str)
+        parser.add_argument('email', required=True, type=str)
+        args = parser.parse_args()
+
+        user = get_user_by_id_or_login(args.ident, args.email)
+
+        if user is None:
+            abort(404, message="Not found", code="not_found")
+
+        if not send_password_reset_mail(user):
+            abort(412, message="No contact email", code="no_contact")
+
+        session.session.commit()
+
+        return {
+            'success': True
+        }
+
+    def patch(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('token', required=True, type=str)
+        parser.add_argument('password', required=True, type=str)
+        args = parser.parse_args()
+
+        if not change_password_from_token(args.token, args.password):
+            abort(403, message="Invalid token", code="invalid_token")
+
+        session.session.commit()
+
+        return {
+            'success': True
+        }
+
+
+api.add_resource(ResetPasswordResource, '/user/reset-password')

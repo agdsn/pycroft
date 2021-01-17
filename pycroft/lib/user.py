@@ -32,7 +32,7 @@ from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
     UserCreatedTemplate, \
     UserMovedInTemplate, MemberRequestPendingTemplate, MemberRequestDeniedTemplate, \
-    MemberRequestMergedTemplate
+    MemberRequestMergedTemplate, UserResetPasswordTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
     get_subnets_for_room
@@ -50,6 +50,7 @@ from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
 mail_confirm_url = os.getenv('MAIL_CONFIRM_URL')
+password_reset_url = os.getenv('PASSWORD_RESET_URL')
 
 
 def encode_type1_user_id(user_id):
@@ -529,6 +530,8 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
     if not email:
         email = None
 
+    email = email.lower()
+
     if email_forwarded != user.email_forwarded:
         user.email_forwarded = email_forwarded
 
@@ -897,13 +900,14 @@ def membership_begin_date(user):
     return end_date
 
 
-def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bool = False, **kwargs):
+def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bool = False,
+                    use_internal: bool = True, **kwargs):
     mails = []
 
     for user in users:
         if user.email:
             email = user.email
-        elif type(user) is User and user.has_property('mail'):
+        elif use_internal and type(user) is User and user.has_property('mail'):
             email = user.email_internal
         else:
             if soft_fail:
@@ -921,8 +925,9 @@ def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bo
     send_mails_async.delay(mails)
 
 
-def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False, **kwargs):
-    user_send_mails([user], template, soft_fail, **kwargs)
+def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False,
+                   use_internal: bool = True, **kwargs):
+    user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
 def send_member_request_merged_email(user: PreMember, merged_to: User, password_merged: bool):
@@ -1214,3 +1219,65 @@ def get_possible_existing_users_for_pre_member(prm: PreMember):
              + users_name + users_similar if user is not None])
 
     return users
+
+
+def get_user_by_id_or_login(ident: str, email: str):
+    re_uid1 = r"^\d{4,6}-\d{1}$"
+    re_uid2 = r"^\d{4,6}-\d{2}$"
+
+    user = User.q.filter_by(email=email)
+
+    if re.match(re_uid1, ident):
+        if check_user_id(ident):
+            user_id = decode_type1_user_id(ident)
+
+            user = user.filter_by(id=user_id[0])
+        else:
+            return None
+    elif re.match(re_uid2, ident):
+        if check_user_id(ident):
+            user_id = decode_type2_user_id(ident)
+
+            user = user.filter_by(id=user_id[0])
+        else:
+            return None
+    elif re.match(BaseUser.login_regex, ident):
+        user = user.filter_by(login=ident)
+
+    user = user.one_or_none()
+
+    return user
+
+
+@with_transaction
+def send_password_reset_mail(user: User):
+    user.password_reset_token = generate_random_str(64)
+
+    if not password_reset_url:
+        raise ValueError("No url specified in PASSWORD_RESET_URL")
+
+    try:
+        user_send_mail(user, UserResetPasswordTemplate(
+                       password_reset_url=password_reset_url.format(user.password_reset_token)),
+                       use_internal=False)
+    except ValueError:
+        user.password_reset_token = None
+        return False
+
+    return True
+
+
+@with_transaction
+def change_password_from_token(token, password):
+    if token is None:
+        return False
+
+    user = User.q.filter_by(password_reset_token=token).one_or_none()
+
+    if user:
+        change_password(user, password)
+        user.password_reset_token = None
+
+        return True
+    else:
+        return False

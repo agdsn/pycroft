@@ -178,6 +178,11 @@ class UserConfirmEmailTemplate(MailTemplate):
     subject = "Bitte bestätige deine E-Mail Adresse // Please confirm your email address"
 
 
+class UserResetPasswordTemplate(MailTemplate):
+    template = "user_reset_password.html"
+    subject = "Neues Passwort setzen // Set a new password"
+
+
 class UserMovedInTemplate(MailTemplate):
     template = "user_moved_in.html"
     subject = "Wohnortänderung // Change of residence"

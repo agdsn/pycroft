@@ -174,6 +174,8 @@ class User(ModelBase, BaseUser, UserMixin):
 
     email_forwarded = Column(Boolean, server_default='True', nullable=False)
 
+    password_reset_token = Column(String, nullable=True)
+
     def __init__(self, **kwargs):
         password = kwargs.pop('password', None)
         wifi_password = kwargs.pop('password', None)
