@@ -387,7 +387,7 @@ You can make changes in these sudmodules and deploy them (in your dev
 environment) with:
 
 ```
-docker-compose run --rm dev-app pip install -r requirements.dev.txt
+docker-compose run --rm dev-app pip install -r requirements.txt
 ```
 
 The production build also uses the submodules. Make sure to update the commit
