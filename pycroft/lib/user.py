@@ -1280,6 +1280,7 @@ def change_password_from_token(token, password):
     if user:
         change_password(user, password)
         user.password_reset_token = None
+        user.email_confirmed = True
 
         return True
     else:
