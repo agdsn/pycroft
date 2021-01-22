@@ -1167,6 +1167,9 @@ def delete_member_request(prm: PreMember, reason: Optional[str], processor: User
 def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_email: bool,
                          merge_person_id: bool, merge_room: bool, merge_password: bool,
                          merge_birthdate: bool, processor: User):
+    if prm.move_in_date is not None and prm.move_in_date < session.utcnow().date():
+        prm.move_in_date = session.utcnow().date()
+
     if merge_name:
         user = edit_name(user, prm.name, processor)
 
@@ -1177,10 +1180,10 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
     if merge_person_id:
         user = edit_person_id(user, prm.swdd_person_id, processor)
 
+    move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+
     if merge_room:
         if prm.room:
-            move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
-
             if user.room:
                 move(user, prm.room.building_id, prm.room.level, prm.room.number,
                      processor=processor, when=move_in_datetime)
@@ -1189,7 +1192,7 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
                         mac=None, processor=processor, when=move_in_datetime)
 
     if not user.member_of(config.member_group):
-        make_member_of(user, config.member_group, processor, closed(session.utcnow(), None))
+        make_member_of(user, config.member_group, processor, closed(move_in_datetime, None))
 
     if merge_birthdate:
         user = edit_birthdate(user, prm.birthdate, processor)
