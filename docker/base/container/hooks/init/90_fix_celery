@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Fix Celery on Python 3.7
+# Adapted from https://github.com/ddliu/dockerfiles/blob/master/special/nc/ns/fix.sh
+# https://github.com/celery/celery/issues/4500
+TARGET=/opt/pycroft/venv/lib/python3.7/site-packages/
+
+echo "Patching celery to ensure Python 3.7 compatibility"
+find "$TARGET" -type f -iname "*.py" -exec sed -i 's/kombu\.async\b/kombu.asynchronous/g' {} +
+
+cd "$TARGET"/kombu
+if [ -e async ]
+then
+    echo "Patching kombu to ensure Python 3.7 compatibility"
+    mv async asynchronous
+
+    find . -type f -iname "*.py" -exec sed -i 's/\basync\b/asynchronous/g' {} +
+fi
