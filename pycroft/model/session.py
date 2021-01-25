@@ -10,6 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from typing import overload, TypeVar, Callable, Any
 
 from werkzeug.local import LocalProxy
 import wrapt
@@ -37,6 +38,13 @@ def set_scoped_session(scoped_session):
     # noinspection PyCallByClass
     object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)
 
+
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+# noinspection PyOverloads
+@overload
+def with_transaction(wrapped: F) -> F: ...
 
 @wrapt.decorator
 def with_transaction(wrapped, instance, args, kwargs):
