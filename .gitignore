@@ -135,7 +135,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/  # conflicts with `pycroft.lib` and `tests.lib`
 lib64/
 parts/
 sdist/
