@@ -1,4 +1,4 @@
-from factory import Faker
+from factory import Faker, LazyAttribute
 
 from pycroft.model.address import Address
 from tests.factories.base import BaseFactory
@@ -7,9 +7,11 @@ from tests.factories.base import BaseFactory
 class AddressFactory(BaseFactory):
     class Meta:
         model = Address
+        exclude = ('_number',)
 
     street = Faker("street_name")
-    number = Faker("random_digit")
+    _number = Faker("random_digit")
+    number = LazyAttribute(lambda o: str(o._number))
     addition = Faker("secondary_address")
     zip_code = Faker("zipcode")
     city = "Dresden"
