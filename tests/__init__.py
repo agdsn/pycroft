@@ -13,7 +13,7 @@ from flask import url_for, _request_ctx_stack
 import flask_testing as testing
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import DeferredReflection
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, Session
 from sqlalchemy.orm.session import close_all_sessions
 from sqlalchemy.pool import SingletonThreadPool
 import sys
@@ -141,7 +141,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
-    session = session.session
+    session: Session = session.session
 
     def setUp(self):
         super().setUp()
