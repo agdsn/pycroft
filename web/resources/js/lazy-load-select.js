@@ -43,8 +43,9 @@ import jQuery from 'jquery';
             this.fields.forEach(f => f.addEventListener("change", this.reload.bind(this)));
         }
 
-        queryData() {
-            return Object.fromEntries(this.fields.map(f => [f.id, f.value]));
+        get queryUrl() {
+            const queryData = Object.fromEntries(this.fields.map(f => [f.id, f.value]));
+            return `${this.dataUrl}?${new URLSearchParams(queryData).toString()}`;
         }
 
         async reload(ev, cb) {
@@ -53,8 +54,7 @@ import jQuery from 'jquery';
 
             const self = this;
 
-            const url = `${this.dataUrl}?${new URLSearchParams(this.queryData()).toString()}`;
-            const resp = await fetch(url);
+            const resp = await fetch(this.queryUrl);
             const data = await resp.json();
             self.replaceOptions.call(self, data, ev);
             if (cb) cb();
