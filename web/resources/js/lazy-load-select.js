@@ -56,13 +56,10 @@ import jQuery from 'jquery';
         replaceOptions(data, ev) {
             this.element.find("option").remove();
 
-            data[this.itemAttr].map(
-                item => (typeof item === 'object')
-                    ? `<option value="${item[0]}">${item[1]}</option>`
-                    : `<option value="${item}">${item}</option>`
-            ).forEach(
-                item => this.element.append(item)
-            );
+            data[this.itemAttr]
+                .map(item => typeof item === 'object' ? item : [item, item])
+                .map(([val, desc]) => `<option value="${val}">${desc}</option>`)
+                .forEach(item => this.element.append(item));
 
             if (!this.oldvalue_loaded) {
                 this.oldvalue_loaded = true;
