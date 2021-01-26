@@ -14,7 +14,7 @@ import jQuery from 'jquery';
  */
 !function ($) {
 
-    var LazyLoadSelect = function (element, options) {
+    const LazyLoadSelect = function (element, options) {
         this.element = $(element);
         this.options = $.extend({
             field_ids: [],
@@ -24,76 +24,70 @@ import jQuery from 'jquery';
         this.itemAttr = this.options.item_attr;
         this.dataUrl = this.element.data("url");
 
-        var field_ids = [];
+        let field_ids = [];
         if (undefined !== this.element.data("fieldids"))
             field_ids = field_ids.concat(this.element.data("fieldids").split(","));
         if (undefined !== this.options.field_ids)
             field_ids = field_ids.concat(this.options.field_ids);
 
-        for (var i = 0; i < field_ids.length; i++) {
-            this.fields.push($("#" + field_ids[i]));
-        }
+        field_ids.forEach(val => this.fields.push($(`#${val}`)))
         this.bind();
     };
 
     LazyLoadSelect.prototype = {
         constructor: LazyLoadSelect,
 
-        bind: function () {
-            for (var i = 0; i < this.fields.length; i++) {
-                this.fields[i].on("change", $.proxy(this.reload, this));
-            }
+        bind() {
+            this.fields.forEach(f => f.on("change", $.proxy(this.reload, this)));
         },
 
-        queryData: function () {
-            var query_data = {};
-            for (var i = 0; i < this.fields.length; i++) {
-                var field = this.fields[i];
-                query_data[field.attr("id")] = field.val();
-            }
-            return query_data;
+        queryData() {
+            return Object.fromEntries(
+                this.fields.map(f => [f.attr("id"), f.val()])
+            );
         },
 
-        reload: function (ev, cb) {
-            var self = this;
+        reload(ev, cb) {
+            const self = this;
             $.getJSON(this.dataUrl, this.queryData(), function (data) {
                 self.replaceOptions.call(self, data, ev);
                 if (cb) cb();
             });
         },
 
-        replaceOptions: function (data, ev) {
-            var items = data[this.itemAttr];
+        replaceOptions(data, ev) {
             this.element.find("option").remove();
-            for (var i = 0; i < items.length; i++) {
-                if (typeof items[i] === 'object')
-                    this.element.append('<option value="' + items[i][0] + '">' + items[i][1] + '</option>');
-                else
-                    this.element.append('<option value="' + items[i] + '">' + items[i] + '</option>');
-            }
+
+            data[this.itemAttr].map(
+                item => (typeof item === 'object')
+                    ? `<option value="${item[0]}">${item[1]}</option>`
+                    : `<option value="${item}">${item}</option>`
+            ).forEach(
+                item => this.element.append(item)
+            );
 
             if (!this.oldvalue_loaded) {
                 this.oldvalue_loaded = true;
                 this.element.val(this.element.attr("value"));
             }
 
-            if(ev !== null && ev.originalEvent){
+            if (ev?.originalEvent) {
                 this.element.trigger('change');
             }
         },
     };
 
     $.fn.lazyLoadSelect = function (options) {
-        var toPreload = [];
+        let toPreload = [];
 
         function loadNext() {
-            var next = toPreload.shift();
+            let next = toPreload.shift();
             if (next) next.reload.call(next, null, loadNext);
         }
 
-        var result = this.each(function () {
+        const result = this.each(function () {
             if (undefined === $(this).data('lazyLoadSelect')) {
-                var plugin = new LazyLoadSelect(this, options);
+                const plugin = new LazyLoadSelect(this, options);
                 $(this).data('lazyLoadSelect', plugin);
                 toPreload.push(plugin);
             }
