@@ -17,11 +17,11 @@ import jQuery from 'jquery';
     class LazyLoadSelect {
         constructor(element, options) {
             this.element = $(element);
-            this.options = $.extend({
+            this.options = {
                 field_ids: [],
                 item_attr: "items",
-            }, options);
-            this.fields = [];
+                ...options
+            }
             this.itemAttr = this.options.item_attr;
             this.dataUrl = this.element.data("url");
 
@@ -30,8 +30,8 @@ import jQuery from 'jquery';
                 field_ids = field_ids.concat(this.element.data("fieldids").split(","));
             if (undefined !== this.options.field_ids)
                 field_ids = field_ids.concat(this.options.field_ids);
+            this.fields = field_ids.map(id => document.getElementById(id));
 
-            field_ids.forEach(val => this.fields.push($(`#${val}`)))
             this.bind();
         }
 
