@@ -14,38 +14,36 @@ import jQuery from 'jquery';
  */
 !function ($) {
 
-    const LazyLoadSelect = function (element, options) {
-        this.element = $(element);
-        this.options = $.extend({
-            field_ids: [],
-            item_attr: "items",
-        }, options);
-        this.fields = [];
-        this.itemAttr = this.options.item_attr;
-        this.dataUrl = this.element.data("url");
+    class LazyLoadSelect {
+        constructor(element, options) {
+            this.element = $(element);
+            this.options = $.extend({
+                field_ids: [],
+                item_attr: "items",
+            }, options);
+            this.fields = [];
+            this.itemAttr = this.options.item_attr;
+            this.dataUrl = this.element.data("url");
 
-        let field_ids = [];
-        if (undefined !== this.element.data("fieldids"))
-            field_ids = field_ids.concat(this.element.data("fieldids").split(","));
-        if (undefined !== this.options.field_ids)
-            field_ids = field_ids.concat(this.options.field_ids);
+            let field_ids = [];
+            if (undefined !== this.element.data("fieldids"))
+                field_ids = field_ids.concat(this.element.data("fieldids").split(","));
+            if (undefined !== this.options.field_ids)
+                field_ids = field_ids.concat(this.options.field_ids);
 
-        field_ids.forEach(val => this.fields.push($(`#${val}`)))
-        this.bind();
-    };
-
-    LazyLoadSelect.prototype = {
-        constructor: LazyLoadSelect,
+            field_ids.forEach(val => this.fields.push($(`#${val}`)))
+            this.bind();
+        }
 
         bind() {
             this.fields.forEach(f => f.on("change", $.proxy(this.reload, this)));
-        },
+        }
 
         queryData() {
             return Object.fromEntries(
                 this.fields.map(f => [f.attr("id"), f.val()])
             );
-        },
+        }
 
         reload(ev, cb) {
             const self = this;
@@ -53,7 +51,7 @@ import jQuery from 'jquery';
                 self.replaceOptions.call(self, data, ev);
                 if (cb) cb();
             });
-        },
+        }
 
         replaceOptions(data, ev) {
             this.element.find("option").remove();
@@ -74,8 +72,9 @@ import jQuery from 'jquery';
             if (ev?.originalEvent) {
                 this.element.trigger('change');
             }
-        },
-    };
+        }
+    }
+
 
     $.fn.lazyLoadSelect = function (options) {
         let toPreload = [];
