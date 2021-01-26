@@ -32,25 +32,32 @@ import jQuery from 'jquery';
                 field_ids = field_ids.concat(this.options.field_ids);
             this.fields = field_ids.map(id => document.getElementById(id));
 
-            this.bind();
+            console.info(`constructing LazyLoadSelect for ${element} w/ options ${options}`)
+            console.debug(this, element, options)
+
+            this.bindEventHandlers();
         }
 
-        bind() {
-            this.fields.forEach(f => f.on("change", $.proxy(this.reload, this)));
+        bindEventHandlers() {
+            console.debug("binding event handlers.", this);
+            this.fields.forEach(f => f.addEventListener("change", this.reload.bind(this)));
         }
 
         queryData() {
-            return Object.fromEntries(
-                this.fields.map(f => [f.attr("id"), f.val()])
-            );
+            return Object.fromEntries(this.fields.map(f => [f.id, f.value]));
         }
 
-        reload(ev, cb) {
+        async reload(ev, cb) {
+            console.info("LazyLoadSelect reload triggered.")
+            console.debug(this, ev, cb)
+
             const self = this;
-            $.getJSON(this.dataUrl, this.queryData(), function (data) {
-                self.replaceOptions.call(self, data, ev);
-                if (cb) cb();
-            });
+
+            const url = `${this.dataUrl}?${new URLSearchParams(this.queryData()).toString()}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            self.replaceOptions.call(self, data, ev);
+            if (cb) cb();
         }
 
         replaceOptions(data, ev) {
