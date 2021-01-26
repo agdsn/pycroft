@@ -51,6 +51,7 @@ export default {
     devtool: PROD ? "source-map" : "eval-source-map",
     resolve: {
         symlinks: false,
+        extensions: ['.js', '.ts'],
     },
     optimization: {
         minimizer: [
@@ -107,10 +108,15 @@ export default {
             // Use the source-map-loader to reuse existing source maps, that
             // are provided by dependencies
             {
-                test: /\.js$/,
+                test: /\.[j]sx?$/,  // TODO look at how we can deal with this and typescript
                 use: ["source-map-loader"],
                 enforce: "pre",
                 include: dep,
+            },
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: dep,
             },
             // Some dependencies are not proper modules yet, they need to
             // be shimmed and their dependencies need to be declared manually.
@@ -157,7 +163,7 @@ export default {
             },
             // Transpile modern JavaScript for older browsers.
             {
-                test: /\.js$/,
+                test: /\.jsx?$/,
                 exclude: dep,
                 use: {
                     loader: 'babel-loader',
