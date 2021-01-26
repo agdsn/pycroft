@@ -11,29 +11,32 @@ import jQuery from 'jquery';
  *
  *  Adds format mask for MAC addresses on input fields.
  */
+
+async function fetchManufacturerName(value) {
+    if (value.length !== 17) { return '?'; }
+
+    const resp = await fetch(`${$SCRIPT_ROOT}/host/interface-manufacturer/${value}`)
+    return resp.json().then(data => {
+        console.log("Received mac data: ", data);
+        return data?.manufacturer ?? '?';
+    });
+}
+
 !function ($) {
     $.fn.inputMacMask = function () {
         this.on("keyup", function (e) {
-            var r = /([a-f0-9]{2})([a-f0-9]{2})/i,
-                str = e.target.value.replace(/[^a-f0-9]/ig, "");
+            const r = /([a-f0-9]{2})([a-f0-9]{2})/i;
+            let str = e.target.value.replace(/[^a-f0-9]/ig, "");
 
             while (r.test(str)) {
-                str = str.replace(r, '$1' + ':' + '$2');
+                str = str.replace(r, "$1:$2");
             }
 
             e.target.value = str.slice(0, 17).toLowerCase();
 
-            var manufacturer_addon = $(e.target).closest('.input-group').find('.mac-manufacturer');
-
-            if(e.target.value.length === 17){
-                $.getJSON( $SCRIPT_ROOT + '/host/interface-manufacturer/' + e.target.value, function( data ){
-                    if(data.manufacturer){
-                        manufacturer_addon.text(data.manufacturer);
-                    }
-                });
-            }else{
-                manufacturer_addon.text('?');
-            }
+            const manufacturer_addon = $(e.target).closest('.input-group').find('.mac-manufacturer');
+            fetchManufacturerName(e.target.value)
+                .then(manuf => manufacturer_addon.text(manuf))
         });
 
         this.trigger('keyup');
