@@ -1202,7 +1202,9 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
     if merge_password:
         user.passwd_hash = prm.passwd_hash
 
-        log_msg += " Password merged."
+        log_msg += " Password overridden."
+    else:
+        log_msg += " Kept old password."
 
     log_user_event(deferred_gettext(log_msg).format(encode_type2_user_id(prm.id)).to_json(),
                    processor, user)
