@@ -1215,7 +1215,7 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
 def get_possible_existing_users_for_pre_member(prm: PreMember):
     user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
     user_login = User.q.filter_by(login=prm.login).first()
-    user_email = User.q.filter_by(email=prm.email).first()
+    user_email = User.q.filter(func.lower(User.email) == prm.email.lower()).first()
 
     users_name = User.q.filter_by(name=prm.name).all()
     users_similar = get_similar_users_in_room(prm.name, prm.room, 0.5)
@@ -1230,7 +1230,7 @@ def get_user_by_id_or_login(ident: str, email: str):
     re_uid1 = r"^\d{4,6}-\d{1}$"
     re_uid2 = r"^\d{4,6}-\d{2}$"
 
-    user = User.q.filter_by(email=email)
+    user = User.q.filter(func.lower(User.email) == email.lower())
 
     if re.match(re_uid1, ident):
         if check_user_id(ident):
