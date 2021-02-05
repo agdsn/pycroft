@@ -3,7 +3,7 @@
 
 Hallo {{ user.name }},
 
-wir schreiben dir, da dein Guthaben bei uns aktuell {{ user.account.balance }}€ beträgt.
+wir schreiben dir, da dein Guthaben bei uns aktuell -{{ user.account.balance }}€ beträgt.
 Dein negatives Guthaben kann folgende Ursachen haben:
 
 (1) Deine Zahlung hat uns noch nicht erreicht.
@@ -50,7 +50,7 @@ https://agdsn.de/sipa/documents/legal/beitragsordnung.pdf
 
 Dear {{ user.name }},
 
-We hereby inform you that your balance is {{ user.account.balance }}€.
+We hereby inform you that your balance is -{{ user.account.balance }}€.
 Your negative balance may be caused by the following reasons:
 
 (1) Your payment has not reached us, yet.
