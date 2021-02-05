@@ -658,6 +658,7 @@ def get_negative_members():
 
     return users
 
+
 def get_users_with_payment_in_default():
     # Add memberships and end "member" membership if threshold met
     users = get_negative_members()
@@ -1049,7 +1050,7 @@ def estimate_balance(user, end_date):
 def get_pid_csv():
     from pycroft.lib.user import encode_type2_user_id
 
-    users_pid_membership, users_membership_terminated = get_users_with_payment_in_default()
+    users = get_negative_members()
 
     f = StringIO()
 
@@ -1058,6 +1059,6 @@ def get_pid_csv():
     writer.writerows((encode_type2_user_id(u.id),
                       "{}@agdsn.me".format(u.login),
                       u.name,
-                      str(-u.account.balance)) for u in users_pid_membership)
+                      str(-u.account.balance)) for u in users)
 
     return f.getvalue()
