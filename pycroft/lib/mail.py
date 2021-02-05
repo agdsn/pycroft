@@ -9,6 +9,7 @@ from email.utils import make_msgid, formatdate
 from typing import List, Optional
 
 import jinja2
+import traceback
 
 from pycroft.helpers import AutoNumber
 
@@ -139,25 +140,9 @@ def send_mails(mails: List[Mail]) -> (bool, int):
 
         if smtp_user:
             smtp.login(smtp_user, smtp_password)
-
-        failures: int = 0
-
-        for mail in mails:
-            try:
-                mime_mail = compose_mail(mail)
-                smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
-                              msg=mime_mail.as_string())
-            except smtplib.SMTPException as e:
-                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to}": {str(e)}', extra={
-                    'trace': True,
-                    'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-                    'data': {'exception_arguments': e.args, 'to': mail.to, 'subject': mail.subject}
-                })
-
-                failures += 1
-
-        smtp.close()
     except (IOError, smtplib.SMTPException) as e:
+        traceback.print_exc()
+
         # smtp.connect failed to connect
         logger.critical('Unable to connect to SMTP server: {}'.format(str(e)), extra={
             'trace': True,
@@ -167,9 +152,30 @@ def send_mails(mails: List[Mail]) -> (bool, int):
 
         raise RetryableException
     else:
+        failures: int = 0
+
+        for mail in mails:
+            try:
+                mime_mail = compose_mail(mail)
+                smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
+                              msg=mime_mail.as_string())
+            except smtplib.SMTPException as e:
+                traceback.print_exc()
+
+                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to}": {str(e)}', extra={
+                    'trace': True,
+                    'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
+                    'data': {'exception_arguments': e.args, 'to': mail.to, 'subject': mail.subject}
+                })
+
+                failures += 1
+
+        smtp.close()
+
         logger.info('Tried to send mails (%i/%i succeeded)', len(mails) - failures, len(mails), extra={
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"}
         })
+
         return failures == 0, failures
 
 
