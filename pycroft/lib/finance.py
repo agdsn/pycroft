@@ -93,6 +93,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :param date valid_on: Date, when the transaction should be valid. Current
     database date, if omitted.
     :type valid_on: date or None
+    :param confirmed: If transaction should be created as confirmed
     :rtype: Transaction
     """
     if valid_on is None:
@@ -117,14 +118,15 @@ def simple_transaction(description, debit_account, credit_account, amount,
 
 
 @with_transaction
-def complex_transaction(description, author, splits, valid_on=None):
+def complex_transaction(description, author, splits, valid_on=None, confirmed=True):
     if valid_on is None:
         valid_on = session.utcnow().date()
     objects = []
     new_transaction = Transaction(
         description=description,
         author=author,
-        valid_on=valid_on
+        valid_on=valid_on,
+        confirmed=confirmed,
     )
     objects.append(new_transaction)
     objects.extend(

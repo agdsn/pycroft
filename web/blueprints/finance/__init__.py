@@ -757,7 +757,7 @@ def transactions_unconfirmed_json():
                     'icon': 'fa-credit-card',
                     'btn_class': 'btn-info btn-sm',
                     'new_tab': True
-                }, {
+                } if bank_acc_act is not None else {}, {
                     'href': url_for(".transaction_confirm",
                                     transaction_id=transaction.id),
                     'title': 'Bestätigen',
@@ -934,6 +934,7 @@ def transactions_create():
             author=current_user,
             splits=splits,
             valid_on=form.valid_on.data,
+            confirmed=current_user.member_of(config.treasurer_group),
         )
 
         end_payment_in_default_memberships(current_user)
