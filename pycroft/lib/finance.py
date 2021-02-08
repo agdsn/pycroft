@@ -842,14 +842,9 @@ def match_activities():
     def _fetch_normal(uid: int) -> Optional[User]:
         return User.q.get(uid)
 
-    def _fetch_hss(login: str) -> Optional[User]:
-        return User.q.filter_by(login=login).one_or_none()
-
     for activity in activity_q.all():
-
         user = match_reference(activity.reference,
                                fetch_normal=_fetch_normal,
-                               fetch_hss=_fetch_hss,
                                session=session.session)
 
         if user:
@@ -869,7 +864,6 @@ def _and_then(thing: Optional[T], f: Callable[[T], Optional[U]]) -> Optional[U]:
 
 def match_reference(reference: str,
                     fetch_normal: Callable[[int], Optional[TUser]],
-                    fetch_hss: Callable[[str], Optional[TUser]],
                     session: Session) -> Optional[TUser]:
     """Try to return a user fitting a given bank reference string.
 
@@ -888,11 +882,6 @@ def match_reference(reference: str,
     pyc_user = _and_then(match_pycroft_reference(reference), fetch_normal)
     if pyc_user:
         return pyc_user
-
-    hss_user = _and_then(match_hss_reference(reference), fetch_hss) \
-        or match_hss_lenient(reference, session)
-    if hss_user:
-        return hss_user
 
     return None
 
@@ -922,12 +911,6 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
             continue
 
     return None
-
-
-def match_hss_reference(reference: str) -> Optional[str]:
-    """Given a bank reference, return the hss username"""
-    search = re.match(r"^\s*(?P<login>[a-zA-Z](?:[.-]?\w)+) ?,+", reference)
-    return search.group('login').lower() if search else None
 
 
 def match_hss_lenient(reference: str, session: Session) -> Optional[TUser]:
