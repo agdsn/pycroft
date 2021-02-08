@@ -889,10 +889,12 @@ def match_reference(reference: str,
 def match_pycroft_reference(reference: str) -> Optional[int]:
     """Given a bank reference, return the user id"""
     from pycroft.lib.user import check_user_id
-    search = re.search(r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(' ', ''))
+
+    search = re.findall(r"([\d]{4,6} ?[-/?:,+.]? ?[\d]{1,2})", reference.replace(' ', ''))
     if not search:
         return None
-    for group in search.groups():
+
+    for group in search:
         try:
             uid = group.replace(' ', '').replace('/', '-') \
                 .replace('?', '-').replace(':', '-').replace(',', '-') \
