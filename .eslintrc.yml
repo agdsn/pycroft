@@ -11,3 +11,4 @@ rules: {
 globals:
   "$SCRIPT_ROOT": readonly
   d3: readonly
+  dc: readonly

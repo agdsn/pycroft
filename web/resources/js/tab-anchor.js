@@ -1,3 +1,4 @@
+import $ from "jquery";
 // Show appropriate pill based on #anchor in URL
 
 
