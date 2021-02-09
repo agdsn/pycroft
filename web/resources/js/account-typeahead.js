@@ -49,6 +49,7 @@ import Bloodhound from 'typeahead.js/dist/bloodhound';
     export const system_accounts_dataset = {
         name: 'system_accounts',
         displayKey: 'account_name',
+        // tt = twitter typeahead
         source: system_accounts.ttAdapter(),
         templates: {
             empty: '<span class="disabled">Keine Ergebnisse</span>',

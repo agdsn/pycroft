@@ -30,6 +30,7 @@ import 'nvd3/build/nv.d3.css';
 import 'vis/dist/vis.css';
 
 import './js/account-typeahead';
+import './js/generic-typeahead';
 import './js/alerts';
 import './js/balance-chart';
 import './js/d3locale';
