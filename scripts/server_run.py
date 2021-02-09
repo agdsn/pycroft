@@ -4,7 +4,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 import argparse
+import logging
 import os
+import sys
 
 import time
 from babel.support import Translations
@@ -23,13 +25,21 @@ from web import make_app
 from scripts.connection import try_create_connection, get_connection_string
 
 
+default_handler = logging.StreamHandler(sys.stdout)
+default_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
+)
+
+
 def server_run(args):
     if args.echo:
-        import logging, sys
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
     app = make_app(args.debug)
+
+    logging.getLogger('pycroft').addHandler(default_handler)
+
     wait_for_db: bool = args.wait_for_database
 
     connection_string = get_connection_string()
