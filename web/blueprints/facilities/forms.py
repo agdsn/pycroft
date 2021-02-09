@@ -101,7 +101,7 @@ class SelectRoomFormOptional(BaseForm):
                                       data_endpoint="facilities.json_rooms")
 
 
-class CreateRoomForm(Form):
+class CreateRoomForm(CreateAddressForm):
     building = QuerySelectField("Wohnheim",
                                 get_label='short_name',
                                 query_factory=building_query)
@@ -109,6 +109,11 @@ class CreateRoomForm(Form):
     number = TextField("Nummer")
     vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
+
+    _order = (
+        'building', 'level', 'number', 'vo_suchname', 'inhabitable',
+        *(f for f in CreateAddressForm.__dict__ if f.startswith('address_')),
+    )
 
 
 class EditRoomForm(Form):

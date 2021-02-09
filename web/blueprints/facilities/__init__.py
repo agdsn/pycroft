@@ -22,6 +22,7 @@ from sqlalchemy.orm import joinedload, aliased
 from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.helpers.net import sort_ports
+from pycroft.lib.address import get_or_create_address
 from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, RoomAlreadyExistsException
 from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port, \
     PatchPortAlreadyExistsException
@@ -130,7 +131,18 @@ def room_create():
 
     if form.validate_on_submit():
         try:
-            room = create_room(form.building.data, form.level.data, form.number.data, current_user, form.inhabitable.data)
+            address = get_or_create_address(
+                street=form.address_street.data,
+                number=form.address_number.data,
+                addition=form.address_addition.data,
+                zip_code=form.address_zip_code.data,
+                city=form.address_city.data,
+                state=form.address_state.data,
+                country=form.address_country.data,
+            )
+            room = create_room(form.building.data, form.level.data, form.number.data,
+                               address=address,
+                               processor=current_user, inhabitable=form.inhabitable.data)
 
             session.session.commit()
 
