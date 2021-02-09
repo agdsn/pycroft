@@ -36,6 +36,7 @@ from web.blueprints.facilities.forms import (
 from web.blueprints.helpers.log import format_room_log_entry
 from web.blueprints.helpers.user import user_button
 from web.blueprints.navigation import BlueprintNavigation
+from .address import get_address_entity, address_entity_search_query
 from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
                      RoomOvercrowdedTable, PatchPortTable)
 
@@ -538,3 +539,18 @@ def overcrowded_json(building_id):
         },
         'inhabitants': [user_button(user) for user in inhabitants]
     } for inhabitants in rooms.values()])
+
+
+@bp.route('address/<string:type>')
+def addresses(type):
+    try:
+        entity = get_address_entity(type)
+    except ValueError as e:
+        return jsonify(errors=[e.args[0]]), 404
+
+    query: str = request.args.get('query', '').replace('%', '%%')
+    limit: int = request.args.get('limit', 10, type=int)
+
+    address_q = address_entity_search_query(query, entity, session.session, limit)
+
+    return jsonify(items=[str(row[0]) for row in address_q.all()])

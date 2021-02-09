@@ -2,6 +2,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from typing import Callable, Optional as OptionalType
+
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import Length, DataRequired, NumberRange, Optional
@@ -12,9 +14,44 @@ from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, 
 
 
 from pycroft.helpers.facilities import sort_buildings
-from wtforms_widgets.fields.custom import LazyLoadSelectField, static
+from wtforms_widgets.fields.custom import LazyLoadSelectField, static, TypeaheadField
 from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 from wtforms_widgets.fields.validators import OptionalIf
+
+from .address import ADDRESS_ENTITIES
+
+
+class LazyString:
+    def __init__(self, value_factory: Callable[[], str]):
+        self.value_factory = value_factory
+
+    def __str__(self):
+        return self.value_factory()
+
+
+def create_address_field(name: str, *args, type: str, render_kw: OptionalType[dict] = None, **kwargs):
+    assert type in ADDRESS_ENTITIES, "Unknown address_type"
+    return TypeaheadField(
+        name,
+        *args,
+        render_kw={'data-role': 'generic-typeahead',
+                   'data-typeahead-name': f"address-{type}",
+                   'data-typeahead-url': LazyString(lambda: url_for('.addresses', type=type)),
+                   **(render_kw or {})},
+        **kwargs
+    )
+
+
+class CreateAddressForm(BaseForm):
+    address_street = create_address_field("Straße", type='street')
+    address_number = create_address_field("Nummer", type='number')
+    address_addition = create_address_field("Adresszusatz", [Optional()], type='addition',
+                                            description="Der Adresszusatz; oft die Raumnummer."
+                                                        " Optional.")
+    address_zip_code = create_address_field("Postleitzahl", type='zip_code')
+    address_city = create_address_field("Stadt", [Optional()], type='city')
+    address_state = create_address_field("Bundesstaat", [Optional()], type='state')
+    address_country = create_address_field("Land", [Optional()], type='country')
 
 
 def building_query():
