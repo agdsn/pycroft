@@ -1,15 +1,21 @@
+import logging
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import func, and_, distinct
+from sqlalchemy import func, and_, distinct, literal_column
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.lib.logging import log_room_event, log_event
 from pycroft.model import session
-from pycroft.model.facilities import Room
+from pycroft.model.address import Address
+from pycroft.model.facilities import Room, Building
 from pycroft.model.host import Host
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
+
+
+logger = logging.getLogger(__name__)
 
 
 class RoomAlreadyExistsException(Exception):
@@ -108,3 +114,54 @@ def edit_room(room, number, inhabitable, vo_suchname: str, processor):
 def get_room(building_id, level, room_number):
     return Room.q.filter_by(number=room_number,
                             level=level, building_id=building_id).one_or_none()
+
+
+@dataclass
+class RoomAddressSuggestion:
+    street: str
+    number: str
+    zip_code: str
+    city: str
+    state: str
+    country: str
+
+    def __str__(self):
+        return f"{self.street} {self.number}, {self.zip_code} {self.city}," \
+               + (f" {self.state}, " if self.state else "") \
+               + f"{self.country}"
+
+
+def suggest_room_address_data(building: Building) -> Optional[RoomAddressSuggestion]:
+    """Return the most common address features of preexisting rooms in a certain building. """
+
+    cols = (Address.street, Address.number, Address.zip_code,
+            Address.city, Address.state, Address.country)
+    query = (
+        session.session.query()
+        .select_from(Room)
+        .join(Address)
+        .add_columns(*cols)
+        .add_columns(func.count().label('count'))
+        .filter(Room.building == building)
+        .group_by(*cols)
+        .order_by(literal_column('count').desc())
+    )
+
+    rows = query.all()
+    if not rows:
+        return
+
+    def row_to_suggestion(row):
+        return RoomAddressSuggestion(*list(row[:-1]))
+
+    row, *rest = rows
+    suggestion = row_to_suggestion(row)
+    if rest:
+        logger.warning("Address suggestion for building '%s' not unique (%d total):\n"
+                       "first suggestion:\n  %s (%d times),\n"
+                       "runner-up suggestion:\n  %s (%d times)",
+                       building.short_name, len(rows),
+                       suggestion, row.count,
+                       row_to_suggestion(rest[0]), rest[0].count)
+
+    return suggestion
