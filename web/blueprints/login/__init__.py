@@ -23,8 +23,9 @@ bp = Blueprint('login', __name__, )
 
 
 class AnonymousUser(AnonymousUserMixin):
-    def has_property(self, _):
-        return False
+    #: See `pycroft.model.user.BaseUser.current_properties_set`
+    current_properties_set = frozenset()
+
 
 login_manager = LoginManager()
 login_manager.anonymous_user = AnonymousUser

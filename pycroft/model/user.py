@@ -13,7 +13,7 @@
 from __future__ import annotations
 import re
 from datetime import timedelta, date
-from typing import Optional, List
+from typing import Optional, List, Set
 
 from flask_login import UserMixin
 from sqlalchemy import (
@@ -231,6 +231,14 @@ class User(ModelBase, BaseUser, UserMixin):
         primaryjoin='User.id == foreign(CurrentProperty.user_id)',
         viewonly=True
     )
+
+    @property
+    def current_properties_set(self) -> Set[str]:
+        """A type-agnostic property giving the granted properties as a set of string.
+
+        Utilized in the web component's access control mechanism.
+        """
+        return {p.property_name for p in self.current_properties}
 
     @property
     def wifi_password(self):

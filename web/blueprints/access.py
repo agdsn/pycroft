@@ -9,7 +9,8 @@ from web.blueprints import bake_endpoint
 
 
 def _check_properties(properties):
-    return all(current_user.has_property(p) for p in properties)
+    missing_props = set(properties) - current_user.current_properties_set
+    return not missing_props
 
 
 class BlueprintAccess(object):
