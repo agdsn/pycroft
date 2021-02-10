@@ -39,3 +39,20 @@ class AddressTest(FactoryDataTestBase):
         assert inspect(new_addr).has_identity, "Created address has no db identity"
 
         assert self.count_addrs() == old_count
+
+    def test_new_address_gets_server_defaults(self):
+        """Test that missing entries get the server default and not the empty string."""
+        new_addr = address.get_or_create_address(
+            street='Wundtstraße',
+            number='3',
+            zip_code='01217',
+            city=None,
+            state=None,
+            country=None,
+        )
+        self.session.commit()
+        self.session.refresh(new_addr)
+
+        assert new_addr.city == 'Dresden', "City not set"
+        # state's default actually _is_ ''
+        assert new_addr.country == 'Germany', "Country not set"

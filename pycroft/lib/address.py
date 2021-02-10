@@ -27,6 +27,6 @@ def get_or_create_address(**kwargs) -> Address:
         raise RuntimeError("Found more than one address")
 
     # create
-    new_address = Address(**kwargs)
+    new_address = Address(**{k: v for k, v in kwargs.items() if v is not None})
     session.add(new_address)
     return new_address
