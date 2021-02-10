@@ -35,6 +35,7 @@ class SwitchTable(BootstrapTable):
 
         return button_toolbar("Switch", url_for(".switch_create"))
 
+
 class VlanTable(BootstrapTable):
     id = Column("#")
     name = Column("Name")
@@ -42,12 +43,17 @@ class VlanTable(BootstrapTable):
 
 
 class PortTable(BootstrapTable):
+    class Meta:
+        table_args = {
+            'data-sort-name': 'switchport_name',
+        }
+
     def __init__(self, *a, switch_id=None, **kw):
         super().__init__(*a, **kw)
         self.switch_id = switch_id
 
-    switchport_name = Column("Name", width=2)
-    patchport_name = Column("→ Patchport", width=2)
+    switchport_name = Column("Name", width=2, col_args={'data-sorter': 'table.sortPort'})
+    patchport_name = Column("→ Patchport", width=2, col_args={'data-sorter': 'table.sortPatchPort'})
     room = LinkColumn("→ Raum", width=10)
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)

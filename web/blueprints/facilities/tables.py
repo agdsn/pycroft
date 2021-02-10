@@ -42,9 +42,14 @@ class RoomOvercrowdedTable(BootstrapTable):
 
 
 class PatchPortTable(BootstrapTable):
-    name = Column('Name', width=2)
+    class Meta:
+        table_args = {
+            'data-sort-name': 'name',
+        }
+
+    name = Column('Name', width=2, col_args={'data-sorter': 'table.sortPatchPort'})
     room = LinkColumn('→ Raum', width=5)
-    switch_port = LinkColumn('→ Switch-Port', width=3)
+    switch_port = LinkColumn('→ Switch-Port', width=3, col_args={'data-sorter': 'table.sortPort'})
     edit_link = BtnColumn('Editieren', hide_if=no_inf_change)
     delete_link = BtnColumn('Löschen', hide_if=no_inf_change)
 

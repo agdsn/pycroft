@@ -524,3 +524,92 @@ export function bankAccountActivitiesDetailFormatter(index, row, element){
 
     return html;
 }
+
+
+
+/**
+ * Returns the type of the switch port name
+ */
+function getSwitchPortType(name) {
+    if (name == null) {
+        return false;
+    }
+
+    if (/^\d+$/.test(name)) {
+        return 'numeric';
+    } else if (/^[a-z]\d+$/.test(name.toLowerCase())) {
+        return 'alphanumeric';
+    } else if (/^\d+\/\d+\/\d+$/.test(name)) {
+        return 'slash';
+    } else {
+        return false
+    }
+}
+
+/**
+ * Sort switch port names. Supports three schemes:
+ * - A1, A2, ..., C20, C22
+ * - 1, 2, 3, ..., 12, 13
+ * - 1/1/1, 1/1/2, 2/1/1, 2/2/20
+ */
+export function sortPort(a, b) {
+    const type_a = getSwitchPortType(a);
+    const type_b = getSwitchPortType(b);
+    
+    if (type_a === type_b && type_a !== 'numeric') {
+        if (type_a === 'alphanumeric') {
+            const character_a = a[0];
+            const character_b = b[0];
+            const num_a = parseInt(a.substr(1));
+            const num_b = parseInt(b.substr(1));
+
+            if(character_a < character_b) { return -1; }
+            if(character_a > character_b) { return 1; }
+
+            if(num_a < num_b) { return -1; }
+            if(num_a > num_b) { return 1; }
+
+            return 0;
+        } else if (type_a === 'slash'){
+            const split_a = a.split('/');
+            const split_b = b.split('/');
+
+            for(let i = 0; i < split_a.length; i++){
+                const num_a = parseInt(split_a[i]);
+                const num_b = parseInt(split_b[i]);
+
+                if(num_a < num_b) { return -1; }
+                if(num_a > num_b) { return 1; }
+            }
+
+            return 0;
+        }
+    } else {
+        if (type_a === type_b && type_a === 'numeric') {
+            a = parseInt(a);
+            b = parseInt(b);
+        }
+
+        if(a < b) { return -1; }
+        if(a > b) { return 1; }
+        return 0;
+    }
+}
+
+export function cleanPortName(name) {
+    if (name == null) {
+        return null;
+    }
+
+    const match = name.match(/^\?\? \((.+)\)$/);
+
+    if (match.length > 1) {
+        return match[1];
+    }
+
+    return name;
+}
+
+export function sortPatchPort(a, b) {
+    return sortPort(cleanPortName(a), cleanPortName(b));
+}
