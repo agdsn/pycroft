@@ -72,8 +72,8 @@ def create_room(building, level, number, processor, address,
     if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
         raise RoomAlreadyExistsException
 
-    if Room.q.filter_by(swdd_vo_suchname=vo_suchname).first() is not None:
-        raise  RoomAlreadyExistsException
+    if vo_suchname and Room.q.filter_by(swdd_vo_suchname=vo_suchname).first() is not None:
+        raise RoomAlreadyExistsException
 
     room = Room(number=number,
                 level=level,

@@ -156,6 +156,7 @@ def room_create():
             return redirect(url_for('.room_show', room_id=room.id))
         except RoomAlreadyExistsException:
             form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
+            session.session.rollback()
 
     form_args = {
         'form': form,
