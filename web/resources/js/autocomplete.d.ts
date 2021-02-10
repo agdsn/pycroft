@@ -49,11 +49,15 @@ interface DataSet<TSuggestion> {
     name?: string;
     displayKey?(suggestion: TSuggestion): string;
     templates?: {
-        empty?(query: string, isEmpty: bool, ...args: any): string;
-        footer?(query: string, isEmpty: bool, ...args: any): string;
-        header?(query: string, isEmpty: bool, ...args: any): string;
+        empty?: string | PrecompiledTemplate;
+        footer?: string | PrecompiledTemplate;
+        header?: string | PrecompiledTemplate;
         suggestion?(suggestion: TSuggestion, ...args: any): string;
     };
     debounce?: number;
     cache?: boolean;
+}
+
+interface PrecompiledTemplate {
+    ({query: string, isEmpty: bool}, ...args: any): string;
 }
