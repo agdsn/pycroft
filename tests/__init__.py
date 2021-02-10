@@ -11,6 +11,7 @@ import string
 import unittest
 from flask import url_for, _request_ctx_stack
 import flask_testing as testing
+from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import sessionmaker, scoped_session, Session
@@ -138,6 +139,10 @@ class SQLAlchemyTestCase(unittest.TestCase):
         pattern = 'duplicate key value violates unique constraint ".+_key"'
         with self.assertRaisesRegexp(IntegrityError, pattern, msg=message) as cm:
             yield cm
+
+    @staticmethod
+    def assert_object_persistent(object):
+        assert inspect(object).persistent
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
