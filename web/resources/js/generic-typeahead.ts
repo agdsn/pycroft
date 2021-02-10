@@ -46,7 +46,7 @@ export function create_dataset(elem: HTMLElement) {
 
 }
 
-const options = {
+const options: AutocompleteOptions = {
     hint: true,
     minLength: 1,
 };
