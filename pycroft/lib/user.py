@@ -195,7 +195,7 @@ def get_user_sheet(sheet_id):
 
 @with_transaction
 def reset_password(user, processor):
-    if not can_reset_password(user, processor):
+    if not can_target(user, processor):
         raise PermissionError("cannot reset password of a user with a"
                               " greater or equal permission level.")
 
@@ -526,6 +526,10 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
     :param is_confirmed: If the email address is already confirmed
     :return:Changed user object
     """
+
+    if not can_target(user, processor):
+        raise PermissionError("cannot change email of a user with a"
+                              " greater or equal permission level.")
 
     if not email:
         email = None
