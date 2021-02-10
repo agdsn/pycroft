@@ -209,8 +209,11 @@ def reset_password(user, processor):
 
     return plain_password
 
-def can_reset_password(user, processor):
-    return user.permission_level < processor.permission_level
+def can_target(user, processor):
+    if user != processor:
+        return user.permission_level < processor.permission_level
+    else:
+        return True
 
 
 @with_transaction
