@@ -13,8 +13,11 @@ find "$TARGET" -type f -iname "*.py" -exec sed -i 's/kombu\.async\b/kombu.asynch
 cd "$TARGET"/kombu
 if [ -e async ]
 then
-    echo "Patching kombu to ensure Python 3.7 compatibility"
+    echo "Patching kombu to ensure Python 3.7 compatibility..."
     mv async asynchronous
 
     find . -type f -iname "*.py" -exec sed -i 's/\basync\b/asynchronous/g' {} +
+    echo "...done"
+else
+    echo "...directory '${TARGET}/kombu/async' nonexistent, skipping."
 fi
