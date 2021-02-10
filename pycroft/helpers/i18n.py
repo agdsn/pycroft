@@ -337,7 +337,7 @@ class Message(object):
     @classmethod
     def from_json(cls, json_string):
         try:
-            obj = json.loads(json_string, encoding='utf8')
+            obj = json.loads(json_string)
         except ValueError:
             return ErroneousMessage(json_string)
         try:
