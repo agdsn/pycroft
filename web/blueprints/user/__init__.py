@@ -41,7 +41,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
     get_possible_existing_users_for_pre_member, edit_email, edit_name, \
-    edit_person_id, send_member_request_merged_email, can_reset_password
+    edit_person_id, send_member_request_merged_email, can_target
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -841,8 +841,13 @@ def edit_user(user_id):
         success = True
 
         edited_user = lib.user.edit_name(user, form.name.data, current_user)
-        edited_user = lib.user.edit_email(edited_user, form.email.data,
+        try:
+            edited_user = lib.user.edit_email(edited_user, form.email.data,
                                           form.email_forwarded.data, current_user)
+        except PermissionError:
+            flash(gettext("Keine Berechtigung die Email dieses Nutzers zu ändern."))
+            session.session.rollback()
+            return abort(403)
         edited_user = lib.user.edit_birthdate(edited_user, form.birthdate.data,
                                               current_user)
 
