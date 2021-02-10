@@ -893,12 +893,17 @@ def reset_password(user_id):
     form = UserResetPasswordForm()
     my_user = get_user_or_404(user_id)
 
-    if not can_reset_password(my_user, current_user):
+    if not can_target(my_user, current_user):
         flash(gettext("Keine Berechtigung das Passwort dieses Nutzers zu ändern."))
         return abort(403)
 
     if form.validate_on_submit():
-        plain_password = lib.user.reset_password(my_user, processor=current_user)
+        try:
+            plain_password = lib.user.reset_password(my_user, processor=current_user)
+        except PermissionError:
+            flash(gettext("Keine Berechtigung das Passwort dieses Nutzers zu ändern."))
+            session.session.rollback()
+            return abort(403)
 
         sheet = lib.user.store_user_sheet(True, False, user=my_user,
                                           plain_user_password=plain_password,
