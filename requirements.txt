@@ -15,12 +15,11 @@ blinker~=1.4
 ipaddr~=2.2.0
 jsonschema~=3.2.0
 passlib~=1.7.1
-psycopg2~=2.7.0 --no-binary psycopg2
-psycopg2-binary~=2.7.0
+psycopg2~=2.8.6
 wrapt~=1.10.11
 # only needed for ldap caching
 ldap3~=2.5.1
-celery~=3.1.25
+celery~=3.1.26
 alembic~=1.0.10
 # decimal serialization
 simplejson~=3.11.1
