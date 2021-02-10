@@ -23,7 +23,8 @@ from pycroft import lib, config
 from pycroft.helpers import facilities
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.address import get_or_create_address
-from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, RoomAlreadyExistsException
+from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, \
+    RoomAlreadyExistsException, suggest_room_address_data
 from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port, \
     PatchPortAlreadyExistsException
 from pycroft.model import session
@@ -108,9 +109,12 @@ def building_levels(building_id=None, building_shortname=None):
     levels_list = [room.level for room in rooms_list]
     levels_list = list(set(levels_list))
 
-    return render_template('facilities/levels.html',
+    return render_template(
+        'facilities/levels.html',
         levels=levels_list, building=building,
-        page_title=u"Etagen Wohnheim {}".format(building.short_name))
+        page_title=u"Etagen Wohnheim {}".format(building.short_name),
+        suggested_address=suggest_room_address_data(building),
+   )
 
 
 @bp.route('/room/create', methods=['GET', 'POST'])
