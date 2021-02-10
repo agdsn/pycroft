@@ -7,11 +7,16 @@ if [[ ! -f /opt/pycroft/venv/bin/activate ]]; then
     python3 -m venv /opt/pycroft/venv
 fi;
 
+/opt/pycroft/venv/bin/python -m ensurepip
+
 PIP="/opt/pycroft/venv/bin/pip"
+
 if [[ -n $($PIP freeze) ]]; then
     echo "Pip packages present, nothing to do"
     exit
 fi;
+
+$PIP install wheel
 
 echo "No pip packages found, installing requirements"
 cd /opt/pycroft/app
