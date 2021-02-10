@@ -163,6 +163,15 @@ def room_create():
         'cancel_to': url_for('.overview')
     }
 
+    suggestion = suggest_room_address_data(building)
+    if suggestion and not form.is_submitted():
+        form.address_street.data = suggestion.street
+        form.address_number.data = suggestion.number
+        form.address_zip_code.data = suggestion.zip_code
+        form.address_city.data = suggestion.city
+        form.address_state.data = suggestion.state
+        form.address_country.data = suggestion.country
+
     return render_template('generic_form.html',
                            page_title="Raum erstellen",
                            form_args=form_args)
