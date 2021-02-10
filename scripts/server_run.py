@@ -61,9 +61,10 @@ def server_run(args):
         if request_time:
             time_taken = time.time() - request_time
             if time_taken > 0.5:
-                app.logger.warn(
-                    "Response took {duration} seconds for request {path}".format(
-                        path=request.full_path, duration=time_taken))
+                app.logger.warning(
+                    "Response took %s seconds for request %s",
+                    request.full_path, time_taken,
+                )
 
     connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
                                                args.profile)
