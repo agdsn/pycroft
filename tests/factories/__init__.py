@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 from .config import ConfigFactory
+from .address import AddressFactory
 from .facilities import SiteFactory, BuildingFactory, RoomFactory, PatchPortFactory
 from .finance import AccountFactory
 from .host import HostFactory, InterfaceFactory, IPFactory, SwitchFactory, SwitchPortFactory
