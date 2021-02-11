@@ -14,6 +14,20 @@ DEFAULT_COUNTRY = "Germany"
 
 
 class Address(IntegerIdModel):
+    """A known address.
+
+    Addresses differ from most other entities such as users or rooms in the following ways:
+
+    - Their identity is provided by their value, i.e. if two addresses have equal values,
+      they should be identitcal
+    - Their existence is justified solely by the reference of another object.
+      At no point in time should there be any unreferenced address records in the db.
+    - They should be immutable: This implies that editing e.g. the street of a user's address
+      should not change the street of the corresponding room's address.
+      This implies that addresses are *stateless*, i.e. have no life cycle.
+
+    Establishing these consistencies requires triggers.
+    """
     street = Column(String(), nullable=False)
     number = Column(String(), nullable=False)
     addition = Column(String(), nullable=False, server_default="")
