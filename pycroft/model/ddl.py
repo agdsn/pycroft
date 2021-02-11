@@ -487,7 +487,18 @@ class DDLManager(object):
     Ensures that create DDL statements are registered with SQLAlchemy in the
     order they were added to the manager and registers the drop DDL statements
     in the reverse order.
+
+    Example usage:
+
+    >>> from sqlalchemy import MetaData, Table, Column as C, Integer as I, String as S
+    >>> table = Table('table', MetaData(), C('id', I, primary_key=True), C('name', S))
+    >>> manager = DDLManager()
+    >>> view = View('my_view', "select concat(name, ' hat das Spiel verloren') from table")
+    >>> manager.add_view(table, view)
+    >>> # … do other stuff
+    >>> manager.register()
     """
+
     def __init__(self):
         self.objects = []
 
