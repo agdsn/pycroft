@@ -61,6 +61,8 @@ services:
           - mq
     volumes:
       - "mq:/var/lib/rabbitmq"
+    ports:
+      - "15672:15672"
   dev-celery-worker:
     extends:
       file: docker-compose.base.yml
