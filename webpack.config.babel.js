@@ -33,7 +33,6 @@ export default {
         'unlimited-end-date': './js/unlimited-end-date.js',
         'select-multiple-improvement': './js/select-multiple-improvement.js',
         'tab-anchor': './js/tab-anchor.js',
-        'hello': './js/hello.ts',
     },
     output: {
         path: dst,

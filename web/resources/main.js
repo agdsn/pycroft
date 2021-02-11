@@ -39,7 +39,6 @@ import './js/navigation';
 import './js/quick-search';
 import './js/table';
 import './js/table-fixed-header';
-import './js/hello';
 
 import './img/favicon.ico';
 import './img/pycroft.png';
