@@ -47,7 +47,10 @@ def server_run(args):
                                                reflections=False)
 
     state = AlembicHelper(connection)
-    strategy = SchemaStrategist(state).determine_schema_strategy()
+    if args.force_schema_create:
+        strategy = SchemaStrategist(state).create_then_stamp
+    else:
+        strategy = SchemaStrategist(state).determine_schema_strategy()
     strategy()
 
     @app.before_request
@@ -109,6 +112,7 @@ def main():
     parser.add_argument("-w", "--wait-for-database", type=int, default=30,
                         help="Maximum time to wait for database to become "
                              "available. Use 0 to wait forever.")
+    parser.add_argument("--force-schema-create", action='store_true')
 
     server_run(parser.parse_args())
 
