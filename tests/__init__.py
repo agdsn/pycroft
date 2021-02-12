@@ -33,8 +33,7 @@ _setup_stack = 0
 
 def setup():
     global engine, connection, _setup_stack
-    _setup_stack += 1
-    if _setup_stack > 1:
+    if _setup_stack > 0:
         return
     try:
         uri = os.environ['PYCROFT_DB_URI']
@@ -50,6 +49,7 @@ def setup():
     create_db_model(connection)
 
     DeferredReflection.prepare(engine)
+    _setup_stack += 1
 
 
 def get_engine_and_connection():
