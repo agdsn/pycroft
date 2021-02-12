@@ -7,7 +7,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
-from pycroft.model.address import Address
+from pycroft.model import ddl
+from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.finance import Account
 
@@ -81,3 +82,13 @@ class Room(IntegerIdModel):
         return Host.q.join(Switch, Host.id == Switch.host_id).filter(Host.room_id==self.id).first() is not None
 
     __table_args__ = (UniqueConstraint('swdd_vo_suchname'),)
+
+
+manager = ddl.DDLManager()
+manager.add_trigger(Room.__table__, ddl.Trigger(
+    'room_address_cleanup_trigger',
+    Room.__table__,
+    ('UPDATE', 'DELETE'),
+    f'{address_remove_orphans.name}()',
+))
+manager.register()

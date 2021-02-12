@@ -6,6 +6,7 @@ from typing import List
 
 from sqlalchemy import Column, String, UniqueConstraint
 
+from pycroft.model import ddl
 from pycroft.model.base import IntegerIdModel
 
 
@@ -58,3 +59,21 @@ class Address(IntegerIdModel):
 
         glue = ", " if spec == "short" else "\n" if spec == "long" else spec
         return glue.join(items)
+
+
+manager = ddl.DDLManager()
+
+address_remove_orphans = ddl.Function(
+    'address_remove_orphans', [], 'trigger',
+    """ BEGIN
+      delete from address
+      where not exists (select 1 from room where room.address_id = address.id)
+      and not exists (select 1 from "user" where "user".address_id = address.id);
+      RETURN NULL;
+    END;""",
+    volatility='volatile', strict=True,  language='plpgsql'
+)
+manager.add_function(Address.__table__, address_remove_orphans)
+# User trigger for the respective backref added in `user.py`
+# Room trigger for the respective backref added in `facilities.py`
+manager.register()

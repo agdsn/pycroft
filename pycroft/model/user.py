@@ -33,7 +33,7 @@ from pycroft.helpers.interval import closed, single, Interval
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
-from pycroft.model.address import Address
+from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.helpers.interval import IntervalModel
 from pycroft.model.facilities import Room
@@ -424,6 +424,14 @@ manager.add_trigger(
         'user_room_change_update_history()'
     )
 )
+
+
+manager.add_trigger(User.__table__, ddl.Trigger(
+    'user_address_cleanup_trigger',
+    User.__table__,
+    ('UPDATE', 'DELETE'),
+    f'{address_remove_orphans.name}()',
+))
 
 
 class Group(IntegerIdModel):
