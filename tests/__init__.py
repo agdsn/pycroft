@@ -151,8 +151,8 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
     def setUp(self):
         super().setUp()
         logging.getLogger('factory').setLevel(logging.INFO)
-        with self.session.begin(subtransactions=True):
-            self.create_factories()
+        self.create_factories()
+        self.session.flush()
 
     def create_factories(self):
         pass
