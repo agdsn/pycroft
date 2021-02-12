@@ -170,7 +170,7 @@ class User(ModelBase, BaseUser, UserMixin):
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants"))
 
-    room = relationship("Room", backref=backref("users", cascade="all"))
+    room = relationship("Room", backref=backref("users", viewonly=True), sync_backref=False)
 
     email_forwarded = Column(Boolean, server_default='True', nullable=False)
 
