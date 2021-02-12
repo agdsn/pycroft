@@ -422,9 +422,10 @@ class View(schema.DDLElement):
 
 
 class CreateView(schema.DDLElement):
-    def __init__(self, view, or_replace=False):
+    def __init__(self, view, or_replace=False, if_not_exists=False):
         self.view = view
         self.or_replace = or_replace
+        self.if_not_exists = if_not_exists
 
 
 class DropView(schema.DDLElement):
@@ -436,9 +437,9 @@ class DropView(schema.DDLElement):
 
 # noinspection PyUnusedLocal
 @compiles(CreateView, 'postgresql')
-def visit_create_view(element, compiler, **kw):
+def visit_create_view(element: CreateView, compiler, **kw):
     view = element.view
-    opt_or_replace = "OR REPLACE" if element.or_replace else None
+    opt_or_replace = "OR REPLACE" if element.or_replace and not view.materialized else None
     opt_temporary = "TEMPORARY" if view.temporary else None
     if view.column_names is not None:
         quoted_column_names = map(compiler.preparer.quote, view.column_names)
@@ -461,9 +462,10 @@ def visit_create_view(element, compiler, **kw):
         opt_check_option = None
 
     view_type = "VIEW" if not view.materialized else "MATERIALIZED VIEW"
+    opt_if_not_exists = "IF NOT EXISTS" if element.if_not_exists and view.materialized else None
 
     return _join_tokens(
-        "CREATE", opt_or_replace, opt_temporary, view_type, view_name,
+        "CREATE", opt_or_replace, opt_temporary, view_type, opt_if_not_exists, view_name,
         opt_column_names, opt_view_options, "AS", compiled_query,
         opt_check_option)
 
@@ -528,8 +530,8 @@ class DDLManager(object):
         self.add(table, CreateConstraintTrigger(constraint_trigger),
                  DropTrigger(constraint_trigger, if_exists=True), dialect=dialect)
 
-    def add_view(self, table, view, dialect=None, or_replace=True):
-        self.add(table, CreateView(view, or_replace=or_replace),
+    def add_view(self, table, view, dialect=None, or_replace=True, if_not_exists=True):
+        self.add(table, CreateView(view, or_replace=or_replace, if_not_exists=if_not_exists),
                  DropView(view, if_exists=True), dialect=dialect)
 
     def register(self):

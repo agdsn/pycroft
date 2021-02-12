@@ -23,7 +23,7 @@ swdd_vo = View(
     query=select([text('*')]).select_from(text("swdd.swdd_vo")),
     materialized=True
 )
-swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo, or_replace=False)
+swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo)
 
 
 class RentalObject(DeferredReflection, ModelBase):
@@ -53,7 +53,7 @@ swdd_vv = View(
     query=select([text('*')]).select_from(text("swdd.swdd_vv")),
     materialized=True
 )
-swdd_view_ddl.add_view(ModelBase.metadata, swdd_vv, or_replace=False)
+swdd_view_ddl.add_view(ModelBase.metadata, swdd_vv)
 
 
 class Tenancy(DeferredReflection, ModelBase):
@@ -91,7 +91,7 @@ swdd_import = View(
     query=select([text('*')]).select_from(text("swdd.swdd_import")),
     materialized=True
 )
-swdd_view_ddl.add_view(ModelBase.metadata, swdd_import, or_replace=False)
+swdd_view_ddl.add_view(ModelBase.metadata, swdd_import)
 
 
 swdd_view_ddl.register()
