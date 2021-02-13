@@ -10,7 +10,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: dev
-    command: ["test"]
+    command: ["/bin/true"]
     depends_on:
       - test-db
       - test-ldap
