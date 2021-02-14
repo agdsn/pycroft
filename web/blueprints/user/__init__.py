@@ -13,10 +13,8 @@
 import operator
 import re
 from datetime import datetime, timedelta
-from difflib import SequenceMatcher
 from functools import partial
 from itertools import chain
-from typing import Optional
 
 from bs_table_py.table import datetime_format, date_format
 from flask import (
@@ -26,8 +24,6 @@ from flask_login import current_user
 from sqlalchemy import Text, distinct, and_
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import or_, func, cast
-from wtforms import Form, Field
-from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
 from pycroft.helpers import utc
@@ -613,24 +609,6 @@ def json_trafficdata(user_id, days=7):
     )
 
 
-def validate_unique_email(form, field):
-    """Check whether there is a user with the same mail.
-
-    Returns an error string containing a link to the first duplicate user."""
-    if not field.data or form.force.data:
-        # not required if this were  areal validator: This would be handled by `Optional()`
-        return
-
-    if (user := User.q.filter_by(email=field.data).first()) is None:
-        return
-
-    url = url_for('user.user_show', user_id=user.id)
-    return HTMLString(
-        "<div class=\"optional-error\">* E-Mail bereits in Verwendung!<br/>Nutzer:"
-        f" <a target=\"_blank\" href=\"{url}\">{user.name}</a></div>"
-    )
-
-
 @bp.route('/create', methods=['GET', 'POST'])
 @nav.navigate(u"Anlegen")
 @access.require('user_change')
@@ -643,10 +621,9 @@ def create():
             if form.is_submitted() else 200
 
     if form.is_submitted():
-        unique_email_error = validate_unique_email(form, form.email)
         unique_mac_error = validate_unique_mac(form, form.mac)
 
-    if form.validate_on_submit() and not (unique_email_error or unique_mac_error):
+    if form.validate_on_submit() and not unique_mac_error:
         room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
                         room_number=form.room_number.data)
         if not room:
@@ -698,9 +675,6 @@ def create():
         return redirect(url_for('.user_show', user_id=new_user.id))
 
     if form.is_submitted():
-        if unique_email_error:
-            form.email.errors.append(unique_email_error)
-
         if unique_mac_error:
             form.mac.errors.append(unique_mac_error)
 
@@ -1139,10 +1113,7 @@ def member_request_edit(pre_member_id: int):
         person_id=prm.swdd_person_id,
     )
 
-    if form.is_submitted():
-        unique_email_error = validate_unique_email(form, form.email)
-
-    if form.validate_on_submit() and not (unique_email_error):
+    if form.validate_on_submit():
         old_email = prm.email
 
         prm.name = form.name.data
@@ -1177,10 +1148,6 @@ def member_request_edit(pre_member_id: int):
             session.session.commit()
 
         flash("Änderungen wurden gespeichert.", "success")
-
-    if form.is_submitted():
-        if unique_email_error:
-            form.email.errors.append(unique_email_error)
 
     return render_template("user/member_request_edit.html",
                            page_title="Mitgliedschaftsanfrage Bearbeiten",

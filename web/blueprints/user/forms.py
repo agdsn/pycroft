@@ -99,6 +99,38 @@ class UniqueName:
         ))
 
 
+class UniqueEmail:
+    """Checks whether a given email is unique, i.e. already assigned to some user.
+
+    :param force_field: The name of the “do it anyway” checkbox field
+    """
+    def __init__(self, force_field: typing.Optional[str] = 'force'):
+        self.force_field = force_field
+
+    def force_set(self, form: Form) -> bool:
+        return self.force_field and getattr(form, self.force_field).data
+
+    @staticmethod
+    def get_conflicting_users(email: str) -> list[User]:
+        return User.q.filter_by(email=email).all()
+
+    def __call__(self, form: Form, field: Field):
+        if any((
+            self.force_set(form),
+            not (conflicting_users := self.get_conflicting_users(field.data))
+        )):
+            return
+
+        user_links = ", ".join(
+            f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
+                {user.name}</a>""" for user in conflicting_users
+        )
+        raise ValidationError(HTMLString(
+            "<div class=\"optional-error\">* E-Mail bereits in Verwendung!"
+            f"<br/>Nutzer:{user_links}</div>"
+        ))
+
+
 class UserSearchForm(Form):
     id = TextField(u"Nutzer-ID")
     name = TextField(u"Name")
