@@ -91,16 +91,19 @@ class UserMoveForm(SelectRoomForm):
     when = DateField(u"Umzug am", [OptionalIf("now")])
 
 
-class UserCreateForm(SelectRoomForm):
+class UserBaseDataForm(Form):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
 
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
         Regexp(regex=User.login_regex_ci, message=u"Login ist ungültig!"),
-        validate_unique_login],
-                      filters=[to_lowercase])
+        validate_unique_login
+    ], filters=[to_lowercase])
     email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
+
+
+class UserCreateForm(UserBaseDataForm, SelectRoomForm):
     birthdate = DateField(u"Geburtsdatum",
                           [OptionalIf('mac', invert=True)])
     mac = MacField(u"MAC",
@@ -114,14 +117,27 @@ class UserCreateForm(SelectRoomForm):
     _order = ("name", "building", "level", "room_number")
 
 
-class PreMemberEditForm(SelectRoomForm):
-    name = TextField("Name", [DataRequired("Name wird benötigt!")])
-    login = TextField("Login", [
-        DataRequired(message="Login wird benötigt!"),
-        Regexp(regex=User.login_regex_ci, message="Login ist ungültig!"),
-        validate_unique_login],
-                      filters=[to_lowercase])
-    email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
+class NonDormantUserCreateForm(UserBaseDataForm, CreateAddressForm):
+    birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
+    mac = MacField(u"MAC",
+                   [MacAddress(message=u"MAC ist ungültig!"), Optional()])
+    property_groups = QuerySelectMultipleField(u"Gruppen",
+                                      get_label='name',
+                                      query_factory=property_group_user_create_query)
+    annex = BooleanField(u"Host annektieren", [Optional()])
+    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+
+    _order = (
+        'name', 'login',
+        *(f for f in CreateAddressForm.__dict__ if f.startswith('address_')),
+        'email', 'birthdate', 'mac', 'property_groups', 'annex', 'force'
+    )
+
+
+class PreMemberEditForm(UserBaseDataForm, SelectRoomForm):
+    # overrides `email` from UserBaseDataForm
+    email = TextField("E-Mail", [DataRequired("Mitgliedschaftsanfragen benötigen E-Mail"),
+                                 Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
     birthdate = DateField(u"Geburtsdatum", [DataRequired("Das Geburtsdatum wird benötigt!")])
     move_in_date = DateField("Einzugsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
