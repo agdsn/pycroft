@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import chain
+from typing import Optional
 
 from bs_table_py.table import datetime_format, date_format
 from flask import (
@@ -25,6 +26,7 @@ from flask_login import current_user
 from sqlalchemy import Text, distinct, and_
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import or_, func, cast
+from wtforms import Form, Field
 from wtforms.widgets import HTMLString
 
 from pycroft import lib, config
@@ -611,41 +613,50 @@ def json_trafficdata(user_id, days=7):
     )
 
 
-def validate_unique_name(form, field):
-    if not form.force.data:
-        try:
-            room = Room.q.filter_by(number=form.room_number.data,
-                                    level=form.level.data,
-                                    building=form.building.data).one()
+def validate_unique_name(form: Form, field: Field) -> Optional[HTMLString]:
+    """Check for existence of a similar user in the room-to-be.
 
-            if room is not None:
-                users = User.q.filter_by(room_id=room.id).all()
+    Returns an error string containing a link to the first duplicate user.
+    """
+    if form.force.data:
+        return
 
-                for user in users:
-                    ratio = SequenceMatcher(None, field.data, user.name).ratio()
+    room = Room.q.filter_by(number=form.room_number.data, level=form.level.data,
+                            building=form.building.data).one_or_none()
+    if not room:
+        return
 
-                    if ratio > 0.6:
-                        return HTMLString("<div class=\"optional-error\">* " +
-                                          u"Ein ähnlicher Benutzer existiert bereits in diesem Zimmer!" +
-                                          "<br/>Nutzer: " +
-                                          "<a target=\"_blank\" href=\"" +
-                                          url_for("user.user_show", user_id=user.id) +
-                                          "\">" + user.name + "</a></div>")
-        except:
-            pass
+    similar_inhabitants = [u for u in room.inhabtiants
+                           if SequenceMatcher(None, field.data, u.name).ratio() > 0.6]
+    if not similar_inhabitants:
+        return
 
-    return False
+    user_links = ", ".join(
+        f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
+            {user.name}</a>""" for user in similar_inhabitants
+    )
+    return HTMLString(
+        "<div class=\"optional-error\">* Ähnliche Benutzer existieren bereits in diesem Zimmer:"
+        f"<br/>Nutzer: {user_links}</a></div>"
+    )
 
 
 def validate_unique_email(form, field):
-    if field.data:
-        user = User.q.filter_by(email=field.data).first()
-        if user is not None and not form.force.data:
-            return HTMLString("<div class=\"optional-error\">* "
-                              + "E-Mail bereits in Verwendung!<br/>Nutzer: " +
-                              "<a target=\"_blank\" href=\"" +
-                              url_for("user.user_show", user_id=user.id) +
-                              "\">" + user.name + "</a></div>")
+    """Check whether there is a user with the same mail.
+
+    Returns an error string containing a link to the first duplicate user."""
+    if not field.data or form.force.data:
+        # not required if this were  areal validator: This would be handled by `Optional()`
+        return
+
+    if (user := User.q.filter_by(email=field.data).first()) is None:
+        return
+
+    url = url_for('user.user_show', user_id=user.id)
+    return HTMLString(
+        "<div class=\"optional-error\">* E-Mail bereits in Verwendung!<br/>Nutzer:"
+        f" <a target=\"_blank\" href=\"{url}\">{user.name}</a></div>"
+    )
 
 
 @bp.route('/create', methods=['GET', 'POST'])
