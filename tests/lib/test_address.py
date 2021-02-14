@@ -19,6 +19,7 @@ class AddressTest(FactoryDataTestBase):
         new_addr = address.get_or_create_address(
             street='Wundtstraße',
             number='3',
+            addition=None,
             zip_code='01217',
             city='Dresden',
         )
@@ -45,6 +46,7 @@ class AddressTest(FactoryDataTestBase):
         new_addr = address.get_or_create_address(
             street='Wundtstraße',
             number='3',
+            addition=None,
             zip_code='01217',
             city=None,
             state=None,

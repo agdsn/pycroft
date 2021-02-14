@@ -10,9 +10,9 @@ def get_or_create_address(
     number: str,
     addition: Optional[str],
     zip_code: str,
-    city: Optional[str],
-    state: Optional[str],
-    country: Optional[str],
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
 ) -> Address:
     query = session.query(Address).filter_by(
         street=street,

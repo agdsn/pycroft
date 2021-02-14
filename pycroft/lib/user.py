@@ -26,6 +26,7 @@ from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
+from pycroft.lib.address import get_or_create_address
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event, log_event
@@ -614,6 +615,28 @@ def edit_person_id(user: User, person_id: int, processor: User):
                    message=message.format(str(old_person_id), str(person_id)).to_json())
 
     return user
+
+
+@with_transaction
+def edit_address(
+    user: User,
+    processor: User,
+    street: str,
+    number: str,
+    addition: Optional[str],
+    zip_code: str,
+    city: Optional[str],
+    state: Optional[str],
+    country: Optional[str],
+):
+    """Changes the address of a user and appends a log entry.
+
+    Should do nothing if the user already has an address.
+    """
+    address = get_or_create_address(street, number, addition, zip_code, city, state, country)
+    user.address = address
+    log_user_event(deferred_gettext("Changed address to {address}").format(str(address)).to_json(),
+                   processor, user)
 
 
 def traffic_history(user_id, start, end):
