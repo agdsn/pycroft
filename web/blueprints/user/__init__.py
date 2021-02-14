@@ -49,7 +49,6 @@ from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMem
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
-from web.blueprints.helpers.host import validate_unique_mac
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
 from web.blueprints.navigation import BlueprintNavigation
@@ -620,10 +619,7 @@ def create():
         return render_template('user/user_create.html', form=form), 400 \
             if form.is_submitted() else 200
 
-    if form.is_submitted():
-        unique_mac_error = validate_unique_mac(form, form.mac)
-
-    if form.validate_on_submit() and not unique_mac_error:
+    if form.validate_on_submit():
         room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
                         room_number=form.room_number.data)
         if not room:
@@ -673,10 +669,6 @@ def create():
         flash(Markup(u'Benutzer angelegt.'), 'success')
 
         return redirect(url_for('.user_show', user_id=new_user.id))
-
-    if form.is_submitted():
-        if unique_mac_error:
-            form.mac.errors.append(unique_mac_error)
 
     return default_response()
 

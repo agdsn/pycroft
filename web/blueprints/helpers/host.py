@@ -1,20 +1,41 @@
 import re
+from typing import Optional
 
 from flask import url_for
+from wtforms import Form, Field, ValidationError
 from wtforms.widgets import HTMLString
 
 from pycroft.helpers.net import mac_regex
 from pycroft.model.host import Interface
 
 
-def validate_unique_mac(form, field):
-    if re.match(mac_regex, field.data):
-        interface_existing = Interface.q.filter_by(mac=field.data).first()
+class UniqueMac:
+    """Validates whether the mac is unique.
 
-        if interface_existing is not None and (not hasattr(form, 'annex') or not form.annex.data):
-            owner = interface_existing.host.owner
+    :param annex_field: the name of the “I want to annex that host/interface” checkbox
+    """
 
-            return HTMLString("MAC bereits in Verwendung!<br/>Nutzer: " +
-                              "<a target=\"_blank\" href=\"" +
-                              url_for("user.user_show", user_id=owner.id) +
-                              "#hosts\">" + owner.name + "</a>")
+    def __init__(self, annex_field: Optional[str] = 'annex'):
+        self.annex_field = annex_field
+
+    def annex_set(self, form: Form) -> bool:
+        return self.annex_field and getattr(form, self.annex_field).data
+
+    @staticmethod
+    def conflicting_interface(mac: str) -> Optional[Interface]:
+        return Interface.q.filter_by(mac=mac).first()
+
+    def __call__(self, form: Form, field: Field):
+        if any((
+            not re.match(mac_regex, field.data),
+            self.annex_set(form),
+            (conflicting_interface := self.conflicting_interface(field.data)) is None,
+        )):
+            return
+
+        owner = conflicting_interface.host.owner
+        url = url_for('user.user_show', user_id=owner.id, _anchor='hosts')
+        raise ValidationError(HTMLString(
+            "MAC bereits in Verwendung!<br/>Nutzer:"
+            f"<a target=\"_blank\" href=\"{url}#hosts\">{owner.name}</a>"
+        ))

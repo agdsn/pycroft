@@ -14,6 +14,7 @@ from wtforms.widgets import HTMLString
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
+from web.blueprints.helpers.host import UniqueMac
 from web.form.widgets import UserIDField
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
@@ -196,7 +197,7 @@ class UserCreateForm(UserBaseDataForm, SelectRoomForm):
     birthdate = DateField(u"Geburtsdatum",
                           [OptionalIf('mac', invert=True)])
     mac = MacField(u"MAC",
-                   [MacAddress(message=u"MAC ist ungültig!"), Optional()])
+                   [MacAddress(message=u"MAC ist ungültig!"), UniqueMac(), Optional()])
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)

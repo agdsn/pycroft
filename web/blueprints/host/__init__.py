@@ -18,7 +18,6 @@ from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
-from web.blueprints.helpers.host import validate_unique_mac
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
 from web.blueprints.host.tables import InterfaceTable
@@ -247,20 +246,10 @@ def interface_edit(interface_id):
 
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
-    unique_mac_error = None
-
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
-    else:
-        if form.mac.data != interface.mac:
-            unique_mac_error = validate_unique_mac(form, form.mac)
 
-            if unique_mac_error:
-                form.validate()
-
-                form.mac.errors.append(unique_mac_error)
-
-    if not unique_mac_error and form.validate_on_submit():
+    if form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
         _, success = web_execute(lib_host.interface_edit,
@@ -306,19 +295,10 @@ def interface_create(host_id):
 
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
-    unique_mac_error = None
-
     if not form.is_submitted():
         form.ips.process_data([next(iter(unused_ips), None)])
-    else:
-        unique_mac_error = validate_unique_mac(form, form.mac)
 
-        if unique_mac_error:
-            form.validate()
-
-            form.mac.errors.append(unique_mac_error)
-
-    if not unique_mac_error and form.validate_on_submit():
+    if form.validate_on_submit():
         ips = set([IPv4Address(ip) for ip in form.ips.data])
 
         _, success = web_execute(lib_host.interface_create,

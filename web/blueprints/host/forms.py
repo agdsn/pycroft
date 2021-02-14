@@ -1,3 +1,4 @@
+from web.blueprints.helpers.host import UniqueMac
 from web.form.widgets import UserIDField
 from wtforms.validators import DataRequired, Optional
 
@@ -22,5 +23,5 @@ class InterfaceForm(Form):
     name = TextField("Name",
                      description="z.B. eth0, en0 oder enp0s29u1u1u5",
                      validators=[Optional()])
-    mac = MacField("MAC", [MacAddress(message="MAC ist ungültig!")])
+    mac = MacField("MAC", [MacAddress(message="MAC ist ungültig!"), UniqueMac(annex_field=None)])
     ips = SelectMultipleField(u"IPs", validators=[Optional()])
