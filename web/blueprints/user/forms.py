@@ -64,7 +64,9 @@ class UniqueName:
         self.ratio = 0.6
 
     def force_set(self, form: Form) -> bool:
-        return self.force_field and getattr(form, self.force_field).data
+        return self.force_field \
+               and hasattr(form, self.force_field)\
+               and getattr(form, self.force_field).data
 
     def try_get_room(self, form: Form) -> typing.Optional[Room]:
         try:
@@ -81,11 +83,11 @@ class UniqueName:
                 if SequenceMatcher(None, our_name, u.name).ratio() > self.ratio]
 
     def __call__(self, form: Form, field: Field):
-        if any((
-            self.force_set(form),
-            (room := self.try_get_room(form)) is None,
-            not (conflicting_inhabitants := self.similar_users(field.data, room))
-        )):
+        if self.force_set(form):
+            return
+        if (room := self.try_get_room(form)) is None:
+            return
+        if not (conflicting_inhabitants := self.similar_users(field.data, room)):
             return
 
         user_links = ", ".join(
@@ -109,17 +111,18 @@ class UniqueEmail:
         self.force_field = force_field
 
     def force_set(self, form: Form) -> bool:
-        return self.force_field and getattr(form, self.force_field).data
+        return self.force_field \
+               and hasattr(form, self.force_field)\
+               and getattr(form, self.force_field).data
 
     @staticmethod
     def get_conflicting_users(email: str) -> list[User]:
         return User.q.filter_by(email=email).all()
 
     def __call__(self, form: Form, field: Field):
-        if any((
-            self.force_set(form),
-            not (conflicting_users := self.get_conflicting_users(field.data))
-        )):
+        if self.force_set(form):
+            return
+        if not (conflicting_users := self.get_conflicting_users(field.data)):
             return
 
         user_links = ", ".join(
