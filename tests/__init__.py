@@ -12,6 +12,7 @@ import unittest
 from flask import url_for, _request_ctx_stack
 import flask_testing as testing
 from sqlalchemy import inspect
+from sqlalchemy.engine import Connection
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import sessionmaker, scoped_session, Session
@@ -62,6 +63,7 @@ def teardown():
     _setup_stack -= 1
     if _setup_stack > 0:
         return
+    assert isinstance(connection, Connection)
     drop_db_model(connection)
     connection.close()
     engine = None
@@ -85,6 +87,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+        assert isinstance(connection, Connection)
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
@@ -95,6 +98,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
         session.session.rollback()
         session.Session.remove()
         # Rollback the outer transaction to the savepoint
+        assert self.transaction is not None
         self.transaction.rollback()
         self.transaction = None
 
