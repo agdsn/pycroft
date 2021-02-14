@@ -187,7 +187,22 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @hybrid_property
     def has_custom_address(self):
-        return self.address != self.room.address
+        """Whether the user's address differs from their room's address.
+
+        If no room is assigned, returns ``False``.
+        """
+        return self.address != self.room.address if self.room else False
+
+    # noinspection PyMethodParameters
+    @has_custom_address.expression
+    def has_custom_address(cls):
+        return and_(
+            cls.room_id.isnot(None),
+            exists(select([null()])
+                  .select_from(Room)
+                  .where(Room.id == cls.room_id)
+                  .where(Room.address_id != cls.address_id))
+        )
 
     @validates('login')
     def validate_login(self, _, value):

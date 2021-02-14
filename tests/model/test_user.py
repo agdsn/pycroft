@@ -7,7 +7,7 @@ from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model import session, user
 from pycroft.model.finance import Account
-from pycroft.model.user import IllegalLoginError, Membership, PropertyGroup
+from pycroft.model.user import IllegalLoginError, Membership, PropertyGroup, User
 from tests import FactoryDataTestBase, factories
 
 
@@ -277,3 +277,27 @@ class Test_has_property(FactoryDataTestBase):
                 user.User.login == self.user.login,
                 user.User.has_property(self.GRANTED_NAME, interval)
             ).first())
+
+
+class UserAddressTest(FactoryDataTestBase):
+    def assert_custom_address(self, user: User):
+        assert user.has_custom_address
+        assert self.session.query(User).filter(User.has_custom_address).count() == 1
+
+    def assert_no_custom_address(self, user: User):
+        assert not user.has_custom_address
+        assert self.session.query(User).filter(~User.has_custom_address).count() == 1
+
+    def test_user_with_room(self):
+        user = factories.UserFactory()
+        self.assert_no_custom_address(user)
+
+        user.address = factories.AddressFactory()
+        self.assert_custom_address(user)
+
+    def test_user_without_room(self):
+        user = factories.UserWithoutRoomFactory()
+        self.assert_no_custom_address(user)
+
+        user.address = factories.AddressFactory()
+        self.assert_no_custom_address(user)
