@@ -4,7 +4,7 @@ from pycroft.model.address import Address
 from pycroft.model.session import session, with_transaction
 
 
-@overload
+@with_transaction
 def get_or_create_address(
     street: str,
     number: str,
@@ -13,12 +13,16 @@ def get_or_create_address(
     city: Optional[str],
     state: Optional[str],
     country: Optional[str],
-) -> Address: ...
-
-
-@with_transaction
-def get_or_create_address(**kwargs) -> Address:
-    query = session.query(Address).filter_by(**kwargs)
+) -> Address:
+    query = session.query(Address).filter_by(
+        street=street,
+        number=number,
+        addition=addition,
+        zip_code=zip_code,
+        city=city,
+        state=state,
+        country=country,
+    )
     num_matching = query.count()
     if num_matching == 1:
         return query.one()
@@ -27,6 +31,14 @@ def get_or_create_address(**kwargs) -> Address:
         raise RuntimeError("Found more than one address")
 
     # create
-    new_address = Address(**{k: v for k, v in kwargs.items() if v is not None})
+    new_address = Address(
+        street=street,
+        number=number,
+        addition=addition,
+        zip_code=zip_code,
+        city=city,
+        state=state,
+        country=country,
+    )
     session.add(new_address)
     return new_address
