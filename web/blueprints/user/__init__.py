@@ -613,34 +613,6 @@ def json_trafficdata(user_id, days=7):
     )
 
 
-def validate_unique_name(form: Form, field: Field) -> Optional[HTMLString]:
-    """Check for existence of a similar user in the room-to-be.
-
-    Returns an error string containing a link to the first duplicate user.
-    """
-    if form.force.data:
-        return
-
-    room = Room.q.filter_by(number=form.room_number.data, level=form.level.data,
-                            building=form.building.data).one_or_none()
-    if not room:
-        return
-
-    similar_inhabitants = [u for u in room.inhabtiants
-                           if SequenceMatcher(None, field.data, u.name).ratio() > 0.6]
-    if not similar_inhabitants:
-        return
-
-    user_links = ", ".join(
-        f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
-            {user.name}</a>""" for user in similar_inhabitants
-    )
-    return HTMLString(
-        "<div class=\"optional-error\">* Ähnliche Benutzer existieren bereits in diesem Zimmer:"
-        f"<br/>Nutzer: {user_links}</a></div>"
-    )
-
-
 def validate_unique_email(form, field):
     """Check whether there is a user with the same mail.
 
@@ -671,14 +643,10 @@ def create():
             if form.is_submitted() else 200
 
     if form.is_submitted():
-        unique_name_error = validate_unique_name(form, form.name)
         unique_email_error = validate_unique_email(form, form.email)
         unique_mac_error = validate_unique_mac(form, form.mac)
 
-    if form.validate_on_submit() and not (unique_name_error or
-                                          unique_email_error or
-                                          unique_mac_error):
-
+    if form.validate_on_submit() and not (unique_email_error or unique_mac_error):
         room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
                         room_number=form.room_number.data)
         if not room:
@@ -730,9 +698,6 @@ def create():
         return redirect(url_for('.user_show', user_id=new_user.id))
 
     if form.is_submitted():
-        if unique_name_error:
-            form.name.errors.append(unique_name_error)
-
         if unique_email_error:
             form.email.errors.append(unique_email_error)
 
@@ -1175,10 +1140,9 @@ def member_request_edit(pre_member_id: int):
     )
 
     if form.is_submitted():
-        unique_name_error = validate_unique_name(form, form.name)
         unique_email_error = validate_unique_email(form, form.email)
 
-    if form.validate_on_submit() and not (unique_name_error or unique_email_error):
+    if form.validate_on_submit() and not (unique_email_error):
         old_email = prm.email
 
         prm.name = form.name.data
@@ -1215,9 +1179,6 @@ def member_request_edit(pre_member_id: int):
         flash("Änderungen wurden gespeichert.", "success")
 
     if form.is_submitted():
-        if unique_name_error:
-            form.name.errors.append(unique_name_error)
-
         if unique_email_error:
             form.email.errors.append(unique_email_error)
 

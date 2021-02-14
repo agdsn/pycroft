@@ -3,12 +3,16 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
+import typing
 from difflib import SequenceMatcher
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
+from wtforms import Field
+from wtforms.widgets import HTMLString
 
 from pycroft.model.address import Address
+from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
 from web.form.widgets import UserIDField
 from wtforms.validators import (
@@ -41,6 +45,58 @@ def group_query():
 def validate_unique_login(form, field):
     if User.q.filter_by(login=field.data).first():
         raise ValidationError(u"Nutzerlogin schon vergeben!")
+
+
+class UniqueName:
+    """Checks whether the name of a user in a given building is unique.
+
+    If the form misses one of the fields ``room_number``, ``level``, ``building``,
+    this validator is effectively disabled.
+
+    :param force_field: The name of the “do it anyway” checkbox field
+    """
+    def __init__(self, force_field: typing.Optional[str] = 'force'):
+        self.force_field = force_field
+        self.building_field = 'building'
+        self.level_field = 'level'
+        self.room_number_field = 'room_number'
+        self.ratio = 0.6
+
+    def force_set(self, form: Form) -> bool:
+        return self.force_field and getattr(form, self.force_field).data
+
+    def try_get_room(self, form: Form) -> typing.Optional[Room]:
+        try:
+            number = getattr(form, self.room_number_field).data
+            level = getattr(form, self.level_field).data
+            building = getattr(form, self.building_field).data
+        except AttributeError:
+            return
+
+        return Room.q.filter_by(number=number, level=level, building=building).one_or_none()
+
+    def similar_users(self, our_name, room: Room):
+        return [u for u in room.users
+                if SequenceMatcher(None, our_name, u.name).ratio() > self.ratio]
+
+    def __call__(self, form: Form, field: Field):
+        if any((
+            self.force_set(form),
+            (room := self.try_get_room(form)) is None,
+            not (conflicting_inhabitants := self.similar_users(field.data, room))
+        )):
+            return
+
+        user_links = ", ".join(
+            f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
+                  {user.name}
+                </a>""" for user in conflicting_inhabitants
+        )
+        raise ValidationError(HTMLString(
+            "<div class=\"optional-error\">"
+            "* Ähnliche Benutzer existieren bereits in diesem Zimmer:"
+            f"<br/>Nutzer: {user_links}</div>"
+        ))
 
 
 class UserSearchForm(Form):
@@ -92,7 +148,8 @@ class UserMoveForm(SelectRoomForm):
 
 
 class UserBaseDataForm(Form):
-    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
+    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!"),
+                               UniqueName()])
 
     login = TextField(u"Login", [
         DataRequired(message=u"Login wird benötigt!"),
