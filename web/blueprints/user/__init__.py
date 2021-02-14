@@ -654,6 +654,11 @@ def validate_unique_email(form, field):
 def create():
     form = UserCreateForm(property_groups=[config.member_group])
 
+    def default_response():
+        # TODO we should do this across the `web` package.  See #417
+        return render_template('user/user_create.html', form=form), 400 \
+            if form.is_submitted() else 200
+
     if form.is_submitted():
         unique_name_error = validate_unique_name(form, form.name)
         unique_email_error = validate_unique_email(form, form.email)
@@ -667,7 +672,8 @@ def create():
                         room_number=form.room_number.data)
         if not room:
             flash("Raum scheint nicht zu existieren…", 'error')
-            return
+            return default_response()
+
         result, success = web_execute(
             lib.user.create_user,
             None,
@@ -680,41 +686,43 @@ def create():
             address=room.address,
             send_confirm_mail=True,
         )
+        if not success:
+            return default_response()
 
-        if success:
-            (new_user, plain_password) = result
+        new_user, plain_password = result
 
-            # We only have to check if building is present, as the presence
-            # of the other fields depends on building
-            if form.building.data is not None:
-                _, success = web_execute(
-                    lib.user.move_in,
-                    None,
-                    user=new_user,
-                    building_id=form.building.data.id, level=form.level.data,
-                    room_number=form.room_number.data,
-                    mac=form.mac.data,
-                    processor=current_user,
-                    host_annex=form.annex.data,
-                    begin_membership=False,
-                )
+        # We only have to check if building is present, as the presence
+        # of the other fields depends on building
+        if form.building.data is not None:
+            _, success = web_execute(
+                lib.user.move_in,
+                None,
+                user=new_user,
+                building_id=form.building.data.id, level=form.level.data,
+                room_number=form.room_number.data,
+                mac=form.mac.data,
+                processor=current_user,
+                host_annex=form.annex.data,
+                begin_membership=False,
+            )
+        if not success:
+            return default_response()
 
-            if success:
-                wifi_password = False
-                plain_wifi_password = ''
-                if new_user.room.building.wifi_available is True:
-                    # create wifi credentials
-                    plain_wifi_password = lib.user.reset_wifi_password(new_user, processor=current_user)
-                    wifi_password = True
-                sheet = lib.user.store_user_sheet(True, wifi_password, user=new_user,
-                                                  plain_user_password=plain_password,
-                                                  plain_wifi_password=plain_wifi_password)
-                session.session.commit()
+        wifi_password = False
+        plain_wifi_password = ''
+        if new_user.room.building.wifi_available is True:
+            # create wifi credentials
+            plain_wifi_password = lib.user.reset_wifi_password(new_user, processor=current_user)
+            wifi_password = True
+        sheet = lib.user.store_user_sheet(True, wifi_password, user=new_user,
+                                          plain_user_password=plain_password,
+                                          plain_wifi_password=plain_wifi_password)
+        session.session.commit()
 
-                flask_session['user_sheet'] = sheet.id
-                flash(Markup(u'Benutzer angelegt.'), 'success')
+        flask_session['user_sheet'] = sheet.id
+        flash(Markup(u'Benutzer angelegt.'), 'success')
 
-                return redirect(url_for('.user_show', user_id=new_user.id))
+        return redirect(url_for('.user_show', user_id=new_user.id))
 
     if form.is_submitted():
         if unique_name_error:
@@ -726,8 +734,7 @@ def create():
         if unique_mac_error:
             form.mac.errors.append(unique_mac_error)
 
-    # TODO we should do this across the `web` package.  See #417
-    return render_template('user/user_create.html', form=form), 400 if form.is_submitted() else 200
+    return default_response()
 
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
