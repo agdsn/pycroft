@@ -54,6 +54,11 @@ class UserFactory(BaseFactory):
                 setattr(rhe, key, value)
 
 
+class UserWithoutRoomFactory(UserFactory):
+    room = None
+    address = factory.SubFactory('tests.factories.address.AddressFactory')
+
+
 class UserWithHostFactory(UserFactory):
     host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
                                   room=factory.SelfAttribute('..room'))

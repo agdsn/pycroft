@@ -9,6 +9,6 @@ from .finance import AccountFactory
 from .host import HostFactory, InterfaceFactory, IPFactory, SwitchFactory, SwitchPortFactory
 from .net import SubnetFactory, VLANFactory
 from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
-from .user import UserFactory, UserWithHostFactory, UnixAccountFactory
+from .user import UserFactory, UserWithoutRoomFactory, UserWithHostFactory, UnixAccountFactory
 from .traffic import TrafficDataFactory, TrafficVolumeFactory
 from .log import RoomLogEntryFactory, UserLogEntryFactory
