@@ -58,7 +58,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, NonDormantUserCreateForm
+    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, NonResidentUserCreateForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
@@ -673,11 +673,11 @@ def create():
 
     return default_response()
 
-@bp.route('/create_non_dormant', methods=['GET', 'POST'])
+@bp.route('/create_non_resident', methods=['GET', 'POST'])
 @nav.navigate(u"Anlegen (Extern)")
 @access.require('user_change')
-def create_non_dormant():
-    form = NonDormantUserCreateForm(property_groups=[config.member_group])
+def create_non_resident():
+    form = NonResidentUserCreateForm(property_groups=[config.member_group])
 
     def default_response():
         # TODO we should do this across the `web` package.  See #417

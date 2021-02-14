@@ -207,7 +207,7 @@ class UserCreateForm(UserBaseDataForm, SelectRoomForm):
     _order = ("name", "building", "level", "room_number")
 
 
-class NonDormantUserCreateForm(UserBaseDataForm, CreateAddressForm):
+class NonResidentUserCreateForm(UserBaseDataForm, CreateAddressForm):
     """User creation form for non-resident folks.
 
     Does not contain mac, since created hosts would not have a room set, anyway.
