@@ -197,7 +197,7 @@ class UserCreateForm(UserBaseDataForm, SelectRoomForm):
     birthdate = DateField(u"Geburtsdatum",
                           [OptionalIf('mac', invert=True)])
     mac = MacField(u"MAC",
-                   [MacAddress(message=u"MAC ist ungültig!"), UniqueMac(), Optional()])
+                   [Optional(), MacAddress(message=u"MAC ist ungültig!"), UniqueMac()])
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
