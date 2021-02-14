@@ -58,7 +58,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm
+    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, NonDormantUserCreateForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
@@ -652,10 +652,68 @@ def create():
             mac=form.mac.data,
             processor=current_user,
             host_annex=form.annex.data,
+            # memberships have already been initiated by `create_user` (`form.property_groups`)
             begin_membership=False,
         )
         if not success:
             return default_response()
+
+        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
+
+        sheet = lib.user.store_user_sheet(True, wifi=(plain_wifi_password is not None),
+                                          user=new_user,
+                                          plain_user_password=plain_password,
+                                          plain_wifi_password=plain_wifi_password or '')
+        session.session.commit()
+
+        flask_session['user_sheet'] = sheet.id
+        flash(Markup(u'Benutzer angelegt.'), 'success')
+
+        return redirect(url_for('.user_show', user_id=new_user.id))
+
+    return default_response()
+
+@bp.route('/create_non_dormant', methods=['GET', 'POST'])
+@nav.navigate(u"Anlegen (Extern)")
+@access.require('user_change')
+def create_non_dormant():
+    form = NonDormantUserCreateForm(property_groups=[config.member_group])
+
+    def default_response():
+        # TODO we should do this across the `web` package.  See #417
+        return render_template('user/user_create.html', form=form), 400 \
+            if form.is_submitted() else 200
+
+    if form.validate_on_submit():
+        address, success = web_execute(
+            lib.user.get_or_create_address,
+            None,
+            street=form.address_street.data,
+            number=form.address_number.data,
+            addition=form.address_addition.data,
+            zip_code=form.address_zip_code.data,
+            city=form.address_city.data,
+            state=form.address_state.data,
+            country=form.address_country.data,
+        )
+        if not success:
+            return default_response()
+        result, success = web_execute(
+            lib.user.create_user,
+            None,
+            name=form.name.data,
+            login=form.login.data,
+            processor=current_user,
+            email=form.email.data,
+            birthdate=form.birthdate.data,
+            groups=form.property_groups.data,
+            address=address,
+            send_confirm_mail=True,
+        )
+        if not success:
+            return default_response()
+
+        new_user, plain_password = result
 
         plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
 
