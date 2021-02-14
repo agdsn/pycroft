@@ -218,7 +218,7 @@ def can_target(user, processor):
 
 
 @with_transaction
-def reset_wifi_password(user, processor):
+def reset_wifi_password(user: User, processor: User) -> str:
     plain_password = generate_wifi_password()
     user.wifi_password = plain_password
 
