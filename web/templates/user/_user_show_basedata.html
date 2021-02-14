@@ -43,6 +43,7 @@
                 <span class="fa fa-home fa fa-home"></span>
                 <span>{{ user.address }}</span>
               {% endif %}
+              <a href="{{ url_for('.edit_user_address', user_id=user.id) }}"><span class="fa fa-edit"></span></a>
             {% elif user.address is not none %}
               <span class="fa fa-home"></span>
               <span>{{ user.address }}</span>

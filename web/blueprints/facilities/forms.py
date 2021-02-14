@@ -36,7 +36,7 @@ def create_address_field(name: str, *args, type: str, render_kw: OptionalType[di
         *args,
         render_kw={'data-role': 'generic-typeahead',
                    'data-typeahead-name': f"address-{type}",
-                   'data-typeahead-url': LazyString(lambda: url_for('.addresses', type=type)),
+                   'data-typeahead-url': LazyString(lambda: url_for('facilities.addresses', type=type)),
                    **(render_kw or {})},
         **kwargs
     )

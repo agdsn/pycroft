@@ -8,6 +8,7 @@ from difflib import SequenceMatcher
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 
+from pycroft.model.address import Address
 from pycroft.model.swdd import Tenancy
 from web.form.widgets import UserIDField
 from wtforms.validators import (
@@ -15,7 +16,8 @@ from wtforms.validators import (
 
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional
+from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional, \
+    CreateAddressForm
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
@@ -74,6 +76,15 @@ class UserEditForm(Form):
     birthdate = DateField(u"Geburtsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()],
                              filters=[empty_to_none])
+
+class UserEditAddressForm(CreateAddressForm):
+    def set_defaults_from_adress(self, address: Address):
+        self.address_street.data = address.street
+        self.address_number.data = address.number
+        self.address_zip_code.data = address.zip_code
+        self.address_city.data = address.city
+        self.address_state.data = address.state
+        self.address_country.data = address.country
 
 
 class UserMoveForm(SelectRoomForm):

@@ -41,7 +41,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
     get_possible_existing_users_for_pre_member, edit_email, edit_name, \
-    edit_person_id, send_member_request_merged_email, can_target
+    edit_person_id, send_member_request_merged_email, can_target, edit_address
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -61,7 +61,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm
+    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
@@ -873,6 +873,49 @@ def edit_user(user_id):
 
     return render_template('user/user_edit.html', user_id=user_id,
         form=form)
+
+@bp.route('/<int:user_id>/edit_address', methods=['GET', 'POST'])
+@access.require('user_change')
+def edit_user_address(user_id: int):
+    user = get_user_or_404(user_id)
+    form = UserEditAddressForm()
+    user_show_url = url_for('.user_show', user_id=user.id)
+    if form.validate_on_submit():
+        edit_address(
+            user=user,
+            processor=current_user,
+            street=form.address_street.data,
+            number=form.address_number.data,
+            addition=form.address_addition.data,
+            zip_code=form.address_zip_code.data,
+            city=form.address_city.data,
+            state=form.address_state.data,
+            country=form.address_country.data,
+        )
+        session.session.commit()
+        return redirect(user_show_url)
+
+    if not form.is_submitted():
+        form.set_defaults_from_adress(user.address)
+
+    if not user.has_custom_address:
+        flash(gettext("Nutzer wohnt bereits im Raum {}."
+                      " Über dieses Formular wird die offizielle Adresse des Nutzers geändert,"
+                      " ohne ihn um- oder Auszuziehen.")
+              .format(user.room.short_name),
+              'warning')
+
+    form_args = {
+        'form': form,
+        'cancel_to': user_show_url,
+        # 'submit_text': 'Zusammenführen',
+        'form_render_mode': 'basic',
+        'field_render_mode': 'basic',
+    }
+    return render_template(
+        'generic_form.html',
+        page_title="Adresse bearbeiten", form_args=form_args
+    )
 
 
 @bp.route('/search', methods=['GET', 'POST'])
