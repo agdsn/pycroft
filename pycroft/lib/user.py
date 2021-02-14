@@ -230,6 +230,13 @@ def reset_wifi_password(user: User, processor: User) -> str:
     return plain_password
 
 
+def maybe_setup_wifi(user: User, processor: User) -> Optional[str]:
+    """If wifi is available, sets a wifi password."""
+    if not user.room.building.wifi_available:
+        return
+    return reset_wifi_password(user, processor)
+
+
 @with_transaction
 def change_password(user, password):
     # TODO: verify password complexity

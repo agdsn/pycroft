@@ -705,15 +705,12 @@ def create():
         if not success:
             return default_response()
 
-        wifi_password = False
-        plain_wifi_password = ''
-        if new_user.room.building.wifi_available is True:
-            # create wifi credentials
-            plain_wifi_password = lib.user.reset_wifi_password(new_user, processor=current_user)
-            wifi_password = True
-        sheet = lib.user.store_user_sheet(True, wifi_password, user=new_user,
+        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
+
+        sheet = lib.user.store_user_sheet(True, wifi=(plain_wifi_password is not None),
+                                          user=new_user,
                                           plain_user_password=plain_password,
-                                          plain_wifi_password=plain_wifi_password)
+                                          plain_wifi_password=plain_wifi_password or '')
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
