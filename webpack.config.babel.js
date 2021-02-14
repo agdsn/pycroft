@@ -23,6 +23,7 @@ export default {
         'balance-chart': './js/balance-chart.js',
         'lazy-load-select': './js/lazy-load-select.js',
         'mac-address-input': './js/mac-address-input.js',
+        'confirmable-error': './js/confirmable-error.ts',
         'main': './main.js',
         'navigation': './js/navigation.js',
         'tooltip': './js/tooltip.js',

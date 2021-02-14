@@ -7,6 +7,7 @@ from wtforms.widgets import HTMLString
 
 from pycroft.helpers.net import mac_regex
 from pycroft.model.host import Interface
+from .form import confirmable_div
 
 
 class UniqueMac:
@@ -36,6 +37,6 @@ class UniqueMac:
         owner = conflicting_interface.host.owner
         url = url_for('user.user_show', user_id=owner.id, _anchor='hosts')
         raise ValidationError(HTMLString(
-            "MAC bereits in Verwendung!<br/>Nutzer:"
-            f"<a target=\"_blank\" href=\"{url}#hosts\">{owner.name}</a>"
+            f'{confirmable_div(self.annex_field)}MAC bereits in Verwendung!<br/>Nutzer:'
+            f'<a target="_blank" href="{url}#hosts">{owner.name}</a></div>'
         ))

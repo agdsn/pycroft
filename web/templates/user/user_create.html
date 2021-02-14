@@ -18,25 +18,5 @@
     {{ resources.link_script_file('lazy-load-select.js' | require) }}
     {{ resources.link_script_file('mac-address-input.js' | require) }}
     {{ resources.link_script_file('select-multiple-improvement.js' | require) }}
-    <script type="text/javascript">
-        var form_group_mac = $('#form-group-mac');
-        var mac = $('#mac');
-
-        var form_group_annex = $('#form-group-annex');
-        var annex = $('#annex');
-
-        var form_group_force = $('#form-group-force');
-        var force = $('#force');
-
-        // TODO use constraint validation instead, `has-error` is ignored in BSv4
-        if (!form_group_mac.hasClass('has-error') || mac.val().length !== 17 && !annex.prop('checked')) {
-            form_group_annex.hide();
-            annex.prop('checked', false);
-        }
-
-        if (!$('.form-text').find('.optional-error').length && !force.prop('checked')) {
-            form_group_force.hide();
-            force.prop('checked', false);
-        }
-    </script>
+    {{ resources.link_script_file('confirmable-error.js' | require) }}
 {% endblock %}

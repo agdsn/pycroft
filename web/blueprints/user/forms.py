@@ -2,7 +2,6 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import re
 import typing
 from difflib import SequenceMatcher
 
@@ -13,7 +12,6 @@ from wtforms.widgets import HTMLString
 
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
-from pycroft.model.swdd import Tenancy
 from web.blueprints.helpers.host import UniqueMac
 from web.form.widgets import UserIDField
 from wtforms.validators import (
@@ -29,6 +27,8 @@ from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, 
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
+
+from ..helpers.form import confirmable_div, ConfirmCheckboxField
 
 
 def user_query():
@@ -94,9 +94,9 @@ class UniqueName:
                 </a>""" for user in conflicting_inhabitants
         )
         raise ValidationError(HTMLString(
-            "<div class=\"optional-error\">"
-            "* Ähnliche Benutzer existieren bereits in diesem Zimmer:"
-            f"<br/>Nutzer: {user_links}</div>"
+            f'{confirmable_div(self.force_field)}'
+            f'* Ähnliche Benutzer existieren bereits in diesem Zimmer:'
+            f'<br/>Nutzer: {user_links}</div>'
         ))
 
 
@@ -127,7 +127,7 @@ class UniqueEmail:
                 {user.name}</a>""" for user in conflicting_users
         )
         raise ValidationError(HTMLString(
-            "<div class=\"optional-error\">* E-Mail bereits in Verwendung!"
+            f"{confirmable_div(self.force_field)}* E-Mail bereits in Verwendung!"
             f"<br/>Nutzer:{user_links}</div>"
         ))
 
@@ -201,8 +201,8 @@ class UserCreateForm(UserBaseDataForm, SelectRoomForm):
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
-    annex = BooleanField(u"Host annektieren", [Optional()])
-    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+    annex = ConfirmCheckboxField(u"Host annektieren")
+    force = ConfirmCheckboxField("* Hinweise ignorieren")
 
     _order = ("name", "building", "level", "room_number")
 
@@ -214,8 +214,8 @@ class NonDormantUserCreateForm(UserBaseDataForm, CreateAddressForm):
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
-    annex = BooleanField(u"Host annektieren", [Optional()])
-    force = BooleanField(u"* Hinweise ignorieren", [Optional()])
+    annex = ConfirmCheckboxField(u"Host annektieren")
+    force = ConfirmCheckboxField("* Hinweise ignorieren")
 
     _order = (
         'name', 'login',
@@ -232,7 +232,7 @@ class PreMemberEditForm(UserBaseDataForm, SelectRoomForm):
     move_in_date = DateField("Einzugsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
 
-    force = BooleanField("* Hinweise ignorieren", [Optional()])
+    force = ConfirmCheckboxField("* Hinweise ignorieren")
 
     _order = ("name", "building", "level", "room_number")
 
