@@ -208,19 +208,20 @@ class UserCreateForm(UserBaseDataForm, SelectRoomForm):
 
 
 class NonDormantUserCreateForm(UserBaseDataForm, CreateAddressForm):
-    birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
-    mac = MacField(u"MAC",
-                   [MacAddress(message=u"MAC ist ungültig!"), Optional()])
+    """User creation form for non-resident folks.
+
+    Does not contain mac, since created hosts would not have a room set, anyway.
+    If necessary, a device can be created afterwards.
+    """
+    birthdate = DateField(u"Geburtsdatum")
     property_groups = QuerySelectMultipleField(u"Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
-    annex = ConfirmCheckboxField(u"Host annektieren")
-    force = ConfirmCheckboxField("* Hinweise ignorieren")
 
     _order = (
         'name', 'login',
         *(f for f in CreateAddressForm.__dict__ if f.startswith('address_')),
-        'email', 'birthdate', 'mac', 'property_groups', 'annex', 'force'
+        'email', 'birthdate', 'property_groups'
     )
 
 
