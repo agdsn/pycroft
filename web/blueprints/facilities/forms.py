@@ -78,29 +78,6 @@ class SelectRoomForm(BaseForm):
                                       data_endpoint="facilities.json_rooms")
 
 
-class SelectRoomFormOptional(BaseForm):
-    building = QuerySelectField(u"Wohnheim",
-                                [Optional()],
-                                get_label='short_name',
-                                query_factory=building_query,
-                                allow_blank=True)
-    level = LazyLoadSelectField(u"Etage",
-                                validators=[
-                                    OptionalIf('building', invert=True),
-                                    NumberRange(message=u"Etage?")],
-                                coerce=int,
-                                choices=[],
-                                conditions=["building"],
-                                data_endpoint="facilities.json_levels")
-    room_number = LazyLoadSelectField(u"Raumnummer",
-                                      validators=[
-                                          OptionalIf('level', invert=True)],
-                                      coerce=str,
-                                      choices=[],
-                                      conditions=["building", "level"],
-                                      data_endpoint="facilities.json_rooms")
-
-
 class CreateRoomForm(CreateAddressForm):
     building = QuerySelectField("Wohnheim",
                                 get_label='short_name',

@@ -16,8 +16,7 @@ from wtforms.validators import (
 
 from pycroft.model.host import Host
 from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query, SelectRoomForm, SelectRoomFormOptional, \
-    CreateAddressForm
+from web.blueprints.facilities.forms import building_query, SelectRoomForm, CreateAddressForm
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
@@ -94,7 +93,7 @@ class UserMoveForm(SelectRoomForm):
     pass
 
 
-class UserCreateForm(SelectRoomFormOptional):
+class UserCreateForm(SelectRoomForm):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
 
     login = TextField(u"Login", [
@@ -117,7 +116,7 @@ class UserCreateForm(SelectRoomFormOptional):
     _order = ("name", "building", "level", "room_number")
 
 
-class PreMemberEditForm(SelectRoomFormOptional):
+class PreMemberEditForm(SelectRoomForm):
     name = TextField("Name", [DataRequired("Name wird benötigt!")])
     login = TextField("Login", [
         DataRequired(message="Login wird benötigt!"),
