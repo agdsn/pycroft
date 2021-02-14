@@ -544,8 +544,8 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
 
     if not email:
         email = None
-
-    email = email.lower()
+    else:
+        email = email.lower()
 
     if email_forwarded != user.email_forwarded:
         user.email_forwarded = email_forwarded
