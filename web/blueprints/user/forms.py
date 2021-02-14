@@ -90,8 +90,6 @@ class UserMoveForm(SelectRoomForm):
     now = BooleanField(u"Sofort", default=False)
     when = DateField(u"Umzug am", [OptionalIf("now")])
 
-    pass
-
 
 class UserCreateForm(SelectRoomForm):
     name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
