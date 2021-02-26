@@ -46,7 +46,7 @@ from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.traffic import TrafficHistoryEntry
-from pycroft.model.user import User, UnixAccount, PreMember, BaseUser
+from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, RoomHistoryEntry
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
@@ -1333,7 +1333,10 @@ def find_similar_users(name: str, room: Room, ratio: float) -> Iterable[User]:
     :param ratio: the threshold which determines which matches are included in this list.
       For that, the `difflib.SequenceMatcher.ratio` must be greater than the given value.
     """
-    return [u for u in room.users if are_names_similar(name, u.name, threshold=ratio)]
+    relevant_users_q = (session.session.query(User)
+        .join(RoomHistoryEntry)
+        .filter(RoomHistoryEntry.room == room))
+    return [u for u in relevant_users_q if are_names_similar(name, u.name, threshold=ratio)]
 
 
 def are_names_similar(one: str, other: str, threshold: float) -> bool:
