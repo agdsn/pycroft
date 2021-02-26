@@ -1,8 +1,14 @@
 import typing
 
+from wtforms import Form
 from wtforms_widgets.fields.core import BooleanField
 
 from pycroft.model.facilities import Room
+
+
+def iter_prefixed_field_names(cls: typing.Type[Form], prefix: str) -> typing.Iterator[str]:
+    return (f for f in cls.__dict__
+            if hasattr(f, '_formfield') and f.startswith(prefix))
 
 
 def refill_room_data(form, room):

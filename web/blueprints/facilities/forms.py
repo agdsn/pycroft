@@ -19,6 +19,7 @@ from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 from wtforms_widgets.fields.validators import OptionalIf
 
 from .address import ADDRESS_ENTITIES
+from ..helpers.form import iter_prefixed_field_names
 
 
 class LazyString:
@@ -94,7 +95,7 @@ class CreateRoomForm(CreateAddressForm):
 
     _order = (
         'building', 'level', 'number', 'vo_suchname', 'inhabitable',
-        *(f for f in CreateAddressForm.__dict__ if f.startswith('address_')),
+        *iter_prefixed_field_names(CreateAddressForm, 'address_'),
     )
 
 
