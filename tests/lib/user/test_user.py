@@ -19,8 +19,8 @@ from tests import FactoryWithConfigDataTestBase, FactoryDataTestBase
 from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, \
     RoomFactory, ConfigFactory
 from tests.factories.address import AddressFactory
-from .. import factories
-from ..factories.user import UserWithoutRoomFactory
+from ... import factories
+from ...factories.user import UserWithoutRoomFactory
 
 
 class Test_User_Move(FactoryDataTestBase):
