@@ -641,7 +641,7 @@ def edit_address(
     """
     address = get_or_create_address(street, number, addition, zip_code, city, state, country)
     user.address = address
-    log_user_event(deferred_gettext("Changed address to {address}").format(str(address)).to_json(),
+    log_user_event(deferred_gettext("Changed address to {address}").format(address=str(address)).to_json(),
                    processor, user)
 
 
