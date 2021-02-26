@@ -14,6 +14,12 @@ def get_or_create_address(
     state: Optional[str] = None,
     country: Optional[str] = None,
 ) -> Address:
+    """Returns an existing address or creates a new one.
+
+    If the address is to be used for some other update operation,
+    make sure to wrap this call and the next one in a `Session.no_autoflush` block,
+    because else the address cleanup trigger may fire.
+    """
     query = session.query(Address).filter_by(
         street=street,
         number=number,

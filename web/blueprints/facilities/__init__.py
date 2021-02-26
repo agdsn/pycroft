@@ -21,6 +21,7 @@ from sqlalchemy.orm import joinedload, aliased
 
 from pycroft import lib, config
 from pycroft.helpers import facilities
+from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, \
@@ -186,7 +187,10 @@ def room_edit(room_id):
 
     if form.validate_on_submit():
         try:
-            edit_room(room, form.number.data, form.inhabitable.data, form.vo_suchname.data, current_user)
+            with session.session.no_autoflush:
+                address = get_or_create_address(**form.address_kwargs)
+                edit_room(room, form.number.data, form.inhabitable.data, form.vo_suchname.data,
+                          address=address, processor=current_user)
 
             session.session.commit()
 
@@ -196,6 +200,23 @@ def room_edit(room_id):
             return redirect(url_for('.room_show', room_id=room.id))
         except RoomAlreadyExistsException:
             form.number.errors.append("Ein Raum mit diesem Namen existiert bereits in dieser Etage!")
+
+    old_addr = room.address
+    if not form.is_submitted():
+        form.address_street.data = old_addr.street
+        form.address_number.data = old_addr.number
+        form.address_addition.data = old_addr.addition
+        form.address_zip_code.data = old_addr.zip_code
+        form.address_city.data = old_addr.city
+        form.address_state.data = old_addr.state
+        form.address_country.data = old_addr.country
+
+    if room.users_sharing_address:
+        flash(gettext("Dieser Raum hat {} bewohner ({}), die die Adresse des Raums teilen."
+                      " Ihre Adresse wird beim Ändern automatisch angepasst.")
+              .format(len(room.users_sharing_address),
+                      ', '.join(u.name for u in room.users_sharing_address)),
+              'info')
 
     form_args = {
         'form': form,

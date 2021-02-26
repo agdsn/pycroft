@@ -6,7 +6,8 @@ from typing import Optional
 from sqlalchemy import func, and_, distinct, literal_column
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
-from pycroft.lib.logging import log_room_event, log_event
+from pycroft.helpers.i18n import deferred_gettext
+from pycroft.lib.logging import log_room_event, log_event, log_user_event
 from pycroft.model import session
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room, Building
@@ -88,7 +89,7 @@ def create_room(building, level, number, processor, address,
 
 
 @with_transaction
-def edit_room(room, number, inhabitable, vo_suchname: str, processor):
+def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, processor: User):
     if room.number != number:
         if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
             raise RoomAlreadyExistsException()
@@ -107,6 +108,13 @@ def edit_room(room, number, inhabitable, vo_suchname: str, processor):
                                                              vo_suchname), processor, room)
 
         room.swdd_vo_suchname = vo_suchname
+
+    if room.address != address:
+        room.address = address
+        log_room_event(deferred_gettext("Changed address to {}").format(f'blah').to_json(),
+                       processor, room)
+        for user in room.users_sharing_address:
+            user.address = room.address
 
     return room
 

@@ -99,12 +99,16 @@ class CreateRoomForm(CreateAddressForm):
     )
 
 
-class EditRoomForm(Form):
+class EditRoomForm(CreateAddressForm):
     building = static(TextField("Wohnheim"))
     level = static(IntegerField("Etage"))
     number = TextField("Nummer")
     vo_suchname = TextField("VO Nummer", validators=[Optional()], filters=[empty_to_none])
     inhabitable = BooleanField("Bewohnbar", validators=[Optional()])
+    _order = (
+        'building', 'level', 'number', 'vo_suchname', 'inhabitable',
+        *iter_prefixed_field_names(CreateAddressForm, 'address_')
+    )
 
 
 class BuildingForm(Form):
