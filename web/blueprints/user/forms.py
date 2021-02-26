@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
+from markupsafe import escape
 from wtforms import Field
 from wtforms.widgets import HTMLString
 
@@ -92,7 +93,7 @@ class UniqueName:
 
         user_links = ", ".join(
             f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
-                  {user.name}
+                  {escape(user.name)}
                 </a>""" for user in conflicting_inhabitants
         )
         raise ValidationError(HTMLString(
@@ -127,7 +128,7 @@ class UniqueEmail:
 
         user_links = ", ".join(
             f"""<a target="_blank" href="{url_for('user.user_show', user_id=user.id)}"/>
-                {user.name}</a>""" for user in conflicting_users
+                {escape(user.name)}</a>""" for user in conflicting_users
         )
         raise ValidationError(HTMLString(
             f"{confirmable_div(self.force_field)}* E-Mail bereits in Verwendung!"
