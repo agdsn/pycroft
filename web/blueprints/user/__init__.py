@@ -899,7 +899,7 @@ def edit_user_address(user_id: int):
     if not form.is_submitted():
         form.set_defaults_from_adress(user.address)
 
-    if not user.has_custom_address:
+    if user.room and not user.has_custom_address:
         flash(gettext("Nutzer wohnt bereits im Raum {}."
                       " Über dieses Formular wird die offizielle Adresse des Nutzers geändert,"
                       " ohne ihn um- oder Auszuziehen.")
