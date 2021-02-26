@@ -135,15 +135,7 @@ def room_create():
 
     if form.validate_on_submit():
         try:
-            address = get_or_create_address(
-                street=form.address_street.data,
-                number=form.address_number.data,
-                addition=form.address_addition.data,
-                zip_code=form.address_zip_code.data,
-                city=form.address_city.data,
-                state=form.address_state.data,
-                country=form.address_country.data,
-            )
+            address = get_or_create_address(**form.address_kwargs)
             room = create_room(form.building.data, form.level.data, form.number.data,
                                address=address,
                                processor=current_user, inhabitable=form.inhabitable.data)

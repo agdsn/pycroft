@@ -688,13 +688,7 @@ def create_non_resident():
         address, success = web_execute(
             lib.user.get_or_create_address,
             None,
-            street=form.address_street.data,
-            number=form.address_number.data,
-            addition=form.address_addition.data,
-            zip_code=form.address_zip_code.data,
-            city=form.address_city.data,
-            state=form.address_state.data,
-            country=form.address_country.data,
+            **form.address_kwargs,
         )
         if not success:
             return default_response()

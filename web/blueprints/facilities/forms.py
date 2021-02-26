@@ -53,6 +53,11 @@ class CreateAddressForm(BaseForm):
     address_state = create_address_field("Bundesstaat", [Optional()], type='state')
     address_country = create_address_field("Land", [Optional()], type='country')
 
+    @property
+    def address_kwargs(self):
+        return {key: getattr(self, f'address_{key}').data
+                for key in 'street number addition zip_code city state country'.split()}
+
 
 def building_query():
     return sort_buildings(Building.q.all())
