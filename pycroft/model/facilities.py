@@ -3,7 +3,6 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.types import Boolean, Integer, String
 
@@ -58,6 +57,12 @@ class Room(IntegerIdModel):
     connected_patch_ports = relationship(
         'PatchPort',
         primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
+    )
+
+    users_sharing_address = relationship(
+        'User',
+        primaryjoin='and_(User.room_id == Room.id, User.address_id == Room.address_id)',
+        viewonly=True,
     )
 
     def __str__(self):
