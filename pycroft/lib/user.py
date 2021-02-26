@@ -15,7 +15,7 @@ import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
-from typing import Optional, List
+from typing import Optional, List, Iterable
 
 from sqlalchemy import or_, func, select, Boolean, String
 
@@ -1323,3 +1323,18 @@ def change_password_from_token(token, password):
         return True
     else:
         return False
+
+
+def find_similar_users(name: str, room: Room, ratio: float) -> Iterable[User]:
+    """Given a potential user's name and a room, find users of similar name living in that room.
+
+    :param name: The potential user's name
+    :param room: the room whose inhabitants to search
+    :param ratio: the threshold which determines which matches are included in this list.
+      For that, the `difflib.SequenceMatcher.ratio` must be greater than the given value.
+    """
+    return [u for u in room.users if are_names_similar(name, u.name, threshold=ratio)]
+
+
+def are_names_similar(one: str, other: str, threshold: float) -> bool:
+    return SequenceMatcher(a=one, b=other).ratio() > threshold

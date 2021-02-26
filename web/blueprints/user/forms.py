@@ -3,7 +3,6 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import typing
-from difflib import SequenceMatcher
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
@@ -11,6 +10,7 @@ from markupsafe import escape
 from wtforms import Field
 from wtforms.widgets import HTMLString
 
+from pycroft.lib.user import find_similar_users
 from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from web.blueprints.helpers.host import UniqueMac
@@ -79,16 +79,13 @@ class UniqueName:
 
         return Room.q.filter_by(number=number, level=level, building=building).one_or_none()
 
-    def similar_users(self, our_name, room: Room):
-        return [u for u in room.users
-                if SequenceMatcher(None, our_name, u.name).ratio() > self.ratio]
-
     def __call__(self, form: Form, field: Field):
         if self.force_set(form):
             return
         if (room := self.try_get_room(form)) is None:
             return
-        if not (conflicting_inhabitants := self.similar_users(field.data, room)):
+        if not (conflicting_inhabitants := find_similar_users(name=field.data, room=room,
+                                                              ratio=self.ratio)):
             return
 
         user_links = ", ".join(
