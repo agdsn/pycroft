@@ -9,6 +9,8 @@ import os
 import sys
 
 import time
+from typing import Tuple, Callable
+
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -21,7 +23,7 @@ from pycroft.helpers.i18n import set_translation_lookup, get_locale
 from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
 from scripts.schema import AlembicHelper, SchemaStrategist
-from web import make_app
+from web import make_app, PycroftFlask
 from scripts.connection import try_create_connection, get_connection_string
 
 
@@ -31,7 +33,8 @@ default_handler.setFormatter(
 )
 
 
-def server_run(args):
+def prepare_server(args) -> Tuple[PycroftFlask, Callable]:
+    """returns both the prepared app and a callback executing `app.run`"""
     if args.echo:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -94,10 +97,10 @@ def server_run(args):
     if args.profile:
         app.config['PROFILE'] = True
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
-    app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
+    return app, lambda: app.run(debug=args.debug, port=args.port, host=args.host, threaded=True)
 
 
-def main():
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Pycroft launcher")
     parser.add_argument("--debug", action="store_true",
                         help="run in debug mode")
@@ -113,9 +116,10 @@ def main():
                         help="Maximum time to wait for database to become "
                              "available. Use 0 to wait forever.")
     parser.add_argument("--force-schema-create", action='store_true')
+    return parser
 
-    server_run(parser.parse_args())
 
+app, run_callable = prepare_server(create_parser().parse_args())
 
 if __name__ == "__main__":
-    main()
+    run_callable()
