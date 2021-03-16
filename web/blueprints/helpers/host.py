@@ -23,20 +23,22 @@ class UniqueMac:
         return self.annex_field and getattr(form, self.annex_field).data
 
     @staticmethod
-    def conflicting_interface(mac: str) -> Optional[Interface]:
-        return Interface.q.filter_by(mac=mac).first()
+    def conflicting_interface(mac: str, current_mac: Optional[str] = None) -> Optional[Interface]:
+        return Interface.q.filter_by(mac=mac).filter(mac != current_mac).first()
 
     def __call__(self, form: Form, field: Field):
+        current_mac = getattr(form.meta, 'current_mac', None)
+
         if any((
             not re.match(mac_regex, field.data),
             self.annex_set(form),
-            (conflicting_interface := self.conflicting_interface(field.data)) is None,
+            (conflicting_interface := self.conflicting_interface(field.data, current_mac)) is None,
         )):
             return
 
         owner = conflicting_interface.host.owner
         url = url_for('user.user_show', user_id=owner.id, _anchor='hosts')
         raise ValidationError(HTMLString(
-            f'{confirmable_div(self.annex_field)}MAC bereits in Verwendung!<br/>Nutzer:'
+            f'{confirmable_div(self.annex_field)}MAC bereits in Verwendung!<br/>Nutzer: '
             f'<a target="_blank" href="{url}#hosts">{owner.name}</a></div>'
         ))

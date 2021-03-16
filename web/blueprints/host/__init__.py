@@ -241,6 +241,7 @@ def interface_edit(interface_id):
     current_ips = list(ip.address for ip in interface.ips)
 
     form = InterfaceForm(obj=interface)
+    form.meta.current_mac = interface.mac
 
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
 
