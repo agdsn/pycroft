@@ -1,12 +1,14 @@
 import os
 
 import jinja2.ext
+import sentry_sdk
 from flask import (
     Flask, current_app, redirect, render_template, request, url_for,
 )
 from flask_babel import Babel
 from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
@@ -161,3 +163,11 @@ def make_app(debug=False):
             return current_app.login_manager.unauthorized()
 
     return app
+
+
+if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
+    sentry_sdk.init(
+        dsn=dsn,
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=1.0
+    )

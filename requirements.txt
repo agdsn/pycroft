@@ -33,5 +33,6 @@ GitPython~=2.1.7
 mac-vendor-lookup~=0.1.11
 marshmallow~=2.19.2
 email-validator~=1.1.1
+sentry-sdk[Flask]~=1.0.0
 -e ./deps/wtforms-widgets/
 -e ./deps/bootstrap-table-py/
