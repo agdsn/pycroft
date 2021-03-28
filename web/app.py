@@ -148,6 +148,11 @@ def make_app(debug=False):
                                active_branch=get_repo_active_branch(pycroft_dir),
                                commits=get_latest_commits(pycroft_dir, 20))
 
+    @app.route('/debug-sentry')
+    def debug_sentry():
+        app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
+        div_by_zero = 1 / 0
+
     @app.teardown_request
     def shutdown_session(exception=None):
         session.Session.remove()
