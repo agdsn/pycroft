@@ -899,7 +899,7 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
             uid = group.replace(' ', '').replace('/', '-') \
                 .replace('?', '-').replace(':', '-').replace(',', '-') \
                 .replace('+', '-').replace('.', '-')
-            if uid[-2] is not '-' and uid[-3] is not '-':
+            if uid[-2] != '-' and uid[-3] != '-':
                 # interpret as type 2 UID with missing -
                 uid = uid[:-2] + '-' + uid[-2:]
 
