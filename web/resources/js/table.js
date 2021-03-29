@@ -35,7 +35,7 @@ export var glyphBtnTemplate = _.template(
 
 export var multiGlyphBtnTemplate = _.template(
     '<a href="<%- href %>" class="btn <%- btn_class %>" title="<%- tooltip %>">' +
-    '<span class="badge badge-pill badge-light">' +
+    '<span class="badge rounded-pill bg-light">' +
     '<% for (var i = 0; i < glyphicons.length; i++) { %>' +
     '<span class="fa <%- glyphicons[i] %>"></span>' +
     '<% } %>' +

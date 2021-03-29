@@ -7,7 +7,7 @@
 
 {% macro multiGlyphBtnMacro(btn) %}
     <a href="{{ btn['href'] }}" class="btn {{ btn['btn_class'] }}" title="{{ btn['tooltip'] }}">
-        <span class="badge badge-pill badge-light">
+        <span class="badge rounded-pill bg-light">
         {%  for glyphicon in btn['icon'] %}
             <span class="fa {{ glyphicon }}"></span>
         {% endfor %}
