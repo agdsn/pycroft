@@ -17,10 +17,7 @@ function updateLocationHash(this: HTMLAnchorElement, ev: MouseEvent){
         return null;
     }
 
-    // XXX in the jQuery variant, was some scrolling mechanism. not sure what it did.
-    // const scrollmem = $('body').scrollTop() || $('html').scrollTop();
     window.location.hash = this.hash;
-    // $('html,body').scrollTop(scrollmem);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
