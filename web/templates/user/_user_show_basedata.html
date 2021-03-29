@@ -11,7 +11,7 @@
 {%- endmacro %}
 
 <div class="row">
-  <div class="col-sm-8">
+  <div class="col-lg-8">
     <div class="card" data-mh="cards">
       <div class="card-top">
         <div class="user-flags">
@@ -110,10 +110,8 @@
     </div>
   </div>
 
-  <br class="visible-xs"/>
-
   {% if current_user is privileged_for('user_change') %}
-    <div class="col-12 col-sm-4">
+    <div class="col-lg-4">
     <div class="card" data-mh="cards">
       <div class="card-top"><span class="card-title">Aktionen</span></div>
       <div class="card-bottom row">
