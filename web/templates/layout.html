@@ -22,11 +22,10 @@
 <body>
     {% block navbar -%}
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-static-top navbar-inverse" role="navigation">
+            <!-- in the docs it's `container-fluid`, but we don't want 100% width, we want to restrict the width to the content. -->
             <div class="container">
-                <div class="navbar-header">
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+                <!-- PYCROFT brand -->
+                <div>
                     <a class="navbar-left" href="/">
                         <img src="{{ "img/pycroft.svg" | require }}" onerror="this.src='{{ "img/pycroft.png" | require }}'" alt="Pycroft" />
                     </a>
@@ -34,12 +33,28 @@
                          &nbsp;Pycroft
                     </a>
                 </div>
+
+                <!-- collapser button -->
+                <button class="navbar-toggler" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbar-collapse"
+                        aria-controls="navbar-collapse" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- collapsible part of the navbar -->
                 <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
+                    <!-- blueprint navigation -->
+                    <ul class="nav navbar-nav me-auto">
                         {% for element in config.blueprint_navigation -%}
                             {{ navigation.blueprint_element(element) }}
                         {%- endfor %}
                     </ul>
+
+
+                    <!-- User login / logout -->
+                    <div class="d-flex">
                     {% if current_user.is_authenticated %}
                       <form class="form-inline ml-auto" method="get">
                         <label for="nav_search"><input type="text" class="form-control" id="nav_search" name="nav_search"
@@ -61,6 +76,7 @@
                             </li>
                       </ul>
                     {% endif %}
+                  </div>
                 </div><!--/.nav-collapse -->
             </div>
         </nav>
