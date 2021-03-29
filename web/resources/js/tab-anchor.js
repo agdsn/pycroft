@@ -1,15 +1,24 @@
-import $ from "jquery";
 // Show appropriate pill based on #anchor in URL
+import {Tab} from 'bootstrap';
 
+function navigateToAnchorTab() {
+    const hash = window.location.hash;
 
-$(function () {
-    var hash = window.location.hash;
-    hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+    if (hash) {
+        new Tab(document.querySelector(`ul.nav a[href="${hash}"]`)).show();
+    }
+}
 
-    $('.nav-tabs a').click(function (e) {
-        $(this).tab('show');
-        var scrollmem = $('body').scrollTop() || $('html').scrollTop();
-        window.location.hash = this.hash;
-        $('html,body').scrollTop(scrollmem);
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    navigateToAnchorTab();
+
+    for (const el of document.querySelectorAll('.nav-tabs a')) {
+        el.addEventListener('click', (e) => {
+                // XXX in the jQuery variant, was some scrolling mechanism. not sure what it did.
+                // const scrollmem = $('body').scrollTop() || $('html').scrollTop();
+                window.location.hash = e.currentTarget.hash;
+                // $('html,body').scrollTop(scrollmem);
+            }
+        )
+    }
 });
