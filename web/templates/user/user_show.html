@@ -25,7 +25,7 @@
         {% for tab in tabs %}
           <li class="nav-item">
             <a class="nav-link {{ "active" if tab.id == 'hosts' else "" }}
-               {{ "disabled" if 'disabled' in tab and tab.disabled else "" }}" id="tab-{{ tab.id }}" href="#{{ tab.id }}" data-toggle="tab">
+               {{ "disabled" if 'disabled' in tab and tab.disabled else "" }}" id="tab-{{ tab.id }}" href="#{{ tab.id }}" data-bs-toggle="tab">
               {{ tab.name }}
               {% if 'badge' in tab and tab.badge %}
                 <span class="badge rounded-pill bg-secondary" style="{{ "background-color: " + tab.badge_color if 'badge_color' in tab else "" }}">

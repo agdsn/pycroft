@@ -19,7 +19,7 @@
 {%- endmacro %}
 
 {% block content %}
-    <h2><em class="dotted" data-toggle="tooltip" data-placement="right" title="" data-original-title="excepting user accounts">Bestandskonten</em></h2>
+    <h2><em class="dotted" data-bs-toggle="tooltip" data-placement="right" title="" data-original-title="excepting user accounts">Bestandskonten</em></h2>
     <div class="row">
         {{ list_accounts("ASSET"|account_type, accounts.get("ASSET", [])) }}
         {{ list_accounts("LIABILITY"|account_type, accounts.get("LIABILITY", [])) }}
