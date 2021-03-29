@@ -26,7 +26,10 @@
     {% if bp_nav.is_allowed %}
         <li class="{{ bp_nav.css_classes|join(" ") }}">
             {%- if bp_nav.dropdown -%}
-                <a href="{{ url_for(bp_nav.first.endpoint) }}" class="nav-link dropdown-toggle" data-toggle="dropdown">{{ bp_nav.text }}<strong class="caret"></strong></a>
+              <a href="{{ url_for(bp_nav.first.endpoint) }}"
+                 class="nav-link dropdown-toggle" data-toggle="dropdown"
+                 role="button" data-bs-toggle="dropdown" aria-expanded="false"
+              >{{ bp_nav.text }}</a>
                 <div class="dropdown-menu">
                     {% for element in bp_nav -%}
                       <a class="dropdown-item" href="{{ url_for(element.endpoint) }}">{{ element.text }}</a>

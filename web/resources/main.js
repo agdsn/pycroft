@@ -36,7 +36,6 @@ import './js/alerts';
 import './js/balance-chart';
 import './js/d3locale';
 import './js/form';
-import './js/navigation';
 import './js/quick-search';
 import './js/table';
 import './js/table-fixed-header';
