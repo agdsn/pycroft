@@ -97,7 +97,8 @@ export default {
         new ManifestPlugin(),
         new webpack.ProvidePlugin({
             $: "jquery",
-            jQuery: "jquery"
+            jQuery: "jquery",
+            bootstrap: "bootstrap"
         }),
     ].concat(PROD ? [
         // PROD plugins
