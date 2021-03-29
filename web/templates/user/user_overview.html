@@ -8,7 +8,7 @@
 
 {% macro badge(href, title, number) %}
   <a {% if href %}href={{ href }}{% endif %} class="list-group-item">{{ title }}
-    <span class="float-right badge badge-pill badge-secondary">{{ number }}</span></a>
+    <span class="float-right badge rounded-pill bg-secondary">{{ number }}</span></a>
 {% endmacro %}
 
 {% block content %}
