@@ -97,9 +97,9 @@
                                     {% set cat = category %}
                                     {% if cat == "message" %}{% set cat = "info" %}{% endif %}
                                     {% if cat == "error" %}{% set cat = "danger" %}{% endif %}
-                                    <div class="alert alert-{{ cat }}">
-                                        <a class="close" data-dismiss="alert" href="#">×</a>
+                                    <div class="alert alert-dismissible alert-{{ cat }} fade show" role="alert">
                                         <strong>{{ category|pretty_category }}:</strong> {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 {%- endfor %}
                                 </div>
