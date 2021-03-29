@@ -59,18 +59,18 @@
             <span class="card-value-secondary"><a href="mailto:{{ user.name }}<{{ user.email }}>"
                style="font-size: small;">(mailto)</a></span>
             {% if user.email_forwarded %}
-              <span data-bs-toggle="tooltip" data-placement="bottom" title="E-Mails werden weitergeleitet"
+              <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="E-Mails werden weitergeleitet"
                     class="fa fa-share-square text-info"></span>
             {% endif %}
             {% if user.email_confirmed %}
-              <span data-bs-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse bestätigt"
+              <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="E-Mail Adresse bestätigt"
                     class="fa fa-check-square text-success"></span>
             {% else %}
-              <span data-bs-toggle="tooltip" data-placement="bottom" title="E-Mail Adresse nicht bestätigt"
+              <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="E-Mail Adresse nicht bestätigt"
                     class="fa fa-times-circle text-danger"></span>
 
                   <a href="{{ url_for(".resend_confirmation_mail", user_id=user.id) }}">
-                    <span data-bs-toggle="tooltip" data-placement="bottom" title="Bestätigungsmail erneut senden">
+                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Bestätigungsmail erneut senden">
                       <i class="fas fa-sync"></i>
                     </span>
                   </a>
