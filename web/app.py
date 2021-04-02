@@ -9,6 +9,7 @@ from flask_babel import Babel
 from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
 from sentry_sdk.integrations.flask import FlaskIntegration
+from werkzeug.exceptions import HTTPException
 
 from hades_logs import HadesLogs
 from pycroft.helpers.i18n import gettext
@@ -170,9 +171,20 @@ def make_app(debug=False):
     return app
 
 
+IGNORED_EXCEPTION_TYPES = (HTTPException,)
+
+
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
+    def before_send(event, hint):
+        if 'exc_info' in hint:
+            exc_type, exc_value, _tb = hint['exc_info']
+            if isinstance(exc_value, IGNORED_EXCEPTION_TYPES):
+                return None
+        return event
+
     sentry_sdk.init(
         dsn=dsn,
         integrations=[FlaskIntegration()],
-        traces_sample_rate=1.0
+        traces_sample_rate=1.0,
+        before_send=before_send
     )
