@@ -8,7 +8,7 @@ from flask import (
 from flask_babel import Babel
 from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
-from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.flask import FlaskIntegration, CeleryIntegration
 from werkzeug.exceptions import HTTPException
 
 from hades_logs import HadesLogs
@@ -184,7 +184,7 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
 
     sentry_sdk.init(
         dsn=dsn,
-        integrations=[FlaskIntegration()],
+        integrations=[FlaskIntegration(), CeleryIntegration()],
         traces_sample_rate=1.0,
         before_send=before_send
     )
