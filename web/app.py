@@ -8,7 +8,8 @@ from flask import (
 from flask_babel import Babel
 from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
-from sentry_sdk.integrations.flask import FlaskIntegration, CeleryIntegration
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 from werkzeug.exceptions import HTTPException
 
 from hades_logs import HadesLogs
