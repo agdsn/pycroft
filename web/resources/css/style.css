@@ -249,9 +249,20 @@ em.dotted{
     margin-right: 5px;
 }
 
+/** Form stuff **/
 input.money-amount {
     text-align: right;
 }
+
+.form-control::placeholder {
+    font-style: italic;
+    color: #bbb;
+}
+.form-control:focus-visible::placeholder {
+    text-shadow: none !important;
+}
+
+/** end form stuff **/
 
 .box {
     padding: 1em 2ex;
