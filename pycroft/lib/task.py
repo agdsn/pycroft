@@ -105,11 +105,14 @@ class UserMoveTaskImpl(UserTaskImpl):
             ).first()
 
             if room is not None:
-                lib_user.move(task.user,
-                              room.building.id,
-                              room.level,
-                              room.number,
-                              task.creator)
+                lib_user.move(
+                    user=task.user,
+                    building_id=room.building.id,
+                    level=room.level,
+                    room_number=room.number,
+                    comment=parameters.get('comment'),
+                    processor=task.creator,
+                )
 
                 self.new_status = TaskStatus.EXECUTED
             else:
