@@ -446,7 +446,7 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, building_id, level, room_number, processor, when=None):
+def move(user, building_id, level, room_number, processor, comment=None, when=None):
     """Moves the user into another room.
 
     :param user: The user to be moved.
@@ -466,7 +466,8 @@ def move(user, building_id, level, room_number, processor, when=None):
                                   user=user,
                                   parameters={'building_id': building_id,
                                               'level': level,
-                                              'room_number': room_number},
+                                              'room_number': room_number,
+                                              'comment': comment},
                                   processor=processor)
     else:
         old_room = user.room
@@ -484,10 +485,17 @@ def move(user, building_id, level, room_number, processor, when=None):
         if not had_custom_address:
             user.address = new_room.address
 
-        message = deferred_gettext(u"Moved from {} to {}.")
+        args = {'old_room': str(old_room), 'new_room': str(new_room)}
+        if comment:
+            message = deferred_gettext("Moved from {old_room} to {new_room}.\n"
+                                       "Comment: {comment}")
+            args.update(comment=comment)
+        else:
+            message = deferred_gettext(u"Moved from {old_room} to {new_room}.")
+
         log_user_event(
             author=processor,
-            message=message.format(str(old_room), str(new_room)).to_json(),
+            message=message.format(**args).to_json(),
             user=user
         )
 

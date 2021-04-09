@@ -748,6 +748,7 @@ def move(user_id):
                 level=form.level.data,
                 room_number=form.room_number.data,
                 processor=current_user,
+                comment=form.comment.data,
                 when=when
             )
 

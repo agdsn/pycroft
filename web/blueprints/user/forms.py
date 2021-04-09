@@ -177,6 +177,8 @@ class UserEditAddressForm(CreateAddressForm):
 
 
 class UserMoveForm(SelectRoomForm):
+    comment = TextAreaField(u"Kommentar", description='Wenn gegeben Referenz zum Ticket',
+                            render_kw={'placeholder': 'ticket:Ticket-Nr'})
     now = BooleanField(u"Sofort", default=False)
     when = DateField(u"Umzug am", [OptionalIf("now")])
 
