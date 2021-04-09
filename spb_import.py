@@ -6,10 +6,13 @@ import sys
 
 from ipaddr import IPAddress
 from sqlalchemy import func
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, scoped_session
+from pycroft.model.session import session
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, UnboundedInterval
+from pycroft.model import create_engine
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import Host, Interface, IP
@@ -17,6 +20,8 @@ from pycroft.model.logging import UserLogEntry
 from pycroft.model.net import Subnet
 from pycroft.model.user import User, UnixAccount, PropertyGroup, Membership
 from scripts.connection import try_create_connection, get_connection_string
+from flask import _request_ctx_stack
+import pycroft.model.session
 
 
 default_handler = logging.StreamHandler(sys.stdout)
@@ -48,15 +53,23 @@ def run():
     logging.basicConfig(level=logging.INFO)
 
     connection_string = get_connection_string()
-    connection, engine = try_create_connection(connection_string, False, None,
-                                               reflections=False)
 
-    session = sessionmaker(bind=engine)()
+    # connection, engine = try_create_connection(connection_string, False, None,
+    #                                            reflections=False)
 
-    processor = session.query(User).get(0)
+    # session = sessionmaker(bind=engine)()
+
+    engine = create_engine(connection_string, echo=False)
+    pycroft.model.session.set_scoped_session(
+        scoped_session(sessionmaker(bind=engine),
+                       scopefunc=lambda: _request_ctx_stack.top))
+
+    processor = User.q.get(0)
     now = datetime.datetime.now(datetime.timezone.utc)
 
     user_data = []
+
+    session.begin(subtransactions=True)
 
     with open('peter.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';', quotechar="'")
@@ -68,6 +81,8 @@ def run():
                 new_ud[key] = value.strip()
 
             user_data.append(new_ud)
+
+    # uid_start = 21020
 
     for ud in user_data:
         logger.info(ud)
@@ -93,14 +108,14 @@ def run():
 
         logger.info(f"Searching room {rn}: {building}, {level}, {number}")
 
-        room = session.query(Room).filter_by(building_id=building, level=level, number=number).one()
+        room = Room.q.filter_by(building_id=building, level=level, number=number).one()
 
         if room is None:
             raise
 
-        existing_user = session.query(User).filter(func.lower(User.email) == ud['email']).one_or_none()
+        existing_user = User.q.filter(func.lower(User.email) == ud['email'].lower()).one_or_none()
 
-        ext_group = session.query(PropertyGroup).get(8)
+        ext_group = PropertyGroup.q.get(8)
 
         if existing_user is None:
             login = ud['email'].split('@')[0].lower().replace('_', '-')
@@ -108,11 +123,14 @@ def run():
             if not login[0].isalpha():
                 login = f'spb-{login}'
 
+            if User.q.filter_by(login=login).first() is not None:
+                login = f'spb-{login}'
+
             unix_acc = UnixAccount(home_directory="/home/{}".format(login))
 
             user = User(login=login,
                         name='{} {}'.format(ud['Vorname'], ud['Nachname']),
-                        email=ud['email'],
+                        email=ud['email'].lower(),
                         email_confirmed=False,
                         registered_at=now,
                         address=room.address,
@@ -122,7 +140,7 @@ def run():
                         )
 
             session.add(user)
-            session.add(unix_acc)
+
             session.flush()
 
             user.account.name = deferred_gettext(u"User {id}").format(
@@ -131,6 +149,8 @@ def run():
             make_member_of(session, user, ext_group, processor, closed(now, None))
 
             logger.info(f"Created user {user.id}: {login}")
+
+            #  uid_start += 1
 
             session.add(UserLogEntry(user=user, author=processor,
                                      message=deferred_gettext(u"User imported from St. Petersburger data.").to_json()))
