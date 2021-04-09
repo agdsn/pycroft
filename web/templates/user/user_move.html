@@ -11,9 +11,14 @@
 {% import "macros/resources.html" as resources %}
 
 {% block single_row_content %}
-    {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
+  <div class="box box-info">
+    <strong>Hinweis:</strong>
+    Bei Umzügen muss ein Nachweis über den Umzugswunsch archiviert werden!
+    Beispiel: Verschieben eines Tickets in die Umzugsqueue oder Ausdrucken / unterschrieben Abheften des Antrags.
+  </div>
+  {{ forms.simple_form(form, '', url_for('.user_show', user_id=user_id)  ) }}
 {% endblock %}
 
 {% block page_script %}
-    {{ resources.link_script_file('lazy-load-select.js' | require) }}
+  {{ resources.link_script_file('lazy-load-select.js' | require) }}
 {% endblock %}
