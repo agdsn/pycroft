@@ -20,6 +20,12 @@ from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
 from pycroft.model.traffic import TrafficVolume
 
+"""
+This module defines celery tasks to run tasks
+(as persisted in the database by means of `pycroft.model.task`)
+by using implementations as defined in `pycroft.lib.task` (see `TaskImpl`).
+"""
+
 app = Celery('tasks', backend=os.environ['PYCROFT_CELERY_RESULT_BACKEND_URI'],
              broker=os.environ['PYCROFT_CELERY_BROKER_URI'])
 
@@ -42,6 +48,11 @@ def repair_session():
 
 @app.task(base=DBTask)
 def execute_scheduled_tasks():
+    """For all tasks which are due, call their respective implementation and handle the result.
+
+    Implementations are given by `task_type_to_impl`.
+    Errors are reported to the creator via `send_user_send_mail`.
+    """
     tasks = (session.session.query(with_polymorphic(Task, "*"))
              .filter(Task.status == TaskStatus.OPEN,
                      Task.due <= session.utcnow())
