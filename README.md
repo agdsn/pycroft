@@ -419,6 +419,16 @@ Additionally, new versions can be uploaded to PyPi by following these steps:
 - Run the `distribute.sh` script afterwards in order to
 upload the new version to PyPi
 
+## Tips&Tricks with Celery
+
+Tasks can be executed manually as follows:
+- run a shell: `docker-compose run --rm dev-app shell`
+- activate the venv: `. ~/venv/bin/activate`
+- run a `celery` command: `celery -A pycroft.task call pycroft.task.execute_scheduled_tasks`
+
+If any issues come up, ensure that the `dummy-worker` is not started
+and restart the actual celery worker.
+
 ## Troubleshooting
 
 Due to laziness, prefix every bash-snippet with
