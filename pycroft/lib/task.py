@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Mapping
 
 from sqlalchemy.orm import with_polymorphic
 
@@ -160,7 +161,7 @@ class UserMoveInTaskImpl(UserTaskImpl):
                 "Tried to move in user, but user was already living in a dormitory.")
 
 
-task_type_to_impl = {
+task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
     TaskType.USER_MOVE: UserMoveTaskImpl,
     TaskType.USER_MOVE_IN: UserMoveInTaskImpl,
     TaskType.USER_MOVE_OUT: UserMoveOutTaskImpl
