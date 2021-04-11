@@ -322,6 +322,29 @@ export function unmarkGuiltyGroups(attrName) {
     rows.forEach(row => row.removeAttribute('data-row-guilty-for'));
 }
 
+/**
+ * Replace occurrences of `ticket:<ticketid>` or `Ticket#<ticket number>` by links to tickets.agdsn.de
+ * @param text the tet to be replaced
+ * @returns the replaced text
+ */
+function withMagicLinksReplaced(text) {
+    let replaced_text = text
+        // ticket id
+        .replace(/ticket[:#]([0-9]{3,6})(?=\b)/ig, "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketID=$1\">$&</a>")
+        // ticket number (YYYYMMDDhhmmss¿¿)
+        .replace(/ticket[:#]([0-9]{16})(?=\b)/ig, "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketNumber=$1\">$&</a>")
+        .replace(/(?<=\b)([0-9]{16})(?=\b)/ig, "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketNumber=$1\">Ticket#$&</a>")
+    ;
+    console.debug(`${text} ⇒ ${replaced_text}`);
+    return replaced_text;
+}
+
+export function withMagicLinksFormatter(value, row, index) {
+    if (!value) {
+        return;
+    }
+    return withMagicLinksReplaced(value);
+}
 
 $('table').on('load-error.bs.table', function (e, status, res) {
     $("tr.no-records-found > td", this).html("Error: Server returned HTTP " + status + ".");
@@ -555,7 +578,7 @@ function getSwitchPortType(name) {
 export function sortPort(a, b) {
     const type_a = getSwitchPortType(a);
     const type_b = getSwitchPortType(b);
-    
+
     if (type_a === type_b && type_a !== 'numeric') {
         if (type_a === 'alphanumeric') {
             const character_a = a[0];

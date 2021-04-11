@@ -23,14 +23,14 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     created_at = DateColumn("Erstellt um", width=2)
     type_ = Column("Logtyp", name='type', sortable=False)
     user = Column("Nutzer", formatter='table.userFormatter')
-    message = Column("Nachricht")
+    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
 class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs"""
     created_at = DateColumn("Erstellt um", width=2)
     user = Column("Nutzer", formatter='table.userFormatter')
-    message = Column("Nachricht")
+    message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
 class MembershipTable(BootstrapTable):
