@@ -23,8 +23,7 @@ from pycroft.lib.finance import (
     is_ordered, get_last_applied_membership_fee, estimate_balance,
     post_transactions_for_membership_fee, get_users_with_payment_in_default,
     end_payment_in_default_memberships,
-    take_actions_for_payment_in_default_users,
-    match_hss_lenient)
+    take_actions_for_payment_in_default_users)
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity, Transaction, Split
 from pycroft.model.user import User
@@ -582,33 +581,5 @@ class TestMatching:
         ("FOO, FOO BAR, HSS46 16-11", None),
     ])
     def test_matching(self, reference, expected):
-        result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
-                                         session=MagicMock())
+        result = finance.match_reference(reference, lambda uid: f"pyc-{uid}")
         assert result == expected
-
-
-class HssMatchingTestCase(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.hss = BuildingFactory(site__name="Hochschulstraße")
-        UserFactory(login='hanssarpei', name="Hans Sarpei", room__building=self.hss)
-        UserFactory(login='franz', name="Franz Wurst", room__building=self.hss)
-        UserFactory(login='hans')  # not living in the HSS
-
-    def test_hss_matching(self):
-        # TODO match something like
-        # - `<username>, <name> Hss foo bar garbage`
-        # - No username at all? Perhaps not
-        self.assert_reference_login("hanssarpei, foo, bar", 'hanssarpei')
-        self.assert_reference_login("haNsSarpei, foo, bar", 'hanssarpei')
-        self.assert_no_match("foo hanssarpei, foo, bar, franz")  # ambiguity 'franz'/'hanssarpei'
-        self.assert_reference_login("foo hanssarpei, foo, bar, hans", 'hanssarpei')
-        self.assert_reference_login("foo HANSSARPEI, foo, bar, hans", 'hanssarpei')
-
-    def assert_no_match(self, reference: str):
-        assert match_hss_lenient(reference, self.session) is None
-
-    def assert_reference_login(self, reference: str, expected_login: str):
-        u: User = match_hss_lenient(reference, self.session)
-        assert u is not None
-        assert u.login == expected_login
