@@ -365,55 +365,54 @@ def move_in(
                                               'host_annex': host_annex,
                                               'begin_membership': begin_membership},
                                   processor=processor)
-    else:
-        if user.room is not None:
-            raise ValueError("user is already living in a room.")
+    if user.room is not None:
+        raise ValueError("user is already living in a room.")
 
-        room = get_room(building_id, level, room_number)
+    room = get_room(building_id, level, room_number)
 
-        if birthdate:
-            user.birthdate = birthdate
+    if birthdate:
+        user.birthdate = birthdate
 
-        if begin_membership:
-            if user.member_of(config.external_group):
-                remove_member_of(user, config.external_group, processor,
-                                 closedopen(session.utcnow(), None))
+    if begin_membership:
+        if user.member_of(config.external_group):
+            remove_member_of(user, config.external_group, processor,
+                             closedopen(session.utcnow(), None))
 
-            for group in {config.member_group, config.network_access_group}:
-                if not user.member_of(group):
-                    make_member_of(user, group, processor, closed(session.utcnow(), None))
+        for group in {config.member_group, config.network_access_group}:
+            if not user.member_of(group):
+                make_member_of(user, group, processor, closed(session.utcnow(), None))
 
-        if room:
-            user.room = room
-            user.address = room.address
+    if room:
+        user.room = room
+        user.address = room.address
 
-            if mac and user.birthdate:
-                interface_existing = Interface.q.filter_by(mac=mac).first()
+        if mac and user.birthdate:
+            interface_existing = Interface.q.filter_by(mac=mac).first()
 
-                if interface_existing is not None:
-                    if host_annex:
-                        host_existing = interface_existing.host
-                        host_existing.owner_id = user.id
+            if interface_existing is not None:
+                if host_annex:
+                    host_existing = interface_existing.host
+                    host_existing.owner_id = user.id
 
-                        session.session.add(host_existing)
-                        migrate_user_host(host_existing, user.room, processor)
-                    else:
-                        raise MacExistsException
+                    session.session.add(host_existing)
+                    migrate_user_host(host_existing, user.room, processor)
                 else:
-                    new_host = Host(owner=user, room=room)
-                    session.session.add(new_host)
-                    session.session.add(Interface(mac=mac, host=new_host))
-                    setup_ipv4_networking(new_host)
+                    raise MacExistsException
+            else:
+                new_host = Host(owner=user, room=room)
+                session.session.add(new_host)
+                session.session.add(Interface(mac=mac, host=new_host))
+                setup_ipv4_networking(new_host)
 
-        user_send_mail(user, UserMovedInTemplate(), True)
+    user_send_mail(user, UserMovedInTemplate(), True)
 
-        msg = deferred_gettext(u"Moved in: {room}")
+    msg = deferred_gettext(u"Moved in: {room}")
 
-        log_user_event(author=processor if processor is not None else user,
-                       message=msg.format(room=room.short_name).to_json(),
-                       user=user)
+    log_user_event(author=processor if processor is not None else user,
+                   message=msg.format(room=room.short_name).to_json(),
+                   user=user)
 
-        return user
+    return user
 
 
 def migrate_user_host(host, new_room, processor):
