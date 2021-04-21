@@ -70,18 +70,17 @@ class UserMoveOutTaskImpl(UserTaskImpl):
 
     def _execute(self, task: UserTask, parameters):
         from pycroft.lib import user as lib_user
+        if task.user.room is None:
+            self.errors.append("Tried to move out user, but user was not living in a dormitory")
+            return
 
-        if task.user.room is not None:
-            lib_user.move_out(user=task.user,
-                              comment=parameters['comment'],
-                              processor=task.creator,
-                              when=session.utcnow(),
-                              end_membership=parameters['end_membership'])
+        lib_user.move_out(user=task.user,
+                          comment=parameters['comment'],
+                          processor=task.creator,
+                          when=session.utcnow(),
+                          end_membership=parameters['end_membership'])
 
-            self.new_status = TaskStatus.EXECUTED
-        else:
-            self.errors.append(
-                "Tried to move out user, but user was not living in a dormitory")
+        self.new_status = TaskStatus.EXECUTED
 
 
 class UserMoveTaskImpl(UserTaskImpl):
@@ -90,31 +89,31 @@ class UserMoveTaskImpl(UserTaskImpl):
 
     def _execute(self, task, parameters):
         from pycroft.lib import user as lib_user
+        if task.user.room is None:
+            self.errors.append("Tried to move in user, "
+                               "but user was already living in a dormitory.")
+            return
 
-        if task.user.room is not None:
-            room = Room.q.filter_by(
-                number=parameters['room_number'],
-                level=parameters['level'],
-                building_id=parameters['building_id']
-            ).first()
+        room = Room.q.filter_by(
+            number=parameters['room_number'],
+            level=parameters['level'],
+            building_id=parameters['building_id']
+        ).first()
 
-            if room is not None:
-                lib_user.move(
-                    user=task.user,
-                    building_id=room.building.id,
-                    level=room.level,
-                    room_number=room.number,
-                    comment=parameters.get('comment'),
-                    processor=task.creator,
-                )
+        if room is None:
+            self.errors.append("Tried to move user, but target room did not exist.")
+            return
 
-                self.new_status = TaskStatus.EXECUTED
-            else:
-                self.errors.append(
-                    "Tried to move user, but target room did not exist.")
-        else:
-            self.errors.append(
-                "Tried to move in user, but user was already living in a dormitory.")
+        lib_user.move(
+            user=task.user,
+            building_id=room.building.id,
+            level=room.level,
+            room_number=room.number,
+            comment=parameters.get('comment'),
+            processor=task.creator,
+        )
+
+        self.new_status = TaskStatus.EXECUTED
 
 
 class UserMoveInTaskImpl(UserTaskImpl):
@@ -124,33 +123,35 @@ class UserMoveInTaskImpl(UserTaskImpl):
     def _execute(self, task, parameters):
         from pycroft.lib import user as lib_user
 
-        if task.user.room is None:
-            room = Room.q.filter_by(
-                number=parameters['room_number'],
-                level=parameters['level'],
-                building_id=parameters['building_id']
-            ).first()
+        if task.user.room is not None:
+            self.errors.append("Tried to move in user, "
+                               "but user was already living in a dormitory.")
+            return
 
-            if room is not None:
-                lib_user.move_in(user=task.user,
-                                 building_id=room.building.id,
-                                 level=room.level,
-                                 room_number=room.number,
-                                 mac=parameters['mac'],
-                                 processor=task.creator,
-                                 birthdate=parameters['birthdate'],
-                                 host_annex=parameters['host_annex'],
-                                 begin_membership=parameters[
-                                     'begin_membership']
-                                 )
+        room = Room.q.filter_by(
+            number=parameters['room_number'],
+            level=parameters['level'],
+            building_id=parameters['building_id']
+        ).first()
 
-                self.new_status = TaskStatus.EXECUTED
-            else:
-                self.errors.append(
-                    "Tried to move in user, but target room did not exist.")
-        else:
+        if room is None:
             self.errors.append(
-                "Tried to move in user, but user was already living in a dormitory.")
+                "Tried to move in user, but target room did not exist.")
+            return
+
+        lib_user.move_in(user=task.user,
+                         building_id=room.building.id,
+                         level=room.level,
+                         room_number=room.number,
+                         mac=parameters['mac'],
+                         processor=task.creator,
+                         birthdate=parameters['birthdate'],
+                         host_annex=parameters['host_annex'],
+                         begin_membership=parameters[
+                             'begin_membership']
+                         )
+
+        self.new_status = TaskStatus.EXECUTED
 
 
 task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
