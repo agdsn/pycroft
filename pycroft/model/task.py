@@ -61,7 +61,7 @@ class Task(IntegerIdModel, Generic[TSchema]):
     def parameters(self, _parameters):
         parameters_schema = self.schema()
 
-        data, errors = parameters_schema.dump(_parameters)
+        data = parameters_schema.dump(_parameters)
 
         self.parameters_json = data
 

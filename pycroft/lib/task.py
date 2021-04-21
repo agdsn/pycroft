@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Mapping, TypeVar, Generic
 
+from marshmallow import ValidationError
 from sqlalchemy.orm import with_polymorphic
 
 from pycroft.lib.logging import log_task_event
@@ -31,15 +32,14 @@ class TaskImpl(ABC, Generic[TTask]):
         ...
 
     @with_transaction
-    def execute(self, task):
+    def execute(self, task: Task):
         self.new_status = TaskStatus.FAILED
         self.errors = list()
 
-        parameters, parse_errors = task.parameters
-
-        if parse_errors:
-            self.errors.append(
-                "Failed to parse parameters: {}".format(parse_errors))
+        try:
+            parameters = task.parameters
+        except ValidationError as e:
+            self.errors.append(f"Failed to parse parameters: {e.messages}")
         else:
             self._execute(task, parameters)
 
