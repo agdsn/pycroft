@@ -7,8 +7,7 @@ from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
-from pycroft.model.task import UserTask, Task, TaskType, TaskStatus, \
-    UserMoveSchema, UserMoveOutSchema, UserMoveInSchema
+from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
 
 
 class TaskImpl(ABC):
@@ -20,11 +19,6 @@ class TaskImpl(ABC):
     @property
     @abstractmethod
     def type(self):
-        ...
-
-    @property
-    @abstractmethod
-    def schema(self):
         ...
 
     new_status = None
@@ -72,7 +66,6 @@ class UserTaskImpl(TaskImpl, ABC):
 class UserMoveOutTaskImpl(UserTaskImpl):
     name = "Auszug"
     type = TaskType.USER_MOVE_OUT
-    schema = UserMoveOutSchema
 
     def _execute(self, task, parameters):
         from pycroft.lib import user as lib_user
@@ -93,7 +86,6 @@ class UserMoveOutTaskImpl(UserTaskImpl):
 class UserMoveTaskImpl(UserTaskImpl):
     name = "Umzug"
     type = TaskType.USER_MOVE
-    schema = UserMoveSchema
 
     def _execute(self, task, parameters):
         from pycroft.lib import user as lib_user
@@ -127,7 +119,6 @@ class UserMoveTaskImpl(UserTaskImpl):
 class UserMoveInTaskImpl(UserTaskImpl):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
-    schema = UserMoveInSchema
 
     def _execute(self, task, parameters):
         from pycroft.lib import user as lib_user
