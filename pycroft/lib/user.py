@@ -816,11 +816,9 @@ def move_out(user, comment, processor, when, end_membership=True):
                     interfaces=', '.join(deleted_interfaces))
         had_custom_address = user.has_custom_address
         user.room = None
-    else:
-        if num_hosts:
-            message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
-                .format(num_hosts=num_hosts,
-                        interfaces=', '.join(deleted_interfaces))
+    elif num_hosts:
+        message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
+            .format(num_hosts=num_hosts, interfaces=', '.join(deleted_interfaces))
 
     if message is not None:
         if comment:
