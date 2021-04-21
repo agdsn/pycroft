@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 
-from marshmallow import Schema, fields
+from marshmallow import Schema
 from sqlalchemy import Column, Enum, Integer, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, backref
@@ -9,6 +9,7 @@ from typing import TypeVar, Generic
 from pycroft.helpers import AutoNumber
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import DateTimeTz
+from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema
 
 
 class TaskType(AutoNumber):
@@ -74,29 +75,6 @@ class UserTask(Task):
 
     user = relationship('User', backref=backref("tasks"))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-
-
-class UserMoveOutSchema(Schema):
-    comment = fields.Str()
-    end_membership = fields.Bool()
-
-
-class UserMoveSchema(Schema):
-    room_number = fields.Str()
-    level = fields.Int()
-    building_id = fields.Int()
-    comment = fields.Str()
-    end_membership = fields.Bool()
-
-
-class UserMoveInSchema(Schema):
-    room_number = fields.Str()
-    level = fields.Int()
-    building_id = fields.Int()
-    mac = fields.Str(allow_none=True, missing=None)
-    birthdate = fields.Date(allow_none=True, missing=None)
-    begin_membership = fields.Bool(missing=False)
-    host_annex = fields.Bool(missing=False)
 
 
 task_type_to_schema: Mapping[TaskType, type[Schema]] = {
