@@ -40,13 +40,15 @@ from pycroft.lib.net import get_free_ip, MacExistsException, \
 from pycroft.lib.swdd import get_relevant_tenancies
 from pycroft.lib.task import schedule_user_task
 from pycroft.model import session
+from pycroft.model.address import Address
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
 from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.traffic import TrafficHistoryEntry
-from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, RoomHistoryEntry
+from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, RoomHistoryEntry, \
+    PropertyGroup
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async
 
@@ -251,20 +253,24 @@ def generate_wifi_password():
     return user_helper.generate_password(12)
 
 
-def create_user(name, login, email, birthdate, groups, processor, address, passwd_hash=None,
-                send_confirm_mail: bool = False):
+def create_user(
+    name: str, login: str, email: str, birthdate: date,
+    groups: list[PropertyGroup], processor: Optional[User], address: Address,
+    passwd_hash: str = None,
+    send_confirm_mail: bool = False
+):
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
     of the `config.member_group` and `config.network_access_group`.
 
-    :param str name: The full name of the user (e.g. Max Mustermann)
-    :param str login: The unix login for the user
-    :param str email: E-Mail address of the user
-    :param Date birthdate: Date of birth
-    :param PropertyGroup groups: The initial groups of the new user
-    :param Optional[User] processor: The processor
-    :param Address address: Where the user lives. May or may not come from a room.
+    :param name: The full name of the user (e.g. Max Mustermann)
+    :param login: The unix login for the user
+    :param email: E-Mail address of the user
+    :param birthdate: Date of birth
+    :param groups: The initial groups of the new user
+    :param processor: The processor
+    :param address: Where the user lives. May or may not come from a room.
     :param passwd_hash: Use password hash instead of generating a new password
     :param send_confirm_mail: If a confirmation mail should be send to the user
     :return:
@@ -316,8 +322,16 @@ def create_user(name, login, email, birthdate, groups, processor, address, passw
 
 
 @with_transaction
-def move_in(user, building_id, level, room_number, mac, processor=None, birthdate=None,
-            host_annex=False, begin_membership=True, when=None):
+def move_in(
+    user: User,
+    building_id: int, level: int, room_number: str,
+    mac: Optional[str],
+    processor: Optional[User] = None,
+    birthdate: date = None,
+    host_annex: bool = False,
+    begin_membership: bool = True,
+    when: Optional[datetime] = None
+):
     """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -325,16 +339,16 @@ def move_in(user, building_id, level, room_number, mac, processor=None, birthdat
     groups.  Networking is set up.
 
     :param User user: The user to move in
-    :param int building_id:
-    :param int level:
-    :param str room_number:
-    :param Optional[str] mac: The mac address of the users pc.
-    :param Optional[User] processor:
-    :param Date birthdate: Date of birth`
-    :param bool host_annex: when true: if MAC already in use,
+    :param building_id:
+    :param level:
+    :param room_number:
+    :param mac: The mac address of the users pc.
+    :param processor:
+    :param birthdate: Date of birth`
+    :param host_annex: when true: if MAC already in use,
         annex host to new user
-    :param bool begin_membership: Starts a membership if true
-    :param datetime when: The date at which the user should be moved in
+    :param begin_membership: Starts a membership if true
+    :param when: The date at which the user should be moved in
 
     :return: The user object.
     """
