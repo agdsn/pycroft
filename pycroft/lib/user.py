@@ -482,43 +482,43 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
                                               'room_number': room_number,
                                               'comment': comment},
                                   processor=processor)
+
+    old_room = user.room
+    had_custom_address = user.has_custom_address
+    new_room = Room.q.filter_by(
+        number=room_number,
+        level=level,
+        building_id=building_id
+    ).one()
+
+    assert old_room != new_room,\
+        "A User is only allowed to move in a different room!"
+
+    user.room = new_room
+    if not had_custom_address:
+        user.address = new_room.address
+
+    args = {'old_room': str(old_room), 'new_room': str(new_room)}
+    if comment:
+        message = deferred_gettext("Moved from {old_room} to {new_room}.\n"
+                                   "Comment: {comment}")
+        args.update(comment=comment)
     else:
-        old_room = user.room
-        had_custom_address = user.has_custom_address
-        new_room = Room.q.filter_by(
-            number=room_number,
-            level=level,
-            building_id=building_id
-        ).one()
+        message = deferred_gettext(u"Moved from {old_room} to {new_room}.")
 
-        assert old_room != new_room,\
-            "A User is only allowed to move in a different room!"
+    log_user_event(
+        author=processor,
+        message=message.format(**args).to_json(),
+        user=user
+    )
 
-        user.room = new_room
-        if not had_custom_address:
-            user.address = new_room.address
+    for user_host in user.hosts:
+        if user_host.room == old_room:
+            migrate_user_host(user_host, new_room, processor)
 
-        args = {'old_room': str(old_room), 'new_room': str(new_room)}
-        if comment:
-            message = deferred_gettext("Moved from {old_room} to {new_room}.\n"
-                                       "Comment: {comment}")
-            args.update(comment=comment)
-        else:
-            message = deferred_gettext(u"Moved from {old_room} to {new_room}.")
+    user_send_mail(user, UserMovedInTemplate(), True)
 
-        log_user_event(
-            author=processor,
-            message=message.format(**args).to_json(),
-            user=user
-        )
-
-        for user_host in user.hosts:
-            if user_host.room == old_room:
-                migrate_user_host(user_host, new_room, processor)
-
-        user_send_mail(user, UserMovedInTemplate(), True)
-
-        return user
+    return user
 
 
 @with_transaction
