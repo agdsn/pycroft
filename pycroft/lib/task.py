@@ -163,7 +163,7 @@ task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
 
 
 @with_transaction
-def schedule_user_task(task_type, due, user, parameters, processor):
+def schedule_user_task(task_type, due, user, parameters: dict, processor):
     if due < session.utcnow():
         raise ValueError("the due date must be in the future")
 
