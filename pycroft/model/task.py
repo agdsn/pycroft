@@ -1,7 +1,10 @@
+from collections.abc import Mapping
+
 from marshmallow import Schema, fields
 from sqlalchemy import Column, Enum, Integer, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, backref
+from typing import TypeVar, Generic
 
 from pycroft.helpers import AutoNumber
 from pycroft.model.base import IntegerIdModel
@@ -21,7 +24,10 @@ class TaskStatus(AutoNumber):
     CANCELLED = ()
 
 
-class Task(IntegerIdModel):
+TSchema = TypeVar('TSchema')
+
+
+class Task(IntegerIdModel, Generic[TSchema]):
     discriminator = Column('task_type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
@@ -35,14 +41,14 @@ class Task(IntegerIdModel):
     errors = Column(JSONB, nullable=True)
 
     @property
-    def schema(self):
+    def schema(self) -> type[Schema]:
         if not task_type_to_schema[self.type]:
             raise ValueError("cannot find schema for task type")
 
         return task_type_to_schema[self.type]
 
     @property
-    def parameters(self):
+    def parameters(self) -> dict:
         parameters_schema = self.schema()
 
         return parameters_schema.load(self.parameters_json)
@@ -89,7 +95,7 @@ class UserMoveInSchema(Schema):
     host_annex = fields.Bool(missing=False)
 
 
-task_type_to_schema = {
+task_type_to_schema: Mapping[TaskType, type[Schema]] = {
     TaskType.USER_MOVE: UserMoveSchema,
     TaskType.USER_MOVE_IN: UserMoveInSchema,
     TaskType.USER_MOVE_OUT: UserMoveOutSchema

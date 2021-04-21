@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Mapping
+from typing import Mapping, TypeVar, Generic
 
 from sqlalchemy.orm import with_polymorphic
 
@@ -9,8 +9,9 @@ from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
 
+TTask = TypeVar('TTask')
 
-class TaskImpl(ABC):
+class TaskImpl(ABC, Generic[TTask]):
     @property
     @abstractmethod
     def name(self):
@@ -43,7 +44,7 @@ class TaskImpl(ABC):
             self._execute(task, parameters)
 
     @abstractmethod
-    def _execute(self, *args, **kwargs):
+    def _execute(self, task: TTask, parameters):
         ...
 
 
@@ -67,7 +68,7 @@ class UserMoveOutTaskImpl(UserTaskImpl):
     name = "Auszug"
     type = TaskType.USER_MOVE_OUT
 
-    def _execute(self, task, parameters):
+    def _execute(self, task: UserTask, parameters):
         from pycroft.lib import user as lib_user
 
         if task.user.room is not None:
