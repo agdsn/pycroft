@@ -9,10 +9,12 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
+from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams
 
 TTask = TypeVar('TTask')
+TParams = TypeVar('TParams')
 
-class TaskImpl(ABC, Generic[TTask]):
+class TaskImpl(ABC, Generic[TTask, TParams]):
     @property
     @abstractmethod
     def name(self):
@@ -37,14 +39,14 @@ class TaskImpl(ABC, Generic[TTask]):
         self.errors = list()
 
         try:
-            parameters = task.parameters
+            parameters: TParams = task.parameters
         except ValidationError as e:
             self.errors.append(f"Failed to parse parameters: {e.messages}")
         else:
             self._execute(task, parameters)
 
     @abstractmethod
-    def _execute(self, task: TTask, parameters):
+    def _execute(self, task: TTask, parameters: TParams):
         ...
 
 
@@ -68,17 +70,17 @@ class UserMoveOutTaskImpl(UserTaskImpl):
     name = "Auszug"
     type = TaskType.USER_MOVE_OUT
 
-    def _execute(self, task: UserTask, parameters):
+    def _execute(self, task: UserTask, parameters: UserMoveOutParams):
         from pycroft.lib import user as lib_user
         if task.user.room is None:
             self.errors.append("Tried to move out user, but user was not living in a dormitory")
             return
 
         lib_user.move_out(user=task.user,
-                          comment=parameters['comment'],
+                          comment=parameters.comment,
                           processor=task.creator,
                           when=session.utcnow(),
-                          end_membership=parameters['end_membership'])
+                          end_membership=parameters.end_membership)
 
         self.new_status = TaskStatus.EXECUTED
 
@@ -87,7 +89,7 @@ class UserMoveTaskImpl(UserTaskImpl):
     name = "Umzug"
     type = TaskType.USER_MOVE
 
-    def _execute(self, task, parameters):
+    def _execute(self, task, parameters: UserMoveParams):
         from pycroft.lib import user as lib_user
         if task.user.room is None:
             self.errors.append("Tried to move in user, "
@@ -95,9 +97,9 @@ class UserMoveTaskImpl(UserTaskImpl):
             return
 
         room = Room.q.filter_by(
-            number=parameters['room_number'],
-            level=parameters['level'],
-            building_id=parameters['building_id']
+            number=parameters.room_number,
+            level=parameters.level,
+            building_id=parameters.building_id,
         ).first()
 
         if room is None:
@@ -109,7 +111,7 @@ class UserMoveTaskImpl(UserTaskImpl):
             building_id=room.building.id,
             level=room.level,
             room_number=room.number,
-            comment=parameters.get('comment'),
+            comment=parameters.comment,
             processor=task.creator,
         )
 
@@ -120,7 +122,7 @@ class UserMoveInTaskImpl(UserTaskImpl):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
 
-    def _execute(self, task, parameters):
+    def _execute(self, task, parameters: UserMoveInParams):
         from pycroft.lib import user as lib_user
 
         if task.user.room is not None:
@@ -129,9 +131,9 @@ class UserMoveInTaskImpl(UserTaskImpl):
             return
 
         room = Room.q.filter_by(
-            number=parameters['room_number'],
-            level=parameters['level'],
-            building_id=parameters['building_id']
+            number=parameters.room_number,
+            level=parameters.level,
+            building_id=parameters.building_id,
         ).first()
 
         if room is None:
@@ -143,12 +145,11 @@ class UserMoveInTaskImpl(UserTaskImpl):
                          building_id=room.building.id,
                          level=room.level,
                          room_number=room.number,
-                         mac=parameters['mac'],
+                         mac=parameters.mac,
                          processor=task.creator,
-                         birthdate=parameters['birthdate'],
-                         host_annex=parameters['host_annex'],
-                         begin_membership=parameters[
-                             'begin_membership']
+                         birthdate=parameters.birthdate,
+                         host_annex=parameters.host_annex,
+                         begin_membership=parameters.begin_membership,
                          )
 
         self.new_status = TaskStatus.EXECUTED
