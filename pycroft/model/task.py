@@ -1,7 +1,6 @@
 from marshmallow import Schema, fields
 from sqlalchemy import Column, Enum, Integer, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 
 from pycroft.helpers import AutoNumber
@@ -42,7 +41,7 @@ class Task(IntegerIdModel):
 
         return task_type_to_schema[self.type]
 
-    @hybrid_property
+    @property
     def parameters(self):
         parameters_schema = self.schema()
 
