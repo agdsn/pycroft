@@ -49,6 +49,10 @@ class Task(IntegerIdModel, Generic[TSchema]):
 
     @property
     def parameters(self) -> dict:
+        """(Lazily) deserialized dict corresponding to the parameters.
+
+        The deserialization happens according to what schema is referenced in self.schema.
+        """
         parameters_schema = self.schema()
 
         return parameters_schema.load(self.parameters_json)
