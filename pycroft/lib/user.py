@@ -1063,7 +1063,7 @@ def check_similar_user_in_room(name: str, room: Room):
         raise UserExistsInRoomException
 
 
-def get_user_by_swdd_person_id(swdd_person_id: Optional[int]) -> User:
+def get_user_by_swdd_person_id(swdd_person_id: Optional[int]) -> Optional[User]:
     if swdd_person_id is None:
         return None
 
