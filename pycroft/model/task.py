@@ -1,3 +1,4 @@
+import builtins
 from collections.abc import Mapping
 
 from marshmallow import Schema
@@ -42,7 +43,7 @@ class Task(IntegerIdModel, Generic[TSchema]):
     errors = Column(JSONB, nullable=True)
 
     @property
-    def schema(self) -> type[Schema]:
+    def schema(self) -> builtins.type[Schema]:
         if not task_type_to_schema[self.type]:
             raise ValueError("cannot find schema for task type")
 
