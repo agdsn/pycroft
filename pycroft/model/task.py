@@ -30,6 +30,17 @@ TSchema = TypeVar('TSchema')
 
 
 class Task(IntegerIdModel, Generic[TSchema]):
+    """The task model
+
+    The task model needs to hold three types of data:
+    - Metadata (creation, status, …)
+    - A type (e.g. USER_MOVE)
+    - the `parameters_json` json dict.
+
+    The parameters should actually be accessed via :ref:`parameters`,
+    as this already takes care of validation and (de-)serialization.
+    The `type` field is essentially only needed for filtering in a query.
+    """
     discriminator = Column('task_type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
