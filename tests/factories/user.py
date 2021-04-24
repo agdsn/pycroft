@@ -48,6 +48,10 @@ class UserFactory(BaseFactory):
             unix_account=factory.SubFactory('tests.factories.user.UnixAccountFactory',
                                             login=factory.SelfAttribute('..login'))
         )
+        with_membership = factory.Trait(
+            membership=factory.RelatedFactory('tests.factories.property.MembershipFactory',
+                                              'user')
+        )
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):
@@ -78,6 +82,12 @@ class UserWithHostFactory(UserFactory):
 
 class UserWithMembershipFactory(UserFactory):
     membership = factory.RelatedFactory('tests.factories.property.MembershipFactory', 'user')
+
+    def __init__(self, *a, **kw):
+        import warnings
+        warnings.warn("Use UserFactory(with_membership=True) instead", DeprecationWarning)
+        super().__init__(*a, **kw)
+
 
 class UnixAccountFactory(BaseFactory):
     class Meta:
