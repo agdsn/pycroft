@@ -46,6 +46,8 @@ from pycroft.model.finance import Account
 from pycroft.model.host import IP, Host, Interface
 from pycroft.model.session import with_transaction
 from pycroft.model.task import TaskType, UserTask, TaskStatus
+from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
+    UserMoveInParams
 from pycroft.model.traffic import TrafficHistoryEntry
 from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, RoomHistoryEntry, \
     PropertyGroup
@@ -354,16 +356,15 @@ def move_in(
     """
 
     if when and when > session.utcnow():
+        task_params = UserMoveInParams(
+            building_id=building_id, level=level, room_number=room_number,
+            mac=mac, birthdate=birthdate,
+            host_annex=host_annex, begin_membership=begin_membership
+        )
         return schedule_user_task(task_type=TaskType.USER_MOVE_IN,
                                   due=when,
                                   user=user,
-                                  parameters={'building_id': building_id,
-                                              'level': level,
-                                              'room_number': room_number,
-                                              'mac': mac,
-                                              'birthdate': birthdate,
-                                              'host_annex': host_annex,
-                                              'begin_membership': begin_membership},
+                                  parameters=task_params,
                                   processor=processor)
     if user.room is not None:
         raise ValueError("user is already living in a room.")
@@ -474,13 +475,14 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
     """
 
     if when and when > session.utcnow():
+        task_params = UserMoveParams(
+            building_id=building_id, level=level, room_number=room_number,
+            comment=comment
+        )
         return schedule_user_task(task_type=TaskType.USER_MOVE,
                                   due=when,
                                   user=user,
-                                  parameters={'building_id': building_id,
-                                              'level': level,
-                                              'room_number': room_number,
-                                              'comment': comment},
+                                  parameters=task_params,
                                   processor=processor)
 
     old_room = user.room
@@ -783,11 +785,11 @@ def move_out(user, comment, processor, when, end_membership=True):
     :return: The user that moved out.
     """
     if when > session.utcnow():
+        task_params = UserMoveOutParams(comment=comment, end_membership=end_membership)
         return schedule_user_task(task_type=TaskType.USER_MOVE_OUT,
                                   due=when,
                                   user=user,
-                                  parameters={'comment': comment,
-                                              'end_membership': end_membership},
+                                  parameters=task_params,
                                   processor=processor)
 
     if end_membership:

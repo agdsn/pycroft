@@ -9,7 +9,8 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
-from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams
+from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams, \
+    TaskParams
 
 TTask = TypeVar('TTask')
 TParams = TypeVar('TParams')
@@ -163,7 +164,7 @@ task_type_to_impl: Mapping[TaskType, type[UserTaskImpl]] = {
 
 
 @with_transaction
-def schedule_user_task(task_type, due, user, parameters: dict, processor):
+def schedule_user_task(task_type, due, user, parameters: TaskParams, processor):
     if due < session.utcnow():
         raise ValueError("the due date must be in the future")
 

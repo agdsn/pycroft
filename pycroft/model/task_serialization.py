@@ -5,6 +5,10 @@ from datetime import date
 from marshmallow import Schema, fields, post_load
 
 
+class TaskParams:
+    pass
+
+
 class UserMoveOutSchema(Schema):
     comment = fields.Str()
     end_membership = fields.Bool()
@@ -15,7 +19,7 @@ class UserMoveOutSchema(Schema):
 
 
 @dataclass
-class UserMoveOutParams:
+class UserMoveOutParams(TaskParams):
     comment: str
     end_membership: bool
 
@@ -33,7 +37,7 @@ class UserMoveSchema(Schema):
 
 
 @dataclass
-class UserMoveParams:
+class UserMoveParams(TaskParams):
     room_number: str
     level: int
     building_id: int
@@ -56,7 +60,7 @@ class UserMoveInSchema(Schema):
 
 
 @dataclass
-class UserMoveInParams:
+class UserMoveInParams(TaskParams):
     room_number: str
     level: int
     building_id: int
