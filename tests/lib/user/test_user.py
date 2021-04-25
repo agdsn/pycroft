@@ -12,8 +12,8 @@ from pycroft.lib.facilities import get_room
 from pycroft.lib.user import move, move_out, move_in
 from pycroft.model import (
     session, host)
-from pycroft.model.task import TaskType, Task
-from pycroft.model.task_serialization import UserMoveOutParams
+from pycroft.model.task import TaskType, Task, UserTask
+from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams
 from tests import FactoryWithConfigDataTestBase, FactoryDataTestBase
 from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, \
     RoomFactory, ConfigFactory
@@ -38,6 +38,27 @@ class Test_User_Move(FactoryDataTestBase):
             building=self.old_room.building,
             patched_with_subnet=True,
             patch_ports__switch_port__default_vlans__subnets=[subnet],
+        )
+
+    def test_move_scheduling(self):
+        when = session.utcnow() + timedelta(days=1)
+        UserHelper.move(
+            self.user,
+            building_id=self.new_room_other_building.building.id,
+            level=self.new_room_other_building.level,
+            room_number=self.new_room_other_building.number,
+            processor=self.processing_user,
+            when=when,
+        )
+        tasks = self.session.query(Task).all()
+        assert len(tasks) == 1
+        [task] = tasks
+        assert isinstance(task, UserTask)
+        assert task.user == self.user
+        assert task.parameters == UserMoveParams(
+            building_id=self.new_room_other_building.building.id,
+            level=self.new_room_other_building.level,
+            room_number=self.new_room_other_building.number,
         )
 
     def test_0010_moves_into_same_room(self):
