@@ -77,6 +77,26 @@ class Test_User_Move(FactoryDataTestBase):
         # TODO test for changing ip
 
 
+############################
+# CREATION / MOVE_IN TESTS #
+############################
+
+# ASSERTIONS
+
+def assert_account_name(account, expected_name):
+    assert localized(account.name, {int: {'insert_commas': False}}) == expected_name
+
+
+def assert_membership_groups(memberships, expected_groups):
+    assert len(memberships) == len(expected_groups)
+    assert {m.group for m in memberships} == set(expected_groups)
+
+
+def assert_logmessage_startswith(logentry, expected_start: str):
+    assert localized(logentry.message).startswith(expected_start)
+
+# /ASSERTIONS
+
 class Test_User_Move_In(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
@@ -106,32 +126,22 @@ class Test_User_Move_In(FactoryDataTestBase):
         )
         return new_user
 
-    def assert_account_name(self, account, expected_name):
-        self.assertEqual(localized(account.name, {int: {'insert_commas': False}}),
-                         expected_name)
-
-    def assert_membership_groups(self, memberships, expected_groups):
-        self.assertEqual(len(memberships), len(expected_groups))
-        self.assertEqual({m.group for m in memberships},
-                         set(expected_groups))
-
-    def assert_logmessage_startswith(self, logentry, expected_start: str):
-        assert localized(logentry.message).startswith(expected_start)
-
     def test_user_create(self):
+        # needs: new_user, self.user (the initiating data),
+        # self.config.member_group
         new_user = self.create_some_user()
         self.assertEqual(new_user.name, self.user.name)
         self.assertEqual(new_user.login, self.user.login)
         self.assertEqual(new_user.email, self.user.email)
         # TODO fix signature and check for explicitly supplied address.
         # self.assertEqual(new_user.address, config.dummy_address)
-        self.assert_account_name(new_user.account, f"User {new_user.id}")
-        self.assert_membership_groups(new_user.active_memberships(), [self.config.member_group])
+        assert_account_name(new_user.account, f"User {new_user.id}")
+        assert_membership_groups(new_user.active_memberships(), [self.config.member_group])
         self.assertEqual(new_user.unix_account.home_directory, f"/home/{new_user.login}")
         self.assertEqual(len(new_user.log_entries), 2)
         first, second = new_user.log_entries
-        self.assert_logmessage_startswith(first, "Added to group Mitglied")
-        self.assert_logmessage_startswith(second, "User created")
+        assert_logmessage_startswith(first, "Added to group Mitglied")
+        assert_logmessage_startswith(second, "User created")
 
     def test_0010_move_in(self):
         test_name = u"Hans"
