@@ -137,7 +137,8 @@ class UserCreationTest(FactoryDataTestBase):
         first, second = new_user.log_entries
         assert_logmessage_startswith(first, "Added to group Mitglied")
         assert_logmessage_startswith(second, "User created")
-
+        assert new_user.account is not None
+        assert new_user.account.balance == 0
 
 class Test_User_Move_In(FactoryDataTestBase):
     def create_factories(self):
@@ -193,8 +194,6 @@ class Test_User_Move_In(FactoryDataTestBase):
         for group in {self.config.member_group, self.config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
-        self.assertIsNotNone(self.user.account)
-        self.assertEqual(self.user.account.balance, 0)
         self.assertFalse(self.user.has_property("reduced_membership_fee"))
 
 
