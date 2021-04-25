@@ -145,6 +145,13 @@ class Test_User_Move_In(FactoryDataTestBase):
         self.config = factories.ConfigFactory()
         self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
         self.processing_user = UserFactory()
+        self.user = UserFactory(
+            with_membership=True,
+            membership__group=self.config.member_group,
+            room=None,
+            address=self.room.address,
+            birthdate=datetime.fromisoformat('2000-01-01')
+        )
 
     user = ExampleUserData
 
@@ -161,59 +168,34 @@ class Test_User_Move_In(FactoryDataTestBase):
         return new_user
 
     def test_0010_move_in(self):
-        test_name = u"Hans"
-        test_login = u"hans66"
-        test_email = u"hans@hans.de"
-        test_building = self.room.building
         test_mac = "12:11:11:11:11:11"
-        test_birthdate = "1990-01-01"
-
-        address = get_room(building_id=test_building.id, level=1, room_number="1").address
-        new_user, _ = UserHelper.create_user(
-            test_name,
-            test_login,
-            test_email,
-            test_birthdate,
-            processor=self.processing_user,
-            groups=[self.config.member_group],
-            address=address
-        )
 
         UserHelper.move_in(
-            new_user,
-            building_id=test_building.id,
+            self.user,
+            building_id=self.room.building.id,
             level=1,
             room_number="1",
             mac=test_mac,
             processor=self.processing_user,
         )
 
-        self.assertEqual(new_user.name, test_name)
-        self.assertEqual(new_user.login, test_login)
-        self.assertEqual(new_user.email, test_email)
-        self.assertEqual(new_user.room.building, test_building)
-        self.assertEqual(new_user.room.number, "1")
-        self.assertEqual(new_user.room.level, 1)
-        self.assertEqual(new_user.address, new_user.room.address)
+        assert self.user.room == self.room
+        self.assertEqual(self.user.address, self.user.room.address)
 
-        user_host = host.Host.q.filter_by(owner=new_user).one()
+        user_host = host.Host.q.filter_by(owner=self.user).one()
         self.assertEqual(len(user_host.interfaces), 1)
         user_interface = user_host.interfaces[0]
         self.assertEqual(len(user_interface.ips), 1)
         self.assertEqual(user_interface.mac, test_mac)
 
         # checks the initial group memberships
-        active_user_groups = new_user.active_property_groups()
+        active_user_groups = self.user.active_property_groups()
         for group in {self.config.member_group, self.config.network_access_group}:
             self.assertIn(group, active_user_groups)
 
-        self.assertIsNotNone(new_user.account)
-        self.assertEqual(new_user.account.balance, 0)
-        self.assertFalse(new_user.has_property("reduced_membership_fee"))
-        self.assertTrue(new_user.unix_account is not None)
-        account = new_user.unix_account
-        self.assertTrue(account.home_directory.endswith(new_user.login))
-        self.assertTrue(account.home_directory.startswith('/home/'))
+        self.assertIsNotNone(self.user.account)
+        self.assertEqual(self.user.account.balance, 0)
+        self.assertFalse(self.user.has_property("reduced_membership_fee"))
 
 
 class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):
