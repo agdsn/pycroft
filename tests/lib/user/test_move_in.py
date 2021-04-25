@@ -2,10 +2,11 @@ from datetime import datetime, timedelta
 
 from pycroft.lib import user as UserHelper
 from pycroft.model import session
-from pycroft.model.task import Task
+from pycroft.model.task import Task, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveInParams
-from tests import FactoryDataTestBase, factories, UserFactory
+from tests import FactoryDataTestBase, factories, UserFactory, FactoryWithConfigDataTestBase
 from . import ExampleUserData
+from .task_helpers import create_task_and_execute
 
 
 class Test_User_Move_In(FactoryDataTestBase):
@@ -83,3 +84,53 @@ class Test_User_Move_In(FactoryDataTestBase):
             room_number="1",
             mac=test_mac,
         )
+
+
+class TestMoveInImpl(FactoryWithConfigDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
+        self.processing_user = UserFactory()
+        self.user = UserFactory(
+            with_membership=True,
+            membership__group=self.config.member_group,
+            room=None,
+            address=self.room.address,
+            birthdate=datetime.fromisoformat('2000-01-01')
+        )
+        self.mac = '00:de:ad:be:ef:00'
+
+    def test_successful_move_in_execution_without_mac(self):
+        self.assert_successful_move_in_execution(self.create_task_and_execute({
+            'level': self.room.level,
+            'building_id': self.room.building_id,
+            'room_number': self.room.number,
+        }))
+        assert not self.user.hosts
+
+    def test_successful_move_in_execution_minimal(self):
+        self.assert_successful_move_in_execution(self.create_task_and_execute({
+            'mac': self.mac,
+            'level': self.room.level,
+            'building_id': self.room.building_id,
+            'room_number': self.room.number,
+        }))
+        assert len(self.user.hosts) == 1
+        [host] = self.user.hosts
+        assert len(host.interfaces) == 1
+        [interface] = host.interfaces
+        assert interface.mac == self.mac
+
+    def assert_successful_move_in_execution(self, task: Task):
+        assert task.status == TaskStatus.EXECUTED
+        assert self.user.room == self.room
+
+    def assert_failing_move_execution(self, task: Task, error_needle: str):
+        assert task.status == TaskStatus.FAILED
+        assert len(task.errors) == 1
+        [error] = task.errors
+        assert error_needle in error.lower()
+        assert self.user.room is None
+
+    def create_task_and_execute(self, params):
+        return create_task_and_execute(TaskType.USER_MOVE_IN, self.user, params)
