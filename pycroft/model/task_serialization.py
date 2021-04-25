@@ -49,7 +49,7 @@ class UserMoveInSchema(Schema):
     building_id = fields.Int()
     mac = fields.Str(allow_none=True, missing=None)
     birthdate = fields.Date(allow_none=True, missing=None)
-    begin_membership = fields.Bool(missing=False)
+    begin_membership = fields.Bool(missing=True)
     host_annex = fields.Bool(missing=False)
 
     @post_load
@@ -64,5 +64,5 @@ class UserMoveInParams(TaskParams):
     building_id: int
     mac: Optional[str] = None
     birthdate: Optional[date] = None
-    begin_membership: bool = False
+    begin_membership: bool = True
     host_annex: bool = False
