@@ -28,7 +28,7 @@ class UserMoveSchema(Schema):
     room_number = fields.Str()
     level = fields.Int()
     building_id = fields.Int()
-    comment = fields.Str()
+    comment = fields.Str(allow_none=True, missing=None)
 
     @post_load
     def build(self, data, **kwargs):
@@ -40,7 +40,7 @@ class UserMoveParams(TaskParams):
     room_number: str
     level: int
     building_id: int
-    comment: str
+    comment: Optional[str] = None
 
 
 class UserMoveInSchema(Schema):
