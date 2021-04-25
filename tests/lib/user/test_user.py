@@ -96,25 +96,26 @@ def assert_logmessage_startswith(logentry, expected_start: str):
     assert localized(logentry.message).startswith(expected_start)
 
 # /ASSERTIONS
+class ExampleUserData:
+    name = u"Hans"
+    login = u"hans66"
+    email = u"hans@hans.de"
+    mac = "12:11:11:11:11:11"
+    birthdate = "1990-01-01"
 
-class Test_User_Move_In(FactoryDataTestBase):
+
+class UserCreationTest(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
         self.config = factories.ConfigFactory()
         self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
         self.processing_user = UserFactory()
 
-    def setUp(self):
-        super().setUp()
-        class _UserData:
-            name = u"Hans"
-            login = u"hans66"
-            email = u"hans@hans.de"
-            mac = "12:11:11:11:11:11"
-            birthdate = "1990-01-01"
-        self.user = _UserData
+    user = ExampleUserData
 
-    def create_some_user(self):
+    def test_user_create(self):
+        # needs: new_user, self.user (the initiating data),
+        # self.config.member_group
         new_user, _ = UserHelper.create_user(
             self.user.name,
             self.user.login,
@@ -124,12 +125,6 @@ class Test_User_Move_In(FactoryDataTestBase):
             groups=[self.config.member_group],
             address=self.room.address,
         )
-        return new_user
-
-    def test_user_create(self):
-        # needs: new_user, self.user (the initiating data),
-        # self.config.member_group
-        new_user = self.create_some_user()
         self.assertEqual(new_user.name, self.user.name)
         self.assertEqual(new_user.login, self.user.login)
         self.assertEqual(new_user.email, self.user.email)
@@ -142,6 +137,28 @@ class Test_User_Move_In(FactoryDataTestBase):
         first, second = new_user.log_entries
         assert_logmessage_startswith(first, "Added to group Mitglied")
         assert_logmessage_startswith(second, "User created")
+
+
+class Test_User_Move_In(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.config = factories.ConfigFactory()
+        self.room = factories.RoomFactory(level=1, number="1", patched_with_subnet=True)
+        self.processing_user = UserFactory()
+
+    user = ExampleUserData
+
+    def create_some_user(self):
+        new_user, _ = UserHelper.create_user(
+            self.user.name,
+            self.user.login,
+            self.user.email,
+            self.user.birthdate,
+            processor=self.processing_user,
+            groups=[self.config.member_group],
+            address=self.room.address,
+        )
+        return new_user
 
     def test_0010_move_in(self):
         test_name = u"Hans"
