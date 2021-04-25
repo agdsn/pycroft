@@ -2,10 +2,12 @@ from datetime import timedelta
 
 from pycroft.lib import user as UserHelper
 from pycroft.model import session
-from pycroft.model.task import Task, UserTask
+from pycroft.model.facilities import Room
+from pycroft.model.task import Task, UserTask, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveParams
-from tests import FactoryDataTestBase, factories, UserFactory
-from tests.factories import UserWithHostFactory
+from tests import FactoryDataTestBase, factories, UserFactory, FactoryWithConfigDataTestBase
+from tests.factories import UserWithHostFactory, RoomFactory
+from tests.lib.user.task_helpers import create_task_and_execute
 
 
 class Test_User_Move(FactoryDataTestBase):
@@ -62,3 +64,54 @@ class Test_User_Move(FactoryDataTestBase):
         self.assertEqual(self.user.room, self.new_room_other_building)
         self.assertEqual(self.user.hosts[0].room, self.new_room_other_building)
         # TODO test for changing ip
+
+
+class MoveImplTestCase(FactoryWithConfigDataTestBase):
+    def create_factories(self):
+        # We want a user who lives somewhere with a membership!
+        super().create_factories()
+        self.user = UserWithHostFactory.create(
+            with_membership=True,
+            membership__group=self.config.member_group,
+        )
+        self.old_room = self.user.room
+        self.new_room: Room = RoomFactory.create()
+
+    def test_successful_move_execution(self):
+        self.assert_successful_move_execution(self.create_task_and_execute({
+            'level': self.new_room.level,
+            'building_id': self.new_room.building_id,
+            'room_number': self.new_room.number,
+        }))
+
+    def test_move_execution_without_level_fails(self):
+        self.assert_failing_move_execution(self.create_task_and_execute({
+            'building_id': self.new_room.building_id,
+            'room_number': self.new_room.number,
+        }), error_needle='level')
+
+    def test_move_execution_without_building_id_fails(self):
+        self.assert_failing_move_execution(self.create_task_and_execute({
+            'level': self.new_room.level,
+            'room_number': self.new_room.number,
+        }), error_needle='building_id')
+
+    def test_move_execution_without_room_number_fails(self):
+        self.assert_failing_move_execution(self.create_task_and_execute({
+                'level': self.new_room.level,
+                'building_id': self.new_room.building_id,
+        }), error_needle='room_number')
+
+    def assert_successful_move_execution(self, task: Task):
+        assert task.status == TaskStatus.EXECUTED
+        assert self.user.room == self.new_room
+
+    def assert_failing_move_execution(self, task: Task, error_needle: str):
+        assert task.status == TaskStatus.FAILED
+        assert len(task.errors) == 1
+        [error] = task.errors
+        assert error_needle in error.lower()
+        assert self.user.room == self.old_room
+
+    def create_task_and_execute(self, params):
+        return create_task_and_execute(TaskType.USER_MOVE, self.user, params)
