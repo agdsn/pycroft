@@ -29,7 +29,6 @@ class UserMoveSchema(Schema):
     level = fields.Int()
     building_id = fields.Int()
     comment = fields.Str()
-    end_membership = fields.Bool()
 
     @post_load
     def build(self, data, **kwargs):
@@ -42,7 +41,6 @@ class UserMoveParams(TaskParams):
     level: int
     building_id: int
     comment: str
-    end_membership: bool
 
 
 class UserMoveInSchema(Schema):
