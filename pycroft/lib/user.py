@@ -467,7 +467,9 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
     :param building_id: The id of the building.
     :param level: The level of the new room.
     :param room_number: The number of the new room.
-    :param processor: The user who is currently logged in.
+    :param processor: The user initiating this process.  Becomes author of the log message.
+        Not used if execution is deferred!
+    :param comment: a comment to be included in the log message.
     :param when: The date at which the user should be moved
 
     :return: The user object of the moved user.
