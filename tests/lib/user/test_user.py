@@ -13,7 +13,7 @@ from pycroft.lib.user import move, move_out, move_in
 from pycroft.model import (
     session, host)
 from pycroft.model.task import TaskType, Task, UserTask
-from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams
+from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams
 from tests import FactoryWithConfigDataTestBase, FactoryDataTestBase
 from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory, \
     RoomFactory, ConfigFactory
@@ -196,6 +196,25 @@ class Test_User_Move_In(FactoryDataTestBase):
             self.assertIn(group, active_user_groups)
 
         self.assertFalse(self.user.has_property("reduced_membership_fee"))
+
+    def test_move_in_scheduling(self):
+        test_mac = '00:de:ad:be:ef:00'
+        UserHelper.move_in(
+            self.user,
+            building_id=self.room.building.id,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+            processor=self.processing_user,
+            when=session.utcnow() + timedelta(days=1),
+        )
+        assert (task := Task.q.first()) is not None
+        assert task.parameters == UserMoveInParams(
+            building_id=self.room.building.id,
+            level=1,
+            room_number="1",
+            mac=test_mac,
+        )
 
 
 class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):
