@@ -62,7 +62,7 @@ class UserMoveInParams(TaskParams):
     room_number: str
     level: int
     building_id: int
-    mac: Optional[str]
-    birthdate: Optional[date]
-    begin_membership: bool
-    host_annex: bool
+    mac: Optional[str] = None
+    birthdate: Optional[date] = None
+    begin_membership: bool = False
+    host_annex: bool = False
