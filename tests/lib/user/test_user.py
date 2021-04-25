@@ -181,13 +181,14 @@ class Test_User_Move_In(FactoryDataTestBase):
         )
 
         assert self.user.room == self.room
-        self.assertEqual(self.user.address, self.user.room.address)
+        assert self.user.address == self.user.room.address
 
-        user_host = host.Host.q.filter_by(owner=self.user).one()
-        self.assertEqual(len(user_host.interfaces), 1)
+        assert len(self.user.hosts) == 1
+        [user_host] = self.user.hosts
+        assert len(user_host.interfaces) == 1
         user_interface = user_host.interfaces[0]
-        self.assertEqual(len(user_interface.ips), 1)
-        self.assertEqual(user_interface.mac, test_mac)
+        assert len(user_interface.ips) == 1
+        assert user_interface.mac == test_mac
 
         # checks the initial group memberships
         active_user_groups = self.user.active_property_groups()
