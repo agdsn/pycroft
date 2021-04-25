@@ -116,7 +116,7 @@ class Test_User_Move_In(FactoryDataTestBase):
                          set(expected_groups))
 
     def assert_logmessage_startswith(self, logentry, expected_start: str):
-        self.assertTrue(localized(logentry.message), expected_start)
+        assert localized(logentry.message).startswith(expected_start)
 
     def test_user_create(self):
         new_user = self.create_some_user()
