@@ -148,6 +148,10 @@ manager.add_function(
     )
 )
 
+class AccountPattern(IntegerIdModel):
+    pattern = Column(String, nullable=False)
+    account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'), nullable=False)
+    account = relationship(Account, backref="patterns")
 
 class Transaction(IntegerIdModel):
     description = Column(Text(), nullable=False)
@@ -342,6 +346,11 @@ class BankAccountActivity(IntegerIdModel):
     split = relationship(Split, foreign_keys=(transaction_id, account_id),
                          backref=backref("bank_account_activity",
                                          uselist=False))
+    matching_patterns = relationship(
+        AccountPattern,
+        primaryjoin='foreign(BankAccountActivity.reference).op("~*", is_comparison=True)(remote(AccountPattern.pattern))',
+        viewonly=True
+    )
 
     __table_args__ = (
         ForeignKeyConstraint((transaction_id, account_id),
