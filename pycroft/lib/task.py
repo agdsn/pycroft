@@ -97,11 +97,11 @@ class UserMoveTaskImpl(UserTaskImpl):
                                "but user was already living in a dormitory.")
             return
 
-        room = Room.q.filter_by(
-            number=parameters.room_number,
+        room = lib_user.get_room(
+            room_number=parameters.room_number,
             level=parameters.level,
             building_id=parameters.building_id,
-        ).first()
+        )
 
         if room is None:
             self.errors.append("Tried to move user, but target room did not exist.")
@@ -131,11 +131,11 @@ class UserMoveInTaskImpl(UserTaskImpl):
                                "but user was already living in a dormitory.")
             return
 
-        room = Room.q.filter_by(
-            number=parameters.room_number,
+        room = lib_user.get_room(
+            room_number=parameters.room_number,
             level=parameters.level,
             building_id=parameters.building_id,
-        ).first()
+        )
 
         if room is None:
             self.errors.append(
