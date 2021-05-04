@@ -10,7 +10,7 @@ from typing import TypeVar, Generic
 from pycroft.helpers import AutoNumber
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import DateTimeTz
-from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema
+from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema, TaskParams
 
 
 class TaskType(AutoNumber):
@@ -61,7 +61,7 @@ class Task(IntegerIdModel, Generic[TSchema]):
         return task_type_to_schema[self.type]
 
     @property
-    def parameters(self) -> dict:
+    def parameters(self) -> TaskParams:
         """(Lazily) deserialized dict corresponding to the parameters.
 
         The deserialization happens according to what schema is referenced in self.schema.

@@ -7,6 +7,7 @@ import wrapt
 from marshmallow import Schema, fields, post_load, ValidationError
 
 
+@dataclass
 class TaskParams:
     pass
 

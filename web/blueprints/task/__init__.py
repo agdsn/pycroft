@@ -38,7 +38,7 @@ def format_parameters(parameters):
     return parameters
 
 
-def task_object(task):
+def task_object(task: Task):
     task_impl = task_type_to_impl.get(task.type)
 
     return {
