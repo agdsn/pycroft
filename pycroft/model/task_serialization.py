@@ -19,9 +19,9 @@ def handle_validation_error(wrapped, instance, args, kwargs):
     try:
         return wrapped(*args, **kwargs)
     except TypeError as e:
-        raise ValidationError("TypeError in post_load") from e
+        raise ValidationError(f"TypeError in post_load: {e}") from e
     except ValueError as e:
-        raise ValidationError("ValueError in post_load") from e
+        raise ValidationError(f"ValueError in post_load: {e}") from e
 
 
 class UserMoveOutSchema(Schema):
