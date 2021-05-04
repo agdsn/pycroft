@@ -1,12 +1,27 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Callable, TypeVar
 
 from datetime import date
-from marshmallow import Schema, fields, post_load
+
+import wrapt
+from marshmallow import Schema, fields, post_load, ValidationError
 
 
 class TaskParams:
     pass
+
+
+T = TypeVar('T')
+handle_validation_error: Callable[[T], T]
+
+@wrapt.decorator
+def handle_validation_error(wrapped, instance, args, kwargs):
+    try:
+        return wrapped(*args, **kwargs)
+    except TypeError as e:
+        raise ValidationError("TypeError in post_load") from e
+    except ValueError as e:
+        raise ValidationError("ValueError in post_load") from e
 
 
 class UserMoveOutSchema(Schema):
@@ -14,6 +29,7 @@ class UserMoveOutSchema(Schema):
     end_membership = fields.Bool()
 
     @post_load
+    @handle_validation_error
     def build(self, data, **kwargs):
         return UserMoveOutParams(**data)
 
@@ -31,6 +47,7 @@ class UserMoveSchema(Schema):
     comment = fields.Str(allow_none=True, missing=None)
 
     @post_load
+    @handle_validation_error
     def build(self, data, **kwargs):
         return UserMoveParams(**data)
 
@@ -53,6 +70,7 @@ class UserMoveInSchema(Schema):
     host_annex = fields.Bool(missing=False)
 
     @post_load
+    @handle_validation_error
     def build(self, data, **kwargs):
         return UserMoveInParams(**data)
 
