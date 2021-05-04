@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 
 from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, \
     render_template
@@ -49,7 +50,7 @@ def task_object(task: Task):
         "name": task_impl.name,
         "type": task.type.name,
         "status": task.status.name,
-        "parameters": format_parameters(task.parameters.data),
+        "parameters": format_parameters(asdict(task.parameters)),
         "errors": task.errors if task.errors is not None else list(),
         "due": datetime_format(task.due, default='', formatter=datetime_filter),
         "created": task.created.strftime("%Y-%m-%d %H:%M:%S"),
