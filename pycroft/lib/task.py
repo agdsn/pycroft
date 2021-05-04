@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Mapping, TypeVar, Generic
 
@@ -14,6 +15,8 @@ from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, 
 
 TTask = TypeVar('TTask')
 TParams = TypeVar('TParams')
+
+logger = logging.getLogger('pycroft.task')
 
 class TaskImpl(ABC, Generic[TTask, TParams]):
     @property
@@ -43,6 +46,7 @@ class TaskImpl(ABC, Generic[TTask, TParams]):
             parameters: TParams = task.parameters
         except ValidationError as e:
             self.errors.append(f"Failed to parse parameters: {e.messages}")
+            logger.error('Failed to deserialize parameters', exc_info=True)
         else:
             self._execute(task, parameters)
 
