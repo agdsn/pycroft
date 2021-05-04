@@ -33,4 +33,4 @@ class UserTaskFactory(TaskFactory):
     class Meta:
         model = UserTask
 
-    user = factory.SubFactory('tests.factories.Userfactory')
+    user = factory.SubFactory('tests.factories.UserFactory')

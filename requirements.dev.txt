@@ -3,3 +3,4 @@ factory-boy~=3.2.0
 pydot~=1.4.1
 pytest~=6.2.1
 git+git://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
+pytest-flask~=1.2.0
