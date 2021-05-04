@@ -1,6 +1,7 @@
 import os
 
 import jinja2.ext
+import logging
 import sentry_sdk
 from flask import (
     Flask, current_app, redirect, render_template, request, url_for,
@@ -9,6 +10,7 @@ from flask_babel import Babel
 from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
 from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
 from werkzeug.exceptions import HTTPException
 
@@ -183,9 +185,14 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
                 return None
         return event
 
+    logging_integration = LoggingIntegration(
+        level=logging.INFO,  # INFO / WARN create breadcrumbs, just as SQL queries
+        event_level=logging.ERROR,  # errors and above create breadcrumbs
+    )
+
     sentry_sdk.init(
         dsn=dsn,
-        integrations=[FlaskIntegration(), CeleryIntegration()],
+        integrations=[FlaskIntegration(), CeleryIntegration(), logging_integration],
         traces_sample_rate=1.0,
         before_send=before_send
     )
