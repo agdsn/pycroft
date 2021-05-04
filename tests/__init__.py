@@ -61,7 +61,7 @@ def get_engine_and_connection():
 def teardown():
     global engine, connection, _setup_stack
     _setup_stack -= 1
-    if _setup_stack > 0:
+    if _setup_stack != 0:
         return
     assert isinstance(connection, Connection)
     drop_db_model(connection)
