@@ -155,6 +155,9 @@ def make_app(debug=False):
     @app.route('/debug-sentry')
     def debug_sentry():
         app.logger.warning("Someone used the debug-sentry endpoint! Also, this is a test warning.")
+        app.logger.info("An info log for inbetween")
+        app.logger.error("Someone used the debug-sentry endpoint! Also, this is a test error.",
+                         extra={'pi': 3.141})
         div_by_zero = 1 / 0
 
     @app.teardown_request
