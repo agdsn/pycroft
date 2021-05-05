@@ -1,10 +1,14 @@
+import logging
 import os
 
 from datetime import timedelta
 from typing import List
 
+import sentry_sdk
 from celery import Celery
 from celery.schedules import crontab
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.task import DBTask
@@ -25,6 +29,18 @@ This module defines celery tasks to run tasks
 (as persisted in the database by means of `pycroft.model.task`)
 by using implementations as defined in `pycroft.lib.task` (see `TaskImpl`).
 """
+
+if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
+    logging_integration = LoggingIntegration(
+        level=logging.INFO,  # INFO / WARN create breadcrumbs, just as SQL queries
+        event_level=logging.ERROR,  # errors and above create breadcrumbs
+    )
+
+    sentry_sdk.init(
+        dsn=dsn,
+        integrations=[CeleryIntegration(), logging_integration],
+        traces_sample_rate=1.0,
+    )
 
 app = Celery('tasks', backend=os.environ['PYCROFT_CELERY_RESULT_BACKEND_URI'],
              broker=os.environ['PYCROFT_CELERY_BROKER_URI'])
