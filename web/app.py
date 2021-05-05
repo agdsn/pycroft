@@ -11,7 +11,6 @@ from flask_login import current_user
 from werkzeug.datastructures import ImmutableDict
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
 from werkzeug.exceptions import HTTPException
 
 from hades_logs import HadesLogs
@@ -195,7 +194,7 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
 
     sentry_sdk.init(
         dsn=dsn,
-        integrations=[FlaskIntegration(), CeleryIntegration(), logging_integration],
+        integrations=[FlaskIntegration(), logging_integration],
         traces_sample_rate=1.0,
         before_send=before_send
     )
