@@ -10,8 +10,6 @@ This module contains Tests for the basic model schema
 
 :copyright: (c) 2011 by AG DSN.
 """
-import unittest
-
 from sqlalchemy.orm.util import class_mapper
 import sqlalchemy.exc
 
@@ -30,50 +28,47 @@ def try_mapper(module):
     return None
 
 
-class Test_010_SchemaMapping(unittest.TestCase):
-    def test_0010_mapping_base(self):
-        from pycroft.model import base
-        msg = try_mapper(base)
-        self.assertIsNone(msg, msg)
+def test_mapping_base():
+    from pycroft.model import base
+    msg = try_mapper(base)
+    assert msg is None, msg
 
-    def test_0020_mapping_building(self):
-        from pycroft.model import facilities
-        msg = try_mapper(facilities)
-        self.assertIsNone(msg, msg)
+def test_mapping_building():
+    from pycroft.model import facilities
+    msg = try_mapper(facilities)
+    assert msg is None, msg
 
-    def test_0030_mapping_hosts(self):
-        from pycroft.model import host
-        msg = try_mapper(host)
-        self.assertIsNone(msg, msg)
+def test_mapping_hosts():
+    from pycroft.model import host
+    msg = try_mapper(host)
+    assert msg is None, msg
 
-    def test_0040_mapping_logging(self):
-        from pycroft.model import logging
-        msg = try_mapper(logging)
-        self.assertIsNone(msg, msg)
+def test_mapping_logging():
+    from pycroft.model import logging
+    msg = try_mapper(logging)
+    assert msg is None, msg
 
-    def test_0050_mapping_session(self):
-        from pycroft.model import session
-        msg = try_mapper(session)
-        self.assertIsNone(msg, msg)
+def test_mapping_session():
+    from pycroft.model import session
+    msg = try_mapper(session)
+    assert msg is None, msg
 
-    def test_0060_mapping_user(self):
-        from pycroft.model import user
-        msg = try_mapper(user)
-        self.assertIsNone(msg, msg)
+def test_mapping_user():
+    from pycroft.model import user
+    msg = try_mapper(user)
+    assert msg is None, msg
 
-    def test_0080_mapping_accounting(self):
-        from pycroft.model import traffic
-        msg = try_mapper(traffic)
-        self.assertIsNone(msg, msg)
+def test_mapping_accounting():
+    from pycroft.model import traffic
+    msg = try_mapper(traffic)
+    assert msg is None, msg
 
-    def test_0090_mapping_config(self):
-        from pycroft.model import config
-        msg = try_mapper(config)
-        self.assertIsNone(msg, msg)
+def test_mapping_config():
+    from pycroft.model import config
+    msg = try_mapper(config)
+    assert msg is None, msg
 
-    def test_0100_mapping_finance(self):
-        from pycroft.model import finance
-        msg = try_mapper(finance)
-        self.assertIsNone(msg, msg)
-
-
+def test_mapping_finance():
+    from pycroft.model import finance
+    msg = try_mapper(finance)
+    assert msg is None, msg
