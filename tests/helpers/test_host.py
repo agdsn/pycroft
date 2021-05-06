@@ -1,8 +1,8 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import unittest
-from random import randint
+from dataclasses import dataclass
+from random import shuffle
 
 import ipaddr
 import pytest
@@ -14,31 +14,34 @@ from pycroft.model.host import IP
 from tests import FactoryDataTestBase, factories
 
 
-class TestSimpleHostsHelper(unittest.TestCase):
-    def test_sort_ports(self):
-        ports = [f"{let}{num}" for let in "ABCDEFG" for num in range(1, 24)]
+@pytest.fixture
+def port_names():
+    return [f"{let}{num}" for let in "ABCDEFG" for num in range(1, 24)]
 
-        class fake_port(object):
-            def __init__(self, name):
-                self.name = name
 
-        pool = list(ports)
-        shuffled = []
-        for selected in range(0, len(ports)):
-            idx = randint(0, len(pool) - 1)
-            shuffled.append(fake_port(pool[idx]))
-            del pool[idx]
-        resorted = [p.name for p in sort_ports(shuffled)]
-        self.assertEqual(resorted, ports)
+@pytest.fixture
+def shuffled_ports(port_names):
+    @dataclass
+    class FakePort:
+        name: str
 
-    def test_generate_hostname(self):
-        ips = [(141, 30, 228, 10), (10, 10, 10, 1)]
-        for ip in ips:
-            byte1, byte2, byte3, byte4 = ip
-            expected = u"x{:02x}{:02x}{:02x}{:02x}".format(byte1, byte2, byte3, byte4)
-            generated = generate_hostname(
-                ipaddr.IPv4Address("{:d}.{:d}.{:d}.{:d}".format(byte1, byte2, byte3, byte4)))
-            self.assertEqual(generated, expected)
+    fake_ports = [FakePort(name) for name in port_names]
+    shuffle(fake_ports)
+    return fake_ports
+
+
+def test_port_sorting(port_names, shuffled_ports):
+    resorted = [p.name for p in sort_ports(shuffled_ports)]
+    assert resorted == port_names
+
+
+@pytest.mark.parametrize('address, expected', [
+    (ipaddr.IPv4Address(f"{byte1:d}.{byte2:d}.{byte3:d}.{byte4:d}"),
+     f"x{byte1:02x}{byte2:02x}{byte3:02x}{byte4:02x}")
+    for byte1, byte2, byte3, byte4 in [(141, 30, 228, 10), (10, 10, 10, 1), (127, 0, 0, 1)]
+])
+def test_hostname_generation(address: ipaddr.IPv4Address, expected: str):
+    assert generate_hostname(address) == expected
 
 
 class TestIpHelper(FactoryDataTestBase):
@@ -64,6 +67,7 @@ class TestIpHelper(FactoryDataTestBase):
             self.session.add(IP(address=ip, subnet=net, interface=interface))
         self.session.commit()
 
+    # TODO at least rewrite the `assert`s
     @pytest.mark.skip(reason="Broken, takes forever")
     def test_get_free_ip_next_to_full(self):
         first_net = self.subnets[0]
