@@ -5,6 +5,7 @@ import unittest
 from random import randint
 
 import ipaddr
+import pytest
 
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.host import change_mac, generate_hostname
@@ -63,7 +64,7 @@ class TestIpHelper(FactoryDataTestBase):
             self.session.add(IP(address=ip, subnet=net, interface=interface))
         self.session.commit()
 
-    @unittest.skip("Broken, takes forever")
+    @pytest.mark.skip(reason="Broken, takes forever")
     def test_get_free_ip_next_to_full(self):
         first_net = self.subnets[0]
         second_net = self.subnets[1]
