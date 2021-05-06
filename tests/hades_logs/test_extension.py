@@ -1,6 +1,7 @@
 import logging
 from contextlib import contextmanager
-from unittest import TestCase
+
+import pytest
 
 from flask import Flask
 
@@ -8,160 +9,165 @@ from hades_logs import HadesLogs, hades_logs
 from hades_logs.exc import HadesOperationalError
 
 
-class UnconfiguredInitializationTestCase(TestCase):
-    def setUp(self):
-        super().setUp()
-        class _app:
-            extensions = {}
-            config = {}
-        self.app = _app
+@contextmanager
+def assert_unconfigured(caplog, level=logging.WARNING):
+    with pytest.raises(KeyError) as exc_cm, \
+         caplog.at_level(level, logger='hades_logs'):
+        yield
 
-    @contextmanager
-    def assert_unconfigured(self, level=logging.WARNING):
-        with self.assertRaises(KeyError) as exc_cm, \
-             self.assertLogs('hades_logs', level=level) as log_cm:
-            yield
-        self.assertIn('missing config ', str(exc_cm.exception).lower())
-        self.assertEqual(len(log_cm.output), 1)
-        self.assertIn("missing config", log_cm.output.pop().lower())
+    assert 'missing config ' in str(exc_cm.value).lower()
 
-    def test_plain_init_works(self):
-        try:
-            HadesLogs()
-        except Exception:  # pylint: disable=broad-except
-            self.fail("Bare init didn't work")
+    assert len(caplog.records) == 1
+    assert "missing config" in caplog.text.lower()
 
-    def test_init_initializes_app(self):
-        with self.assert_unconfigured():
-            HadesLogs(self.app)
 
-    def test_init_app_initializes_app(self):
-        l = HadesLogs()
-        with self.assert_unconfigured():
-            l.init_app(self.app)
+def test_plain_init_works():
+    # noinspection PyBroadException
+    try:
+        HadesLogs()
+    except Exception:  # pylint: disable=broad-except
+        pytest.fail("Bare init didn't work")
+
+
+class TestUnconfiguredInitialization:
+    @pytest.fixture(scope='class')
+    def app(self):
+        return Flask('test')
+
+    def test_init_initializes_app(self, app, caplog):
+        with assert_unconfigured(caplog):
+            HadesLogs(app)
+
+    def test_init_app_initializes_app(self, app, caplog):
+        logs = HadesLogs()
+        with assert_unconfigured(caplog):
+            logs.init_app(app)
 
     def test_proxy_object_inaccessible(self):
-        with self.assertRaises(RuntimeError) as cm:
-            hades_logs.app  # pylint: disable=pointless-statement
-        self.assertIn("working outside of application context",
-                      str(cm.exception).lower())
+        with pytest.raises(RuntimeError) as cm:
+            _ = hades_logs.app
+        assert "working outside of application context" in str(cm.value).lower()
 
 
-class ConfiguredFlaskAppTestBase(TestCase):
-    """Provide a flask app with enough config for ``HadesLogs``"""
-    def setUp(self):
-        super().setUp()
-        self.app = Flask('testapp')
-        self.app.config.update({
+class ConfiguredFlaskAppTestBase:
+    @pytest.fixture(scope='module')
+    def app(self):
+        """Provide a flask app with enough config for ``HadesLogs``"""
+        app = Flask('testapp')
+        app.config.update({
             'HADES_CELERY_APP_NAME': 'test',
             'HADES_BROKER_URI': 'rpc://broker/',
             'HADES_RESULT_BACKEND_URI': 'rpc://backend/',
-        })
+            })
+        return app
 
 
-class ConfiguredInitializationTestCase(ConfiguredFlaskAppTestBase):
+class TestConfiguredInitialization(ConfiguredFlaskAppTestBase):
     """The flask app is configured, but ``HadesLogs`` not registered"""
+
     @contextmanager
-    def assert_registers_extension(self, app):
-        with self.assertLogs('hades_logs', level=logging.INFO) as cm:
+    def assert_registers_extension(self, app, caplog):
+        with caplog.at_level(logging.INFO, logger='hades_logs'):
             yield
-        self.assertEqual(len(cm.output), 1)
-        self.assertIn("initialization complete", cm.output.pop().lower())
-        self.assertIn('hades_logs', app.extensions)
 
-    def test_init_initializes_app(self):
-        with self.assert_registers_extension(self.app):
-            HadesLogs(self.app)
+        assert len(caplog.records) == 1
+        assert "initialization complete" in caplog.text.lower()
+        assert 'hades_logs' in app.extensions
 
-    def test_init_app_initializes_app(self):
+    def test_init_initializes_app(self, app, caplog):
+        with self.assert_registers_extension(app, caplog):
+            HadesLogs(app)
+
+    def test_init_app_initializes_app(self, app, caplog):
         l = HadesLogs()
-        with self.assert_registers_extension(self.app):
-            l.init_app(self.app)
+        with self.assert_registers_extension(app, caplog):
+            l.init_app(app)
 
-    def test_proxy_object_accessible(self):
+    def test_proxy_object_accessible(self, app):
         try:
-            with self.app.app_context():
+            with app.app_context():
                 hades_logs  # pylint: disable=pointless-statement
         except RuntimeError:
-            self.fail("`hades_logs` inaccessible although in app context")
+            pytest.fail("`hades_logs` inaccessible although in app context")
 
 
-class RegisteredExtensionTestCase(ConfiguredFlaskAppTestBase):
+class TestRegisteredExtension(ConfiguredFlaskAppTestBase):
     """``HadesLogs`` is now registered to the app"""
-    def setUp(self):
-        super().setUp()
-        self.hades_logs = HadesLogs(self.app)
+    @pytest.fixture(scope='class')
+    def hades_logs(self, app):
+        return HadesLogs(app)
 
-    def test_celery_app_name_passed(self):
-        self.assertEqual(self.hades_logs.celery.main,
-                         self.app.config['HADES_CELERY_APP_NAME'])
+    def test_celery_app_name_passed(self, hades_logs, app):
+        assert hades_logs.celery.main == app.config['HADES_CELERY_APP_NAME']
 
-    def test_celery_broker_url_passed(self):
+    def test_celery_broker_url_passed(self, hades_logs, app):
         # In celery 4.0, this is `conf.broker_url`
-        self.assertEqual(self.hades_logs.celery.conf['BROKER_URL'],
-                         self.app.config['HADES_BROKER_URI'])
+        assert hades_logs.celery.conf['BROKER_URL'] == app.config['HADES_BROKER_URI']
 
-    def localhost(self):
-        self.assertEqual(self.hades_logs.celery.conf.result_localhost,
-                         self.app.config['HADES_RESULT_BACKEND_URI'])
+    def localhost(self, hades_logs, app):
+        assert hades_logs.celery.conf.result_localhost == app.config['HADES_RESULT_BACKEND_URI']
 
-    def test_timeout_set(self):
-        self.assertEqual(self.hades_logs.timeout, 5)
+    def test_timeout_set(self, hades_logs):
+        assert hades_logs.timeout == 5
 
 
-class ManualTimeoutConfiguredTestCase(ConfiguredFlaskAppTestBase):
+class TestManualTimeoutConfigured(ConfiguredFlaskAppTestBase):
     """Configure a manual timeout and see it was passed"""
-    def setUp(self):
-        super().setUp()
-        self.app.config['HADES_TIMEOUT'] = 10
-        self.hades_logs = HadesLogs(self.app)
+    @pytest.fixture(scope='class')
+    def hades_logs(self, app):
+        app.config['HADES_TIMEOUT'] = 10
+        return HadesLogs(app)
 
-    def test_timeout_passed(self):
-        self.assertEqual(self.hades_logs.timeout, 10)
+    def test_timeout_passed(self, hades_logs):
+        assert hades_logs.timeout == 10
 
 
-class TaskCreatedTestCase(ConfiguredFlaskAppTestBase):
+class TestTaskCreated(ConfiguredFlaskAppTestBase):
     """Provide a task created by :py:meth`create_task`"""
-    def setUp(self):
-        super().setUp()
-        self.hades_logs = HadesLogs(self.app)
-        self.task = self.hades_logs.create_task('taskname', 'foo', bar='baz')
+    @pytest.fixture(scope='class')
+    def hades_logs(self, app):
+        return HadesLogs(app)
 
-    def test_task_bound_to_app(self):
-        self.assertTrue(self.task.app is self.hades_logs.celery)
+    @pytest.fixture(scope='class')
+    def task(self, hades_logs):
+        return hades_logs.create_task('taskname', 'foo', bar='baz')
 
-    def test_task_name_correct(self):
+    def test_task_bound_to_app(self, task, hades_logs):
+        assert task.app is hades_logs.celery
+
+    def test_task_name_correct(self, task):
         # In celery 4.0, this is `self.task.name`
-        self.assertEqual(self.task.task, 'test.taskname')
+        assert task.task == 'test.taskname'
 
-    def test_task_args_passed(self):
-        self.assertEqual(self.task.args, ('foo',))
+    def test_task_args_passed(self, task):
+        assert task.args == ('foo',)
 
-    def test_task_kwargs_passed(self):
-        self.assertEqual(self.task.kwargs, {'bar': 'baz'})
+    def test_task_kwargs_passed(self, task):
+        assert task.kwargs == {'bar': 'baz'}
 
 
-class CorrectURIsConfiguredTestCase(TestCase):
+class TestCorrectURIsConfigured:
     """Provides ``HadesLogs`` with syntactically correct URIs"""
-    def setUp(self):
-        super().setUp()
-        self.app = Flask('test')
-        self.app.config.update({
+    @pytest.fixture(scope='class')
+    def hades_logs(self):
+        app = Flask('test')
+        app.config.update({
             'HADES_CELERY_APP_NAME': 'test',
             'HADES_BROKER_URI': 'amqp://localhost:5762/',
             'HADES_RESULT_BACKEND_URI': 'rpc://localhost:5762/',
         })
-        self.hades_logs = HadesLogs(self.app)
+        return HadesLogs(app)
 
-    def test_empty_task_raises_operational_error(self):
+    def test_empty_task_raises_operational_error(self, hades_logs):
         # This throws an OSError as there is no `HadesLogs` around to
         # catch it.
-        with self.assertRaises(OSError):
-            self.hades_logs.celery.signature('').apply_async().wait()
+        with pytest.raises(OSError):
+            hades_logs.celery.signature('').apply_async().wait()
 
-    def test_fetch_logs_logs_and_raises_connection_refused(self):
-        with self.assertRaises(HadesOperationalError), \
-             self.assertLogs('hades_logs', level=logging.INFO) as cm:
-            self.hades_logs.fetch_logs(None, None)
-        self.assertEqual(len(cm.output), 1)
-        self.assertIn("waiting for task", cm.output.pop().lower())
+    def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs, caplog):
+        with pytest.raises(HadesOperationalError), \
+             caplog.at_level(logging.INFO, logger='hades_logs'):
+            hades_logs.fetch_logs(None, None)
+
+        assert len(caplog.records) == 1
+        assert "waiting for task" in caplog.text.lower()
