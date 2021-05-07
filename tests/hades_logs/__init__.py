@@ -1,38 +1,32 @@
 import os
 from unittest import TestCase
 
+import pytest
 from flask import Flask
 
 from hades_logs import HadesLogs
 
-class DummyHadesWorkerBase(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.BROKER_URL = os.environ['HADES_BROKER_URI']
-        cls.BACKEND_URL = os.environ['HADES_RESULT_BACKEND_URI']
 
+def get_hades_logs_config():
+    return {
+        'HADES_CELERY_APP_NAME': 'dummy_tasks',
+        'HADES_BROKER_URI': os.environ['HADES_BROKER_URI'],
+        'HADES_RESULT_BACKEND_URI': os.environ['HADES_RESULT_BACKEND_URI'],
+        'HADES_ROUTING_KEY': None,
+    }
+
+
+class DummyHadesWorkerBase(TestCase):
+    """Used for configuring the `Flask` app for `HadesLogs`,
+    as well as in the user integration test"""
     @property
     def hades_logs_config(self):
-        return {
-            'HADES_CELERY_APP_NAME': 'dummy_tasks',
-            'HADES_BROKER_URI': self.BROKER_URL,
-            'HADES_RESULT_BACKEND_URI': self.BACKEND_URL,
-            'HADES_ROUTING_KEY': None,
-        }
+        return get_hades_logs_config()
 
 
-class SimpleFlaskWithHadesLogsBase(DummyHadesWorkerBase):
-    def setUp(self):
-        super().setUp()
-        self.app = Flask('test')
-        self.app.config.update(self.hades_logs_config)
-        self.hades_logs = HadesLogs(self.app)
-        self.valid_kwargs = {'nasipaddress': '141.30.223.206', 'nasportid': 'C6'}
+def fetch_logs(hades_logs, *a, **kw):
+    """Call :py:meth:`hades_logs.fetch_logs` and convert to list
 
-    def fetch_logs(self, *a, **kw):
-        """Call :py:meth:`hades_logs.fetch_logs` and convert to list
-
-        :rtype: list
-        """
-        return list(self.hades_logs.fetch_logs(*a, **kw))
+    :rtype: list
+    """
+    return list(hades_logs.fetch_logs(*a, **kw))
