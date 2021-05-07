@@ -40,20 +40,18 @@ class Test_User_Passwords(FactoryDataTestBase):
         self.user.password = password
         session.session.commit()
 
-        self.assertTrue(self.user.check_password(password))
-        self.assertEqual(user.User.verify_and_get(self.user.login, password),
-                         self.user)
+        assert self.user.check_password(password)
+        assert user.User.verify_and_get(self.user.login, password) == self.user
 
-        self.assertIsNone(user.User.verify_and_get(self.user.login,
-                                                   password + "_wrong"))
+        assert user.User.verify_and_get(self.user.login, password + "_wrong") is None
 
         for length in range(4, 10):
             for cnt in range(1, 3):
                 pw = generate_password(length)
                 if pw == password:
                     continue
-                self.assertFalse(self.user.check_password(pw))
-                self.assertIsNone(user.User.verify_and_get(self.user.login, pw))
+                assert not self.user.check_password(pw)
+                assert user.User.verify_and_get(self.user.login, pw) is None
 
 
 class Test_User_Login(FactoryDataTestBase):
@@ -117,12 +115,10 @@ class Test_User_Login(FactoryDataTestBase):
         u.password = password
         session.session.commit()
 
-        self.assertEqual(
-            user.User.verify_and_get(u.login, password), u)
+        assert user.User.verify_and_get(u.login, password) == u
 
         # Verification of login name should be case insensitive
-        self.assertEqual(
-            user.User.verify_and_get(u.login.upper(), password), u)
+        assert user.User.verify_and_get(u.login.upper(), password) == u
 
 class TestUnixAccounts(FactoryDataTestBase):
     def create_factories(self):
@@ -134,17 +130,17 @@ class TestUnixAccounts(FactoryDataTestBase):
         self.dummy_account = factories.UnixAccountFactory()
 
     def test_correct_default_values(self):
-        self.assertEqual(self.dummy_account.gid, 100)
-        self.assertGreaterEqual(self.dummy_account.uid, 1000)
-        self.assertTrue(self.dummy_account.login_shell)
+        assert self.dummy_account.gid == 100
+        assert self.dummy_account.uid >= 1000
+        assert self.dummy_account.login_shell
 
     def test_custom_ids_set(self):
-        self.assertEqual(self.custom_account.gid, 27)
+        assert self.custom_account.gid == 27
 
     def test_account_reference(self):
-        self.assertIsInstance(self.ldap_user.unix_account, user.UnixAccount)
-        self.assertTrue(self.ldap_user.unix_account.home_directory.startswith('/home/'))
-        self.assertIsNone(self.dummy_user.unix_account)
+        assert isinstance(self.ldap_user.unix_account, user.UnixAccount)
+        assert self.ldap_user.unix_account.home_directory.startswith('/home/')
+        assert self.dummy_user.unix_account is None
 
 
 class TestActiveHybridMethods(FactoryDataTestBase):
@@ -160,13 +156,13 @@ class TestActiveHybridMethods(FactoryDataTestBase):
         return m
 
     def test_active_memberships(self):
-        self.assertEqual(self.user.active_memberships(), [])
+        assert self.user.active_memberships() == []
         m = self.add_membership(self.property_group)
-        self.assertEqual(self.user.active_memberships(), [m])
+        assert self.user.active_memberships() == [m]
         when = single(session.utcnow() - timedelta(hours=1))
-        self.assertEqual(self.user.active_memberships(when), [])
+        assert self.user.active_memberships(when) == []
         when = single(session.utcnow() + timedelta(hours=1))
-        self.assertEqual(self.user.active_memberships(when), [m])
+        assert self.user.active_memberships(when) == [m]
 
     def create_active_memberships_query(self, when=None):
         return session.session.query(Membership).from_statement(
@@ -175,27 +171,25 @@ class TestActiveHybridMethods(FactoryDataTestBase):
 
     def test_active_memberships_expression(self):
         query = self.create_active_memberships_query()
-        self.assertEqual(query.all(), [])
+        assert query.all() == []
         m = self.add_membership(self.property_group)
         query = self.create_active_memberships_query()
-        self.assertEqual(query.all(), [m])
+        assert query.all() == [m]
         when = single(session.utcnow() - timedelta(hours=1))
         query = self.create_active_memberships_query(when)
-        self.assertEqual(query.all(), [])
+        assert query.all() == []
         when = single(session.utcnow() + timedelta(hours=1))
         query = self.create_active_memberships_query(when)
-        self.assertEqual(query.all(), [m])
+        assert query.all() == [m]
 
     def test_active_property_groups(self):
-        self.assertEqual(self.user.active_property_groups(), [])
+        assert self.user.active_property_groups() == []
         self.add_membership(self.property_group)
-        self.assertEqual(self.user.active_property_groups(),
-                         [self.property_group])
+        assert self.user.active_property_groups() == [self.property_group]
         when = single(session.utcnow() - timedelta(hours=1))
-        self.assertEqual(self.user.active_property_groups(when), [])
+        assert self.user.active_property_groups(when) == []
         when = single(session.utcnow() + timedelta(hours=1))
-        self.assertEqual(self.user.active_property_groups(when),
-                         [self.property_group])
+        assert self.user.active_property_groups(when) == [self.property_group]
 
     def create_active_property_groups_query(self, when=None):
         return session.session.query(PropertyGroup).from_statement(
@@ -204,16 +198,16 @@ class TestActiveHybridMethods(FactoryDataTestBase):
 
     def test_active_property_groups_expression(self):
         query = self.create_active_property_groups_query()
-        self.assertEqual(query.all(), [])
+        assert query.all() == []
         self.add_membership(self.property_group)
         query = self.create_active_property_groups_query()
-        self.assertEqual(query.all(), [self.property_group])
+        assert query.all() == [self.property_group]
         when = single(session.utcnow() - timedelta(hours=1))
         query = self.create_active_property_groups_query(when)
-        self.assertEqual(query.all(), [])
+        assert query.all() == []
         when = single(session.utcnow() + timedelta(hours=1))
         query = self.create_active_property_groups_query(when)
-        self.assertEqual(query.all(), [self.property_group])
+        assert query.all() == [self.property_group]
 
 
 class Test_has_property(FactoryDataTestBase):
@@ -229,54 +223,45 @@ class Test_has_property(FactoryDataTestBase):
                                                       includes_today=True)
 
     def test_positive_test(self):
-        self.assertTrue(self.user.has_property(self.GRANTED_NAME))
-        self.assertIsNotNone(
-            user.User.q.filter(
-                user.User.login == self.user.login,
-                user.User.has_property(self.GRANTED_NAME)
-            ).first())
+        assert self.user.has_property(self.GRANTED_NAME)
+        assert user.User.q.filter(
+            user.User.login == self.user.login,
+            user.User.has_property(self.GRANTED_NAME)
+        ).first() is not None
 
     def test_negative_test(self):
-        self.assertFalse(self.user.has_property(self.DENIED_NAME))
-        self.assertIsNone(
-            user.User.q.filter(
-                user.User.login == self.user.login,
-                user.User.has_property(self.DENIED_NAME)
-            ).first())
+        assert not self.user.has_property(self.DENIED_NAME)
+        assert user.User.q.filter(
+            user.User.login == self.user.login,
+            user.User.has_property(self.DENIED_NAME)
+        ).first() is None
 
     def test_non_existent_test(self):
-        self.assertFalse(self.user.has_property("unused"))
-        self.assertIsNone(
-            user.User.q.filter(
-                user.User.login == self.user.login,
-                user.User.has_property("unused")
-            ).first())
+        assert not self.user.has_property("unused")
+        assert user.User.q.filter(
+            user.User.login == self.user.login,
+            user.User.has_property("unused")
+        ).first() is None
 
     def test_positive_test_interval(self):
         interval = closed(self.membership.begins_at,
                           self.membership.ends_at)
-        self.assertTrue(
-            self.user.has_property(self.GRANTED_NAME, interval)
-        )
-        self.assertIsNotNone(
-            user.User.q.filter(
-                user.User.login == self.user.login,
-                user.User.has_property(self.GRANTED_NAME, interval)
-            ).first())
+        assert self.user.has_property(self.GRANTED_NAME, interval)
+        assert user.User.q.filter(
+            user.User.login == self.user.login,
+            user.User.has_property(self.GRANTED_NAME, interval)
+        ).first() is not None
 
     def test_negative_test_interval(self):
         interval = closed(
             self.membership.ends_at + timedelta(1),
             self.membership.ends_at + timedelta(2)
         )
-        self.assertFalse(
-            self.user.has_property(self.GRANTED_NAME, interval)
-        )
-        self.assertIsNone(
-            user.User.q.filter(
-                user.User.login == self.user.login,
-                user.User.has_property(self.GRANTED_NAME, interval)
-            ).first())
+        assert not self.user.has_property(self.GRANTED_NAME, interval)
+        assert user.User.q.filter(
+            user.User.login == self.user.login,
+            user.User.has_property(self.GRANTED_NAME, interval)
+        ).first() is None
 
 
 class UserAddressTest(FactoryDataTestBase):

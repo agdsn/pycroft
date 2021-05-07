@@ -3,6 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
 
+import pytest
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.model import finance, session
@@ -66,7 +67,7 @@ class TestTransactionSplits(FinanceModelTest):
         session.session.commit()
         session.session.delete(t)
         session.session.commit()
-        self.assertEqual(finance.Split.q.count(), 0)
+        assert finance.Split.q.count() == 0
 
     def test_fail_on_self_transaction(self):
         t = self.create_transaction()

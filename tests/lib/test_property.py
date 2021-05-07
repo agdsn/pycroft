@@ -91,28 +91,28 @@ class Test_040_Property(FactoryDataTestBase):
     def test_0010_grant_property(self):
         prop = grant_property(self.group, self.property_name)
 
-        self.assertIsNotNone(Property.q.get(prop.id))
+        assert Property.q.get(prop.id) is not None
 
         db_property = Property.q.get(prop.id)
 
-        self.assertEqual(db_property.name, self.property_name)
-        self.assertEqual(db_property.property_group, self.group)
-        self.assertTrue(db_property.granted)
-        self.assertTrue(self.group.property_grants[self.property_name])
+        assert db_property.name == self.property_name
+        assert db_property.property_group == self.group
+        assert db_property.granted
+        assert self.group.property_grants[self.property_name]
 
         session.session.delete(db_property)
         session.session.commit()
 
     def test_0020_deny_property(self):
         prop = deny_property(self.group, self.property_name)
-        self.assertIsNotNone(Property.q.get(prop.id))
+        assert Property.q.get(prop.id) is not None
 
         db_property = Property.q.get(prop.id)
 
-        self.assertEqual(db_property.name, self.property_name)
-        self.assertEqual(db_property.property_group, self.group)
-        self.assertFalse(db_property.granted)
-        self.assertFalse(self.group.property_grants[self.property_name])
+        assert db_property.name == self.property_name
+        assert db_property.property_group == self.group
+        assert not db_property.granted
+        assert not self.group.property_grants[self.property_name]
 
         session.session.delete(db_property)
         session.session.commit()

@@ -59,7 +59,7 @@ class TestIpHelper(FactoryDataTestBase):
     def test_get_free_ip_simple(self):
         for subnet in self.subnets:
             ip, subnet = get_free_ip((subnet,))
-            self.assertIn(ip, subnet.address)
+            assert ip in subnet.address
 
     def fill_net(self, net, interface):
         for num in range(0, self.calculate_usable_ips(net)):
@@ -100,4 +100,4 @@ class TestChangeMacInterface(FactoryDataTestBase):
     def test_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         change_mac(self.interface, new_mac, self.processing_user)
-        self.assertEqual(self.interface.mac, new_mac)
+        assert self.interface.mac == new_mac

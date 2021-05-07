@@ -62,9 +62,9 @@ class Test_User_Move_In(FactoryDataTestBase):
         # checks the initial group memberships
         active_user_groups = self.user.active_property_groups()
         for group in {self.config.member_group, self.config.network_access_group}:
-            self.assertIn(group, active_user_groups)
+            assert group in active_user_groups
 
-        self.assertFalse(self.user.has_property("reduced_membership_fee"))
+        assert not self.user.has_property("reduced_membership_fee")
 
     def test_move_in_scheduling(self):
         test_mac = '00:de:ad:be:ef:00'

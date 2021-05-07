@@ -15,12 +15,12 @@ class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
         # Multiple assertions in one method to avoid useless
         # setup/teardown which leads to 5s for this class
         hades_items = self.get_logs(logtype='hades')
-        self.assertEqual(len(hades_items), 1)
-        self.assertIn("logs cannot be displayed", hades_items[0]['message'].lower())
+        assert len(hades_items) == 1
+        assert "logs cannot be displayed" in hades_items[0]['message'].lower()
 
-        self.assertFalse(self.get_logs(logtype='user'))
-        self.assertFalse(self.get_logs(logtype='room'))
-        self.assertEqual(len(self.get_logs()), 1)
+        assert not self.get_logs(logtype='user')
+        assert not self.get_logs(logtype='room')
+        assert len(self.get_logs()) == 1
 
 
 class RoomAndUserLogTestCase(UserLogTestBase):
@@ -31,10 +31,10 @@ class RoomAndUserLogTestCase(UserLogTestBase):
         self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)
 
     def assert_one_log(self, got_logs, expected_entry):
-        self.assertEqual(len(got_logs), 1)
+        assert len(got_logs) == 1
         item = got_logs[0]
-        self.assertEqual(item['message'], expected_entry.message)
-        self.assertEqual(item['user']['title'], expected_entry.author.name)
+        assert item['message'] == expected_entry.message
+        assert item['user']['title'] == expected_entry.author.name
 
     def test_room_log_exists(self):
         items = self.get_logs(user_id=self.relevant_user.id, logtype='room')
@@ -46,10 +46,10 @@ class RoomAndUserLogTestCase(UserLogTestBase):
 
     def test_no_hades_log_exists(self):
         items = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
-        self.assertEqual(len(items), 1)
+        assert len(items) == 1
         item = items[0]
-        self.assertIn(" cannot be displayed", item['message'].lower())
-        self.assertIn(" connected room", item['message'].lower())
+        assert " cannot be displayed" in item['message'].lower()
+        assert " connected room" in item['message'].lower()
 
 
 class IntegrationTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
@@ -73,15 +73,15 @@ class IntegrationTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
 
     def test_hades_logs_are_returned(self):
         logs = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
-        self.assertEqual(len(logs), 4)
+        assert len(logs) == 4
         for log in logs:
             if "rejected" in log['message'].lower():
                 continue
-            self.assertIn("– groups: ", log['message'].lower())
-            self.assertIn("tagged)", log['message'].lower())
+            assert "– groups: " in log['message'].lower()
+            assert "tagged)" in log['message'].lower()
 
     def test_disconnected_user_emits_warning(self):
         logs = self.get_logs(self.other_user.id, logtype='hades')
-        self.assertEqual(len(logs), 1)
-        self.assertIn("are in a connected room", logs[0]['message'].lower())
-        self.assertIn("logs cannot be displayed", logs[0]['message'].lower())
+        assert len(logs) == 1
+        assert "are in a connected room" in logs[0]['message'].lower()
+        assert "logs cannot be displayed" in logs[0]['message'].lower()

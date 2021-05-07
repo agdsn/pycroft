@@ -16,8 +16,7 @@ class PropertiesFrontendTestCase(FrontendWithAdminTestBase):
 
         content = response.data.decode('utf-8')
         # This actually should be `assert_flashed`
-        self.assertIn(group_name, content)
+        assert group_name in content
 
-        self.assertEqual(PropertyGroup.q.filter_by(name=group_name).count(), 1,
-                         msg="Expected one property group of name '{}'".format(group_name))
-
+        assert PropertyGroup.q.filter_by(name=group_name).count() == 1, \
+            f"Expected one property group of name '{group_name}'"

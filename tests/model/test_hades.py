@@ -50,75 +50,75 @@ class HadesViewTest(HadesTestBase):
         host = self.user.hosts[0]
         mac = host.interfaces[0].mac
         for row in rows:
-            self.assertEqual(row.UserName, mac)
-            self.assertEqual(row.NASIPAddress, self.switch.management_ip)
-            self.assertEqual(row.Attribute, "User-Name")
-            self.assertEqual(row.Op, "=*")
-            self.assertEqual(row.Value, None)
-            self.assertEqual(row.Priority, 10)
+            assert row.UserName == mac
+            assert row.NASIPAddress == self.switch.management_ip
+            assert row.Attribute == "User-Name"
+            assert row.Op == "=*"
+            assert row.Value == None
+            assert row.Priority == 10
 
-        self.assertEqual({row.NASPortId for row in rows},
-                         {port.switch_port.name for port in host.room.patch_ports})
+        assert {row.NASPortId for row in rows} \
+            == {port.switch_port.name for port in host.room.patch_ports}
 
     def test_radgroupcheck(self):
         rows = session.session.query(hades.radgroupcheck.table).all()
-        self.assertEqual(len(rows), 1)
+        assert len(rows) == 1
         row = rows[0]
-        self.assertEqual(row, ("unknown", "Auth-Type", ":=", "Accept", 10))
+        assert row == ("unknown", "Auth-Type", ":=", "Accept", 10)
 
     # Radreply is empty by default...
 
     def test_radgroupreply_custom_entries(self):
         radgroupreply_q = session.session.query(hades.radgroupreply.table)
         custom_reply_row = ("TestGroup", "Egress-VLAN-Name", "+=", "2Servernetz")
-        self.assertNotIn(custom_reply_row, radgroupreply_q.all())
+        assert custom_reply_row not in radgroupreply_q.all()
         session.session.execute(hades.radgroupreply_base.insert([custom_reply_row]))
         session.session.commit()
-        self.assertIn(custom_reply_row, radgroupreply_q.all())
+        assert custom_reply_row in radgroupreply_q.all()
 
     def test_radgroupreply_access_groups(self):
         rows = session.session.query(hades.radgroupreply.table).all()
         vlans = VLAN.q.all()
         for vlan in vlans:
             with self.subTest(vlan=vlan):
-                group_name = "{}_untagged".format(vlan.name)
-                self.assertIn((group_name, "Egress-VLAN-Name", "+=", "2{}".format(vlan.name)), rows)
-                self.assertIn((group_name, "Fall-Through", ":=", "Yes"), rows)
+                group_name = f"{vlan.name}_untagged"
+                assert (group_name, "Egress-VLAN-Name", "+=", f"2{vlan.name}") in rows
+                assert (group_name, "Fall-Through", ":=", "Yes") in rows
 
-                group_name = "{}_tagged".format(vlan.name)
-                self.assertIn((group_name, "Egress-VLAN-Name", "+=", "1{}".format(vlan.name)), rows)
-                self.assertIn((group_name, "Fall-Through", ":=", "Yes"), rows)
+                group_name = f"{vlan.name}_tagged"
+                assert (group_name, "Egress-VLAN-Name", "+=", f"1{vlan.name}") in rows
+                assert (group_name, "Fall-Through", ":=", "Yes") in rows
 
     def test_radgroupreply_blocking_groups(self):
         props = [x[0] for x in session.session.query(hades.radius_property).all()]
         rows = session.session.query(hades.radgroupreply.table).all()
         for prop in props:
-            self.assertIn((prop, "Egress-VLAN-Name", ":=", "2hades-unauth"), rows)
-            self.assertIn((prop, "Fall-Through", ":=", "No"), rows)
+            assert (prop, "Egress-VLAN-Name", ":=", "2hades-unauth") in rows
+            assert (prop, "Fall-Through", ":=", "No") in rows
 
     def test_radusergroup_access(self):
         host = self.user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
-        self.assertEqual(len(host.ips), 1)
-        self.assertEqual(len(host.interfaces), 1)
+        assert len(host.ips) == 1
+        assert len(host.interfaces) == 1
         mac = host.interfaces[0].mac
-        group = "{}_untagged".format(host.ips[0].subnet.vlan.name)
+        group = f"{host.ips[0].subnet.vlan.name}_untagged"
 
         rows = session.session.query(hades.radusergroup.table).all()
         for switch_port in switch_ports:
-            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name, group, 20),
-                          rows)
+            assert (mac, switch_port.switch.management_ip, switch_port.name, group, 20) \
+                in rows
 
     def test_dhcphost_access(self):
         rows = session.session.query(hades.dhcphost.table).all()
-        self.assertEqual(len(rows), 1)
+        assert len(rows) == 1
         row = rows[0]
         host = self.user.hosts[0]
-        self.assertEqual(row, (host.interfaces[0].mac, str(host.ips[0].address)))
+        assert row == (host.interfaces[0].mac, str(host.ips[0].address))
 
     def test_alternative_dns(self):
         # Nobody is cache user by default
-        self.assertEqual(session.session.query(hades.alternative_dns.table).count(), 0)
+        assert session.session.query(hades.alternative_dns.table).count() == 0
         # add cache group
         cache_group = PropertyGroupFactory.create(name="Cache User",
                                                   granted={'cache_access'})
@@ -128,7 +128,7 @@ class HadesViewTest(HadesTestBase):
                                  ends_at=datetime.now() + timedelta(1))
         rows = session.session.query(hades.alternative_dns.table).all()
         ip = self.user.hosts[0].ips[0]
-        self.assertEqual(rows, [(str(ip.address),)])
+        assert rows == [(str(ip.address),)]
 
 
 class HadesBlockedViewTest(HadesTestBase):
@@ -141,22 +141,20 @@ class HadesBlockedViewTest(HadesTestBase):
     def test_radusergroup_blocked(self):
         host = self.user.hosts[0]
         switch_ports = [p.switch_port for p in host.room.connected_patch_ports]
-        self.assertEqual(len(host.ips), 1)
-        self.assertEqual(len(host.interfaces), 1)
+        assert len(host.ips) == 1
+        assert len(host.interfaces) == 1
         mac = host.interfaces[0].mac
 
         rows = session.session.query(hades.radusergroup.table).all()
         for switch_port in switch_ports:
-            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name,
-                           'payment_in_default', -10),
-                          rows)
-            self.assertIn((mac, switch_port.switch.management_ip, switch_port.name,
-                           'no_network_access', 0),
-                          rows)
+            assert (mac, switch_port.switch.management_ip, switch_port.name,
+                    'payment_in_default', -10) in rows
+            assert (mac, switch_port.switch.management_ip, switch_port.name,
+                    'no_network_access', 0) in rows
 
     def test_dhcphost_blocked(self):
         rows = session.session.query(hades.dhcphost.table).all()
-        self.assertEqual(len(rows), 0)
+        assert len(rows) == 0
 
     def test_no_alternative_dns(self):
         cache_group = PropertyGroupFactory.create(name="Cache User",
@@ -165,4 +163,4 @@ class HadesBlockedViewTest(HadesTestBase):
         MembershipFactory.create(user=self.user, group=cache_group,
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
-        self.assertEqual(session.session.query(hades.alternative_dns.table).count(), 0)
+        assert session.session.query(hades.alternative_dns.table).count() == 0

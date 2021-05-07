@@ -29,25 +29,22 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         self.user.address = address = AddressFactory.create(city="Bielefeld")
         session.session.add(user)
         session.session.commit()
-        self.assertTrue(user.has_custom_address)
+        assert user.has_custom_address
         return address
 
     def test_move_out_keeps_address(self):
-        self.assertFalse(self.user.has_custom_address)
+        assert not self.user.has_custom_address
         old_address = self.user.address
 
         self.move_out(self.user)
-        self.assertEqual(
-            self.user.active_memberships(when=single(datetime.now(timezone.utc))),
-            []
-        )
-        self.assertIsNone(self.user.room)
-        self.assertEqual(self.user.address, old_address)
+        assert self.user.active_memberships(when=single(datetime.now(timezone.utc))) == []
+        assert self.user.room is None
+        assert self.user.address == old_address
 
     def test_move_out_keeps_custom_address(self):
         address = self.customize_address(self.user)
         self.move_out(self.user)
-        self.assertEqual(self.user.address, address)
+        assert self.user.address == address
 
     def move(self, user, room):
         UserHelper.move(user, processor=self.processor,
@@ -56,12 +53,12 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
 
     def test_move_changes_address(self):
         self.move(self.user, self.other_room)
-        self.assertEqual(self.user.address, self.other_room.address)
+        assert self.user.address == self.other_room.address
 
     def test_move_keeps_custom_address(self):
         address = self.customize_address(self.user)
         self.move(self.user, self.other_room)
-        self.assertEqual(self.user.address, address)
+        assert self.user.address == address
 
 
 class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):

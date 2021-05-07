@@ -15,13 +15,13 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
         self.room = RoomFactory()
 
     def test_room_history_create(self):
-        self.assertEqual(1, len(self.user.room_history_entries), "more than one room history entry")
+        assert 1 == len(self.user.room_history_entries), "more than one room history entry"
 
         rhe = self.user.room_history_entries[0]
 
-        self.assertEqual(self.user.room, rhe.room)
-        self.assertIsNotNone(rhe.begins_at)
-        self.assertIsNone(rhe.ends_at)
+        assert self.user.room == rhe.room
+        assert rhe.begins_at is not None
+        assert rhe.ends_at is None
 
     def test_room_history_move(self):
         session.session.refresh(self.room)
@@ -34,17 +34,17 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
         found_new = False
 
         for rhe in self.user.room_history_entries:
-            self.assertIsNotNone(rhe.begins_at)
+            assert rhe.begins_at is not None
 
             if rhe.room == old_room:
-                self.assertIsNotNone(rhe.ends_at)
+                assert rhe.ends_at is not None
                 found_old = True
             elif rhe.room == self.room:
-                self.assertIsNone(rhe.ends_at)
+                assert rhe.ends_at is None
                 found_new = True
 
-        self.assertTrue(found_new, "Did not find new history entry")
-        self.assertTrue(found_old, "Did not find old history entry")
+        assert found_new, "Did not find new history entry"
+        assert found_old, "Did not find old history entry"
 
     def test_room_history_move_out(self):
         move_out(self.user, comment="test", processor=self.processor, when=session.utcnow())
@@ -53,11 +53,11 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
 
         rhe = self.user.room_history_entries[0]
 
-        self.assertIsNotNone(rhe.begins_at)
-        self.assertIsNotNone(rhe.ends_at)
+        assert rhe.begins_at is not None
+        assert rhe.ends_at is not None
 
     def test_room_history_move_in(self):
-        self.assertEqual(0, len(self.user_no_room.room_history_entries))
+        assert 0 == len(self.user_no_room.room_history_entries)
 
         move_in(self.user_no_room, self.room.building.id, self.room.level, self.room.number,
                 mac=None, processor=self.processor)
@@ -66,7 +66,7 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
 
         rhe = self.user_no_room.room_history_entries[0]
 
-        self.assertEqual(rhe.room, self.room)
+        assert rhe.room == self.room
 
-        self.assertIsNotNone(rhe.begins_at)
-        self.assertIsNone(rhe.ends_at)
+        assert rhe.begins_at is not None
+        assert rhe.ends_at is None

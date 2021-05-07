@@ -56,7 +56,7 @@ class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
         self.session = session
 
     def test_no_users_fetched(self):
-        self.assertEqual(fetch_users_to_sync(self.session), [])
+        assert fetch_users_to_sync(self.session) == []
 
 
 class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
@@ -77,19 +77,19 @@ class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
 
     def test_one_user_fetched(self):
         users = fetch_users_to_sync(session, required_property=self.PROPNAME)
-        self.assertEqual(len(users), 1, f"Not a list of length one: {users}")
+        assert len(users) == 1, f"Not a list of length one: {users}"
 
     def test_one_group_fetched(self):
         groups = [group for group in fetch_groups_to_sync(session)
                   if group.Group.name == self.propgroup.name]
-        self.assertEqual(len(groups), 1)
-        self.assertEqual(set(groups[0].members), {self.user.login})
+        assert len(groups) == 1
+        assert set(groups[0].members) == {self.user.login}
 
     def test_one_property_fetched(self):
         properties = [prop for prop in fetch_properties_to_sync(session)
                       if prop.name == self.PROPNAME]
-        self.assertEqual(len(properties), 1)
-        self.assertEqual(set(properties[0].members), {self.user.login})
+        assert len(properties) == 1
+        assert set(properties[0].members) == {self.user.login}
 
 
 class MultipleUsersFilterTestCase(FactoryDataTestBase):
@@ -109,7 +109,7 @@ class MultipleUsersFilterTestCase(FactoryDataTestBase):
     def test_correct_users_fetched(self):
         users = fetch_users_to_sync(session, required_property='mail')
         expected_logins = {self.user1.login, self.user2.login}
-        self.assertEqual({u.User.login for u in users}, expected_logins)
+        assert {u.User.login for u in users} == expected_logins
 
 
 class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
@@ -206,7 +206,7 @@ class LdapFunctionalityTestCase(LdapTestBase):
         if not success:
             self.fail(f"Base DN subtree search failed: {self.conn.result}")
         relevant_entries = [r for r in self.conn.response if r['dn'] != self.base_dn]
-        self.assertEqual(len(relevant_entries), 1)
+        assert len(relevant_entries) == 1
 
 
 class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
@@ -295,22 +295,22 @@ class LdapTestCase(LdapSyncerTestBase):
             use_ssl=self.config.use_ssl, ca_certs_file=None, ca_certs_data=None,
             bind_dn=self.config.bind_dn, bind_pw=self.config.bind_pw
         )
-        self.assertTrue(conn.bound)
+        assert conn.bound
         result = conn.search(self.base_dn, '(objectclass=*)', ldap3.BASE)
-        self.assertTrue(result)
+        assert result
 
     def test_no_current_ldap_entries(self):
-        self.assertEqual(self.initial_ldap_users, [])
-        self.assertEqual(self.initial_ldap_groups, [])
-        self.assertEqual(self.initial_ldap_properties, [])
+        assert self.initial_ldap_users == []
+        assert self.initial_ldap_groups == []
+        assert self.initial_ldap_properties == []
 
     def assert_entries_synced(self):
         new_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
-        self.assertEqual(len(new_users), len(self.users_to_sync))
+        assert len(new_users) == len(self.users_to_sync)
         new_groups = fetch_current_ldap_groups(self.conn, base_dn=self.group_base_dn)
-        self.assertEqual(len(new_groups), len(self.groups_to_sync))
+        assert len(new_groups) == len(self.groups_to_sync)
         new_properties = fetch_current_ldap_properties(self.conn, base_dn=self.property_base_dn)
-        self.assertEqual(len(new_properties), len(self.properties_to_sync))
+        assert len(new_properties) == len(self.properties_to_sync)
 
     def test_syncall_adds_entries(self):
         self.sync_all()
@@ -319,10 +319,9 @@ class LdapTestCase(LdapSyncerTestBase):
     def test_exporter_compiles_all_addactions(self):
         exporter = self.build_exporter()
         exporter.compile_actions()
-        self.assertEqual(
-            len(exporter.actions),
-            len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync))
-        self.assertTrue(isinstance(a, AddAction) for a in exporter.actions)
+        assert len(exporter.actions) \
+            == len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync)
+        assert (isinstance(a, AddAction) for a in exporter.actions)
 
         exporter.execute_all(self.conn)
         self.assert_entries_synced()
@@ -341,10 +340,9 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.sync_all()
         exporter = self.build_exporter()
         exporter.compile_actions()
-        self.assertEqual(
-            len(exporter.actions),
-            len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync))
-        self.assertTrue(isinstance(a, IdleAction) for a in exporter.actions)
+        assert len(exporter.actions) \
+            == len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync)
+        assert (isinstance(a, IdleAction) for a in exporter.actions)
 
     def assert_attributes_equal(self, expected, actual):
         # Due to the canonicalization, empty attributes will appear in
@@ -354,9 +352,8 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             for key, val in expected.attrs.items()
             if val != []
         }
-        self.assertEqual(effective_attributes_in_db,
-                         {k: v for k, v in actual.attrs.items()
-                          if k in effective_attributes_in_db})
+        assert effective_attributes_in_db \
+            == {k: v for k, v in actual.attrs.items() if k in effective_attributes_in_db}
 
     def test_user_attributes_synced_correctly(self):
         records = {}
@@ -412,7 +409,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
         modified_record = self.get_by_dn(newest_users, mod_dn)
-        self.assertNotIn('mail', modified_record)
+        assert 'mail' not in modified_record
 
     def test_mail_creation(self):
         users_without_mail = [u for u in self.users_to_sync if u.User.email is None]
@@ -430,14 +427,14 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         exporter.compile_actions()
         relevant_actions = [a for a in exporter.actions if not isinstance(a, IdleAction)]
         print(relevant_actions)
-        self.assertEqual(len(relevant_actions), 1)
-        self.assertEqual(type(relevant_actions[0]), ModifyAction)
+        assert len(relevant_actions) == 1
+        assert type(relevant_actions[0]) == ModifyAction
         exporter.execute_all(self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
         modified_ldap_record = self.get_by_dn(newest_users, mod_dn)
-        self.assertIn('mail', modified_ldap_record['attributes'])
-        self.assertEqual(modified_ldap_record['attributes']['mail'], [mod_user.email])
+        assert 'mail' in modified_ldap_record['attributes']
+        assert modified_ldap_record['attributes']['mail'] == [mod_user.email]
 
     def test_change_property_membership(self):
         mail_property =  next(p for p in  self.properties_to_sync if p.name == 'mail')
@@ -447,37 +444,34 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         member = self.filter_members(mail_property.members)[0]
         member_dn = dn_from_username(member, self.user_base_dn)
 
-        self.assertIn(
-            member_dn,
-            self.get_by_dn(self.new_ldap_properties, mail_property_dn)['attributes']['member'])
+        assert member_dn \
+            in self.get_by_dn(self.new_ldap_properties, mail_property_dn)['attributes']['member']
 
         mail_property.members.remove(member)
         self.initial_ldap_properties = self.new_ldap_properties
         self.sync_all()
         newest_ldap_properties = fetch_current_ldap_properties(self.conn, self.property_base_dn)
-        self.assertNotIn(
-            member_dn,
-            self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member'])
+        assert member_dn \
+            not in self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member']
 
         mail_property.members.append(member)
         self.initial_ldap_properties = newest_ldap_properties
         self.sync_all()
         newest_ldap_properties = fetch_current_ldap_properties(self.conn, self.property_base_dn)
-        self.assertIn(
-            member_dn,
-            self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member'])
+        assert member_dn \
+            in self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member']
 
     def test_no_desired_records_removes_everything(self):
         exporter = self.build_user_exporter(current_users=self.new_ldap_users, desired_users=[])
         exporter.compile_actions()
 
         # Test the actions are correct
-        self.assertEqual(len(exporter.actions), len(self.new_ldap_users))
+        assert len(exporter.actions) == len(self.new_ldap_users)
         for action in exporter.actions:
-            self.assertEqual(type(action), DeleteAction)
+            assert type(action) == DeleteAction
 
         # Actually execute these and check they delete everything
         exporter.execute_all(self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
-        self.assertEqual(newest_users, [])
+        assert newest_users == []

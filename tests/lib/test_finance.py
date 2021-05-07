@@ -360,13 +360,13 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         transaction = Transaction.q.filter_by(valid_on=self.membership_fee_last.ends_on) \
             .filter(Transaction.description.contains(self.membership_fee_last.name)).first()
 
-        self.assertIsNotNone(transaction, "Transaction not found")
+        assert transaction is not None, "Transaction not found"
 
         split_fee_account = Split.q.filter_by(transaction=transaction,
                                               account=config.membership_fee_account,
                                               amount=-self.membership_fee_last.regular_fee).first()
 
-        self.assertIsNotNone(split_fee_account, "Fee account split not found")
+        assert split_fee_account is not None, "Fee account split not found"
 
     def handle_payment_in_default_users(self):
         end_payment_in_default_memberships(self.processor)

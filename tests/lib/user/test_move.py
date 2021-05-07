@@ -61,8 +61,8 @@ class Test_User_Move(FactoryDataTestBase):
             self.new_room_other_building.level,
             self.new_room_other_building.number, self.processing_user,
         )
-        self.assertEqual(self.user.room, self.new_room_other_building)
-        self.assertEqual(self.user.hosts[0].room, self.new_room_other_building)
+        assert self.user.room == self.new_room_other_building
+        assert self.user.hosts[0].room == self.new_room_other_building
         # TODO test for changing ip
 
 

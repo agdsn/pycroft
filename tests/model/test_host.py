@@ -84,7 +84,7 @@ class TestIpModel(IpModelTestBase):
 
         with self.assertRaises(IntegrityError):
             ip_addr.address = None
-            self.assertIsNone(ip_addr.address)
+            assert ip_addr.address is None
             self.session.commit()
 
     def test_delete_subnet(self):
@@ -92,7 +92,7 @@ class TestIpModel(IpModelTestBase):
 
         with self.assertRaises(IntegrityError):
             ip_addr.subnet = None
-            self.assertIsNone(ip_addr.subnet)
+            assert ip_addr.subnet is None
             self.session.commit()
 
 
@@ -162,8 +162,7 @@ class TestVariousCascades(FactoryDataTestBase):
         tv_of_test_ip = test_ip.traffic_volumes
         self.session.delete(test_ip)
         self.session.commit()
-        self.assertTrue(all(inspect(o).was_deleted
-                            for o in tv_of_test_ip))
+        assert all(inspect(o).was_deleted for o in tv_of_test_ip)
 
     def test_traffic_volume_cascade_on_delete_interface(self):
         test_interface = self.interface
@@ -171,8 +170,7 @@ class TestVariousCascades(FactoryDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         self.session.delete(test_interface)
         self.session.commit()
-        self.assertTrue(all(inspect(o).was_deleted
-                            for o in chain(ips, traffic_volumes)))
+        assert all(inspect(o).was_deleted for o in chain(ips, traffic_volumes))
 
     def test_traffic_volume_cascade_on_delete_host(self):
         test_host = self.host
@@ -181,8 +179,7 @@ class TestVariousCascades(FactoryDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         self.session.delete(test_host)
         self.session.commit()
-        self.assertTrue(all(inspect(o).was_deleted
-                            for o in chain(interfaces, ips, traffic_volumes)))
+        assert all(inspect(o).was_deleted for o in chain(interfaces, ips, traffic_volumes))
 
     def test_all_cascades_on_delete_user(self):
         """Test that hosts, interfaces, ips, and traffic_volumes of a host are cascade deleted"""
@@ -193,8 +190,7 @@ class TestVariousCascades(FactoryDataTestBase):
         traffic_volumes = tuple(chain(*(ip.traffic_volumes for ip in ips)))
         self.session.delete(test_user)
         self.session.commit()
-        self.assertTrue(all(inspect(o).was_deleted
-                            for o in chain(hosts, interfaces, ips, traffic_volumes)))
+        assert all(inspect(o).was_deleted for o in chain(hosts, interfaces, ips, traffic_volumes))
 
 
 class TestDefaultVlanCascades(FactoryDataTestBase):
@@ -210,21 +206,21 @@ class TestDefaultVlanCascades(FactoryDataTestBase):
         associations_query = self.session.query(host.switch_port_default_vlans)\
             .filter_by(vlan_id=self.vlan.id)
 
-        self.assertEqual(associations_query.count(), 2)
+        assert associations_query.count() == 2
         for subnet in self.vlan.subnets:
             self.session.delete(subnet)
         self.session.delete(self.vlan)
         self.session.commit()
-        self.assertEqual(associations_query.count(), 0)
+        assert associations_query.count() == 0
 
     def test_default_vlan_associations_cascade_on_delete_switch_port(self):
         associations_query = self.session.query(host.switch_port_default_vlans)\
             .filter_by(switch_port_id=self.port.id)
 
-        self.assertEqual(associations_query.count(), 2)
+        assert associations_query.count() == 2
         self.session.delete(self.port)
         self.session.commit()
-        self.assertEqual(associations_query.count(), 0)
+        assert associations_query.count() == 0
 
 
 class TestVLANAssociations(FactoryDataTestBase):
@@ -235,5 +231,5 @@ class TestVLANAssociations(FactoryDataTestBase):
         self.port2 = factories.SwitchPortFactory(default_vlans=self.vlans)
 
     def test_secondary_relationship_works(self):
-        self.assertEqual(len(self.port1.default_vlans), 1)
-        self.assertEqual(len(self.port2.default_vlans), 2)
+        assert len(self.port1.default_vlans) == 1
+        assert len(self.port2.default_vlans) == 2

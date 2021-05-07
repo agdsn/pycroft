@@ -32,34 +32,32 @@ class AlembicTest(SQLAlchemyTestCase):
 
 class TestSchemaStrategy(AlembicTest):
     def test_we_have_a_revision(self):
-        self.assertTrue(self.helper.desired_version)
+        assert self.helper.desired_version
 
     def test_default_wants_intervention(self):
         strategist = MockedStrategist(self.helper)
-        self.assertEqual(strategist.determine_schema_strategy(),
-                         MockedStrategist.manual_intervention)
+        assert strategist.determine_schema_strategy() \
+            == MockedStrategist.manual_intervention
 
     def test_empty_database_will_create(self):
         strategist = EmptyDBStrategist(self.helper)
-        self.assertEqual(strategist.determine_schema_strategy(),
-                         MockedStrategist.create_then_stamp)
+        assert strategist.determine_schema_strategy() \
+            == MockedStrategist.create_then_stamp
 
     def test_stamped_schema_is_ok(self):
         self.helper.stamp()
         # self.helper sticks to the old versions
         helper = AlembicHelper(self.connection)
-        self.assertTrue(helper.running_version)
-        self.assertEqual(helper.running_version, helper.desired_version)
+        assert helper.running_version
+        assert helper.running_version == helper.desired_version
         strategist = MockedStrategist(helper)
-        self.assertEqual(strategist.determine_schema_strategy(),
-                         strategist.run)
+        assert strategist.determine_schema_strategy() == strategist.run
 
     def old_schema_needs_upgrade(self):
         self.helper.stamp(revision='aaaaaa')  # something != the head revision
         helper = AlembicHelper(self.connection)
         strategist = MockedStrategist(helper)
-        self.assertEqual(strategist.determine_schema_strategy(),
-                         strategist.upgrade)
+        assert strategist.determine_schema_strategy() == strategist.upgrade
 
 
 class TestUpgrade(SQLAlchemyTestCase):
@@ -108,12 +106,12 @@ class TestUpgrade(SQLAlchemyTestCase):
         initial_version = self.helper.running_version
 
         out = self.create_revision("Testrevision")
-        self.assertIn(b"Generating /", out)
-        self.assertIn(b"_testrevision.py", out)
+        assert b"Generating /" in out
+        assert b"_testrevision.py" in out
 
         new_created_version = self.helper.desired_version
-        self.assertNotEqual(new_created_version, initial_version)
+        assert new_created_version != initial_version
 
         self.helper.upgrade()
         new_running_version = self.helper.running_version
-        self.assertEqual(new_running_version, new_created_version)
+        assert new_running_version == new_created_version

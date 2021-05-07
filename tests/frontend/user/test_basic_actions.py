@@ -97,11 +97,12 @@ class UserMovedOutTestCase(UserFrontendTestBase):
     def test_static_datasheet(self):
         endpoint = url_for('user.static_datasheet', user_id=self.user.id)
         response = self.client.get(endpoint)
-        self.assertTrue(response.data.startswith(b"%PDF"))
+        assert response.data.startswith(b"%PDF")
         self.assert200(response)
-        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
-        self.assertEqual(response.headers.get('Content-Disposition'),
-                         "inline; filename=user_sheet_plain_{}.pdf".format(self.user.id))
+        headers = response.headers
+        assert headers.get('Content-Type') == "application/pdf"
+        assert headers.get('Content-Disposition') \
+               == f"inline; filename=user_sheet_plain_{self.user.id}.pdf"
 
     def test_password_reset(self):
         endpoint = url_for('user.reset_password', user_id=self.user.id)
@@ -110,12 +111,11 @@ class UserMovedOutTestCase(UserFrontendTestBase):
                                            category='success')
         # access user_sheet
         response = self.client.get(url_for('user.user_sheet'))
-        self.assertEqual(WebStorage.q.count(), 1)
+        assert WebStorage.q.count() == 1
         self.assert200(response)
-        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
-        self.assertEqual(response.headers.get('Content-Disposition'),
-                         "inline; filename=user_sheet.pdf")
-        self.assertTrue(response.data.startswith(b"%PDF"))
+        assert response.headers.get('Content-Type') == "application/pdf"
+        assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
+        assert response.data.startswith(b"%PDF")
 
 
 class NewUserDatasheetTest(UserFrontendTestBase):
@@ -139,18 +139,17 @@ class NewUserDatasheetTest(UserFrontendTestBase):
         })
         self.assert_user_moved_in(response)
         response = self.client.get(url_for('user.user_sheet'))
-        self.assertEqual(WebStorage.q.count(), 1)
+        assert WebStorage.q.count() == 1
         self.assert200(response)
-        self.assertEqual(response.headers.get('Content-Type'), "application/pdf")
-        self.assertEqual(response.headers.get('Content-Disposition'),
-                         "inline; filename=user_sheet.pdf")
-        self.assertTrue(response.data.startswith(b"%PDF"))
+        assert response.headers.get('Content-Type') == "application/pdf"
+        assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
+        assert response.data.startswith(b"%PDF")
 
     def test_user_host_annexation(self):
         mac = "00:de:ad:be:ef:00"
         other_user = UserWithHostFactory(host__interface__mac=mac)
         session.session.commit()
-        self.assertEqual(len(other_user.hosts), 1)
+        assert len(other_user.hosts) == 1
 
         move_in_formdata = {
             'now': True,
@@ -166,7 +165,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
         }
         response = self.client.post(url_for('user.create'), data=move_in_formdata)
         self.assertStatus(response, 400)
-        self.assertIsNone(response.location)
+        assert response.location is None
 
         move_in_formdata.update(annex="y")
         response = self.client.post(url_for('user.create'), data=move_in_formdata)

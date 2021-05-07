@@ -36,16 +36,16 @@ class PMAcctViewTest(FactoryDataTestBase):
 
     def test_egress_insert(self):
         session.session.execute(self.build_insert(type='Egress'))
-        self.assertEqual(TrafficVolume.q.count(), 1)
+        assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        self.assertEqual(volume.type, 'Egress')
-        self.assertEqual(volume.amount, 1024)
-        self.assertEqual(volume.packets, 20)
-        self.assertEqual(volume.user, self.user)
+        assert volume.type == 'Egress'
+        assert volume.amount == 1024
+        assert volume.packets == 20
+        assert volume.user == self.user
 
     def test_egress_insert_nonexistent_ip(self):
         session.session.execute(self.build_insert(type='Egress', ip_src="1.1.1.1"))
-        self.assertEqual(TrafficVolume.q.count(), 0)
+        assert TrafficVolume.q.count() == 0
 
     def test_egress_update_successive_entries(self):
         data = [
@@ -57,25 +57,25 @@ class PMAcctViewTest(FactoryDataTestBase):
         for stamp, packets, bytes in data:
             session.session.execute(self.build_insert(type='Egress', packets=packets, bytes=bytes,
                                                       stamp_inserted=stamp, stamp_updated=stamp))
-        self.assertEqual(TrafficVolume.q.count(), 1)
+        assert TrafficVolume.q.count() == 1
         vol = TrafficVolume.q.one()
-        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00+00:00')
-        self.assertEqual(vol.packets, sum(x[1] for x in data))
-        self.assertEqual(vol.amount, sum(x[2] for x in data))
+        assert str(vol.timestamp) == '2018-03-15 00:00:00+00:00'
+        assert vol.packets == sum(x[1] for x in data)
+        assert vol.amount == sum(x[2] for x in data)
 
 
     def test_ingress_insert(self):
         session.session.execute(self.build_insert(type='Ingress'))
-        self.assertEqual(TrafficVolume.q.count(), 1)
+        assert TrafficVolume.q.count() == 1
         volume = TrafficVolume.q.one()
-        self.assertEqual(volume.type, 'Ingress')
-        self.assertEqual(volume.amount, 1024)
-        self.assertEqual(volume.packets, 20)
-        self.assertEqual(volume.user, self.user)
+        assert volume.type == 'Ingress'
+        assert volume.amount == 1024
+        assert volume.packets == 20
+        assert volume.user == self.user
 
     def test_ingress_insert_nonexistent_ip(self):
         session.session.execute(self.build_insert(type='Ingress', ip_dst="1.1.1.1"))
-        self.assertEqual(TrafficVolume.q.count(), 0)
+        assert TrafficVolume.q.count() == 0
 
     def test_ingress_update_successive_entries(self):
         data = [
@@ -87,8 +87,8 @@ class PMAcctViewTest(FactoryDataTestBase):
         for stamp, packets, bytes in data:
             session.session.execute(self.build_insert(type='Ingress', packets=packets, bytes=bytes,
                                                       stamp_inserted=stamp, stamp_updated=stamp))
-        self.assertEqual(TrafficVolume.q.count(), 1)
+        assert TrafficVolume.q.count() == 1
         vol = TrafficVolume.q.one()
-        self.assertEqual(str(vol.timestamp), '2018-03-15 00:00:00+00:00')
-        self.assertEqual(vol.packets, sum(x[1] for x in data))
-        self.assertEqual(vol.amount, sum(x[2] for x in data))
+        assert str(vol.timestamp) == '2018-03-15 00:00:00+00:00'
+        assert vol.packets == sum(x[1] for x in data)
+        assert vol.amount == sum(x[2] for x in data)

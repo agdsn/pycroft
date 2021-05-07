@@ -16,4 +16,4 @@ class ChangeMacTest(FactoryDataTestBase):
     def test_change_mac(self):
         new_mac = "20:00:00:00:00:00"
         change_mac(self.interface, new_mac, self.processor)
-        self.assertEqual(self.interface.mac, new_mac)
+        assert self.interface.mac == new_mac

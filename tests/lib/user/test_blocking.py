@@ -14,23 +14,24 @@ class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
             membership__includes_today=True,
             membership__group=self.config.member_group,
         )
-        self.assertNotIn(self.config.violation_group, self.user_to_block.active_property_groups())
+        assert self.config.violation_group \
+          not in self.user_to_block.active_property_groups()
 
     def assert_violation_membership(self, user, subinterval=None):
         if subinterval is None:
-            self.assertFalse(user.has_property("network_access"))
-            self.assertTrue(user.member_of(config.violation_group))
+            assert not user.has_property("network_access")
+            assert user.member_of(config.violation_group)
             return
 
         self.assertTrue(user.member_of(config.violation_group, when=subinterval))
 
     def assert_no_violation_membership(self, user, subinterval=None):
         if subinterval is None:
-            self.assertTrue(user.has_property("network_access"))
-            self.assertFalse(user.member_of(config.violation_group))
+            assert user.has_property("network_access")
+            assert not user.member_of(config.violation_group)
             return
 
-        self.assertFalse(user.member_of(config.violation_group, when=subinterval))
+        assert not user.member_of(config.violation_group, when=subinterval)
 
     def test_deferred_blocking_and_unblocking_works(self):
         u = self.user_to_block
@@ -42,11 +43,11 @@ class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
         session.session.commit()
 
         blocked_during = closedopen(blockage, unblockage)
-        self.assertEqual(u.log_entries[0].author, blocked_user)
+        assert u.log_entries[0].author == blocked_user
         self.assert_violation_membership(blocked_user, subinterval=blocked_during)
 
         unblocked_user = UserHelper.unblock(blocked_user, processor=u, when=unblockage)
         session.session.commit()
 
-        self.assertEqual(unblocked_user.log_entries[0].author, unblocked_user)
+        assert unblocked_user.log_entries[0].author == unblocked_user
         self.assert_violation_membership(unblocked_user, subinterval=blocked_during)

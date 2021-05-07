@@ -25,15 +25,15 @@ class UserCreationTest(FactoryDataTestBase):
             groups=[self.config.member_group],
             address=self.room.address,
         )
-        self.assertEqual(new_user.name, self.user.name)
-        self.assertEqual(new_user.login, self.user.login)
-        self.assertEqual(new_user.email, self.user.email)
+        assert new_user.name == self.user.name
+        assert new_user.login == self.user.login
+        assert new_user.email == self.user.email
         # TODO fix signature and check for explicitly supplied address.
-        # self.assertEqual(new_user.address, config.dummy_address)
+        # assert new_user.address == config.dummy_address
         assert_account_name(new_user.account, f"User {new_user.id}")
         assert_membership_groups(new_user.active_memberships(), [self.config.member_group])
-        self.assertEqual(new_user.unix_account.home_directory, f"/home/{new_user.login}")
-        self.assertEqual(len(new_user.log_entries), 2)
+        assert new_user.unix_account.home_directory == f"/home/{new_user.login}"
+        assert len(new_user.log_entries) == 2
         first, second = new_user.log_entries
         assert_logmessage_startswith(first, "Added to group Mitglied")
         assert_logmessage_startswith(second, "User created")

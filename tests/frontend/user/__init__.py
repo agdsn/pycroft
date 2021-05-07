@@ -23,9 +23,9 @@ class UserLogTestBase(FrontendWithAdminTestBase):
                                user_id=user_id,
                                **kw)
         response = self.assert_response_code(log_endpoint, code=200)
-        self.assertIn("json", response.content_type.lower())
+        assert "json" in response.content_type.lower()
         json = response.json
-        self.assertIsNotNone(json.get('items'))
+        assert json.get('items') is not None
         return json['items']
 
 

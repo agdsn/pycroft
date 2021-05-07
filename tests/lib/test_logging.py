@@ -18,11 +18,10 @@ class LogTestBase(FactoryDataTestBase):
         self.user = UserFactory.create()
 
     def assert_log_entry(self, log_entry, expected_author, expected_created_at, expected_message):
-        self.assertEqual(log_entry.message, expected_message)
-        self.assertAlmostEqual(log_entry.created_at, expected_created_at,
-                               delta=timedelta(seconds=5))
-        self.assertEqual(log_entry.author, expected_author)
-        self.assertIsNotNone(LogEntry.q.get(log_entry.id))
+        assert log_entry.message == expected_message
+        assert abs(log_entry.created_at - expected_created_at) < timedelta(seconds=5)
+        assert log_entry.author == expected_author
+        assert LogEntry.q.get(log_entry.id) is not None
 
 
 class UserLogEntryTest(LogTestBase):
@@ -32,11 +31,11 @@ class UserLogEntryTest(LogTestBase):
                                         user=self.user)
 
         self.assert_log_entry(user_log_entry, self.user, session.utcnow(), self.message)
-        self.assertEqual(user_log_entry.user, self.user)
+        assert user_log_entry.user == self.user
 
         session.session.delete(user_log_entry)
         session.session.commit()
-        self.assertIsNone(LogEntry.q.get(user_log_entry.id))
+        assert LogEntry.q.get(user_log_entry.id) is None
 
 
 class RoomLogEntryTest(LogTestBase):
@@ -49,14 +48,14 @@ class RoomLogEntryTest(LogTestBase):
                                         author=self.user,
                                         room=self.room)
 
-        self.assertIsNotNone(RoomLogEntry.q.get(room_log_entry.id))
+        assert RoomLogEntry.q.get(room_log_entry.id) is not None
 
         db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
 
         self.assert_log_entry(db_room_log_entry, self.user, session.utcnow(), self.message)
-        self.assertEqual(db_room_log_entry.room, self.room)
+        assert db_room_log_entry.room == self.room
 
-        self.assertIsNotNone(LogEntry.q.get(db_room_log_entry.id))
+        assert LogEntry.q.get(db_room_log_entry.id) is not None
         session.session.delete(db_room_log_entry)
         session.session.commit()
-        self.assertIsNone(LogEntry.q.get(db_room_log_entry.id))
+        assert LogEntry.q.get(db_room_log_entry.id) is None
