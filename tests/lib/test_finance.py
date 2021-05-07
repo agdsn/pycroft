@@ -3,12 +3,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import operator
 import pkgutil
-import unittest
 from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
 from unittest.mock import MagicMock
 
+import pytest
 from factory import Iterator
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -497,11 +497,15 @@ class MembershipFeeTestCase(FactoryDataTestBase):
             user.has_property("payment_in_default"), "User has payment_in_default property")
 
 
-class TestIsOrdered(unittest.TestCase):
+class TestIsOrdered:
     def test_ordered(self):
-        self.assertTrue(is_ordered((1, 2, 3)))
-        self.assertFalse(is_ordered((1, 3, 2)))
-        self.assertTrue(is_ordered((3, 2, 1), relation=operator.gt))
+        assert is_ordered((1, 2, 3))
+
+    def test_not_ordered(self):
+        assert not is_ordered((1, 3, 2))
+
+    def test_custom_operator(self):
+        assert is_ordered((3, 2, 1), relation=operator.gt)
 
 
 class BalanceEstimationTestCase(FactoryDataTestBase):
@@ -596,9 +600,9 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         self.assertEqual(0.00, estimate_balance(self.user, end_date))
 
 
-class MatchingTestCase(unittest.TestCase):
+class TestMatching:
     # noinspection SpellCheckingInspection
-    cases = [
+    @pytest.mark.parametrize('reference, expected', [
         ("11111-36, Hans Wurst, HSS46/A 01 B", "pyc-11111"),
         ("11111-36, JustOneName, /My fancy room", "pyc-11111"),
         ("12345-65465, Hans Wurst, HSS46/A 01 B", None),  # checksum too long
@@ -609,14 +613,11 @@ class MatchingTestCase(unittest.TestCase):
         ("n1cOLAS, Nicolas Bourbaki, HSS48 76-3", None),
         ("  admin,Ich Bin Hier der Admin , ficticous location , garbage", None),
         ("FOO, FOO BAR, HSS46 16-11", None),
-    ]
-
-    def test_matching(self):
-        for reference, expected in self.cases:
-            with self.subTest(reference=reference, expected=expected):
-                result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
-                                                 session=MagicMock())
-                self.assertEqual(result, expected)
+    ])
+    def test_matching(self, reference, expected):
+        result = finance.match_reference(reference, lambda uid: f"pyc-{uid}",
+                                         session=MagicMock())
+        assert result == expected
 
 
 class HssMatchingTestCase(FactoryDataTestBase):
