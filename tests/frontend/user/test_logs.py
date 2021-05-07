@@ -7,7 +7,7 @@ from hades_logs import HadesLogs
 from tests import InvalidateHadesLogsMixin
 
 from . import UserLogTestBase
-from ...hades_logs import DummyHadesWorkerBase
+from ...hades_logs import get_hades_logs_config
 
 
 class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
@@ -52,7 +52,7 @@ class RoomAndUserLogTestCase(UserLogTestBase):
         self.assertIn(" connected room", item['message'].lower())
 
 
-class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLogTestBase):
+class IntegrationTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
     """Frontend Tests for the endpoints utilizing live Hades Logs
     """
     def create_factories(self):
@@ -66,7 +66,7 @@ class IntegrationTestCase(InvalidateHadesLogsMixin, DummyHadesWorkerBase, UserLo
         app = super().create_app()
 
         # Setup dummy_tasks hades logs
-        app.config.update(self.hades_logs_config)
+        app.config.update(get_hades_logs_config())
         HadesLogs(app)
 
         return app
