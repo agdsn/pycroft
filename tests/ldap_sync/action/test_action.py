@@ -2,6 +2,7 @@ import pytest
 
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
 from ldap_sync.record import UserRecord
+from . import validate_attribute_type, get_all_objects
 
 
 class TestActionSubclass:
@@ -48,34 +49,7 @@ class TestModifyActionConstructor:
         assert action.modifications == modifications
 
 
-def validate_attribute_type(key, value):
-    """Validate if some attribute value has the correct type.
-
-    This concerns the single-valuedness, which is estimated using
-    a hard-coded, global list :py:obj:`SINGLE_VALUED_ATTRIBUTES`
-    capturing teh most relevant attributes restricted to a single
-    value.
-    """
-    if key in SINGLE_VALUED_ATTRIBUTES and isinstance(value, list):
-        raise ValueError(f"Value '{value}' for key '{key}' should be a single value")
-    if key not in SINGLE_VALUED_ATTRIBUTES and not isinstance(value, list):
-        raise ValueError(f"Value '{value}' for key '{key}' should be a list")
-
-
-class MockedLdapTestBase:
-    base = 'ou=Nutzer,ou=Pycroft,dc=AG DSN,dc=de'
-
-    def get_all_objects(self, connection):
-        connection.search(search_base=self.base, search_filter='(objectclass=*)', attributes='*')
-        return connection.response
-
-
-SINGLE_VALUED_ATTRIBUTES = ['uidNumber', 'gidNumber', 'homeDirectory',
-                            'gecos', 'shadowMin', 'shadowMax',
-                            'shadowFlag', 'shadowExpire', 'loginShell']
-
-
-class TestAddAction(MockedLdapTestBase):
+class TestAddAction:
     @pytest.fixture(scope='class')
     def attributes(self):
         return {'objectClass': UserRecord.LDAP_OBJECTCLASSES,
@@ -84,11 +58,11 @@ class TestAddAction(MockedLdapTestBase):
 
 
     @pytest.fixture(scope='class')
-    def objects(self, connection, attributes, uid, dn):
+    def objects(self, connection, attributes, uid, dn, base):
         """Objects after executing an AddAction"""
         action = AddAction(record=UserRecord(dn=dn, attrs=attributes))
         action.execute(connection)
-        return self.get_all_objects(connection)
+        return get_all_objects(connection, base)
 
     def test_dn_correct(self, objects, dn):
         assert objects[0]['dn'] == dn
@@ -109,26 +83,26 @@ class TestAddAction(MockedLdapTestBase):
             assert received_attributes[key] == value
 
 
-class TestDeleteAction(MockedLdapTestBase):
+class TestDeleteAction:
     @pytest.fixture(scope='class')
-    def objects(self, dn, connection):
+    def objects(self, dn, connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
         DeleteAction(record=record).execute(connection)
-        return self.get_all_objects(connection)
+        return get_all_objects(connection, base)
 
     def test_no_objects(self, objects):
         assert len(objects) == 0
 
 
-class TestModifyAction(MockedLdapTestBase):
+class TestModifyAction:
     @pytest.fixture(scope='class')
-    def objects(self, dn, connection):
+    def objects(self, dn, connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
         action = ModifyAction(record=record, modifications={'mail': 'new@shizzle.de'})
         action.execute(connection)
-        return self.get_all_objects(connection)
+        return get_all_objects(connection, base)
 
     def test_one_object_changed(self, objects):
         assert len(objects) == 1
