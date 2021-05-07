@@ -4,6 +4,7 @@ import logging
 from unittest import TestCase
 
 import ldap3
+import pytest
 
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, \
@@ -19,27 +20,24 @@ from tests.factories import PropertyGroupFactory
 from tests.factories.user import UserWithMembershipFactory
 
 
-class ExporterInitializationTestCase(TestCase):
-    def setUp(self):
-        self.desired_user = UserRecord(dn='user', attrs={})
-        self.exporter = LdapExporter(desired=[self.desired_user], current=[])
+class TestEmptyLdap:
+    @pytest.fixture(scope='class')
+    def desired_user(self):
+        return UserRecord(dn='user', attrs={})
 
-    def test_one_record_state(self):
-        self.assertEqual(len(self.exporter.states_dict), 1)
-        state = self.exporter.states_dict[self.desired_user.dn]
-        self.assertEqual(state, RecordState(current=None, desired=self.desired_user))
+    @pytest.fixture(scope='class')
+    def exporter(self, desired_user):
+        return LdapExporter(desired=[desired_user], current=[])
 
+    def test_one_record_state(self, exporter, desired_user):
+        assert len(exporter.states_dict) == 1
+        state = exporter.states_dict[desired_user.dn]
+        assert state == RecordState(current=None, desired=desired_user)
 
-class EmptyLdapTestCase(TestCase):
-    def setUp(self):
-        self.desired_user = UserRecord(dn='user', attrs={})
-        self.exporter = LdapExporter(desired=[self.desired_user], current=[])
-        self.exporter.compile_actions()
-
-    def test_one_action_is_add(self):
-        self.assertEqual(len(self.exporter.actions), 1)
-        action = self.exporter.actions[0]
-        self.assertIsInstance(action, AddAction)
+    def test_one_action_is_add(self, exporter):
+        exporter.compile_actions()
+        assert len(exporter.actions) == 1
+        assert isinstance(exporter.actions[0], AddAction)
 
 
 class LdapSyncLoggerMutedMixin(object):
