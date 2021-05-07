@@ -68,23 +68,23 @@ class Test_010_BankAccount(FactoryDataTestBase):
             bank_account=self.bank_account,
             reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
-        self.assertEqual(activity.other_account_number, "12345678")
-        self.assertEqual(activity.other_routing_number, "80040400")
-        self.assertEqual(activity.other_name, u"SCH, AAA")
-        self.assertEqual(activity.amount, 9000.00)
-        self.assertEqual(activity.posted_on, date(2013, 1, 2))
-        self.assertEqual(activity.valid_on, date(2013, 1, 2))
+        assert activity.other_account_number == "12345678"
+        assert activity.other_routing_number == "80040400"
+        assert activity.other_name == u"SCH, AAA"
+        assert activity.amount == 9000.00
+        assert activity.posted_on == date(2013, 1, 2)
+        assert activity.valid_on == date(2013, 1, 2)
 
         # verify that the right year gets chosen for the transaction
         activity = BankAccountActivity.q.filter_by(
             bank_account=self.bank_account,
             reference=u"Pauschalen"
         ).first()
-        self.assertEqual(activity.posted_on, date(2012, 12, 24))
-        self.assertEqual(activity.valid_on, date(2012, 12, 24))
+        assert activity.posted_on == date(2012, 12, 24)
+        assert activity.valid_on == date(2012, 12, 24)
 
         # verify that a negative amount is imported correctly
-        self.assertEqual(activity.amount, -6.00)
+        assert activity.amount == -6.00
 
         # verify that the correct transaction year gets chosen for a valuta date
         # which is in the next year
@@ -92,8 +92,8 @@ class Test_010_BankAccount(FactoryDataTestBase):
             bank_account=self.bank_account,
             reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
-        self.assertEqual(activity.posted_on, date(2013, 12, 29))
-        self.assertEqual(activity.valid_on, date(2013, 1, 10))
+        assert activity.posted_on == date(2013, 12, 29)
+        assert activity.valid_on == date(2013, 1, 10)
 
         BankAccountActivity.q.delete()
         session.session.commit()
@@ -130,29 +130,29 @@ class Test_010_BankAccount(FactoryDataTestBase):
             u"transaction", self.fee_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
-        self.assertEqual(
+        assert (
             transferred_amount(
                 self.fee_account, self.user_account, single(today)
-            ),
-            amount
+            )
+            == amount
         )
-        self.assertEqual(
+        assert (
             transferred_amount(
                 self.fee_account, self.user_account, closedopen(today, None)
-            ),
-            2 * amount
+            )
+            == 2 * amount
         )
-        self.assertEqual(
+        assert (
             transferred_amount(
                 self.fee_account, self.user_account, openclosed(None, today)
-            ),
-            2 * amount
+            )
+            == 2 * amount
         )
-        self.assertEqual(
+        assert (
             transferred_amount(
                 self.fee_account, self.user_account
-            ),
-            3 * amount
+            )
+            == 3 * amount
         )
         Transaction.q.delete()
         session.session.commit()
@@ -160,8 +160,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
     def test_0050_cleanup_non_sepa_description(self):
         non_sepa_description = u"1234-0 Dummy, User, with " \
                                u"a- space at postition 28"
-        self.assertEqual(cleanup_description(non_sepa_description),
-                         non_sepa_description)
+        assert cleanup_description(non_sepa_description) == non_sepa_description
 
     def test_0060_cleanup_sepa_description(self):
         clean_sepa_description = u"EREF+Long EREF 1234567890 with a parasitic " \
@@ -170,8 +169,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
         sepa_description = u"EREF+Long EREF 1234567890 w ith a parasitic space " \
                            u"SVWZ+A reference with paras itic spaces at " \
                            u"multiples of  28"
-        self.assertEqual(cleanup_description(sepa_description),
-                         clean_sepa_description)
+        assert cleanup_description(sepa_description) == clean_sepa_description
 
 
 class MembershipFeeTestCase(FactoryDataTestBase):
@@ -281,62 +279,56 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         )
 
     def grace_check(self, user_grace, user_no_grace):
-        self.assertEqual(user_grace.account.balance, 0.00,
-                         "Initial user grace account balance not zero")
-        self.assertEqual(user_no_grace.account.balance, 0.00,
-                         "Initial user no grace account balance not zero")
+        assert user_grace.account.balance == 0.00, \
+            "Initial user grace account balance not zero"
+        assert user_no_grace.account.balance == 0.00, \
+            "Initial user no grace account balance not zero"
 
         affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
 
         session.session.refresh(user_grace.account)
         session.session.refresh(user_no_grace.account)
 
-        self.assertEqual(len(affected), 1, "Wrong affected user count")
+        assert len(affected) == 1, "Wrong affected user count"
 
-        self.assertEqual(user_grace.account.balance, 0.00, "User grace balance not zero")
-        self.assertEqual(user_no_grace.account.balance, self.membership_fee_last.regular_fee,
-                         "User no grace balance wrong")
+        assert user_grace.account.balance == 0.00, "User grace balance not zero"
+        assert user_no_grace.account.balance == self.membership_fee_last.regular_fee, \
+            "User no grace balance wrong"
 
     def test_basic_from1y(self):
         user1y = self.create_user_from1y()
 
-        self.assertEqual(user1y.account.balance, 0.00,
-                         "Initial user account balance not zero")
+        assert user1y.account.balance == 0.00, "Initial user account balance not zero"
 
         affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
-
         session.session.refresh(user1y.account)
 
-        self.assertEqual(len(affected), 1,
-                         "Wrong affected user count")
-
-        self.assertEqual(user1y.account.balance, self.membership_fee_last.regular_fee,
-                         "User balance incorrect")
+        assert len(affected) == 1, "Wrong affected user count"
+        assert user1y.account.balance == self.membership_fee_last.regular_fee, "User balance incorrect"
 
         transaction = Transaction.q.filter_by(valid_on=self.membership_fee_last.ends_on)\
             .filter(Transaction.description.contains(self.membership_fee_last.name)).first()
 
-        self.assertIsNotNone(transaction, "Transaction not found")
+        assert transaction is not None, "Transaction not found"
 
         split_user = Split.q.filter_by(transaction=transaction, account=user1y.account,
                                        amount=self.membership_fee_last.regular_fee).first()
 
-        self.assertIsNotNone(split_user, "User split not found")
+        assert split_user is not None, "User split not found"
 
         split_fee_account = Split.q.filter_by(transaction=transaction,
                                               account=user1y.room.building.fee_account,
                                               amount=-self.membership_fee_last.regular_fee).first()
 
-        self.assertIsNotNone(split_fee_account, "Fee account split not found")
+        assert split_fee_account is not None, "Fee account split not found"
 
         affected = post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
 
         session.session.refresh(user1y.account)
 
-        self.assertEqual(len(affected), 0, "Affected users not zero")
+        assert len(affected) == 0, "Affected users not zero"
 
-        self.assertEqual(user1y.account.balance, self.membership_fee_last.regular_fee,
-                         "User balance changed")
+        assert user1y.account.balance == self.membership_fee_last.regular_fee, "User balance changed"
 
     def test_membership_begin_grace(self):
         user_grace = self.create_user_move_in_grace()
@@ -358,14 +350,12 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         transaction = Transaction.q.filter_by(valid_on=self.membership_fee_last.ends_on) \
             .filter(Transaction.description.contains(self.membership_fee_last.name)).first()
 
-        self.assertIsNone(transaction, "Transaction found, but should not exist yet.")
+        assert transaction is None, "Transaction found, but should not exist yet."
 
         post_transactions_for_membership_fee(self.membership_fee_last, self.processor)
-
         session.session.refresh(user_no_room.account)
 
-        self.assertEqual(user_no_room.account.balance, self.membership_fee_last.regular_fee,
-                         "User balance incorrect")
+        assert user_no_room.account.balance == self.membership_fee_last.regular_fee, "User balance incorrect"
 
         transaction = Transaction.q.filter_by(valid_on=self.membership_fee_last.ends_on) \
             .filter(Transaction.description.contains(self.membership_fee_last.name)).first()
@@ -389,100 +379,82 @@ class MembershipFeeTestCase(FactoryDataTestBase):
     def test_payment_in_default_actions(self):
         user = self.create_user_from1y()
 
-        self.assertEqual(user.account.balance, 0.00,
-                         "Initial user account balance not zero")
-
-        self.assertEqual(user.account.in_default_days, 0)
-
-        self.assertTrue(user.has_property("member"), "User is not a member")
+        assert user.account.balance == 0.00, "Initial user account balance not zero"
+        assert user.account.in_default_days == 0
+        assert user.has_property("member"), "User is not a member"
 
         # Test fee with no action
         post_transactions_for_membership_fee(self.membership_fee_no_pid_action, self.processor)
-
         session.session.refresh(user.account)
 
-        self.assertEqual(user.account.balance, self.membership_fee_no_pid_action.regular_fee,
-                         "User balance incorrect")
+        assert user.account.balance == self.membership_fee_no_pid_action.regular_fee, "User balance incorrect"
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
-        self.assertTrue(user.has_property("member"), "User is not a member")
-        self.assertFalse(user.has_property("payment_in_default"), "User has payment_in_default property")
+        assert user.has_property("member"), "User is not a member"
+        assert not user.has_property("payment_in_default"), "User has payment_in_default property"
 
         # Test fee with payment_in_default group action (minimum)
         post_transactions_for_membership_fee(self.membership_fee_pid_state, self.processor)
-
         session.session.refresh(user.account)
 
-        self.assertEqual(self.membership_fee_no_pid_action.regular_fee
-                         + self.membership_fee_pid_state.regular_fee,
-                        user.account.balance,
-                         "User balance incorrect")
+        assert self.membership_fee_no_pid_action.regular_fee + self.membership_fee_pid_state.regular_fee \
+            == user.account.balance, \
+            "User balance incorrect"
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
-        self.assertTrue(user.has_property("member"), "User is not a member")
-        self.assertTrue(user.has_property("payment_in_default"), "User has no payment_in_default property")
+        assert user.has_property("member"), "User is not a member"
+        assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
         # Test fee with payment_in_default group action (maximum)
         post_transactions_for_membership_fee(self.membership_fee_no_end_membership, self.processor)
-
         session.session.refresh(user.account)
 
-        self.assertEqual(self.membership_fee_no_pid_action.regular_fee
-                         + self.membership_fee_pid_state.regular_fee
-                         + self.membership_fee_no_end_membership.regular_fee,
-                         user.account.balance,
-                         "User balance incorrect")
+        assert self.membership_fee_no_pid_action.regular_fee \
+               + self.membership_fee_pid_state.regular_fee \
+               + self.membership_fee_no_end_membership.regular_fee \
+               == user.account.balance, \
+               "User balance incorrect"
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
-        self.assertTrue(user.has_property("member"), "User is not a member")
-        self.assertTrue(
-            user.has_property("payment_in_default"), "User has no payment_in_default property")
+        assert user.has_property("member"), "User is not a member"
+        assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
         # Test fee with terminating membership
         post_transactions_for_membership_fee(self.membership_fee_pid_end_membership, self.processor)
-
         session.session.refresh(user.account)
 
-        self.assertEqual(self.membership_fee_no_pid_action.regular_fee
-                         + self.membership_fee_pid_state.regular_fee
-                         + self.membership_fee_no_end_membership.regular_fee
-                         + self.membership_fee_pid_end_membership.regular_fee,
-                         user.account.balance,
-                         "User balance incorrect")
+        assert self.membership_fee_no_pid_action.regular_fee \
+               + self.membership_fee_pid_state.regular_fee \
+               + self.membership_fee_no_end_membership.regular_fee \
+               + self.membership_fee_pid_end_membership.regular_fee \
+               == user.account.balance, \
+               "User balance incorrect"
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
-        self.assertFalse(user.has_property("member"), "User is a member")
-        self.assertTrue(
-            user.has_property("payment_in_default"), "User has no payment_in_default property")
+        assert not user.has_property("member"), "User is a member"
+        assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
     def test_payment_in_default_recover(self):
         user = self.create_user_from1y()
 
-        self.assertEqual(user.account.balance, 0.00,
-                         "Initial user account balance not zero")
-
-        self.assertEqual(user.account.in_default_days, 0)
-
-        self.assertTrue(user.has_property("member"), "User is not a member")
+        assert user.account.balance == 0.00, "Initial user account balance not zero"
+        assert user.account.in_default_days == 0
+        assert user.has_property("member"), "User is not a member"
 
         # Test fee with payment_in_default group action
         post_transactions_for_membership_fee(self.membership_fee_pid_state, self.processor)
-
         session.session.refresh(user.account)
 
-        self.assertEqual(user.account.balance,
-                         self.membership_fee_pid_state.regular_fee,
-                         "User balance incorrect")
+        assert user.account.balance == self.membership_fee_pid_state.regular_fee, "User balance incorrect"
 
         self.handle_payment_in_default_users()
 
-        self.assertTrue(user.has_property("member"), "User is not a member")
-        self.assertTrue(
-            user.has_property("payment_in_default"), "User has no payment_in_default property")
+        assert user.has_property("member"), "User is not a member"
+        assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
         simple_transaction(description="deposit",
                            debit_account=user.account,
@@ -492,9 +464,8 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         self.handle_payment_in_default_users()
 
-        self.assertTrue(user.has_property("member"), "User is not a member")
-        self.assertFalse(
-            user.has_property("payment_in_default"), "User has payment_in_default property")
+        assert user.has_property("member"), "User is not a member"
+        assert not user.has_property("payment_in_default"), "User has payment_in_default property"
 
 
 class TestIsOrdered:
@@ -547,32 +518,28 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
 
     def check_current_and_next_month(self, base):
         # End in grace-period in current month
-        end_date = session.utcnow().date().replace(
-            day=self.membership_fee_current.booking_begin.days - 1)
-        self.assertEqual(base, estimate_balance(self.user, end_date))
+        end_date = session.utcnow().date().replace(day=self.membership_fee_current.booking_begin.days - 1)
+        assert base == estimate_balance(self.user, end_date)
 
         # End after grace-period in current month
         end_date = self.membership_fee_current.ends_on
-        self.assertEqual(base - 5.00, estimate_balance(self.user, end_date))
+        assert base - 5.00 == estimate_balance(self.user, end_date)
 
         # End in the middle of next month
         end_date = session.utcnow().date().replace(day=14) + timedelta(weeks=4)
-        self.assertEqual(base - 10.00, estimate_balance(self.user, end_date))
+        assert base - 10.00 == estimate_balance(self.user, end_date)
 
         # End in grace-period of next month
-        end_date = end_date.replace(
-            day=self.membership_fee_current.booking_begin.days - 1)
-        self.assertEqual(base - 5.00, estimate_balance(self.user, end_date))
+        end_date = end_date.replace(day=self.membership_fee_current.booking_begin.days - 1)
+        assert base - 5.00 == estimate_balance(self.user, end_date)
 
     def test_last_booked__current_not_booked(self):
-        self.assertTrue(self.user.has_property('member'))
-
+        assert self.user.has_property('member')
         self.create_transaction_last()
-
         self.check_current_and_next_month(-5.00)
 
     def test_last_booked__current_booked(self):
-        self.assertTrue(self.user.has_property('member'))
+        assert self.user.has_property('member')
 
         self.create_transaction_last()
         self.create_transaction_current()
@@ -580,24 +547,24 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         self.check_current_and_next_month(-5.00)
 
     def test_last_not_booked__current_not_booked(self):
-        self.assertTrue(self.user.has_property('member'))
+        assert self.user.has_property('member')
 
         self.check_current_and_next_month(-5.00)
 
     def test_last_not_due__current_not_booked(self):
         self.user_membership.begins_at = self.membership_fee_current.begins_on
 
-        self.assertTrue(self.user.has_property('member'))
+        assert self.user.has_property('member')
 
         self.check_current_and_next_month(0.00)
 
     def test_free_membership(self):
-        self.user_membership.begins_at = session.utcnow().replace(
-            day=self.membership_fee_current.booking_end.days + 1)
+        self.user_membership.begins_at \
+            = session.utcnow().replace(day=self.membership_fee_current.booking_end.days + 1)
 
         end_date = last_day_of_month(session.utcnow().date())
 
-        self.assertEqual(0.00, estimate_balance(self.user, end_date))
+        assert estimate_balance(self.user, end_date) == 0.00
 
 
 class TestMatching:
@@ -639,9 +606,9 @@ class HssMatchingTestCase(FactoryDataTestBase):
         self.assert_reference_login("foo HANSSARPEI, foo, bar, hans", 'hanssarpei')
 
     def assert_no_match(self, reference: str):
-        self.assertIsNone(match_hss_lenient(reference, self.session))
+        assert match_hss_lenient(reference, self.session) is None
 
     def assert_reference_login(self, reference: str, expected_login: str):
         u: User = match_hss_lenient(reference, self.session)
-        self.assertIsNotNone(u)
-        self.assertEqual(u.login, expected_login)
+        assert u is not None
+        assert u.login == expected_login
