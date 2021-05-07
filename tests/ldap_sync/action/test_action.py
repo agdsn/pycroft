@@ -1,10 +1,7 @@
-from unittest import TestCase
-
-import ldap3
 import pytest
 
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
-from ldap_sync.record import UserRecord, dn_from_username
+from ldap_sync.record import UserRecord
 
 
 class TestActionSubclass:
@@ -63,31 +60,6 @@ def validate_attribute_type(key, value):
         raise ValueError(f"Value '{value}' for key '{key}' should be a single value")
     if key not in SINGLE_VALUED_ATTRIBUTES and not isinstance(value, list):
         raise ValueError(f"Value '{value}' for key '{key}' should be a list")
-
-
-@pytest.fixture(scope='class')
-def connection():
-    server = ldap3.Server('fake_server', get_info=ldap3.ALL)
-    connection = ldap3.Connection(server, user='cn=test', password='pw',
-                                  client_strategy=ldap3.MOCK_SYNC)
-    connection.open()
-    yield connection
-    connection.strategy.close()
-
-
-@pytest.fixture(scope='session')
-def base():
-    return 'ou=Nutzer,ou=Pycroft,dc=AG DSN,dc=de'
-
-
-@pytest.fixture(scope='session')
-def uid():
-    return 'shizzle'
-
-
-@pytest.fixture(scope='session')
-def dn(uid, base):
-    return dn_from_username(uid, base=base)
 
 
 class MockedLdapTestBase:
@@ -165,7 +137,5 @@ class TestModifyAction(MockedLdapTestBase):
         assert objects[0]['attributes']['mail'] == ['new@shizzle.de']
 
 
-class IdleActionTestCase(TestCase):
-    def test_execute_does_nothing(self):
-        record = UserRecord(dn='test', attrs={})
-        IdleAction(record=record).execute()
+def test_execute_does_nothing():
+    IdleAction(record=(UserRecord(dn='test', attrs={}))).execute()
