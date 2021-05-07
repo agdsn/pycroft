@@ -1,7 +1,7 @@
 import pytest
 
 from pycroft.helpers.interval import IntervalSet, closed, empty, closedopen, \
-    open, openclosed
+    open, openclosed, Interval
 
 
 @pytest.mark.parametrize('one, other', [
@@ -11,7 +11,7 @@ from pycroft.helpers.interval import IntervalSet, closed, empty, closedopen, \
     ([empty(6), closedopen(1, 2), empty(0), closedopen(2, 3), open(4, 5)],
      [closedopen(1, 3), open(4, 5)]),
 ])
-def test_constructor(one, other):
+def test_constructor(one: list[Interval], other: list[Interval]):
     assert IntervalSet(one) == IntervalSet(other)
 
 
@@ -20,7 +20,7 @@ def test_constructor(one, other):
     ([closed(0, 1), open(2, 3)], [open(None, 0), openclosed(1, 2), closedopen(3, None)]),
     ([closed(None, 0), closed(1, None)], [open(0, 1)]),
 ])
-def test_complement(intervals, expected):
+def test_complement(intervals: list[Interval], expected: IntervalSet):
     assert IntervalSet(intervals).complement() == IntervalSet(expected)
 
 
@@ -32,7 +32,7 @@ def test_complement(intervals, expected):
     ([closed(None, 1), closed(3, 4), open(7, 8)], [open(0, 5), closed(6, 7), closedopen(8, None)],
      [open(None, 5), closed(6, None)]),
 ])
-def test_union(one, other, expected):
+def test_union(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).union(IntervalSet(other)) == IntervalSet(expected)
 
 
@@ -41,7 +41,7 @@ def test_union(one, other, expected):
      [openclosed(None, 0), closed(1, 2), closedopen(3, None)],
      [openclosed(None, 0), closed(1, 2), closedopen(3, None)],)
 ])
-def test_intersect(one, other, expected):
+def test_intersect(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).intersect(IntervalSet(other)) == IntervalSet(expected)
 
 
@@ -50,7 +50,7 @@ def test_intersect(one, other, expected):
      [closed(0, 1), closedopen(2, 3), openclosed(4, 5), open(6, 7)],
      [open(None, 0), open(1, 2), closed(3, 4), openclosed(5, 6), closedopen(7, None)])
 ])
-def test_difference(one, other, expected):
+def test_difference(one: list[Interval], other: list[Interval], expected: IntervalSet):
     assert IntervalSet(one).difference(IntervalSet(other)) == IntervalSet(expected)
 
 
@@ -62,5 +62,5 @@ def test_difference(one, other, expected):
     ([closed(None, 0), closed(1, 2)], None),
     ([closed(None, None)], None),
 ])
-def test_length(intervals, expected):
+def test_length(intervals: list[Interval], expected: IntervalSet):
     assert IntervalSet(intervals).length == expected
