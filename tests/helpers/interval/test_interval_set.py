@@ -4,15 +4,15 @@ from pycroft.helpers.interval import IntervalSet, closed, empty, closedopen, \
     open, openclosed
 
 
-def test_sort_join():
-    assert IntervalSet([
-        closed(2, 3), closed(2, None), closed(None, 1), closed(1, 3), closed(2, 3),
-        closed(-10, None)
-    ]) == IntervalSet([
-        closed(None, None)
-    ])
-    assert IntervalSet([empty(6), closedopen(1, 2), empty(0), closedopen(2, 3), open(4, 5)]) \
-           == IntervalSet([closedopen(1, 3), open(4, 5)])
+@pytest.mark.parametrize('one, other', [
+    ([closed(2, 3), closed(2, None), closed(None, 1), closed(1, 3), closed(2, 3),
+      closed(-10, None)],
+     [closed(None, None)]),
+    ([empty(6), closedopen(1, 2), empty(0), closedopen(2, 3), open(4, 5)],
+     [closedopen(1, 3), open(4, 5)]),
+])
+def test_constructor(one, other):
+    assert IntervalSet(one) == IntervalSet(other)
 
 
 @pytest.mark.parametrize('intervals, expected', [
