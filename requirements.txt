@@ -6,6 +6,10 @@ Flask-Testing~=0.8.1
 Flask-WTF~=0.14.2
 Flask-RESTful~=0.3.7
 Flask~=1.1.2
+# manual pin of itsdangerous: v2 does not use `simplejson` anymore,
+# even if installed, and hence cannot (de)serialize `Decimal`s out of the box.
+# When upgrading flask, remove this, add a custom deserializer or find another fix.
+itsdangerous~=1.1.0
 Jinja2~=2.11.2
 MarkupSafe~=1.0
 SQLAlchemy~=1.3.18
