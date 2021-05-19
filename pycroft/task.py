@@ -7,9 +7,11 @@ from typing import List
 import sentry_sdk
 from celery import Celery
 from celery.schedules import crontab
+from celery.utils.log import get_task_logger
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sqlalchemy.orm import with_polymorphic
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 from pycroft.helpers.task import DBTask
 from pycroft.lib.finance import get_negative_members
@@ -44,6 +46,8 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
 
 app = Celery('tasks', backend=os.environ['PYCROFT_CELERY_RESULT_BACKEND_URI'],
              broker=os.environ['PYCROFT_CELERY_BROKER_URI'])
+
+logger = get_task_logger(__name__)
 
 
 @with_transaction
@@ -97,8 +101,15 @@ def execute_scheduled_tasks():
             for error in task.errors:
                 print("Error while executing task: {}".format(error))
 
-        write_task_message(task, "Processed {} task. Status: {}".format(
-            task.type.name, task.status.name), log=True)
+        try:
+            write_task_message(
+                task,
+                f"Processed {task.type.name} task. Status: {task.status.name}",
+                log=True
+            )
+        except ObjectDeletedError:
+            logger.error("Task instance deleted (broken polymorphism?)", exc_info=True)
+            continue
 
         session.session.commit()
 
