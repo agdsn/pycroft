@@ -15,6 +15,7 @@ from functools import partial
 from itertools import groupby, zip_longest, chain
 from io import StringIO
 
+import wtforms
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for, make_response)
@@ -415,12 +416,13 @@ def bank_account_activities_match():
     FieldList = [
         # ("Field-Name",BooleanField('Text')),
     ]
+    FieldList_team = []
 
-    matching = match_activities()
+    matching, team_matching = match_activities()
 
     matched_activities = {}
     for activity, user in matching.items():
-        matched_activities[str(activity.id)] = {
+        matched_activities[f"user-{str(activity.id)}"] = {
             'purpose': activity.reference,
             'name': activity.other_name,
             'user': user,
@@ -428,26 +430,49 @@ def bank_account_activities_match():
         }
         FieldList.append((str(activity.id), BooleanField(str(activity.id),
                                                          default=True)))
+    matched_activities_team = {}
+    for activity, team in team_matching.items():
+        matched_activities_team[f"team-{str(activity.id)}"] = {
+            'purpose': activity.reference,
+            'name': activity.other_name,
+            'team': team.name,
+            'amount': activity.amount
+        }
+        FieldList_team.append((str(activity.id), BooleanField(str(activity.id),
+                                                         default=True)))
 
-    class F(forms.ActivityMatchForm):
-        pass
+    def create_form(FieldList):
+        class F(forms.ActivityMatchForm):
+            pass
 
-    for (name, field) in FieldList:
-        setattr(F, name, field)
-    form = F()
+        for (name, field) in FieldList:
+            setattr(F, name, field)
+        return F
+
+    form_user = create_form(FieldList)
+    form_team = create_form(FieldList_team)
+
+    class Form(FlaskForm):
+        # this also adds "team-" or "user-" to the field-IDs
+        user = wtforms.FormField(form_user)
+        team = wtforms.FormField(form_team)
+
+    form = Form()
 
     return render_template('finance/bank_accounts_match.html', form=form,
-                           activities=matched_activities)
+                           activities=matched_activities, activities_team=matched_activities_team)
 
 
 @bp.route('/bank-account-activities/match/do/', methods=['GET', 'POST'])
 @access.require('finance_change')
 def bank_account_activities_do_match():
     # Generate form again
-    matching = match_activities()
+    matching, team_matching = match_activities()
 
     matched = []
+    matched_team = []
     FieldList = []
+    FieldList_team = []
     for activity, user in matching.items():
         FieldList.append(
             (str(activity.id), BooleanField('{} ({}€) -> {} ({}, {})'.format(
@@ -455,25 +480,41 @@ def bank_account_activities_do_match():
                 user.login
             ))))
 
-    class F(forms.ActivityMatchForm):
-        pass
+    for activity, team in team_matching.items():
+        FieldList_team.append(
+            (str(activity.id), BooleanField('{} ({}€) -> {} ({})'.format(
+                activity.reference, activity.amount, team.name, team.id
+            ))))
 
-    for (name, field) in FieldList:
-        setattr(F, name, field)
-    form = F()
+    def create_form(FieldList):
+        class F(forms.ActivityMatchForm):
+            pass
+
+        for (name, field) in FieldList:
+            setattr(F, name, field)
+        return F
+
+    form_user = create_form(FieldList)
+    form_team = create_form(FieldList_team)
+
+    class Form(FlaskForm):
+        user = wtforms.FormField(form_user)
+        team = wtforms.FormField(form_team)
+
+    form = Form()
 
     # parse data
-    if form.validate_on_submit():
+    if form.user.validate_on_submit() or form.team.validate_on_submit():
         # look for all matches which were checked
         for activity, user in matching.items():
-            if form._fields[str(activity.id)].data is True and activity.transaction_id is None:
-                debit_account = user.account
+            if form.user[str(activity.id)].data and activity.transaction_id is None:
                 credit_account = activity.bank_account.account
                 transaction = finance.simple_transaction(
                     description=activity.reference,
-                    debit_account=debit_account,
+                    debit_account=user.account,
                     credit_account=credit_account, amount=activity.amount,
-                    author=current_user, valid_on=activity.valid_on)
+                    author=current_user, valid_on=activity.valid_on
+                )
                 activity.split = next(split for split in transaction.splits
                                       if split.account_id == credit_account.id)
 
@@ -481,12 +522,28 @@ def bank_account_activities_do_match():
 
                 matched.append((activity, user))
 
+        for activity, team in team_matching.items():
+            if form.team[str(activity.id)].data and activity.transaction_id is None:
+                credit_account = activity.bank_account.account
+                transaction = finance.simple_transaction(
+                    description=activity.reference,
+                    debit_account=team,
+                    credit_account=credit_account, amount=activity.amount,
+                    author=current_user, valid_on=activity.valid_on
+                )
+                activity.split = next(split for split in transaction.splits
+                                      if split.account_id == credit_account.id)
+
+                session.add(activity)
+
+                matched_team.append((activity, team))
+
         end_payment_in_default_memberships(current_user)
 
         session.flush()
         session.commit()
 
-    return render_template('finance/bank_accounts_matched.html', matched=matched)
+    return render_template('finance/bank_accounts_matched.html', matched=matched, matched_team=matched_team)
 
 
 @bp.route('/accounts/')

@@ -33,5 +33,23 @@
             </div>
         </div>
         {% endfor %}
+        <div class="row">
+          <div class="col-md-6">
+            <b>Überweisung</b>
+          </div>
+          <div class="col-md-6">
+            <b>Team</b>
+          </div>
+        </div>
+        {% for match in matched_team %}
+          <div class="row">
+            <div class="col-md-6">
+              {{ match[0].reference }} ({{ match[0].amount }}€)
+            </div>
+            <div class="col-md-6">
+              <a href="{{ url_for('.accounts_show', account_id=match[1].id) }}">{{ match[1].name }}</a>
+            </div>
+          </div>
+        {% endfor %}
 
 {% endblock %}
