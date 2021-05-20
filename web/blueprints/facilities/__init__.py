@@ -70,7 +70,7 @@ def overview_json():
                     'href': url_for("facilities.building_levels", building_shortname=building.short_name),
                     'title': building.street+" "+building.number
                 } for building in facilities.sort_buildings(site.buildings)]
-        } for site in Site.q.all()])
+        } for site in Site.q.order_by(Site.name).all()])
 
 
 @bp.route('/site/<int:site_id>')
