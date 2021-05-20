@@ -197,27 +197,6 @@ class ChangePasswordResource(Resource):
 api.add_resource(ChangePasswordResource, '/user/<int:user_id>/change-password')
 
 
-class ChangeCacheUsageResource(Resource):
-    def post(self, user_id):
-        parser = reqparse.RequestParser()
-        parser.add_argument('use_cache', dest='use_cache', type=inputs.boolean,
-                            required=True)
-        args = parser.parse_args()
-
-        user = get_user_or_404(user_id)
-        if args.use_cache != user.member_of(config.cache_group):
-            if args.use_cache:
-                make_member_of(user, config.cache_group, user)
-            else:
-                remove_member_of(user, config.cache_group, user)
-        session.session.commit()
-        return "Cache usage has been changed."
-
-
-api.add_resource(ChangeCacheUsageResource,
-                 '/user/<int:user_id>/change-cache-usage')
-
-
 class FinanceHistoryResource(Resource):
     def get(self, user_id):
         user = get_user_or_404(user_id)

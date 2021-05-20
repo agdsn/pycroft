@@ -19,7 +19,6 @@ def property_group_user_create_query():
     return PropertyGroup.q.filter(PropertyGroup.id.in_([
         config.member_group_id,
         config.external_group_id,
-        config.cache_group_id
     ])).order_by(PropertyGroup.id)
 
 
