@@ -37,9 +37,6 @@ class Config(IntegerIdModel):
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     treasurer_group = relationship(
         PropertyGroup, foreign_keys=[treasurer_group_id])
-    # TODO remove this from model
-    cache_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
-                            nullable=False)
     traffic_limit_exceeded_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     traffic_limit_exceeded_group = relationship(PropertyGroup,
