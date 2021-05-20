@@ -7,6 +7,11 @@
 import _ from "underscore";
 import $ from 'jquery';
 import 'bootstrap-table';
+import TimeAgo from 'javascript-time-ago'
+import de from 'javascript-time-ago/locale/de'
+
+TimeAgo.addDefaultLocale(de)
+const timeAgo = new TimeAgo('de-DE')
 
 export var linkTemplate = _.template(
     '<a target="<%- target %>"  href="<%- href %>"><%- title %></a>',
@@ -212,6 +217,24 @@ export function dateFormatter(value, row, index) {
         return;
     }
     return value['formatted'];
+}
+dateFormatter.attributes = { sortName: 'timestamp' };
+
+const relativeDateTemplate = _.template(
+    '<span class="relative-date" title="<%- formatted_date %>" data-toggle="tooltip" data-placement="bottom">' +
+    '<%- relative_date %>' +
+    '</span>'
+);
+export function relativeDateFormatter(value, row, index) {
+    if (!value) {
+        return;
+    }
+    const msecEpoch = value['timestamp'] * 1000;
+    const date = new Date(msecEpoch);
+    return relativeDateTemplate({
+        'formatted_date': value['formatted'],
+        'relative_date': timeAgo.format(date),
+    });
 }
 dateFormatter.attributes = { sortName: 'timestamp' };
 

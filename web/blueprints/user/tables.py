@@ -1,7 +1,7 @@
 from flask import url_for
 
 from bs_table_py.table import BootstrapTable, Column, \
-    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn
+    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn
 from web.blueprints.helpers.user import no_membership_change
 
 
@@ -20,7 +20,7 @@ class RefreshableTableMixin:
 
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
-    created_at = DateColumn("Erstellt um", width=2)
+    created_at = RelativeDateColumn("Erstellt um", width=2)
     type_ = Column("Logtyp", name='type', sortable=False)
     user = Column("Nutzer", formatter='table.userFormatter')
     message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
@@ -28,7 +28,7 @@ class LogTableExtended(RefreshableTableMixin, BootstrapTable):
 
 class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs"""
-    created_at = DateColumn("Erstellt um", width=2)
+    created_at = RelativeDateColumn("Erstellt um", width=2)
     user = Column("Nutzer", formatter='table.userFormatter')
     message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
