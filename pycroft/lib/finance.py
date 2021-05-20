@@ -1049,3 +1049,12 @@ def get_pid_csv():
                       str(-u.account.balance)) for u in users)
 
     return f.getvalue()
+
+
+def get_last_import_date() -> Optional[datetime]:
+    act = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).limit(1).first()
+
+    if act is None:
+        return None
+
+    return act.imported_at

@@ -9,7 +9,7 @@ from pycroft.helpers import utc
 from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
-from pycroft.lib.finance import build_transactions_query, estimate_balance
+from pycroft.lib.finance import build_transactions_query, estimate_balance, get_last_import_date
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -104,8 +104,8 @@ def generate_user_data(user):
         'amount': -split.amount,
         'description': split.transaction.description
     } for split in build_transactions_query(user.account, eagerload=True)]
-    last_finance_update = finance_history[-1]['valid_on'] if finance_history \
-        else None
+
+    last_finance_update = get_last_import_date().date()
 
     try:
         wifi_password = user.wifi_password
@@ -143,7 +143,7 @@ def generate_user_data(user):
         # TODO: think about better way for credit
         finance_balance=-user.account.balance,
         finance_history=finance_history,
-        last_finance_update=last_finance_update,
+        last_finance_update=last_finance_update.isoformat() if last_finance_update else None,
         membership_end_date=med.isoformat() if med else None,
         membership_begin_date=mbd.isoformat() if mbd else None,
         wifi_password=wifi_password,
