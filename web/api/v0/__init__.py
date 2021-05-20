@@ -9,6 +9,7 @@ from pycroft.helpers import utc
 from sqlalchemy.exc import IntegrityError
 
 from pycroft import config
+from pycroft.helpers.i18n import Message
 from pycroft.lib.finance import build_transactions_query, estimate_balance, get_last_import_date
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
@@ -102,7 +103,7 @@ def generate_user_data(user):
         'valid_on': split.transaction.valid_on,
         # Invert amount, to display it from the user's point of view
         'amount': -split.amount,
-        'description': split.transaction.description
+        'description': Message.from_json(split.transaction.description).localize()
     } for split in build_transactions_query(user.account, eagerload=True)]
 
     last_finance_update = get_last_import_date().date()
