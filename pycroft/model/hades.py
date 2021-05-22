@@ -271,6 +271,10 @@ current_prop_alias = aliased(CurrentProperty)
 alternative_dns = View(
     name='alternative_dns',
     query=(
+        # This query still works, but shouldn't have an effect,
+        # since the alternative DNS is not used anymore.
+        # Furthermore, pycroft is oblivious to the `cache_access` functionality,
+        # as it has been removed in 2021-05.
         Query([func.host(IP.address).label('IpAddress')])
         .select_from(User)
         .join(Host)
