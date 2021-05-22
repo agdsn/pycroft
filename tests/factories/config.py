@@ -23,7 +23,6 @@ class ConfigFactory(BaseFactory):
     member_group = SubFactory(MemberPropertyGroupFactory)
     network_access_group = SubFactory(PropertyGroupFactory)
     violation_group = SubFactory(PropertyGroupFactory)
-    cache_group = SubFactory(PropertyGroupFactory)
     traffic_limit_exceeded_group = SubFactory(PropertyGroupFactory)
     external_group = SubFactory(PropertyGroupFactory)
     payment_in_default_group = SubFactory(PropertyGroupFactory,
