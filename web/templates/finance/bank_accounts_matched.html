@@ -5,7 +5,7 @@
 #}
 {% extends "layout.html" %}
 
-{% set page_title = "Überweisungen matchen" %}
+{% set page_title = "Überweisungen zuordnen" %}
 
 {% block content %}
 
@@ -16,40 +16,47 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <b>Überweisung</b>
-            </div>
-            <div class="col-md-6">
-                <b>Nutzer</b>
+            <div class="col-md-12">
+              <h3>Nutzer</h3>
+              <table class="table table-striped table-responsive">
+                <thead>
+                  <th>Verwendungszweck</th>
+                  <th>Betrag</th>
+                  <th>Nutzer</th>
+                </thead>
+                <tbody>
+                  {% for match in matched_user %}
+                  <tr>
+                    <td>{{ match[0].reference }}</td>
+                    <td>{{ match[0].amount }}</td>
+                    <td><a href="{{ url_for('user.user_show', user_id=match[1].id) }}">{{ match[1].name }}</a></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
         </div>
-        {% for match in matched_user %}
+
         <div class="row">
-            <div class="col-md-6">
-                {{ match[0].reference }} ({{ match[0].amount }}€)
-            </div>
-            <div class="col-md-6">
-                <a href="{{ url_for('user.user_show', user_id=match[1].id) }}">{{ match[1].name }}</a>
-            </div>
+          <div class="col-md-12">
+            <h3>Teams</h3>
+            <table class="table table-striped table-responsive">
+              <thead>
+              <th>Verwendungszweck</th>
+              <th>Betrag</th>
+              <th>Team</th>
+              </thead>
+              <tbody>
+              {% for match in matched_team %}
+                <tr>
+                  <td>{{ match[0].reference }}</td>
+                  <td>{{ match[0].amount }}</td>
+                  <td><a href="{{ url_for('.accounts_show', account_id=match[1].id) }}">{{ match[1].name }}</a></td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-        {% endfor %}
-        <div class="row">
-          <div class="col-md-6">
-            <b>Überweisung</b>
-          </div>
-          <div class="col-md-6">
-            <b>Team</b>
-          </div>
-        </div>
-        {% for match in matched_team %}
-          <div class="row">
-            <div class="col-md-6">
-              {{ match[0].reference }} ({{ match[0].amount }}€)
-            </div>
-            <div class="col-md-6">
-              <a href="{{ url_for('.accounts_show', account_id=match[1].id) }}">{{ match[1].name }}</a>
-            </div>
-          </div>
-        {% endfor %}
 
 {% endblock %}
