@@ -46,12 +46,12 @@ table.activities td.purpose {
                     {% for field in form.user %}{% if field.type != 'CSRFTokenField' %}
                       <tr>
                         <td>{{ field }}</td>
-                        <td class="purpose">{{ activities[field.id]['purpose'] }}</td>
-                        <td>{{ activities[field.id]['user'].id }}</td>
-                        <td>{{ activities[field.id]['user'].room }}</td>
-                        <td>{{ activities[field.id]['name'] }}</td>
-                        <td>{{ activities[field.id]['user'].name }}</td>
-                        <td>{{ activities[field.id]['amount'] }} &euro;</td>
+                        <td class="purpose">{{ activities_user[field.id]['purpose'] }}</td>
+                        <td>{{ activities_user[field.id]['user'].id }}</td> # TODO: 'str object' has no attribute 'id'
+                        <td>{{ activities_user[field.id]['user'].room }}</td>
+                        <td>{{ activities_user[field.id]['name'] }}</td>
+                        <td>{{ activities_user[field.id]['user'].name }}</td>
+                        <td>{{ activities_user[field.id]['amount'] }} &euro;</td>
                       </tr>
                     {% endif %}{% endfor %}
                   </tbody>
@@ -75,7 +75,7 @@ table.activities td.purpose {
                   <td>{{ field }}</td>
                   <td class="purpose">{{ activities_team[field.id]['purpose'] }}</td>
                   <td>{{ activities_team[field.id]['name'] }}</td>
-                  <td>{{ activities_team[field.id]['team'] }}</td>
+                  <td>{{ activities_team[field.id]['team'].name }}</td>
                   <td>{{ activities_team[field.id]['amount'] }} &euro;</td>
                 </tr>
               {% endif %}{% endfor %}
