@@ -826,14 +826,11 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
     return query
 
 
-def match_activities():
-    """Get a dict of all unmatched transactions and a user they should be matched with
-
-    :returns: Dictionary with transaction and user
-    :rtype: Dict
+def match_activities() -> (dict[BankAccountActivity, User], dict[BankAccountActivity, Account]):
+    """For all unmatched transactions, determine which user or team they should be matched with.
     """
-    matching = {}
-    team_matching = {}
+    matching: dict[BankAccountActivity, User] = {}
+    team_matching: dict[BankAccountActivity, Account] = {}
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
                   .filter(BankAccountActivity.transaction_id == None))
@@ -914,7 +911,7 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
     return None
 
 
-def match_team_transaction(activity):
+def match_team_transaction(activity: BankAccountActivity) -> Optional[Account]:
     account_id = activity.matching_patterns.account_id
 
     if account_id:
