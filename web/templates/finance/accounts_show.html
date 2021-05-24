@@ -58,6 +58,14 @@
             </a>
         </dd>
         {% endif %}
+        {% if account.patterns %}
+          <dt>Patterns</dt>
+          <dd><ul class="list-inline">{% for account_pattern in account.patterns %}
+            <li class="list-inline-item">
+              <code>{{ account_pattern.pattern }}</code> {% if not loop.last %};{% endif %}
+            </li>
+          {% endfor %}</ul></dd>
+        {% endif %}
         <dt>Saldo</dt>
         <dd>{{ balance | money }}</dd>
     </dl>
