@@ -413,16 +413,17 @@ def bank_account_activities_edit(activity_id):
 def bank_account_activities_match():
     matching_user, matching_team = match_activities()
 
-    field_list_user, matched_activities_user = _create_field_list_and_matched_activities_dict(matching_user,
-                                                                                              "user")
-    field_list_team, matched_activities_team = _create_field_list_and_matched_activities_dict(matching_team,
-                                                                                              "team")
+    field_list_user, matched_activities_user \
+        = _create_field_list_and_matched_activities_dict(matching_user, "user")
+    field_list_team, matched_activities_team \
+        = _create_field_list_and_matched_activities_dict(matching_team, "team")
 
     form = _create_combined_form(field_list_user, field_list_team)
 
     return render_template('finance/bank_accounts_match.html', form=form,
                            activities_user=matched_activities_user,
                            activities_team=matched_activities_team)
+
 
 def _create_field_list_and_matched_activities_dict(matching, prefix):
     matched_activities = {}
@@ -463,6 +464,7 @@ def bank_account_activities_do_match():
     return render_template('finance/bank_accounts_matched.html', matched_user=matched_user,
                            matched_team=matched_team)
 
+
 def _create_field_list(matching):
     field_list = []
     for activity, entity in matching.items():
@@ -472,6 +474,7 @@ def _create_field_list(matching):
             ))))
 
     return field_list
+
 
 def _create_combined_form(field_list_user, field_list_team):
     form_user = _create_form(field_list_user)
@@ -483,6 +486,7 @@ def _create_combined_form(field_list_user, field_list_team):
 
     return Form()
 
+
 def _create_form(field_list):
     class F(forms.ActivityMatchForm):
         pass
@@ -490,6 +494,7 @@ def _create_form(field_list):
     for (name, field) in field_list:
         setattr(F, name, field)
     return F
+
 
 def _apply_checked_matches(matching, subform):
     # look for all matches which were checked

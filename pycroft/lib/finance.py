@@ -913,6 +913,7 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
 
     return None
 
+
 def match_team_transaction(activity):
     account_id = activity.matching_patterns.account_id
 
@@ -920,6 +921,7 @@ def match_team_transaction(activity):
         return Account.q.get(account_id)
     else:
         return None
+
 
 @with_transaction
 def transaction_delete(transaction, processor):
