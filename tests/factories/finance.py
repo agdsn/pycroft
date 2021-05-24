@@ -12,7 +12,7 @@ from pycroft.helpers.date import last_day_of_month
 from pycroft.model import session
 
 from pycroft.model.finance import Account, BankAccount, MembershipFee, Split, \
-    Transaction
+    Transaction, BankAccountActivity
 
 from .base import BaseFactory
 
@@ -44,6 +44,22 @@ class BankAccountFactory(BaseFactory):
     bic = Faker('random_number', digits=11)
     fints_endpoint = Faker('url')
     account = SubFactory(AccountFactory, type='BANK_ASSET')
+
+
+class BankAccountActivityFactory(BaseFactory):
+    class Meta:
+        model = BankAccountActivity
+
+    bank_account = SubFactory(BankAccountFactory)
+    amount = Faker('random_number', digits=5)
+    reference = None
+    other_account_number = Faker('random_number', digits=10)
+    other_routing_number = Faker('random_number', digits=8)
+    other_name = Faker('word')
+    imported_at = LazyAttribute(lambda o: session.utcnow().date() - timedelta(days=4))
+    posted_on = LazyAttribute(lambda o: o.imported_at + timedelta(days=1))
+    valid_on = LazyAttribute(lambda o: o.posted_on + timedelta(minutes=30))
+    # transaction, account both None
 
 
 class MembershipFeeFactory(BaseFactory):
