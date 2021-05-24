@@ -3,6 +3,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from abc import ABCMeta, abstractmethod
+import logging
 from collections import namedtuple
 import csv
 from datetime import datetime, date, timedelta
@@ -38,6 +39,9 @@ from pycroft.model.property import CurrentProperty
 from pycroft.model.session import with_transaction
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
+
+
+logger = logging.getLogger('pycroft.lib.finance')
 
 
 def get_membership_fee_for_date(target_date):
@@ -845,10 +849,8 @@ def match_activities() -> (dict[BankAccountActivity, User], dict[BankAccountActi
             matching.update({activity: user})
             continue
 
-        if activity.matching_patterns:
-            team = match_team_transaction(activity)
-            if team:
-                team_matching.update({activity: team})
+        if team := match_team_transaction(activity):
+            team_matching.update({activity: team})
 
     return matching, team_matching
 
@@ -912,12 +914,18 @@ def match_pycroft_reference(reference: str) -> Optional[int]:
 
 
 def match_team_transaction(activity: BankAccountActivity) -> Optional[Account]:
-    account_id = activity.matching_patterns.account_id
+    """Return the first team account that matches a given activity, or None.
 
-    if account_id:
-        return Account.q.get(account_id)
-    else:
+    There is no tie-breaking mechanism if multiple patterns match.
+    """
+    if not activity.matching_patterns:
         return None
+
+    first, *_rest = activity.matching_patterns
+    if _rest:
+        logger.warning("Ambiguously matched reference: '%s'", activity.reference)
+
+    return first.account
 
 
 @with_transaction

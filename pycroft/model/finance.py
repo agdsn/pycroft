@@ -352,6 +352,7 @@ class BankAccountActivity(IntegerIdModel):
         AccountPattern,
         primaryjoin='foreign(BankAccountActivity.reference)'
                     '.op("~*", is_comparison=True)(remote(AccountPattern.pattern))',
+        uselist=True,
         viewonly=True
     )
 
