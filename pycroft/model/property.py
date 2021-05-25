@@ -9,8 +9,6 @@ pycroft.model.property
 This module contains model descriptions concerning properties, groups, and memberships.
 
 """
-from sqlalchemy.dialects import postgresql
-
 from pycroft.model import ddl
 from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, \
     literal, literal_column, select
@@ -56,12 +54,7 @@ property_query_stmt = union(
 evaluate_properties_function = ddl.Function(
     'evaluate_properties', ['evaluation_time timestamp with time zone'],
     'TABLE (user_id INT, property_name VARCHAR(255), denied BOOLEAN)',
-    str(
-        property_query_stmt.compile(
-            dialect=postgresql.dialect(),
-            compile_kwargs={'literal_binds': True}
-        )
-    ),
+    definition=property_query_stmt,
     volatility='stable',
 )
 

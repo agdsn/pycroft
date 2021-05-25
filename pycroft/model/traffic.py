@@ -6,7 +6,6 @@
 from sqlalchemy import Column, ForeignKey, CheckConstraint, \
     PrimaryKeyConstraint, func, or_, and_, true, literal_column, \
     select, cast, TEXT
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, backref, Query
 from sqlalchemy.types import BigInteger, Enum, Integer
 
@@ -199,12 +198,7 @@ def traffic_history_query():
 traffic_history_function = Function(
     'traffic_history', ['arg_user_id int', 'arg_start timestamptz', 'arg_end timestamptz'],
     'TABLE ("timestamp" timestamptz, ingress numeric, egress numeric)',
-    str(
-        traffic_history_query().compile(
-            dialect=postgresql.dialect(),
-            compile_kwargs={'literal_binds': True}
-        )
-    ),
+    definition=traffic_history_query(),
     volatility='stable',
 )
 
