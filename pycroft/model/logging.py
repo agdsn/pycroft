@@ -45,7 +45,7 @@ class TaskLogEntry(LogEntry):
 
     # many to one from UserLogEntry to User
     user = relationship("User",
-                        primaryjoin=("TaskLogEntry.task_id == UserTask.id"),
+                        primaryjoin="TaskLogEntry.task_id == UserTask.id",
                         secondary="user_task",
                         backref=backref("task_log_entries"))
 
