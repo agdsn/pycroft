@@ -4,11 +4,13 @@
 import inspect
 from collections import OrderedDict
 from collections.abc import Iterable
-from functools import partial
+from functools import partial, cached_property
+from typing import Union
 
 from sqlalchemy import event as sqla_event, schema, table
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql import ClauseElement, Selectable
 
 from pycroft.model.session import with_transaction, session
 
@@ -57,7 +59,8 @@ def visit_drop_constraint(drop_constraint, compiler, **kw):
 class Function(schema.DDLElement):
     on = 'postgresql'
 
-    def __init__(self, name, arguments, rtype, definition, volatility='volatile',
+    def __init__(self, name, arguments, rtype, definition: Union[str, Selectable],
+                 volatility='volatile',
                  strict=False, leakproof=False, language='sql', quote_tag=''):
         """
         Represents PostgreSQL function
@@ -67,7 +70,7 @@ class Function(schema.DDLElement):
             identifier of ``new_function(integer, integer)`` would
             result in ``arguments=['integer', 'integer']``.
         :param str rtype: Return type
-        :param str definition: Definition
+        :param definition: Definition
         :param str volatility: Either 'volatile', 'stable', or
             'immutable'
         :param bool strict: Function should be declared STRICT
@@ -81,13 +84,26 @@ class Function(schema.DDLElement):
                              "'immutable'")
         self.name = name
         self.arguments = arguments
-        self.definition = inspect.cleandoc(definition)
+        self._definition = definition
         self.volatility = volatility
         self.strict = strict
         self.rtype = rtype
         self.language = language
         self.leakproof = leakproof
         self.quote_tag = quote_tag
+
+    @cached_property
+    def definition(self):
+        if isinstance(self._definition, str):
+            return inspect.cleandoc(self._definition)
+
+        if isinstance(self._definition, Selectable):
+            return str(self._definition.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={'literal_binds': True}
+            ))
+
+        raise ValueError(f"definition must be str or Selectable, not {type(self._definition)}")
 
     def build_quoted_identifier(self, quoter):
         """Compile the function identifier from name and arguments.
