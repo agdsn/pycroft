@@ -47,7 +47,8 @@ class TaskLogEntry(LogEntry):
     user = relationship("User",
                         primaryjoin="TaskLogEntry.task_id == UserTask.id",
                         secondary="user_task",
-                        backref=backref("task_log_entries"))
+                        backref=backref("task_log_entries"),
+                        viewonly=True)
 
 
 class UserLogEntry(LogEntry):

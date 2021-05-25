@@ -57,6 +57,7 @@ class Room(IntegerIdModel):
     connected_patch_ports = relationship(
         'PatchPort',
         primaryjoin='and_(PatchPort.room_id == Room.id, PatchPort.switch_port_id != None)',
+        viewonly=True,
     )
 
     users_sharing_address = relationship(

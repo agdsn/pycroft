@@ -166,7 +166,8 @@ class Transaction(IntegerIdModel):
                        onupdate=func.current_timestamp())
     valid_on = Column(Date, nullable=False,
                       server_default=func.current_timestamp(), index=True)
-    accounts = relationship(Account, secondary="split", backref="transactions")
+    accounts = relationship(Account, secondary="split", backref="transactions",
+                            viewonly=True)
 
     confirmed = Column(Boolean(), nullable=False, default=True)
 
