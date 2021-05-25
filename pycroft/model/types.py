@@ -12,6 +12,8 @@ from pycroft.helpers.net import mac_regex
 class _IPType(TypeDecorator):
     impl = String(50)
 
+    cache_ok = True
+
     def load_dialect_impl(self, dialect):
         if dialect.name == 'postgresql':
             return dialect.type_descriptor(INET)
@@ -47,6 +49,8 @@ class IPNetwork(_IPType):
 class MACAddress(TypeDecorator):
     impl = String(10)
 
+    cache_ok = True
+
     def load_dialect_impl(self, dialect):
         if dialect.name == 'postgresql':
             return dialect.type_descriptor(MACADDR)
@@ -75,6 +79,8 @@ class MACAddress(TypeDecorator):
 
 class Money(TypeDecorator):
     impl = Integer
+
+    cache_ok = True
 
     def python_type(self):
         return Decimal
