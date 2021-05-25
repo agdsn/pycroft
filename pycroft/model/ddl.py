@@ -423,7 +423,7 @@ class View(schema.DDLElement):
                 raise ValueError("The given column_names must coincide with"
                                  " the implicit columns of the query: {!r} != {!r}"
                                  .format(set(self.column_names), query_column_names))
-        for c in self.query.c:
+        for c in self.query.selected_columns:
             # _make_proxy doesn't attach the column to the selectable (`self.table`) anymore
             # since sqla commit:aceefb508ccd0911f52ff0e50324b3fefeaa3f16 (before 1.4.0)
             key, col = c._make_proxy(self.table)
