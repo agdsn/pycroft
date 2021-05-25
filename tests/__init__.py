@@ -94,12 +94,14 @@ class SQLAlchemyTestCase(unittest.TestCase):
         self.addCleanup(self.cleanup)
 
     def _rollback(self):
-        # Rollback the session
+        # Rollback the session (automatically rolls back the transaction if it is associated)
         session.session.rollback()
         session.Session.remove()
-        # Rollback the outer transaction to the savepoint
         assert self.transaction is not None
-        self.transaction.rollback()
+        # if the transaction is still associated, this means it has e.g. pending trigger events.
+        transaction_associated = self.transaction.connection._transaction == self.transaction
+        if transaction_associated:
+            self.transaction.rollback()
         self.transaction = None
 
     def tearDown(self):
