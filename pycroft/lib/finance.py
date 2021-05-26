@@ -17,7 +17,7 @@ import re
 from typing import Optional, Callable, TypeVar
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
-    text, DateTime
+    text, DateTime, future
 from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, between, Integer, cast
@@ -211,7 +211,7 @@ def users_eligible_for_fee_query(membership_fee):
     begin_tstz = datetime.combine(membership_fee.begins_on, time_min())
     end_tstz = datetime.combine(membership_fee.ends_on, time_max())
 
-    return (select([User.id.label('id'),
+    return (future.select(User.id.label('id'),
                      User.name.label('name'),
                      User.account_id.label('account_id'),
                      # Select fee_account_id of the building or the default
