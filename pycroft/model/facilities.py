@@ -18,7 +18,7 @@ class Site(IntegerIdModel):
 
 class Building(IntegerIdModel):
     site_id = Column(Integer, ForeignKey(Site.id), nullable=False, index=True)
-    site = relationship(Site, backref=backref("buildings"))
+    site = relationship(Site, backref=backref("buildings", cascade_backrefs=False))
     number = Column(String(), nullable=False)
     short_name = Column(String(), unique=True, nullable=False)
     street = Column(String(), nullable=False)
@@ -26,7 +26,8 @@ class Building(IntegerIdModel):
 
     fee_account_id = Column(Integer, ForeignKey(Account.id), nullable=False)
     fee_account = relationship(Account, backref=backref("building",
-                                                        uselist=False))
+                                                        uselist=False,
+                                                        cascade_backrefs=False))
 
     swdd_haus_id = Column(Integer, nullable=True)
 
@@ -47,10 +48,11 @@ class Room(IntegerIdModel):
         Integer, ForeignKey(Building.id, onupdate='CASCADE'), nullable=False,
         index=True,
     )
-    building = relationship(Building, backref=backref("rooms", order_by=(level, number)))
+    building = relationship(Building, backref=backref("rooms", order_by=(level, number),
+                                                      cascade_backrefs=False))
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
-    address = relationship(Address, backref=backref("rooms"))
+    address = relationship(Address, backref=backref("rooms", cascade_backrefs=False))
 
     swdd_vo_suchname = Column(String, nullable=True)
 
