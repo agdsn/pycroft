@@ -48,6 +48,7 @@ def setup():
 
     drop_db_model(connection)
     create_db_model(connection)
+    connection.commit()
 
     DeferredReflection.prepare(engine)
     _setup_stack += 1
@@ -64,6 +65,7 @@ def teardown():
     if _setup_stack != 0:
         return
     assert isinstance(connection, Connection)
+    connection.commit()  # necessary to apply e.g. pending triggers
     drop_db_model(connection)
     connection.close()
     engine = None
