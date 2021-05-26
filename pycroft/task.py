@@ -73,9 +73,10 @@ def execute_scheduled_tasks():
     Implementations are given by `task_type_to_impl`.
     Errors are reported to the creator via `send_user_send_mail`.
     """
-    tasks = (session.session.query(with_polymorphic(Task, "*"))
-             .filter(Task.status == TaskStatus.OPEN,
-                     Task.due <= session.utcnow())
+    task_and_subtypes = with_polymorphic(Task, "*")
+    tasks = (session.session.query(task_and_subtypes)
+             .filter(task_and_subtypes.status == TaskStatus.OPEN,
+                     task_and_subtypes.due <= session.utcnow())
              .all())
 
     print("executing {} scheduled tasks".format(len(tasks)))

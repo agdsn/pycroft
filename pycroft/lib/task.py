@@ -184,9 +184,9 @@ def schedule_user_task(task_type, due, user, parameters: TaskParams, processor):
 
 
 def get_active_tasks_by_type(type):
+    task_and_subtypes = with_polymorphic(Task, "*")
     return session.session.query(
-        with_polymorphic(Task, "*")
-            .where(Task.type == type)
+        task_and_subtypes.where(task_and_subtypes.type == type)
     ).all()
 
 
