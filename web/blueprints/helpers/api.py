@@ -12,5 +12,5 @@ def json_agg(query):
 
 
 def json_agg_core(selectable):
-    return select([func.json_agg(literal_column("row"))]) \
+    return select(func.json_agg(literal_column("row"))) \
         .select_from(selectable.alias("row"))

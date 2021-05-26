@@ -135,7 +135,7 @@ def upgrade():
     op.execute(
         RoomHistoryEntry.__table__.insert().from_select(
             [RoomHistoryEntry.user_id, RoomHistoryEntry.room_id, RoomHistoryEntry.begins_at],
-            sa.select([User.id, User.room_id, User.registered_at]).select_from(User).where(User.room_id.isnot(None)))
+            sa.select(User.id, User.room_id, User.registered_at).select_from(User).where(User.room_id.isnot(None)))
     )
 
     # Update membership_fee constraint

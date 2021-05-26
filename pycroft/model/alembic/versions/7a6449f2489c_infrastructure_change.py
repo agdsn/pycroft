@@ -34,7 +34,7 @@ def upgrade():
 
     # Set patch_port.switch_room_id to patch_port.switch_port.switch.host.id
     op.execute(patch_port.update().values(
-        switch_room_id=sa.select([host.c.room_id])
+        switch_room_id=sa.select(host.c.room_id)
                          .select_from(patch_port.alias("patch_port_subselect")
                                       .join(switch_port, patch_port.c.switch_port_id == switch_port.c.id)
                                       .join(host, switch_port.c.switch_id == host.c.id))
@@ -48,7 +48,7 @@ def upgrade():
 
     # Set switch.host.name to switch.name
     op.execute(host.update().values(
-        name=sa.select([switch.c.name])
+        name=sa.select(switch.c.name)
                .select_from(host.alias("host_subselect")
                             .join(switch, switch.c.host_id == host.c.id))
                .where(sa.literal_column('host_subselect.id') == switch.c.host_id)
@@ -106,7 +106,7 @@ def downgrade():
 
     # Set switch.name to switch.host.name
     op.execute(switch.update().values(
-        name=sa.select([host.c.name])
+        name=sa.select(host.c.name)
             .select_from(switch.alias("switch_subselect")
                          .join(host, switch.c.host_id == host.c.id))
             .where(sa.literal_column('switch_subselect.host_id') == host.c.id)

@@ -270,7 +270,7 @@ def users_eligible_for_fee_query(membership_fee):
                  .outerjoin(Building, Building.id == Room.building_id)
             )
             # Check if a booking already exists on the user account in the fee timespan
-            .where(not_(exists(select([None]).select_from(split_user_account
+            .where(not_(exists(select(None).select_from(split_user_account
                     .join(Transaction, Transaction.id == split_user_account.c.transaction_id)
                     .join(split_fee_account, split_fee_account.c.transaction_id == Transaction.id)
                 )
@@ -312,15 +312,15 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
     # Select all users who fulfill the requirements for the fee in the fee timespan
     users = users_eligible_for_fee_query(membership_fee)
 
-    affected_users_raw = session.session.execute(select([users.c.id,
-                                                         users.c.name,
-                                                         users.c.fee_account_id])).fetchall()
+    affected_users_raw = session.session.execute(select(users.c.id,
+                                                        users.c.name,
+                                                        users.c.fee_account_id)).fetchall()
 
     if not simulate:
-        numbered_users = (select([users.c.id,
-                                  users.c.fee_account_id.label('fee_account_id'),
-                                  users.c.account_id,
-                                  func.row_number().over().label('index')])
+        numbered_users = (select(users.c.id,
+                                 users.c.fee_account_id.label('fee_account_id'),
+                                 users.c.account_id,
+                                 func.row_number().over().label('index'))
                           .select_from(users)
                           .cte("membership_fee_numbered_users"))
 
@@ -330,23 +330,23 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                            Transaction.posted_at,
                            Transaction.valid_on,
                            Transaction.confirmed],
-                          select([literal(description),
-                                  literal(processor.id),
-                                  func.current_timestamp(),
-                                  literal(membership_fee.ends_on),
-                                  True]).select_from(users))
+                          select(literal(description),
+                                 literal(processor.id),
+                                 func.current_timestamp(),
+                                 literal(membership_fee.ends_on),
+                                 True).select_from(users))
              .returning(Transaction.id)
              .cte('membership_fee_transactions'))
 
-        numbered_transactions = (select([transactions.c.id, func.row_number().over().label('index')])
+        numbered_transactions = (select(transactions.c.id, func.row_number().over().label('index'))
              .select_from(transactions)
              .cte('membership_fee_numbered_transactions'))
 
         split_insert_fee_account = (Split.__table__.insert()
             .from_select([Split.amount, Split.account_id, Split.transaction_id],
-                         select([literal(-membership_fee.regular_fee, type_=Money),
-                                 numbered_users.c.fee_account_id,
-                                 numbered_transactions.c.id])
+                         select(literal(-membership_fee.regular_fee, type_=Money),
+                                numbered_users.c.fee_account_id,
+                                numbered_transactions.c.id)
                          .select_from(numbered_users.join(numbered_transactions,
                                                           numbered_transactions.c.index == numbered_users.c.index))
                          )
@@ -355,15 +355,15 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
 
         split_insert_user = (Split.__table__.insert().from_select(
             [Split.amount, Split.account_id, Split.transaction_id],
-            select([literal(membership_fee.regular_fee, type_=Money),
-                    numbered_users.c.account_id,
-                    numbered_transactions.c.id])
+            select(literal(membership_fee.regular_fee, type_=Money),
+                   numbered_users.c.account_id,
+                   numbered_transactions.c.id)
             .select_from(numbered_users.join(numbered_transactions,
                                              numbered_transactions.c.index == numbered_users.c.index)))
             .returning(Split.id)
             .cte('membership_fee_split_user'))
 
-        session.session.execute(select([]).select_from(split_insert_fee_account
+        session.session.execute(select().select_from(split_insert_fee_account
                                                        .join(split_insert_user,
                                                              split_insert_user.c.id ==
                                                              split_insert_fee_account.c.id)))

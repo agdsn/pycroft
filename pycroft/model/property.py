@@ -67,8 +67,8 @@ current_property = View(
     name='current_property',
     #metadata=ModelBase.metadata,
     query=(
-        select([literal_column('user_id'), literal_column('property_name'),
-                literal_column('denied')])
+        select(literal_column('user_id'), literal_column('property_name'),
+               literal_column('denied'))
         .select_from(func.evaluate_properties(func.current_timestamp()))
     ),
 )

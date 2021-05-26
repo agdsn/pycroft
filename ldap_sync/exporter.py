@@ -198,7 +198,7 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
     return (
         Group.q
         # uids of the members of the group
-        .add_columns(func.coalesce(select([func.array_agg(User.login)])
+        .add_columns(func.coalesce(select(func.array_agg(User.login))
                 .select_from(join(Membership, User))
                 .where(Membership.group_id == Group.id).where(Membership.active())
                 .group_by(Group.id)
@@ -230,8 +230,8 @@ def fetch_properties_to_sync(session) -> List[PropertyProxyType]:
     :returns: An iterable of `(property_name, members)` ResultProxies.
     """
     properties = session.execute(
-        select([CurrentProperty.property_name.label('name'),
-                func.array_agg(User.login).label('members')])
+        select(CurrentProperty.property_name.label('name'),
+               func.array_agg(User.login).label('members'))
         .select_from(join(CurrentProperty, User, onclause=CurrentProperty.user_id == User.id))
         .where(CurrentProperty.property_name.in_(EXPORTED_PROPERTIES))
         .group_by(CurrentProperty.property_name)

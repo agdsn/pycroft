@@ -198,7 +198,7 @@ class User(ModelBase, BaseUser, UserMixin):
     def has_custom_address(cls):
         return and_(
             cls.room_id.isnot(None),
-            exists(select([null()])
+            exists(select(null())
                   .select_from(Room)
                   .where(Room.id == cls.room_id)
                   .where(Room.address_id != cls.address_id))
@@ -226,7 +226,7 @@ class User(ModelBase, BaseUser, UserMixin):
     def traffic_for_days(self, days):
         from pycroft.model.traffic import TrafficVolume
 
-        return select([func.sum(TrafficVolume.amount).label('amount')]) \
+        return select(func.sum(TrafficVolume.amount).label('amount')) \
             .where(
             TrafficVolume.timestamp >= (session.utcnow() - timedelta(days-1)).date()
             .where(TrafficVolume.user_id == self.id))
@@ -293,7 +293,7 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
-        return select([Membership]).select_from(
+        return select(Membership).select_from(
             join(cls, Membership)
         ).where(
             Membership.active(when)
@@ -312,7 +312,7 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @active_property_groups.expression
     def active_property_groups(cls, when=None):
-        return select([PropertyGroup]).select_from(
+        return select(PropertyGroup).select_from(
             join(PropertyGroup,
                  Membership).join(cls)
         ).where(
@@ -326,7 +326,7 @@ class User(ModelBase, BaseUser, UserMixin):
     @member_of.expression
     def member_of(cls, group, when=None):
         return exists(
-            select([null()]).select_from(
+            select(null()).select_from(
                 PropertyGroup.__table__.join(
                     Membership.__table__,
                     PropertyGroup.id == Membership.group_id
@@ -472,7 +472,7 @@ class Group(IntegerIdModel):
 
     @active_users.expression
     def active_users(cls, when=None):
-        return select([User]).select_from(
+        return select(User).select_from(
             join(User, Membership).join(cls)
         ).where(
             Membership.active(when)

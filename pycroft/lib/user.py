@@ -672,7 +672,7 @@ def edit_address(
 
 def traffic_history(user_id, start, end):
     result = session.session.execute(
-        select(['*']).select_from(
+        select('*').select_from(
             func.traffic_history(user_id, start, end))).fetchall()
     return [TrafficHistoryEntry(**dict(row.items())) for row in result]
 

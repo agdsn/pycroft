@@ -11,7 +11,7 @@ def table():
 
 
 def test_plain_create_view(table):
-    view = View("view", select([table.c.id]))
+    view = View("view", select(table.c.id))
     stmt = CreateView(view)
     assert literal_compile(stmt) == (
         'CREATE VIEW view AS SELECT "table".id \n'
@@ -19,7 +19,7 @@ def test_plain_create_view(table):
     )
 
 def test_create_or_replace_view(table):
-    view = View("view", select([table.c.id]))
+    view = View("view", select(table.c.id))
     stmt = CreateView(view, or_replace=True)
     assert literal_compile(stmt) == (
         'CREATE OR REPLACE VIEW view AS SELECT "table".id \n'
@@ -27,7 +27,7 @@ def test_create_or_replace_view(table):
     )
 
 def test_create_temporary_view(table):
-    view = View("view", select([table.c.id]), temporary=True)
+    view = View("view", select(table.c.id), temporary=True)
     stmt = CreateView(view)
     assert literal_compile(stmt) == (
         'CREATE TEMPORARY VIEW view AS SELECT "table".id \n'
@@ -35,7 +35,7 @@ def test_create_temporary_view(table):
     )
 
 def test_create_view_with_view_options(table):
-    view = View("view", select([table.c.id]), view_options=[
+    view = View("view", select(table.c.id), view_options=[
         ('check_option', 'cascaded'),
         ('security_barrier', 't'),
     ])
@@ -48,7 +48,7 @@ def test_create_view_with_view_options(table):
     )
 
 def test_create_view_with_check_option(table):
-    view = View("view", select([table.c.id]), check_option='cascaded')
+    view = View("view", select(table.c.id), check_option='cascaded')
     stmt = CreateView(view)
     assert literal_compile(stmt) == (
         'CREATE VIEW view '
@@ -58,21 +58,21 @@ def test_create_view_with_check_option(table):
     )
 
 def test_drop_view(table):
-    view = View("view", select([table.c.id]))
+    view = View("view", select(table.c.id))
     stmt = DropView(view)
     assert literal_compile(stmt) == (
         'DROP VIEW view'
     )
 
 def test_drop_view_if_exists(table):
-    view = View("view", select([table.c.id]))
+    view = View("view", select(table.c.id))
     stmt = DropView(view, if_exists=True)
     assert literal_compile(stmt) == (
         'DROP VIEW IF EXISTS view'
     )
 
 def test_drop_view_cascade(table):
-    view = View("view", select([table.c.id]))
+    view = View("view", select(table.c.id))
     stmt = DropView(view, cascade=True)
     assert literal_compile(stmt) == (
         'DROP VIEW view CASCADE'

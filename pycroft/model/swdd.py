@@ -20,7 +20,7 @@ swdd_view_ddl = DDLManager()
 
 swdd_vo = View(
     name='swdd_vo',
-    query=select([text('*')]).select_from(text("swdd.swdd_vo")),
+    query=select(text('*')).select_from(text("swdd.swdd_vo")),
     materialized=True
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vo)
@@ -50,7 +50,7 @@ class RentalObject(DeferredReflection, ModelBase):
 
 swdd_vv = View(
     name='swdd_vv',
-    query=select([text('*')]).select_from(text("swdd.swdd_vv")),
+    query=select(text('*')).select_from(text("swdd.swdd_vv")),
     materialized=True
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_vv)
@@ -88,7 +88,7 @@ class Tenancy(DeferredReflection, ModelBase):
 
 swdd_import = View(
     name='swdd_import',
-    query=select([text('*')]).select_from(text("swdd.swdd_import")),
+    query=select(text('*')).select_from(text("swdd.swdd_import")),
     materialized=True
 )
 swdd_view_ddl.add_view(ModelBase.metadata, swdd_import)

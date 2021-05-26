@@ -184,9 +184,9 @@ def set_uninhabitable_room_addresses(session):
 
 def add_room_addresses(session):
     room_select = (
-        sa.select([_Room.id, (sa.cast(_Room.level, sa.String)
-                              + "-"
-                              + _Room.number).label("addition")])
+        sa.select(_Room.id, (sa.cast(_Room.level, sa.String)
+                             + "-"
+                             + _Room.number).label("addition"))
         .select_from(_Room)
         .select_from(_Building)
         .where(_Building.id == _Room.building_id)
@@ -203,7 +203,7 @@ def add_room_addresses(session):
 
 
 def add_building_addresses(session):
-    building_select = sa.select([_Building.street, _Building.number, _Building.id])
+    building_select = sa.select(_Building.street, _Building.number, _Building.id)
     session.execute(
         sa.insert(_Address)
         .from_select([_Address.street, _Address.number, _Address.tmp_building_id],

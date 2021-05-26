@@ -162,9 +162,9 @@ ddl.add_trigger(TrafficVolume.__table__, pmacct_ingress_upsert_trigger)
 
 
 def traffic_history_query():
-    events = (select([func.sum(TrafficVolume.amount).label('amount'),
-                      literal_column('day'),
-                      cast(TrafficVolume.type, TEXT).label('type')]
+    events = (select(func.sum(TrafficVolume.amount).label('amount'),
+                     literal_column('day'),
+                     cast(TrafficVolume.type, TEXT).label('type')
                      )
               .select_from(
                     func.generate_series(
@@ -180,12 +180,12 @@ def traffic_history_query():
               .group_by(literal_column('day'), literal_column('type'))
               ).cte()
 
-    events_ingress = select([events]).where(or_(events.c.type == 'Ingress', events.c.type == None)).cte()
-    events_egress = select([events]).where(or_(events.c.type == 'Egress', events.c.type == None)).cte()
+    events_ingress = select(events).where(or_(events.c.type == 'Ingress', events.c.type == None)).cte()
+    events_egress = select(events).where(or_(events.c.type == 'Egress', events.c.type == None)).cte()
 
-    hist = (select([func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
-                    events_ingress.c.amount.label('ingress'),
-                    events_egress.c.amount.label('egress')])
+    hist = (select(func.coalesce(events_ingress.c.day, events_egress.c.day).label('timestamp'),
+                   events_ingress.c.amount.label('ingress'),
+                   events_egress.c.amount.label('egress'))
             .select_from(events_ingress.join(events_egress,
                                              events_ingress.c.day == events_egress.c.day,
                                              full=true))

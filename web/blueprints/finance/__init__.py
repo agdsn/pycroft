@@ -564,9 +564,9 @@ def balance_json(account_id):
     if invert:
         sum_exp = -sum_exp
 
-    balance_json = (select([Transaction.valid_on,
-                            sum_exp.label("balance")
-                            ])
+    balance_json = (select(Transaction.valid_on,
+                           sum_exp.label("balance")
+                           )
                     .select_from(
         Join(Split, Transaction,
              Split.transaction_id == Transaction.id))
@@ -904,7 +904,7 @@ def transactions_all_json():
     upper = request.args.get('before', "")
     filter = request.args.get('filter', "nonuser")
     if filter == "nonuser":
-        non_user_transactions = (select([Split.transaction_id])
+        non_user_transactions = (select(Split.transaction_id)
                                  .select_from(
             Join(Split, User,
                  (User.account_id == Split.account_id),
@@ -919,11 +919,11 @@ def transactions_all_json():
     else:
         transactions = Transaction.__table__
 
-    q = (select([Transaction.id,
-                 Transaction.valid_on,
-                 Split.account_id,
-                 Account.type,
-                 Split.amount])
+    q = (select(Transaction.id,
+                Transaction.valid_on,
+                Split.account_id,
+                Account.type,
+                Split.amount)
          .select_from(transactions
                       .join(Split, Split.transaction_id == Transaction.id)
                       .join(Account, Account.id == Split.account_id)))

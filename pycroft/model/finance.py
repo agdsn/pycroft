@@ -320,7 +320,7 @@ class BankAccount(IntegerIdModel):
     @hybrid_property
     def last_imported_at(self):
         return object_session(self).execute(
-                    select([func.max(BankAccountActivity.imported_at)])
+                    select(func.max(BankAccountActivity.imported_at))
                     .where(BankAccountActivity.bank_account_id == self.id)
                 ).fetchone()[0]
 

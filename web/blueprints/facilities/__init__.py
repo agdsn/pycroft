@@ -272,7 +272,7 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
     if not all_users:
         user_join_condition = and_(
             user_join_condition,
-            exists(select([CurrentProperty]).where(
+            exists(select(CurrentProperty).where(
                 and_(CurrentProperty.user_id == user.id,
                      CurrentProperty.property_name == 'network_access')))
         )
