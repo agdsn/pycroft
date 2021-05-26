@@ -10,12 +10,21 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
+from sqlalchemy.future import select
+
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, closed
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
-from pycroft.model.user import Membership
+from pycroft.model.user import Membership, Property
+
+
+def known_properties() -> set[str]:
+    """Return a set of all known properties, granted or denied."""
+    return set(session.session.execute(
+        select(Property.name).distinct()
+    ).scalars())
 
 
 @with_transaction

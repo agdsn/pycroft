@@ -21,7 +21,7 @@ from pycroft.model import session
 from pycroft.property import property_categories
 from pycroft.model.user import Property, PropertyGroup
 from pycroft.lib.membership import grant_property, deny_property, \
-    remove_property, edit_property_group, delete_property_group
+    remove_property, edit_property_group, delete_property_group, known_properties
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm
@@ -39,10 +39,8 @@ def property_groups():
     properties_with_description = set(chain(*(
         category.keys() for category in categories.values()
     )))
-    properties = set(property_name[0] for property_name
-                     in Property.q.distinct().values(Property.name))
     categories[u"Ohne Beschreibung"] = {
-        p: p for p in properties if p not in properties_with_description
+        p: p for p in known_properties() if p not in properties_with_description
     }
     return render_template(
         'properties/property_groups_list.html',
