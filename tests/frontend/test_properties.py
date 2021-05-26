@@ -11,7 +11,7 @@ class PropertiesFrontendTestCase(FrontendWithAdminTestBase):
         # first time: a redirect
         response = self.assert_response_code(url, code=302, method='post',
                                              data={'name': group_name})
-        self.assertEqual(response.location, url_for('properties.property_groups', _external=True))
+        assert response.location == url_for('properties.property_groups', _external=True)
         response = self.assert_response_code(response.location, code=200)
 
         content = response.data.decode('utf-8')
