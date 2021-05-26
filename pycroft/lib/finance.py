@@ -186,26 +186,9 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
-@with_transaction
-def post_transactions_for_membership_fee(membership_fee, processor, simulate=False):
-    """
-    Posts transactions (and splits) for users where the specified membership fee
-    was not posted yet.
 
-    User select: User -> Split (user account) -> Transaction -> Split (fee account)
-                 Conditions: User has `membership_fee` property on
-                             begins_on + booking_begin - 1 day or
-                             begins_on + booking_end - 1 day
-                             and no transaction exists on the user account int the fee timespan
 
-    :param membership_fee: The membership fee which should be posted
-    :param processor:
-    :param simulate: Do not post any transactions, just return the affected users.
-    :return: A list of name of all affected users
-    """
-
-    description = membership_fee_description.format(fee_name=membership_fee.name).to_json()
-
+def users_eligible_for_fee_query(membership_fee):
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
@@ -228,8 +211,7 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
     begin_tstz = datetime.combine(membership_fee.begins_on, time_min())
     end_tstz = datetime.combine(membership_fee.ends_on, time_max())
 
-    # Select all users who fulfill the requirements for the fee in the fee timespan
-    users = (select([User.id.label('id'),
+    return (select([User.id.label('id'),
                      User.name.label('name'),
                      User.account_id.label('account_id'),
                      # Select fee_account_id of the building or the default
@@ -295,6 +277,30 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                             not_(literal_column('properties_end.denied')))))
             .distinct()
             .cte('membership_fee_users'))
+
+
+@with_transaction
+def post_transactions_for_membership_fee(membership_fee, processor, simulate=False):
+    """
+    Posts transactions (and splits) for users where the specified membership fee
+    was not posted yet.
+
+    User select: User -> Split (user account) -> Transaction -> Split (fee account)
+                 Conditions: User has `membership_fee` property on
+                             begins_on + booking_begin - 1 day or
+                             begins_on + booking_end - 1 day
+                             and no transaction exists on the user account int the fee timespan
+
+    :param membership_fee: The membership fee which should be posted
+    :param processor:
+    :param simulate: Do not post any transactions, just return the affected users.
+    :return: A list of name of all affected users
+    """
+
+    description = membership_fee_description.format(fee_name=membership_fee.name).to_json()
+
+    # Select all users who fulfill the requirements for the fee in the fee timespan
+    users = users_eligible_for_fee_query(membership_fee)
 
     affected_users_raw = session.session.execute(select([users.c.id,
                                                          users.c.name,
