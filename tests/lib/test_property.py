@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from pycroft.helpers.interval import IntervalSet, UnboundedInterval, closed
 from pycroft.lib.membership import grant_property, deny_property, \
-    remove_property, make_member_of, remove_member_of
+    remove_property, make_member_of, remove_member_of, known_properties
 from pycroft.model import session
 from pycroft.model.user import Membership, Property
 from tests import FactoryDataTestBase
@@ -126,3 +126,13 @@ class Test_040_Property(FactoryDataTestBase):
     def test_0035_remove_wrong_property(self):
         self.assertRaises(ValueError, remove_property, self.group,
                           "non_existent_property")
+
+
+class TestPropertyFetch(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        PropertyGroupFactory.create(granted={'member', 'must_pay', 'network_access'})
+        PropertyGroupFactory.create(granted={'violation'}, denied={'network_access'})
+
+    def test_known_properties(self):
+        assert known_properties() == {'member', 'must_pay', 'network_access', 'violation'}
