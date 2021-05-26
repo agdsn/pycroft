@@ -4,6 +4,8 @@ import subprocess
 from functools import partial
 from tempfile import mkdtemp
 
+from sqlalchemy import text
+
 from scripts.schema import AlembicHelper, SchemaStrategist
 from tests import SQLAlchemyTestCase, get_engine_and_connection
 
@@ -26,7 +28,7 @@ class AlembicTest(SQLAlchemyTestCase):
     def setUp(self):
         super().setUp()
         _, self.connection = get_engine_and_connection()
-        self.connection.execute("DROP TABLE IF EXISTS alembic_version")
+        self.connection.execute(text("DROP TABLE IF EXISTS alembic_version"))
         self.helper = AlembicHelper(self.connection)
 
 

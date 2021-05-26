@@ -3,6 +3,7 @@ from alembic.operations.base import Operations
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from pkg_resources import resource_filename
+from sqlalchemy import text
 
 from pycroft.model import create_db_model
 
@@ -55,12 +56,12 @@ class AlembicHelper:
 
 def db_has_nontrivial_objects(connection):
     # %% for escaping reasons: internally, %-Formatting is applied
-    num_objects = connection.execute(
+    num_objects = connection.execute(text(
         "select count(*) from pg_class c"
         " join pg_namespace s on s.oid = c.relnamespace"
         " where (s.nspname = 'public' or s.nspname = 'pycroft')"
         " and s.nspname not like 'pg_%%'"
-    ).scalar()
+    )).scalar()
     return num_objects > 0
 
 
