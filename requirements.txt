@@ -24,7 +24,7 @@ wrapt~=1.10.11
 # only needed for ldap caching
 ldap3~=2.5.1
 celery~=3.1.26
-alembic~=1.0.10
+alembic~=1.6.4
 # decimal serialization
 simplejson~=3.11.1
 #usersheet generation
