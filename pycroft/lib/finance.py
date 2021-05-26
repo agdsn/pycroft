@@ -217,16 +217,28 @@ def users_eligible_for_fee_query(membership_fee):
                      # Select fee_account_id of the building or the default
                      # fee_account_id if user was not living in a room at booking time
                      func.coalesce(Building.fee_account_id,
-                                   literal(config.membership_fee_account_id)).label('fee_account_id')])
+                                   literal(config.membership_fee_account_id)).label('fee_account_id'))
              .select_from(User.__table__
                  # Join the users properties at `booking_begin`
-                 .outerjoin(func.evaluate_properties(properties_beginning_timestamp)
-                            .alias('properties_beginning'),
-                            literal_column('properties_beginning.user_id') == User.id)
+                 .outerjoin(
+                     func.evaluate_properties(properties_beginning_timestamp)
+                         .alias('properties_beginning'),
+                     and_(
+                         literal_column('properties_beginning.user_id') == User.id,
+                         literal_column('properties_beginning.property_name') == 'membership_fee',
+                         not_(literal_column('properties_beginning.denied')),
+                     )
+                 )
                  # Join the users properties at `booking_end`
-                 .outerjoin(func.evaluate_properties(properties_end_timestamp)
-                            .alias('properties_end'),
-                            literal_column('properties_end.user_id') == User.id)
+                 .outerjoin(
+                     func.evaluate_properties(properties_end_timestamp)
+                         .alias('properties_end'),
+                     and_(
+                         literal_column('properties_end.user_id') == User.id,
+                         literal_column('properties_end.property_name') == 'membership_fee',
+                         not_(literal_column('properties_end.denied')),
+                     )
+                 )
                  # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
                  .outerjoin(rhe_end,
                             and_(rhe_end.c.user_id == User.id,
@@ -271,10 +283,8 @@ def users_eligible_for_fee_query(membership_fee):
             )))
             # Only those users who had the `membership_fee` property on `booking_begin` or
             # `booking_end`
-            .where(or_(and_(literal_column('properties_beginning.property_name') == 'membership_fee',
-                            not_(literal_column('properties_beginning.denied'))),
-                       and_(literal_column('properties_end.property_name') == 'membership_fee',
-                            not_(literal_column('properties_end.denied')))))
+            .where(or_(literal_column('properties_beginning').isnot(None),
+                       literal_column('properties_end').isnot(None)))
             .distinct()
             .cte('membership_fee_users'))
 
