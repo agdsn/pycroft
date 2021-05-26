@@ -6,6 +6,7 @@ from itertools import chain
 
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.base import instance_state, object_state
 
 from pycroft.lib.net import get_free_ip
 from pycroft.model import host
@@ -39,6 +40,9 @@ class TestInterfaceValidators(FactoryDataTestBase):
 
     def test_mac_validation(self):
         interface = host.Interface(host=self.host)
+        # assert that object is not added to session
+        # (see https://docs.sqlalchemy.org/en/14/orm/session_state_management.html#session-object-states)
+        assert object_state(interface).transient
 
         # Try some bad macs
         self.assertSetMAC(interface, "ff:ff:ff:ff:ff")
