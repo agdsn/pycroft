@@ -224,16 +224,21 @@ def users_eligible_for_fee_query(membership_fee):
                      func.coalesce(Building.fee_account_id,
                                    literal(config.membership_fee_account_id)).label('fee_account_id'))
              .select_from(User.__table__
-                 # Join the users properties at `booking_begin`
+                 # The first two joins are there for filtering reasons (does this user have to pay?)
+                 # ----
+                 # `membership_fee` flag on booking_begin, if existent
                  .outerjoin(fee_prop_beginning,
                             and_(fee_prop_beginning.c.user_id == User.id,
                                  fee_prop_beginning.c.property_name == 'membership_fee',
                                  not_(fee_prop_beginning.c.denied)))
-                 # Join the users properties at `booking_end`
+                 # `membership_fee` flag on booking_end, if existent
                  .outerjoin(fee_prop_end,
                             and_(fee_prop_end.c.user_id == User.id,
                                  fee_prop_end.c.property_name == 'membership_fee',
                                  not_(fee_prop_end.c.denied)))
+
+                 # The following joins are there to get a meaningful `account_id` for the user
+                 # ----
                  # Join RoomHistoryEntry, Room and Building of the user at membership_fee.ends_on
                  .outerjoin(rhe_end,
                             and_(rhe_end.c.user_id == User.id,
