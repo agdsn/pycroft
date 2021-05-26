@@ -21,9 +21,8 @@ from sqlalchemy import (
     String, and_, exists, join, not_, null, select, Sequence,
     Date, func, UniqueConstraint)
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.orm import backref, object_session, relationship, validates
+from sqlalchemy.orm import backref, object_session, relationship, validates, declared_attr
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity

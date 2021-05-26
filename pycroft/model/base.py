@@ -13,8 +13,7 @@
 import re
 
 from sqlalchemy import Column
-from sqlalchemy.ext.declarative import (
-    DeclarativeMeta, as_declarative, declared_attr)
+from sqlalchemy.orm import DeclarativeMeta, as_declarative, declared_attr
 from sqlalchemy.types import Integer
 
 from pycroft.model.session import session
