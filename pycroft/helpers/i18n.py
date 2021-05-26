@@ -69,7 +69,7 @@ def ignore_options(formatter):
 @type_specific_options
 def format_number(n, insert_commas=True):
     if insert_commas:
-        return numbers.format_number(n, locale=get_locale())
+        return numbers.format_decimal(n, locale=get_locale())
     else:
         return n
 
