@@ -202,7 +202,7 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
                 .select_from(join(Membership, User))
                 .where(Membership.group_id == Group.id).where(Membership.active())
                 .group_by(Group.id)
-                .as_scalar(),
+                .scalar_subquery(),
                 func.cast('{}', dialects.postgresql.ARRAY(User.login.type))).label('members'))
         .all()
     )
