@@ -25,6 +25,7 @@ class TestHashing:
     def pw(self) -> str:
         return generate_password(8)
 
+    @pytest.mark.slow
     def test_salt_generation(self, pw):
         """The same password should be encrypted differently for each
         invocation."""

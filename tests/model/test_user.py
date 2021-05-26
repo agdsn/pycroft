@@ -3,6 +3,8 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
+import pytest
+
 from pycroft.helpers.interval import single, closed
 from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model import session, user
@@ -34,6 +36,7 @@ class Test_User_Passwords(FactoryDataTestBase):
             self.user.passwd_hash = None
         session.session.commit()
 
+    @pytest.mark.slow
     def test_set_and_verify_password(self):
         password = generate_password(4)
 
