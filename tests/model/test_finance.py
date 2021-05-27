@@ -4,6 +4,7 @@
 from datetime import datetime
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from pycroft.model import finance, session
@@ -122,10 +123,10 @@ class TestBankAccountActivity(FinanceModelTest):
 
     def setUp(self):
         super().setUp()
-        session.session.execute("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger IMMEDIATE")
+        session.session.execute(text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger IMMEDIATE"))
 
     def tearDown(self):
-        session.session.execute("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger DEFERRED")
+        session.session.execute(text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger DEFERRED"))
         super(TestBankAccountActivity, self).tearDown()
 
     def create_activity(self, amount):
