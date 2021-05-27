@@ -109,11 +109,9 @@ class Account(IntegerIdModel):
 
     @balance.expression
     def balance(cls):
-        return select(
-            [func.coalesce(func.sum(Split.amount), 0)]
-        ).where(
-            Split.account_id == cls.id
-        ).label("balance")
+        return select(func.coalesce(func.sum(Split.amount), 0))\
+            .where(Split.account_id == cls.id)\
+            .label("balance")
 
     @hybrid_property
     def in_default_days(self):

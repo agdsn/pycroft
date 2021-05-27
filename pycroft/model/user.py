@@ -359,12 +359,11 @@ class User(ModelBase, BaseUser, UserMixin):
     def has_property(cls, prop, when=None):
         # TODO Use joins
         property_granted_select = select(
-            [null()],
-            from_obj=[
-                Property.__table__,
-                PropertyGroup.__table__,
-                Membership.__table__
-            ]
+            null()
+        ).select_from(
+            Property.__table__,
+            PropertyGroup.__table__,
+            Membership.__table__
         ).where(
             and_(
                 Property.name == prop,
@@ -464,7 +463,7 @@ class Group(IntegerIdModel):
         :rtype: list[User]
         """
         return object_session(self).query(User).join(
-            (Membership, Membership.user_id == User.id),
+            Membership, Membership.user_id == User.id
         ).filter(
             Membership.active(when), Membership.group_id == self.id
         ).all()

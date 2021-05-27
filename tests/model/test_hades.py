@@ -36,7 +36,7 @@ class HadesTestBase(FactoryDataTestBase):
                                  begins_at=datetime.now() + timedelta(-1),
                                  ends_at=datetime.now() + timedelta(1))
 
-        session.session.execute(hades.radius_property.insert(values=[
+        session.session.execute(hades.radius_property.insert().values([
             ('payment_in_default',),
             ('traffic_limit_exceeded',),
         ]))
@@ -72,7 +72,7 @@ class HadesViewTest(HadesTestBase):
         radgroupreply_q = session.session.query(hades.radgroupreply.table)
         custom_reply_row = ("TestGroup", "Egress-VLAN-Name", "+=", "2Servernetz")
         assert custom_reply_row not in radgroupreply_q.all()
-        session.session.execute(hades.radgroupreply_base.insert([custom_reply_row]))
+        session.session.execute(hades.radgroupreply_base.insert().values([custom_reply_row]))
         session.session.commit()
         assert custom_reply_row in radgroupreply_q.all()
 

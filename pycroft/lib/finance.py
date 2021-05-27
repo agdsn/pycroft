@@ -166,7 +166,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
     ).select_from(
         split1
     ).join(
-        (split2, split1.transaction_id == split2.transaction_id)
+        split2, split1.transaction_id == split2.transaction_id
     ).join(
         Transaction, split2.transaction_id == Transaction.id
     ).filter(
