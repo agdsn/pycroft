@@ -69,7 +69,7 @@ class Resource(FlaskRestfulResource):
 
 
 def get_user_or_404(user_id):
-    user = User.q.get(user_id)
+    user = User.get(user_id)
     if user is None:
         abort(404, message="User {} does not exist".format(user_id))
     return user
@@ -83,7 +83,7 @@ def get_authenticated_user(user_id, password):
 
 
 def get_interface_or_404(interface_id):
-    interface = Interface.q.get(interface_id)
+    interface = Interface.get(interface_id)
     if interface is None:
         abort(404, message="Interface {} does not exist".format(interface_id))
     return interface
@@ -509,7 +509,7 @@ class RegistrationResource(Resource):
         swdd_person_id = None
 
         if args.room_id is not None:
-            room = Room.q.get(args.room_id)
+            room = Room.get(args.room_id)
 
             if room is None:
                 abort(404, message="Invalid room", code="invalid_room")
@@ -559,7 +559,7 @@ class EmailConfirmResource(Resource):
         parser.add_argument('user_id', required=True, type=int)
         args = parser.parse_args()
 
-        user = User.q.get(args.user_id)
+        user = User.get(args.user_id)
 
         if user is None:
             abort(404, message='User not found')

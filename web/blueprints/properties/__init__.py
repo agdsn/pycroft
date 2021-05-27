@@ -68,7 +68,7 @@ def property_group_create():
 @bp.route('/property_group/<group_id>/grant/<property_name>')
 @access.require('groups_change')
 def property_group_grant_property(group_id, property_name):
-    property_group = PropertyGroup.q.get(group_id)
+    property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
@@ -84,7 +84,7 @@ def property_group_grant_property(group_id, property_name):
 @bp.route('/property_group/<group_id>/deny/<property_name>')
 @access.require('groups_change')
 def property_group_deny_property(group_id, property_name):
-    property_group = PropertyGroup.q.get(group_id)
+    property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
@@ -100,7 +100,7 @@ def property_group_deny_property(group_id, property_name):
 @bp.route('/property_group/<group_id>/remove/<property_name>')
 @access.require('groups_change')
 def property_group_remove_property(group_id, property_name):
-    group = PropertyGroup.q.get(group_id)
+    group = PropertyGroup.get(group_id)
 
     if group is None:
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
@@ -116,7 +116,7 @@ def property_group_remove_property(group_id, property_name):
 @bp.route('/property_group/<group_id>/edit', methods=['GET', 'POST'])
 @access.require('groups_change')
 def property_group_edit(group_id):
-    group = PropertyGroup.q.get(group_id)
+    group = PropertyGroup.get(group_id)
 
     if group is None:
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
@@ -149,7 +149,7 @@ def property_group_edit(group_id):
 @bp.route('/property_group/<group_id>/delete', methods=['GET', 'POST'])
 @access.require('groups_change')
 def property_group_delete(group_id):
-    group = PropertyGroup.q.get(group_id)
+    group = PropertyGroup.get(group_id)
 
     if group is None:
         flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')

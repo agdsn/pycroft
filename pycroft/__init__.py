@@ -16,7 +16,7 @@ from pycroft.model.config import Config
 
 
 def _get_config():
-    config = Config.q.get(1)
+    config = Config.get(1)
     if config is None:
         raise NoResultFound
     return config

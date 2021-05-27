@@ -16,5 +16,5 @@ class UserIDField(wtforms_widgets.fields.core.StringField):
         )
 
     def pre_validate(self, form):
-        if User.q.get(self.data) is None:
+        if User.get(self.data) is None:
             raise ValidationError("Ungültige Nutzer-ID.")

@@ -77,7 +77,7 @@ def user_button(user):
 
 
 def get_user_or_404(user_id):
-    user = User.q.get(user_id)
+    user = User.get(user_id)
     if user is None:
         flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
         abort(404)
@@ -85,7 +85,7 @@ def get_user_or_404(user_id):
 
 
 def get_pre_member_or_404(prm_id):
-    prm = PreMember.q.get(prm_id)
+    prm = PreMember.get(prm_id)
     if prm is None:
         flash(u"Mitgliedsanfrage mit ID {} existiert nicht!".format(prm_id,), 'error')
         abort(404)

@@ -39,6 +39,6 @@ def determine_building(shortname=None, id=None):
         return Building.q.filter(Building.short_name == shortname).one()
 
     if id:
-        return Building.q.get(id)
+        return Building.get(id)
 
     raise ValueError("Either shortname or id must be given to identify the building!")

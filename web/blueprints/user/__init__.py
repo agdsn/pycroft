@@ -152,7 +152,7 @@ def static_datasheet(user_id):
 
     Useful for testing the layout itself.
     """
-    user = User.q.get(user_id)
+    user = User.get(user_id)
     if user is None:
         abort(404)
 
@@ -542,7 +542,7 @@ def add_membership(user_id):
 @access.require('groups_change_membership')
 def end_membership(user_id, membership_id):
     user = get_user_or_404(user_id)
-    membership = Membership.q.get(membership_id)
+    membership = Membership.get(membership_id)
 
     if membership is None:
         flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(membership.id), 'error')
@@ -778,7 +778,7 @@ def move(user_id):
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
 @access.require('groups_change_membership')
 def edit_membership(user_id, membership_id):
-    membership = Membership.q.get(membership_id)
+    membership = Membership.get(membership_id)
 
     if membership is None:
         flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
@@ -960,7 +960,7 @@ def reset_password(user_id):
 @access.require('user_change')
 def reset_wifi_password(user_id):
     form = UserResetPasswordForm()
-    myUser = User.q.get(user_id)
+    myUser = User.get(user_id)
     if form.validate_on_submit():
         plain_password = lib.user.reset_wifi_password(myUser, processor=current_user)
         sheet = lib.user.store_user_sheet(False, True, user=myUser,

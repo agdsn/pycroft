@@ -30,6 +30,10 @@ class _ModelMeta(DeclarativeMeta):
         """
         return session.query(cls)
 
+    def get(cls, *a, **kw):
+        """This is a shortcut for `session.get(cls, –)`"""
+        return session.get(cls, *a, **kw)
+
 
 @as_declarative(metaclass=_ModelMeta)
 class ModelBase(object):

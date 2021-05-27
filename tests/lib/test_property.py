@@ -91,9 +91,9 @@ class Test_040_Property(FactoryDataTestBase):
     def test_0010_grant_property(self):
         prop = grant_property(self.group, self.property_name)
 
-        assert Property.q.get(prop.id) is not None
+        assert Property.get(prop.id) is not None
 
-        db_property = Property.q.get(prop.id)
+        db_property = Property.get(prop.id)
 
         assert db_property.name == self.property_name
         assert db_property.property_group == self.group
@@ -105,9 +105,9 @@ class Test_040_Property(FactoryDataTestBase):
 
     def test_0020_deny_property(self):
         prop = deny_property(self.group, self.property_name)
-        assert Property.q.get(prop.id) is not None
+        assert Property.get(prop.id) is not None
 
-        db_property = Property.q.get(prop.id)
+        db_property = Property.get(prop.id)
 
         assert db_property.name == self.property_name
         assert db_property.property_group == self.group

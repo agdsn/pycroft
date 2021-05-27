@@ -29,7 +29,7 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 @bp.route('/<int:host_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_delete(host_id):
-    host = Host.q.get(host_id)
+    host = Host.get(host_id)
 
     if host is None:
         flash(u"Host existiert nicht.", 'error')
@@ -66,7 +66,7 @@ def host_delete(host_id):
 @bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_edit(host_id):
-    host = Host.q.get(host_id)
+    host = Host.get(host_id)
 
     if host is None:
         flash(u"Host existiert nicht.", 'error')
@@ -148,7 +148,7 @@ def host_create():
 
 @bp.route("/<int:host_id>/interfaces")
 def host_interfaces_json(host_id):
-    host = Host.q.get(host_id)
+    host = Host.get(host_id)
 
     if host is None:
         flash(u"Host existiert nicht.", 'error')
@@ -194,7 +194,7 @@ def interface_table(host_id):
 @bp.route('/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_delete(interface_id):
-    interface = Interface.q.get(interface_id)
+    interface = Interface.get(interface_id)
 
     if interface is None:
         flash(u"Interface existiert nicht.", 'error')
@@ -230,7 +230,7 @@ def interface_delete(interface_id):
 @bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_edit(interface_id):
-    interface = Interface.q.get(interface_id)
+    interface = Interface.get(interface_id)
 
     if interface is None:
         flash(u"Interface existiert nicht.", 'error')
@@ -282,7 +282,7 @@ def interface_edit(interface_id):
 @bp.route('/<int:host_id>/interface/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_create(host_id):
-    host = Host.q.get(host_id)
+    host = Host.get(host_id)
 
     if host is None:
         flash(u"Host existiert nicht.", 'error')

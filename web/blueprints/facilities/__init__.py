@@ -75,7 +75,7 @@ def overview_json():
 
 @bp.route('/site/<int:site_id>')
 def site_show(site_id):
-    site = Site.q.get(site_id)
+    site = Site.get(site_id)
     buildings_list = facilities.sort_buildings(site.buildings)
     return render_template('facilities/site_show.html',
         buildings=buildings_list,
@@ -126,7 +126,7 @@ def room_create():
     building = None
 
     if building_id:
-        building = Building.q.get(building_id)
+        building = Building.get(building_id)
 
         if not building:
             flash("Gebäude mit ID {} nicht gefunden!".format(building_id), "error")
@@ -173,7 +173,7 @@ def room_create():
 @bp.route('/room/<int:room_id>/create', methods=['GET', 'POST'])
 @access.require('facilities_change')
 def room_edit(room_id):
-    room = Room.q.get(room_id)
+    room = Room.get(room_id)
 
     if not room:
         flash("Raum mit ID {} nicht gefunden!".format(room_id), "error")
@@ -302,7 +302,7 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
 @bp.route('/room/<int:switch_room_id>/patch-port/create', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_create(switch_room_id):
-    switch_room = Room.q.get(switch_room_id)
+    switch_room = Room.get(switch_room_id)
 
     if not switch_room:
         flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
@@ -348,8 +348,8 @@ def patch_port_create(switch_room_id):
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/edit', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_edit(switch_room_id, patch_port_id):
-    switch_room = Room.q.get(switch_room_id)
-    patch_port = PatchPort.q.get(patch_port_id)
+    switch_room = Room.get(switch_room_id)
+    patch_port = PatchPort.get(patch_port_id)
 
     if not switch_room:
         flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
@@ -404,8 +404,8 @@ def patch_port_edit(switch_room_id, patch_port_id):
 @bp.route('/room/<int:switch_room_id>/patch-port/<int:patch_port_id>/delete', methods=['GET', 'POST'])
 @access.require('infrastructure_change')
 def patch_port_delete(switch_room_id, patch_port_id):
-    switch_room = Room.q.get(switch_room_id)
-    patch_port = PatchPort.q.get(patch_port_id)
+    switch_room = Room.get(switch_room_id)
+    patch_port = PatchPort.get(patch_port_id)
 
     if not switch_room:
         flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
@@ -448,7 +448,7 @@ def patch_port_delete(switch_room_id, patch_port_id):
 
 @bp.route('/room/<int:room_id>', methods=['GET', 'POST'])
 def room_show(room_id):
-    room = Room.q.get(room_id)
+    room = Room.get(room_id)
 
     if room is None:
         flash(u"Zimmer existiert nicht!", 'error')
@@ -480,12 +480,12 @@ def room_show(room_id):
 @bp.route('/room/<int:room_id>/logs/json')
 def room_logs_json(room_id):
     return jsonify(items=[format_room_log_entry(entry) for entry in
-                          reversed(Room.q.get(room_id).log_entries)])
+                          reversed(Room.get(room_id).log_entries)])
 
 
 @bp.route('/room/<int:room_id>/patchpanel/json')
 def room_patchpanel_json(room_id):
-    room = Room.q.get(room_id)
+    room = Room.get(room_id)
 
     if not room:
         abort(404)

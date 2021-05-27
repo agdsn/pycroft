@@ -35,7 +35,7 @@ login_manager.login_message = u"Bitte melden Sie sich an, um diese Seite zu benu
 
 @login_manager.user_loader
 def load_user(userid):
-    return User.q.get(userid)
+    return User.get(userid)
 
 
 @bp.route("/login", methods=("GET", "POST"))

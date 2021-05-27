@@ -21,7 +21,7 @@ class LogTestBase(FactoryDataTestBase):
         assert log_entry.message == expected_message
         assert abs(log_entry.created_at - expected_created_at) < timedelta(seconds=5)
         assert log_entry.author == expected_author
-        assert LogEntry.q.get(log_entry.id) is not None
+        assert LogEntry.get(log_entry.id) is not None
 
 
 class UserLogEntryTest(LogTestBase):
@@ -35,7 +35,7 @@ class UserLogEntryTest(LogTestBase):
 
         session.session.delete(user_log_entry)
         session.session.commit()
-        assert LogEntry.q.get(user_log_entry.id) is None
+        assert LogEntry.get(user_log_entry.id) is None
 
 
 class RoomLogEntryTest(LogTestBase):
@@ -48,14 +48,14 @@ class RoomLogEntryTest(LogTestBase):
                                         author=self.user,
                                         room=self.room)
 
-        assert RoomLogEntry.q.get(room_log_entry.id) is not None
+        assert RoomLogEntry.get(room_log_entry.id) is not None
 
-        db_room_log_entry = RoomLogEntry.q.get(room_log_entry.id)
+        db_room_log_entry = RoomLogEntry.get(room_log_entry.id)
 
         self.assert_log_entry(db_room_log_entry, self.user, session.utcnow(), self.message)
         assert db_room_log_entry.room == self.room
 
-        assert LogEntry.q.get(db_room_log_entry.id) is not None
+        assert LogEntry.get(db_room_log_entry.id) is not None
         session.session.delete(db_room_log_entry)
         session.session.commit()
-        assert LogEntry.q.get(db_room_log_entry.id) is None
+        assert LogEntry.get(db_room_log_entry.id) is None

@@ -190,7 +190,7 @@ def get_user_sheet(sheet_id):
     if sheet_id is None:
         return None
 
-    storage = WebStorage.q.get(sheet_id)
+    storage = WebStorage.get(sheet_id)
 
     if storage is None:
         return None

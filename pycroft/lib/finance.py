@@ -856,7 +856,7 @@ def match_activities() -> (dict[BankAccountActivity, User], dict[BankAccountActi
                   .filter(BankAccountActivity.transaction_id == None))
 
     def _fetch_normal(uid: int) -> Optional[User]:
-        return User.q.get(uid)
+        return User.get(uid)
 
     for activity in activity_q.all():
         user = match_reference(activity.reference, fetch_normal=_fetch_normal)

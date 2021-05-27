@@ -169,7 +169,7 @@ def bank_accounts_import():
         form.end_date.data = date.today() - timedelta(days=1)
 
     if form.validate_on_submit():
-        bank_account = BankAccount.q.get(form.account.data)
+        bank_account = BankAccount.get(form.account.data)
 
         # set start_date, end_date
         if form.start_date.data is None:
@@ -279,7 +279,7 @@ def bank_accounts_import_errors():
 @bp.route('/bank-accounts/importerrors/<error_id>', methods=['GET', 'POST'])
 @access.require('finance_change')
 def fix_import_error(error_id):
-    error = MT940Error.q.get(error_id)
+    error = MT940Error.get(error_id)
     form = FixMT940Form()
     (transactions, old_transactions, doubtful_transactions) = ([], [], [])
     new_exception = None
@@ -343,7 +343,7 @@ def bank_accounts_create():
 @bp.route('/bank-account-activities/<activity_id>',
           methods=["GET", "POST"])
 def bank_account_activities_edit(activity_id):
-    activity = BankAccountActivity.q.get(activity_id)
+    activity = BankAccountActivity.get(activity_id)
 
     if activity is None:
         flash(u"Bankbewegung mit ID {} existiert nicht!".format(activity_id), 'error')
@@ -541,7 +541,7 @@ def accounts_list():
 @bp.route('/account/<int:account_id>/toggle-legacy')
 @access.require('finance_change')
 def account_toggle_legacy(account_id):
-    account = Account.q.get(account_id)
+    account = Account.get(account_id)
 
     if not account:
         abort(404)
@@ -578,7 +578,7 @@ def balance_json(account_id):
 
 @bp.route('/accounts/<int:account_id>')
 def accounts_show(account_id):
-    account = Account.q.get(account_id)
+    account = Account.get(account_id)
 
     if account is None:
         flash(u"Konto mit ID {} existiert nicht!".format(account_id), 'error')
@@ -661,7 +661,7 @@ def accounts_show_json(account_id):
     if sort_by.startswith("soll_") or sort_order.startswith("haben_"):
         sort_by = '_'.join(sort_by.split('_')[1:])
 
-    account = Account.q.get(account_id) or abort(404)
+    account = Account.get(account_id) or abort(404)
 
     total = Split.q.join(Transaction).filter(Split.account == account).count()
 
@@ -700,7 +700,7 @@ def accounts_show_json(account_id):
 
 @bp.route('/transactions/<int:transaction_id>')
 def transactions_show(transaction_id):
-    transaction = Transaction.q.get(transaction_id)
+    transaction = Transaction.get(transaction_id)
 
     if transaction is None:
         abort(404)
@@ -718,7 +718,7 @@ def transactions_show(transaction_id):
 
 @bp.route('/transactions/<int:transaction_id>/json')
 def transactions_show_json(transaction_id):
-    transaction = Transaction.q.get(transaction_id)
+    transaction = Transaction.get(transaction_id)
     return jsonify(
         description=transaction.description,
         items=[
@@ -807,7 +807,7 @@ def transactions_unconfirmed_json():
 @bp.route('/transaction/<int:transaction_id>/confirm', methods=['GET', 'POST'])
 @access.require('finance_change')
 def transaction_confirm(transaction_id):
-    transaction = Transaction.q.get(transaction_id)
+    transaction = Transaction.get(transaction_id)
 
     if transaction is None:
         flash(u"Transaktion existiert nicht.", 'error')
@@ -855,7 +855,7 @@ def transaction_confirm_all():
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
 @access.require('finance_change')
 def transaction_delete(transaction_id):
-    transaction = Transaction.q.get(transaction_id)
+    transaction = Transaction.get(transaction_id)
 
     if transaction is None:
         flash(u"Transaktion existiert nicht.", 'error')
@@ -955,7 +955,7 @@ def transactions_create():
         splits = []
         for split_form in form.splits:
             splits.append((
-                Account.q.get(split_form.account_id.data),
+                Account.get(split_form.account_id.data),
                 split_form.amount.data
             ))
         transaction = finance.complex_transaction(
@@ -996,7 +996,7 @@ def accounts_create():
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
 @access.require('finance_change')
 def membership_fee_book(fee_id):
-    fee = MembershipFee.q.get(fee_id)
+    fee = MembershipFee.get(fee_id)
 
     if fee is None:
         flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')
@@ -1020,7 +1020,7 @@ def membership_fee_book(fee_id):
 
 @bp.route("/membership_fee/<int:fee_id>/users_due_json")
 def membership_fee_users_due_json(fee_id):
-    fee = MembershipFee.q.get(fee_id)
+    fee = MembershipFee.get(fee_id)
 
     if fee is None:
         abort(404)
@@ -1137,7 +1137,7 @@ def membership_fee_create():
 @bp.route('/membership_fee/<int:fee_id>/edit', methods=("GET", "POST"))
 @access.require('finance_change')
 def membership_fee_edit(fee_id):
-    fee = MembershipFee.q.get(fee_id)
+    fee = MembershipFee.get(fee_id)
 
     if fee is None:
         flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')

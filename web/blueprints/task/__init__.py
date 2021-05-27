@@ -30,7 +30,7 @@ def format_parameters(parameters):
 
     # Replace building_id by the buildings short name
     if parameters.get("building_id"):
-        building = Building.q.get(parameters["building_id"])
+        building = Building.get(parameters["building_id"])
 
         if building:
             parameters["building"] = building.short_name
@@ -96,7 +96,7 @@ def json_user_tasks():
 def cancel_user_task(task_id):
     redirect_url = request.args.get("redirect")
 
-    task = Task.q.get(task_id)
+    task = Task.get(task_id)
 
     if task is None:
         abort(404)
