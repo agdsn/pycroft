@@ -25,7 +25,7 @@ class BuildingFactory(BaseFactory):
 
     site = SubFactory(SiteFactory)
 
-    number = Sequence(lambda n: n)
+    number = Sequence(lambda n: str(n))
     street = LazyAttribute(lambda b: b.site.name)
     short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
     fee_account = SubFactory(AccountFactory, type='REVENUE')

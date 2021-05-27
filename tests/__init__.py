@@ -107,7 +107,8 @@ class SQLAlchemyTestCase(unittest.TestCase):
         self.transaction = None
 
     def tearDown(self):
-        self._rollback()
+        if self.transaction is not None:
+            self._rollback()
         close_all_sessions()
         super().tearDown()
 
@@ -191,15 +192,16 @@ class FrontendDataTestBase(testing.TestCase):
     _default_argument_creator = lambda c: u"default"
 
     def _login(self, login, password):
-        self.client.post(url_for("login.login"), follow_redirects=True,
+        self.client.post(url_for("login.login"),
                          data={'login': login, 'password': password})
 
     def tearDown(self):
-        self.client.get("/logout")
+        self.client2.get("/logout")
         super().tearDown()
 
     def setUp(self):
         super().setUp()
+        self.client2 = self.client
         if self.login:
             self._login(login=self.login, password=self.password)
 

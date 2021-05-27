@@ -301,8 +301,8 @@ class Test_Membership(PropertyDataTestBase):
     def test_active_instance_property(self):
         p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
                         user=self.user, group=self.property_group1)
-        assert p1.active()
         session.session.add(p1)
+        assert p1.active()
         session.session.commit()
 
         p1 = Membership.q.filter_by(
