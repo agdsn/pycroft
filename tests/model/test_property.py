@@ -141,7 +141,8 @@ class Test_MembershipValidators(PropertyDataTestBase):
         session.session.add(p1)
         session.session.commit()
 
-        p = Membership.q.first()
+        session.session.refresh(p1)
+        p = p1
         assert p is not None
         assert p.begins_at is not None
         assert p.ends_at is None
