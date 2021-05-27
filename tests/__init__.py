@@ -42,7 +42,7 @@ def setup():
         raise RuntimeError("Environment variable PYCROFT_DB_URI must be "
                            "set to an SQLalchemy connection string.")
 
-    engine = create_engine(uri, poolclass=SingletonThreadPool)
+    engine = create_engine(uri, poolclass=SingletonThreadPool, future=True)
 
     connection = engine.connect()
 
