@@ -191,14 +191,16 @@ class Split(IntegerIdModel):
                         nullable=False, index=True)
     account = relationship(Account,
                            backref=backref("splits",
-                                           cascade="all, delete-orphan"))
+                                           cascade="all, delete-orphan",
+                                           cascade_backrefs=False))
 
     transaction_id = Column(Integer,
                             ForeignKey(Transaction.id, ondelete='CASCADE'),
                             nullable=False)
     transaction = relationship(Transaction,
                                backref=backref("splits",
-                                               cascade="all, delete-orphan"))
+                                               cascade="all, delete-orphan",
+                                               cascade_backrefs=False))
     __table_args__ = (
         UniqueConstraint(transaction_id, account_id),
     )
@@ -328,7 +330,7 @@ class BankAccount(IntegerIdModel):
 class BankAccountActivity(IntegerIdModel):
     bank_account_id = Column(Integer, ForeignKey(BankAccount.id),
                              nullable=False, index=True)
-    bank_account = relationship(BankAccount, backref=backref("activities"))
+    bank_account = relationship(BankAccount, backref=backref("activities", viewonly=True))
     amount = Column(Money, nullable=False)
     reference = Column(Text, nullable=False)
     other_account_number = Column(String(255), nullable=False)

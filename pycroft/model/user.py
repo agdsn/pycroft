@@ -161,13 +161,13 @@ class User(ModelBase, BaseUser, UserMixin):
 
     # one to one from User to Account
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)
-    account = relationship("Account", backref=backref("user", uselist=False))
+    account = relationship("Account", backref=backref("user", uselist=False, viewonly=True))
 
     unix_account_id = Column(Integer, ForeignKey('unix_account.id'), nullable=True, unique=True)
     unix_account = relationship('UnixAccount')  # backref not really needed.
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
-    address = relationship(Address, backref=backref("inhabitants"))
+    address = relationship(Address, backref=backref("inhabitants", viewonly=True))
 
     room = relationship("Room", backref=backref("users", viewonly=True), sync_backref=False)
 
@@ -484,13 +484,15 @@ class Membership(IntegerIdModel, IntervalModel):
                       nullable=False, index=True)
     group = relationship(Group, backref=backref("memberships",
                                                 cascade="all, delete-orphan",
-                                                order_by='Membership.id'))
+                                                order_by='Membership.id',
+                                                cascade_backrefs=False))
 
     # many to one from Membership to User
     user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                      nullable=False, index=True)
     user = relationship(User, backref=backref("memberships",
-                                              cascade="all, delete-orphan"))
+                                              cascade="all, delete-orphan",
+                                              cascade_backrefs=False))
 
 
 class PropertyGroup(Group):
@@ -539,13 +541,13 @@ class RoomHistoryEntry(IntegerIdModel, IntervalModel):
                      nullable=False, index=True)
     room = relationship(Room, backref=backref(name="room_history_entries",
                                               order_by='RoomHistoryEntry.id',
-                                              passive_deletes=True))
+                                              viewonly=True))
 
     user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                      nullable=False, index=True)
     user = relationship(User, backref=backref("room_history_entries",
                                               order_by='RoomHistoryEntry.id',
-                                              passive_deletes=True))
+                                              viewonly=True))
 
 
 manager.add_function(

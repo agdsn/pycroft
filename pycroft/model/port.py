@@ -19,12 +19,13 @@ class PatchPort(IntegerIdModel):
 
     switch_port_id = Column(Integer, ForeignKey(SwitchPort.id, ondelete="SET NULL"), unique=True)
     switch_port = relationship(SwitchPort,
-                               backref=backref("patch_port", uselist=False))
+                               backref=backref("patch_port", uselist=False, cascade_backrefs=False))
 
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
                      nullable=False, index=True)
     room = relationship(Room, foreign_keys=room_id, backref=backref("patch_ports",
-                                                                    cascade="all, delete-orphan"))
+                                                                    cascade="all, delete-orphan",
+                                                                    cascade_backrefs=False))
 
     switch_room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
     switch_room = relationship(Room, foreign_keys=switch_room_id)
@@ -44,13 +45,13 @@ manager.add_function(
           v_switch_port_switch_host_room_id integer;
         BEGIN
           v_patch_port := NEW;
-        
+
           IF v_patch_port.switch_port_id IS NOT NULL THEN
               SELECT h.room_id INTO v_switch_port_switch_host_room_id FROM patch_port pp
                   JOIN switch_port sp ON pp.switch_port_id = sp.id
                   JOIN host h ON sp.switch_id = h.id
                   WHERE pp.id = v_patch_port.id;
-                  
+
               IF v_switch_port_switch_host_room_id <> v_patch_port.switch_room_id THEN
                 RAISE EXCEPTION 'A patch-port can only be patched to a switch that is located in the switch-room of
                                   the patch-port';

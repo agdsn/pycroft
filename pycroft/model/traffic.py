@@ -33,12 +33,14 @@ class TrafficVolume(TrafficEvent, ModelBase):
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
                    nullable=False, index=True)
     ip = relationship(IP, backref=backref("traffic_volumes",
-                                          cascade="all, delete-orphan"))
+                                          cascade="all, delete-orphan",
+                                          cascade_backrefs=False))
     user_id = Column(Integer, ForeignKey(User.id, ondelete='CASCADE'),
                      nullable=True, index=True)
     user = relationship(User,
                         backref=backref("traffic_volumes",
-                                        cascade="all, delete-orphan"),
+                                        cascade="all, delete-orphan",
+                                        cascade_backrefs=False),
                         uselist=False)
     packets = Column(Integer, CheckConstraint('packets >= 0'),
                      nullable=False)

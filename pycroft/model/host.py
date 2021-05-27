@@ -24,10 +24,11 @@ class Host(IntegerIdModel):
     owner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"),
                       nullable=True, index=True)
     owner = relationship(User, backref=backref("hosts",
-                                               cascade="all, delete-orphan"))
+                                               cascade="all, delete-orphan",
+                                               cascade_backrefs=False))
 
     # many to one from Host to Room
-    room = relationship(Room, backref=backref("hosts"))
+    room = relationship(Room, backref=backref("hosts", cascade_backrefs=False))
     # We don't want to `ONDELETE CASCADE` because deleting a room
     # should not delete a host being there
     room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
@@ -41,7 +42,7 @@ class Switch(ModelBase):
     column, the primary key is `host_id`, a foreign key on a `Host`.
     """
     host_id = Column(Integer, ForeignKey(Host.id), primary_key=True, index=True)
-    host = relationship(Host, backref=backref("switch", uselist=False))
+    host = relationship(Host, backref=backref("switch", uselist=False, viewonly=True))
 
     management_ip = Column(IPAddress, nullable=False)
 
@@ -89,7 +90,7 @@ class Interface(IntegerIdModel):
 
     host = relationship(Host,
                         backref=backref("interfaces",
-                                        cascade="all, delete-orphan"))
+                                        cascade="all, delete-orphan", cascade_backrefs=False))
 
 
 # See the `SwitchPort.default_vlans` relationship
@@ -107,7 +108,8 @@ class SwitchPort(IntegerIdModel):
                        nullable=False, index=True)
     switch = relationship(Switch,
                           backref=backref("ports",
-                                        cascade="all, delete-orphan"))
+                                          cascade="all, delete-orphan",
+                                          cascade_backrefs=False))
     name = Column(String(64), nullable=False)
     #: These are the VLANs that should theoretically be available at
     #: this switch port.  It is only used to calculate the pool of IPs
@@ -129,7 +131,8 @@ class IP(IntegerIdModel):
                           nullable=False)
     interface = relationship(Interface,
                              backref=backref("ips",
-                                             cascade="all, delete-orphan"))
+                                             cascade="all, delete-orphan",
+                                             cascade_backrefs=False))
 
     host = relationship(Host, secondary=Interface.__table__, sync_backref=False,
                         backref=backref("ips", viewonly=True), viewonly=True)
@@ -137,7 +140,8 @@ class IP(IntegerIdModel):
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
                        nullable=False, index=True)
     subnet = relationship(Subnet,
-                          backref=backref("ips", cascade="all, delete-orphan"),
+                          backref=backref("ips", cascade="all, delete-orphan",
+                                          cascade_backrefs=False),
                           lazy='joined')
 
     def _check_subnet_valid(self, address, subnet):

@@ -85,7 +85,7 @@ class UserTask(Task):
     id = Column(Integer, ForeignKey(Task.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    user = relationship('User', backref=backref("tasks"))
+    user = relationship('User', backref=backref("tasks", viewonly=True))
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
 
 

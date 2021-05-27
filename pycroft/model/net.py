@@ -18,7 +18,7 @@ class VLAN(IntegerIdModel):
     )
     switch_ports = relationship('SwitchPort', secondary='switch_port_default_vlans',
                                 back_populates='default_vlans')
-    subnets = relationship('Subnet', back_populates='vlan')
+    subnets = relationship('Subnet', back_populates='vlan', viewonly=True)
 
 
 class Subnet(IntegerIdModel):

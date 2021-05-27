@@ -29,7 +29,7 @@ class LogEntry(IntegerIdModel):
 
     # many to one from LogEntry to User
     author = relationship("User",
-                          backref=backref("authored_log_entries"))
+                          backref=backref("authored_log_entries", viewonly=True))
     author_id = Column(Integer, ForeignKey("user.id"), index=True)
 
 
@@ -38,8 +38,7 @@ class TaskLogEntry(LogEntry):
     id = Column(Integer, ForeignKey(LogEntry.id, ondelete="CASCADE"),
                 primary_key=True)
 
-    task = relationship("Task", backref=backref("log_entries",
-                                                cascade="all, delete-orphan"))
+    task = relationship("Task", backref=backref("log_entries", viewonly=True))
     task_id = Column(Integer, ForeignKey("task.id", ondelete="CASCADE"),
                      nullable=False, index=True)
 
@@ -47,7 +46,7 @@ class TaskLogEntry(LogEntry):
     user = relationship("User",
                         primaryjoin="TaskLogEntry.task_id == UserTask.id",
                         secondary="user_task",
-                        backref=backref("task_log_entries"),
+                        backref=backref("task_log_entries", viewonly=True),
                         viewonly=True)
 
 
@@ -58,7 +57,8 @@ class UserLogEntry(LogEntry):
 
     # many to one from UserLogEntry to User
     user = relationship("User", backref=backref("log_entries",
-                                                cascade="all, delete-orphan"))
+                                                cascade="all, delete-orphan",
+                                                cascade_backrefs=False))
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"),
                      nullable=False, index=True)
 
@@ -69,6 +69,7 @@ class RoomLogEntry(LogEntry):
 
     # many to one from RoomLogEntry to Room
     room = relationship("Room", backref=backref("log_entries",
-                                                cascade="all, delete-orphan"))
+                                                cascade="all, delete-orphan",
+                                                cascade_backrefs=False))
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
                      nullable=False, index=True)
