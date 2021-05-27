@@ -368,7 +368,7 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                                                              split_insert_user.c.id ==
                                                              split_insert_fee_account.c.id)))
 
-    affected_users = [dict(user) for user in affected_users_raw]
+    affected_users = [dict(user._mapping) for user in affected_users_raw]
 
     return affected_users
 
