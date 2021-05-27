@@ -179,6 +179,7 @@ def schedule_user_task(task_type, due, user, parameters: TaskParams, processor):
                     user=user)
 
     task.parameters = parameters
+    session.session.add(task)
 
     return task
 
