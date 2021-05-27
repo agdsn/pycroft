@@ -48,7 +48,7 @@ def with_transaction(wrapped: F) -> F: ...
 
 @wrapt.decorator
 def with_transaction(wrapped, instance, args, kwargs):
-    transaction = session.begin(subtransactions=True)
+    transaction = session.begin_nested()
     try:
         rv = wrapped(*args, **kwargs)
         transaction.commit()

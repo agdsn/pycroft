@@ -302,7 +302,7 @@ def create_user(
     account = UnixAccount(home_directory="/home/{}".format(login))
     new_user.unix_account = account
 
-    with session.session.begin(subtransactions=True):
+    with session.session.begin_nested():
         session.session.add(new_user)
         session.session.add(account)
     new_user.account.name = deferred_gettext(u"User {id}").format(
