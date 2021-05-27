@@ -161,6 +161,11 @@ def make_app(debug=False):
 
     @app.teardown_request
     def shutdown_session(exception=None):
+        if app.testing:
+            # things are not necessarily committed here,
+            # so `remove` would result in a `ROLLBACK TO SAVEPOINT` to a pre-setup state.
+            return
+
         session.Session.remove()
 
     @app.before_request
