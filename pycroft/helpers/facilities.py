@@ -15,7 +15,7 @@ from pycroft.model.facilities import Building
 
 def sort_buildings(buildings):
     def make_sort_key(building):
-        s = re.split('(\d+)([a-zA-Z]?)', building.number)
+        s = re.split(r'(\d+)([a-zA-Z]?)', building.number)
         if len(s) != 4: return building.street, building.number #split unsuccessful
         return building.street, (int(s[1]), s[2].lower())
 
