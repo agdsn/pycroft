@@ -37,6 +37,10 @@ class Config(IntegerIdModel):
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
     treasurer_group = relationship(
         PropertyGroup, foreign_keys=[treasurer_group_id])
+    pre_member_group_id = Column(
+        Integer, ForeignKey(PropertyGroup.id), nullable=False)
+    pre_member_group = relationship(
+        PropertyGroup, foreign_keys=[pre_member_group_id])
     traffic_limit_exceeded_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
     traffic_limit_exceeded_group = relationship(PropertyGroup,
