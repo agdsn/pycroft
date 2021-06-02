@@ -1,4 +1,4 @@
-"""add pre member account
+"""add pre member group to config
 
 Revision ID: 27f7f8832dfa
 Revises: fb8d553a7268
