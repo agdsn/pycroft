@@ -1157,6 +1157,10 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
     message = deferred_gettext("Created from registration {}.").format(str(prm.id)).to_json()
     log_user_event(message, processor, user)
 
+    if move_in_datetime > session.utcnow():
+        make_member_of(user, config.pre_member_group, processor,
+                       closed(session.utcnow(), move_in_datetime + timedelta(hours=3)))
+
     session.session.delete(prm)
 
     return user
