@@ -7,8 +7,6 @@ Create Date: 2021-04-26 22:16:41.772282
 """
 from alembic import op
 import sqlalchemy as sa
-import pycroft
-
 
 # revision identifiers, used by Alembic.
 revision = 'fb8d553a7268'
