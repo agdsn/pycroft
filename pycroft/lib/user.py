@@ -578,6 +578,10 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
                        message=deferred_gettext(
                            "Set e-mail forwarding to {}.".format(email_forwarded)).to_json())
 
+    if is_confirmed:
+        user.email_confirmed = True
+        user.email_confirmation_key = None
+
     if email == user.email:
         # email wasn't changed, do nothing
         return user
@@ -588,9 +592,6 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
     if email is not None:
         if not is_confirmed:
             send_confirmation_email(user)
-        else:
-            user.email_confirmed = True
-            user.email_confirmation_key = None
     else:
         user.email_confirmed = False
         user.email_confirmation_key = None
