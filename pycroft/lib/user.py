@@ -375,9 +375,9 @@ def move_in(
         user.birthdate = birthdate
 
     if begin_membership:
-        if user.member_of(config.external_group):
-            remove_member_of(user, config.external_group, processor,
-                             closedopen(session.utcnow(), None))
+        for group in {config.external_group, config.pre_member_group}:
+            if user.member_of(group):
+                remove_member_of(user, group, processor, closedopen(session.utcnow(), None))
 
         for group in {config.member_group, config.network_access_group}:
             if not user.member_of(group):
@@ -1159,7 +1159,7 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
 
     if move_in_datetime > session.utcnow():
         make_member_of(user, config.pre_member_group, processor,
-                       closed(session.utcnow(), move_in_datetime + timedelta(hours=3)))
+                       closed(session.utcnow(), None))
 
     session.session.delete(prm)
 
