@@ -672,7 +672,7 @@ def edit_address(
                    processor, user)
 
 
-def traffic_history(user_id, start, end):
+def traffic_history(user_id, start, end) -> list[TrafficHistoryEntry]:
     result: list[Row] = session.session.execute(
         select('*').select_from(
             func.traffic_history(user_id, start, end))).fetchall()
