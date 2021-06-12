@@ -449,7 +449,7 @@ def user_show_logs_json(user_id, logtype="all"):
 @bp.route("/<int:user_id>/groups")
 @bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all"):
-    memberships = Membership.q.filter(Membership.user_id == user_id)
+    memberships = Membership.q.select_from(Membership).filter(Membership.user_id == user_id)
     if group_filter == "active":
         memberships = memberships.filter(
             # it is important to use == here, "is" does NOT work
