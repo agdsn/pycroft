@@ -1,6 +1,6 @@
 from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer, \
     PrimaryKeyConstraint, null, and_
-from sqlalchemy.orm import Query, aliased
+from sqlalchemy.orm import Query, aliased, configure_mappers
 
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, View
@@ -11,6 +11,9 @@ from pycroft.model.port import PatchPort
 from pycroft.model.user import User
 from pycroft.model.property import current_property, CurrentProperty
 
+# we need backref attributes to be accessible for view queries,
+# which get set in the configuration phase
+configure_mappers()
 hades_view_ddl = DDLManager()
 
 network_access_subq = (
