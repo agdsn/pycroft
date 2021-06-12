@@ -23,6 +23,18 @@
     --red-bright-60: hsl(2, 100%, 95%);
 }
 
+/* LINKS:
+ * Don't underline them if they're not part of a special component
+ * (i.e., don't have a `class=` attribute
+ */
+a:not([class]):not(:hover) {
+    text-decoration: none;
+}
+
+a:not([class]):hover {
+    text-decoration: underline;
+}
+
 .navbar {
     z-index: 1;
 }
