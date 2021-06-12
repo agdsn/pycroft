@@ -213,8 +213,8 @@ ddl.add_function(
 class TrafficHistoryEntry:
     def __init__(self, timestamp, ingress, egress):
         self.timestamp = timestamp
-        self.ingress = ingress
-        self.egress = egress
+        self.ingress = ingress or 0
+        self.egress = egress or 0
 
     def __repr__(self):
         return str(self.__dict__)
