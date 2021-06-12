@@ -18,6 +18,7 @@ from difflib import SequenceMatcher
 from typing import Optional, List, Iterable
 
 from sqlalchemy import or_, func, select, Boolean, String
+from sqlalchemy.engine import Row
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict, utc
@@ -672,10 +673,10 @@ def edit_address(
 
 
 def traffic_history(user_id, start, end):
-    result = session.session.execute(
+    result: list[Row] = session.session.execute(
         select('*').select_from(
             func.traffic_history(user_id, start, end))).fetchall()
-    return [TrafficHistoryEntry(**dict(row.items())) for row in result]
+    return [TrafficHistoryEntry(**dict(row)) for row in result]
 
 
 def has_balance_of_at_least(user, amount):
