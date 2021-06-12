@@ -27,3 +27,7 @@ class TrafficVolumeFactory(TrafficDataFactory):
     ip = factory.SubFactory(IPFactory)
     type = FuzzyChoice(['Ingress', 'Egress'])
     packets = FuzzyInteger(0, 5000)
+
+
+class TrafficVolumeLastWeekFactory(TrafficVolumeFactory):
+    timestamp = factory.Faker('date_time_between', start_date='-1w', end_date='now')

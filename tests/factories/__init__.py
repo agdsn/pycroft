@@ -10,5 +10,5 @@ from .host import HostFactory, InterfaceFactory, IPFactory, SwitchFactory, Switc
 from .net import SubnetFactory, VLANFactory
 from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGroupFactory
 from .user import UserFactory, UserWithoutRoomFactory, UserWithHostFactory, UnixAccountFactory
-from .traffic import TrafficDataFactory, TrafficVolumeFactory
+from .traffic import TrafficDataFactory, TrafficVolumeFactory, TrafficVolumeLastWeekFactory
 from .log import RoomLogEntryFactory, UserLogEntryFactory
