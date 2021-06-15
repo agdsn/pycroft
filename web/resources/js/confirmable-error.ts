@@ -45,10 +45,10 @@ function exposeCheckboxesForErrors() {
  * For all hidden checkboxes, hide their surrounding form-group as well.
  */
 function hideFormGroupsWithHiddenInput() {
-    document.querySelectorAll('.form-group [data-role=confirm-checkbox]')
+    document.querySelectorAll('form [data-role=confirm-checkbox]')
         .forEach(el => {
             const checkbox = <HTMLElement>el;
-            const formGroup = <HTMLElement>checkbox.closest('.form-group')!;
+            const formGroup = document.getElementById(`form-group-${el.id}`)!;
             formGroup.hidden = checkbox.hidden;
         })
 }
