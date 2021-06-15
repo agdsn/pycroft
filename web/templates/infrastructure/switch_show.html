@@ -12,7 +12,7 @@
         <li class="breadcrumb-item active">{{ switch.host.name }}</li>
 
         {% if current_user is privileged_for('infrastructure_change') %}
-            <div class="ml-auto">
+            <div class="ms-auto">
                 <a class="btn btn-primary btn-sm" href="{{ url_for('.switch_edit', switch_id=switch.host.id) }}">
                     <span class="fa fa-edit"></span>
                     Bearbeiten
