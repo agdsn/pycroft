@@ -9,7 +9,7 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ url_for('facilities.overview') }}">Wohnheime</a></li>
         <li class="breadcrumb-item active">{{ building.short_name }}</li>
-        <div class="ml-auto">
+        <div class="ms-auto">
             {% if current_user is privileged_for('facilities_change') %}
                 <a class="btn btn-success btn-sm" href="{{ url_for('.room_create', building_id=building.id) }}">
                     <span class="fa fa-plus"></span>

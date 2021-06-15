@@ -16,7 +16,7 @@
         <li class="breadcrumb-item active">Zimmer {{ room.number }}</li>
 
         {% if current_user is privileged_for('facilities_change') %}
-            <a class="btn btn-primary btn-sm ml-auto" href="{{ url_for('.room_edit', room_id=room.id) }}">
+            <a class="btn btn-primary btn-sm ms-auto" href="{{ url_for('.room_edit', room_id=room.id) }}">
                 <span class="fa fa-edit"></span>
                 Bearbeiten
             </a>
