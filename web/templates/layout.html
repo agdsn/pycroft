@@ -56,10 +56,15 @@
                     <!-- User login / logout -->
                     <div class="d-flex">
                     {% if current_user.is_authenticated %}
-                      <form class="form-inline ml-auto" method="get">
-                        <label for="nav_search"><input type="text" class="form-control" id="nav_search" name="nav_search"
-                                                               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                                                               placeholder="Nutzer suchen…" /></label>
+                      <form class="ms-auto row" method="get">
+                        <div class="col">
+                          <label class="visually-hidden" for="nav_search">Suche</label>
+                          <input type="text" class="form-control"
+                                 id="nav_search" name="nav_search"
+                                 autocomplete="off" autocorrect="off"
+                                 autocapitalize="off" spellcheck="false"
+                                 placeholder="Nutzer suchen…"/>
+                        </div>
                       </form>
                       <span class="nav navbar-nav">
                           <a class="nav-link" style="display: inline-block; padding-right: 0; margin-right: 0;"
@@ -68,9 +73,9 @@
                           <a class="nav-link" href="{{ url_for("login.logout") }}"><span style="color: white;" class="fa fa-power-off"></span></a>
                       </span>
                     {% else %}
-                      <ul class="nav navbar-nav ml-auto">
+                      <ul class="nav navbar-nav ms-auto">
                             <li class="nav-item">
-                                <a class="nav-link ml-auto" href="{{ url_for("login.login") }}">
+                                <a class="nav-link ms-auto" href="{{ url_for("login.login") }}">
                                     Anmelden&nbsp;<span style="color: white;" class="fa fa-power-off"></span>
                                 </a>
                             </li>
