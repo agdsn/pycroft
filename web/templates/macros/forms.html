@@ -20,7 +20,7 @@
             {# Namespace required because jinja2 does not save changes done in a loop #}
             {% set ns = namespace(autofocus=first_autofocus) %}
             {% for field in form %}
-                <div class="col-sm-{{ col_width }}">
+                <div class="col-sm-{{ col_width }} mb-3">
                     {{ field(render_mode=field_render_mode, autofocus=ns.autofocus, autocomplete=autocomplete) }}
                 </div>
                 {% set ns.autofocus = false %}
