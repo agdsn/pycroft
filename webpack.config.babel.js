@@ -117,9 +117,11 @@ export default {
             },
             // Expose our table module as a global variable.
             // Functions from this module are referenced through
-            // data-*-attributes for use by bootstrap-table
+            // data-*-attributes for use by bootstrap-table.
+            // This is necessary because `bootstrap-table` requires
+            // the referenced function to be globally accessible, like
+            // `window.fooFormatter`, and does not import it from somewhere.
             {
-                // test: path.join(src, 'js', 'table.js'),
                 test: path.join(src, 'js', 'table.js'),
                 use: {
                     loader: "expose-loader",
