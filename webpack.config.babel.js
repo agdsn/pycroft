@@ -119,16 +119,6 @@ export default {
                 use: 'ts-loader',
                 exclude: dep,
             },
-            // Some dependencies are not proper modules yet, they need to
-            // be shimmed and their dependencies need to be declared manually.
-            {
-                test: /\.js$/,
-                include: [
-                    'bootstrap',
-                    'bootstrap-datepicker',
-                    'bootstrap-table',
-                ].map(pkg => path.join(dep, pkg)),
-            },
             // Expose our table module as a global variable.
             // Functions from this module are referenced through
             // data-*-attributes for use by bootstrap-table
