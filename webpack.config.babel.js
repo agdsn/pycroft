@@ -130,15 +130,6 @@ export default {
                     },
                 },
             },
-            {
-                test: path.join(dep, 'jquery'),
-                use: {
-                    loader: "expose-loader",
-                    options: {
-                        exposes: "$",
-                    },
-                },
-            },
             // Inject 'bootstrap' symbol into bootstrap-table`
             // This is required because the BS5 version detection requires that:
             // `constants/index.js` probes `bootstrap.Tooltip.VERSION`
