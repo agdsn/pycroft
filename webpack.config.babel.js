@@ -157,21 +157,6 @@ export default {
                 },
                 include: path.join(dep, "bootstrap-table")
             },
-            // Inject bootstrap-table import into its locales
-            {
-                test: /\.js$/,
-                use: {
-                    loader: "imports-loader",
-                    options: {
-                        type: 'commonjs',
-                        imports: {
-                            'moduleName': 'bootstrap-table',
-                            'name': 'bootstrapTable',
-                        },
-                    },
-                },
-                include: path.join(dep, "bootstrap-table", "dist", "locale"),
-            },
             // Inject jQuery import into bootstrap-datepicker locales
             {
                 test: /\.js$/,
