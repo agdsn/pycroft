@@ -163,7 +163,11 @@ export default {
                 use: {
                     loader: "imports-loader",
                     options: {
-                        imports: ['bootstrapTable bootstrap-table'],
+                        type: 'commonjs',
+                        imports: {
+                            'moduleName': 'bootstrap-table',
+                            'name': 'bootstrapTable',
+                        },
                     },
                 },
                 include: path.join(dep, "bootstrap-table", "dist", "locale"),
