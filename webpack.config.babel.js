@@ -95,10 +95,6 @@ export default {
         // Generate a manifest file, that maps entries and assets to their
         // output file.
         new ManifestPlugin(),
-        new webpack.ProvidePlugin({
-            $: "jquery",
-            jQuery: "jquery",
-        }),
     ].concat(PROD ? [
         // PROD plugins
     ] : [
@@ -171,6 +167,21 @@ export default {
                     },
                 },
                 include: path.join(dep, "bootstrap-table", "dist", "locale"),
+            },
+            // Inject jQuery import into bootstrap-datepicker locales
+            {
+                test: /\.js$/,
+                use: {
+                    loader: "imports-loader",
+                    options: {
+                        type: 'commonjs',
+                        imports: {
+                            'moduleName': 'jquery',
+                            'name': 'jQuery',
+                        }
+                    },
+                },
+                include: path.join(dep, "bootstrap-datepicker", "dist", "locales"),
             },
             // Transpile modern JavaScript for older browsers.
             {
