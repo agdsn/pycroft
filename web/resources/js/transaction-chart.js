@@ -61,10 +61,10 @@ $(() => {
         // todo url_for
         const accountName = (acc_id, format_func, action_func) => {
             if (!(acc_id in accountCache)) {
-                const href = "/finance/accounts/" + acc_id;
+                const href = `/finance/accounts/${acc_id}`;
                 if (!accountReq.has(acc_id)) {
                     accountReq.add(acc_id);
-                    $.getJSON(href + "/json?limit=0", data => {
+                    $.getJSON(`${href}/json?limit=0`, data => {
                         accountCache[acc_id] = data.name;
                         action_func(acc_id, data.name);
                     }).done(() => {
@@ -85,9 +85,9 @@ $(() => {
             .cap(10)
             .x(d3.scale.linear().range([1, 100]))
             .label(d => {
-                const format_func = acc_id => "acc-" + acc_id;
+                const format_func = acc_id => `acc-${acc_id}`;
                 const action_func = (acc_id, replacement) => {
-                    $('text:contains("' + format_func(acc_id) + '")').text(replacement);
+                    $(`text:contains("${format_func(acc_id)}")`).text(replacement);
                 };
                 return accountName(d.key, format_func, action_func);
             })
@@ -105,7 +105,7 @@ $(() => {
             .group(accountTypeGroup)
             .cap(10)
             .x(d3.scale.linear().range([1, 100]))
-            .label(d => d.key + " (" + d.value + ")")
+            .label(d => `${d.key} (${d.value})`)
             .renderLabel(true)
             .xAxis().tickValues([]);
 
@@ -187,11 +187,11 @@ $(() => {
         transactionTable
             .dimension(dateDimension)
             .columns([
-                d => d.amount / 100. + "&#x202F;€",
+                d => `${d.amount / 100.}&#x202F;€`,
                 d => {
-                    const format_func = acc_id => "<span id=\"acc-" + acc_id + "\"></span>";
+                    const format_func = acc_id => `<span id="acc-${acc_id}"></span>`;
                     const action_func = (acc_id, replacement) => {
-                        $('#acc-' + acc_id).text(replacement);
+                        $(`#acc-${acc_id}`).text(replacement);
                     };
                     return accountName(d.account_id, format_func, action_func);
                 },
@@ -199,15 +199,15 @@ $(() => {
             ])
 
             .group(d => {
-                const href = "/finance/transactions/" + d.id;
+                const href = `/finance/transactions/${d.id}`;
                 // if building template is too slow, jquery may be executed
                 // before document is generated :(
                 let desc = "Link";
                 if (!(d.id in descCache)) {
                     if (!descReq.has(d.id)) {
                         descReq.add(d.id);
-                        $.getJSON(href + "/json", data => {
-                            $('a[href="' + href + '"]').text(data.description);
+                        $.getJSON(`${href}/json`, data => {
+                            $(`a[href="${href}"]`).text(data.description);
                             descCache[d.id] = data.description;
                             descReq.delete(d.id);
                         });
@@ -218,7 +218,7 @@ $(() => {
                 const date = d3.time.format("%Y-%m-%d")(d.dd);
 
                 const link = `<a id="transaction-link" href="${href}">${desc}</a>`;
-                return date + " " + link;
+                return `${date} ${link}`;
             })
             .sortBy(d => -d.id)
             .size(15);
