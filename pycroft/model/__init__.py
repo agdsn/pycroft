@@ -33,8 +33,8 @@ class UTCTZInfoFactory(tzinfo):
     """
 
     def __new__(cls, offset):
-        if offset != 0:
-            raise psycopg2.DataError("UTC Offset is not zero: " + offset)
+        if offset:
+            raise psycopg2.DataError(f"UTC Offset is not zero: {offset}")
         return timezone.utc
 
 
