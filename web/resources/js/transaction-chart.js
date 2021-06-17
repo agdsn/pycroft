@@ -5,6 +5,8 @@
  */
 
 import $ from 'jquery';
+import * as dc from 'dc';
+import crossfilter from 'crossfilter';
 
 $(function () {
     var dateFormat = d3.time.format('%Y-%m-%d');
@@ -42,7 +44,7 @@ $(function () {
             d.month = d3.time.month(d.dd);
         });
 
-        var ndx = dc.crossfilter(data);
+        var ndx = crossfilter(data);
         var all = ndx.groupAll();
 
         var transaction = ndx.dimension(function (d) {
