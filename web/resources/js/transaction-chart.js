@@ -9,21 +9,21 @@ import * as dc from 'dc';
 import crossfilter from 'crossfilter';
 
 $(function () {
-    var dateFormat = d3.time.format('%Y-%m-%d');
-    var parent = d3.select('[data-chart="transactions-overview"]');
+    const dateFormat = d3.time.format('%Y-%m-%d');
+    const parent = d3.select('[data-chart="transactions-overview"]');
 
     //todo custom reduce functions for server-side stuff
-    var volumeChart = dc.barChart('#volume-chart');
-    var valueChart = dc.compositeChart('#value-chart');
-    var amountChart = dc.barChart(valueChart);
-    var cumAmountChart = dc.lineChart(valueChart);
-    var accountChart = dc.rowChart('#account-selector');
-    var typeChart = dc.rowChart('#account-type-selector');
-    var transactionTable = dc.dataTable('#transaction-table');
-    var transactionCount = dc.dataCount(".dc-data-count");
-    var params = (new URL(document.location)).searchParams;
-    var dateMin = dateFormat.parse(params.get('after'));
-    var dateMax = dateFormat.parse(params.get('before'));
+    const volumeChart = dc.barChart('#volume-chart');
+    const valueChart = dc.compositeChart('#value-chart');
+    const amountChart = dc.barChart(valueChart);
+    const cumAmountChart = dc.lineChart(valueChart);
+    const accountChart = dc.rowChart('#account-selector');
+    const typeChart = dc.rowChart('#account-type-selector');
+    const transactionTable = dc.dataTable('#transaction-table');
+    const transactionCount = dc.dataCount(".dc-data-count");
+    const params = (new URL(document.location)).searchParams;
+    const dateMin = dateFormat.parse(params.get('after'));
+    const dateMax = dateFormat.parse(params.get('before'));
 
     $("#reset-all").click(function () {
         dc.filterAll();
@@ -38,34 +38,34 @@ $(function () {
 
     d3.json(parent.attr("data-url"), function (resp) {
 
-        var data = resp.items;
+        const data = resp.items;
         data.forEach(function (d) {
             d.dd = dateFormat.parse(d.valid_on);
             d.month = d3.time.month(d.dd);
         });
 
-        var ndx = crossfilter(data);
-        var all = ndx.groupAll();
+        const ndx = crossfilter(data);
+        const all = ndx.groupAll();
 
-        var transaction = ndx.dimension(function (d) {
+        const transaction = ndx.dimension(function (d) {
             return d.account_id;
         });
-        var transactionGroup = transaction.groupAll();
+        const transactionGroup = transaction.groupAll();
         transactionCount
             .dimension(ndx)
             .group(transactionGroup);
 
-        var account = ndx.dimension(function (d) {
+        const account = ndx.dimension(function (d) {
             return d.account_id;
         });
-        var accountGroup = account.group();
-        var accountCache = {"Others": "Other accounts"}; //dict of values cached
-        var accountReq = new Set([]); //set of ids being requested
+        const accountGroup = account.group();
+        const accountCache = {"Others": "Other accounts"}; //dict of values cached
+        const accountReq = new Set([]); //set of ids being requested
 
         // todo url_for
-        var accountName = function (acc_id, format_func, action_func) {
+        const accountName = function (acc_id, format_func, action_func) {
             if (!(acc_id in accountCache)) {
-                var href = "/finance/accounts/" + acc_id;
+                const href = "/finance/accounts/" + acc_id;
                 if (!accountReq.has(acc_id)) {
                     accountReq.add(acc_id);
                     $.getJSON(href + "/json?limit=0", function (data) {
@@ -89,10 +89,10 @@ $(function () {
             .cap(10)
             .x(d3.scale.linear().range([1, 100]))
             .label(function (d) {
-                var format_func = function (acc_id) {
+                const format_func = function (acc_id) {
                     return "acc-" + acc_id;
                 };
-                var action_func = function (acc_id, replacement) {
+                const action_func = function (acc_id, replacement) {
                     $('text:contains("' + format_func(acc_id) + '")').text(replacement);
                 };
                 return accountName(d.key, format_func, action_func);
@@ -103,10 +103,10 @@ $(function () {
             .renderLabel(true)
             .xAxis().tickValues([]);
 
-        var accountType = ndx.dimension(function (d) {
+        const accountType = ndx.dimension(function (d) {
             return d.type;
         });
-        var accountTypeGroup = accountType.group();
+        const accountTypeGroup = accountType.group();
 
         typeChart
             .height(300)
@@ -121,17 +121,17 @@ $(function () {
             .renderLabel(true)
             .xAxis().tickValues([]);
 
-        var dateDimension = ndx.dimension(function (d) {
+        const dateDimension = ndx.dimension(function (d) {
             return d.dd;
         });
-        var monthDimension = ndx.dimension(function (d) {
+        const monthDimension = ndx.dimension(function (d) {
             return d.month;
         });
 
-        var dateAccessor = function (d) {
+        const dateAccessor = function (d) {
             return d.dd;
         };
-        var dateExtent = [];
+        let dateExtent = [];
         dateExtent = d3.extent(data, dateAccessor);
         if (!(dateMin === null)) {
             dateExtent[0] = dateMin;
@@ -141,7 +141,7 @@ $(function () {
         }
 
 
-        var monthGroup = monthDimension.group().reduceCount();
+        const monthGroup = monthDimension.group().reduceCount();
         volumeChart
             .width(700)
             .height(100)
@@ -157,13 +157,13 @@ $(function () {
             .renderVerticalGridLines(true)
             .yAxisLabel("# transactions");
 
-        var valueGroup = monthDimension.group().reduceSum(function (d) {
+        const valueGroup = monthDimension.group().reduceSum(function (d) {
             return d.amount;
         });
-        var cumValueGroup = {
+        const cumValueGroup = {
             all: function () {
-                var s = 0;
-                var g = [];
+                let s = 0;
+                const g = [];
                 valueGroup.all().forEach(function (d, i) {
                     s += d.value;
                     g.push({key: d.key, value: s});
@@ -201,8 +201,8 @@ $(function () {
             .compose([amountChart, cumAmountChart]);
 
 
-        var descCache = {};
-        var descReq = new Set([]);
+        const descCache = {};
+        const descReq = new Set([]);
 
         transactionTable
             .dimension(dateDimension)
@@ -211,10 +211,10 @@ $(function () {
                     return d.amount / 100. + "&#x202F;€";
                 },
                 function (d) {
-                    var format_func = function (acc_id) {
+                    const format_func = function (acc_id) {
                         return "<span id=\"acc-" + acc_id + "\"></span>";
                     };
-                    var action_func = function (acc_id, replacement) {
+                    const action_func = function (acc_id, replacement) {
                         $('#acc-' + acc_id).text(replacement);
                     };
                     return accountName(d.account_id, format_func, action_func);
@@ -225,10 +225,10 @@ $(function () {
             ])
 
             .group(function (d) {
-                var href = "/finance/transactions/" + d.id;
+                const href = "/finance/transactions/" + d.id;
                 // if building template is too slow, jquery may be executed
                 // before document is generated :(
-                var desc = "Link";
+                let desc = "Link";
                 if (!(d.id in descCache)) {
                     if (!descReq.has(d.id)) {
                         descReq.add(d.id);
@@ -241,9 +241,9 @@ $(function () {
                 } else {
                     desc = descCache[d.id];
                 }
-                var date = d3.time.format("%Y-%m-%d")(d.dd);
+                const date = d3.time.format("%Y-%m-%d")(d.dd);
 
-                var link = `<a id="transaction-link" href="${href}">${desc}</a>`
+                const link = `<a id="transaction-link" href="${href}">${desc}</a>`;
                 return date + " " + link;
             })
             .sortBy(function (d) {
