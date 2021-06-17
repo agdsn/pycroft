@@ -9,7 +9,7 @@ import $ from 'jquery';
 /*
  * Activates all tooltips.
  * Non-Essential for page loading.
- * See https://getbootstrap.com/docs/4.6/components/tooltips/ */
+ * See https://getbootstrap.com/docs/5.0/components/tooltips/ */
 $(function () {
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-bs-toggle="tooltip"]').tooltip()
 });

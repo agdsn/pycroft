@@ -221,7 +221,7 @@ export function dateFormatter(value, row, index) {
 dateFormatter.attributes = { sortName: 'timestamp' };
 
 const relativeDateTemplate = _.template(
-    '<span class="relative-date" title="<%- formatted_date %>" data-toggle="tooltip" data-placement="bottom">' +
+    '<span class="relative-date" title="<%- formatted_date %>" data-bs-toggle="tooltip" data-placement="bottom">' +
     '<%- relative_date %>' +
     '</span>'
 );
