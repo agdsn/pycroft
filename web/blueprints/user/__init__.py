@@ -24,6 +24,7 @@ from flask import (
 from flask_login import current_user
 from sqlalchemy.sql.expression import func
 
+import pycroft.lib.stats
 from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import gettext
@@ -73,37 +74,22 @@ nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
 @bp.route('/')
 @nav.navigate(u"Übersicht")
 def overview():
-    uquery = lambda: session.session.query(User)
-
+    stats = pycroft.lib.stats.overview_stats()
     entries = [{"title": "Mitgliedschaftsanfragen",
                 "href": url_for('.member_requests'),
-                "number": len(PreMember.q.all())},
+                "number": stats.member_requests},
                {"title": "Nutzer in Datenbank",
                 "href": None,
-                "number": uquery().count()},
+                "number": stats.users_in_db},
                {"title": "Mitglieder",
                 "href": None,
-                "number": uquery().join(Membership).filter(
-                                Membership.group == config.member_group,
-                                Membership.active())
-                           .count()},
+                "number": stats.members},
                {"title": "Nicht bezahlt",
                 "href": None,
-                "number": uquery().join(User.account)
-                           .join(Split)
-                           .group_by(User.id)
-                           .having(func.sum(Split.amount) > 0)
-                           .count()},
+                "number": stats.not_paid_all},
                {"title": "Nicht bezahlt (Mitglieder)",
                 "href": None,
-                "number": uquery().join(Membership).filter(
-                                Membership.group == config.member_group,
-                                Membership.active())
-                           .join(User.account)
-                           .join(Split)
-                           .group_by(User.id)
-                           .having(func.sum(Split.amount) > 0)
-                           .count()}]
+                "number": stats.not_paid_members}]
     return render_template("user/user_overview.html", entries=entries,
                            traffic_top_table=TrafficTopTable(
                                 data_url=url_for("user.json_users_highest_traffic"),
