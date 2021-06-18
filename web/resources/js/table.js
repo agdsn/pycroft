@@ -10,6 +10,7 @@ import 'bootstrap-table';
 import TimeAgo from 'javascript-time-ago'
 import de from 'javascript-time-ago/locale/de'
 
+$.extend($.fn.bootstrapTable.defaults, $.fn.bootstrapTable.locales['de-DE'])
 TimeAgo.addDefaultLocale(de)
 const timeAgo = new TimeAgo('de-DE')
 
