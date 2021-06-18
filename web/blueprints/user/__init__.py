@@ -15,21 +15,22 @@ import re
 from datetime import datetime, timedelta
 from functools import partial
 from itertools import chain
+from typing import Optional, TypeVar
 
 from bs_table_py.table import datetime_format, date_format
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
-from sqlalchemy import Text, distinct, and_
+from sqlalchemy import distinct, and_
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql.expression import or_, func, cast
+from sqlalchemy.sql.expression import or_, func
 
 from pycroft import lib, config
 from pycroft.helpers import utc
-from pycroft.helpers.i18n import deferred_gettext, gettext
+from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed, closedopen
-from pycroft.helpers.net import mac_regex, ip_regex
+from pycroft.helpers.net import ip_regex, mac_regex
 from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -38,12 +39,10 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
-    get_possible_existing_users_for_pre_member, edit_email, edit_name, \
-    edit_person_id, send_member_request_merged_email, can_target, edit_address
+    get_possible_existing_users_for_pre_member, send_member_request_merged_email, can_target, edit_address
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
-from pycroft.model.host import Host, IP, Interface
 from pycroft.model.swdd import Tenancy
 from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMember, BaseUser
 from web.blueprints.access import BlueprintAccess
@@ -173,96 +172,34 @@ def json_users_highest_traffic():
         }} for user in get_users_with_highest_traffic(7, 20)])
 
 
+T = TypeVar('T')
+def coalesce_none(value: Optional[T], *none_values: T) -> Optional[T]:
+    return None if any(value == n for n in none_values) else value
+
+
 @bp.route('/json/search')
 def json_search():
-    user_id = request.args.get('id')
-    name = request.args.get('name')
-    login = request.args.get('login')
-    mac = request.args.get('mac')
-    ip_address = request.args.get('ip_address')
-    property_group_id = request.args.get('property_group_id')
-    building_id = request.args.get('building_id')
-    email = request.args.get('email')
-    person_id = request.args.get('person_id')
-    query = request.args.get("query")
-    result = User.q
+    g = request.args.get
+    try:
+        user_id = int(coalesce_none(g('id'), ""))
+        name = g('name')
+        login = g('login')
+        mac = g('mac')
+        ip_address = g('ip_address')
+        property_group_id = int(coalesce_none(g('property_group_id'), "", "__None"))
+        building_id = int(coalesce_none(g('building_id'), "", "__None"))
+        email = g('email')
+        person_id = int(coalesce_none(g('person_id'), ""))
+        query = g("query")
+    except ValueError:
+        return abort(400)
+    if not re.match(ip_regex, ip_address) or not re.match(mac_regex, mac):
+        return abort(400)
 
-    count_no_filter = result.count()
-
-    if user_id is not None and user_id != "":
-        try:
-            result = result.filter(User.id == int(user_id))
-        except ValueError:
-            return abort(400)
-    if email:
-        result = result.filter(User.email.ilike("%{}%".format(email)))
-    if person_id:
-        result = result.filter(User.swdd_person_id == person_id)
-    if name:
-        result = result.filter(User.name.ilike("%{}%".format(name)))
-    if login:
-        result = result.filter(User.login.ilike("%{}%".format(login)))
-    if mac:
-        if not re.match(mac_regex, mac):
-            return abort(400)
-
-        result = result.join(User.hosts)\
-                       .join(Host.interfaces)\
-                       .filter(Interface.mac == mac)
-    if ip_address:
-        if not re.match(ip_regex, ip_address):
-            return abort(400)
-
-        result = result.join(User.hosts) \
-                       .join(Host.ips) \
-                       .filter(IP.address == ip_address)
-
-    search_for_pg = property_group_id is not None and property_group_id != "" \
-        and property_group_id != "__None"
-
-    if search_for_pg:
-        result = result.join(Membership)
-        result = result.filter(or_(
-                            Membership.ends_at.is_(None),
-                            Membership.ends_at > func.current_timestamp())) \
-                       .filter(or_(
-                            Membership.begins_at.is_(None),
-                            Membership.begins_at < func.current_timestamp()))
-
-        try:
-            if search_for_pg:
-                pg_id = int(property_group_id)
-                result = result.join(PropertyGroup, PropertyGroup.id == Membership.group_id) \
-                                  .filter(PropertyGroup.id == pg_id)
-        except ValueError:
-            return abort(400)
-    if building_id is not None and building_id != "" and building_id != "__None":
-        try:
-            result = result.join(User.room) \
-                           .filter(Room.building_id == int(building_id))
-        except ValueError:
-            return abort(400)
-    if query:
-        query = query.strip()
-
-        if re.match(mac_regex, query):
-            result = result.join(User.hosts) \
-                           .join(Host.interfaces) \
-                           .filter(Interface.mac == query)
-        elif re.match(ip_regex, query):
-            result = result.join(User.hosts) \
-                           .join(Host.ips) \
-                           .filter(IP.address == query)
-        else:
-            result = result.filter(or_(
-                func.lower(User.name).like(
-                    func.lower("%{0}%".format(query))),
-                func.lower(User.login).like(
-                    func.lower("%{0}%".format(query))),
-                cast(User.id, Text).like("{0}%".format(query)),
-                cast(User.swdd_person_id, Text) == query,
-                cast(User.email, Text) == query,
-            ))
+    search_query = lib.search.user_search_query(
+        user_id, name, login, mac, ip_address, property_group_id, building_id, email, person_id,
+        query
+    )
 
     return jsonify(items=[{
         'id': found_user.id,
@@ -273,7 +210,11 @@ def json_search():
         },
         'login': found_user.login,
         'room_id': found_user.room_id if found_user.room_id is not None else None
-    } for found_user in (result.all() if result.count() < count_no_filter else [])])
+    } for found_user in (
+        search_query.all()
+        if search_query.count() < User.q.count()
+        else []
+    )])
 
 
 def infoflags(user):
