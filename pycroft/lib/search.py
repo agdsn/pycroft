@@ -26,13 +26,13 @@ def user_search_query(
     if user_id is not None:
         result = result.filter(User.id == int(user_id))
     if email:
-        result = result.filter(User.email.ilike("%{}%".format(email)))
+        result = result.filter(User.email.ilike(f"%{email}%"))
     if person_id is not None:
         result = result.filter(User.swdd_person_id == person_id)
     if name:
-        result = result.filter(User.name.ilike("%{}%".format(name)))
+        result = result.filter(User.name.ilike(f"%{name}%"))
     if login:
-        result = result.filter(User.login.ilike("%{}%".format(login)))
+        result = result.filter(User.login.ilike(f"%{login}%"))
     if mac:
         result = result.join(User.hosts) \
             .join(Host.interfaces) \
@@ -72,12 +72,10 @@ def user_search_query(
                 .filter(IP.address == query)
         else:
             result = result.filter(or_(
-                func.lower(User.name).like(
-                    func.lower("%{0}%".format(query))),
-                func.lower(User.login).like(
-                    func.lower("%{0}%".format(query))),
-                cast(User.id, Text).like("{0}%".format(query)),
+                func.lower(User.name).like(func.lower(f"%{query}%")),
+                func.lower(User.login).like(func.lower(f"%{query}%")),
+                cast(User.id, Text).like(f"{query}%"),
                 cast(User.swdd_person_id, Text) == query,
                 cast(User.email, Text) == query,
-                ))
+            ))
     return result
