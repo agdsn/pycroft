@@ -46,10 +46,11 @@ def user_search_query(
         result = result.join(Membership)
         result = result.filter(or_(
             Membership.ends_at.is_(None),
-            Membership.ends_at > func.current_timestamp())) \
-            .filter(or_(
+            Membership.ends_at > func.current_timestamp()
+        )).filter(or_(
             Membership.begins_at.is_(None),
-            Membership.begins_at < func.current_timestamp()))
+            Membership.begins_at < func.current_timestamp()
+        ))
 
         result = result\
             .join(PropertyGroup, PropertyGroup.id == Membership.group_id)\
