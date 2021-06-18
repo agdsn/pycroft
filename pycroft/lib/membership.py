@@ -10,14 +10,16 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
+from sqlalchemy import or_, and_, func, distinct
 from sqlalchemy.future import select
+from sqlalchemy.orm import aliased
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, closed
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
-from pycroft.model.user import Membership, Property
+from pycroft.model.user import Membership, Property, PropertyGroup
 
 
 def known_properties() -> set[str]:
@@ -157,3 +159,36 @@ def delete_property_group(group, processor):
               processor)
 
     session.session.delete(group)
+
+
+def user_memberships_query(user_id: int, active_groups_only: bool = False):
+    memberships = Membership.q.select_from(Membership).filter(Membership.user_id == user_id)
+    if active_groups_only:
+        memberships = memberships.filter(
+            # it is important to use == here, "is" does NOT work
+            or_(Membership.begins_at == None,
+                Membership.begins_at <= session.utcnow())
+        ).filter(
+            # it is important to use == here, "is" does NOT work
+            or_(Membership.ends_at == None,
+                Membership.ends_at > session.utcnow())
+        )
+    group = aliased(PropertyGroup)
+    p_granted = aliased(Property)
+    p_denied = aliased(Property)
+    memberships = (
+        memberships
+            .join(group)
+            .outerjoin(p_granted, and_(p_granted.property_group_id == group.id,
+                                       p_granted.granted == True))
+            .add_column(func.array_agg(distinct(p_granted.name))
+                        .label('granted'))
+
+            .outerjoin(p_denied, and_(p_denied.property_group_id == group.id,
+                                      p_denied.granted == False))
+            .add_column(func.array_agg(distinct(p_denied.name))
+                        .label('denied'))
+
+            .group_by(Membership.id)
+    )
+    return memberships

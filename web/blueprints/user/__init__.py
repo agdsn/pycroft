@@ -22,9 +22,7 @@ from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
-from sqlalchemy import distinct, and_
-from sqlalchemy.orm import aliased
-from sqlalchemy.sql.expression import or_, func
+from sqlalchemy.sql.expression import func
 
 from pycroft import lib, config
 from pycroft.helpers import utc
@@ -44,7 +42,7 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, PropertyGroup, Property, PreMember, BaseUser
+from pycroft.model.user import User, Membership, PreMember, BaseUser
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -390,36 +388,8 @@ def user_show_logs_json(user_id, logtype="all"):
 @bp.route("/<int:user_id>/groups")
 @bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all"):
-    memberships = Membership.q.select_from(Membership).filter(Membership.user_id == user_id)
-    if group_filter == "active":
-        memberships = memberships.filter(
-            # it is important to use == here, "is" does NOT work
-            or_(Membership.begins_at == None,
-                Membership.begins_at <= session.utcnow())
-        ).filter(
-            # it is important to use == here, "is" does NOT work
-            or_(Membership.ends_at == None,
-                Membership.ends_at > session.utcnow())
-        )
-
-    group = aliased(PropertyGroup)
-    p_granted = aliased(Property)
-    p_denied = aliased(Property)
-    memberships = (
-        memberships
-            .join(group)
-            .outerjoin(p_granted, and_(p_granted.property_group_id == group.id,
-                                       p_granted.granted == True))
-            .add_column(func.array_agg(distinct(p_granted.name))
-                        .label('granted'))
-
-            .outerjoin(p_denied, and_(p_denied.property_group_id == group.id,
-                                      p_denied.granted == False))
-            .add_column(func.array_agg(distinct(p_denied.name))
-                        .label('denied'))
-
-            .group_by(Membership.id)
-    )
+    active_groups_only = group_filter == "active"
+    memberships = lib.membership.user_memberships_query(user_id, active_groups_only)
 
     return jsonify(items=[{
             'group_name': membership.group.name,
