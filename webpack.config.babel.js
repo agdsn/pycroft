@@ -34,6 +34,7 @@ export default {
         'unlimited-end-date': './js/unlimited-end-date.js',
         'select-multiple-improvement': './js/select-multiple-improvement.js',
         'tab-anchor': './js/tab-anchor.ts',
+        'rooms-table': './js/rooms-table.ts',
     },
     output: {
         path: dst,

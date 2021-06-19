@@ -15,17 +15,10 @@
 {% endblock %}
 
 {% block page_script %}
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $("#rooms-toggle-all-users").click(function() {
-                $(this).toggleClass("active");
-                $("#rooms").bootstrapTable('refresh');
-            });
-            $("rooms").bootstrapTable()
-        });
-
+  {{ resources.link_script_file('rooms-table.js' | require) }}
+   <script type="text/javascript">
         function perhaps_all_users_query_params(params) {
-            if ($('#rooms-toggle-all-users').hasClass("active")) {
+            if (document.getElementById('rooms-toggle-all-users').classList.contains("active")) {
                 params['all_users'] = '1';
             }
             return params;
