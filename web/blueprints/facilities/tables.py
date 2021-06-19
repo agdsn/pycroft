@@ -1,7 +1,7 @@
 from flask import url_for
 
 from bs_table_py.table import BootstrapTable, Column, LinkColumn, \
-    button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
+    button_toolbar, toggle_button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
 from web.blueprints.infrastructure.tables import no_inf_change
 
 
@@ -22,9 +22,11 @@ class BuildingLevelRoomTable(BootstrapTable):
 
     @property
     def toolbar(self):
-        return button_toolbar(
-            "Display all users", href="#", id="rooms-toggle-all-users",
-            icon="fa-user")
+        return toggle_button_toolbar(
+            "Display all users",
+            id="rooms-toggle-all-users",
+            icon="fa-user"
+        )
 
 
 class RoomLogTable(BootstrapTable):
