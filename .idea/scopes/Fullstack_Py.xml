@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Fullstack Py" pattern="(((file[pycroft]:pycroft//*||file[pycroft]:tests//*)&amp;&amp;!file[pycroft]:tests/frontend//*||file[pycroft]:tests/frontend/*||file:requirements.dev.txt||file:requirements.txt||file:setup.py)&amp;&amp;!file[pycroft]:**/.*/**&amp;&amp;!file[pycroft]:**/.*||file[pycroft]:web//*)&amp;&amp;!file[pycroft]:web/resources//*" />
+</component>
