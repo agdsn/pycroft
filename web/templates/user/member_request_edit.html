@@ -72,10 +72,15 @@
   {{ resources.link_script_file('confirmable-error.js' | require) }}
 
   <script type="application/javascript">
-    $(function () {
-      $('.main .form-control').on('change paste keyup', function () {
-        $('#member_request_finish').addClass('disabled');
-      });
+    // If any change occurs in any of the elements,
+    // the `#member_request_finish` button shall be disabled.
+    const disable_finish = () => document.getElementById('member_request_finish').classList.add('disabled');
+    document.addEventListener('DOMContentLoaded', () => {
+      for (const event of ['change', 'paste', 'keyup']) {
+        for (const el of document.querySelectorAll('.main .form-control')) {
+          el.addEventListener(event, disable_finish)
+        }
+      }
     });
   </script>
 {% endblock %}
