@@ -18,3 +18,11 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Architecture decision records
+=============================
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   arch/*
