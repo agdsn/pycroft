@@ -1,0 +1,78 @@
+ADR001
+======
+
+:Number: 001
+:Title: Use jQuery in typescript modules exclusively
+:Author: Lukas Juhrich
+:Created: 2021-06-20
+:Status: Proposed
+
+.. contents:: Table of Contents
+
+Context
+-------
+There's multiple ways to interact with our HTML output using Javascript:
+
+#. Add inline Javascript in e.g. a ``{% page_script %}`` block
+#. Add an ECMAscript (ES) or typescript (TS) module,
+   configure webpack to export it as a chunk,
+   and reference it in the relevant HTML pages
+#. Add an ES/TS module, and import it in the ``main`` chunk.
+
+The important differences between option one and the other two are
+
+- In inline JS, one cannot use an
+  `ES2015 import <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import>`_
+  to use arbitrary libraries.
+  However, this can indirectly be achieved by using
+  the `expose-loader <https://github.com/webpack-contrib/expose-loader>`_
+  or the `ProvidePlugin <https://webpack.js.org/plugins/provide-plugin/>`_
+  in webpack's config to expose certain symbols as ``window.foo``.
+- In a separate module, we're able to use typescript.
+- A separate module has to undergo the webpack toolchain, whereas inline JS is “cheap” in that respect.
+
+Prior to this decision, we did a cleanup of the webpack rules,
+which replaced brute-force ``ProvidePlugin`` invocations
+
+- by specific import injections via ``imports-loader``
+- or by ``window`` attribute expositions using ``expose-loader``.
+
+This is mainly motivated by a comment of Sebastian Schrader stating that blindly
+providing things via ``ProvidePlugin`` can have detrimental effects on
+`tree shaking <https://webpack.js.org/guides/tree-shaking/>`_
+because webpack cannot make any strong assumptions anymore about who the dependents of an exposed symbol are.
+
+Also, most uses of these plugins can be considered workarounds for a deficiency,
+since most inter-module dependencies should be realized by proper module ``import`` s and ``export`` s.
+
+In light of this workaround, two instances of inline JS broke
+because jQuery's ``$`` symbol was not accessible anymore.
+In one instance, this was actually unavoidable, because ``bootstrapTable``
+is only accessible as a jQuery extension function, a fact which will
+`remain that way <https://github.com/wenzhixin/bootstrap-table/issues/4796#issuecomment-578567848>`_
+in the forseeable future.
+
+
+Decision
+--------
+#. New JS code that requires jQuery or jQuery extension functions shall occur in TS modules.
+#. No jQuery invocations shall exist in inline JS.
+#. Current jQuery invocations that exist in ES modules shall be replaced by pure-ES alternatives wherever possible,
+   or turned into TS code.
+   This does not need to happen retrospectively, but at the latest whenever these invocations are next modified.
+
+
+Consequences
+------------
+- The ``providePlugin`` section in the webpack config does not have to be reinstantiated.
+- The aforementioned, broken inline-JS took significantly more effort to fix:
+  We had to create a new typescript module, and to make the ``$().bootstrap`` invocations compile,
+  and we had to add declaration files (``.d.ts``), declaring the signature of ``bootstrapTable('refresh', params)``.
+- As a consequence, code completion and documentation lookups in JS files are now aware of this extension function,
+  and can provide documentation and type hints.
+- Every new usage of ``bootstrapTable`` functionality now requires adding type declarations,
+  which is a slight increase in effort as opposed to just reading the API docs.
+- From a contribbutor who is not too acquainted with TS syntax, this demands a few minutes more in time investment.
+  This cost however does not scale linearly, as with more functions declared,
+  more examples to imitate exist directly in the codebase.
+- Frontend developers are forced to read up on modern solutions to the problems jQuery once tried to solve.

@@ -25,4 +25,5 @@ Architecture decision records
    :maxdepth: 1
    :glob:
 
+   ADR001 – Use jQuery in typescript modules exclusively <arch/adr-001.rst>
    arch/*
