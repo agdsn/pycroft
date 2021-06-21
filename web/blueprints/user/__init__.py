@@ -175,7 +175,7 @@ def json_search():
         email = g('email')
         person_id = int(coalesce_none(g('person_id'), ""))
         query = g("query")
-    except ValueError:
+    except TypeError:
         return abort(400)
     if not re.match(ip_regex, ip_address) or not re.match(mac_regex, mac):
         return abort(400)
