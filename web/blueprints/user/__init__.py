@@ -15,7 +15,7 @@ import re
 from datetime import datetime, timedelta
 from functools import partial
 from itertools import chain
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Callable
 
 from bs_table_py.table import datetime_format, date_format
 from flask import (
@@ -25,6 +25,7 @@ from flask_login import current_user
 from sqlalchemy.sql.expression import func
 
 import pycroft.lib.stats
+import pycroft.lib.search
 from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import gettext
@@ -161,23 +162,30 @@ def coalesce_none(value: Optional[T], *none_values: T) -> Optional[T]:
     return None if any(value == n for n in none_values) else value
 
 
+U = TypeVar('U')
+def and_then(val: Optional[T], map: Callable[[T], U]) -> Optional[U]:
+    return map(val) if val is not None else None
+
+
 @bp.route('/json/search')
 def json_search():
     g = request.args.get
     try:
-        user_id = int(coalesce_none(g('id'), ""))
+        user_id = and_then(coalesce_none(g('id'), ""), int)
         name = g('name')
         login = g('login')
         mac = g('mac')
         ip_address = g('ip_address')
-        property_group_id = int(coalesce_none(g('property_group_id'), "", "__None"))
-        building_id = int(coalesce_none(g('building_id'), "", "__None"))
+        property_group_id = and_then(coalesce_none(g('property_group_id'), "", "__None"), int)
+        building_id = and_then(coalesce_none(g('building_id'), "", "__None"), int)
         email = g('email')
-        person_id = int(coalesce_none(g('person_id'), ""))
+        person_id = and_then(coalesce_none(g('person_id'), ""), int)
         query = g("query")
     except TypeError:
         return abort(400)
-    if not re.match(ip_regex, ip_address) or not re.match(mac_regex, mac):
+    ip_invalid = ip_address is not None and not re.match(ip_regex, ip_address)
+    mac_invalid = mac is not None and not re.match(mac_regex, mac)
+    if ip_invalid or mac_invalid:
         return abort(400)
 
     search_query = lib.search.user_search_query(
