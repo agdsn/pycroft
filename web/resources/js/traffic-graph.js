@@ -26,7 +26,9 @@ $(function() {
             .attr('height', height);
     }
 
-    $("#tab-traffic").one('shown.bs.tab', function () {
+    const el = document.getElementById('tab-traffic');
+    el.addEventListener('shown.bs.tab', function() {
+        console.error("Inside loadTrafficData!");
         d3.select(".traffic-graph").each(function () {
             var trafficGraph = {
                 parent: d3.select(this),
