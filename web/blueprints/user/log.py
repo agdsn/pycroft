@@ -4,6 +4,8 @@ web.blueprints.user.log
 This module contains functions that provide certain types of logs for
 a user.
 """
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.orm import Query
 
@@ -18,6 +20,8 @@ from pycroft.model.user import User
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
     format_user_not_connected, format_hades_error, format_hades_timeout
 
+
+logger = logging.getLogger(__name__)
 
 def iter_hades_switch_ports(room):
     """Return all tuples of (nasportid, nasipaddress) for a room.
@@ -89,10 +93,12 @@ def formatted_user_hades_logs(user):
     try:
         for interface, entry in get_user_hades_logs(user):
             yield format_hades_log_entry(interface, entry)
-    except HadesConfigError:
+    except HadesConfigError as e:
+        logger.error("Error in hades config: %s", e, exc_info=True)
         yield format_hades_disabled()
         return
-    except HadesOperationalError:
+    except HadesOperationalError as e:
+        logger.error("Operational error when fetching hades logs: %s", e, exc_info=True)
         yield format_hades_error()
     except HadesTimeout:
         yield format_hades_timeout()
