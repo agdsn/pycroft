@@ -22,7 +22,6 @@ from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
-from sqlalchemy.sql.expression import func
 
 import pycroft.lib.stats
 import pycroft.lib.search

@@ -21,7 +21,7 @@ from flask import (
     url_for, make_response)
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from sqlalchemy import func, or_, and_, Text, cast
+from sqlalchemy import or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms import BooleanField
