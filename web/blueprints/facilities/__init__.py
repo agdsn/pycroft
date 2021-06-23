@@ -113,7 +113,7 @@ def building_levels(building_id=None, building_shortname=None):
     return render_template(
         'facilities/levels.html',
         levels=levels_list, building=building,
-        page_title=u"Etagen Wohnheim {}".format(building.short_name),
+        page_title=f"Etagen Wohnheim {building.short_name}",
         suggested_address=suggest_room_address_data(building),
    )
 
@@ -129,7 +129,7 @@ def room_create():
         building = Building.get(building_id)
 
         if not building:
-            flash("Gebäude mit ID {} nicht gefunden!".format(building_id), "error")
+            flash(f"Gebäude mit ID {building_id} nicht gefunden!", "error")
             return redirect(url_for('.overview'))
 
     form = CreateRoomForm(building=building)
@@ -143,8 +143,7 @@ def room_create():
 
             session.session.commit()
 
-            flash("Der Raum {} wurde erfolgreich erstellt.".format(room.short_name),
-                  "success")
+            flash(f"Der Raum {room.short_name} wurde erfolgreich erstellt.", "success")
 
             return redirect(url_for('.room_show', room_id=room.id))
         except RoomAlreadyExistsException:
@@ -176,7 +175,7 @@ def room_edit(room_id):
     room = Room.get(room_id)
 
     if not room:
-        flash("Raum mit ID {} nicht gefunden!".format(room_id), "error")
+        flash(f"Raum mit ID {room_id} nicht gefunden!", "error")
         return redirect(url_for('.overview'))
 
     form = EditRoomForm(building=room.building.short_name,
@@ -194,7 +193,7 @@ def room_edit(room_id):
 
             session.session.commit()
 
-            flash("Der Raum {} wurde erfolgreich bearbeitet.".format(room.short_name),
+            flash(f"Der Raum {room.short_name} wurde erfolgreich bearbeitet.",
                   "success")
 
             return redirect(url_for('.room_show', room_id=room.id))
@@ -238,7 +237,7 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
         flash(u"Gebäude existiert nicht!", 'error')
         abort(404)
 
-    level_l0 = "{:02d}".format(level)
+    level_l0 = f"{level:02d}"
 
     room_table = BuildingLevelRoomTable(
         data_url=url_for('.building_level_rooms_json',
@@ -247,9 +246,7 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
         'facilities/rooms.html',
         level=level_l0,
         building=building,
-        page_title=u"Zimmer der Etage {:d} des Wohnheims {}".format(
-            level, building.short_name
-        ),
+        page_title=f"Zimmer der Etage {level:d} des Wohnheims {building.short_name}",
         room_table=room_table,
     )
 
@@ -293,7 +290,7 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
     return jsonify(items=[{
             'room': {
                 'href': url_for(".room_show", room_id=room.id),
-                'title': "{:02d} - {}".format(level, room.number)
+                'title': f"{level:02d} - {room.number}"
             },
             'inhabitants': [user_button(i) for i in inhabitants]
         } for room, inhabitants in level_inhabitants.items()])
@@ -305,7 +302,7 @@ def patch_port_create(switch_room_id):
     switch_room = Room.get(switch_room_id)
 
     if not switch_room:
-        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
         return redirect(url_for('.overview'))
 
     if not switch_room.is_switch_room:
@@ -325,8 +322,8 @@ def patch_port_create(switch_room_id):
 
             session.session.commit()
 
-            flash("Der Patch-Port {} zum Zimmer {} wurde erfolgreich erstellt.".format(patch_port.name,
-                                                                                       patch_port.room.short_name),
+            flash(
+                f"Der Patch-Port {patch_port.name} zum Zimmer {patch_port.room.short_name} wurde erfolgreich erstellt.",
                   "success")
 
             return redirect(url_for('.room_show', room_id=switch_room_id, _anchor="patchpanel"))
@@ -352,7 +349,7 @@ def patch_port_edit(switch_room_id, patch_port_id):
     patch_port = PatchPort.get(patch_port_id)
 
     if not switch_room:
-        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
         return redirect(url_for('.overview'))
 
     if not switch_room.is_switch_room:
@@ -360,11 +357,11 @@ def patch_port_edit(switch_room_id, patch_port_id):
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port:
-        flash("Patch-Port mit ID {} nicht gefunden!".format(patch_port_id), "error")
+        flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port.switch_room == switch_room:
-        flash("Patch-Port ist nicht im Switchraum!".format(patch_port_id), "error")
+        flash(f"Patch-Port ist nicht im Switchraum!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     form = PatchPortForm(switch_room=switch_room.short_name,
@@ -408,7 +405,7 @@ def patch_port_delete(switch_room_id, patch_port_id):
     patch_port = PatchPort.get(patch_port_id)
 
     if not switch_room:
-        flash("Raum mit ID {} nicht gefunden!".format(switch_room_id), "error")
+        flash(f"Raum mit ID {switch_room_id} nicht gefunden!", "error")
         return redirect(url_for('.overview'))
 
     if not switch_room.is_switch_room:
@@ -416,11 +413,11 @@ def patch_port_delete(switch_room_id, patch_port_id):
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port:
-        flash("Patch-Port mit ID {} nicht gefunden!".format(patch_port_id), "error")
+        flash(f"Patch-Port mit ID {patch_port_id} nicht gefunden!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     if not patch_port.switch_room == switch_room:
-        flash("Patch-Port ist nicht im Switchraum!".format(patch_port_id), "error")
+        flash(f"Patch-Port ist nicht im Switchraum!", "error")
         return redirect(url_for('.room_show', room_id=switch_room_id))
 
     form = Form()
@@ -468,13 +465,13 @@ def room_show(room_id):
                                       room_id=room_id)
 
     return render_template('facilities/room_show.html',
-                           page_title="Raum {}".format(room.short_name),
+                           page_title=f"Raum {room.short_name}",
                            room=room,
                            ports=room.patch_ports,
                            user_buttons=list(map(user_button, room.users)),
                            room_log_table=room_log_table,
                            patch_port_table=patch_port_table,
-                           form=form,)
+                           form=form, )
 
 
 @bp.route('/room/<int:room_id>/logs/json')
@@ -510,7 +507,7 @@ def room_patchpanel_json(room_id):
                 "infrastructure.switch_show",
                 switch_id=port.switch_port.switch.host_id
             ),
-            "title": "{}/{}".format(port.switch_port.switch.host.name, port.switch_port.name)
+            "title": f"{port.switch_port.switch.host.name}/{port.switch_port.name}"
         } if port.switch_port else None,
         "edit_link": {"href": url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
                       'title': "Bearbeiten",
@@ -554,7 +551,7 @@ def overcrowded(building_id):
         if building is None:
             flash(u"Gebäude existiert nicht!", 'error')
             abort(404)
-        page_title = "Mehrfachbelegungen {}".format(building.short_name)
+        page_title = f"Mehrfachbelegungen {building.short_name}"
 
     return render_template(
         "facilities/room_overcrowded.html",
