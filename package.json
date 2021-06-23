@@ -46,7 +46,7 @@
     "@babel/plugin-transform-runtime": "^7.10.3",
     "@babel/preset-env": "^7.10.3",
     "@babel/register": "^7.10.3",
-    "@types/bootstrap": "^5.0.12",
+    "@types/bootstrap": "^5.0.16",
     "@types/bootstrap-3-typeahead": "^4.0.3",
     "@types/jquery": "^3.5.5",
     "@typescript-eslint/eslint-plugin": "^4.14.1",
