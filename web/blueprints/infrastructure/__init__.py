@@ -53,11 +53,9 @@ def format_address_range(base_address, amount):
     elif abs(amount) == 1:
         return str(base_address)
     elif amount > 1:
-        return '{} - {}'.format(str(base_address),
-                                str(base_address + amount - 1))
+        return f'{str(base_address)} - {str(base_address + amount - 1)}'
     else:
-        return '{} - {}'.format(str(base_address + amount + 1),
-                                str(base_address))
+        return f'{str(base_address + amount + 1)} - {str(base_address)}'
 
 
 def format_reserved_addresses(subnet):
@@ -82,10 +80,8 @@ def subnets_json():
             'address': str(subnet.address),
             'gateway': str(subnet.gateway),
             'reserved': format_reserved_addresses(subnet),
-            'free_ips': '{}'.format(subnet.max_ips - subnet.used_ips),
-            'free_ips_formatted': '{} (von {})'.format(
-                subnet.max_ips - subnet.used_ips,
-                subnet.max_ips),
+            'free_ips': f'{subnet.max_ips - subnet.used_ips}',
+            'free_ips_formatted': f'{subnet.max_ips - subnet.used_ips} (von {subnet.max_ips})',
         } for subnet in subnets_list])
 
 
@@ -121,11 +117,11 @@ def switches_json():
 def switch_show(switch_id):
     switch = Switch.get(switch_id)
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
     return render_template(
         'infrastructure/switch_show.html',
-        page_title=u"Switch: " + switch.host.name,
+        page_title=f"Switch: {switch.host.name}",
         switch=switch,
         port_table=PortTable(
             data_url=url_for('.switch_show_json', switch_id=switch.host_id),
@@ -195,7 +191,7 @@ def switch_edit(switch_id):
     switch = Switch.q.filter_by(host_id=switch_id).one()
 
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     form = SwitchForm(name=switch.host.name, management_ip=switch.management_ip, building=switch.host.room.building,
@@ -229,7 +225,7 @@ def switch_delete(switch_id):
     switch = Switch.q.filter_by(host_id=switch_id).one()
 
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     form = Form()
@@ -261,7 +257,7 @@ def switch_port_create(switch_id):
     switch = Switch.get(switch_id)
 
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     form = SwitchPortForm()
@@ -286,7 +282,7 @@ def switch_port_create(switch_id):
         if not error:
             session.session.commit()
 
-            flash("Der Switch-Port {} wurde erfolgreich erstellt.".format(switch_port.name), "success")
+            flash(f"Der Switch-Port {switch_port.name} wurde erfolgreich erstellt.", "success")
 
             return redirect(url_for('.switch_show', switch_id=switch.host_id))
         else:
@@ -309,15 +305,15 @@ def switch_port_edit(switch_id, switch_port_id):
     switch_port = SwitchPort.get(switch_port_id)
 
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     if not switch_port:
-        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switch_port_id), "error")
+        flash(f"SwitchPort mit ID {switch_port_id} nicht gefunden!", "error")
         return redirect(url_for('.switch_show', switch_id=switch_id))
 
     if switch_port.switch != switch:
-        flash(u"SwitchPort mit ID {} gehört nicht zu {}!".format(switch_port_id, switch.host.name), "error")
+        flash(f"SwitchPort mit ID {switch_port_id} gehört nicht zu {switch.host.name}!", "error")
         return redirect(url_for('.switch_show', switch_id=switch_id))
 
     form = SwitchPortForm(obj=switch_port)
@@ -366,15 +362,15 @@ def switch_port_delete(switch_id, switch_port_id):
     switch_port = SwitchPort.get(switch_port_id)
 
     if not switch:
-        flash(u"Switch mit ID {} nicht gefunden!".format(switch_id), "error")
+        flash(f"Switch mit ID {switch_id} nicht gefunden!", "error")
         return redirect(url_for('.switches'))
 
     if not switch_port:
-        flash(u"SwitchPort mit ID {} nicht gefunden!".format(switch_port_id), "error")
+        flash(f"SwitchPort mit ID {switch_port_id} nicht gefunden!", "error")
         return redirect(url_for('.switch_show', switch_id=switch_id))
 
     if switch_port.switch != switch:
-        flash(u"SwitchPort mit ID {} gehört nicht zu {}!".format(switch_port_id, switch.host.name), "error")
+        flash(f"SwitchPort mit ID {switch_port_id} gehört nicht zu {switch.host.name}!", "error")
         return redirect(url_for('.switch_show', switch_id=switch_id))
 
     form = Form()
