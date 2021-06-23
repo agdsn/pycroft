@@ -50,12 +50,11 @@ def subnets():
 def format_address_range(base_address, amount):
     if amount == 0:
         raise ValueError
-    elif abs(amount) == 1:
+    if abs(amount) == 1:
         return str(base_address)
-    elif amount > 1:
+    if amount > 1:
         return f'{str(base_address)} - {str(base_address + amount - 1)}'
-    else:
-        return f'{str(base_address + amount + 1)} - {str(base_address)}'
+    return f'{str(base_address + amount + 1)} - {str(base_address)}'
 
 
 def format_reserved_addresses(subnet):
