@@ -62,7 +62,7 @@ $(() => {
                 },
             });
         });
-    });
+    }, {once: true});
 
     function loadTrafficData(trafficGraph) {
         d3.json(`${trafficGraph.url}/${trafficGraph.days}`,
