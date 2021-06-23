@@ -15,8 +15,6 @@ $(function() {
         var width = graph.parent.node().getBoundingClientRect().width;
         var height = 200;
 
-        console.log(width);
-
         graph.chart
             .width(width)
             .height(height);
@@ -28,7 +26,6 @@ $(function() {
 
     const el = document.getElementById('tab-traffic');
     el.addEventListener('shown.bs.tab', function() {
-        console.error("Inside loadTrafficData!");
         d3.select(".traffic-graph").each(function () {
             var trafficGraph = {
                 parent: d3.select(this),
