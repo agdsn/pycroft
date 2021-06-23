@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     navigateToAnchorTab();
 
     for (const el of document.querySelectorAll<HTMLAnchorElement>('.nav-tabs a')) {
+        // `new Tab(element)` already implicitly happens due to the respective
+        // `data-` attributes being present
         el.addEventListener('click', updateLocationHash, false)
     }
 });
