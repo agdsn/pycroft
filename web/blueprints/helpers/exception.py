@@ -1,12 +1,9 @@
 import traceback
 
 from flask import flash
-from sqlalchemy.exc import InternalError
-
-from pycroft.helpers import AutoNumber
-from pycroft.model import session
 
 from pycroft.lib.net import MacExistsException, SubnetFullException
+from pycroft.model import session
 from pycroft.model.host import MulticastFlagException
 from pycroft.model.types import InvalidMACAddressException
 
@@ -35,15 +32,6 @@ def web_execute(function, success_message, *args, **kwargs):
         flash("Die MAC-Adresse ist ungültig.", 'error')
 
         session.session.rollback()
-    except InternalError as e:
-        # Special case: Username already taken in Abe
-        # Should be removed after migration
-        if "Username already taken in Abe!" in str(e):
-            flash("Dieser Benutzername wird bereits in Abe verwendet.", 'error')
-
-            session.session.rollback()
-        else:
-            raise e
     except Exception as e:
         traceback.print_exc()
         flash("Es ist ein unerwarteter Fehler aufgetreten: {}".format(e), "error")
