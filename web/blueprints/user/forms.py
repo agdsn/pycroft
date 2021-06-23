@@ -29,7 +29,7 @@ from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
 
-from ..helpers.form import confirmable_div, ConfirmCheckboxField
+from ..helpers.form import confirmable_div, ConfirmCheckboxField, iter_prefixed_field_names
 
 
 def user_query():
@@ -223,7 +223,7 @@ class NonResidentUserCreateForm(UserBaseDataForm, CreateAddressForm):
 
     _order = (
         'name', 'login',
-        *(f for f in CreateAddressForm.__dict__ if f.startswith('address_')),
+        *iter_prefixed_field_names(CreateAddressForm, 'address_'),
         'email', 'birthdate', 'property_groups'
     )
 
