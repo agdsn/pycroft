@@ -8,12 +8,12 @@ import $ from 'jquery';
 import nv from 'nvd3';
 import * as binaryPrefix from './binary-prefix';
 
-$(function() {
-    var dateFormat = d3.time.format('%Y-%m-%d');
+$(() => {
+    const dateFormat = d3.time.format('%Y-%m-%d');
 
     function setChartSize(graph) {
-        var width = graph.parent.node().getBoundingClientRect().width;
-        var height = 200;
+        const width = graph.parent.node().getBoundingClientRect().width;
+        const height = 200;
 
         graph.chart
             .width(width)
@@ -25,16 +25,16 @@ $(function() {
     }
 
     const el = document.getElementById('tab-traffic');
-    el.addEventListener('shown.bs.tab', function() {
+    el.addEventListener('shown.bs.tab', () => {
         d3.select(".traffic-graph").each(function () {
-            var trafficGraph = {
+            const trafficGraph = {
                 parent: d3.select(this),
                 url: this.dataset.url,
                 days: this.dataset.days,
             };
 
             nv.addGraph({
-                generate: function () {
+                generate: () => {
                     trafficGraph.chart = nv.models.multiBarChart()
                         .margin({top: 25, right: 75, bottom: 30, left: 60})
                         .stacked(true)
@@ -49,8 +49,8 @@ $(function() {
 
                     return trafficGraph.chart;
                 },
-                callback: function (graph) {
-                    nv.utils.windowResize(function () {
+                callback: graph => {
+                    nv.utils.windowResize(() => {
                         setChartSize(trafficGraph);
 
                         trafficGraph.data
@@ -65,53 +65,43 @@ $(function() {
     });
 
     function loadTrafficData(trafficGraph) {
-        var days = trafficGraph.days;
-        var url = trafficGraph.url;
-        d3.json(url + "/" + days, function (error, resp) {
+        d3.json(`${trafficGraph.url}/${trafficGraph.days}`,
+            (error, resp) => {
             if (error) throw error;
 
             // Normalize data
-            var traffic = resp.items.traffic;
-            traffic.forEach(function (d) {
+            const traffic = resp.items.traffic;
+            traffic.forEach(d => {
                 d.timestamp = d3.time.format.iso.parse(d.timestamp);
             });
 
             // Traffic graph
-            var data = [{
+            const data = [{
                 key: "Upload",
                 nonStackable: false,
-                values: traffic.map(function (d) {
-                    return {
-                        x: d.timestamp,
-                        y: d.egress,
-                    };
-                }),
+                values: traffic.map(d => ({
+                    x: d.timestamp,
+                    y: d.egress,
+                })),
             },
-            {
-                key: "Download",
-                nonStackable: false,
-                values: traffic.map(function (d) {
-                    return {
+                {
+                    key: "Download",
+                    nonStackable: false,
+                    values: traffic.map(d => ({
                         x: d.timestamp,
                         y: d.ingress,
-                    };
-                }),
-            }];
+                    })),
+                }];
 
-            trafficGraph.chart.xAxis.tickFormat(function (d) {
-                return dateFormat(d);
-            });
+            trafficGraph.chart.xAxis.tickFormat(d => dateFormat(d));
 
-            if (!traffic.some(function (d) {
-                return !!d.ingress || !!d.egress;
-            }))
+            if (!traffic.some(d => !!d.ingress || !!d.egress))
                 trafficGraph.chart.forceY([0, 1000]);
 
             trafficGraph.data.datum(data).transition().duration(250).call(trafficGraph.chart);
         });
     }
 
-    $('.select-days').on("change", function () {
-        loadTrafficData(this);
-    });
+    document.querySelector('.select-days')
+        .addEventListener('change', ev => loadTrafficData(ev.target));
 });
