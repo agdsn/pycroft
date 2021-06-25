@@ -28,7 +28,7 @@ setup(
     python_requires=">= 3.4",
     install_requires=[
         'alembic',
-        'celery ~= 3.1.25',
+        'celery ~= 5.1.1',
         'Flask',
         'Flask-Babel',
         'Flask-Login',

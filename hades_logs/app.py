@@ -16,12 +16,12 @@ class HadesCelery(Celery):
     def __init__(self, *a, routing_key=None, **kw):
         super().__init__(*a, **kw)
         self.routing_key = routing_key
-        self.conf['CELERY_DEFAULT_EXCHANGE'] = 'hades.agent.rpc'
-        self.conf['CELERY_DEFAULT_EXCHANGE_TYPE'] = 'topic'
-        self.conf['CELERY_CREATE_MISSING_QUEUES'] = True
-        self.conf['CELERY_TASK_SERIALIZER'] = 'json'
-        self.conf['CELERY_EVENT_SERIALIZER'] = 'json'
-        self.conf['CELERY_RESULT_SERIALIZER'] = 'json'
+        self.conf['task_default_exchange'] = 'hades.agent.rpc'
+        self.conf['task_default_exchange_type'] = 'topic'
+        self.conf['task_create_missing_queues'] = True
+        self.conf['task_serializer'] = 'json'
+        self.conf['event_serializer'] = 'json'
+        self.conf['result_serializer'] = 'json'
 
     def signature(self, *a, **kw):
         if self.routing_key is not None:
