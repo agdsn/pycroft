@@ -175,7 +175,7 @@ def send_mails_async(self, mails: List[Mail]):
 
 
 app.conf.update(
-    CELERYBEAT_SCHEDULE={
+    beat_schedule={
         'execute-scheduled-tasks': {
             'task': 'pycroft.task.execute_scheduled_tasks',
             'schedule': timedelta(hours=1)
@@ -193,5 +193,5 @@ app.conf.update(
             'schedule': crontab(0, 0, day_of_month=5)
         }
     },
-    CELERY_ENABLE_UTC=True,
-    CELERY_TIMEZONE='Europe/Berlin')
+    enable_utc=True,
+    timezone='Europe/Berlin')
