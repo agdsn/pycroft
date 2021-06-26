@@ -194,4 +194,8 @@ app.conf.update(
         }
     },
     enable_utc=True,
-    timezone='Europe/Berlin')
+    timezone='Europe/Berlin',
+    accept_content={'pickle'},
+    task_serializer='pickle',
+    result_serializer='pickle',
+)
