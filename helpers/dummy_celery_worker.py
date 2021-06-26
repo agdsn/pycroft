@@ -53,6 +53,9 @@ def get_auth_attempts_at_port(nas_ip_address, nas_port_id, limit=100):
          datetime(2017, 4, 20, 18, 0).timestamp()),
     ][:limit]
 
+
 if __name__ == '__main__':
     import sys
-    app.start(sys.argv)
+    command, *rest = sys.argv
+    assert command.strip().endswith(".py"), f"{command=!r} does not end with '.py'!"
+    app.start(argv=rest)
