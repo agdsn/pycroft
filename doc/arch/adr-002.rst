@@ -1,0 +1,43 @@
+ADR002
+======
+
+:Number: 002
+:Title: Continue using pickle as default serializer
+:Author: Lukas Juhrich
+:Created: 2021-06-26
+:Status: Postulated
+
+.. contents:: Table of Contents
+
+Context
+-------
+In the course of upgrading from celery 3 to celery 5,
+the default serializer switched from pickle to json
+(see `docs <https://docs.celeryproject.org/en/v5.1.1/userguide/security.html#serializers>`_).
+We ignored the deprecation warnings urging us to make this decision explicit.
+
+Since the tasks responsible for sending mails contain ``Mail`` objects in their payload,
+this causes an error, because the ``json`` backend does not know how to serialize it.
+Now we either have to fix the config or switch to another backend like ``json``.
+
+The rationale behind changing the default is that pickle has some security concerns,
+and should not be used for untrusted data of any kind.
+The ``pickle`` serializer itself is not deprecated.
+
+However, in our setup, the only producer and consumer of messages is pycroft itself,
+so no untrusted third party is part of the process.
+
+Using ``json`` is also less convenient in that we would need to specify the (de-)serialization
+process for every non-builtin data type.
+``pickle`` however can deal with arbitrary python objects out-of-the-box.
+
+Decision
+--------
+Configure celery explicitly to continue using ``pickle`` instead of ``json``
+for seriaization and deserialization.
+
+Consequences
+------------
+`Configure <https://docs.celeryproject.org/en/stable/history/whatsnew-4.0.html#json-is-now-the-default-serializer>`_
+``pickle`` to be the ``task_serializer`` for the client
+as well as ``accepted_content`` for the worker.

@@ -26,4 +26,5 @@ Architecture decision records
    :glob:
 
    ADR001 – Use jQuery in typescript modules exclusively <arch/adr-001.rst>
+   ADR002 - Continue using pickle as default serializer <arch/adr-002.rst>
    arch/*
