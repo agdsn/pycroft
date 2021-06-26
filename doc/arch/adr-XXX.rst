@@ -5,7 +5,7 @@ ADRXXX
 :Title: Short nouns summarizing the decision.
 :Author: Max Mustermann
 :Created: 2021-06-20
-:Status: Approved
+:Status: Proposed / Approved / Postulated / Superseded
 
 .. contents:: Table of Contents
 
