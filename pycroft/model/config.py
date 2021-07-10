@@ -10,52 +10,52 @@ from pycroft.model.user import PropertyGroup
 
 
 class Config(IntegerIdModel):
-    member_group_id = Column(
+    member_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    member_group = relationship(PropertyGroup, foreign_keys=[member_group_id])
-    network_access_group_id = Column(
+    member_group: PropertyGroup = relationship(PropertyGroup, foreign_keys=[member_group_id])
+    network_access_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    network_access_group = relationship(
+    network_access_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[network_access_group_id])
-    violation_group_id = Column(
+    violation_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    violation_group = relationship(
+    violation_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[violation_group_id])
-    external_group_id = Column(
+    external_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    external_group = relationship(
+    external_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[external_group_id])
-    blocked_group_id = Column(
+    blocked_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    blocked_group = relationship(
+    blocked_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[blocked_group_id])
-    caretaker_group_id = Column(
+    caretaker_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    caretaker_group = relationship(
+    caretaker_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[caretaker_group_id])
-    treasurer_group_id = Column(
+    treasurer_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    treasurer_group = relationship(
+    treasurer_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[treasurer_group_id])
-    pre_member_group_id = Column(
+    pre_member_group_id: int = Column(
         Integer, ForeignKey(PropertyGroup.id), nullable=False)
-    pre_member_group = relationship(
+    pre_member_group: PropertyGroup = relationship(
         PropertyGroup, foreign_keys=[pre_member_group_id])
-    traffic_limit_exceeded_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
+    traffic_limit_exceeded_group_id: int = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
-    traffic_limit_exceeded_group = relationship(PropertyGroup,
+    traffic_limit_exceeded_group: PropertyGroup = relationship(PropertyGroup,
                                                 foreign_keys=[traffic_limit_exceeded_group_id])
-    payment_in_default_group_id = Column(Integer, ForeignKey(PropertyGroup.id),
+    payment_in_default_group_id: int = Column(Integer, ForeignKey(PropertyGroup.id),
                             nullable=False)
-    payment_in_default_group = relationship(PropertyGroup, foreign_keys=[payment_in_default_group_id])
-    membership_fee_account_id = Column(
+    payment_in_default_group: PropertyGroup = relationship(PropertyGroup, foreign_keys=[payment_in_default_group_id])
+    membership_fee_account_id: int = Column(
         Integer, ForeignKey(Account.id), nullable=False)
-    membership_fee_account = relationship(
+    membership_fee_account: Account = relationship(
         Account, foreign_keys=[membership_fee_account_id])
-    membership_fee_bank_account_id = Column(
+    membership_fee_bank_account_id: int = Column(
         Integer, ForeignKey(BankAccount.id), nullable=False)
-    membership_fee_bank_account = relationship(
+    membership_fee_bank_account: BankAccount = relationship(
         BankAccount, foreign_keys=[membership_fee_bank_account_id])
-    fints_product_id = Column(String, nullable=True)
+    fints_product_id: str = Column(String, nullable=True)
 
     __table_args__ = (CheckConstraint("id = 1"),)
