@@ -40,7 +40,7 @@ class ModelBase(object):
     """Base class for all database models."""
 
     @declared_attr
-    def __tablename__(cls):
+    def __tablename__(cls) -> str:
         """Autogenerate the tablename for the mapped objects."""
         return cls._to_snake_case(cls.__name__)
 
