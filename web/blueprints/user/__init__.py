@@ -1272,3 +1272,10 @@ def resend_confirmation_mail():
         session.session.commit()
 
         return redirect(return_url)
+
+
+@nav.navigate('Archivable users')
+@bp.route('/archivable_users')
+def archivable_users():
+    from pycroft.lib.user_deletion import get_archivable_members
+    return render_template('user/archivable_users.html', rows=get_archivable_members())
