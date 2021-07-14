@@ -160,8 +160,12 @@ class TestActiveHybridMethods(FactoryDataTestBase):
 
     def test_active_memberships(self):
         assert self.user.active_memberships() == []
+        assert self.user.current_memberships == []
+
         m = self.add_membership(self.property_group)
         assert self.user.active_memberships() == [m]
+        assert self.user.current_memberships == [m]
+
         when = single(session.utcnow() - timedelta(hours=1))
         assert self.user.active_memberships(when) == []
         when = single(session.utcnow() + timedelta(hours=1))

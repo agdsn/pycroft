@@ -282,6 +282,12 @@ class User(ModelBase, BaseUser, UserMixin):
         else:
             return user if user.check_password(plaintext_password) else None
 
+    current_memberships = relationship(
+        'Membership',
+        primaryjoin='and_(Membership.user_id==User.id, Membership.active())',
+        viewonly=True
+    )
+
     @hybrid_method
     def active_memberships(self, when: Optional[Interval] = None) -> List[Membership]:
         if when is None:
