@@ -3,10 +3,11 @@ from typing import Protocol
 
 from sqlalchemy import func, nulls_last
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.elements import and_, not_
 from sqlalchemy.sql.functions import current_timestamp
 
-from pycroft import config, Config
+from pycroft import Config
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import session
 from pycroft.model.user import User, Membership
@@ -57,6 +58,8 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
+        .options(joinedload(User.hosts), joinedload(User.current_memberships),
+                 joinedload(User.account))
     )
 
     return session.execute(stmt).all()
