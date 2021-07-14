@@ -1,7 +1,7 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
+from typing import Protocol
 
 from sqlalchemy import func, nulls_last
-from sqlalchemy.engine import Row
 from sqlalchemy.future import select
 from sqlalchemy.sql.elements import and_, not_
 from sqlalchemy.sql.functions import current_timestamp
@@ -12,7 +12,13 @@ from pycroft.model.session import session
 from pycroft.model.user import User, Membership
 
 
-def get_archivable_members() -> list[Row]:
+class ArchivableMemberInfo(Protocol):
+    User: User
+    mem_id: int
+    mem_end: datetime
+
+
+def get_archivable_members() -> list[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
     Selected are those users
