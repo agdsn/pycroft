@@ -9,6 +9,11 @@ pycroft.model.property
 This module contains model descriptions concerning properties, groups, and memberships.
 
 """
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy.sql.selectable import TableValuedAlias
+
 from pycroft.model import ddl
 from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, \
     literal, literal_column, select
@@ -63,13 +68,25 @@ manager.add_function(
     evaluate_properties_function
 )
 
+
+def evaluate_properties(when: Optional[datetime] = None, name='properties') -> TableValuedAlias:
+    """A sqlalchemy `func` wrapper for the `evaluate_properties` PSQL function.
+
+    See `sqlalchemy.sql.selectable.FromClause.table_valued`.
+    """
+    return func.evaluate_properties(when)\
+        .table_valued('user_id', 'property_name', 'denied', name=name)
+
+
+_current_props = evaluate_properties(func.current_timestamp())
 current_property = View(
     name='current_property',
     #metadata=ModelBase.metadata,
     query=(
-        select(literal_column('user_id'), literal_column('property_name'),
-               literal_column('denied'))
-        .select_from(func.evaluate_properties(func.current_timestamp()))
+        select(_current_props.c.user_id,
+               _current_props.c.property_name,
+               _current_props.c.denied)
+        .select_from(_current_props)
     ),
 )
 manager.add_view(Membership.__table__, current_property)

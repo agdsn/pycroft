@@ -35,7 +35,7 @@ from pycroft.model.finance import (
 from pycroft.helpers.interval import (
     closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.model.functions import sign, least
-from pycroft.model.property import CurrentProperty
+from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
@@ -211,10 +211,8 @@ def users_eligible_for_fee_query(membership_fee):
     begin_tstz = datetime.combine(membership_fee.begins_on, time_min())
     end_tstz = datetime.combine(membership_fee.ends_on, time_max())
 
-    fee_prop_beginning = func.evaluate_properties(properties_beginning_timestamp) \
-        .table_valued('user_id', 'property_name', 'denied', name='fee_prop_beg')
-    fee_prop_end = func.evaluate_properties(properties_end_timestamp) \
-        .table_valued('user_id', 'property_name', 'denied', name='fee_prop_end')
+    fee_prop_beginning = evaluate_properties(properties_beginning_timestamp, name='fee_prop_beg')
+    fee_prop_end = evaluate_properties(properties_end_timestamp, name='fee_prop_end')
 
     return (future.select(User.id.label('id'),
                      User.name.label('name'),
