@@ -44,14 +44,16 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
             User,
             last_mem.c.mem_id,
             last_mem.c.mem_end,
-            CurrentProperty.property_name.is_not(None).label('noarchive')
         )
         .select_from(last_mem)
+        # Join the granted `noarchive` property, if existent
         .join(CurrentProperty,
               and_(last_mem.c.user_id == CurrentProperty.user_id,
                    CurrentProperty.property_name == 'noarchive',
                    not_(CurrentProperty.denied)),
               isouter=True)
+        # …and use that to filter out the `noarchive` occurrences.
+        .filter(CurrentProperty.property_name.is_not(None))
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
