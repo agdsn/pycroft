@@ -1,0 +1,59 @@
+ADR003
+======
+
+:Number: 003
+:Title: Use ``.table_valued`` wrapper for table valued sql functions
+:Author: Lukas Juhrich
+:Created: 2021-07-14
+:Status: Postulated
+
+.. contents:: Table of Contents
+
+Context
+-------
+The currently used way of using table valued functions is to use ``func.function_name``
+and then refering to the columns it returns via ``literal_column('column_name')``.
+Typos in the column name go undetected, because a priori, sqlalchemy does not know the schema of the table returned.
+This can be done by calling ``.table_valued(*cols, name)`` on the function expression.
+The result is a ``TableValuedAlias``, which provides all the attributes of a proper selectable,
+in particular one can reference its columns via ``.c.column_name`` or ``.columns.column_name``.
+
+For instance, the ``evaluate_properties`` function may be called this way:
+
+.. code-block:: python
+
+   tv = func.evaluate_properties(when=None)\
+       .table_valued('user_id', 'property_name', 'denied', name=name)
+
+   stmt = select(tv).where(tv.c.denied == False)
+
+This should be the default approach, as incorrect usages such as ``tv.c.deneid``
+will be detected at ``compile time``.
+
+The only occurrences of tabble valued functions are
+- ``evaluate_properties``
+- ``traffic_history_function``
+
+The last case can be ignored becase the function is only used once in the subsequent view definition.
+
+Decision
+--------
+- Every SQL function we manually define and use in python code shall have a corresponding function
+  of the following signature:
+
+  .. code-block:: python
+
+     def function_name(*args, name: str) -> TableValuedAlias:
+         return func.function_name(*args)\
+             .table_valued(*columns, name=name)
+
+- Every usage of such a SQL function shall use the aforementioned function
+  and refer to columns via the ``.c`` property instead of via ``literal_column``.
+
+
+Consequences
+------------
+- The current usages must be consolidated to fit this pattern.
+- Future function definitions need to write three lines more code.
+- Future function invocations may need to introduce a variable for each function invocation
+  in order to reference its columns, possibly causing slightly more comprehensive queries.
