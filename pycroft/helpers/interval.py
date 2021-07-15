@@ -779,8 +779,11 @@ class IntervalModel:
         :return:
         """
         if when is None:
-            now = session.utcnow()
-            when = single(now)
+            # use `current_timestamp()`
+            return and_(
+                or_(cls.begins_at == null(), cls.begins_at <= func.current_timestamp()),
+                or_(cls.ends_at == null(), func.current_timestamp() <= cls.ends_at)
+            ).label('active')
 
         return and_(
             or_(cls.begins_at == null(), literal(when.end) == null(),
