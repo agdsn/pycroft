@@ -69,7 +69,7 @@ def prepare_server(args) -> Tuple[PycroftFlask, Callable]:
             if time_taken > 0.5:
                 app.logger.warning(
                     "Response took %s seconds for request %s",
-                    request.full_path, time_taken,
+                    time_taken, request.full_path,
                 )
 
     connection, engine = try_create_connection(connection_string, wait_for_db, app.logger,
