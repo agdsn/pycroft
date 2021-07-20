@@ -54,7 +54,7 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
                    not_(CurrentProperty.denied)),
               isouter=True)
         # …and use that to filter out the `noarchive` occurrences.
-        .filter(CurrentProperty.property_name.is_not(None))
+        .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
