@@ -527,18 +527,13 @@ export function taskDetailFormatter(index, row, element){
     rowStyle for the task table, representing the status
 */
 export function taskRowFormatter(row){
-    let cssclass = "";
-
-    if(row.status == "OPEN"){
-        cssclass = "table-warning";
-    }else if(row.status == "EXECUTED"){
-        cssclass = "table-success";
-    }else if(row.status == "FAILED"){
-        cssclass = "table-danger";
+    const mapping = {
+        "OPEN": 'table-warning',
+        "EXECUTED": 'table-success',
+        "FAILED": 'table-danger',
     }
-
     return {
-       classes: cssclass
+        classes: mapping[row.status] || ""
     }
 }
 
