@@ -1253,7 +1253,7 @@ def resend_confirmation_mail():
     user_id = request.args.get('user_id', type=int)
     is_prm = request.args.get('is_prm', type=bool, default=False)
 
-    user: BaseUser = None
+    user: BaseUser
 
     if is_prm:
         user = get_pre_member_or_404(user_id)
