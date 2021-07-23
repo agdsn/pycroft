@@ -5,10 +5,5 @@
 #}
 {% extends "layout.html" %}
 {% block content %}
-  <ul>
-  {% for row in rows %}
-      <li>{{ row.User.login }} / {{ row.mem_end }}</li>
-  {% endfor %}
-  </ul>
-
+  {{ table.render('archivable-users-table') }}
 {% endblock %}

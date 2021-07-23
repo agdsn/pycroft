@@ -1,3 +1,5 @@
+import typing
+
 from flask import url_for
 
 from bs_table_py.table import BootstrapTable, Column, \
@@ -104,3 +106,15 @@ class PreMemberTable(BootstrapTable):
         table_args = {
             'data-row-style': 'table.membershipRequestRowFormatter',
         }
+
+
+class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
+    id = Column("ID")
+    user = LinkColumn("Mitglied")
+    num_hosts = Column("#Hosts")
+    end_of_membership = DateColumn("EOM")
+
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def row(cls, id: int, user: dict, num_hosts: int, end_of_membership: dict) -> dict: ...
+

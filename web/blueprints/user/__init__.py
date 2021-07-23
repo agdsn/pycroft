@@ -17,7 +17,7 @@ from functools import partial
 from itertools import chain
 from typing import Optional, TypeVar, Callable
 
-from bs_table_py.table import datetime_format, date_format
+from bs_table_py.table import datetime_format, date_format, LinkColumn
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
@@ -39,6 +39,7 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
     get_possible_existing_users_for_pre_member, send_member_request_merged_email, can_target, edit_address
+from pycroft.lib.user_deletion import get_archivable_members
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
@@ -60,7 +61,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,
-                     PreMemberTable, TenancyTable)
+                     PreMemberTable, TenancyTable, ArchivableMembersTable)
 from ..finance.tables import FinanceTable, FinanceTableSplitted
 from ..helpers.log import format_user_log_entry, format_room_log_entry, \
     format_task_log_entry
@@ -1277,5 +1278,22 @@ def resend_confirmation_mail():
 @nav.navigate('Archivable users')
 @bp.route('/archivable_users')
 def archivable_users():
-    from pycroft.lib.user_deletion import get_archivable_members
-    return render_template('user/archivable_users.html', rows=get_archivable_members())
+    table = ArchivableMembersTable(data_url=url_for('.archivable_users_json'))
+    return render_template('user/archivable_users.html', table=table)
+
+
+@bp.route('/archivable_users_table')
+def archivable_users_json():
+    T = ArchivableMembersTable
+    return {'items': [
+        T.row(
+            id=info.User.id,
+            user=T.user.value(
+                title=info.User.name,
+                href=url_for('user.user_show', user_id=info.User.id)
+            ),
+            num_hosts=len(info.User.hosts),
+            # TODO better: `DateColumn.value`
+            end_of_membership=datetime_format(info.mem_end)
+        ) for info in get_archivable_members()
+    ]}
