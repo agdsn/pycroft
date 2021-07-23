@@ -98,9 +98,11 @@ export function linkFormatter(value, row, index) {
 }
 linkFormatter.attributes = { sortName: 'title' };
 
+/**
+ *  Format an entry as a link or plain, depending on the value of
+ * the 'type' field.  It can either be 'plain' or 'native'.
+ */
 export function userFormatter(value, row, index) {
-    /* Format an entry as a link or plain, depending on the value of
-     * the 'type' field.  It can either be 'plain' or 'native'. */
     if (!value) {
         return;
     }
