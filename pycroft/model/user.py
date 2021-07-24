@@ -236,6 +236,7 @@ class User(ModelBase, BaseUser, UserMixin):
         'CurrentProperty',
         primaryjoin='and_(User.id == foreign(CurrentProperty.user_id),'
                     '~CurrentProperty.denied)',
+        order_by='CurrentProperty.property_name',
         viewonly=True
     )
     #: This is a relationship to the `current_property` view ignoring the
@@ -243,6 +244,7 @@ class User(ModelBase, BaseUser, UserMixin):
     current_properties_maybe_denied = relationship(
         'CurrentProperty',
         primaryjoin='User.id == foreign(CurrentProperty.user_id)',
+        order_by='CurrentProperty.property_name',
         viewonly=True
     )
 
