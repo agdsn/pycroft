@@ -59,7 +59,8 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
         .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
         .order_by(last_mem.c.mem_end)
         .options(joinedload(User.hosts), joinedload(User.current_memberships),
-                 joinedload(User.account), joinedload(User.room))
+                 joinedload(User.account), joinedload(User.room),
+                 joinedload(User.current_properties_maybe_denied))
     )
     # The default dedupe strategy for the `mem_id` and `mem_end` columns is `id` instead of `hash`.
     # See sqlalchemy#6769

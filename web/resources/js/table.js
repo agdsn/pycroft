@@ -568,6 +568,41 @@ export function bankAccountActivitiesDetailFormatter(index, row, element){
     return html;
 }
 
+/**
+ * Convert a property string like `~prop` into a red/green property badge.
+ * @param value: string
+ * @return string
+ */
+function propertyBadge(value) {
+    const denied = value.startsWith("~");
+    const info = denied ? {
+        "propName": value.slice(1),
+        "userPropClass": "userprop-denied",
+        "spanTitle": "Granted, aber dann denied",
+    } : {
+        "propName": value,
+        "userPropClass": "userprop-granted",
+        "spanTitle": "Granted",
+    };
+    return `
+        <span class="badge userprop ${info.userPropClass}"
+           data-property-name="${info.propName}">
+          <span title="${info.spanTitle}">${info.propName}</span>
+        </span>
+    `;
+}
+
+/**
+ * Present a string of the form `foo ~bar ~baz` as red/green property badges.
+ * @param value
+ * @param row
+ * @param index
+ */
+export function propertiesFormatter(value, row, index) {
+    if (!value) { return; }
+    return value.split(/\s+/).map(propertyBadge).join(" ");
+}
+
 
 
 /**

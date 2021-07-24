@@ -113,10 +113,12 @@ class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
     user = LinkColumn("Mitglied")
     room_shortname = LinkColumn("Raum")
     num_hosts = Column("#Hosts")
+    current_properties = Column("Props", formatter="table.propertiesFormatter")
     end_of_membership = DateColumn("EOM")
 
     if typing.TYPE_CHECKING:
         @classmethod
         def row(cls, id: int, user: dict, room_shortname: dict,
+                current_properties: str,
                 num_hosts: int, end_of_membership: dict) -> dict: ...
 
