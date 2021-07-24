@@ -109,10 +109,13 @@ class PreMemberTable(BootstrapTable):
 
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
-    id = Column("ID")
+    class Meta:
+        table_args = {'data-escape': 'false'}
+
+    id = Column("#")
     user = LinkColumn("Mitglied")
-    room_shortname = LinkColumn("Raum")
-    num_hosts = Column("#Hosts")
+    room_shortname = LinkColumn("<i class=\"fas fa-home\"></i>")
+    num_hosts = Column("<i class=\"fas fa-laptop\"></i>")
     current_properties = Column("Props", formatter="table.propertiesFormatter")
     end_of_membership = DateColumn("EOM")
 
