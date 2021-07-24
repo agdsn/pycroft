@@ -1292,6 +1292,10 @@ def archivable_users_json():
                 title=info.User.name,
                 href=url_for('user.user_show', user_id=info.User.id)
             ),
+            room_shortname=info.User.room and T.room_shortname.value(
+                title=info.User.room.short_name,
+                href=url_for('facilities.room_show', room_id=info.User.room.id)
+            ),
             num_hosts=len(info.User.hosts),
             # TODO better: `DateColumn.value`
             end_of_membership=datetime_format(info.mem_end)

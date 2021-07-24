@@ -111,10 +111,12 @@ class PreMemberTable(BootstrapTable):
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
     id = Column("ID")
     user = LinkColumn("Mitglied")
+    room_shortname = LinkColumn("Raum")
     num_hosts = Column("#Hosts")
     end_of_membership = DateColumn("EOM")
 
     if typing.TYPE_CHECKING:
         @classmethod
-        def row(cls, id: int, user: dict, num_hosts: int, end_of_membership: dict) -> dict: ...
+        def row(cls, id: int, user: dict, room_shortname: dict,
+                num_hosts: int, end_of_membership: dict) -> dict: ...
 
