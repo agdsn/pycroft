@@ -24,7 +24,7 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
 
     Selected are those users
     - whose last membership in the member_group ended two weeks in the past,
-    - excluding users who currently have the `noarchive` property.
+    - excluding users who currently have the `do-not-archive` property.
     """
     # see FunctionElement.over
     window_args = {'partition_by': User.id, 'order_by': nulls_last(Membership.ends_at),
@@ -47,13 +47,13 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
             last_mem.c.mem_end,
         )
         .select_from(last_mem)
-        # Join the granted `noarchive` property, if existent
+        # Join the granted `do-not-archive` property, if existent
         .join(CurrentProperty,
               and_(last_mem.c.user_id == CurrentProperty.user_id,
-                   CurrentProperty.property_name == 'noarchive',
+                   CurrentProperty.property_name == 'do-not-archive',
                    not_(CurrentProperty.denied)),
               isouter=True)
-        # …and use that to filter out the `noarchive` occurrences.
+        # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))
