@@ -182,8 +182,8 @@ def json_search():
         query = g("query")
     except TypeError:
         return abort(400)
-    ip_invalid = ip_address is not None and not re.match(ip_regex, ip_address)
-    mac_invalid = mac is not None and not re.match(mac_regex, mac)
+    ip_invalid = ip_address and not re.match(ip_regex, ip_address)
+    mac_invalid = mac and not re.match(mac_regex, mac)
     if ip_invalid or mac_invalid:
         return abort(400)
 
