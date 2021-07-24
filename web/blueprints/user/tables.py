@@ -110,7 +110,7 @@ class PreMemberTable(BootstrapTable):
 
 class ArchivableMembersTable(RefreshableTableMixin, BootstrapTable):
     class Meta:
-        table_args = {'data-escape': 'false'}
+        table_args = {'data-escape': 'false', 'data-sort-stable': True}
 
     id = Column("#")
     user = LinkColumn("Mitglied")
