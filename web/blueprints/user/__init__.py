@@ -1300,6 +1300,6 @@ def archivable_users_json():
                                         for p in info.User.current_properties_maybe_denied),
             num_hosts=len(info.User.hosts),
             # TODO better: `DateColumn.value`
-            end_of_membership=datetime_format(info.mem_end)
+            end_of_membership=date_format(info.mem_end.date())
         ) for info in get_archivable_members()
     ]}
