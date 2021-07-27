@@ -11,6 +11,12 @@ readonly DESCRIPTION=(
 
 run() {
 	cd /opt/pycroft/app
+	# for debugging purposes
+	echo "## npm version:"
+	npm --version
+	echo "## I am $(id)"
+	echo "## webpack is: $(which webpack)"
+	echo "## $(ls -l $(which webpack))"
 	exec npm run -- webpack --require @babel/register --config webpack.config.babel.js "$@"
 }
 
