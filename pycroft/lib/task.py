@@ -7,7 +7,6 @@ from sqlalchemy.orm import with_polymorphic
 
 from pycroft.lib.logging import log_task_event
 from pycroft.model import session
-from pycroft.model.facilities import Room
 from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams, \
@@ -17,6 +16,7 @@ TTask = TypeVar('TTask')
 TParams = TypeVar('TParams')
 
 logger = logging.getLogger('pycroft.task')
+
 
 class TaskImpl(ABC, Generic[TTask, TParams]):
     @property

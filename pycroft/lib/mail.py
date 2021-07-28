@@ -11,6 +11,8 @@ from typing import List, Optional
 import jinja2
 import traceback
 
+from dataclasses import dataclass
+
 from pycroft.helpers import AutoNumber
 
 mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')
@@ -36,25 +38,14 @@ else:
 template_env = jinja2.Environment(loader=template_loader)
 
 
+@dataclass
 class Mail:
-    to: str
     to_name: str
     to_address: str
     subject: str
     body_plain: str
     body_html: Optional[str]
-    reply_to: Optional[str]
-
-    def __init__(self, to_name: str, to_address: str, subject: str, body_plain: str,
-                 body_html: Optional[str] = None, reply_to: str = None):
-        self.to_name = to_name
-        self.to_address = to_address
-        self.subject = subject
-        self.body_plain = body_plain
-        self.body_html = body_html
-        self.reply_to = reply_to
-
-        self.to = to_address  # "{} <{}>".format(to_name, to_address)
+    reply_to: Optional[str] = None
 
 
 class MailTemplate:
@@ -76,7 +67,7 @@ def compose_mail(mail: Mail) -> MIMEMultipart:
     msg = MIMEMultipart('alternative', _charset='utf-8')
     msg['Message-Id'] = make_msgid()
     msg['From'] = mail_from
-    msg['To'] = Header(mail.to)
+    msg['To'] = Header(mail.to_address)
     msg['Subject'] = mail.subject
     msg['Date'] = formatdate(localtime=True)
 
@@ -162,10 +153,10 @@ def send_mails(mails: List[Mail]) -> (bool, int):
             except smtplib.SMTPException as e:
                 traceback.print_exc()
 
-                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to}": {str(e)}', extra={
+                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to_address}": {str(e)}', extra={
                     'trace': True,
                     'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-                    'data': {'exception_arguments': e.args, 'to': mail.to, 'subject': mail.subject}
+                    'data': {'exception_arguments': e.args, 'to': mail.to_address, 'subject': mail.subject}
                 })
 
                 failures += 1

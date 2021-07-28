@@ -979,7 +979,11 @@ def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bo
                                                 user_id=encode_type2_user_id(user.id),
                                                 **kwargs)
 
-        mail = Mail(user.name, email, template.subject, body_plain, body_html)
+        mail = Mail(to_name=user.name,
+                    to_address=email,
+                    subject=template.subject,
+                    body_plain=body_plain,
+                    body_html=body_html)
         mails.append(mail)
 
     send_mails_async.delay(mails)
