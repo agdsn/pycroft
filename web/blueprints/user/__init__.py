@@ -17,7 +17,7 @@ from functools import partial
 from itertools import chain
 from typing import Optional, TypeVar, Callable
 
-from bs_table_py.table import datetime_format, date_format, LinkColumn
+from web.table.table import datetime_format, date_format, LinkColumn
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)

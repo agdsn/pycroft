@@ -12,7 +12,7 @@ from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 
 from web.blueprints.access import BlueprintAccess
-from bs_table_py.table import datetime_format
+from web.table.table import datetime_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.task.tables import TaskTable

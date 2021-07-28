@@ -2,9 +2,9 @@ from flask import url_for
 from flask_babel import gettext
 from flask_login import current_user
 
-from bs_table_py.table import lazy_join
+from web.table.table import lazy_join
 
-from bs_table_py.table import BootstrapTable, Column, SplittedTable, \
+from web.table.table import BootstrapTable, Column, SplittedTable, \
     BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
 from web.template_filters import money_filter
 

@@ -1,7 +1,7 @@
 from flask import url_for
 from flask_login import current_user
 
-from bs_table_py.table import BootstrapTable, Column, LinkColumn, \
+from web.table.table import BootstrapTable, Column, LinkColumn, \
     BtnColumn, button_toolbar
 
 

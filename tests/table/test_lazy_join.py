@@ -1,6 +1,6 @@
 import pytest
 
-from bs_table_py.table import lazy_join
+from web.table.table import lazy_join
 
 
 def test_simple_join():

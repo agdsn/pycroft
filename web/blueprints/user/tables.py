@@ -2,7 +2,7 @@ import typing
 
 from flask import url_for
 
-from bs_table_py.table import BootstrapTable, Column, \
+from web.table.table import BootstrapTable, Column, \
     LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn
 from web.blueprints.helpers.user import no_membership_change
 

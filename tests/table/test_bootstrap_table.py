@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pytest
 
-from bs_table_py.table import Column, BootstrapTable, SplittedTable, \
+from web.table.table import Column, BootstrapTable, SplittedTable, \
     BootstrapTableMeta, custom_formatter_column
 
 

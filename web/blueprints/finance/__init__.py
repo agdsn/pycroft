@@ -42,7 +42,7 @@ from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.fints import FinTS3Client
-from bs_table_py.table import date_format
+from web.table.table import date_format
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,

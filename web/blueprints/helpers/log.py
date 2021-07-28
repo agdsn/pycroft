@@ -12,7 +12,7 @@ from functools import partial
 from flask import url_for
 
 from pycroft.helpers.i18n import Message
-from bs_table_py.table import datetime_format
+from web.table.table import datetime_format
 
 from web.template_filters import datetime_filter
 

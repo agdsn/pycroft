@@ -1,6 +1,6 @@
 from flask import url_for
 
-from bs_table_py.table import BootstrapTable, Column, LinkColumn, \
+from web.table.table import BootstrapTable, Column, LinkColumn, \
     button_toolbar, toggle_button_toolbar, BtnColumn, MultiBtnColumn, DateColumn
 from web.blueprints.infrastructure.tables import no_inf_change
 
