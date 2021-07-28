@@ -169,6 +169,7 @@ class TestCorrectURIsConfigured:
     def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs, caplog):
         with pytest.raises(HadesOperationalError), \
              caplog.at_level(logging.INFO, logger='hades_logs'):
+            # noinspection PyTypeChecker
             hades_logs.fetch_logs(None, None)
 
         assert len(caplog.records) == 1
