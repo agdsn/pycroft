@@ -22,8 +22,8 @@ which needs certain config variables.
 
 A minimal example configuration would look like this:
 > app.config['HADES_CELERY_APP_NAME'] = 'hades'
-> app.config['HADES_BROKER_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'
-> app.config['HADES_RESULT_BACKEND_URI'] = 'pyamqp://user:password@rabbitmq_host:5762/vhost'\
+> app.config['HADES_BROKER_URI'] = 'amqp://user:password@rabbitmq_host:5672/vhost'
+> app.config['HADES_RESULT_BACKEND_URI'] = 'rpc://user:password@rabbitmq_host:5672/vhost'\
 """
 
 
