@@ -26,6 +26,7 @@ class TestConfiguredHadesLogs:
             hades_logs.fetch_logs(nasipaddress='', nasportid='magic_sleep')
 
     @pytest.mark.slow
+    @pytest.mark.timeout(15)
     def test_longer_timeout_allows_long_task_to_finish(self, app_longer_timeout):
         hades_logs = HadesLogs(app_longer_timeout)
         try:

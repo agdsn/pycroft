@@ -37,6 +37,7 @@ class Test_User_Passwords(FactoryDataTestBase):
         session.session.commit()
 
     @pytest.mark.slow
+    @pytest.mark.timeout(15)
     def test_set_and_verify_password(self):
         password = generate_password(4)
 
