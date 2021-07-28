@@ -395,8 +395,6 @@ maintained by the Pycroft team. Those are:
 
 - [wtforms-widgets](https://github.com/agdsn/wtforms-widgets),
 for rendering forms
-- [bootstrap-table-py](https://github.com/agdsn/bootstrap-table-py),
-for declaring bootstrap-tables in python
 
 To make it easier to make changes on these dependencies, they are added as
 submodule in the `deps` folder. You need to recursively clone this repo
