@@ -22,6 +22,12 @@ class HadesCelery(Celery):
         self.conf['task_serializer'] = 'json'
         self.conf['event_serializer'] = 'json'
         self.conf['result_serializer'] = 'json'
+        self.conf['broker_transport_options'] = {
+            "max_retries": 3,
+            "interval_start": 0,
+            "interval_step": 0.2,
+            "interval_max": 0.5,
+        }
 
     def signature(self, *a, **kw):
         if self.routing_key is not None:

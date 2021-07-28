@@ -110,9 +110,8 @@ class HadesLogs:
                   ``get_port_auth_attempts`` in hades)
         :rtype: iterable (generator if :param:`reduced`)
 
-        :raises HadesTimeout: on timeouts, e.g. when the task takes
-            too long to be executed by a worker or when the broker is
-            down.
+        :raises HadesTimeout: raised when no response arrives in the time window
+            configured by the `timeout` parameter.
         """
         if reduced:
             reductor = reduce_radius_logs
