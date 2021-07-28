@@ -9,6 +9,7 @@ import logging
 
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 from flask.globals import current_app
+from kombu.exceptions import OperationalError
 from werkzeug.local import LocalProxy
 
 from .app import HadesCelery
@@ -132,13 +133,16 @@ class HadesLogs:
         except CeleryTimeoutError as e:
             raise HadesTimeout("The Hades lookup task has timed out") from e
         except OSError as e:
-            # In newer versions of celery, this is encapsuled by
-            # `kombu.exc.OperationalError`. It is thrown when e.g. the
-            # broker is down
             if "timeout" in str(e).lower():
-                raise HadesTimeout("The Hades lookup task has timed out") from e
+                # TODO this is mainly to make this error visible once it occurs (sentry).
+                # Since timeouts should actually be handled by the branch above,
+                # I'm not quite sure in what cases an `OSError` would be thrown!
+                self.logger.error("Hades task timed out with OSError", exc_info=True)
+                raise HadesTimeout("The Hades lookup task has timed out (from OSError)") from e
             else:
-                raise HadesOperationalError("OSError when fetching hades logs") from e
+                raise
+        except OperationalError as e:
+            raise HadesOperationalError("OSError when fetching hades logs") from e
 
 
 def _get_extension():

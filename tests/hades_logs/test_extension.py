@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import pytest
 
 from flask import Flask
+from kombu.exceptions import OperationalError
 
 from hades_logs import HadesLogs, hades_logs
 from hades_logs.exc import HadesOperationalError
@@ -153,15 +154,16 @@ class TestCorrectURIsConfigured:
         app = Flask('test')
         app.config.update({
             'HADES_CELERY_APP_NAME': 'test',
+            # intentionally wrong urls to trigger `OperationalError`s
             'HADES_BROKER_URI': 'amqp://localhost:5762/',
             'HADES_RESULT_BACKEND_URI': 'rpc://localhost:5762/',
         })
         return HadesLogs(app)
 
     def test_empty_task_raises_operational_error(self, hades_logs):
-        # This throws an OSError as there is no `HadesLogs` around to
-        # catch it.
-        with pytest.raises(OSError):
+        # This throws an `OperationalError` as there is no `HadesLogs` around to
+        # wrap it into a `HadesOperationalError`.
+        with pytest.raises(OperationalError):
             hades_logs.celery.signature('').apply_async().wait()
 
     def test_fetch_logs_logs_and_raises_connection_refused(self, hades_logs, caplog):
