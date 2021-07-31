@@ -64,14 +64,14 @@ class Column:
         """Build th html-style attribute string for this column.
 
         This string can be used to add this column to a table in the
-        header: ``"<td {}></td>".format(col.build_col_args())``.
+        header: ``f"<td {col.build_col_args()}></td>"``.
         Attributes are utilized as described in :meth:`__init__`.
 
         :param kwargs: Keyword arguments which are merged into the
             dict of html attributes.
         """
         html_args = {
-            'class': "col-sm-{}".format(self.width) if self.width else False,
+            'class': f"col-sm-{self.width}" if self.width else False,
             'data-sortable': "true" if self.sortable else "false",
             'data-field': self.name,
             'data-formatter': self.formatter,
@@ -89,7 +89,7 @@ class Column:
         """
         if self.hide_if():
             return ""
-        return "<th {}>{}</th>".format(self.build_col_args(), self.title)
+        return f"<th {self.build_col_args()}>{self.title}</th>"
 
     __str__ = render
     __html__ = render
@@ -292,20 +292,20 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
 
     @lazy_join("\n")
     def _render(self, table_id):
-        toolbar_args = html_params(id="{}-toolbar".format(table_id),
+        toolbar_args = html_params(id=f"{table_id}-toolbar",
                                    class_="btn-toolbar",
                                    role="toolbar")
-        yield "<div {}>".format(toolbar_args)
+        yield f"<div {toolbar_args}>"
         yield self.toolbar
         yield "</div>"
 
         table_args = self.table_args
         table_args.update({
             'id': table_id,
-            'data-toolbar': "#{}-toolbar".format(table_id),
+            'data-toolbar': f"#{table_id}-toolbar",
         })
 
-        yield "<table {}>".format(html_params(**table_args))
+        yield f"<table {html_params(**table_args)}>"
         yield self.table_header
         yield self.table_footer
         yield "</table>"
@@ -360,8 +360,8 @@ class SplittedTable(BootstrapTable):
         yield "<thead>"
         yield "<tr>"
         for split in self._iter_typed_splits():
-            yield ("<th colspan=\"{}\" class=\"text-center\">{}</th>"
-                   .format(len(super().columns), split.title))
+            yield (
+                f'<th colspan="{len(super().columns)}" class="text-center">{split.title}</th>')
         yield "</tr>"
 
         yield "<tr>"
