@@ -1,12 +1,21 @@
+import typing
+
 from flask import url_for
 from flask_babel import gettext
 from flask_login import current_user
 
-from web.table.table import lazy_join
+from web.table.table import lazy_join, DictValueMixin, custom_formatter_column
 
 from web.table.table import BootstrapTable, Column, SplittedTable, \
     BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
 from web.template_filters import money_filter
+
+
+@custom_formatter_column('table.coloredFormatter')
+class ColoredColumn(DictValueMixin, Column):
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def value(cls, value: str, is_positive: bool) -> dict: ...
 
 
 class FinanceTable(BootstrapTable):
@@ -47,9 +56,7 @@ class FinanceTable(BootstrapTable):
     posted_at = Column("Erstellt um")
     valid_on = Column("Gültig am")
     description = LinkColumn("Beschreibung")
-    amount = Column("Wert",
-                    formatter='table.coloredFormatter',
-                    cell_style='table.tdRelativeCellStyle')
+    amount = ColoredColumn("Wert", cell_style='table.tdRelativeCellStyle')
 
     @property
     def toolbar(self):
