@@ -135,9 +135,16 @@ class custom_formatter_column:
 
 
 @custom_formatter_column('table.btnFormatter')
-class BtnColumn(Column):
+class BtnColumn(DictValueMixin, Column):
     def __init__(self, *a, **kw):
         super().__init__(*a, sortable=False, **kw)
+
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def value(cls, btn_class: str, href: str, title: str, tooltip: str,
+                  new_tab: Optional[str] = None,
+                  icon: Optional[typing.Union[str, Iterable[str]]] = None) \
+            -> dict: ...
 
 
 @custom_formatter_column('table.multiBtnFormatter')
