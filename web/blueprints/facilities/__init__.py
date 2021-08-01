@@ -61,15 +61,17 @@ def overview():
 
 @bp.route('/sites/json')
 def overview_json():
+    T = SiteTable
     return jsonify(items=[{
-            'site': {
-                'title': site.name,
-                'href': url_for("facilities.site_show", site_id=site.id)
-            },
-            'buildings': [{
-                    'href': url_for("facilities.building_levels", building_shortname=building.short_name),
-                    'title': building.street+" "+building.number
-                } for building in facilities.sort_buildings(site.buildings)]
+            'site': T.site.value(
+                title=site.name,
+                href=url_for("facilities.site_show", site_id=site.id)
+            ),
+            'buildings': [T.buildings.single_value(
+                href=url_for("facilities.building_levels",
+                             building_shortname=building.short_name),
+                title=building.street_and_number
+            ) for building in facilities.sort_buildings(site.buildings)]
         } for site in Site.q.order_by(Site.name).all()])
 
 
