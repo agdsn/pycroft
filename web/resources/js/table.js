@@ -162,7 +162,7 @@ export function btnFormatter(value, row, index) {
 function humanByteSize(bytes, si) {
     const thresh = si ? 1000 : 1024;
     if(Math.abs(bytes) < thresh) {
-        return bytes + ' B';
+        return `${bytes} B`;
     }
     const units = si
         ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
@@ -172,7 +172,7 @@ function humanByteSize(bytes, si) {
         bytes /= thresh;
         ++u;
     } while(Math.abs(bytes) >= thresh && u < units.length - 1);
-    return bytes.toFixed(1)+' '+units[u];
+    return `${bytes.toFixed(1)} ${units[u]}`;
 }
 
 export function byteFormatterBinary(value, row, indexx) {
@@ -209,7 +209,7 @@ export function listFormatter(value, row, index) {
     }
     let ret = '<ul style="margin:0;">';
     for (const item of value) {
-        ret += '<li>' + item + '</li>';
+        ret += `<li>${item}</li>`;
     }
     ret += '</ul>';
     return ret;
@@ -260,9 +260,9 @@ export function textWithBooleanFormatter(value, row, index) {
     let icon_false = value['icon_false'] ||'fa fa-times-circle'
 
     if (value['bool']){
-        return '<i class="' + icon_true + ' text-success"></i> ' + value['text'];
+        return `<i class="${icon_true} text-success"></i> ${value['text']}`;
     }else{
-        return '<i class="' + icon_false + ' text-danger"></i> ' + value['text'];
+        return `<i class="${icon_false} text-danger"></i> ${value['text']}`;
     }
 }
 
@@ -294,13 +294,13 @@ $(function() {
     userPropSel.mouseenter(function(ev) {
         let propitem = ev.currentTarget;
         let propname = propitem.attributes['data-property-name'].value;
-        console.log("hovered " + propname);
+        console.log(`hovered ${propname}`);
         markGuiltyGroups(propname);
     });
     userPropSel.mouseleave(function(ev) {
         let propitem = ev.currentTarget;
         let propname = propitem.attributes['data-property-name'].value;
-        console.log("un-hovered " + propname);
+        console.log(`un-hovered ${propname}`);
         unmarkGuiltyGroups(propname);
     });
 
@@ -310,11 +310,11 @@ $(function() {
         let granted = groupRow.hasAttribute('data-row-grants')
             ? groupRow.attributes['data-row-grants'].value.split(' ')
             : [];
-        console.log("granted: " + granted);
+        console.log(`granted: ${granted}`);
         let denied = groupRow.hasAttribute('data-row-grants')
             ? groupRow.attributes['data-row-denies'].value.split(' ')
             : [];
-        console.log("denied: " + denied);
+        console.log(`denied: ${denied}`);
 
         let userprops = $('.userprop[data-property-name]').toArray();
         userprops.filter(prop => (
@@ -335,16 +335,16 @@ $(function() {
 export function markGuiltyGroups(attrName) {
     let rows = $('.membership-table tbody tr').toArray();
     let grantingRows = rows.filter(row => row.attributes['data-row-grants'].value.split(' ').includes(attrName));
-    console.log("Got " + grantingRows.length + " rows granting " + attrName);
+    console.log(`Got ${grantingRows.length} rows granting ${attrName}`);
     grantingRows.forEach(row => row.setAttribute('data-row-guilty-for', 'grants'));
     let denyingRows = rows.filter(row => row.attributes['data-row-denies'].value.split(' ').includes(attrName));
-    console.log("Got " + denyingRows.length + " rows denying " + attrName);
+    console.log(`Got ${denyingRows.length} rows denying ${attrName}`);
     denyingRows.forEach(row => row.setAttribute('data-row-guilty-for', 'denies'));
 }
 
 export function unmarkGuiltyGroups(attrName) {
     let rows = $('.membership-table tbody tr').toArray();
-    console.log("Removing all attributes from all " + rows.length + " rows.");
+    console.log(`Removing all attributes from all ${rows.length} rows.`);
     rows.forEach(row => row.removeAttribute('data-row-guilty-for'));
 }
 
@@ -372,7 +372,7 @@ export function withMagicLinksFormatter(value, row, index) {
 }
 
 $('table').on('load-error.bs.table', function (e, status, res) {
-    $("tr.no-records-found > td", this).html("Error: Server returned HTTP " + status + ".");
+    $("tr.no-records-found > td", this).html(`Error: Server returned HTTP ${status}.`);
 });
 
 $.extend($.fn.bootstrapTable.defaults, {
@@ -459,10 +459,10 @@ export function userHostResponseHandler(resp) {
             if (column.hasAttribute('data-formatter')) {
                 const formatter = column.getAttribute('data-formatter');
                 const attributes = $.fn.bootstrapTable.utils.calculateObjectValue(
-                    column, formatter + '.attributes', [], null);
+                    column, `${formatter}.attributes`, [], null);
 
                 if (attributes !== null && attributes.hasOwnProperty('sortName')) {
-                    const sortName = column.getAttribute('data-field') + "." + attributes.sortName;
+                    const sortName = `${column.getAttribute('data-field')}.${attributes.sortName}`;
                     column.setAttribute('data-sort-name', sortName);
                 }
             }
