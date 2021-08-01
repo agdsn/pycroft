@@ -52,6 +52,8 @@ export var multiGlyphBtnTemplate = _.template(
  *
  * @param value - the JSON content of the current cell. It should be
  * of the format `{'value': "3,50€", "is_positive": true}`
+ * @param row
+ * @param index
  */
 export function coloredFormatter(value, row, index) {
     if (!value) {
@@ -196,11 +198,10 @@ export function multiBtnFormatter(value, row, index) {
         return;
     }
 
-    if (Array.isArray(value)){
+    if (Array.isArray(value)) {
         return value.map(v => btnFormatter(v, row, index)).join('&nbsp;');
-    }else{
-        return btnFormatter(value, row, index);
     }
+    return btnFormatter(value, row, index);
 }
 
 export function listFormatter(value, row, index) {
@@ -242,17 +243,12 @@ export function relativeDateFormatter(value, row, index) {
 dateFormatter.attributes = { sortName: 'timestamp' };
 
 export function euroFormatter(value, row, index){
-    value = value.toFixed(2).replace('.', ',')
-
-    return `${value} €`;
+    return `${(value.toFixed(2).replace('.', ','))} €`;
 }
 
 export function booleanFormatter(value, row, index) {
-    if (value){
-        return '<i class="fa fa-check-circle text-success"></i>';
-    }else{
-        return '<i class="fa fa-times-circle text-danger"></i>';
-    }
+    return value ? '<i class="fa fa-check-circle text-success"></i>'
+        : '<i class="fa fa-times-circle text-danger"></i>';
 }
 
 export function textWithBooleanFormatter(value, row, index) {
@@ -267,11 +263,9 @@ export function textWithBooleanFormatter(value, row, index) {
 }
 
 export function financeRowFormatter(row, index) {
-    if (row && row['row_positive']) {
-        return {classes: 'table-success'};
-    } else {
-        return {classes: 'table-danger'};
-    }
+    return row && row['row_positive']
+        ? {classes: 'table-success'}
+        : {classes: 'table-danger'};
 }
 
 export function membershipRowAttributes(row, index) {
@@ -641,23 +635,36 @@ export function sortPort(a, b) {
             const num_a = parseInt(a.substr(1));
             const num_b = parseInt(b.substr(1));
 
-            if(character_a < character_b) { return -1; }
-            if(character_a > character_b) { return 1; }
+            if (character_a < character_b) {
+                return -1;
+            }
+            if (character_a > character_b) {
+                return 1;
+            }
 
-            if(num_a < num_b) { return -1; }
-            if(num_a > num_b) { return 1; }
+            if (num_a < num_b) {
+                return -1;
+            }
+            if (num_a > num_b) {
+                return 1;
+            }
 
             return 0;
-        } else if (type_a === 'slash'){
+        }
+        if (type_a === 'slash') {
             const split_a = a.split('/');
             const split_b = b.split('/');
 
-            for(let i = 0; i < split_a.length; i++){
+            for (let i = 0; i < split_a.length; i++) {
                 const num_a = parseInt(split_a[i]);
                 const num_b = parseInt(split_b[i]);
 
-                if(num_a < num_b) { return -1; }
-                if(num_a > num_b) { return 1; }
+                if (num_a < num_b) {
+                    return -1;
+                }
+                if (num_a > num_b) {
+                    return 1;
+                }
             }
 
             return 0;
