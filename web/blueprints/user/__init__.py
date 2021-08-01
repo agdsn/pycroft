@@ -147,14 +147,13 @@ def static_datasheet(user_id):
 
 @bp.route('/json/traffic-usage')
 def json_users_highest_traffic():
+    T = TrafficTopTable
     return jsonify(items=[{
         'id': user.id,
         'name': user.name,
         'traffic_for_days': user.traffic_for_days,
-        'url': {
-            'href': url_for('.user_show', user_id=user.id),
-            'title': user.name
-        }} for user in get_users_with_highest_traffic(7, 20)])
+        'url': T.url.value(href=url_for('.user_show', user_id=user.id), title=user.name)
+    } for user in get_users_with_highest_traffic(7, 20)])
 
 
 T = TypeVar('T')
@@ -196,10 +195,10 @@ def json_search():
     return jsonify(items=[{
         'id': found_user.id,
         'name': found_user.name,
-        'url': {
-            'href': url_for('.user_show', user_id=found_user.id),
-            'title': found_user.name
-        },
+        'url': SearchTable.url.value(
+            href=url_for('.user_show', user_id=found_user.id),
+            title=found_user.name
+        ),
         'login': found_user.login,
         'room_id': found_user.room_id if found_user.room_id is not None else None
     } for found_user in (
@@ -385,6 +384,7 @@ def user_show_groups_json(user_id, group_filter="all"):
     active_groups_only = group_filter == "active"
     memberships = lib.membership.user_memberships_query(user_id, active_groups_only)
 
+    T = MembershipTable
     return jsonify(items=[{
             'group_name': membership.group.name,
             'begins_at': datetime_format(membership.begins_at,
@@ -394,16 +394,18 @@ def user_show_groups_json(user_id, group_filter="all"):
             'grants': granted,
             'denies': denied,
             'active': membership.active(),
-            'actions': [{'href': url_for(".edit_membership",
-                                        user_id=user_id,
-                                        membership_id=membership.id),
-                        'title': 'Bearbeiten',
-                        'icon': 'fa-edit'},
-                        {'href': url_for(".end_membership",
-                                         user_id=user_id,
-                                         membership_id=membership.id),
-                         'title': "Beenden",
-                         'icon': 'fa-power-off'} if membership.active() else {}],
+            'actions': [
+                T.actions.single_value(
+                    href=url_for(".edit_membership", user_id=user_id, membership_id=membership.id),
+                    title='Bearbeiten',
+                    icon='fa-edit'
+                ),
+                T.actions.single_value(
+                    href=url_for(".end_membership", user_id=user_id, membership_id=membership.id),
+                    title="Beenden",
+                    icon='fa-power-off'
+                ) if membership.active() else {}
+            ],
         } for membership, granted, denied in memberships.all()])
 
 
@@ -1013,26 +1015,28 @@ def move_in(user_id):
 def room_history_json(user_id):
     user = get_user_or_404(user_id)
 
+    T = RoomHistoryTable
     return jsonify(items=[{
         'begins_at': date_format(history_entry.begins_at, formatter=date_filter),
         'ends_at': date_format(history_entry.ends_at, formatter=date_filter),
-        'room': {
-            'href': url_for('facilities.room_show', room_id=history_entry.room_id),
-            'title': history_entry.room.short_name
-        }} for history_entry in user.room_history_entries])
+        'room': T.room.value(
+            href=url_for('facilities.room_show', room_id=history_entry.room_id),
+            title=history_entry.room.short_name
+        )
+    } for history_entry in user.room_history_entries])
 
 
 @bp.route('<int:user_id>/json/tenancies')
 def tenancies_json(user_id):
     user = get_user_or_404(user_id)
-
+    T = TenancyTable
     return jsonify(items=[{
         'begins_at': date_format(tenancy.mietbeginn, formatter=date_filter),
         'ends_at': date_format(tenancy.mietende, formatter=date_filter),
-        'room': {
-            'href': url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
-            'title': tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
-        },
+        'room': T.room.value(
+            href=url_for('facilities.room_show', room_id=tenancy.room.id) if tenancy.room else '#',
+            title=tenancy.room.short_name if tenancy.room else tenancy.vo_suchname
+        ),
         'status': tenancy.status.name
     } for tenancy in user.tenancies])
 
@@ -1222,29 +1226,31 @@ def member_request_merge_confirm(pre_member_id: int, user_id: int):
 def member_requests_json():
     prms = get_member_requests()
 
+    T = PreMemberTable
     return jsonify(items=[{
         'id': prm.id,
         'prm_id': encode_type2_user_id(prm.id),
-        'name': {'text': prm.name, 'bool': prm.swdd_person_id is not None,
-                 'icon_true': 'fas fa-address-card',
-                 'icon_false': 'far fa-address-card'},
+        'name': T.name.value(
+            text=prm.name, bool=prm.swdd_person_id is not None,
+            icon_true='fas fa-address-card', icon_false='far fa-address-card'
+        ),
         'login': prm.login,
-        'email': {'text': prm.email, 'bool': prm.email_confirmed},
+        'email': T.email.value(text=prm.email, bool=prm.email_confirmed),
         'email_confirmed': prm.email_confirmed,
         'move_in_date': date_format(prm.move_in_date, formatter=date_filter),
         'action_required': prm.room is not None and prm.email_confirmed and prm.is_adult,
-        'actions': [{'href': url_for(".member_request_edit",
-                                     pre_member_id=prm.id),
-                     'title': 'Bearbeiten',
-                     'icon': 'fa-edit',
-                     'btn_class': 'btn-info btn-sm',
-                     'new_tab': True},
-                    {'href': url_for(".member_request_delete",
-                                     pre_member_id=prm.id),
-                     'title': 'Löschen',
-                     'icon': 'fa-trash',
-                     'btn_class': 'btn-danger btn-sm'},
-                    ],
+        'actions': [
+            T.actions.single_value(
+                href=url_for(".member_request_edit", pre_member_id=prm.id),
+                title='Bearbeiten', icon='fa-edit',
+                btn_class='btn-info btn-sm', new_tab=True
+            ),
+            T.actions.single_value(
+                href=url_for(".member_request_delete", pre_member_id=prm.id),
+                title='Löschen', icon='fa-trash',
+                btn_class='btn-danger btn-sm'
+            ),
+        ],
     } for prm in prms])
 
 

@@ -41,12 +41,13 @@ def format_parameters(parameters):
 
 def task_object(task: Task):
     task_impl = task_type_to_impl.get(task.type)
-
+    T = TaskTable
     return {
         "id": task.id,
-        "user": {
-            'href': url_for('user.user_show', user_id=task.user.id),
-            'title': task.user.name},
+        "user": T.user.value(
+            href=url_for('user.user_show', user_id=task.user.id),
+            title=task.user.name
+        ),
         "name": task_impl.name,
         "type": task.type.name,
         "status": task.status.name,
@@ -54,17 +55,20 @@ def task_object(task: Task):
         "errors": task.errors if task.errors is not None else list(),
         "due": datetime_format(task.due, default='', formatter=datetime_filter),
         "created": task.created.strftime("%Y-%m-%d %H:%M:%S"),
-        "creator": {
-            'href': url_for('user.user_show', user_id=task.creator.id),
-            'title': task.creator.name},
-        'actions': [{'href': url_for('.cancel_user_task',
-                                     task_id=task.id,
-                                     redirect=url_for('user.user_show',
-                                                      user_id=task.user.id,
-                                                      _anchor='tasks')),
-                     'title': "Abbrechen",
-                     'icon': 'fa-times',
-                     'btn-class': 'btn-link'}] if task.status == TaskStatus.OPEN else None,
+        "creator": T.creator.value(
+            href=url_for('user.user_show', user_id=task.creator.id),
+            title=task.creator.name
+        ),
+        'actions': [T.actions.single_value(
+            href=url_for(
+                '.cancel_user_task',
+                task_id=task.id,
+                redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+            ),
+            title="Abbrechen",
+            icon='fa-times',
+            btn_class='btn-link'
+        )] if task.status == TaskStatus.OPEN else None,
     }
 
 @bp.route("/user/<int:user_id>/json")

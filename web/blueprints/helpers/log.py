@@ -12,6 +12,7 @@ from functools import partial
 from flask import url_for
 
 from pycroft.helpers.i18n import Message
+from web.blueprints.user.tables import UserColumn
 from web.table.table import datetime_format
 
 from web.template_filters import datetime_filter
@@ -27,11 +28,10 @@ def format_log_entry(entry, log_type):
     return {
         'created_at': datetime_format(entry.created_at, formatter=datetime_filter),
         'raw_created_at': entry.created_at,
-        'user': {
-            'type': 'native',  # parses it as a link
-            'title': entry.author.name,
-            'href': url_for("user.user_show", user_id=entry.author.id)
-        },
+        'user': UserColumn.value_native(
+            title=entry.author.name,
+            href=url_for("user.user_show", user_id=entry.author.id)
+        ),
         'message': Message.from_json(entry.message).localize(),
         'type': log_type
     }

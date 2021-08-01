@@ -94,22 +94,27 @@ def switches():
 
 @bp.route('/switches/json')
 def switches_json():
+    T = SwitchTable
     return jsonify(items=[{
-            'id': switch.host_id,
-            'name': {
-                'title': switch.host.name,
-                'href': url_for(".switch_show", switch_id=switch.host_id)
-            },
-            'ip': str(switch.management_ip),
-            "edit_link": {"href": url_for(".switch_edit", switch_id=switch.host_id),
-                          'title': "Bearbeiten",
-                          'icon': 'fa-edit',
-                          'btn-class': 'btn-link'},
-            "delete_link": {"href": url_for(".switch_delete", switch_id=switch.host_id),
-                            'title': "Löschen",
-                            'icon': 'fa-trash',
-                            'btn-class': 'btn-link'},
-        } for switch in Switch.q.all()])
+        'id': switch.host_id,
+        'name': T.name.value(
+            title=switch.host.name,
+            href=url_for(".switch_show", switch_id=switch.host_id)
+        ),
+        'ip': str(switch.management_ip),
+        "edit_link": T.edit_link.value(
+            href=url_for(".switch_edit", switch_id=switch.host_id),
+            title="Bearbeiten",
+            icon='fa-edit',
+            btn_class='btn-link'
+        ),
+        "delete_link": T.delete_link.value(
+            href=url_for(".switch_delete", switch_id=switch.host_id),
+            title="Löschen",
+            icon='fa-trash',
+            btn_class='btn-link'
+        ),
+    } for switch in Switch.q.all()])
 
 
 @bp.route('/switch/show/<int:switch_id>')
@@ -136,24 +141,28 @@ def switch_show_json(switch_id):
         abort(404)
     switch_port_list = switch.ports
     switch_port_list = net.sort_ports(switch_port_list)
+    T = PortTable
     return jsonify(items=[{
             "switchport_name": port.name,
             "patchport_name": port.patch_port.name if port.patch_port else None,
-            "room": {
-                "href": url_for(
-                    "facilities.room_show",
-                    room_id=port.patch_port.room.id
-                ),
-                "title": port.patch_port.room.short_name
-            } if port.patch_port else None,
-            "edit_link": {"href": url_for(".switch_port_edit", switch_id=switch.host.id, switch_port_id=port.id),
-                          'title': "Bearbeiten",
-                          'icon': 'fa-edit',
-                          'btn-class': 'btn-link'},
-            "delete_link": {"href": url_for(".switch_port_delete", switch_id=switch.host.id, switch_port_id=port.id),
-                            'title': "Löschen",
-                            'icon': 'fa-trash',
-                            'btn-class': 'btn-link'},
+            "room": T.room.value(
+                href=url_for("facilities.room_show", room_id=port.patch_port.room.id),
+                title=port.patch_port.room.short_name
+            ) if port.patch_port else None,
+            "edit_link": T.edit_link.value(
+                href=url_for(".switch_port_edit",
+                             switch_id=switch.host.id, switch_port_id=port.id),
+                title="Bearbeiten",
+                icon='fa-edit',
+                btn_class='btn-link'
+            ),
+            "delete_link": T.delete_link.value(
+                href=url_for(".switch_port_delete",
+                             switch_id=switch.host.id, switch_port_id=port.id),
+                title="Löschen",
+                icon='fa-trash',
+                btn_class='btn-link'
+            ),
         } for port in switch_port_list])
 
 

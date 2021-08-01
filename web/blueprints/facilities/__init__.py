@@ -289,11 +289,12 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
             # Ensure room is in level_inhabitants
             level_inhabitants[room]
 
+    T = BuildingLevelRoomTable
     return jsonify(items=[{
-            'room': {
-                'href': url_for(".room_show", room_id=room.id),
-                'title': f"{level:02d} - {room.number}"
-            },
+            'room': T.room.value(
+                href=url_for(".room_show", room_id=room.id),
+                title=f"{level:02d} - {room.number}"
+            ),
             'inhabitants': [user_button(i) for i in inhabitants]
         } for room, inhabitants in level_inhabitants.items()])
 
@@ -494,31 +495,32 @@ def room_patchpanel_json(room_id):
 
     patch_ports = PatchPort.q.filter_by(switch_room=room).all()
     patch_ports = sort_ports(patch_ports)
+    T = PatchPortTable
 
     return jsonify(items=[{
         "name": port.name,
-        "room": {
-            "href": url_for(
-                ".room_show",
-                room_id=port.room.id
-            ),
-            "title": port.room.short_name
-        },
-        "switch_port": {
-            "href": url_for(
-                "infrastructure.switch_show",
-                switch_id=port.switch_port.switch.host_id
-            ),
-            "title": f"{port.switch_port.switch.host.name}/{port.switch_port.name}"
-        } if port.switch_port else None,
-        "edit_link": {"href": url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
-                      'title': "Bearbeiten",
-                      'icon': 'fa-edit',
-                      'btn-class': 'btn-link'},
-        "delete_link": {"href": url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
-                        'title': "Löschen",
-                        'icon': 'fa-trash',
-                        'btn-class': 'btn-link'},
+        "room": T.room.value(
+            href=url_for(".room_show", room_id=port.room.id),
+            title=port.room.short_name
+        ),
+        "switch_port": T.switch_port.value(
+            href=url_for("infrastructure.switch_show",
+                         switch_id=port.switch_port.switch.host_id),
+            title=f"{port.switch_port.switch.host.name}/{port.switch_port.name}"
+        ) if port.switch_port else None,
+        'edit_link': T.edit_link.value(
+            hef=url_for(".patch_port_edit", switch_room_id=room.id, patch_port_id=port.id),
+            title="Bearbeiten",
+            icon='fa-edit',
+            # TODO decide on a convention here
+            btn_class='btn-link',
+        ),
+        'delete_link': T.delete_link.value(
+            href=url_for(".patch_port_delete", switch_room_id=room.id, patch_port_id=port.id),
+            title="Löschen",
+            icon='fa-trash',
+            btn_class='btn-link'
+        ),
     } for port in patch_ports])
 
 
@@ -566,15 +568,16 @@ def overcrowded(building_id):
 @bp.route('/overcrowded/<int:building_id>/json')
 def overcrowded_json(building_id):
     rooms = get_overcrowded_rooms(building_id)
+    T = RoomOvercrowdedTable
 
     return jsonify(items=[{
-        'room': {
-            'title': '{} / {:02d} / {}'.format(
+        'room': T.room.value(
+            title='{} / {:02d} / {}'.format(
                 inhabitants[0].room.building.short_name,
                 inhabitants[0].room.level, inhabitants[0].room.number),
-            'href': url_for("facilities.room_show",
-                            room_id=inhabitants[0].room.id)
-        },
+            href=url_for("facilities.room_show",
+                         room_id=inhabitants[0].room.id)
+        ),
         'inhabitants': [user_button(user) for user in inhabitants]
     } for inhabitants in rooms.values()])
 

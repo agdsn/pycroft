@@ -99,12 +99,11 @@ def bank_accounts_list_json():
             'blz': bank_account.routing_number,
             'iban': bank_account.iban,
             'bic': bank_account.bic,
-            'kto': {
-                'href': url_for('.accounts_show',
-                                account_id=bank_account.account_id),
-                'title': 'Konto anzeigen',
-                'btn_class': 'btn-primary'
-            },
+            'kto': BankAccountTable.kto.value(
+                href=url_for('.accounts_show', account_id=bank_account.account_id),
+                title='Konto anzeigen',
+                btn_class='btn-primary'
+            ),
             'balance': money_filter(bank_account.balance),
             'last_imported_at': '{}'.format(
                 map_or_default(bank_account.last_imported_at, datetime.date,
@@ -115,14 +114,12 @@ def bank_accounts_list_json():
 @bp.route('/bank-accounts/activities/json')
 def bank_accounts_activities_json():
     def actions(activity_id):
-        return [{
-            'href': url_for(
-                '.bank_account_activities_edit',
-                activity_id=activity_id),
-            'title': '',
-            'btn_class': 'btn-primary',
-            'icon': 'fa-edit'
-        }]
+        return [BankAccountActivityTable.actions.single_value(
+            href=url_for('.bank_account_activities_edit', activity_id=activity_id),
+            title='',
+            btn_class='btn-primary',
+            icon='fa-edit'
+        )]
 
     activity_q = (BankAccountActivity.q
                   .options(joinedload(BankAccountActivity.bank_account))
@@ -143,15 +140,15 @@ def bank_accounts_activities_json():
 
 @bp.route('/bank-accounts/import/errors/json')
 def bank_accounts_errors_json():
+    T = ImportErrorTable
     return jsonify(items=[
         {
             'name': error.bank_account.name,
-            'fix': {
-                'href': url_for('.fix_import_error',
-                                error_id=error.id),
-                'title': 'korrigieren',
-                'btn_class': 'btn-primary'
-            },
+            'fix': T.fix.value(
+                href=url_for('.fix_import_error', error_id=error.id),
+                title='korrigieren',
+                btn_class='btn-primary'
+            ),
             'imported_at': '{}'.format(
                 map_or_default(error.imported_at, datetime.date, 'nie'))
         } for error in MT940Error.q.all()])
@@ -615,24 +612,23 @@ def accounts_show(account_id):
 
 
 def _format_row(split, style, prefix=None):
+    T = FinanceTable
     row = {
         'posted_at': datetime_filter(split.transaction.posted_at),
         # 'posted_by': (split.transaction.author.id, split.transaction.author.name),
         'valid_on': date_filter(split.transaction.valid_on),
-        'description': {
-            'href': url_for(
-                "finance.transactions_show",
-                transaction_id=split.transaction_id
-                ),
-            'title': localized(split.transaction.description) if split.transaction.description
-                     else 'Keine Beschreibung',
-            **({'empty': True} if not split.transaction.description else {}),
-        },
-        'amount': {
-            'value': money_filter(-split.amount) if (style == "inverted") else money_filter(
+        'description': T.description.value(
+            href=url_for("finance.transactions_show",
+                         transaction_id=split.transaction_id),
+            title=localized(split.transaction.description)
+            if split.transaction.description
+            else 'Keine Beschreibung'
+        ),
+        'amount': T.amount.value(
+            value=money_filter(-split.amount) if (style == "inverted") else money_filter(
                 split.amount),
-            'is_positive': (split.amount > 0) ^ (style == "inverted"),
-        },
+            is_positive=(split.amount > 0) ^ (style == "inverted"),
+        ),
         'row_positive': (split.amount > 0) ^ (style == "inverted"),
     }
     if prefix is None:
@@ -723,10 +719,10 @@ def transactions_show_json(transaction_id):
         description=transaction.description,
         items=[
             {
-                'account': {
-                    'href': url_for(".accounts_show", account_id=split.account_id),
-                    'title': localized(split.account.name, {int: {'insert_commas': False}})
-                },
+                'account': TransactionTable.account.value(
+                    href=url_for(".accounts_show", account_id=split.account_id),
+                    title=localized(split.account.name, {int: {'insert_commas': False}})
+                ),
                 'amount': money_filter(split.amount),
                 'row_positive': split.amount > 0
             } for split in transaction.splits])
@@ -749,6 +745,7 @@ def transactions_unconfirmed_json():
         100).all()
 
     items = []
+    T = UnconfirmedTransactionsTable
 
     for transaction in transactions:
         user_account = next((a for a in transaction.accounts if a.type == "USER_ASSET"), None)
@@ -756,49 +753,46 @@ def transactions_unconfirmed_json():
 
         items.append(
             {
-                'description': {
-                    'href': url_for(".transactions_show",
-                                    transaction_id=transaction.id),
-                    'title': transaction.description,
-                    'new_tab': True,
-                    'glyphicon': 'fa-external-link-alt'
-                },
-                'user': {
-                    'href': url_for("user.user_show",
-                                    user_id=user_account.user.id),
-                    'title': "{} ({})".format(user_account.user.name,
-                                              encode_type2_user_id(user_account.user.id)),
-                    'new_tab': True
-                } if user_account else None,
+                'description': T.description.value(
+                    href=url_for(".transactions_show", transaction_id=transaction.id),
+                    title=transaction.description,
+                    new_tab=True,
+                    glyphicon='fa-external-link-alt'
+                ),
+                'user': T.user.value(
+                    href=url_for("user.user_show", user_id=user_account.user.id),
+                    title="{} ({})".format(user_account.user.name,
+                                           encode_type2_user_id(user_account.user.id)),
+                    new_tab=True
+                ) if user_account else None,
                 'room': user_account.user.room.short_name if user_account and user_account.user.room else None,
-                'author': {
-                    'href': url_for("user.user_show",
-                                    user_id=transaction.author.id),
-                    'title': transaction.author.name,
-                    'new_tab': True,
-                },
+                'author': T.author.value(
+                    href=url_for("user.user_show", user_id=transaction.author.id),
+                    title=transaction.author.name,
+                    new_tab=True
+                ),
                 'date': date_format(transaction.posted_at, formatter=date_filter),
                 'amount': money_filter(transaction.amount),
-                'actions': [{
-                    'href': url_for(".bank_account_activities_edit",
-                                    activity_id=bank_acc_act.id),
-                    'title': 'Bankbewegung',
-                    'icon': 'fa-credit-card',
-                    'btn_class': 'btn-info btn-sm',
-                    'new_tab': True
-                } if bank_acc_act is not None else {}, {
-                    'href': url_for(".transaction_confirm",
-                                    transaction_id=transaction.id),
-                    'title': 'Bestätigen',
-                    'icon': 'fa-check',
-                    'btn_class': 'btn-success btn-sm',
-                },{
-                    'href': url_for(".transaction_delete",
-                                    transaction_id=transaction.id),
-                    'title': 'Löschen',
-                    'icon': 'fa-trash',
-                    'btn_class': 'btn-danger btn-sm',
-                }] if privilege_check(current_user, 'finance_change') else [],
+                'actions': [
+                    T.actions.single_value(
+                        href=url_for(".bank_account_activities_edit",
+                                     activity_id=bank_acc_act.id),
+                        title='Bankbewegung', icon='fa-credit-card',
+                        btn_class='btn-info btn-sm',
+                        new_tab=True
+                    ) if bank_acc_act is not None else {},
+                    T.actions.single_value(
+                        href=url_for(".transaction_confirm",
+                                     transaction_id=transaction.id), title='Bestätigen',
+                        icon='fa-check', btn_class='btn-success btn-sm'
+                    ),
+                    T.actions.single_value(
+                        href=url_for(".transaction_delete",
+                                     transaction_id=transaction.id), title='Löschen',
+                        icon='fa-trash',
+                        btn_class='btn-danger btn-sm'
+                    )
+                ] if privilege_check(current_user, 'finance_change') else [],
             })
 
     return jsonify(items=items)
@@ -1033,17 +1027,20 @@ def membership_fee_users_due_json(fee_id):
     fee_description = localized(
         finance.membership_fee_description.format(fee_name=fee.name).to_json())
 
+    T = UsersDueTable
     return jsonify(items=[{
         'user_id': user['id'],
-        'user': {'title': str(user['name']),
-                 'href': url_for("user.user_show", user_id=user['id'])},
+        'user': T.user.value(
+            title=str(user['name']),
+            href=url_for("user.user_show", user_id=user['id'])
+        ),
         'amount': fee_amount,
         'description': fee_description,
         'valid_on': fee.ends_on,
-        'fee_account_id':{
-            'title': str(user['fee_account_id']),
-            'href': url_for(".accounts_show", account_id=user['fee_account_id'])
-        },
+        'fee_account_id': T.fee_account_id.value(
+            title=str(user['fee_account_id']),
+            href=url_for(".accounts_show", account_id=user['fee_account_id'])
+        ),
     } for user in affected_users])
 
 
@@ -1057,6 +1054,7 @@ def membership_fees():
 @bp.route("/membership_fees/json")
 @access.require('finance_change')
 def membership_fees_json():
+    T = MembershipFeeTable
     return jsonify(items=[
         {
             'name': localized(membership_fee.name),
@@ -1067,23 +1065,22 @@ def membership_fees_json():
             'begins_on': date_format(membership_fee.begins_on, formatter=date_filter),
             'ends_on': date_format(membership_fee.ends_on, formatter=date_filter),
             'actions': [
-                {'href': url_for(".transactions_all",
+                T.actions.single_value(
+                    href=url_for(".transactions_all",
                                  filter="all",
                                  after=membership_fee.begins_on,
                                  before=membership_fee.ends_on),
-                 'title': 'Finanzübersicht',
-                 'icon': 'fa-euro-sign',
-                 'btn_class': 'btn-success btn-sm'},
-                {'href': url_for(".membership_fee_book",
-                                 fee_id=membership_fee.id),
-                 'title': 'Buchen',
-                 'icon': 'fa-book',
-                 'btn_class': 'btn-warning btn-sm'},
-                {'href': url_for(".membership_fee_edit",
-                                 fee_id=membership_fee.id),
-                 'title': 'Bearbeiten',
-                 'icon': 'fa-edit',
-                 'btn_class': 'btn-primary btn-sm'}
+                    title='Finanzübersicht',
+                    icon='fa-euro-sign', btn_class='btn-success btn-sm'
+                ),
+                T.actions.single_value(
+                    href=url_for(".membership_fee_book", fee_id=membership_fee.id),
+                    title='Buchen', icon='fa-book', btn_class='btn-warning btn-sm'
+                ),
+                T.actions.single_value(
+                    href=url_for(".membership_fee_edit", fee_id=membership_fee.id),
+                    title='Bearbeiten', icon='fa-edit', btn_class='btn-primary btn-sm'
+                )
             ]
         } for membership_fee in
         MembershipFee.q.order_by(MembershipFee.begins_on.desc()).all()])

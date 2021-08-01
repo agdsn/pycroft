@@ -20,7 +20,7 @@ from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
-from web.blueprints.host.tables import InterfaceTable
+from web.blueprints.host.tables import InterfaceTable, HostTable
 
 bp = Blueprint('host', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
@@ -155,6 +155,7 @@ def host_interfaces_json(host_id):
         abort(404)
 
     interfaces = []
+    T = InterfaceTable
 
     for interface in host.interfaces:
         interfaces.append({
@@ -164,17 +165,18 @@ def host_interfaces_json(host_id):
             'ips': ', '.join(str(ip.address) for ip in interface.ips),
             'mac': interface.mac,
             'actions': [
-                {
-                    'href': url_for('.interface_edit',
-                                    interface_id=interface.id),
-                    'title': "Bearbeiten",
-                    'icon': 'fa-edit',
-                    'btn-class': 'btn-link'},
-                {'href': url_for('.interface_delete',
-                                 interface_id=interface.id),
-                 'title': "Löschen",
-                 'icon': 'fa-trash',
-                 'btn-class': 'btn-link'}
+                T.actions.single_value(
+                    href=url_for('.interface_edit', interface_id=interface.id),
+                    title="Bearbeiten",
+                    icon='fa-edit',
+                    btn_class='btn-link'
+                ),
+                T.actions.single_value(
+                    href=url_for('.interface_delete', interface_id=interface.id),
+                    title="Löschen",
+                    icon='fa-trash',
+                    btn_class='btn-link'
+                )
             ]
         })
 
@@ -330,6 +332,7 @@ def interface_create(host_id):
 @bp.route("/<int:user_id>")
 def user_hosts_json(user_id):
     user = get_user_or_404(user_id)
+    T = HostTable
 
     list_items = []
     for host in user.hosts:
@@ -347,19 +350,22 @@ def user_hosts_json(user_id):
             'name': host.name,
             'switch': switches,
             'port': ports,
-            'actions': [{'href': url_for('.host_edit', host_id=host.id,
-                                         user_id=user_id),
-                         'title': "Bearbeiten",
-                         'icon': 'fa-edit',
-                         'btn-class': 'btn-link'},
-                        {'href': url_for('.host_delete', host_id=host.id),
-                         'title': "Löschen",
-                         'icon': 'fa-trash',
-                         'btn-class': 'btn-link'}],
-            'interfaces_table_link': url_for('.interface_table',
-                                             host_id=host.id),
-            'interface_create_link': url_for('.interface_create',
-                                             host_id=host.id),
+            'actions': [
+                T.actions.single_value(
+                    href=url_for('.host_edit', host_id=host.id, user_id=user_id),
+                    title="Bearbeiten",
+                    icon='fa-edit',
+                    btn_class='btn-link'
+                ),
+                T.actions.single_value(
+                    href=url_for('.host_delete', host_id=host.id),
+                    title="Löschen",
+                    icon='fa-trash',
+                    btn_class='btn-link'
+                )
+            ],
+            'interfaces_table_link': url_for('.interface_table', host_id=host.id),
+            'interface_create_link': url_for('.interface_create', host_id=host.id),
         })
     return jsonify(items=list_items)
 
