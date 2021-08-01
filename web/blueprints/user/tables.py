@@ -4,7 +4,7 @@ from flask import url_for
 
 from web.table.table import BootstrapTable, Column, \
     LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn, \
-    custom_formatter_column, DictValueMixin
+    custom_formatter_column, DictValueMixin, TextWithBooleanColumn
 from web.blueprints.helpers.user import no_membership_change
 
 
@@ -111,9 +111,9 @@ class TenancyTable(BootstrapTable):
 
 class PreMemberTable(BootstrapTable):
     prm_id = Column("ID")
-    name = Column("Name", formatter="table.textWithBooleanFormatter")
+    name = TextWithBooleanColumn("Name")
     login = Column("Login")
-    email = Column("E-Mail Adresse", formatter="table.textWithBooleanFormatter")
+    email = TextWithBooleanColumn("E-Mail Adresse")
     move_in_date = DateColumn("Einzug am")
     actions = MultiBtnColumn("Aktionen", hide_if=no_membership_change, width=1)
 

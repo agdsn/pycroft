@@ -175,6 +175,15 @@ class RelativeDateColumn(Column):
     pass
 
 
+@custom_formatter_column('table.textWithBooleanFormatter')
+class TextWithBooleanColumn(DictValueMixin, Column):
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def value(cls, text: str, bool: bool,
+                  icon_true: Optional[str] = None,
+                  icon_false: Optional[str] = None) -> dict: ...
+
+
 UnboundTableArgs = FrozenSet[Tuple[str, Any]]
 TableArgs = Dict[str, str]
 
