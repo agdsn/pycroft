@@ -114,6 +114,10 @@ class DictValueMixin:
         }
 
 
+class DictListValueMixin:
+    single_value = DictValueMixin.value
+
+
 # noinspection PyPep8Naming
 class custom_formatter_column:
     def __init__(self, formatter_name: str):
@@ -137,9 +141,13 @@ class BtnColumn(Column):
 
 
 @custom_formatter_column('table.multiBtnFormatter')
-class MultiBtnColumn(Column):
+class MultiBtnColumn(DictListValueMixin, Column):
     def __init__(self, *a, **kw):
         super().__init__(*a, sortable=False, **kw)
+
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def single_value(cls, href: str, title: str, glyphicon: Optional[str] = None) -> dict: ...
 
 
 @custom_formatter_column('table.linkFormatter')
