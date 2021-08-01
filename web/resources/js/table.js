@@ -283,15 +283,15 @@ export function membershipRowFormatter(row, index) {
 }
 
 
-$(function() {
+$(() => {
     let userPropSel = $('.userprop[data-property-name]');
-    userPropSel.mouseenter(function(ev) {
+    userPropSel.mouseenter(ev => {
         let propitem = ev.currentTarget;
         let propname = propitem.attributes['data-property-name'].value;
         console.log(`hovered ${propname}`);
         markGuiltyGroups(propname);
     });
-    userPropSel.mouseleave(function(ev) {
+    userPropSel.mouseleave(ev => {
         let propitem = ev.currentTarget;
         let propname = propitem.attributes['data-property-name'].value;
         console.log(`un-hovered ${propname}`);
@@ -299,7 +299,7 @@ $(function() {
     });
 
     let tbodySel = $('.membership-table tbody');
-    tbodySel.on('mouseenter', 'tr', function(ev) {
+    tbodySel.on('mouseenter', 'tr', ev => {
         let groupRow = ev.currentTarget;
         let granted = groupRow.hasAttribute('data-row-grants')
             ? groupRow.attributes['data-row-grants'].value.split(' ')
@@ -319,7 +319,7 @@ $(function() {
             && !denied.includes(prop.attributes['data-property-name'].value)
         )).forEach(prop => prop.classList.add('userprop-deemphasized'));
     });
-    tbodySel.on('mouseleave', 'tr', function(ev) {
+    tbodySel.on('mouseleave', 'tr', ev => {
         $('.userprop[data-property-name]').toArray()
             .forEach(prop => prop.classList.remove('userprop-deemphasized'));
     });
@@ -415,7 +415,7 @@ export function userHostResponseHandler(resp) {
  * If the `data-load-subtables` attributes is set to `true` on the table,
  * subtables in the detailView will be loaded.
  */
-!function ($) {
+!($ => {
     let BootstrapTable = $.fn.bootstrapTable.Constructor;
     let _initTable = BootstrapTable.prototype.initTable;
     let _initBody = BootstrapTable.prototype.initBody;
@@ -427,8 +427,8 @@ export function userHostResponseHandler(resp) {
 
         //Initialize subtables
         if (this.options.loadSubtables){
-            this.$container.find('table').on('expand-row.bs.table', function(e, index, row, $detail){
-                $detail.find('table').each(function(_, table){
+            this.$container.find('table').on('expand-row.bs.table', (e, index, row, $detail) => {
+                $detail.find('table').each((_, table) => {
                     if ($(table).bootstrapTable('getOptions').length === 1){
                         $(table).bootstrapTable();
                     }
@@ -475,7 +475,7 @@ export function userHostResponseHandler(resp) {
             this.$pagination.find('.pagination-info').hide();
         }
     }
-}($);
+})($);
 
 /*
     detailFormatter for the host table, displaying the related interfaces
@@ -487,7 +487,7 @@ export function hostDetailFormatter(index, row, element){
          async: false,
          type: 'GET',
          url: row.interfaces_table_link,
-         success: function(data) {
+         success: data => {
               html = html.concat(data)
          }
     });
@@ -502,14 +502,14 @@ export function hostDetailFormatter(index, row, element){
 export function taskDetailFormatter(index, row, element){
     let html = '<h5><b>Verwendete Parameter</b></h5>';
 
-    $.each(row.parameters, function(key, value) {
+    $.each(row.parameters, (key, value) => {
         html = html.concat(`<code>${key}:</code> ${value}<br/>`);
     });
 
     if (row.errors.length) {
         html = html.concat(`<br/><h5><b>Fehlermeldungen</b></h5>`);
 
-        $.each(row.errors, function(key, value){
+        $.each(row.errors, (key, value) => {
             html = html.concat(`<code>${value}</code><br/>`);
         });
     }
