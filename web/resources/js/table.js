@@ -160,14 +160,14 @@ export function btnFormatter(value, row, index) {
 }
 
 function humanByteSize(bytes, si) {
-    var thresh = si ? 1000 : 1024;
+    const thresh = si ? 1000 : 1024;
     if(Math.abs(bytes) < thresh) {
         return bytes + ' B';
     }
-    var units = si
-        ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
-        : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
-    var u = -1;
+    const units = si
+        ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+        : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    let u = -1;
     do {
         bytes /= thresh;
         ++u;
@@ -207,9 +207,9 @@ export function listFormatter(value, row, index) {
     if (!value) {
         return;
     }
-    var ret = '<ul style="margin:0;">';
-    for (var i = 0; i < value.length; i++) {
-        ret += '<li>' + value[i] + '</li>';
+    let ret = '<ul style="margin:0;">';
+    for (const item of value) {
+        ret += '<li>' + item + '</li>';
     }
     ret += '</ul>';
     return ret;
@@ -448,21 +448,21 @@ export function userHostResponseHandler(resp) {
 
     // Init sort name
     BootstrapTable.prototype.initSortName = function () {
-        var header = this.$el.find('>thead');
+        const header = this.$el.find('>thead');
         header.find('th').each(function () {
-            var column = this;
+            const column = this;
             // Column already has a sort name
             if (column.hasAttribute("data-sort-name") || !column.hasAttribute('data-field'))
                 return;
 
             // Lookup sort name in formatter attributes
             if (column.hasAttribute('data-formatter')) {
-                var formatter = column.getAttribute('data-formatter');
-                var attributes = $.fn.bootstrapTable.utils.calculateObjectValue(
+                const formatter = column.getAttribute('data-formatter');
+                const attributes = $.fn.bootstrapTable.utils.calculateObjectValue(
                     column, formatter + '.attributes', [], null);
 
                 if (attributes !== null && attributes.hasOwnProperty('sortName')) {
-                    var sortName = column.getAttribute('data-field') + "." + attributes.sortName;
+                    const sortName = column.getAttribute('data-field') + "." + attributes.sortName;
                     column.setAttribute('data-sort-name', sortName);
                 }
             }
