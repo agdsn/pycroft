@@ -3,7 +3,8 @@ import typing
 from flask import url_for
 
 from web.table.table import BootstrapTable, Column, \
-    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn
+    LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn, \
+    custom_formatter_column, DictValueMixin
 from web.blueprints.helpers.user import no_membership_change
 
 
@@ -20,18 +21,32 @@ class RefreshableTableMixin:
         super().__init__(*a, **kw)
 
 
+@custom_formatter_column('table.userFormatter')
+class UserColumn(Column):
+    @classmethod
+    def value_plain(cls, title: str) -> dict:
+        return DictValueMixin.value(type='plain', title=title)
+
+    @classmethod
+    def value_native(cls, href: str, title: str,
+                     glyphicon: typing.Optional[str] = None) -> dict:
+        return DictValueMixin.value(
+            type='native', href=href, title=title, glyphicon=glyphicon,
+        )
+
+
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs, with a ``type`` column"""
     created_at = RelativeDateColumn("Erstellt um", width=2)
     type_ = Column("Logtyp", name='type', sortable=False)
-    user = Column("Nutzer", formatter='table.userFormatter')
+    user = UserColumn("Nutzer")
     message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
 class LogTableSpecific(RefreshableTableMixin, BootstrapTable):
     """A table for displaying logs"""
     created_at = RelativeDateColumn("Erstellt um", width=2)
-    user = Column("Nutzer", formatter='table.userFormatter')
+    user = UserColumn("Nutzer")
     message = Column("Nachricht", formatter='table.withMagicLinksFormatter')
 
 
