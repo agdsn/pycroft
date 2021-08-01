@@ -4,7 +4,7 @@ import pytest
 
 from pycroft.model.task import TaskType, UserTask
 from tests.factories.task import UserTaskFactory
-from web.blueprints.task import task_object
+from web.blueprints.task import task_row
 
 
 @pytest.fixture(scope='function')
@@ -31,6 +31,6 @@ def task_request_ctx(app):
     )
 ])
 def test_task_object_creation(app, task: UserTask, session, task_request_ctx):
-    object = task_object(task)
+    object = task_row(task)
     assert object['user']['title'] is not None
     assert object['user']['href'] is not None

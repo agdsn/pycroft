@@ -39,7 +39,7 @@ def format_parameters(parameters):
     return parameters
 
 
-def task_object(task: Task):
+def task_row(task: Task):
     task_impl = task_type_to_impl.get(task.type)
     T = TaskTable
     return {
@@ -75,7 +75,7 @@ def task_object(task: Task):
 def json_tasks_for_user(user_id):
     user = get_user_or_404(user_id)
 
-    return jsonify(items=[task_object(task) for task in user.tasks])
+    return jsonify(items=[task_row(task) for task in user.tasks])
 
 
 @bp.route("/user/json")
@@ -92,7 +92,7 @@ def json_user_tasks():
     else:
         tasks = tasks.all()
 
-    return jsonify(items=[task_object(task) for task in tasks])
+    return jsonify(items=[task_row(task) for task in tasks])
 
 
 @bp.route("/<int:task_id>/cancel")
