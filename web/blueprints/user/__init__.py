@@ -398,12 +398,14 @@ def user_show_groups_json(user_id, group_filter="all"):
                 T.actions.single_value(
                     href=url_for(".edit_membership", user_id=user_id, membership_id=membership.id),
                     title='Bearbeiten',
-                    icon='fa-edit'
+                    icon='fa-edit',
+                    btn_class='btn-link',
                 ),
                 T.actions.single_value(
                     href=url_for(".end_membership", user_id=user_id, membership_id=membership.id),
                     title="Beenden",
-                    icon='fa-power-off'
+                    icon='fa-power-off',
+                    btn_class='btn-link',
                 ) if membership.active() else {}
             ],
         } for membership, granted, denied in memberships.all()])
