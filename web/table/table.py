@@ -184,6 +184,20 @@ class TextWithBooleanColumn(DictValueMixin, Column):
                   icon_false: Optional[str] = None) -> dict: ...
 
 
+@custom_formatter_column('table.userFormatter')
+class UserColumn(Column):
+    @classmethod
+    def value_plain(cls, title: str) -> dict:
+        return DictValueMixin.value(type='plain', title=title)
+
+    @classmethod
+    def value_native(cls, href: str, title: str,
+                     glyphicon: typing.Optional[str] = None) -> dict:
+        return DictValueMixin.value(
+            type='native', href=href, title=title, glyphicon=glyphicon,
+        )
+
+
 UnboundTableArgs = FrozenSet[Tuple[str, Any]]
 TableArgs = Dict[str, str]
 

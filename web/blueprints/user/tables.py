@@ -4,7 +4,7 @@ from flask import url_for
 
 from web.table.table import BootstrapTable, Column, \
     LinkColumn, button_toolbar, MultiBtnColumn, DateColumn, RelativeDateColumn, \
-    custom_formatter_column, DictValueMixin, TextWithBooleanColumn
+    TextWithBooleanColumn, UserColumn
 from web.blueprints.helpers.user import no_membership_change
 
 
@@ -19,20 +19,6 @@ class RefreshableTableMixin:
         table_args.setdefault('data-show-refresh', "true")
         kw['table_args'] = table_args
         super().__init__(*a, **kw)
-
-
-@custom_formatter_column('table.userFormatter')
-class UserColumn(Column):
-    @classmethod
-    def value_plain(cls, title: str) -> dict:
-        return DictValueMixin.value(type='plain', title=title)
-
-    @classmethod
-    def value_native(cls, href: str, title: str,
-                     glyphicon: typing.Optional[str] = None) -> dict:
-        return DictValueMixin.value(
-            type='native', href=href, title=title, glyphicon=glyphicon,
-        )
 
 
 class LogTableExtended(RefreshableTableMixin, BootstrapTable):
