@@ -3,10 +3,12 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import typing
+from datetime import datetime, timezone
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from markupsafe import escape
+from pycroft.helpers import utc
 from wtforms import Field
 from wtforms.widgets import HTMLString
 
@@ -24,7 +26,7 @@ from web.blueprints.facilities.forms import building_query, SelectRoomForm, Crea
 from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
-    QuerySelectMultipleField, DateField, IntegerField
+    QuerySelectMultipleField, DateField, IntegerField, TimeField
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
@@ -181,6 +183,17 @@ class UserMoveForm(SelectRoomForm):
                             render_kw={'placeholder': 'ticket#<TicketNr> / <TicketNr> / ticket:<ticketId>'})
     now = BooleanField(u"Sofort", default=False)
     when = DateField(u"Umzug am", [OptionalIf("now")])
+    when_time = TimeField("Genaue Zeit", [Optional()],
+                          description="Optional. In UTC angeben.",
+                          render_kw={'placeholder': 'hh:mm'})
+
+    def get_execution_time(self, now: datetime) -> datetime:
+        if self.now.data:
+            return now
+        assert self.when.data, "`now` checkbox deselected but no date given!"
+        time = t.replace(tzinfo=timezone.utc) if (t := self.when_time.data) is not None \
+            else utc.time_min()
+        return now if self.now.data else datetime.combine(self.when.data, time)
 
 
 class UserBaseDataForm(Form):
