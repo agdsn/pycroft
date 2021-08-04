@@ -18,7 +18,7 @@ from pycroft.lib.finance import get_negative_members
 from pycroft.lib.logging import log_task_event
 from pycroft.lib.mail import send_mails, Mail, RetryableException, TaskFailedTemplate, \
     MemberNegativeBalance
-from pycroft.lib.task import task_type_to_impl
+from pycroft.lib.task import get_task_implementation
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity
 from pycroft.model.session import with_transaction
@@ -84,7 +84,7 @@ def execute_scheduled_tasks():
     for task in tasks:
         repair_session()
 
-        task_impl = task_type_to_impl.get(task.type)()
+        task_impl = get_task_implementation(task)
 
         try:
             task_impl.execute(task)
