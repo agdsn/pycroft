@@ -1,5 +1,6 @@
 import json
 from dataclasses import asdict
+from typing import NoReturn, Union
 
 from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, \
     render_template
@@ -71,7 +72,11 @@ def task_row(task: Task):
                 btn_class='btn-link'
             ),
             T.actions.single_value(
-                href='#',
+                href=url_for(
+                    '.force_execute_user_task',
+                    task_id=task.id,
+                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                ),
                 title="Sofort ausführen",
                 icon='fa-fast-forward',
                 btn_class='btn-link'
@@ -101,6 +106,26 @@ def json_user_tasks():
         tasks = tasks.all()
 
     return jsonify(items=[task_row(task) for task in tasks])
+
+
+def get_task_or_404(task_id) -> Union[Task, NoReturn]:
+    if task := session.session.get(Task, task_id):
+        return task
+    abort(404)
+
+
+@bp.route("/<int:task_id>/force_execute")
+@access.require('user_change')
+def force_execute_user_task(task_id: int):
+    task = get_task_or_404(task_id)
+
+    # TODO execute task immediately
+    # session.session.commit()
+
+    flash("Aufgabe erfolgreich ausgeführt", 'success')
+    if redirect_url := request.args.get("redirect"):
+        return redirect(redirect_url)
+    return abort(404)
 
 
 @bp.route("/<int:task_id>/cancel")
