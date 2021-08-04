@@ -59,16 +59,24 @@ def task_row(task: Task):
             href=url_for('user.user_show', user_id=task.creator.id),
             title=task.creator.name
         ),
-        'actions': [T.actions.single_value(
-            href=url_for(
-                '.cancel_user_task',
-                task_id=task.id,
-                redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+        'actions': [
+            T.actions.single_value(
+                href=url_for(
+                    '.cancel_user_task',
+                    task_id=task.id,
+                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                ),
+                title="Abbrechen",
+                icon='fa-times',
+                btn_class='btn-link'
             ),
-            title="Abbrechen",
-            icon='fa-times',
-            btn_class='btn-link'
-        )] if task.status == TaskStatus.OPEN else None,
+            T.actions.single_value(
+                href='#',
+                title="Sofort ausführen",
+                icon='fa-fast-forward',
+                btn_class='btn-link'
+            )
+        ] if task.status == TaskStatus.OPEN else None,
     }
 
 @bp.route("/user/<int:user_id>/json")
