@@ -12,3 +12,4 @@ from .property import PropertyGroupFactory, MembershipFactory, AdminPropertyGrou
 from .user import UserFactory, UserWithoutRoomFactory, UserWithHostFactory, UnixAccountFactory
 from .traffic import TrafficDataFactory, TrafficVolumeFactory, TrafficVolumeLastWeekFactory
 from .log import RoomLogEntryFactory, UserLogEntryFactory
+from .task import UserTaskFactory
