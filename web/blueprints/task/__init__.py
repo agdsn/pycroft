@@ -11,6 +11,7 @@ from pycroft.model import session
 from pycroft.lib.task import cancel_task, task_type_to_impl
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
+from web.blueprints import redirect_or_404
 
 from web.blueprints.access import BlueprintAccess
 from web.table.table import datetime_format
@@ -123,26 +124,19 @@ def force_execute_user_task(task_id: int):
     # session.session.commit()
 
     flash("Aufgabe erfolgreich ausgeführt", 'success')
-    if redirect_url := request.args.get("redirect"):
-        return redirect(redirect_url)
-    return abort(404)
+    return redirect_or_404(request.args.get("redirect"))
 
 
 @bp.route("/<int:task_id>/cancel")
 @access.require('user_change')
 def cancel_user_task(task_id):
-    redirect_url = request.args.get("redirect")
     task = get_task_or_404(task_id)
 
     cancel_task(task, current_user)
     session.session.commit()
 
     flash(u'Aufgabe erfolgreich abgebrochen.', 'success')
-
-    if redirect_url:
-        return redirect(redirect_url)
-    else:
-        return abort(404)  # redirect(url_for('.tasks'))
+    return redirect_or_404(request.args.get("redirect"))
 
 
 @bp.route("/user")
