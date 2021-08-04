@@ -132,14 +132,9 @@ def force_execute_user_task(task_id: int):
 @access.require('user_change')
 def cancel_user_task(task_id):
     redirect_url = request.args.get("redirect")
-
-    task = Task.get(task_id)
-
-    if task is None:
-        abort(404)
+    task = get_task_or_404(task_id)
 
     cancel_task(task, current_user)
-
     session.session.commit()
 
     flash(u'Aufgabe erfolgreich abgebrochen.', 'success')
