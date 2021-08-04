@@ -25,6 +25,10 @@ $(() => {
     }
 
     const el = document.getElementById('tab-traffic');
+    if (!el) {
+        console.warning("No element of id tab-traffic exists!")
+        return
+    }
     el.addEventListener('shown.bs.tab', () => {
         d3.select(".traffic-graph").each(function () {
             const trafficGraph = {
@@ -102,6 +106,11 @@ $(() => {
         });
     }
 
-    document.querySelector('.select-days')
-        .addEventListener('change', ev => loadTrafficData(ev.target));
+    const selectDays = document.querySelector('.select-days');
+    if (!selectDays) {
+        // TODO find out why that field does not exist anymore
+        console.warn("No element of selector `.select-days`!");
+        return
+    }
+    selectDays.addEventListener('change', ev => loadTrafficData(ev.target));
 });
