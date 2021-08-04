@@ -213,6 +213,7 @@ def force_execute_task(task: Task, processor: User):
 
     get_task_implementation(task).execute(task)
 
+    task.due = session.utcnow()
     log_task_event(deferred_gettext("Manually executed task {}").format(task.id).to_json(),
                    author=processor, task=task)
     task.status = TaskStatus.EXECUTED

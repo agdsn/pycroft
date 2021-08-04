@@ -4,6 +4,7 @@
 import datetime
 
 from pycroft.lib.task import cancel_task, force_execute_task
+from pycroft.model import session
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
 from tests import FactoryDataTestBase
@@ -41,9 +42,11 @@ class TestTaskExecution(FactoryDataTestBase):
 
     def test_task_force_execute(self):
         force_execute_task(self.task, self.admin)
+        now = session.utcnow()
         self.session.commit()
 
         assert self.user.room == self.new_room
         assert self.task.status == TaskStatus.EXECUTED
+        assert self.task.due == now
         assert len(logs := self.task.log_entries) == 1
         assert logs[0].author == self.admin
