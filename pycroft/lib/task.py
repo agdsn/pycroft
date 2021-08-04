@@ -197,7 +197,7 @@ def get_active_tasks_by_type(type):
 
 
 @with_transaction
-def cancel_task(task, processor):
+def cancel_task(task: Task, processor: User):
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot cancel a task that is not open")
 
