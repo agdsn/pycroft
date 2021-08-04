@@ -5,6 +5,7 @@ from typing import Mapping, TypeVar, Generic
 from marshmallow import ValidationError
 from sqlalchemy.orm import with_polymorphic
 
+from pycroft.helpers.i18n import deferred_gettext
 from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -210,4 +211,8 @@ def force_execute_task(task: Task, processor: User):
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
-    pass  # not implemented
+    get_task_implementation(task).execute(task)
+
+    log_task_event(deferred_gettext("Manually executed task {}").format(task.id).to_json(),
+                   author=processor, task=task)
+    task.status = TaskStatus.EXECUTED
