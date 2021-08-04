@@ -26,9 +26,7 @@ nav = BlueprintNavigation(bp, "Tasks", blueprint_access=access)
 
 
 def format_parameters(parameters):
-    """
-    Makes parameters human readable
-    """
+    """Make task parameters human readable by looking up objects behind ids"""
 
     # Replace building_id by the buildings short name
     if parameters.get("building_id"):
