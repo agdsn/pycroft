@@ -207,7 +207,7 @@ def cancel_task(task: Task, processor: User):
     task.status = TaskStatus.CANCELLED
 
 
-def force_execute_task(task: Task, processor: User):
+def manually_execute_task(task: Task, processor: User):
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 

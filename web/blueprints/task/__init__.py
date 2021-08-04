@@ -8,7 +8,7 @@ from flask_login import current_user
 
 from pycroft.model import session
 
-from pycroft.lib.task import cancel_task, task_type_to_impl, force_execute_task
+from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 from web.blueprints import redirect_or_404
@@ -72,7 +72,7 @@ def task_row(task: Task):
             ),
             T.actions.single_value(
                 href=url_for(
-                    '.force_execute_user_task',
+                    '.manually_execute_user_task',
                     task_id=task.id,
                     redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
                 ),
@@ -113,12 +113,12 @@ def get_task_or_404(task_id) -> Union[Task, NoReturn]:
     abort(404)
 
 
-@bp.route("/<int:task_id>/force_execute")
+@bp.route("/<int:task_id>/manually_execute")
 @access.require('user_change')
-def force_execute_user_task(task_id: int):
+def manually_execute_user_task(task_id: int):
     task = get_task_or_404(task_id)
 
-    force_execute_task(task, processor=current_user)
+    manually_execute_task(task, processor=current_user)
     session.session.commit()
 
     flash("Aufgabe erfolgreich ausgeführt", 'success')

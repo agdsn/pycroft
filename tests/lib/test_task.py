@@ -3,7 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import datetime
 
-from pycroft.lib.task import cancel_task, force_execute_task
+from pycroft.lib.task import cancel_task, manually_execute_task
 from pycroft.model import session
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
@@ -40,8 +40,8 @@ class TestTaskExecution(FactoryDataTestBase):
         assert len(logs := self.task.log_entries) == 1
         assert logs[0].author == self.admin
 
-    def test_task_force_execute(self):
-        force_execute_task(self.task, self.admin)
+    def test_task_manually_execute(self):
+        manually_execute_task(self.task, self.admin)
         now = session.utcnow()
         self.session.commit()
 
