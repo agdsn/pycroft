@@ -313,7 +313,7 @@ def user_show(user_id):
             },
             {
                 'id': 'tasks',
-                'name': 'Aufgaben',
+                'name': 'Tasks',
                 'badge': len(user.tasks),
                 'badge_color': '#d9534f' if len(user.tasks) > 0 else None
             },
