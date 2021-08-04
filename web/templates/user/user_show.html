@@ -24,7 +24,7 @@
       <ul class="nav nav-tabs">
         {% for tab in tabs %}
           <li class="nav-item">
-            <button class="nav-link {{ "active" if tab.id == 'hosts' else "" }}
+            <a class="nav-link {{ "active" if tab.id == 'hosts' else "" }}
                {{ "disabled" if 'disabled' in tab and tab.disabled else "" }}"
                {{ 'aria-current="page"' if tab.id == 'hosts' else "" }}
                {{ 'aria-disabled="true"' if 'disabled' in tab and tab.disabled else "" }}
@@ -36,7 +36,7 @@
                   {{ tab.badge }}
                 </span>
               {% endif %}
-            </button>
+            </a>
           </li>
         {% endfor %}
       </ul>
