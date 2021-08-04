@@ -8,7 +8,7 @@ from flask_login import current_user
 
 from pycroft.model import session
 
-from pycroft.lib.task import cancel_task, task_type_to_impl
+from pycroft.lib.task import cancel_task, task_type_to_impl, force_execute_task
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 from web.blueprints import redirect_or_404
@@ -118,8 +118,8 @@ def get_task_or_404(task_id) -> Union[Task, NoReturn]:
 def force_execute_user_task(task_id: int):
     task = get_task_or_404(task_id)
 
-    # TODO execute task immediately
-    # session.session.commit()
+    force_execute_task(task, processor=current_user)
+    session.session.commit()
 
     flash("Aufgabe erfolgreich ausgeführt", 'success')
     return redirect_or_404(request.args.get("redirect"))

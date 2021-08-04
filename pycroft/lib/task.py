@@ -11,6 +11,7 @@ from pycroft.model.session import with_transaction
 from pycroft.model.task import UserTask, Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, UserMoveInParams, \
     TaskParams
+from pycroft.model.user import User
 
 TTask = TypeVar('TTask')
 TParams = TypeVar('TParams')
@@ -203,3 +204,10 @@ def cancel_task(task, processor):
     log_task_event("Cancelled task {}.".format(task.id), processor, task)
 
     task.status = TaskStatus.CANCELLED
+
+
+def force_execute_task(task: Task, processor: User):
+    if task.status != TaskStatus.OPEN:
+        raise ValueError("Cannot execute a task that is not open")
+
+    pass  # not implemented
