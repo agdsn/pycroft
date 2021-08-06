@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, 
     render_template
 from flask_login import current_user
 
+from pycroft.lib.exc import PycroftLibException
 from pycroft.model import session
 
 from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task
@@ -117,11 +118,21 @@ def get_task_or_404(task_id) -> Union[Task, NoReturn]:
 @access.require('user_change')
 def manually_execute_user_task(task_id: int):
     task = get_task_or_404(task_id)
+    try:
+        manually_execute_task(task, processor=current_user)
+        session.session.commit()
+    except Exception as e:
+        if not isinstance(e, PycroftLibException):
+            import logging
+            logging.getLogger('pycroft.web').error(
+                "Unexpected error in manual task execution: %s", e,
+                exc_info=True
+            )
+        flash(f"Fehler bei der Ausführung: {e}", 'error')
+        session.session.rollback()
+    else:
+        flash("Aufgabe erfolgreich ausgeführt", 'success')
 
-    manually_execute_task(task, processor=current_user)
-    session.session.commit()
-
-    flash("Aufgabe erfolgreich ausgeführt", 'success')
     return redirect_or_404(request.args.get("redirect"))
 
 
