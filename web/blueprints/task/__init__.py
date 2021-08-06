@@ -30,13 +30,10 @@ def format_parameters(parameters):
     """Make task parameters human readable by looking up objects behind ids"""
 
     # Replace building_id by the buildings short name
-    if parameters.get("building_id"):
-        building = Building.get(parameters["building_id"])
-
-        if building:
+    if bid := parameters.get("building_id"):
+        if building := Building.get(bid):
             parameters["building"] = building.short_name
             del parameters["building_id"]
-
     return parameters
 
 
@@ -151,12 +148,10 @@ def cancel_user_task(task_id):
 @bp.route("/user")
 @nav.navigate("Tasks")
 def user_tasks():
-    return render_template("task/tasks.html",
-                           task_table=TaskTable(
-                               data_url=url_for('.json_user_tasks',
-                                                open_only=1)),
-                           task_failed_table=TaskTable(
-                               data_url=url_for('.json_user_tasks',
-                                                failed_only=1),
-                               sort_order='desc'),
-                           page_title="Aufgaben (Nutzer)")
+    return render_template(
+        "task/tasks.html",
+        task_table=TaskTable(data_url=url_for('.json_user_tasks', open_only=1)),
+        task_failed_table=TaskTable(data_url=url_for('.json_user_tasks', failed_only=1),
+                                    sort_order='desc'),
+        page_title="Aufgaben (Nutzer)"
+    )
