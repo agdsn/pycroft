@@ -452,7 +452,7 @@ class CSVImportError(PycroftLibException):
                 message, cause
             )
         self.cause = cause
-        super(CSVImportError, self).__init__(message)
+        super().__init__(message)
 
 
 def is_ordered(iterable, relation=operator.le):
