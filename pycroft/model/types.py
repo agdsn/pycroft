@@ -7,6 +7,7 @@ import ipaddr
 from sqlalchemy import String, TypeDecorator, Integer, DateTime
 from sqlalchemy.dialects.postgresql import MACADDR, INET
 from pycroft.helpers.net import mac_regex
+from pycroft.model.exc import PycroftModelException
 
 
 class _IPType(TypeDecorator):
@@ -102,7 +103,7 @@ class Money(TypeDecorator):
         return Decimal(value).scaleb(-2)
 
 
-class InvalidMACAddressException(ValueError):
+class InvalidMACAddressException(PycroftModelException, ValueError):
     pass
 
 

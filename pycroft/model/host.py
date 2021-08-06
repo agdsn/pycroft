@@ -10,6 +10,7 @@ from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
 
 from pycroft.model.base import ModelBase, IntegerIdModel
+from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.net import Subnet
 from pycroft.model.user import User
@@ -51,7 +52,7 @@ class Switch(ModelBase):
 # and explain why it does not work (switches → owner=root w/o room)
 def _check_user_host_in_user_room(mapper, connection, userhost):
     if userhost.room is not userhost.owner.room:
-        raise Exception("UserHost can only be in user's room")
+        raise PycroftModelException("UserHost can only be in user's room")
 
 #event.listen(Host, "before_insert", _check_user_host_in_user_room)
 #event.listen(Host, "before_update", _check_user_host_in_user_room)
@@ -61,7 +62,7 @@ class MulticastFlagException(InvalidMACAddressException):
     message = "Multicast bit set in MAC address"
 
 
-class TypeMismatch(Exception):
+class TypeMismatch(PycroftModelException):
     pass
 
 

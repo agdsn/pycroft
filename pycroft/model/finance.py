@@ -20,7 +20,7 @@ from pycroft.helpers.interval import closed
 from pycroft.model import ddl
 from pycroft.model.types import Money, DateTimeTz
 from .base import IntegerIdModel
-
+from .exc import PycroftModelException
 
 manager = ddl.DDLManager()
 
@@ -253,7 +253,7 @@ manager.add_constraint_trigger(
 )
 
 
-class IllegalTransactionError(Exception):
+class IllegalTransactionError(PycroftModelException):
     """Indicates an attempt to persist an illegal Transaction."""
     pass
 

@@ -35,17 +35,18 @@ from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.helpers.interval import IntervalModel
+from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz
 
 manager = ddl.DDLManager()
 
 
-class IllegalLoginError(ValueError):
+class IllegalLoginError(PycroftModelException, ValueError):
     pass
 
 
-class IllegalEmailError(ValueError):
+class IllegalEmailError(PycroftModelException, ValueError):
     pass
 
 
