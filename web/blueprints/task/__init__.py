@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, 
     render_template
 from flask_login import current_user
 
-from pycroft.lib.exc import PycroftLibException
+from pycroft.exc import PycroftException
 from pycroft.model import session
 
 from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task
@@ -119,7 +119,7 @@ def manually_execute_user_task(task_id: int):
         manually_execute_task(task, processor=current_user)
         session.session.commit()
     except Exception as e:
-        if not isinstance(e, PycroftLibException):
+        if not isinstance(e, PycroftException):
             import logging
             logging.getLogger('pycroft.web').error(
                 "Unexpected error in manual task execution: %s", e,
