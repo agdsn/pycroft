@@ -26,6 +26,7 @@ from pycroft import config, model
 from pycroft.helpers.i18n import deferred_gettext, gettext, Message
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.utc import time_max, time_min
+from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
@@ -444,8 +445,7 @@ class MT940Dialect(csv.Dialect):
     quoting = csv.QUOTE_ALL
 
 
-class CSVImportError(Exception):
-
+class CSVImportError(PycroftLibException):
     def __init__(self, message, cause=None):
         if cause is not None:
             message = gettext(u"{0}\nCaused by:\n{1}").format(

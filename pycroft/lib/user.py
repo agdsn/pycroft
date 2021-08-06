@@ -28,6 +28,7 @@ from pycroft.helpers.interval import closed, closedopen, single
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
 from pycroft.lib.address import get_or_create_address
+from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.facilities import get_room
 from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event, log_event
@@ -1013,32 +1014,32 @@ def send_confirmation_email(user: BaseUser):
         email_confirm_url=mail_confirm_url.format(user.email_confirmation_key)))
 
 
-class LoginTakenException(Exception):
+class LoginTakenException(PycroftLibException):
     def __init__(self):
         super().__init__("Login already taken")
 
 
-class EmailTakenException(Exception):
+class EmailTakenException(PycroftLibException):
     def __init__(self):
         super().__init__("E-Mail address already in use")
 
 
-class UserExistsInRoomException(Exception):
+class UserExistsInRoomException(PycroftLibException):
     def __init__(self):
         super().__init__("A user with a similar name already lives in this room")
 
 
-class UserExistsException(Exception):
+class UserExistsException(PycroftLibException):
     def __init__(self):
         super().__init__("This user already exists")
 
 
-class NoTenancyForRoomException(Exception):
+class NoTenancyForRoomException(PycroftLibException):
     def __init__(self):
         super().__init__("This user has no tenancy in that room")
 
 
-class MoveInDateInvalidException(Exception):
+class MoveInDateInvalidException(PycroftLibException):
     def __init__(self):
         super().__init__("The move-in date is invalid (in the past or more than 6 months in the future)")
 

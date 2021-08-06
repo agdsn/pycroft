@@ -14,6 +14,7 @@ import traceback
 from dataclasses import dataclass
 
 from pycroft.helpers import AutoNumber
+from pycroft.lib.exc import PycroftLibException
 
 mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')
 mail_from = os.environ.get('PYCROFT_MAIL_FROM')
@@ -84,7 +85,7 @@ def compose_mail(mail: Mail) -> MIMEMultipart:
     return msg
 
 
-class RetryableException(Exception):
+class RetryableException(PycroftLibException):
     pass
 
 

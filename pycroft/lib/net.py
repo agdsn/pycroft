@@ -7,17 +7,18 @@ import sys
 
 from sqlalchemy import func, and_, cast
 
+from pycroft.lib.exc import PycroftLibException
 from pycroft.model import session
 from pycroft.model.host import IP
 from pycroft.model.net import Subnet
 from pycroft.model.types import IPAddress
 
-class SubnetFullException(Exception):
+class SubnetFullException(PycroftLibException):
     def __init__(self):
         super().__init__("Subnet full")
 
 
-class MacExistsException(Exception):
+class MacExistsException(PycroftLibException):
     def __init__(self):
         super().__init__("MAC address already exists")
 

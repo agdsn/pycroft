@@ -7,6 +7,7 @@ from sqlalchemy import func, and_, distinct, literal_column
 from sqlalchemy.orm import aliased, contains_eager, joinedload
 
 from pycroft.helpers.i18n import deferred_gettext
+from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_room_event, log_event, log_user_event
 from pycroft.model import session
 from pycroft.model.address import Address
@@ -19,7 +20,7 @@ from pycroft.model.user import User
 logger = logging.getLogger(__name__)
 
 
-class RoomAlreadyExistsException(Exception):
+class RoomAlreadyExistsException(PycroftLibException):
     pass
 
 
