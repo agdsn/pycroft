@@ -225,5 +225,6 @@ def reschedule_task(task: Task, due: datetime, processor: User):
         raise ValueError("Cannot execute a task that is not open")
 
     task.due = due
-    log_task_event(deferred_gettext("Rescheduled to {}").format(due).to_json(),
+    log_task_event(deferred_gettext("Rescheduled task {task_id} to {new_due}")
+                   .format(task_id=task.id, new_due=due).to_json(),
                    author=processor, task=task)
