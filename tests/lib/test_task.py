@@ -3,7 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import datetime
 
-from pycroft.lib.task import cancel_task, manually_execute_task
+from pycroft.lib.task import cancel_task, manually_execute_task, reschedule_task
 from pycroft.model import session
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
@@ -50,3 +50,14 @@ class TestTaskExecution(FactoryDataTestBase):
         assert self.task.due == now
         assert len(logs := self.task.log_entries) == 1
         assert logs[0].author == self.admin
+
+    def test_task_reschedule(self):
+        new_due_date = datetime.datetime.now() + datetime.timedelta(days=5)
+        reschedule_task(self.task, new_due_date,
+                        processor=self.admin)
+        assert self.user.room == self.old_room
+        assert self.task.status == TaskStatus.OPEN
+        assert self.task.due == new_due_date
+        assert len(logs := self.task.log_entries) == 1
+        assert logs[0].author == self.admin
+
