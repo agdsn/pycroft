@@ -30,6 +30,7 @@
                {{ 'aria-disabled="true"' if 'disabled' in tab and tab.disabled else "" }}
                id="tab-{{ tab.id }}" href="#{{ tab.id }}"
                data-bs-toggle="tab" data-bs-target="#{{ tab.id }}">
+              {% if tab.icon %}<i class="fas {{ tab.icon }}"></i> {% endif -%}
               {{ tab.name }}
               {% if 'badge' in tab and tab.badge %}
                 <span class="badge rounded-pill bg-light text-dark" style="{{ "background-color: " + tab.badge_color if 'badge_color' in tab else "" }}">
