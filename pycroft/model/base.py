@@ -13,7 +13,7 @@
 import re
 
 from sqlalchemy import Column
-from sqlalchemy.orm import DeclarativeMeta, as_declarative, declared_attr
+from sqlalchemy.orm import DeclarativeMeta, as_declarative, declared_attr, Query
 from sqlalchemy.types import Integer
 
 from pycroft.model.session import session
@@ -56,6 +56,14 @@ class ModelBase(object):
             ", ".join("{0}={1!r}".format(key, getattr(self, key, "<unknown>"))
                       for key in self.__mapper__.columns.keys()))
 
+    import typing
+    if typing.TYPE_CHECKING:
+        @classmethod
+        def q(cls):
+            import warnings
+            warnings.warn("Deprecated: Use `session.execute()` and `select()` instead",
+                          DeprecationWarning)
+        q: Query
 
 class IntegerIdModel(ModelBase):
     """
