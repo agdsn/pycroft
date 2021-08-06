@@ -9,12 +9,13 @@ from flask_login import current_user
 from pycroft.exc import PycroftException
 from pycroft.model import session
 
-from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task
+from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task, reschedule_task
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 from web.blueprints import redirect_or_404
 
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.task.forms import RescheduleTaskForm
 from web.table.table import datetime_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.navigation import BlueprintNavigation
@@ -70,6 +71,16 @@ def task_row(task: Task):
             ),
             T.actions.single_value(
                 href=url_for(
+                    '.reschedule_user_task',
+                    task_id=task.id,
+                    redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+                ),
+                title="Datum Ändern",
+                icon='fa-calendar-alt',
+                btn_class='btn-link'
+            ),
+            T.actions.single_value(
+                href=url_for(
                     '.manually_execute_user_task',
                     task_id=task.id,
                     redirect=url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
@@ -80,6 +91,7 @@ def task_row(task: Task):
             )
         ] if task.status == TaskStatus.OPEN else None,
     }
+
 
 @bp.route("/user/<int:user_id>/json")
 def json_tasks_for_user(user_id):
@@ -143,6 +155,27 @@ def cancel_user_task(task_id):
 
     flash(u'Aufgabe erfolgreich abgebrochen.', 'success')
     return redirect_or_404(request.args.get("redirect"))
+
+
+@bp.route("/<int:task_id>/reschedule", methods=['GET', 'POST'])
+@access.require('user_change')
+def reschedule_user_task(task_id):
+    task = get_task_or_404(task_id)
+
+    form = RescheduleTaskForm()
+    return_url = url_for('user.user_show', user_id=task.user.id, _anchor='tasks')
+
+    if form.validate_on_submit():
+        reschedule_task(task, form.full_datetime, processor=current_user)
+        session.session.commit()
+        flash(f'Datum erfolgreich auf {form.full_datetime} geändert.', 'success')
+        return redirect(return_url)
+
+    return render_template(
+        "task/reschedule_task.html",
+        form_args={'form': form, 'cancel_to': return_url}
+    )
+
 
 
 @bp.route("/user")
