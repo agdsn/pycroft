@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Mapping, TypeVar, Generic
 
 from marshmallow import ValidationError
@@ -217,3 +218,12 @@ def manually_execute_task(task: Task, processor: User):
     log_task_event(deferred_gettext("Manually executed task {}").format(task.id).to_json(),
                    author=processor, task=task)
     task.status = TaskStatus.EXECUTED
+
+
+def reschedule_task(task: Task, due: datetime, processor: User):
+    if task.status != TaskStatus.OPEN:
+        raise ValueError("Cannot execute a task that is not open")
+
+    task.due = due
+    log_task_event(deferred_gettext("Rescheduled to {}").format(due).to_json(),
+                   author=processor, task=task)
