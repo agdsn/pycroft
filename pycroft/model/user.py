@@ -34,7 +34,7 @@ from pycroft.helpers.user import hash_password, verify_password, cleartext_passw
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
-from pycroft.helpers.interval import IntervalModel
+from pycroft.model.interval_base import IntervalModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz
