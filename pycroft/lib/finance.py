@@ -25,7 +25,7 @@ from sqlalchemy import func, between, Integer, cast
 from pycroft import config, model
 from pycroft.helpers.i18n import deferred_gettext, gettext, Message
 from pycroft.helpers.date import diff_month, last_day_of_month
-from pycroft.helpers.utc import time_max, time_min
+from pycroft.helpers.utc import with_min_time, with_max_time
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -199,18 +199,19 @@ def users_eligible_for_fee_query(membership_fee):
     fee_accounts = Account.q.join(Building).distinct(Account.id).all()
     fee_accounts_ids = set([acc.id for acc in fee_accounts] + [config.membership_fee_account_id])
 
-    properties_beginning_timestamp = datetime.combine((membership_fee.begins_on
-                                                       + membership_fee.booking_begin
-                                                       - timedelta(1)),
-                                                      time_min())
+    properties_beginning_timestamp = with_min_time(
+        membership_fee.begins_on
+        + membership_fee.booking_begin
+        - timedelta(1)
+    )
+    properties_end_timestamp = with_max_time(
+        membership_fee.begins_on
+        + membership_fee.booking_end
+        - timedelta(1)
+    )
 
-    properties_end_timestamp = datetime.combine((membership_fee.begins_on
-                                                   + membership_fee.booking_end
-                                                   - timedelta(1)),
-                                                  time_max())
-
-    begin_tstz = datetime.combine(membership_fee.begins_on, time_min())
-    end_tstz = datetime.combine(membership_fee.ends_on, time_max())
+    begin_tstz = with_min_time(membership_fee.begins_on)
+    end_tstz = with_max_time(membership_fee.ends_on)
 
     fee_prop_beginning = evaluate_properties(properties_beginning_timestamp, name='fee_prop_beg')
     fee_prop_end = evaluate_properties(properties_end_timestamp, name='fee_prop_end')

@@ -369,7 +369,7 @@ class TerminateMembershipResource(Resource):
         move_out(user=user,
                  comment=args.comment if args.comment is not None else "Move-out over API",
                  processor=user,
-                 when=datetime.combine(args.end_date, utc.time_min()),
+                 when=utc.with_min_time(args.end_date),
                  end_membership=True)
 
         session.session.commit()

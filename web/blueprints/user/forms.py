@@ -191,9 +191,7 @@ class UserMoveForm(SelectRoomForm):
         if self.now.data:
             return now
         assert self.when.data, "`now` checkbox deselected but no date given!"
-        time = t.replace(tzinfo=timezone.utc) if (t := self.when_time.data) is not None \
-            else utc.time_min()
-        return now if self.now.data else datetime.combine(self.when.data, time)
+        return utc.combine_or_midnight(self.when.data, self.when_time.data)
 
 
 class UserBaseDataForm(Form):

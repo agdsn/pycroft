@@ -1155,7 +1155,7 @@ def finish_member_request(prm: PreMember, processor: Optional[User],
     user.swdd_person_id = prm.swdd_person_id
     user.email_confirmed = prm.email_confirmed
 
-    move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+    move_in_datetime = utc.with_min_time(prm.move_in_date)
 
     move_in(user, prm.room.building_id, prm.room.level, prm.room.number, None,
             processor if processor is not None else user, when=move_in_datetime)
@@ -1249,7 +1249,7 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
     if merge_person_id:
         user = edit_person_id(user, prm.swdd_person_id, processor)
 
-    move_in_datetime = datetime.combine(prm.move_in_date, utc.time_min())
+    move_in_datetime = utc.with_min_time(prm.move_in_date)
 
     if merge_room:
         if prm.room:

@@ -427,11 +427,11 @@ def add_membership(user_id):
 
     if form.validate_on_submit():
         if form.begins_at.date.data:
-            begins_at = datetime.combine(form.begins_at.date.data, utc.time_min())
+            begins_at = utc.with_min_time(form.begins_at.date.data)
         else:
             begins_at = session.utcnow()
         if not form.ends_at.unlimited.data:
-            ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
+            ends_at = utc.with_min_time(form.ends_at.date.data)
         else:
             ends_at = None
 
@@ -718,11 +718,11 @@ def edit_membership(user_id, membership_id):
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.begins_at = datetime.combine(form.begins_at.data, utc.time_min())
+        membership.begins_at = utc.with_min_time(form.begins_at.data)
         if form.ends_at.unlimited.data:
             membership.ends_at = None
         else:
-            membership.ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
+            membership.ends_at = utc.with_min_time(form.ends_at.date.data)
 
         message = (u"Edited the membership of group '{group}'. During: {during}"
                    .format(group=membership.group.name,
@@ -902,7 +902,7 @@ def block(user_id):
         if form.ends_at.unlimited.data:
             ends_at = None
         else:
-            ends_at = datetime.combine(form.ends_at.date.data, utc.time_min())
+            ends_at = utc.with_min_time(form.ends_at.date.data, )
 
         try:
             during = closedopen(session.utcnow(), ends_at)
@@ -950,15 +950,13 @@ def move_out(user_id):
         abort(404)
 
     if form.validate_on_submit():
-        when = session.utcnow() if form.now.data else datetime.combine(
-            form.when.data, utc.time_min())
+        when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
 
         _, success = web_execute(lib.user.move_out, None,
             user=user,
             comment=form.comment.data,
             processor=current_user,
-            when=session.utcnow() if form.now.data else datetime.combine(
-             form.when.data, utc.time_min()),
+            when=session.utcnow() if form.now.data else utc.with_min_time(form.when.data),
             end_membership=form.end_membership.data
         )
 
@@ -989,8 +987,7 @@ def move_in(user_id):
         abort(404)
 
     if form.validate_on_submit():
-        when = session.utcnow() if form.now.data else datetime.combine(
-            form.when.data, utc.time_min())
+        when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
 
         _, success = web_execute(lib.user.move_in, None,
             user=user,
