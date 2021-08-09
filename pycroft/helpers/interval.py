@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from __future__ import annotations
 import collections.abc
 import operator
 from functools import reduce
@@ -10,6 +11,11 @@ __all__ = (
     'Interval', 'closed', 'closedopen', 'openclosed', 'open', 'single', 'empty',
     'UnboundedInterval', 'IntervalSet'
 )
+
+from typing import TypeVar, Generic, Optional
+
+# TODO figure out how we can demand that T shall be a totally ordered metric space
+T = TypeVar('T')
 
 
 def _infinity(name):
@@ -100,7 +106,7 @@ class Bound(tuple):
         return self.value is NegativeInfinity or self.value is PositiveInfinity
 
 
-class Interval(tuple):
+class Interval(tuple, Generic[T]):
     """
     Represents an bounded or unbounded interval.
 
@@ -140,6 +146,15 @@ class Interval(tuple):
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores
         return tuple.__new__(cls, (lower_bound, upper_bound))
+
+    @classmethod
+    def from_explicit_data(
+        cls,
+        lower: Optional[T], lower_closed: bool,
+        upper: Optional[T], upper_closed: bool,
+    ) -> Interval[T]:
+        return cls(Bound(_convert_begin(lower), lower_closed),
+                   Bound(_convert_end(upper), upper_closed))
 
     def __hash__(self):
         return hash((self[0], self[1]))

@@ -3,12 +3,21 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from decimal import Decimal
 from numbers import Number
+from typing import Optional
+
 import ipaddr
+from psycopg2._range import DateTimeTZRange
 from sqlalchemy import String, TypeDecorator, Integer, DateTime
 from sqlalchemy.dialects.postgresql import MACADDR, INET
+from sqlalchemy.dialects.postgresql.ranges import TSTZRANGE
+
+from pycroft.helpers.interval import Interval, Bound
 from pycroft.helpers.net import mac_regex
 from pycroft.model.exc import PycroftModelException
 
+
+# NOTES
+# In the type decorators below, `dialect` will be `sqlalchemy.dialects.postgresql.base.PGDialect`.
 
 class _IPType(TypeDecorator):
     impl = String(50)
@@ -101,6 +110,28 @@ class Money(TypeDecorator):
     @staticmethod
     def process_result_value(value, dialect):
         return Decimal(value).scaleb(-2)
+
+
+class TsTzRange(TypeDecorator):
+    impl = TSTZRANGE
+    cache_ok = True
+
+    def python_type(self):
+        return Interval
+
+    def process_bind_param(self, value: Optional[Interval], dialect) -> Optional[str]:
+        # gets PY TYPE, returns DB TYPE
+        if value is None:
+            return None
+
+        return str(value)
+
+    def process_result_value(self, value: Optional[DateTimeTZRange], dialect)\
+            -> Optional[Interval]:
+        if value is None:
+            return None
+        return Interval.from_explicit_data(value.lower, value.lower_inc,
+                                           value.upper, value.upper_inc)
 
 
 class InvalidMACAddressException(PycroftModelException, ValueError):
