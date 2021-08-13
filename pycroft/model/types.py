@@ -130,6 +130,15 @@ class TsTzRange(TypeDecorator):
             -> Optional[Interval]:
         if value is None:
             return None
+        if not isinstance(value, DateTimeTZRange):
+            # see https://github.com/sqlalchemy/sqlalchemy/discussions/6942
+            raise PycroftModelException(
+                f"Unable to deserialize TsTzRange value of type {type(value)}."
+                " Usually, this value should've been deserialized by psycopg2 into a"
+                " DatetimeTzRange.  Did you make a mistake in your query?"
+                " Note that you may have to use `cast(…, TsTzRange)` to let sqlalchemy know"
+                " of the return type –– even if you specified the type in `literal()` already!"
+            )
         return Interval.from_explicit_data(value.lower, value.lower_inc,
                                            value.upper, value.upper_inc)
 
