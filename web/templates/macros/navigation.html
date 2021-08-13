@@ -29,14 +29,18 @@
               <a href="{{ url_for(bp_nav.first.endpoint) }}"
                  class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
                  role="button" data-bs-toggle="dropdown" aria-expanded="false"
-              >{{ bp_nav.text }}</a>
+              >{% if bp_nav.icon %}<i class="fas {{ bp_nav.icon }}"></i>{% endif %}
+                {{ bp_nav.text }}</a>
                 <div class="dropdown-menu">
                     {% for element in bp_nav -%}
                       <a class="dropdown-item" href="{{ url_for(element.endpoint) }}">{{ element.text }}</a>
                     {%- endfor %}
                 </div>
             {%- else -%}
-                <a href="{{ url_for(bp_nav.first.endpoint) }}" class="nav-link">{{ bp_nav.text }}</a>
+                <a href="{{ url_for(bp_nav.first.endpoint) }}" class="nav-link">
+                  {% if bp_nav.icon %}<i class="fas {{ bp_nav.icon }}"></i>{% endif %}
+                  {{ bp_nav.text }}
+                </a>
             {%- endif -%}
         </li>
     {% endif %}

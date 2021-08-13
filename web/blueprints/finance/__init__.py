@@ -67,7 +67,7 @@ from datetime import date
 
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])
-nav = BlueprintNavigation(bp, "Finanzen", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=access)
 
 
 @bp.route('/')

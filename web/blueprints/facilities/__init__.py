@@ -45,7 +45,7 @@ from .tables import (BuildingLevelRoomTable, RoomLogTable, SiteTable,
 
 bp = Blueprint('facilities', __name__)
 access = BlueprintAccess(bp, required_properties=['facilities_show'])
-nav = BlueprintNavigation(bp, "Wohnheime", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=access)
 
 @bp.route('/')
 def root():

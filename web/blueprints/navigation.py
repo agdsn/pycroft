@@ -41,7 +41,7 @@ class BlueprintNavigation(object):
     that are accessible for the current user.
     """
 
-    def __init__(self, blueprint, text, description=None, blueprint_access=None):
+    def __init__(self, blueprint, text, icon=None, description=None, blueprint_access=None):
         """Init the `BlueprintNavigation` instance.
 
         :param blueprint: A `flask.Blueprint` instance.
@@ -50,6 +50,7 @@ class BlueprintNavigation(object):
         """
         self.blueprint = blueprint
         self.text = text
+        self.icon = icon
         self.description = description
         self._elements = []
         if blueprint_access is None:

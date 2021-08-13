@@ -36,7 +36,7 @@ from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
 
 bp = Blueprint('infrastructure', __name__)
 access = BlueprintAccess(bp, required_properties=['infrastructure_show'])
-nav = BlueprintNavigation(bp, "Infrastruktur", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Infrastruktur", icon='fa-network-wired', blueprint_access=access)
 
 
 @bp.route('/subnets')

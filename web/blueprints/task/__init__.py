@@ -24,7 +24,7 @@ from web.template_filters import datetime_filter
 
 bp = Blueprint('task', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
-nav = BlueprintNavigation(bp, "Tasks", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Tasks", icon='fa-tasks', blueprint_access=access)
 
 
 def format_parameters(parameters):

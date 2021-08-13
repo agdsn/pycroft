@@ -69,7 +69,7 @@ from ...template_filters import date_filter, datetime_filter
 
 bp = Blueprint('user', __name__)
 access = BlueprintAccess(bp, required_properties=['user_show'])
-nav = BlueprintNavigation(bp, "Nutzer", blueprint_access=access)
+nav = BlueprintNavigation(bp, "Nutzer", icon='fa-user', blueprint_access=access)
 
 
 @bp.route('/')
