@@ -87,7 +87,7 @@
         </nav>
     {%- endblock %}
 
-    <div class="container main">
+    <div class="{{ container_class | default("container") }} main">
         {% block content_container -%}
             {% block messages -%}
                 {% with messages = get_flashed_messages(with_categories=true) -%}
