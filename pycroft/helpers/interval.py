@@ -42,6 +42,19 @@ class Bound(tuple):
     def closed(self):
         return self[1]
 
+    @property
+    def pg_identifier(self) -> str:
+        if self.value is PositiveInfinity or self.value is NegativeInfinity:
+            # in postgres tstzranges, there exists the lower bound `-infinity`,
+            # but that is not quite the same as the empty lower bound (same for upper).
+            # To see why we don't use `±infinity`, stare at this query
+            # and open a strong alcoholic beverage.
+            # pycroft=# select tsrange '(,today)' - '[-infinity, today)';
+            # ?column?
+            # (,-infinity)
+            return ''
+        return str(self.value)
+
     def __new__(cls, value, is_closed):
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
@@ -228,17 +241,10 @@ class Interval(tuple, Generic[T]):
         return self.lower_bound <= bound <= self.upper_bound
 
     def __str__(self):
-        return "{0}{1}, {2}{3}".format(
+        return "{0}{1},{2}{3}".format(
             '[' if self.lower_bound.closed else '(',
-            self.lower_bound.value, self.upper_bound.value,
+            self.lower_bound.pg_identifier, self.upper_bound.pg_identifier,
             ']' if self.upper_bound.closed else ')',
-        )
-
-    def __unicode__(self):
-        return u"{0}{1}, {2}{3}".format(
-            u'[' if self.lower_bound.closed else u'(',
-            self.lower_bound.value, self.upper_bound.value,
-            u']' if self.upper_bound.closed else u')',
         )
 
     def __repr__(self):
