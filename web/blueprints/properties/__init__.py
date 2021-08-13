@@ -28,7 +28,7 @@ from web.blueprints.properties.forms import PropertyGroupForm
 
 bp = Blueprint('properties', __name__)
 access = BlueprintAccess(bp, required_properties=['groups_show'])
-nav = BlueprintNavigation(bp, "", icon='fa-cogs', blueprint_access=access)
+nav = BlueprintNavigation(bp, "", icon='fa-cogs', push_right=True, blueprint_access=access)
 
 
 @bp.route('/property_groups')

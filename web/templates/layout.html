@@ -47,14 +47,19 @@
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     <!-- blueprint navigation -->
                     <ul class="nav navbar-nav me-auto">
-                        {% for element in config.blueprint_navigation -%}
+                        {% for element in config.blueprint_navigation.left -%}
                             {{ navigation.blueprint_element(element) }}
                         {%- endfor %}
                     </ul>
 
 
-                    <!-- User login / logout -->
+                    <!-- right nav portion + User login / logout -->
                     <div class="d-flex">
+                        <ul class="nav navbar-nav me-auto">
+                            {% for element in config.blueprint_navigation.right -%}
+                                {{ navigation.blueprint_element(element) }}
+                            {%- endfor %}
+                        </ul>
                     {% if current_user.is_authenticated %}
                       <form class="ms-auto row" method="get">
                         <div class="col">

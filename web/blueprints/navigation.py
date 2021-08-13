@@ -1,6 +1,9 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from dataclasses import dataclass, field
+from typing import Generic, TypeVar
+
 from flask import request, url_for
 from web.blueprints.access import BlueprintAccess
 from web.blueprints import bake_endpoint
@@ -41,7 +44,8 @@ class BlueprintNavigation(object):
     that are accessible for the current user.
     """
 
-    def __init__(self, blueprint, text, icon=None, description=None, blueprint_access=None):
+    def __init__(self, blueprint, text, icon=None, description=None, blueprint_access=None,
+                 push_right=False):
         """Init the `BlueprintNavigation` instance.
 
         :param blueprint: A `flask.Blueprint` instance.
@@ -56,6 +60,7 @@ class BlueprintNavigation(object):
         if blueprint_access is None:
             blueprint_access = BlueprintAccess(blueprint)
         self._access = blueprint_access
+        self.push_right = push_right
 
     @property
     def is_allowed(self):
@@ -185,6 +190,21 @@ class BlueprintNavigation(object):
             "Blueprint resistred as {} in Flask app is not the one you " \
             "register navigation for!"
 
-            if "blueprint_navigation" not in app.config:
-                app.config["blueprint_navigation"] = list()
-            app.config["blueprint_navigation"].append(self)
+            app.config.setdefault('blueprint_navigation', SegmentedList())\
+                .append(self, right=self.push_right)
+
+
+T = TypeVar('T')
+
+
+@dataclass
+class SegmentedList(Generic[T]):
+    left: list[T] = field(default_factory=lambda: [])
+    right: list[T] = field(default_factory=lambda: [])
+
+    def append(self, element: T, right=False):
+        (self.right if right else self.left).append(element)
+
+    def __iter__(self):
+        yield from self.left
+        yield from self.right
