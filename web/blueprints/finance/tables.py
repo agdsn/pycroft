@@ -4,7 +4,7 @@ from flask import url_for
 from flask_babel import gettext
 from flask_login import current_user
 
-from web.table.table import lazy_join, DictValueMixin, custom_formatter_column
+from web.table.table import lazy_join, DictValueMixin, custom_formatter_column, IbanColumn
 
 from web.table.table import BootstrapTable, Column, SplittedTable, \
     BtnColumn, LinkColumn, button_toolbar, DateColumn, MultiBtnColumn
@@ -143,9 +143,7 @@ class BankAccountTable(BootstrapTable):
     """
     name = Column("Name")
     bank = Column("Bank")
-    ktonr = Column("Kontonummer")
-    blz = Column("Bankleitzahl")
-    iban = Column("IBAN")
+    iban = IbanColumn("IBAN")
     bic = Column("SWIFT-BIC")
     balance = Column("Saldo")
     last_imported_at = Column("Zuletzt importiert")

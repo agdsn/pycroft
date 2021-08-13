@@ -197,6 +197,10 @@ class UserColumn(Column):
             type='native', href=href, title=title, glyphicon=glyphicon,
         )
 
+@custom_formatter_column('table.ibanFormatter')
+class IbanColumn(Column):
+    pass
+
 
 UnboundTableArgs = FrozenSet[Tuple[str, Any]]
 TableArgs = Dict[str, str]

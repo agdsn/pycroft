@@ -598,6 +598,19 @@ export function propertiesFormatter(value, row, index) {
 }
 
 
+export function ibanFormatter(value, row, index) {
+    if (!value) { return; }
+    const prefix = value.slice(0,4)
+    const rest = value.slice(4)
+    let res = prefix;
+
+    for (let i = 0; i < rest.length / 4; i++) {
+        res += `\u202f${rest.slice(4*i, 4*i+4)}`;
+    }
+    return res;
+}
+
+
 
 /**
  * Returns the type of the switch port name
