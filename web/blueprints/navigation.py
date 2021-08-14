@@ -56,7 +56,7 @@ class BlueprintNavigation(object):
         self.text = text
         self.icon = icon
         self.description = description
-        self._elements = []
+        self._elements: list[NavigationItem] = []
         if blueprint_access is None:
             blueprint_access = BlueprintAccess(blueprint)
         self._access = blueprint_access
@@ -87,19 +87,13 @@ class BlueprintNavigation(object):
         :param description: a anchor title.
         """
         def decorator(f):
-            element = self._navigation_item(
-                bake_endpoint(self.blueprint, f),
-                text,
-                description)
-
-            self._elements.append(element)
+            self._elements.append(NavigationItem(
+                endpoint=bake_endpoint(self.blueprint, f),
+                text=text,
+                description=description,
+            ))
             return f
         return decorator
-
-    def _navigation_item(self, endpoint, text, description=None):
-        return {"endpoint": endpoint,
-                "text": text,
-                "description": description,}
 
     def __iter__(self):
         """Get all navigation elements the user has access to.
@@ -112,7 +106,7 @@ class BlueprintNavigation(object):
         granted.
         """
         for element in self._elements:
-            if self._access.is_endpoint_accessible(element["endpoint"]):
+            if self._access.is_endpoint_accessible(element.endpoint):
                 yield element
 
     @property
@@ -143,8 +137,8 @@ class BlueprintNavigation(object):
         """Returns the active element of the instance, or nil"""
 
         for element in self._elements:
-            if url_for(element["endpoint"]) == request.path:
-                return element["text"]
+            if url_for(element.endpoint) == request.path:
+                return element.text
 
     @property
     def first(self):
@@ -208,3 +202,11 @@ class SegmentedList(Generic[T]):
     def __iter__(self):
         yield from self.left
         yield from self.right
+
+
+@dataclass
+class NavigationItem:
+    endpoint: str
+    text: str
+    description: str
+    icon: str
