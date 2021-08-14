@@ -34,8 +34,8 @@
                 <div class="dropdown-menu">
                     {% for element in bp_nav -%}
                       <a class="dropdown-item" href="{{ url_for(element.endpoint) }}">
-                        {% if element.icon %}<i class="fas {{ element.icon }}"></i>{% endif %}
-                        {{ element.text }}
+                        <span>{% if element.icon %}<i class="{{ element.icon | icon }}"></i>{% endif %}</span>
+                        <span>{{ element.text }}</span>
                       </a>
                     {%- endfor %}
                 </div>

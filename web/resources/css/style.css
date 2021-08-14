@@ -54,6 +54,11 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     margin-right: 0 !important;
 }
 
+.navbar li.nav-item.dropdown .dropdown-menu .dropdown-item {
+    display: grid;
+    grid-template-columns: 24px auto;
+}
+
 .tt-suggestion.tt-cursor {
   color: #fff !important;
   background-color: #0097cf !important;

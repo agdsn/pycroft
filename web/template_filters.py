@@ -176,6 +176,16 @@ def money_filter(amount):
     return (u"{:.2f}\u202f€".format(amount)).replace('.', ',')
 
 
+@template_filter("icon")
+def icon_filter(icon_class: str):
+    if len(tokens := icon_class.split(maxsplit=1)) == 2:
+        prefix, icon = tokens
+    else:
+        prefix = 'fas'
+        [icon] = tokens
+    return f"{prefix} {icon}"
+
+
 @template_filter("account_type")
 def account_type_filter(account_type):
     types = {
