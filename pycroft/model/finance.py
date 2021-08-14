@@ -307,7 +307,10 @@ class BankAccount(IntegerIdModel):
 
     @hybrid_property
     def balance(self):
-        return sum(baa.amount for baa in self.activities)
+        return object_session(self).execute(
+            select(func.coalesce(func.sum(BankAccountActivity.amount), 0))
+                .where(BankAccountActivity.bank_account_id == self.id)
+        ).scalar()
 
     @balance.expression
     def balance(cls):
