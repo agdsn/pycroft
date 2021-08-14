@@ -85,7 +85,7 @@ def subnets_json():
 
 
 @bp.route('/switches')
-@nav.navigate(u"Switche")
+@nav.navigate(u"Switche", icon='fa-random')
 def switches():
     return render_template(
         'infrastructure/switches_list.html',
@@ -405,7 +405,7 @@ def switch_port_delete(switch_id, switch_port_id):
 
 
 @bp.route('/vlans')
-@nav.navigate(u"VLANs")
+@nav.navigate(u"VLANs", icon='fa-hashtag')
 def vlans():
     return render_template(
         'infrastructure/vlan_list.html',

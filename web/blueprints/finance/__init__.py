@@ -73,7 +73,7 @@ nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=
 @bp.route('/')
 @bp.route('/bank-accounts')
 @bp.route('/bank-accounts/list')
-@nav.navigate(u"Bankkonten")
+@nav.navigate(u"Bankkonten", icon='fa-university')
 def bank_accounts_list():
     bank_account_table = BankAccountTable(
         data_url=url_for('.bank_accounts_list_json'),
@@ -156,7 +156,7 @@ def bank_accounts_errors_json():
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
-@nav.navigate(u"Bankkontobewegungen importieren")
+@nav.navigate(u"Bankkontobewegungen importieren", icon='fa-file-import')
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
@@ -517,7 +517,7 @@ def _apply_checked_matches(matching, subform):
 
 @bp.route('/accounts/')
 @bp.route('/accounts/list')
-@nav.navigate(u"Konten")
+@nav.navigate(u"Konten", icon='fa-money-check-alt')
 def accounts_list():
     accounts_by_type = {
         t[0]: list(t[1])
@@ -729,7 +729,7 @@ def transactions_show_json(transaction_id):
 
 
 @bp.route('/transactions/unconfirmed')
-@nav.navigate(u"Unbestätigte Transaktionen")
+@nav.navigate(u"Unbestätigte Transaktionen", icon='fa-question')
 def transactions_unconfirmed():
     return render_template(
         'finance/transactions_unconfirmed.html',
@@ -941,7 +941,7 @@ def transactions_all_json():
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
-@nav.navigate(u'Buchung erstellen')
+@nav.navigate(u'Buchung erstellen', icon='fa-plus')
 @access.require('finance_change')
 def transactions_create():
     form = TransactionCreateForm()
@@ -1045,7 +1045,7 @@ def membership_fee_users_due_json(fee_id):
 
 
 @bp.route("/membership_fees", methods=['GET', 'POST'])
-@nav.navigate(u"Beiträge")
+@nav.navigate(u"Beiträge", icon='fa-hand-holding-usd')
 def membership_fees():
     table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
     return render_template('finance/membership_fees.html', table=table)

@@ -526,7 +526,7 @@ def json_trafficdata(user_id, days=7):
 
 
 @bp.route('/create', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen")
+@nav.navigate(u"Anlegen", icon="fa-plus-square")
 @access.require('user_change')
 def create():
     form = UserCreateForm(property_groups=[config.member_group])
@@ -591,7 +591,7 @@ def create():
     return default_response()
 
 @bp.route('/create_non_resident', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen (Extern)")
+@nav.navigate(u"Anlegen (Extern)", icon="far fa-plus-square")
 @access.require('user_change')
 def create_non_resident():
     form = NonResidentUserCreateForm(property_groups=[config.member_group])
@@ -832,7 +832,7 @@ def edit_user_address(user_id: int):
 
 
 @bp.route('/search', methods=['GET', 'POST'])
-@nav.navigate(u"Suchen")
+@nav.navigate(u"Suchen", icon="fa-search")
 def search():
     form = UserSearchForm()
 
@@ -1049,7 +1049,7 @@ def tenancies_json(user_id):
 
 
 @bp.route('member-requests')
-@nav.navigate("Mitgliedschaftsanfragen")
+@nav.navigate("Mitgliedschaftsanfragen", icon="fa-user-clock")
 def member_requests():
     return render_template("user/member_requests.html",
                            page_title="Mitgliedschaftsanfragen",
@@ -1288,7 +1288,7 @@ def resend_confirmation_mail():
         return redirect(return_url)
 
 
-@nav.navigate('Archivable users')
+@nav.navigate('Archivierbar', icon='fa-archive')
 @bp.route('/archivable_users')
 def archivable_users():
     table = ArchivableMembersTable(data_url=url_for('.archivable_users_json'))

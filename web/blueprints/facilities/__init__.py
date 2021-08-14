@@ -51,7 +51,7 @@ nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=
 def root():
     return redirect(url_for(".overview"))
 
-@nav.navigate(u"Wohnheime")
+@nav.navigate(u"Wohnheime", icon='fa-building')
 @bp.route('/sites/')
 def overview():
     return render_template(
@@ -547,7 +547,7 @@ def json_rooms():
 
 @bp.route('/overcrowded', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>')
-@nav.navigate(u"Mehrfachbelegungen")
+@nav.navigate(u"Mehrfachbelegungen", icon='fa-people-arrows')
 def overcrowded(building_id):
     page_title = "Mehrfachbelegungen"
     if building_id:
