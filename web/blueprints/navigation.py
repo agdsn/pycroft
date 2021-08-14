@@ -74,7 +74,7 @@ class BlueprintNavigation(object):
         """
         return self._access.is_accessible
 
-    def navigate(self, text, description=None):
+    def navigate(self, text, description=None, icon=None):
         """A decorator to add a navigation menu entry for the actual view func.
 
         This is a decorator like the "route()" from `flask.Flask` or
@@ -91,6 +91,7 @@ class BlueprintNavigation(object):
                 endpoint=bake_endpoint(self.blueprint, f),
                 text=text,
                 description=description,
+                icon=icon,
             ))
             return f
         return decorator
