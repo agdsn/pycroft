@@ -18,6 +18,7 @@ services:
       dockerfile: ../dev.Dockerfile
     image: agdsn/pycroft-dev:${TAG:-latest}
     environment:
+      PYTHONDEVMODE: 1
       PYCROFT_DB_URI: postgresql://postgres:password@db:5432/pycroft
       PYCROFT_API_KEY: secret
       PYCROFT_LDAP_HOST: ldap
