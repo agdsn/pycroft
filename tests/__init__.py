@@ -9,6 +9,8 @@ import os
 import random
 import string
 import unittest
+from typing import cast
+
 from flask import url_for, _request_ctx_stack
 import flask_testing as testing
 from sqlalchemy import inspect
@@ -79,6 +81,8 @@ class SQLAlchemyTestCase(unittest.TestCase):
     test is test executed. Tests are rolled back after execution regardless of
     their outcome.
     """
+    session: Session
+
     @classmethod
     def setUpClass(cls):
         setup()
@@ -93,6 +97,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
         self.transaction = connection.begin_nested()
         s = scoped_session(sessionmaker(bind=connection))
         session.set_scoped_session(s)
+        self.session = cast(Session, s())
         self.addCleanup(self.cleanup)
 
     def _rollback(self):
@@ -155,8 +160,6 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
-    session: Session = session.session
-
     def setUp(self):
         super().setUp()
         logging.getLogger('factory').setLevel(logging.INFO)
