@@ -6,10 +6,8 @@ from datetime import datetime, timedelta
 import pytz
 from sqlalchemy import Column, literal, cast, TEXT
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
 
 from pycroft.helpers.interval import open, closed, openclosed, closedopen
-from pycroft.model import session
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import TsTzRange
 from tests import SQLAlchemyTestCase
@@ -22,8 +20,6 @@ class TestTable(IntegerIdModel):
 NOW = datetime.utcnow().replace(tzinfo=pytz.utc)
 
 class TestTsTzRange(SQLAlchemyTestCase):
-    session: Session = session.session
-
     def test_select_as_text(self):
         stmt = select(cast(literal(open(None, None), TsTzRange), TEXT))
         assert self.session.scalar(stmt) == '(,)'
