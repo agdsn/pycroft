@@ -4,12 +4,12 @@
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import Column, literal, cast, TEXT
+from sqlalchemy import Column, literal, cast, TEXT, func
 from sqlalchemy.future import select
 
-from pycroft.helpers.interval import open, closed, openclosed, closedopen
+from pycroft.helpers.interval import open, closed, openclosed, closedopen, single
 from pycroft.model.base import IntegerIdModel
-from pycroft.model.types import TsTzRange
+from pycroft.model.types import TsTzRange, DateTimeTz
 from tests import SQLAlchemyTestCase
 
 
@@ -41,6 +41,7 @@ class TestTsTzRange(SQLAlchemyTestCase):
                 self.session.commit()
 
                 assert mem.value == interval
+
     def test_literal_select(self):
         for interval in [
             open(NOW, NOW + timedelta(days=1)),
@@ -48,3 +49,29 @@ class TestTsTzRange(SQLAlchemyTestCase):
             with self.subTest(interval=interval):
                 stmt = select(cast(literal(interval, TsTzRange), TsTzRange))
                 assert self.session.scalar(stmt) == interval
+
+
+class TestTsTzRangeOperators(SQLAlchemyTestCase):
+    def setUp(self):
+        super().setUp()
+        interval = closedopen(NOW, NOW + timedelta(days=1))
+        self.session.add(TestTable(value=interval))
+        self.session.commit()
+
+    def test_containmment(self):
+        for value, expected in [
+            (literal(NOW, DateTimeTz), True),
+            (NOW, True),
+            (func.current_timestamp(), True),
+            (NOW + timedelta(hours=6), True),
+            (single(NOW), True),
+            (closedopen(NOW, NOW + timedelta(days=1)), True),
+            (open(NOW, NOW + timedelta(days=1)), True),
+
+            (NOW - timedelta(days=1), False),
+            (NOW - timedelta(seconds=1), False),
+            (literal(NOW - timedelta(seconds=1), DateTimeTz), False),
+            (closed(NOW, NOW + timedelta(days=1)), False),
+        ]:
+            stmt = select(TestTable.value.contains(value))
+            assert self.session.execute(stmt).scalar() is expected

@@ -1,13 +1,14 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from datetime import datetime
 from decimal import Decimal
 from numbers import Number
-from typing import Optional
+from typing import Optional, Any
 
 import ipaddr
 from psycopg2._range import DateTimeTZRange
-from sqlalchemy import String, TypeDecorator, Integer, DateTime
+from sqlalchemy import String, TypeDecorator, Integer, DateTime, literal
 from sqlalchemy.dialects.postgresql import MACADDR, INET
 from sqlalchemy.dialects.postgresql.ranges import TSTZRANGE
 
@@ -141,6 +142,27 @@ class TsTzRange(TypeDecorator):
             )
         return Interval.from_explicit_data(value.lower, value.lower_inc,
                                            value.upper, value.upper_inc)
+
+    class comparator_factory(TSTZRANGE.Comparator):
+        def contains(self, other: Any, **kwargs) -> None:
+            """Provide the functionality of the `@>` operator for Intervals.
+
+            :param other: can be an interval, a tz-aware datetime,
+               or column-like sql expressions with these types.
+
+            If any `.contains()` call does not work, you can add support here.
+            """
+            op = self.op('@>', is_comparison=True)
+
+            if isinstance(other, datetime):
+                if not other.tzinfo:
+                    raise PycroftModelException(
+                        'You cannot use `.contains()` with a non-timezone-aware datetime'
+                        f' ({other})!'
+                    )
+                return op(literal(other, type_=DateTimeTz))
+
+            return op(other)
 
 
 class InvalidMACAddressException(PycroftModelException, ValueError):
