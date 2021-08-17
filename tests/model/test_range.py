@@ -13,7 +13,7 @@ from pycroft.model.types import TsTzRange, DateTimeTz
 from tests import SQLAlchemyTestCase
 
 
-class TestTable(IntegerIdModel):
+class TableWithInterval(IntegerIdModel):
     value = Column(TsTzRange)
 
 
@@ -35,7 +35,7 @@ class TestTsTzRange(SQLAlchemyTestCase):
             closedopen(None, NOW),
         ]:
             with self.subTest(interval=interval):
-                mem = TestTable(value=interval)
+                mem = TableWithInterval(value=interval)
 
                 self.session.add(mem)
                 self.session.commit()
@@ -55,7 +55,7 @@ class TestTsTzRangeOperators(SQLAlchemyTestCase):
     def setUp(self):
         super().setUp()
         interval = closedopen(NOW, NOW + timedelta(days=1))
-        self.session.add(TestTable(value=interval))
+        self.session.add(TableWithInterval(value=interval))
         self.session.commit()
 
     def test_containmment(self):
@@ -73,5 +73,5 @@ class TestTsTzRangeOperators(SQLAlchemyTestCase):
             (literal(NOW - timedelta(seconds=1), DateTimeTz), False),
             (closed(NOW, NOW + timedelta(days=1)), False),
         ]:
-            stmt = select(TestTable.value.contains(value))
+            stmt = select(TableWithInterval.value.contains(value))
             assert self.session.execute(stmt).scalar() is expected
