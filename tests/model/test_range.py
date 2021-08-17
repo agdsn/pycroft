@@ -14,7 +14,7 @@ from tests import SQLAlchemyTestCase
 
 
 class TableWithInterval(IntegerIdModel):
-    value = Column(TsTzRange)
+    value = Column(TsTzRange, server_default=literal(open(None, None), TsTzRange))
 
 
 NOW = datetime.utcnow().replace(tzinfo=pytz.utc)

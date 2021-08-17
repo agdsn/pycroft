@@ -120,6 +120,11 @@ class TsTzRange(TypeDecorator):
     def python_type(self):
         return Interval
 
+    def process_literal_param(self, value, dialect):
+        if value is None:
+            return None
+        return f"'{str(value)}'"
+
     def process_bind_param(self, value: Optional[Interval], dialect) -> Optional[str]:
         # gets PY TYPE, returns DB TYPE
         if value is None:
