@@ -472,6 +472,11 @@ def room_show(room_id):
                            room=room,
                            ports=room.patch_ports,
                            user_buttons=list(map(user_button, room.users)),
+                           user_histories=[(user_button(room_history_entry.user),
+                                            room_history_entry.begins_at,
+                                            room_history_entry.ends_at)
+                                           for room_history_entry
+                                           in room.room_history_entries],
                            room_log_table=room_log_table,
                            patch_port_table=patch_port_table,
                            form=form, )

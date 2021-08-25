@@ -55,6 +55,40 @@
                     {%- endfor %}
                 </ul>
                 {%- endif %}
+
+              <h3>Bewohner history</h3>
+              <table class="table">
+                <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Einzug</th>
+                  <th>Auszug</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user_history in user_histories -%}
+                  <tr>
+                    <td>{{ btn.multiGlyphBtnMacro(user_history[0]) }}</td>
+                    <td>
+                      {% if user_history[1] %}
+                        {{ user_history[1].date() }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if user_history[2] %}
+                        {{ user_history[2].date() }}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
+                  </tr>
+
+                {%- endfor %}
+
+                </tbody>
+              </table>
             </div>
             {%- endif %}
         </div>
