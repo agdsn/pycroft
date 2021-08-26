@@ -28,7 +28,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
-from pycroft.helpers.interval import closed, single, Interval
+from pycroft.helpers.interval import closed, single, Interval, Bound
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
@@ -37,7 +37,7 @@ from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.interval_base import IntervalModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
-from pycroft.model.types import DateTimeTz
+from pycroft.model.types import DateTimeTz, TsTzRange
 
 manager = ddl.DDLManager()
 
@@ -486,7 +486,60 @@ class Group(IntegerIdModel):
         )
 
 
-class Membership(IntegerIdModel, IntervalModel):
+class Membership(IntegerIdModel):
+    active_during: Interval = Column(TsTzRange, nullable=False, index=True)
+
+    @property
+    def begins_at(self) -> Bound:
+        return self.active_during.lower_bound
+
+    @property
+    def ends_at(self) -> Bound:
+        return self.active_during.lower_bound
+
+    ##### COMPAT BOILERPLATE
+    @hybrid_method
+    def active(self, when=None):
+        """
+        Tests if overlaps with a given interval. If no interval is
+        given, it tests if active right now.
+        :param Interval when: interval to test
+        :rtype: bool
+        """
+        import warnings
+        warnings.warn('Deprecated: Use `overlaps` instead', DeprecationWarning)
+        if when is None:
+            now = object_session(self).query(func.current_timestamp()).scalar()
+            when = single(now)
+
+        return when.overlaps(closed(self.begins_at, self.ends_at))
+
+    @active.expression
+    def active(cls, when=None):
+        """
+        Tests if overlaps with a given interval. If no interval is
+        given, it tests if active right now.
+        :param Interval when:
+        :return:
+        """
+        import warnings
+        warnings.warn('Deprecated: Use `contains` instead', DeprecationWarning)
+        from sqlalchemy import or_, literal
+        if when is None:
+            # use `current_timestamp()`
+            return and_(
+                or_(cls.begins_at == null(), cls.begins_at <= func.current_timestamp()),
+                or_(cls.ends_at == null(), func.current_timestamp() <= cls.ends_at)
+            ).label('active')
+
+        return and_(
+            or_(cls.begins_at == null(), literal(when.end) == null(),
+                cls.begins_at <= literal(when.end)),
+            or_(literal(when.begin) == null(), cls.ends_at == null(),
+                literal(when.begin) <= cls.ends_at)
+        ).label("active")
+
+
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
                       nullable=False, index=True)
