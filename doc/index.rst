@@ -28,4 +28,5 @@ Architecture decision records
    ADR001 – Use jQuery in typescript modules exclusively <arch/adr-001.rst>
    ADR002 - Continue using pickle as default serializer <arch/adr-002.rst>
    ADR003 - Use ``.table_valued`` wrapper for table valued sql functions <arch/adr-003.rst>
+   ADR004 - Deprecate usage of ``session`` proxy in favor of dependency injection <arch/adr-004.rst>
    arch/*
