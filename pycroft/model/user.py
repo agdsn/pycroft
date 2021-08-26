@@ -351,8 +351,7 @@ class User(ModelBase, BaseUser, UserMixin):
     @hybrid_method
     def has_property(self, property_name: str, when: Optional[Interval] = None) -> bool:
         if when is None:
-            now = session.utcnow()
-            when = single(now)
+            return property_name in self.current_properties_set
 
         prop_granted_flags = [
             group.property_grants[property_name]
