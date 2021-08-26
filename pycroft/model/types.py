@@ -171,6 +171,16 @@ class TsTzRange(TypeDecorator):
 
             return op(other)
 
+        def overlaps(self, other: Any, **kwargs):
+            """Provide the functionality of the `&&` operator for Intervals. """
+            if other is None:
+                raise PycroftModelException(
+                    'You cannot use `.overlaps()`/`&` with `null` (`None`)!'
+                )
+            return self.op('&&', is_comparison=True)(other)
+
+        __and__ = overlaps
+
 
 class InvalidMACAddressException(PycroftModelException, ValueError):
     pass
