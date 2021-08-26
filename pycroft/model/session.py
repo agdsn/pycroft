@@ -10,7 +10,7 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from typing import overload, TypeVar, Callable, Any
+from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy
 import wrapt
@@ -31,6 +31,13 @@ class NullScopedSession(object):
 
 Session = LocalProxy(lambda: NullScopedSession())
 session = LocalProxy(lambda: Session())
+
+if TYPE_CHECKING:
+    def session():
+        import warnings
+        warnings.warn("Deprecated: Use dependency injection instead"
+                      " (i.e. pass the session explicitly via a parameter)",
+                      DeprecationWarning)
 
 
 def set_scoped_session(scoped_session):
