@@ -11,7 +11,10 @@ from pycroft.model.types import DateTimeTz
 
 
 class IntervalModel:
-    begins_at = Column(DateTimeTz, nullable=False, index=True, server_default=func.current_timestamp())
+    import warnings
+    warnings.warn('Use a column of type `TsTzRange` instead', DeprecationWarning)
+
+    begins_at = Column(DateTimeTz, nullable=False, index=True)
     ends_at = Column(DateTimeTz, nullable=True, index=True)
 
     __table_args__ = (

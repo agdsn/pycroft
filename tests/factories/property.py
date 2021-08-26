@@ -5,6 +5,7 @@ from itertools import chain
 import factory
 
 from pycroft.model.user import Membership, PropertyGroup
+from pycroft.helpers import interval
 
 from .base import BaseFactory
 from .user import UserFactory
@@ -13,8 +14,10 @@ from .user import UserFactory
 class MembershipFactory(BaseFactory):
     class Meta:
         model = Membership
+        exclude = ('begins_at', 'ends_at')
     begins_at = datetime.now(timezone.utc)
     ends_at = None
+    active_during = interval.closedopen(begins_at, ends_at)
 
     user = factory.SubFactory(UserFactory)
     # note: group is non-nullable!
