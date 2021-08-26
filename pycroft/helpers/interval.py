@@ -462,6 +462,13 @@ class Interval(tuple, Generic[T]):
     __or__ = join
     __add__ = join
 
+    def __sub__(self, other: Interval):
+        if not (other.upper_bound.unbounded or other.lower_bound.unbounded):
+            raise ValueError("You can only subtract a ray from an interval!")
+        diff_set = IntervalSet([self]) - other
+        assert len(diff_set) == 1
+        return diff_set[0]
+
 
 def _convert_begin(begin):
     return NegativeInfinity if begin is None else begin
