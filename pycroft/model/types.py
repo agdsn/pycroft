@@ -139,7 +139,7 @@ class TsTzRange(TypeDecorator):
         if not isinstance(value, DateTimeTZRange):
             # see https://github.com/sqlalchemy/sqlalchemy/discussions/6942
             raise PycroftModelException(
-                f"Unable to deserialize TsTzRange value of type {type(value)}."
+                f"Unable to deserialize TsTzRange value {value!r} of type {type(value)}."
                 " Usually, this value should've been deserialized by psycopg2 into a"
                 " DatetimeTzRange.  Did you make a mistake in your query?"
                 " Note that you may have to use `cast(…, TsTzRange)` to let sqlalchemy know"
