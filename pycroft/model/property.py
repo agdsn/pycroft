@@ -31,10 +31,7 @@ property_query_stmt = union(
     .select_from(Membership)
     .join(PropertyGroup)
     .join(User)
-    .filter(and_(
-        or_(Membership.begins_at == null(), Membership.begins_at <= literal_column('evaluation_time')),
-        or_(Membership.ends_at == null(), literal_column('evaluation_time') <= Membership.ends_at),
-    ))
+    .filter(Membership.active_during.contains(literal_column('evaluation_time')))
     .join(Property)
     .group_by(User.id, Property.name)
     .having(func.every(Property.granted))
@@ -45,10 +42,7 @@ property_query_stmt = union(
     .select_from(Membership)
     .join(PropertyGroup)
     .join(User)
-    .filter(and_(
-        or_(Membership.begins_at == null(), Membership.begins_at <= literal_column('evaluation_time')),
-        or_(Membership.ends_at == null(), literal_column('evaluation_time') <= Membership.ends_at),
-    ))
+    .filter(Membership.active_during.contains(literal_column('evaluation_time')))
     .join(Property)
     .group_by(User.id, Property.name)
     # granted by ≥1 membership, but also denied by ≥1 membership
