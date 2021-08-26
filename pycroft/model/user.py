@@ -28,7 +28,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
-from pycroft.helpers.interval import closed, single, Interval, Bound
+from pycroft.helpers.interval import closed, single, Interval, Bound, closedopen
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
@@ -309,22 +309,25 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @hybrid_method
     def active_property_groups(self, when: Optional[Interval] = None) -> List[PropertyGroup]:
-        return object_session(self).query(
+        sess = object_session(self)
+        when = when or single(session.utcnow())
+        return sess.query(
             PropertyGroup
         ).join(
             Membership
         ).filter(
-            Membership.active(when),
+            Membership.active_during & when,
             Membership.user_id == self.id
         ).all()
 
     @active_property_groups.expression
     def active_property_groups(cls, when=None):
+        when = when or func.current_timestamp()
         return select(PropertyGroup).select_from(
             join(PropertyGroup,
                  Membership).join(cls)
         ).where(
-            Membership.active(when)
+            Membership.active_during & when
         )
 
     @hybrid_method
@@ -473,7 +476,9 @@ class Group(IntegerIdModel):
         return object_session(self).query(User).join(
             Membership, Membership.user_id == User.id
         ).filter(
-            Membership.active(when), Membership.group_id == self.id
+            (Membership.active_during & when) if when
+            else Membership.active_during.contains(func.current_timestamp()),
+            Membership.group_id == self.id
         ).all()
 
     @active_users.expression
@@ -481,7 +486,8 @@ class Group(IntegerIdModel):
         return select(User).select_from(
             join(User, Membership).join(cls)
         ).where(
-            Membership.active(when)
+            Membership.active_during & when if when
+            else Membership.active_during.contains(func.current_timestamp())
         )
 
 
@@ -511,7 +517,7 @@ class Membership(IntegerIdModel):
             now = object_session(self).query(func.current_timestamp()).scalar()
             when = single(now)
 
-        return when.overlaps(closed(self.begins_at, self.ends_at))
+        return when.overlaps(self.active_during)
 
     @active.expression
     def active(cls, when=None):
