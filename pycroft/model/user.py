@@ -535,6 +535,12 @@ class Membership(IntegerIdModel):
         return cls.active_during.overlaps(when).label("active")
 
 
+    def disable(self, at=None):
+        if at is None:
+            at = object_session(self).scalar(select(func.current_timestamp()))
+
+        self.active_during = self.active_during - closedopen(at, None)
+
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
                       nullable=False, index=True)

@@ -222,77 +222,38 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
 
 class Test_Membership(PropertyDataTestBase):
     def test_active_instance_property(self):
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
+        NOW = session.utcnow()
+        h = lambda x: timedelta(hours=x)
+        d = lambda x: timedelta(days=x)
+
+        for interval, active_expected in [
+            (closedopen(NOW - h(2), None), True),
+            (closedopen(NOW + h(2), None), False),
+            (closedopen(NOW - h(2), None), True),
+            (closedopen(NOW + d(2), None), False),
+            (closedopen(NOW + d(2), NOW + d(3)), False),
+            (closedopen(NOW - d(1), NOW + d(3)), True),
+        ]:
+            with self.subTest(interval=interval):
+                mem = Membership(
+                    active_during=interval, user=self.user, group=self.property_group1
+                )
+                self.session.add(mem)
+                assert mem.active() == active_expected
+
+    def test_active_disable(self):
+        NOW = session.utcnow()
+        mem = Membership(active_during=closedopen(NOW - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        assert p1.active()
-        session.session.commit()
+        self.session.add(mem)
+        self.session.commit()
+        assert mem.active()
 
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert p1.active()
-
-        p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert not p1.active()
-
-        p1.ends_at = None
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert p1.active()
-
-        session.session.delete(p1)
-        session.session.commit()
-
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
-                        user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert p1.active()
-
-        p1.begins_at = session.utcnow() + timedelta(days=2)
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert not p1.active()
-
-        p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert not p1.active()
-
-        p1.ends_at = p1.begins_at + timedelta(days=1)
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert not p1.active()
-
-        p1.begins_at = session.utcnow() - timedelta(days=1)
-        session.session.commit()
-
-        p1 = Membership.q.filter_by(
-            user=self.user, group=self.property_group1
-        ).one()
-        assert p1.active()
+        # disable: [NOW - 2h,) → [NOW - 2h, NOW - 1h)
+        mem.disable(NOW - timedelta(hours=1))
+        self.session.commit()
+        self.session.refresh(mem)
+        assert not mem.active()
 
 
 class TestGroup(PropertyDataTestBase):
