@@ -1,0 +1,141 @@
+ADR004
+======
+
+:Number: 004
+:Title: Deprecate usage of ``session`` proxy in favor of dependency injection
+:Author: Lukas Juhrich
+:Created: 2021-08-26
+:Status: Proposed
+
+.. contents:: Table of Contents
+
+Context
+-------
+
+Two ways of accessing a session
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the ``pycroft.model.session`` module, we have a global proxy ``session`` in place
+which provides a ``Session``.
+Much of the code in the past worked in the following way:
+
+1. Some startup code called ``pycroft.model.session.set_scoped_session()``,
+   which bound the ``session`` proxy to the passed value
+2. Code after that imported ``session.session`` and used it implicitly.
+3. Some code at the end does necessary cleanup and calls ``session.Session.Remove``.
+
+Other code, however, uses a more explicit approach:
+In many test cases, the following happens instead:
+
+1. The ``setUp`` method of the ``SQLAlchemyTestCase`` assigns ``self.session``
+2. Test code in an inheriting test case uses ``self.session`` to execute statements.
+3. The ``tearDown`` code does necessary cleanup.
+
+The first option creates a layer of indirection:
+At any time, one has to be aware of the fact that the proxy exists,
+might be used, and one has to be sure that the session has been set up before accessing it.
+From a typing perspective, this global proxy variable has type ``Optional[Session]``.
+
+In the second case, where all of the code uses ``self.session``,
+the situation is much clearer:  Safe accessing is possible at any time,
+and it is easily verifyable who is responsible for setting that session.
+The type in this case is just ``Session``.
+
+This concept of explicitly passing variables to a function
+(or explicitly setting attributes of a class in a constructor-like method)
+is called *dependency injection*.
+The word dependency refers to the fact that code that uses the ``session`` *depends* on it,
+and the word injection is used to communicate that instead of using a globally accessible object,
+we have to *make it accessible* in a very precise location
+– like a function parameter or a class attribute –
+before we can refer to it.
+
+This is usually a standard programming practice,
+and also in pycroft, this principle is applied already almost everywhere.
+
+Flask
+^^^^^
+
+However, one exception is Flask (vis-à-vis Werkzeug), which “promotes” the implicit pattern by
+
+1. using such global proxies for the ``current_app``, ``request``, and ``g`` objects
+2. providing the ``LocalProxy`` class which actually makes it easier
+   to establish such proxies and thus incentivises this pattern.
+
+(*Nota bene:* The word “global” is not technically correct, since
+global variabbles are of course “thread-local”.
+But that distinction does not matter for the matters at hand.)
+
+Cost vs. Benefit
+^^^^^^^^^^^^^^^^
+
+Apart from the benefits of dependency injection outlined in the beginning,
+there are benefits to the implicit pattern:  It's easier to use,
+since one does not have to explicitly inject the ``session`` every time.
+
+However, it's more complicated to set up which adds complexity to tests:
+For instance, to test a flask app, we have to
+`set up an app context <https://flask.palletsprojects.com/en/2.0.x/testing/#the-testing-skeleton>`_
+before we can test anything app-related.
+Just from looking at the code, this is not obvious unless you are already aware
+of the fact that flask requires this.
+
+This kind of complexity does not only have to mean “maintenance burden”,
+but can also have the effect of discouraging the creation of new tests.
+
+This decision also benefits a related change (`#136 <https://github.com/agdsn/pycroft/issues/136>`_),
+in which we want to remove and session management from the ``lib`` functions.
+Having the ``session`` as an explicit parameter improves clarity
+as there is a direct way to verify what has or has not been done with the session
+at the time of function call.
+
+In a similar way, this should clear up confusion as to how a ``pytest`` fixture-based test setup should look like.
+Since that ``pytest``s fixture system is designed with a dependency-injection based approach in its purest form,
+we are forced to deal with the session explicitly anyway.
+Handling the session in such a way in the rest of the codebase removes an additional point of friction.
+
+Open questions
+^^^^^^^^^^^^^^
+At the point of writing it is still unclear how to make the ``session`` available to view functions.
+One possibility would be to register a ``scoped_session`` to the ``flask.g`` object:
+
+.. code-block:: python
+
+   @app.before_request
+   def register_session():
+       g.Session = scoped_session(
+           sessionmaker(bind=engine),
+           scopefunc=lambda: _request_ctx_stack.top
+       )
+
+In principle, the view function could then be written as
+
+.. code-block:: python
+
+   @bp.route('route')
+   def route():
+       with g.Session() as session:
+           lib.user.do_thing(session, foo='bar')
+
+However, this is just an idea and might not be the best solution.
+
+Decision
+--------
+- Use dependency injection for any new ``lib`` code using the ``session``.
+- Mark ``session.session`` as deprecated to promote the first decision
+- Adapt any ``lib`` function to use an explicitly passed ``session``
+- Adapt any test code to use ``self.session`` or a pytest ``session`` fixture if it exists
+  at that point in time
+- Once no code uses the proxy anymore,
+  simplify the test setup and other places as to not invoke ``set_scoped_session``,
+  and Remove the proxy.
+
+Consequences
+------------
+Immediate:
+- The ``session`` proxy has to be marked as ``deprecated``
+- A way to pass the ``session`` to view functions has to be found
+- Modifications on the ``lib`` code now
+  include a small refactoring in that they have to change the function signature as well
+  to include a ``session`` parameter.
+
