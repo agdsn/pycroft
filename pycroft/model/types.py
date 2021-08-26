@@ -157,8 +157,10 @@ class TsTzRange(TypeDecorator):
 
             If any `.contains()` call does not work, you can add support here.
             """
-            op = self.op('@>', is_comparison=True)
+            if other is None:
+                raise PycroftModelException('You cannot use `.contains()` with `null` (`None`)!')
 
+            op = self.op('@>', is_comparison=True)
             if isinstance(other, datetime):
                 if not other.tzinfo:
                     raise PycroftModelException(
