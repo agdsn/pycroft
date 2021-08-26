@@ -523,20 +523,10 @@ class Membership(IntegerIdModel):
         """
         import warnings
         warnings.warn('Deprecated: Use `contains` instead', DeprecationWarning)
-        from sqlalchemy import or_, literal
         if when is None:
-            # use `current_timestamp()`
-            return and_(
-                or_(cls.begins_at == null(), cls.begins_at <= func.current_timestamp()),
-                or_(cls.ends_at == null(), func.current_timestamp() <= cls.ends_at)
-            ).label('active')
+            return cls.active_during.contains(func.current_timestamp()).label('active')
 
-        return and_(
-            or_(cls.begins_at == null(), literal(when.end) == null(),
-                cls.begins_at <= literal(when.end)),
-            or_(literal(when.begin) == null(), cls.ends_at == null(),
-                literal(when.begin) <= cls.ends_at)
-        ).label("active")
+        return cls.active_during.overlaps(when).label("active")
 
 
     # many to one from Membership to Group
