@@ -27,7 +27,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
     def test_assert_correct_fixture(self):
         """simply test that fixtures work
         """
-        assert Membership.q.count() == 0
+        assert self.session.scalar(func.count(Membership.id)) == 0
 
         assert not self.user.has_property(self.prop1)
         assert not self.user.has_property(self.prop2)
@@ -45,8 +45,8 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group1
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         assert not self.user.has_property(self.prop2)
@@ -57,8 +57,8 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group2
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         assert self.user.has_property(self.prop2)
@@ -71,8 +71,8 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group1
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         assert not self.user.has_property(self.prop2)
@@ -83,9 +83,8 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group2
         )
-        membership.ends_at = now - timedelta(hours=1)
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         assert not self.user.has_property(self.prop2)
@@ -97,23 +96,23 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group1
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         membership.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
+        self.session.commit()
         assert self.property_group1 not in self.user.active_property_groups()
         assert not self.user.has_property(self.prop1)
 
         # add membership to group1
         membership = Membership(
-            begins_at=session.utcnow(),
+            active_during=closedopen(session.utcnow(), None),
             user=self.user,
             group=self.property_group1
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
 
@@ -123,15 +122,15 @@ class Test_PropertyResolving(PropertyDataTestBase):
             user=self.user,
             group=self.property_group2
         )
-        session.session.add(membership)
-        session.session.commit()
+        self.session.add(membership)
+        self.session.commit()
 
         assert self.user.has_property(self.prop1)
         assert self.user.has_property(self.prop2)
 
         # disables membership in group2
         membership.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
+        self.session.commit()
         assert self.user.has_property(self.prop1)
         assert not self.user.has_property(self.prop2)
 
@@ -144,14 +143,14 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         # add membership to group1
         p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        session.session.commit()
+        self.session.add(p1)
+        self.session.commit()
 
         assert len(self.property_group1.users) == 1
         assert len(self.property_group1.active_users()) == 1
 
         p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
+        self.session.commit()
         assert len(self.property_group1.users) == 1
         assert len(self.property_group1.active_users()) == 0
 
@@ -163,8 +162,8 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         # add one active property group
         p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        session.session.commit()
+        self.session.add(p1)
+        self.session.commit()
         f = Membership.q.first()
         assert f.active()
         assert len(self.user.property_groups) == 1
@@ -173,19 +172,19 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         # add a second active property group - count should be 2
         p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group2)
-        session.session.add(p1)
-        session.session.commit()
+        self.session.add(p1)
+        self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2
 
         # disable the second group. active should be one, all 2
         p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
+        self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 1
 
         # test a join
-        res = session.session.query(
+        res = self.session.query(
             user.User, PropertyGroup.id
         ).join(user.User.property_groups).filter(
             user.User.id == self.user.id
@@ -202,19 +201,19 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         # should not affect the count
         p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
-        session.session.add(p1)
-        session.session.commit()
+        self.session.add(p1)
+        self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2
 
         # disabling the new one should also not affect.
         p1.disable(session.utcnow() - timedelta(hours=1))
-        session.session.commit()
+        self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2
 
         # test a join
-        res = session.session.query(
+        res = self.session.query(
             user.User, PropertyGroup
         ).join(user.User.property_groups).filter(
             user.User.id == self.user.id
@@ -260,9 +259,9 @@ class Test_Membership(PropertyDataTestBase):
 
 class TestGroup(PropertyDataTestBase):
     def add_membership(self):
-        session.session.add(Membership(user=self.user,
+        self.session.add(Membership(user=self.user,
                                                 group=self.property_group1))
-        session.session.commit()
+        self.session.commit()
 
     def test_active_users(self):
         assert self.property_group1.active_users() == []
@@ -272,7 +271,7 @@ class TestGroup(PropertyDataTestBase):
     def create_active_users_query(self):
         active_users = Group.active_users().where(
             Group.id == self.property_group1.id)
-        return session.session.query(user.User).from_statement(active_users)
+        return self.session.query(user.User).from_statement(active_users)
 
     def test_active_users_expression(self):
         query = self.create_active_users_query()
@@ -323,7 +322,7 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
         self.session.commit()
 
     def test_current_properties_of_user(self):
-        rows = (session.session.query(current_property.table.c.property_name)
+        rows = (self.session.query(current_property.table.c.property_name)
                 .add_columns(user.User.login.label('login'))
                 .join(user.User.current_properties)
                 .all())
@@ -344,7 +343,7 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
                     assert (denied_prop, login) not in rows
 
     def test_current_granted_or_denied_properties_of_user(self):
-        rows = (session.session.query(current_property.table.c.property_name)
+        rows = (self.session.query(current_property.table.c.property_name)
                 .add_columns(user.User.login.label('login'))
                 .join(user.User.current_properties_maybe_denied)
                 .all())
