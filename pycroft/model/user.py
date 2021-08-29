@@ -322,12 +322,12 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @active_property_groups.expression
     def active_property_groups(cls, when=None):
-        when = when or func.current_timestamp()
         return select(PropertyGroup).select_from(
             join(PropertyGroup,
                  Membership).join(cls)
         ).where(
-            Membership.active_during & when
+            Membership.active_during & when if when
+            else Membership.active_during.contains(func.current_timestamp())
         )
 
     @hybrid_method
