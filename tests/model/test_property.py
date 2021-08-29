@@ -259,8 +259,11 @@ class Test_Membership(PropertyDataTestBase):
 
 class TestGroup(PropertyDataTestBase):
     def add_membership(self):
-        self.session.add(Membership(user=self.user,
-                                                group=self.property_group1))
+        self.session.add(Membership(
+            user=self.user,
+            group=self.property_group1,
+            active_during=closedopen(session.utcnow(), None),
+        ))
         self.session.commit()
 
     def test_active_users(self):
