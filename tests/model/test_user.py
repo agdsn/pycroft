@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pytest
 
-from pycroft.helpers.interval import single, closed
+from pycroft.helpers.interval import single, closed, closedopen
 from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model import session, user
 from pycroft.model.finance import Account
@@ -154,7 +154,8 @@ class TestActiveHybridMethods(FactoryDataTestBase):
         self.property_group = factories.PropertyGroupFactory()
 
     def add_membership(self, group):
-        m = Membership(user=self.user, group=group)
+        m = Membership(user=self.user, group=group,
+                       active_during=closedopen(session.utcnow(), None))
         session.session.add(m)
         session.session.commit()
         return m

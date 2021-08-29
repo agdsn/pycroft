@@ -3,6 +3,9 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
 
+from sqlalchemy import func
+
+from pycroft.helpers.interval import closedopen
 from pycroft.model import session, user
 from pycroft.model.property import current_property
 from pycroft.model.user import Group, Membership, PropertyGroup
@@ -38,7 +41,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
     def test_add_membership(self):
         # add membership to group1
         membership = Membership(
-            begins_at=session.utcnow(),
+            active_during=closedopen(session.utcnow(), None),
             user=self.user,
             group=self.property_group1
         )
@@ -50,7 +53,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
 
         # add membership to group2
         membership = Membership(
-            begins_at=session.utcnow(),
+            active_during=closedopen(session.utcnow(), None),
             user=self.user,
             group=self.property_group2
         )
@@ -64,11 +67,10 @@ class Test_PropertyResolving(PropertyDataTestBase):
         # add membership to group1
         now = session.utcnow()
         membership = Membership(
-            begins_at=now,
+            active_during=closedopen(now, now + timedelta(days=3)),
             user=self.user,
             group=self.property_group1
         )
-        membership.ends_at = membership.begins_at + timedelta(days=3)
         session.session.add(membership)
         session.session.commit()
 
@@ -77,7 +79,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
 
         # add expired membership to group2
         membership = Membership(
-            begins_at=now - timedelta(hours=2),
+            active_during=closedopen(now - timedelta(hours=2), now - timedelta(hours=1)),
             user=self.user,
             group=self.property_group2
         )
@@ -91,7 +93,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
     def test_disable_membership(self):
         # add membership to group1
         membership = Membership(
-            begins_at=session.utcnow() - timedelta(hours=2),
+            active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
             user=self.user,
             group=self.property_group1
         )
@@ -117,7 +119,7 @@ class Test_PropertyResolving(PropertyDataTestBase):
 
         # add membership to group2
         membership = Membership(
-            begins_at=session.utcnow() - timedelta(hours=2),
+            active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
             user=self.user,
             group=self.property_group2
         )
@@ -140,7 +142,7 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert len(self.property_group1.active_users()) == 0
 
         # add membership to group1
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
+        p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
         session.session.add(p1)
         session.session.commit()
@@ -159,7 +161,7 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert len(self.user.active_property_groups()) == 0
 
         # add one active property group
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
+        p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
         session.session.add(p1)
         session.session.commit()
@@ -169,7 +171,7 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert len(self.user.active_property_groups()) == 1
 
         # add a second active property group - count should be 2
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
+        p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group2)
         session.session.add(p1)
         session.session.commit()
@@ -191,14 +193,14 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert res == 2
 
         # reenable it - but with a deadline - both counts should be 2
-        p1.ends_at = session.utcnow() + timedelta(days=1)
-        session.session.commit()
+        p1.active_during = closedopen(p1.begins_at.value, session.utcnow() + timedelta(days=1))
+        self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2
 
         # Add a second membership to the first group
         # should not affect the count
-        p1 = Membership(begins_at=session.utcnow() - timedelta(hours=2),
+        p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
                         user=self.user, group=self.property_group1)
         session.session.add(p1)
         session.session.commit()
@@ -313,11 +315,12 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
                      if delta_days_start is not None else None)
             end = (datetime.now() + timedelta(delta_days_end)
                    if delta_days_end is not None else None)
+            interval = closedopen(start, end)
 
             MembershipFactory.create(user=self.users[username],
                                      group=self.groups[groupname],
-                                     begins_at=start, ends_at=end)
-        session.session.commit()
+                                     active_during=interval)
+        self.session.commit()
 
     def test_current_properties_of_user(self):
         rows = (session.session.query(current_property.table.c.property_name)
