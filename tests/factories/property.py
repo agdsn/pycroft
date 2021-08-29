@@ -25,8 +25,10 @@ class MembershipFactory(BaseFactory):
 
     class Params:
         includes_today = factory.Trait(
-            begins_at=datetime.now(timezone.utc) - timedelta(1),
-            ends_at=datetime.now(timezone.utc) + timedelta(1),
+            active_during=interval.closedopen(
+                datetime.now(timezone.utc) - timedelta(1),
+                datetime.now(timezone.utc) + timedelta(1),
+            ),
         )
 
 
