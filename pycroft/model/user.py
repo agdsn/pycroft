@@ -12,7 +12,7 @@
 """
 from __future__ import annotations
 import re
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from typing import Optional, List, Set
 
 from flask_login import UserMixin
@@ -28,7 +28,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.sql import true, false
 
-from pycroft.helpers.interval import closed, single, Interval, Bound, closedopen
+from pycroft.helpers.interval import closed, single, Interval, closedopen
 from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
@@ -495,12 +495,16 @@ class Membership(IntegerIdModel):
     active_during: Interval = Column(TsTzRange, nullable=False, index=True)
 
     @property
-    def begins_at(self) -> Bound:
-        return self.active_during.lower_bound
+    def begins_at(self) -> Optional[datetime]:
+        import warnings
+        warnings.warn("Compatability boilerplate. Use `active_during`.")
+        return self.active_during.begin
 
     @property
-    def ends_at(self) -> Bound:
-        return self.active_during.lower_bound
+    def ends_at(self) -> Optional[datetime]:
+        import warnings
+        warnings.warn("Compatability boilerplate. Use `active_during`.")
+        return self.active_during.end
 
     ##### COMPAT BOILERPLATE
     @hybrid_method
