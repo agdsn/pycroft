@@ -14,7 +14,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
 from pycroft.helpers.date import last_day_of_month
-from pycroft.helpers.interval import closedopen, openclosed, single
+from pycroft.helpers.interval import closedopen, openclosed, single, closed
 from pycroft.lib import finance
 from pycroft.lib.finance import (
     cleanup_description,
@@ -222,12 +222,11 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         )
 
     def create_user_from1y(self, **kwargs):
-        reg_date = session.utcnow() - timedelta(weeks=52),
+        reg_date = session.utcnow() - timedelta(weeks=52)
 
         return UserWithMembershipFactory(
             registered_at=reg_date,
-            membership__begins_at=reg_date,
-            membership__ends_at=None,
+            membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group,
             **kwargs
         )
@@ -237,8 +236,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         return UserWithMembershipFactory(
             registered_at=reg_date,
-            membership__begins_at=reg_date,
-            membership__ends_at=None,
+            membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group
         )
 
@@ -247,8 +245,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         return UserWithMembershipFactory(
             registered_at=reg_date,
-            membership__begins_at=reg_date,
-            membership__ends_at=None,
+            membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group
         )
 
@@ -259,8 +256,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         return UserWithMembershipFactory(
             registered_at=reg_date,
-            membership__begins_at=reg_date,
-            membership__ends_at=membership_end_date,
+            membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
             room_history_entries__ends_at=membership_end_date,
         )
@@ -271,8 +267,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         return UserWithMembershipFactory(
             registered_at=reg_date,
-            membership__begins_at=reg_date,
-            membership__ends_at=membership_end_date,
+            membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
             room_history_entries__ends_at=membership_end_date,
         )
@@ -485,8 +480,7 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         self.user = UserFactory.create()
 
         self.user_membership = MembershipFactory.create(
-            begins_at=session.utcnow() - timedelta(weeks=52),
-            ends_at=None,
+            active_during=closedopen(session.utcnow() - timedelta(weeks=52), None),
             user=self.user,
             group=config.member_group
         )
@@ -551,18 +545,15 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         self.check_current_and_next_month(-5.00)
 
     def test_last_not_due__current_not_booked(self):
-        self.user_membership.begins_at = self.membership_fee_current.begins_on
-
+        self.user_membership.active_during \
+            = closedopen(self.membership_fee_current.begins_on, None)
         assert self.user.has_property('member')
-
         self.check_current_and_next_month(0.00)
 
     def test_free_membership(self):
-        self.user_membership.begins_at \
-            = session.utcnow().replace(day=self.membership_fee_current.booking_end.days + 1)
-
+        new_start = session.utcnow().replace(day=self.membership_fee_current.booking_end.days + 1)
+        self.user_membership.active_during = closedopen(new_start, None)
         end_date = last_day_of_month(session.utcnow().date())
-
         assert estimate_balance(self.user, end_date) == 0.00
 
 

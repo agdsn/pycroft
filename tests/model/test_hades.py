@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from pycroft.helpers.interval import closedopen
 from pycroft.model import session
 from pycroft.model import hades
 from pycroft.model.net import VLAN
@@ -32,9 +33,11 @@ class HadesTestBase(FactoryDataTestBase):
                                       # This needs to be the HOSTS room!
                                       room=self.user.hosts[0].room)
 
-        MembershipFactory.create(user=self.user, group=self.network_access_group,
-                                 begins_at=datetime.now() + timedelta(-1),
-                                 ends_at=datetime.now() + timedelta(1))
+        NOW = datetime.now()
+        MembershipFactory.create(
+            user=self.user, group=self.network_access_group,
+            active_during=closedopen(NOW + timedelta(-1), NOW + timedelta(1))
+        )
 
         session.session.execute(hades.radius_property.insert().values([
             ('payment_in_default',),
