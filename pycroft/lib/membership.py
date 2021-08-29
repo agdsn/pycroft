@@ -89,17 +89,13 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
         raise PermissionError("cannot create a membership for a group with a"
                               " higher permission level")
 
-    memberships = session.session.query(Membership).filter(
-        Membership.user == user, Membership.group == group,
-        Membership.active(during)).all()
-    intervals = IntervalSet(
-        closed(m.begins_at, m.ends_at) for m in memberships
-    ).union(during)
+    memberships: list[Membership] = session.session.query(Membership)\
+        .filter(Membership.user == user, Membership.group == group, Membership.active(during))\
+        .all()
+    intervals = IntervalSet(m.active_during.closure() for m in memberships).union(during)
     for m in memberships:
         session.session.delete(m)
-    session.session.add_all(
-        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
-        for i in intervals)
+    session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
     message = deferred_gettext(u"Added to group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
@@ -127,17 +123,13 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
         raise PermissionError("cannot delete a membership for a group with a"
                               " higher permission level")
 
-    memberships = session.session.query(Membership).filter(
-        Membership.user == user, Membership.group == group,
-        Membership.active(during)).all()
-    intervals = IntervalSet(
-        closed(m.begins_at, m.ends_at) for m in memberships
-    ).difference(during)
+    memberships: list[Membership] = session.session.query(Membership)\
+        .filter(Membership.user == user, Membership.group == group, Membership.active(during))\
+        .all()
+    intervals = IntervalSet(m.active_during.closure() for m in memberships).difference(during)
     for m in memberships:
         session.session.delete(m)
-    session.session.add_all(
-        Membership(begins_at=i.begin, ends_at=i.end, user=user, group=group)
-        for i in intervals)
+    session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
     message = deferred_gettext(u"Removed from group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
