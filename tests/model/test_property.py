@@ -3,12 +3,14 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, text
+from sqlalchemy.future import select, Engine
+from tests.factories import UserFactory
 
 from pycroft.helpers.interval import closedopen
 from pycroft.model import session, user
-from pycroft.model.property import current_property
-from pycroft.model.user import Group, Membership, PropertyGroup
+from pycroft.model.property import current_property, evaluate_properties
+from pycroft.model.user import Group, Membership, PropertyGroup, User
 from tests import FactoryDataTestBase, factories
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
 
@@ -353,3 +355,68 @@ class CurrentPropertyViewTest(FactoryDataTestBase):
         # This checks that the violator's 'login' property is in the view as well
         # when ignoring the `denied` column
         assert ('login', self.users['violator'].login) in rows
+
+
+def _iso(date):
+    return datetime.fromisoformat(f'{date}T00:00:00+00:00')
+
+
+class EvaluatePropertiesTest(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.group1 = PropertyGroupFactory(granted={'good', 'other'})
+        self.group2 = PropertyGroupFactory(granted={'bad'}, denied={'good'})
+        self.user = UserFactory()
+
+        # mem1: [2000-01-01 ---------------------- 2000-01-03)
+        # mem2:                  [2000-01-02 ---------------------- 2000-01-04)
+        self.mem1 = MembershipFactory.create(
+            user=self.user,
+            active_during=closedopen(_iso('2000-01-01'), _iso('2000-01-03')),
+            group=self.group1,
+        )
+        self.mem2 = MembershipFactory.create(
+            user=self.user,
+            active_during=closedopen(_iso('2000-01-02'), _iso('2000-01-04')),
+            group=self.group2,
+        )
+
+    def props_at(self, when) -> set:
+        props = evaluate_properties(when=when, name='props')
+        stmt = (
+            select(props.c.property_name, props.c.denied)
+                .select_from(props)
+                .join(User, onclause=User.id == props.c.user_id)
+                .where(User.id == self.user.id)
+        )
+        rows = self.session.execute(stmt).all()
+        return set(rows)
+
+    def mems_at(self, when):
+        stmt = select(Membership).where(Membership.active_during.contains(when))
+        return {m for m, *_ in self.session.execute(stmt).all()}
+
+    def test_beginning(self):
+        when = _iso('2000-01-01')
+        assert self.mems_at(when) == {self.mem1}
+        assert self.props_at(when) \
+               == {('good', False), ('other', False)}
+
+    def test_right_at_new_membership(self):
+        when = _iso('2000-01-02')
+        assert self.mems_at(when) == {self.mem1, self.mem2}
+        assert self.props_at(when) \
+               == {('bad', False), ('other', False),
+                   ('good', True)}  # 'good' has beed denied
+
+    def test_one_ended(self):
+        when = _iso('2000-01-03')
+        assert self.mems_at(when) == {self.mem2}
+        # 'good' has beed denied – but never granted, so it does not show up in the list!
+        assert self.props_at(when) \
+               == {('bad', False)}
+
+    def test_right_after(self):
+        when = _iso('2000-01-04')
+        assert self.mems_at(when) == set()
+        assert self.props_at(when) == set()
