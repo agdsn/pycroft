@@ -46,6 +46,7 @@ property_query_stmt = union(
     .join(Property)
     .group_by(User.id, Property.name)
     # granted by ≥1 membership, but also denied by ≥1 membership
+    # NB: this does NOT include properties in the list that were ONLY denied, but never granted!
     .having(and_(func.bool_or(Property.granted), ~func.every(Property.granted)))
     .statement,
 )
