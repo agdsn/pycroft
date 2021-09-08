@@ -597,7 +597,7 @@ class ResetPasswordResource(Resource):
 
         user = get_user_by_id_or_login(args.ident, args.email)
 
-        if user is None:
+        if user is None or not user.has_property('sipa_login'):
             abort(404, message="Not found", code="not_found")
 
         if not send_password_reset_mail(user):
