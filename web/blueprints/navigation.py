@@ -62,6 +62,7 @@ class BlueprintNavigation(object):
         self._access = blueprint_access
         self.push_right = push_right
 
+
     @property
     def is_allowed(self):
         """Checks if the user has general access to the blueprint.
@@ -74,7 +75,7 @@ class BlueprintNavigation(object):
         """
         return self._access.is_accessible
 
-    def navigate(self, text, description=None, icon=None):
+    def navigate(self, text, weight=0, description=None, icon=None):
         """A decorator to add a navigation menu entry for the actual view func.
 
         This is a decorator like the "route()" from `flask.Flask` or
@@ -85,6 +86,7 @@ class BlueprintNavigation(object):
 
         :param text: The menu entry text.
         :param description: a anchor title.
+        :param weight: weight (i.e. priority) of the object.
         """
         def decorator(f):
             self._elements.append(NavigationItem(
@@ -92,7 +94,10 @@ class BlueprintNavigation(object):
                 text=text,
                 description=description,
                 icon=icon,
+                weight=weight
             ))
+            self._elements.sort(key=lambda entry: entry.weight)
+            # TODO: Sort this list
             return f
         return decorator
 
@@ -211,3 +216,4 @@ class NavigationItem:
     text: str
     description: str
     icon: str
+    weight: int

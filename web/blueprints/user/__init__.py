@@ -73,7 +73,7 @@ nav = BlueprintNavigation(bp, "Nutzer", icon='fa-user', blueprint_access=access)
 
 
 @bp.route('/')
-@nav.navigate(u"Übersicht")
+@nav.navigate(u"Übersicht", weight=1)
 def overview():
     stats = pycroft.lib.stats.overview_stats()
     entries = [{"title": "Mitgliedschaftsanfragen",
@@ -526,7 +526,8 @@ def json_trafficdata(user_id, days=7):
 
 
 @bp.route('/create', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen", icon="fa-plus-square")
+@nav.navigate(u"Anlegen (Extern/IBR)", weight=4, icon="fa-plus-square")
+# TODO: Namen aendern
 @access.require('user_change')
 def create():
     form = UserCreateForm(property_groups=[config.member_group])
@@ -591,7 +592,8 @@ def create():
     return default_response()
 
 @bp.route('/create_non_resident', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen (Extern)", icon="far fa-plus-square")
+@nav.navigate(u"Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
+# TODO: Namen aendern
 @access.require('user_change')
 def create_non_resident():
     form = NonResidentUserCreateForm(property_groups=[config.member_group])
@@ -832,7 +834,7 @@ def edit_user_address(user_id: int):
 
 
 @bp.route('/search', methods=['GET', 'POST'])
-@nav.navigate(u"Suchen", icon="fa-search")
+@nav.navigate(u"Suchen", weight=3, icon="fa-search")
 def search():
     form = UserSearchForm()
 
@@ -1049,7 +1051,7 @@ def tenancies_json(user_id):
 
 
 @bp.route('member-requests')
-@nav.navigate("Mitgliedschaftsanfragen", icon="fa-user-clock")
+@nav.navigate("Mitgliedschaftsanfragen", weight=2, icon="fa-user-clock")
 def member_requests():
     return render_template("user/member_requests.html",
                            page_title="Mitgliedschaftsanfragen",
@@ -1288,7 +1290,7 @@ def resend_confirmation_mail():
         return redirect(return_url)
 
 
-@nav.navigate('Archivierbar', icon='fa-archive')
+@nav.navigate('Archivierbar', weight=6, icon='fa-archive')
 @bp.route('/archivable_users')
 def archivable_users():
     table = ArchivableMembersTable(data_url=url_for('.archivable_users_json'))
