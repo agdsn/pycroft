@@ -350,9 +350,9 @@ export function unmarkGuiltyGroups(attrName) {
 function withMagicLinksReplaced(text) {
     let replaced_text = text
         // ticket id
-        .replace(/ticket[:#]([0-9]{3,6})(?=\b)/ig, "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketID=$1\">$&</a>")
+        .replace(new RegExp("ticket[:#]([0-9]{3,6})(?=\\b)", "ig"), "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketID=$1\">$&</a>")
         // ticket number (YYYYMMDDhhmmss¿¿)
-        .replace(/(?<=\b)(ticket[:#])?([0-9]{16})(?=\b)/ig, "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketNumber=$2\">Ticket#$2</a>")
+        .replace(new RegExp("(?<=\\b)(ticket[:#])?([0-9]{16})(?=\\b)", "ig"), "<a href=\"https://tickets.agdsn.de/index.pl?Action=AgentTicketZoom;TicketNumber=$2\">Ticket#$2</a>")
     ;
     console.debug(`${text} ⇒ ${replaced_text}`);
     return replaced_text;
