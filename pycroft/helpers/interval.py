@@ -459,6 +459,7 @@ class Interval(tuple, Generic[T]):
             max(self.upper_bound, other.upper_bound)
         )
 
+    @property
     def closure(self):
         """Return a closed variant of this interval"""
         return Interval(Bound(self.lower_bound.value, is_closed=True),

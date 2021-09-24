@@ -297,7 +297,7 @@ class User(ModelBase, BaseUser, UserMixin):
             now = session.utcnow()
             when = single(now)
         return [m for m in self.memberships
-                if when.overlaps(closed(m.begins_at, m.ends_at))]
+                if when.overlaps(m.active_during.closure)]
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
