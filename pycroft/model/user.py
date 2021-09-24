@@ -332,26 +332,8 @@ class User(ModelBase, BaseUser, UserMixin):
             else Membership.active_during.contains(func.current_timestamp())
         )
 
-    @hybrid_method
     def member_of(self, group: PropertyGroup, when: Optional[Interval] = None) -> bool:
         return group in self.active_property_groups(when)
-
-    @member_of.expression
-    def member_of(cls, group, when=None):
-        return exists(
-            select(null()).select_from(
-                PropertyGroup.__table__.join(
-                    Membership.__table__,
-                    PropertyGroup.id == Membership.group_id
-                    )
-            ).where(
-                and_(
-                    Membership.user_id == cls.id,
-                    PropertyGroup.id == group.id,
-                    Membership.active(when)
-                )
-            )
-        )
 
     def has_property(self, property_name: str, when: Optional[Interval] = None) -> bool:
         if when is None:
