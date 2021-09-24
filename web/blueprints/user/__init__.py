@@ -398,7 +398,7 @@ def user_show_groups_json(user_id, group_filter="all"):
             'begins_at': datetime_format(membership.begins_at,
                                          default='',
                                          formatter=datetime_filter),
-            'ends_at': datetime_format(membership.ends_at, default='', formatter=datetime_filter),
+            'ends_at': datetime_format(membership.active_during.end, default='', formatter=datetime_filter),
             'grants': granted,
             'denies': denied,
             'active': (active := (session.utcnow() in membership.active_during)),

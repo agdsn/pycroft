@@ -43,16 +43,9 @@ def user_search_query(
             .filter(IP.address == ip_address)
 
     if property_group_id is not None:
-        result = result.join(Membership)
-        result = result.filter(or_(
-            Membership.ends_at.is_(None),
-            Membership.ends_at > func.current_timestamp()
-        )).filter(or_(
-            Membership.begins_at.is_(None),
-            Membership.begins_at < func.current_timestamp()
-        ))
-
         result = result\
+            .join(Membership)\
+            .filter(Membership.active_during.contains(func.current_timestamp))\
             .join(PropertyGroup, PropertyGroup.id == Membership.group_id)\
             .filter(PropertyGroup.id == property_group_id)
 

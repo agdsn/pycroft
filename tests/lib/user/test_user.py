@@ -57,8 +57,9 @@ class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
         self.session.refresh(new_user)
         # check ends_at of moved out user
         for membership in new_user.memberships:
-            assert membership.ends_at is not None
-            membership.ends_at <= out_time
+            assert (int := membership.active_during) is not None
+            assert (end := int.end) is not None
+            assert end <= out_time
 
         assert not new_user.hosts
         assert new_user.room is None
