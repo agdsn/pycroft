@@ -859,20 +859,6 @@ def status(user):
     })
 
 
-def status_query():
-    now = single(session.utcnow())
-    return session.session.query(
-        User,
-        User.member_of(config.member_group, now).label('member'),
-        (Account.balance <= 0).label('account_balanced'),
-        # a User.properties hybrid attribute would be preferrable
-        (User.has_property('network_access', now)).label('network_access'),
-        (User.has_property('violation', now)).label('violation'),
-        (User.has_property('ldap', now)).label('ldap'),
-        or_(*(User.has_property(prop, now) for prop in admin_properties)).label('admin')
-    ).join(Account)
-
-
 def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, generation_purpose='',
                         plain_wifi_password=''):
     """Create a new datasheet for the given user.
