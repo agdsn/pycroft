@@ -21,7 +21,7 @@ class Test_030_Membership(FactoryDataTestBase):
     def assertMembershipIntervalsEqual(self, expected):
         memberships = session.session.query(Membership).filter_by(
             user=self.user, group=self.group)
-        got = IntervalSet(closed(m.begins_at, m.ends_at) for m in memberships)
+        got = IntervalSet(m.active_during.closure for m in memberships)
         assert expected == got, "IntervalSets differ: " \
                                 "expected {0!r}" \
                                 "got      {1!r}".format(expected, got)

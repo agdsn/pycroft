@@ -27,13 +27,15 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
     - excluding users who currently have the `do-not-archive` property.
     """
     # see FunctionElement.over
-    window_args = {'partition_by': User.id, 'order_by': nulls_last(Membership.ends_at),
+    mem_ends_at = func.upper(Membership.active_during)
+    window_args = {'partition_by': User.id,
+                   'order_by': nulls_last(mem_ends_at),
                    'rows': (None, None)}
     last_mem = (
         select(
             User.id.label('user_id'),
             func.last_value(Membership.id).over(**window_args).label('mem_id'),
-            func.last_value(Membership.ends_at).over(**window_args).label('mem_end'),
+            func.last_value(mem_ends_at).over(**window_args).label('mem_end'),
         )
         .select_from(User)
         .distinct()

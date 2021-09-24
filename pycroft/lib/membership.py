@@ -159,13 +159,7 @@ def user_memberships_query(user_id: int, active_groups_only: bool = False):
     memberships = Membership.q.select_from(Membership).filter(Membership.user_id == user_id)
     if active_groups_only:
         memberships = memberships.filter(
-            # it is important to use == here, "is" does NOT work
-            or_(Membership.begins_at == None,
-                Membership.begins_at <= session.utcnow())
-        ).filter(
-            # it is important to use == here, "is" does NOT work
-            or_(Membership.ends_at == None,
-                Membership.ends_at > session.utcnow())
+            Membership.active_during.contains(func.current_timestamp())
         )
     group = aliased(PropertyGroup)
     p_granted = aliased(Property)

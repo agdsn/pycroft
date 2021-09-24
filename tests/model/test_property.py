@@ -194,7 +194,8 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert res == 2
 
         # reenable it - but with a deadline - both counts should be 2
-        p1.active_during = closedopen(p1.begins_at, session.utcnow() + timedelta(days=1))
+        p1.active_during = closedopen(p1.active_during.begin,
+                                      session.utcnow() + timedelta(days=1))
         self.session.commit()
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2

@@ -241,14 +241,18 @@ class Test_has_property(FactoryDataTestBase):
         assert not self.user.has_property("unused")
 
     def test_positive_test_interval(self):
-        assert self.user.has_property(self.GRANTED_NAME, self.membership.begins_at)
-        assert self.user.has_property(self.GRANTED_NAME, self.membership.ends_at)
+        assert self.user.has_property(self.GRANTED_NAME, self.membership.active_during.begin)
+        # active_during is [)
+        assert self.user.has_property(self.GRANTED_NAME,
+                                      self.membership.active_during.end - timedelta(seconds=1))
+        assert not self.user.has_property(self.GRANTED_NAME,
+                                          self.membership.active_during.end)
 
     def test_negative_test_interval(self):
         assert not self.user.has_property(self.GRANTED_NAME,
-                                          self.membership.ends_at + timedelta(1))
+                                          self.membership.active_during.end + timedelta(1))
         assert not self.user.has_property(self.GRANTED_NAME,
-                                          self.membership.ends_at + timedelta(2))
+                                          self.membership.active_during.end + timedelta(2))
 
 
 class UserAddressTest(FactoryDataTestBase):
