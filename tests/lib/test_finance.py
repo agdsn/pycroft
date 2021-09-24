@@ -388,6 +388,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         assert user.has_property("member"), "User is not a member"
         assert not user.has_property("payment_in_default"), "User has payment_in_default property"
 
+
         # Test fee with payment_in_default group action (minimum)
         post_transactions_for_membership_fee(self.membership_fee_pid_state, self.processor)
         session.session.refresh(user.account)
@@ -398,6 +399,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
+        self.session.refresh(user)
         assert user.has_property("member"), "User is not a member"
         assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
@@ -413,6 +415,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
+        self.session.refresh(user)
         assert user.has_property("member"), "User is not a member"
         assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
@@ -429,6 +432,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         users_pid_membership, users_membership_terminated = self.handle_payment_in_default_users()
 
+        self.session.refresh(user)
         assert not user.has_property("member"), "User is a member"
         assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
@@ -447,17 +451,20 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         self.handle_payment_in_default_users()
 
+        self.session.refresh(user)
         assert user.has_property("member"), "User is not a member"
         assert user.has_property("payment_in_default"), "User has no payment_in_default property"
 
+        # this transaction…
         simple_transaction(description="deposit",
                            debit_account=user.account,
                            credit_account=AccountFactory(),
                            amount=self.membership_fee_pid_state.regular_fee,
                            author=self.processor)
-
+        # …should unblock the user now
         self.handle_payment_in_default_users()
 
+        self.session.refresh(user)
         assert user.has_property("member"), "User is not a member"
         assert not user.has_property("payment_in_default"), "User has payment_in_default property"
 
