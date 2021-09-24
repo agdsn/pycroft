@@ -34,7 +34,7 @@ from pycroft.model.facilities import Room, Building, Site
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
 from pycroft.helpers.interval import (
-    closed, single, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
+    closed, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction
@@ -1024,8 +1024,11 @@ def estimate_balance(user, end_date):
     months_to_pay = diff_month(end_date_justified, tomorrow)
 
     # If the user has to pay a fee for the current month
-    if user.has_property('membership_fee',
-                         single(tomorrow.replace(day=last_fee.booking_end.days))):
+    has_to_pay_this_month = user.has_property(
+        'membership_fee',
+        tomorrow.replace(day=last_fee.booking_end.days)
+    )
+    if has_to_pay_this_month:
         months_to_pay += 1
 
     # If there was no fee booked yet for the last month and the user has to pay
@@ -1038,7 +1041,7 @@ def estimate_balance(user, end_date):
     if last_month_fee_outstanding:
         had_to_pay_last_month = user.has_property(
             'membership_fee',
-            single(last_month_last.replace(day=last_fee.booking_end.days))
+            last_month_last.replace(day=last_fee.booking_end.days)
         )
         if had_to_pay_last_month:
             months_to_pay += 1

@@ -335,13 +335,17 @@ class User(ModelBase, BaseUser, UserMixin):
     def member_of(self, group: PropertyGroup, when: Optional[Interval] = None) -> bool:
         return group in self.active_property_groups(when)
 
-    def has_property(self, property_name: str, when: Optional[Interval] = None) -> bool:
+    def has_property(self, property_name: str, when: Optional[datetime] = None) -> bool:
         if when is None:
             return property_name in self.current_properties_set
 
+        if isinstance(when, Interval):
+            raise PycroftModelException("`has_property` does not accept intervals!")
+
+        # usages in this branch: only wrt `membership_fee` in `estimate_balance` for finance stuff
         prop_granted_flags = [
             group.property_grants[property_name]
-            for group in self.active_property_groups(when)
+            for group in self.active_property_groups(single(when))
             if property_name in group.property_grants
         ]
 

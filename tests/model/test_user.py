@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pytest
 
-from pycroft.helpers.interval import single, closed, closedopen
+from pycroft.helpers.interval import single, closedopen
 from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model import session, user
 from pycroft.model.finance import Account
@@ -241,16 +241,14 @@ class Test_has_property(FactoryDataTestBase):
         assert not self.user.has_property("unused")
 
     def test_positive_test_interval(self):
-        interval = closed(self.membership.begins_at,
-                          self.membership.ends_at)
-        assert self.user.has_property(self.GRANTED_NAME, interval)
+        assert self.user.has_property(self.GRANTED_NAME, self.membership.begins_at)
+        assert self.user.has_property(self.GRANTED_NAME, self.membership.ends_at)
 
     def test_negative_test_interval(self):
-        interval = closed(
-            self.membership.ends_at + timedelta(1),
-            self.membership.ends_at + timedelta(2)
-        )
-        assert not self.user.has_property(self.GRANTED_NAME, interval)
+        assert not self.user.has_property(self.GRANTED_NAME,
+                                          self.membership.ends_at + timedelta(1))
+        assert not self.user.has_property(self.GRANTED_NAME,
+                                          self.membership.ends_at + timedelta(2))
 
 
 class UserAddressTest(FactoryDataTestBase):
