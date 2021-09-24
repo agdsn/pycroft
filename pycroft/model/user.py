@@ -351,7 +351,6 @@ class User(ModelBase, BaseUser, UserMixin):
             )
         )
 
-    @hybrid_method
     def has_property(self, property_name: str, when: Optional[Interval] = None) -> bool:
         if when is None:
             return property_name in self.current_properties_set
@@ -365,38 +364,6 @@ class User(ModelBase, BaseUser, UserMixin):
         # In case of prop_granted_flags = []: Return False
         # Else: Return True if all elements of prop_granted_flags are True
         return all(prop_granted_flags) and any(prop_granted_flags)
-
-    @has_property.expression
-    def has_property(cls, prop, when=None):
-        # TODO Use joins
-        property_granted_select = select(
-            null()
-        ).select_from(
-            Property.__table__,
-            PropertyGroup.__table__,
-            Membership.__table__
-        ).where(
-            and_(
-                Property.name == prop,
-                Property.property_group_id == PropertyGroup.id,
-                PropertyGroup.id == Membership.group_id,
-                Membership.user_id == cls.id,
-                Membership.active(when)
-            )
-        )
-        #.cte("property_granted_select")
-        return and_(
-            not_(exists(
-                property_granted_select.where(
-                    Property.granted == false())
-
-            )),
-            exists(
-                property_granted_select.where(
-                    Property.granted == true()
-                )
-            )
-        ).self_group().label("has_property_" + prop)
 
     @property
     def permission_level(self) -> int:

@@ -233,33 +233,17 @@ class Test_has_property(FactoryDataTestBase):
 
     def test_positive_test(self):
         assert self.user.has_property(self.GRANTED_NAME)
-        assert user.User.q.filter(
-            user.User.login == self.user.login,
-            user.User.has_property(self.GRANTED_NAME)
-        ).first() is not None
 
     def test_negative_test(self):
         assert not self.user.has_property(self.DENIED_NAME)
-        assert user.User.q.filter(
-            user.User.login == self.user.login,
-            user.User.has_property(self.DENIED_NAME)
-        ).first() is None
 
     def test_non_existent_test(self):
         assert not self.user.has_property("unused")
-        assert user.User.q.filter(
-            user.User.login == self.user.login,
-            user.User.has_property("unused")
-        ).first() is None
 
     def test_positive_test_interval(self):
         interval = closed(self.membership.begins_at,
                           self.membership.ends_at)
         assert self.user.has_property(self.GRANTED_NAME, interval)
-        assert user.User.q.filter(
-            user.User.login == self.user.login,
-            user.User.has_property(self.GRANTED_NAME, interval)
-        ).first() is not None
 
     def test_negative_test_interval(self):
         interval = closed(
@@ -267,10 +251,6 @@ class Test_has_property(FactoryDataTestBase):
             self.membership.ends_at + timedelta(2)
         )
         assert not self.user.has_property(self.GRANTED_NAME, interval)
-        assert user.User.q.filter(
-            user.User.login == self.user.login,
-            user.User.has_property(self.GRANTED_NAME, interval)
-        ).first() is None
 
 
 class UserAddressTest(FactoryDataTestBase):
