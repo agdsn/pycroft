@@ -19,7 +19,7 @@ from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, Column, ForeignKey, Integer,
     String, and_, exists, join, not_, null, select, Sequence,
-    Date, func, UniqueConstraint)
+    Date, func, UniqueConstraint, Index)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates, declared_attr
@@ -447,7 +447,7 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    active_during: Interval = Column(TsTzRange, nullable=False, index=True)
+    active_during: Interval = Column(TsTzRange, nullable=False)
 
     def disable(self, at=None):
         if at is None:
@@ -469,6 +469,10 @@ class Membership(IntegerIdModel):
     user = relationship(User, backref=backref("memberships",
                                               cascade="all, delete-orphan",
                                               cascade_backrefs=False))
+
+    __table_args__ = (
+        Index('ix_active_during', 'active_during', postgresql_using='gist'),
+    )
 
 
 class PropertyGroup(Group):
