@@ -449,51 +449,6 @@ class Group(IntegerIdModel):
 class Membership(IntegerIdModel):
     active_during: Interval = Column(TsTzRange, nullable=False, index=True)
 
-    @property
-    def begins_at(self) -> Optional[datetime]:
-        import warnings
-        warnings.warn("Compatability boilerplate. Use `active_during`.")
-        return self.active_during.begin
-
-    @property
-    def ends_at(self) -> Optional[datetime]:
-        import warnings
-        warnings.warn("Compatability boilerplate. Use `active_during`.")
-        return self.active_during.end
-
-    ##### COMPAT BOILERPLATE
-    @hybrid_method
-    def active(self, when=None):
-        """
-        Tests if overlaps with a given interval. If no interval is
-        given, it tests if active right now.
-        :param Interval when: interval to test
-        :rtype: bool
-        """
-        import warnings
-        warnings.warn('Deprecated: Use `overlaps` instead', DeprecationWarning)
-        if when is None:
-            now = object_session(self).query(func.current_timestamp()).scalar()
-            when = single(now)
-
-        return when.overlaps(self.active_during)
-
-    @active.expression
-    def active(cls, when=None):
-        """
-        Tests if overlaps with a given interval. If no interval is
-        given, it tests if active right now.
-        :param Interval when:
-        :return:
-        """
-        import warnings
-        warnings.warn('Deprecated: Use `contains` instead', DeprecationWarning)
-        if when is None:
-            return cls.active_during.contains(func.current_timestamp()).label('active')
-
-        return cls.active_during.overlaps(when).label("active")
-
-
     def disable(self, at=None):
         if at is None:
             at = object_session(self).scalar(select(func.current_timestamp()))
