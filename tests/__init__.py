@@ -199,7 +199,8 @@ class FrontendDataTestBase(testing.TestCase):
                          data={'login': login, 'password': password})
 
     def tearDown(self):
-        self.client2.get("/logout")
+        if hasattr(self, 'client2'):
+            self.client2.get("/logout")
         super().tearDown()
 
     def setUp(self):
