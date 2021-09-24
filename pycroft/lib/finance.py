@@ -680,12 +680,27 @@ def get_negative_members():
     return users
 
 
-def get_users_with_payment_in_default():
+def get_last_payment_in_default_membership(user: User) -> Optional[Membership]:
+    return (
+        Membership.q
+            .filter(Membership.user_id == user.id)
+            .filter(Membership.group_id == config.payment_in_default_group.id)
+            .order_by(Membership.active_during.desc())
+            .first()
+    )
+
+
+def get_users_with_payment_in_default() -> tuple[set[User], set[User]]:
+    """Determine which users should be blocked and whose membership should be terminated.
+
+    :returns: which users should be added to the ``payment_in_default`` group (``[0]``)
+        and which ones should get their membership terminated (``[1]``).
+    """
     # Add memberships and end "member" membership if threshold met
     users = get_negative_members()
 
-    users_pid_membership = set()
-    users_membership_terminated = set()
+    users_pid_membership: set[User] = set()
+    users_membership_terminated: set[User] = set()
 
     ts_now = session.utcnow()
     for user in users:
@@ -703,12 +718,11 @@ def get_users_with_payment_in_default():
 
         if in_default_days >= fee.payment_deadline.days:
             # Skip user if the payment in default group membership was terminated within the last week
-            last_pid_membership = Membership.q.filter(Membership.user_id == user.id).filter(
-                Membership.group_id == config.payment_in_default_group.id).order_by(Membership.ends_at.desc()).first()
+            last_pid_membership = get_last_payment_in_default_membership(user)
 
             if last_pid_membership is not None:
-                if last_pid_membership.ends_at is not None and \
-                        last_pid_membership.ends_at >= ts_now - timedelta(days=7):
+                end = last_pid_membership.active_during.end
+                if end is not None and end >= ts_now - timedelta(days=7):
                     continue
 
             if not user.has_property('payment_in_default'):
