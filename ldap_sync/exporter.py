@@ -200,7 +200,8 @@ def fetch_groups_to_sync(session) -> List[GroupProxyType]:
         # uids of the members of the group
         .add_columns(func.coalesce(select(func.array_agg(User.login))
                 .select_from(join(Membership, User))
-                .where(Membership.group_id == Group.id).where(Membership.active())
+                .where(Membership.group_id == Group.id)
+                .where(Membership.active_during.contains(func.current_timestamp()))
                 .group_by(Group.id)
                 .scalar_subquery(),
                 func.cast('{}', dialects.postgresql.ARRAY(User.login.type))).label('members'))

@@ -287,7 +287,8 @@ class User(ModelBase, BaseUser, UserMixin):
 
     current_memberships = relationship(
         'Membership',
-        primaryjoin='and_(Membership.user_id==User.id, Membership.active())',
+        primaryjoin='and_(Membership.user_id==User.id,'
+                    '     Membership.active_during.contains(func.current_timestamp()))',
         viewonly=True
     )
 
@@ -301,10 +302,11 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @active_memberships.expression
     def active_memberships(cls, when=None):
-        return select(Membership).select_from(
-            join(cls, Membership)
-        ).where(
-            Membership.active(when)
+        return (
+            select(Membership)
+            .select_from(join(cls, Membership))
+            .where(Membership.active_during & when if when
+                   else Membership.active_during.contains(func.current_timestamp()))
         )
 
     @hybrid_method

@@ -89,9 +89,10 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
         raise PermissionError("cannot create a membership for a group with a"
                               " higher permission level")
 
-    memberships: list[Membership] = session.session.query(Membership)\
-        .filter(Membership.user == user, Membership.group == group, Membership.active(during))\
-        .all()
+    memberships: list[Membership] = [
+        m for m in user.active_memberships(when=during)
+        if m.group == group
+    ]
     intervals = IntervalSet(m.active_during.closure for m in memberships).union(during)
     for m in memberships:
         session.session.delete(m)
@@ -123,9 +124,10 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
         raise PermissionError("cannot delete a membership for a group with a"
                               " higher permission level")
 
-    memberships: list[Membership] = session.session.query(Membership)\
-        .filter(Membership.user == user, Membership.group == group, Membership.active(during))\
-        .all()
+    memberships: list[Membership] = [
+        m for m in user.active_memberships(when=during)
+        if m.group == group
+    ]
     intervals = IntervalSet(m.active_during.closure for m in memberships).difference(during)
     for m in memberships:
         session.session.delete(m)

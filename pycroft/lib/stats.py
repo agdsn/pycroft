@@ -22,7 +22,8 @@ def overview_stats():
         users_in_db=User.q.count(),
         members=User.q
             .join(Membership)
-            .filter(Membership.group == config.member_group, Membership.active())
+            .filter(Membership.group == config.member_group,
+                    Membership.active_during.contains(func.current_timestamp()))
             .count(),
         not_paid_all=User.q
             .join(User.account)
@@ -32,7 +33,8 @@ def overview_stats():
             .count(),
         not_paid_members=User.q
             .join(Membership)
-            .filter(Membership.group == config.member_group, Membership.active())
+            .filter(Membership.group == config.member_group,
+                    Membership.active_during.contains(func.current_timestamp()))
             .join(User.account)
             .join(Split)
             .group_by(User.id)

@@ -401,7 +401,7 @@ def user_show_groups_json(user_id, group_filter="all"):
             'ends_at': datetime_format(membership.ends_at, default='', formatter=datetime_filter),
             'grants': granted,
             'denies': denied,
-            'active': membership.active(),
+            'active': (active := (session.utcnow() in membership.active_during)),
             'actions': [
                 T.actions.single_value(
                     href=url_for(".edit_membership", user_id=user_id, membership_id=membership.id),
@@ -414,7 +414,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                     title="Beenden",
                     icon='fa-power-off',
                     btn_class='btn-link',
-                ) if membership.active() else {}
+                ) if active else {}
             ],
         } for membership, granted, denied in memberships.all()])
 
