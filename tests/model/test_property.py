@@ -167,7 +167,7 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         self.session.add(p1)
         self.session.commit()
         f = Membership.q.first()
-        assert f.active()
+        assert session.utcnow() in f.active_during
         assert len(self.user.property_groups) == 1
         assert len(self.user.active_property_groups()) == 1
 
@@ -242,7 +242,7 @@ class Test_Membership(PropertyDataTestBase):
                     active_during=interval, user=self.user, group=self.property_group1
                 )
                 self.session.add(mem)
-                assert mem.active() == active_expected
+                assert (session.utcnow() in mem.active_during) == active_expected
 
     def test_active_disable(self):
         NOW = session.utcnow()
@@ -250,13 +250,13 @@ class Test_Membership(PropertyDataTestBase):
                         user=self.user, group=self.property_group1)
         self.session.add(mem)
         self.session.commit()
-        assert mem.active()
+        assert session.utcnow() in mem.active_during
 
         # disable: [NOW - 2h,) → [NOW - 2h, NOW - 1h)
         mem.disable(NOW - timedelta(hours=1))
         self.session.commit()
         self.session.refresh(mem)
-        assert not mem.active()
+        assert session.utcnow() not in mem.active_during
 
 
 class TestGroup(PropertyDataTestBase):
