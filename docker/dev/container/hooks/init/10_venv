@@ -20,5 +20,6 @@ $PIP install wheel
 
 echo "No pip packages found, installing requirements"
 cd /opt/pycroft/app
+$PIP install git+git://github.com/lukasjuhrich/pip.git@master#egg=pip
 $PIP install -r requirements.txt -r requirements.dev.txt
 $PIP install -e .
