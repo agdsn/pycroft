@@ -19,10 +19,12 @@ from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, Column, ForeignKey, Integer,
     String, and_, exists, join, not_, null, select, Sequence,
-    Date, func, UniqueConstraint, Index)
+    Date, func, UniqueConstraint, Index, text, event)
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates, declared_attr
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
@@ -454,6 +456,7 @@ class Membership(IntegerIdModel):
             at = object_session(self).scalar(select(func.current_timestamp()))
 
         self.active_during = self.active_during - closedopen(at, None)
+        flag_modified(self, 'active_during')
 
     # many to one from Membership to Group
     group_id = Column(Integer, ForeignKey(Group.id, ondelete="CASCADE"),
@@ -472,7 +475,17 @@ class Membership(IntegerIdModel):
 
     __table_args__ = (
         Index('ix_active_during', 'active_during', postgresql_using='gist'),
+        ExcludeConstraint(  # there should be no two memberships…
+            (group_id, '='),  # …with the same user
+            (user_id, '='),  # …and the same group
+            (active_during, '&&'),  # …and overlapping durations
+            using='gist'
+        ),
     )
+
+@event.listens_for(Membership.__table__, 'before_create')
+def create_btree_gist(target, connection, **kw):
+    connection.execute(text("create extension if not exists btree_gist"))
 
 
 class PropertyGroup(Group):

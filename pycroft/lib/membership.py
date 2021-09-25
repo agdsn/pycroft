@@ -96,6 +96,7 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
     intervals = IntervalSet(m.active_during.closure for m in memberships).union(during)
     for m in memberships:
         session.session.delete(m)
+    session.session.flush()
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
     message = deferred_gettext(u"Added to group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
@@ -131,7 +132,11 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     intervals = IntervalSet(m.active_during.closure for m in memberships).difference(during)
     for m in memberships:
         session.session.delete(m)
+    # flush necessary because we otherwise don't have any control
+    # over the order of deletion vs. addition
+    session.session.flush()
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
+
     message = deferred_gettext(u"Removed from group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),

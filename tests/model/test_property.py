@@ -200,21 +200,6 @@ class Test_View_Only_Shortcut_Properties(PropertyDataTestBase):
         assert len(self.user.property_groups) == 2
         assert len(self.user.active_property_groups()) == 2
 
-        # Add a second membership to the first group
-        # should not affect the count
-        p1 = Membership(active_during=closedopen(session.utcnow() - timedelta(hours=2), None),
-                        user=self.user, group=self.property_group1)
-        self.session.add(p1)
-        self.session.commit()
-        assert len(self.user.property_groups) == 2
-        assert len(self.user.active_property_groups()) == 2
-
-        # disabling the new one should also not affect.
-        p1.disable(session.utcnow() - timedelta(hours=1))
-        self.session.commit()
-        assert len(self.user.property_groups) == 2
-        assert len(self.user.active_property_groups()) == 2
-
         # test a join
         res = self.session.query(
             user.User, PropertyGroup
@@ -244,6 +229,8 @@ class Test_Membership(PropertyDataTestBase):
                 )
                 self.session.add(mem)
                 assert (session.utcnow() in mem.active_during) == active_expected
+                self.session.delete(mem)
+                self.session.commit()
 
     def test_active_disable(self):
         NOW = session.utcnow()
