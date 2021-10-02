@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 from pycroft.model.address import Address
+from pycroft.model.port import PatchPort
 from pycroft.model.session import session
 
 from pycroft.helpers.i18n import deferred_gettext
@@ -18,9 +19,9 @@ from pycroft.helpers.interval import closed, UnboundedInterval
 from pycroft.model import create_engine
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Account
-from pycroft.model.host import Host, Interface, IP
+from pycroft.model.host import Host, Interface, IP, SwitchPort, Switch
 from pycroft.model.logging import UserLogEntry
-from pycroft.model.net import Subnet
+from pycroft.model.net import Subnet, VLAN
 from pycroft.model.user import User, UnixAccount, PropertyGroup, Membership
 from scripts.connection import try_create_connection, get_connection_string
 from flask import _request_ctx_stack
@@ -47,6 +48,12 @@ vlan_ids = {
     'A': 67,
     'B': 68,
     'C': 69
+}
+
+switch_ids = {
+    'A': 14117,
+    'B': 14118,
+    'C': 14119,
 }
 
 ignore_debits = [4051171, 4051942,  4055284,  4056841, 4056874]
@@ -87,7 +94,9 @@ def run():
     logger.addHandler(fh)
     logging.basicConfig(level=logging.INFO)
 
-    connection_string = get_connection_string()
+    connection_string = 'postgresql://pycroft:@172.30.13.1:35432/usermanagement?options=-csearch_path%3Dpycroft,%20public'
+    #vvtvludrbnlkfcgjblfckfrlikguejdvfhbieulnjkii
+    # connection_string = get_connection_string()
 
     # connection, engine = try_create_connection(connection_string, False, None,
     #                                            reflections=False)
@@ -110,7 +119,7 @@ def run():
 
     new_rooms = {}
 
-    session.begin(subtransactions=True)
+    # session.begin(subtransactions=True)
 
     for room in rooms:
         level = int(room['level']) + 1
@@ -141,6 +150,30 @@ def run():
         new_rooms[room['number']] = new_room
 
     # uid_start = 21020
+
+    dummy_room = Room.q.get(9194)
+
+    for room in new_rooms.values():
+        pp_name = f"{room.number}-dummy"
+
+        switch = Switch.q.get(switch_ids[room.number[0]])
+        vlan = VLAN.q.get(vlan_ids[room.number[0]])
+
+        sp = SwitchPort(switch=switch, name=pp_name, default_vlans=[vlan])
+        session.add(sp)
+
+        session.flush()
+
+        pp = PatchPort(name=pp_name, switch_room=dummy_room, room=room, switch_port=sp)
+        session.add(pp)
+
+        logger.info(f"Added switchport and patchport {pp_name}")
+
+    session.flush()
+
+    # session.commit()
+
+    return
 
     extra_count = 2
 
@@ -189,6 +222,7 @@ def run():
                         room=room,
                         account=Account(name="", type="USER_ASSET"),
                         unix_account=unix_acc,
+                        swdd_person_id=ud['debitor'],
                         )
 
             session.add(user)
@@ -300,3 +334,5 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+# 16978 16536
