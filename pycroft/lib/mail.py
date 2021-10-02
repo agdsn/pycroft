@@ -213,3 +213,21 @@ class TaskFailedTemplate(MailTemplate):
 class MemberNegativeBalance(MailTemplate):
     template = "member_negative_balance.html"
     subject =  "Deine ausstehenden Zahlungen // Your due payments"
+
+
+def send_template_mails(email_addresses: List[str], template: MailTemplate, **kwargs):
+    mails = []
+
+    for addr in email_addresses:
+        body_plain, body_html = template.render(**kwargs)
+
+        mail = Mail(to_name='',
+                    to_address=addr,
+                    subject=template.subject,
+                    body_plain=body_plain,
+                    body_html=body_html)
+        mails.append(mail)
+
+    from pycroft.task import send_mails_async
+
+    send_mails_async.delay(mails)
