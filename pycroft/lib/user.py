@@ -169,11 +169,12 @@ def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=
 
     """
 
-    pdf_data = b64encode(generate_user_sheet(new_user, wifi, user,
-                                             plain_user_password=plain_user_password,
-                                             generation_purpose=generation_purpose,
-                                             plain_wifi_password=plain_wifi_password)
-                         ).decode('ascii')
+    pdf_data = generate_user_sheet(
+        new_user, wifi, user,
+        plain_user_password=plain_user_password,
+        generation_purpose=generation_purpose,
+        plain_wifi_password=plain_wifi_password,
+    )
 
     pdf_storage = WebStorage(data=pdf_data,
                              expiry=session.utcnow() + timedelta(minutes=timeout))
@@ -191,13 +192,10 @@ def get_user_sheet(sheet_id):
 
     if sheet_id is None:
         return None
-
-    storage = WebStorage.get(sheet_id)
-
-    if storage is None:
+    if (storage := WebStorage.get(sheet_id)) is None:
         return None
 
-    return b64decode(storage.data)
+    return storage.data
 
 
 @with_transaction

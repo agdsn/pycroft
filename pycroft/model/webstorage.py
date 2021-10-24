@@ -4,12 +4,12 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 from pycroft.model.base import IntegerIdModel
-from sqlalchemy import Column, Text, func
+from sqlalchemy import Column, func, LargeBinary
 from pycroft.model.session import session
 from pycroft.model.types import DateTimeTz
 
 class WebStorage(IntegerIdModel):
-    data = Column(Text, nullable=False)
+    data = Column(LargeBinary, nullable=False)
     expiry = Column(DateTimeTz, nullable=False)
 
     @staticmethod
