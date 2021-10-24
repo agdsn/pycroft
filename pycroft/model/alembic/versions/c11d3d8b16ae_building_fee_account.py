@@ -7,12 +7,9 @@ Create Date: 2020-02-26 23:05:46.376751
 """
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-from pycroft.model.facilities import Building
-from pycroft.model.types import DateTimeTz
-from pycroft.model.user import User, RoomHistoryEntry
-
 revision = 'c11d3d8b16ae'
 down_revision = '3ec1d29bfd10'
 branch_labels = None
@@ -24,7 +21,7 @@ def upgrade():
     op.create_foreign_key('building_fee_account_id_fkey', 'building', 'account',
                           ['fee_account_id'], ['id'])
 
-    op.execute(sa.update(Building).values(fee_account_id=19))
+    op.execute("update building set fee_account_id=19 where true")
 
     op.alter_column('building', 'fee_account_id', nullable=False)
 
@@ -42,9 +39,9 @@ def upgrade():
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('room_id', sa.Integer(), nullable=False),
-                    sa.Column('begins_at', DateTimeTz, nullable=False,
+                    sa.Column('begins_at', postgresql.TIMESTAMP(timezone=True), nullable=False,
                               server_default=sa.func.current_timestamp()),
-                    sa.Column('ends_at', DateTimeTz, nullable=True),
+                    sa.Column('ends_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
                     sa.ForeignKeyConstraint(('user_id',), ['user.id'], ),
                     sa.ForeignKeyConstraint(('room_id',), ['room.id'], ),
                     sa.PrimaryKeyConstraint('id'),
@@ -133,9 +130,10 @@ def upgrade():
     # Insert room history entries for all users living in a dorm beginning with their registration
 
     op.execute(
-        RoomHistoryEntry.__table__.insert().from_select(
-            [RoomHistoryEntry.user_id, RoomHistoryEntry.room_id, RoomHistoryEntry.begins_at],
-            sa.select(User.id, User.room_id, User.registered_at).select_from(User).where(User.room_id.isnot(None)))
+        """INSERT INTO room_history_entry (user_id, room_id, begins_at)
+        SELECT "user".id, "user".room_id, "user".registered_at
+        FROM "user"
+        WHERE "user".room_id IS NOT NULL"""
     )
 
     # Update membership_fee constraint
