@@ -24,6 +24,7 @@ from .blueprints import (
 )
 
 from .blueprints.login import login_manager
+from .commands import register_commands
 from .templates import page_resources
 from pycroft.helpers.git_helpers import get_repo_active_branch, get_latest_commits
 
@@ -177,6 +178,8 @@ def make_app(debug=False):
         """
         if current_user.is_anonymous and request.blueprint not in ("login", 'api', None):
             return current_app.login_manager.unauthorized()
+
+    register_commands(app)
 
     return app
 
