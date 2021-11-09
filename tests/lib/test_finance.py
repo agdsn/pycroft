@@ -258,7 +258,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
             registered_at=reg_date,
             membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
-            room_history_entries__ends_at=membership_end_date,
+            room_history_entries__active_during=closedopen(reg_date, membership_end_date),
         )
 
     def create_user_move_out_no_grace(self):
@@ -269,7 +269,7 @@ class MembershipFeeTestCase(FactoryDataTestBase):
             registered_at=reg_date,
             membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
-            room_history_entries__ends_at=membership_end_date,
+            room_history_entries__active_during=closedopen(reg_date, membership_end_date),
         )
 
     def grace_check(self, user_grace, user_no_grace):

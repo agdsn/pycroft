@@ -1,5 +1,6 @@
 from pycroft.lib.user import move, move_out, move_in
 from pycroft.model import session
+from pycroft.model.user import RoomHistoryEntry
 from tests import FactoryDataTestBase, ConfigFactory, UserFactory
 from tests.factories import AddressFactory, RoomFactory
 
@@ -17,11 +18,11 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
     def test_room_history_create(self):
         assert 1 == len(self.user.room_history_entries), "more than one room history entry"
 
-        rhe = self.user.room_history_entries[0]
+        rhe: RoomHistoryEntry = self.user.room_history_entries[0]
 
         assert self.user.room == rhe.room
-        assert rhe.begins_at is not None
-        assert rhe.ends_at is None
+        assert rhe.active_during.begin is not None
+        assert rhe.active_during.end is None
 
     def test_room_history_move(self):
         session.session.refresh(self.room)
@@ -34,13 +35,13 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
         found_new = False
 
         for rhe in self.user.room_history_entries:
-            assert rhe.begins_at is not None
+            assert rhe.active_during.begin is not None
 
             if rhe.room == old_room:
-                assert rhe.ends_at is not None
+                assert rhe.active_during.end is not None
                 found_old = True
             elif rhe.room == self.room:
-                assert rhe.ends_at is None
+                assert rhe.active_during.end is None
                 found_new = True
 
         assert found_new, "Did not find new history entry"
@@ -53,8 +54,8 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
 
         rhe = self.user.room_history_entries[0]
 
-        assert rhe.begins_at is not None
-        assert rhe.ends_at is not None
+        assert rhe.active_during.begin  is not None
+        assert rhe.active_during.end is not None
 
     def test_room_history_move_in(self):
         assert 0 == len(self.user_no_room.room_history_entries)
@@ -68,5 +69,5 @@ class UserRoomHistoryTestCase(FactoryDataTestBase):
 
         assert rhe.room == self.room
 
-        assert rhe.begins_at is not None
-        assert rhe.ends_at is None
+        assert rhe.active_during.begin is not None
+        assert rhe.active_during.end is None

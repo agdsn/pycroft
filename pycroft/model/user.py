@@ -36,7 +36,6 @@ from pycroft.helpers.user import hash_password, verify_password, cleartext_passw
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
-from pycroft.model.interval_base import IntervalModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.types import DateTimeTz, TsTzRange
@@ -377,16 +376,19 @@ manager.add_function(
             IF old.room_id IS DISTINCT FROM new.room_id THEN
                 IF old.room_id IS NOT NULL THEN
                     /* User was living in a room before, history entry must be ended */
-                    UPDATE "room_history_entry" SET ends_at = CURRENT_TIMESTAMP
-                        WHERE room_id = old.room_id AND user_id = new.id AND ends_at IS NULL;
+                    /* active_during is expected to be [) */
+                    UPDATE "room_history_entry"
+                        SET active_during = active_during - tstzrange(CURRENT_TIMESTAMP, null, '[)')
+                        WHERE room_id = old.room_id AND user_id = new.id
+                        AND active_during && tstzrange(CURRENT_TIMESTAMP, null, '[)');
                 END IF;
 
                 IF new.room_id IS NOT NULL THEN
                     /* User moved to a new room. history entry must be created */
-                    INSERT INTO "room_history_entry" (user_id, room_id, begins_at)
+                    INSERT INTO "room_history_entry" (user_id, room_id, active_during)
                         /* We must add one second so that the user doesn't have two entries
                            for the same timestamp */
-                        VALUES(new.id, new.room_id, CURRENT_TIMESTAMP);
+                        VALUES(new.id, new.room_id, tstzrange(CURRENT_TIMESTAMP, null, '[)'));
                 END IF;
             END IF;
             RETURN NULL;
@@ -529,7 +531,16 @@ class UnixAccount(IntegerIdModel):
     home_directory = Column(String, nullable=False, unique=True)
 
 
-class RoomHistoryEntry(IntegerIdModel, IntervalModel):
+class RoomHistoryEntry(IntegerIdModel):
+    active_during: Interval = Column(TsTzRange, nullable=False)
+
+    def disable(self, at=None):
+        if at is None:
+            at = object_session(self).scalar(select(func.current_timestamp()))
+
+        self.active_during = self.active_during - closedopen(at, None)
+        flag_modified(self, 'active_during')
+
     room_id = Column(Integer, ForeignKey("room.id", ondelete="CASCADE"),
                      nullable=False, index=True)
     room = relationship(Room, backref=backref(name="room_history_entries",
@@ -542,51 +553,15 @@ class RoomHistoryEntry(IntegerIdModel, IntervalModel):
                                               order_by='RoomHistoryEntry.id',
                                               viewonly=True))
 
-
-manager.add_function(
-    User.__table__,
-    ddl.Function(
-        'room_history_entry_uniqueness', [],
-        'trigger',
-        """
-        DECLARE
-          rhe_id integer;
-          count integer;
-        BEGIN
-            SELECT COUNT(*), MAX(rhe.id) INTO STRICT count, rhe_id FROM "room_history_entry" rhe
-              WHERE (tstzrange(NEW.begins_at,
-                               COALESCE(new.ends_at, 'infinity'::timestamp),
-                               '()')
-                  &&
-                  tstzrange(rhe.begins_at,
-                               COALESCE(rhe.ends_at, 'infinity'::timestamp),
-                               '()')
-                  )
-              AND NEW.user_id = rhe.user_id AND NEW.id != rhe.id;
-
-            IF count > 0 THEN
-                RAISE EXCEPTION 'entry overlaps with entry %%',
-                rhe_id
-                USING ERRCODE = 'integrity_constraint_violation';
-            END IF;
-
-            RETURN NULL;
-        END;
-        """,
-        volatility='stable', strict=True, language='plpgsql'
+    __table_args__ = (
+        Index('ix_room_history_entry_active_during', 'active_during', postgresql_using='gist'),
+        ExcludeConstraint(  # there should be no two room_history_entries
+            (room_id, '='),  # …in the same room
+            (user_id, '='),  # …and for the same user
+            (active_during, '&&'),  # …and overlapping durations
+            using='gist'
+        ),
     )
-)
-
-manager.add_constraint_trigger(
-    RoomHistoryEntry.__table__,
-    ddl.ConstraintTrigger(
-        'room_history_entry_uniqueness_trigger',
-        RoomHistoryEntry.__table__,
-        ('UPDATE', 'INSERT'),
-        'room_history_entry_uniqueness()',
-        deferrable=True, initially_deferred=True,
-    )
-)
 
 
 class PreMember(ModelBase, BaseUser):

@@ -244,26 +244,14 @@ def users_eligible_for_fee_query(membership_fee):
                             and_(rhe_end.c.user_id == User.id,
                                  # Only join RoomHistoryEntry that is relevant
                                  # on the fee interval end date
-                                 literal(end_tstz).op("<@")(
-                                    func.tstzrange(rhe_end.c.begins_at,
-                                                   func.coalesce(rhe_end.c.ends_at,
-                                                                 literal('infinity').cast(DateTime)
-                                                                 )
-                                                   , '[)')
-                                 )))
+                                 literal(end_tstz).op("<@")(rhe_end.c.active_during)))
                  # Join RoomHistoryEntry, Room and Building of the user at membership_fee.begins_on
                  # As second option if user moved out within the month
                  .outerjoin(rhe_begin,
                             and_(rhe_begin.c.user_id == User.id,
                                  # Only join RoomHistoryEntry that is relevant
                                  # on the fee interval end date
-                                 literal(begin_tstz).op("<@")(
-                                    func.tstzrange(rhe_begin.c.begins_at,
-                                                   func.coalesce(rhe_begin.c.ends_at,
-                                                                 literal('infinity').cast(DateTime)
-                                                                 )
-                                                   , '[)')
-                                 )))
+                                 literal(begin_tstz).op("<@")(rhe_begin.c.active_during)))
                  # Join with Room from membership_fee.ends_on if available,
                  # if not, join with the Room from membership_fee.begins_on
                  .outerjoin(Room, Room.id == func.coalesce(rhe_end.c.room_id, rhe_begin.c.room_id))

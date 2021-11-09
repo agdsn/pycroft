@@ -5,6 +5,7 @@
 import factory
 from factory.faker import Faker
 
+from pycroft.helpers.interval import closedopen
 from pycroft.model.user import User, RoomHistoryEntry, UnixAccount
 from .base import BaseFactory
 from .facilities import RoomFactory
@@ -58,10 +59,8 @@ class UserFactory(BaseFactory):
         """Create a room history entry, which is required for consistency reasons."""
         if create and self.room is not None:
             # Set room history entry begin to registration date
-
             rhe = RoomHistoryEntry.q.filter_by(user=self, room=self.room).one()
-
-            rhe.begins_at = self.registered_at
+            rhe.active_during = closedopen(self.registered_at, None)
 
             for key, value in kwargs.items():
                 setattr(rhe, key, value)
