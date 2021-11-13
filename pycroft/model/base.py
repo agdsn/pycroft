@@ -65,6 +65,12 @@ class ModelBase(object):
                           DeprecationWarning)
         q: Query
 
+        T = typing.TypeVar('T', bound='ModelBase')
+
+        @classmethod
+        def get(cls: typing.Type[T], *a, **kw) -> T:
+            pass
+
 class IntegerIdModel(ModelBase):
     """
     Abstract base class for database models with an Integer primary column,
