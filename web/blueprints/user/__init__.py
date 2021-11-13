@@ -15,7 +15,7 @@ import re
 from datetime import datetime, timedelta
 from functools import partial
 from itertools import chain
-from typing import Optional, TypeVar, Callable
+from typing import Optional, TypeVar, Callable, cast, List
 
 from web.table.table import datetime_format, date_format, LinkColumn
 from flask import (
@@ -27,7 +27,7 @@ import pycroft.lib.stats
 import pycroft.lib.search
 from pycroft import lib, config
 from pycroft.helpers import utc
-from pycroft.helpers.i18n import gettext
+from pycroft.helpers.i18n import gettext, deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.net import ip_regex, mac_regex
 from pycroft.lib.facilities import get_room
@@ -44,7 +44,7 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.finance import Split
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, PreMember, BaseUser
+from pycroft.model.user import User, Membership, PreMember, BaseUser, RoomHistoryEntry
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -390,12 +390,13 @@ def user_show_logs_json(user_id, logtype="all"):
 @bp.route("/<int:user_id>/groups/<group_filter>")
 def user_show_groups_json(user_id, group_filter="all"):
     active_groups_only = group_filter == "active"
-    memberships = lib.membership.user_memberships_query(user_id, active_groups_only)
+    memberships: list[tuple[Membership, list[str], list[str]]] = \
+        lib.membership.user_memberships_query(user_id, active_groups_only)
 
     T = MembershipTable
     return jsonify(items=[{
             'group_name': membership.group.name,
-            'begins_at': datetime_format(membership.begins_at,
+            'begins_at': datetime_format(membership.active_during.begin,
                                          default='',
                                          formatter=datetime_filter),
             'ends_at': datetime_format(membership.active_during.end, default='', formatter=datetime_filter),
@@ -416,7 +417,7 @@ def user_show_groups_json(user_id, group_filter="all"):
                     btn_class='btn-link',
                 ) if active else {}
             ],
-        } for membership, granted, denied in memberships.all()])
+        } for membership, granted, denied in memberships])
 
 
 @bp.route('/<int:user_id>/add_membership', methods=['GET', 'Post'])
@@ -697,7 +698,7 @@ def move(user_id):
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
 @access.require('groups_change_membership')
 def edit_membership(user_id, membership_id):
-    membership = Membership.get(membership_id)
+    membership: Membership = Membership.get(membership_id)
 
     if membership is None:
         flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
@@ -712,23 +713,21 @@ def edit_membership(user_id, membership_id):
     membership_data = {}
     if request.method == 'GET':
         membership_data = {
-            "begins_at": None if membership.begins_at is None else membership.begins_at.date(),
-            "ends_at": {"unlimited": membership.ends_at is None,
-                        "date": membership.ends_at and membership.ends_at.date()}
+            "begins_at": (beg := membership.active_during.begin) and beg.date(),
+            "ends_at": {"unlimited": membership.active_during.end is None,
+                        "date": (end := membership.active_during.end) and end.date()}
         }
 
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.begins_at = utc.with_min_time(form.begins_at.data)
-        if form.ends_at.unlimited.data:
-            membership.ends_at = None
-        else:
-            membership.ends_at = utc.with_min_time(form.ends_at.date.data)
+        membership.active_during = closedopen(
+            utc.with_min_time(form.begins_at.date.data),
+            None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data),
+        )
 
-        message = (u"Edited the membership of group '{group}'. During: {during}"
-                   .format(group=membership.group.name,
-                           during=closed(membership.begins_at, membership.ends_at)))
+        message = deferred_gettext("Edited the membership of group '{group}'. During: {during}")\
+            .format(group=membership.group.name, during=membership.active_during)
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
@@ -1026,13 +1025,13 @@ def room_history_json(user_id):
 
     T = RoomHistoryTable
     return jsonify(items=[{
-        'begins_at': date_format(history_entry.begins_at, formatter=date_filter),
-        'ends_at': date_format(history_entry.ends_at, formatter=date_filter),
+        'begins_at': date_format(history_entry.active_during.begin, formatter=date_filter),
+        'ends_at': date_format(history_entry.active_during.end, formatter=date_filter),
         'room': T.room.value(
             href=url_for('facilities.room_show', room_id=history_entry.room_id),
             title=history_entry.room.short_name
         )
-    } for history_entry in user.room_history_entries])
+    } for history_entry in cast(List[RoomHistoryEntry], user.room_history_entries)])
 
 
 @bp.route('<int:user_id>/json/tenancies')
