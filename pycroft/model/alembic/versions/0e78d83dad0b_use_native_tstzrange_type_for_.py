@@ -5,10 +5,10 @@ Revises: 27f7f8832dfa
 Create Date: 2021-10-23 17:31:29.093581
 
 """
-from alembic import op
 import sqlalchemy as sa
-import pycroft
+from alembic import op
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects.postgresql import TSTZRANGE
 
 # revision identifiers, used by Alembic.
 revision = '0e78d83dad0b'
@@ -18,7 +18,7 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('membership', sa.Column('active_during', pycroft.model.types.TsTzRange()))
+    op.add_column('membership', sa.Column('active_during', TSTZRANGE))
     op.execute("update membership set active_during = tstzrange(begins_at, ends_at, '[]')")
     op.alter_column('membership', 'active_during', nullable=False)
 
