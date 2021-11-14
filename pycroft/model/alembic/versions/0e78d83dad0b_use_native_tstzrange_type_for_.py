@@ -30,7 +30,7 @@ def upgrade():
     op.drop_column('membership', 'begins_at')
 
     op.execute("""
-    CREATE OR REPLACE FUNCTION public.evaluate_properties(evaluation_time timestamp with time zone)
+    CREATE OR REPLACE FUNCTION evaluate_properties(evaluation_time timestamp with time zone)
         RETURNS TABLE
                 (
                     user_id       integer,
@@ -79,7 +79,7 @@ def downgrade():
     op.drop_column('membership', 'active_during')
 
     op.execute("""
-    CREATE OR REPLACE FUNCTION public.evaluate_properties(evaluation_time timestamp with time zone)
+    CREATE OR REPLACE FUNCTION evaluate_properties(evaluation_time timestamp with time zone)
     RETURNS TABLE
             (
                 user_id       integer,
