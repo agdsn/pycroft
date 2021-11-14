@@ -17,6 +17,9 @@ run() {
 	echo "## I am $(id)"
 	echo "## webpack is: $(which webpack)"
 	echo "## $(ls -l $(which webpack))"
+	echo "## ./node_modules/webpack/bin:"
+	echo "## $(ls -l ./node_modules/webpack/bin)"
+	chmod +x ./node_modules/webpack/bin/*
 	exec npm run -- webpack --require @babel/register --config webpack.config.babel.js "$@"
 }
 
