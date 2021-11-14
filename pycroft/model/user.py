@@ -476,7 +476,7 @@ class Membership(IntegerIdModel):
                                               cascade_backrefs=False))
 
     __table_args__ = (
-        Index('ix_active_during', 'active_during', postgresql_using='gist'),
+        Index('ix_membership_active_during', 'active_during', postgresql_using='gist'),
         ExcludeConstraint(  # there should be no two memberships…
             (group_id, '='),  # …with the same user
             (user_id, '='),  # …and the same group
