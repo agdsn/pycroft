@@ -19,18 +19,11 @@ class VLANFactory(BaseFactory):
         )
 
 
-def _random_subnet():
-    f = faker.Faker()
-    while True:
-        str_network = f.ipv4(network=True)
-        network = IPv4Network(str_network)
-        if network.numhosts >= 4:
-            return network
-
-
 class SubnetFactory(BaseFactory):
     class Meta:
         model = Subnet
 
-    address = factory.LazyAttribute(lambda o: _random_subnet())
+    address = factory.Sequence(
+        lambda n: IPv4Network((f"141.{n // 255}.{n % 255}.0", 24))
+    )
     vlan = factory.SubFactory(VLANFactory)

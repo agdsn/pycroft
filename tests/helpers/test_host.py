@@ -68,7 +68,6 @@ class TestIpHelper(FactoryDataTestBase):
         self.session.commit()
 
     # TODO at least rewrite the `assert`s
-    @pytest.mark.skip(reason="Broken, takes forever")
     def test_get_free_ip_next_to_full(self):
         first_net = self.subnets[0]
         second_net = self.subnets[1]
