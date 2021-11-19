@@ -45,7 +45,7 @@ def user_search_query(
     if property_group_id is not None:
         result = result\
             .join(Membership)\
-            .filter(Membership.active_during.contains(func.current_timestamp))\
+            .filter(Membership.active_during.contains(func.current_timestamp()))\
             .join(PropertyGroup, PropertyGroup.id == Membership.group_id)\
             .filter(PropertyGroup.id == property_group_id)
 
