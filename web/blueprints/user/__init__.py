@@ -722,7 +722,7 @@ def edit_membership(user_id, membership_id):
 
     if form.validate_on_submit():
         membership.active_during = closedopen(
-            utc.with_min_time(form.begins_at.date.data),
+            utc.with_min_time(form.begins_at.data),
             None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data),
         )
 
