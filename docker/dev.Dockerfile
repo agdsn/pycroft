@@ -10,8 +10,7 @@ COPY etc/apt /etc/apt
 
 # Install Debian packages
 # Build-essential is needed For compiling things in pip
-RUN apt-key add /etc/apt/keys/nodesource.gpg.key \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         bash-completion \

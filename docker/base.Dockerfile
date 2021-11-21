@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-FROM python:3.9-buster
+FROM python:3.10-bullseye
 ARG UID=1000
 ARG GID=1000
 ENV LANG=C.UTF-8 DEBIAN_FRONTEND=noninteractive
