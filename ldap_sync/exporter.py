@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 import logging
 import os
 import sys
@@ -31,16 +29,16 @@ class UserProxyType(NamedTuple):
 class GroupProxyType(NamedTuple):
     """Representation of a group as returned by :func:`fetch_groups_to_sync`."""
     Group: Group
-    members: List[str]
+    members: list[str]
 
 
 class PropertyProxyType(NamedTuple):
     """Representation of a property as returned by :func:`fetch_properties_to_sync`."""
     name: str
-    members: List[str]
+    members: list[str]
 
 
-class LdapExporter(object):
+class LdapExporter:
     """The ldap Exporter
 
     Usage:
@@ -140,7 +138,7 @@ def establish_and_return_session(connection_string):
     return global_session  # from pycroft.model.session
 
 
-def fetch_users_to_sync(session, required_property=None) -> List[UserProxyType]:
+def fetch_users_to_sync(session, required_property=None) -> list[UserProxyType]:
     """Fetch the users who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -188,7 +186,7 @@ def fetch_users_to_sync(session, required_property=None) -> List[UserProxyType]:
     )
 
 
-def fetch_groups_to_sync(session) -> List[GroupProxyType]:
+def fetch_groups_to_sync(session) -> list[GroupProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -223,7 +221,7 @@ EXPORTED_PROPERTIES = frozenset([
 ])
 
 
-def fetch_properties_to_sync(session) -> List[PropertyProxyType]:
+def fetch_properties_to_sync(session) -> list[PropertyProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -311,9 +309,9 @@ def sync_all(connection, ldap_users: dict, db_users: Iterable[UserProxyType], us
                 len(exporter.states_dict))
 
     exporter.compile_actions()
-    action_types = Counter((type(a).__name__ for a in exporter.actions))
+    action_types = Counter(type(a).__name__ for a in exporter.actions)
     logger.info("Compiled %s actions (%s)", len(exporter.actions),
-                ", ".join("{}: {}".format(type_, count)
+                ", ".join(f"{type_}: {count}"
                           for type_, count in action_types.items()))
 
     logger.info("Executing actions")
@@ -331,11 +329,11 @@ _sync_config = namedtuple(
 
 def _from_environ_or_defaults(key, defaults):
     try:
-        return os.environ['PYCROFT_LDAP_{}'.format(key.upper())]
+        return os.environ[f'PYCROFT_LDAP_{key.upper()}']
     except KeyError as e:
         if key not in defaults:
             print("defaults:", defaults)
-            raise ValueError("Missing configuration key {}".format(key)) from e
+            raise ValueError(f"Missing configuration key {key}") from e
         return defaults[key]
 
 

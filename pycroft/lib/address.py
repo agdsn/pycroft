@@ -8,11 +8,11 @@ from pycroft.model.session import session, with_transaction
 def get_or_create_address(
     street: str,
     number: str,
-    addition: Optional[str],
+    addition: str | None,
     zip_code: str,
-    city: Optional[str] = None,
-    state: Optional[str] = None,
-    country: Optional[str] = None,
+    city: str | None = None,
+    state: str | None = None,
+    country: str | None = None,
 ) -> Address:
     """Returns an existing address or creates a new one.
 

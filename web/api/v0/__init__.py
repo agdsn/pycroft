@@ -71,7 +71,7 @@ class Resource(FlaskRestfulResource):
 def get_user_or_404(user_id):
     user = User.get(user_id)
     if user is None:
-        abort(404, message="User {} does not exist".format(user_id))
+        abort(404, message=f"User {user_id} does not exist")
     return user
 
 
@@ -85,7 +85,7 @@ def get_authenticated_user(user_id, password):
 def get_interface_or_404(interface_id):
     interface = Interface.get(interface_id)
     if interface is None:
-        abort(404, message="Interface {} does not exist".format(interface_id))
+        abort(404, message=f"Interface {interface_id} does not exist")
     return interface
 
 
@@ -232,7 +232,7 @@ class UserByIPResource(Resource):
         ipv4 = request.args.get('ip', IPAddress)
         ip = IP.q.filter_by(address=ipv4).one_or_none()
         if ip is None:
-            abort(404, message="IP {} is not related to a user".format(ipv4))
+            abort(404, message=f"IP {ipv4} is not related to a user")
         return generate_user_data(ip.interface.host.owner)
 
 

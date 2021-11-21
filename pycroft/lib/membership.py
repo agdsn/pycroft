@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2017 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -67,7 +66,7 @@ def remove_property(group, name):
     :raises ValueError: if group doesn't have a property with the given name
     """
     if not group.properties.pop(name, None):
-        raise ValueError("Group {0} doesn't have property {1}"
+        raise ValueError("Group {} doesn't have property {}"
                          .format(group.name, name))
 
 
@@ -98,7 +97,7 @@ def make_member_of(user, group, processor, during=UnboundedInterval):
         session.session.delete(m)
     session.session.flush()
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
-    message = deferred_gettext(u"Added to group {group} during {during}.")
+    message = deferred_gettext("Added to group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
@@ -137,7 +136,7 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
     session.session.flush()
     session.session.add_all(Membership(active_during=i, user=user, group=group) for i in intervals)
 
-    message = deferred_gettext(u"Removed from group {group} during {during}.")
+    message = deferred_gettext("Removed from group {group} during {during}.")
     log_user_event(message=message.format(group=group.name,
                                           during=during).to_json(),
                    user=user, author=processor)
@@ -154,7 +153,7 @@ def edit_property_group(group, name, permission_level, processor):
 
 @with_transaction
 def delete_property_group(group, processor):
-    log_event("Deleted property group '{}'.".format(group.name),
+    log_event(f"Deleted property group '{group.name}'.",
               processor)
 
     session.session.delete(group)

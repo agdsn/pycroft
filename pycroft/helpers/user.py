@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -45,7 +44,7 @@ def cleartext_password(plaintext_passwd):
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
     """
-    return "{}{}".format(clear_password_prefix, plaintext_passwd)
+    return f"{clear_password_prefix}{plaintext_passwd}"
 
 
 def verify_password(plaintext_password, hash):

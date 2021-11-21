@@ -36,7 +36,7 @@ def _maybe_append_seq(n, prefix):
     """Append a sequence value to a prefix if non-zero"""
     if not n:
         return prefix
-    return "{} {}".format(prefix, n)
+    return f"{prefix} {n}"
 
 
 class PropertyGroupFactory(BaseFactory):

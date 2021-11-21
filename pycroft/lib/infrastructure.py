@@ -25,7 +25,7 @@ def create_patch_port(name, room, switch_room, processor):
     patch_port = PatchPort(name=name, room=room, switch_room=switch_room)
     session.add(patch_port)
 
-    log_room_event("Created patch-port {} to {}.".format(patch_port.name, room.short_name), processor, switch_room)
+    log_room_event(f"Created patch-port {patch_port.name} to {room.short_name}.", processor, switch_room)
 
     return patch_port
 
@@ -37,7 +37,7 @@ def edit_patch_port(patch_port, name, room, processor):
         if PatchPort.q.filter_by(name=name, switch_room=patch_port.switch_room).first():
             raise PatchPortAlreadyExistsException()
 
-        log_room_event("Changed name of patch-port {} to {}.".format(patch_port.name, name),
+        log_room_event(f"Changed name of patch-port {patch_port.name} to {name}.",
                        processor, patch_port.switch_room)
 
         patch_port.name = name
@@ -52,7 +52,7 @@ def edit_patch_port(patch_port, name, room, processor):
 
 @with_transaction
 def delete_patch_port(patch_port, processor):
-    log_room_event("Deleted patch-port {}.".format(patch_port.name), processor, patch_port.switch_room)
+    log_room_event(f"Deleted patch-port {patch_port.name}.", processor, patch_port.switch_room)
 
     session.delete(patch_port)
 
@@ -62,7 +62,7 @@ def patch_switch_port_to_patch_port(switch_port, patch_port, processor):
     if patch_port.switch_port:
         raise PatchPortAlreadyPatchedException()
 
-    log_room_event("Added patch from {}/{} to {}.".format(switch_port.switch.host.name, switch_port.name, patch_port.name),
+    log_room_event(f"Added patch from {switch_port.switch.host.name}/{switch_port.name} to {patch_port.name}.",
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = switch_port
@@ -75,7 +75,7 @@ def remove_patch_to_patch_port(patch_port, processor):
 
     switch_port = patch_port.switch_port
 
-    log_room_event("Removed patch from {}/{} to {}.".format(switch_port.switch.host.name, switch_port.name, patch_port.name),
+    log_room_event(f"Removed patch from {switch_port.switch.host.name}/{switch_port.name} to {patch_port.name}.",
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = None
@@ -115,7 +115,7 @@ def edit_switch_port(switch_port, name,  default_vlans, processor):
 
 @with_transaction
 def delete_switch_port(switch_port, processor):
-    log_room_event("Deleted switch-port {} on {}.".format(switch_port.name, switch_port.switch.host.name), processor, switch_port.switch.host.room)
+    log_room_event(f"Deleted switch-port {switch_port.name} on {switch_port.switch.host.name}.", processor, switch_port.switch.host.room)
 
     session.delete(switch_port)
 
@@ -123,12 +123,12 @@ def delete_switch_port(switch_port, processor):
 @with_transaction
 def edit_switch(switch, name, management_ip, room, processor):
     if switch.host.name != name:
-        log_room_event("Changed name of '{}' to '{}'.".format(switch.host.name, name), processor, switch.host.room)
+        log_room_event(f"Changed name of '{switch.host.name}' to '{name}'.", processor, switch.host.room)
 
         switch.host.name = name
 
     if switch.host.room != room:
-        log_room_event("Moved switch '{}' from {} to {}.".format(switch.host.name, switch.host.room, room), processor, switch.host.room)
+        log_room_event(f"Moved switch '{switch.host.name}' from {switch.host.room} to {room}.", processor, switch.host.room)
 
         switch.host.room = room
 
@@ -145,7 +145,7 @@ def create_switch(name, management_ip, room, processor):
 
     session.add(switch)
 
-    log_room_event("Created switch '{}' with management IP {}.".format(switch.host.name, switch.management_ip),
+    log_room_event(f"Created switch '{switch.host.name}' with management IP {switch.management_ip}.",
                    processor, switch.host.room)
 
     return switch
@@ -153,7 +153,7 @@ def create_switch(name, management_ip, room, processor):
 
 @with_transaction
 def delete_switch(switch, processor):
-    log_room_event("Deleted switch {}.".format(switch.host.name), processor, switch.host.room)
+    log_room_event(f"Deleted switch {switch.host.name}.", processor, switch.host.room)
 
     session.delete(switch)
     session.delete(switch.host)

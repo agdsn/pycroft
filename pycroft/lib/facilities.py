@@ -70,7 +70,7 @@ def get_overcrowded_rooms(building_id=None):
 
 @with_transaction
 def create_room(building, level, number, processor, address,
-                inhabitable=True, vo_suchname: Optional[str] = None):
+                inhabitable=True, vo_suchname: str | None = None):
     if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
         raise RoomAlreadyExistsException
 
@@ -95,12 +95,12 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
         if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
             raise RoomAlreadyExistsException()
 
-        log_room_event("Renamed room from {} to {}.".format(room.number, number), processor, room)
+        log_room_event(f"Renamed room from {room.number} to {number}.", processor, room)
 
         room.number = number
 
     if room.inhabitable != inhabitable:
-        log_room_event("Changed inhabitable status to {}.".format(str(inhabitable)), processor, room)
+        log_room_event(f"Changed inhabitable status to {str(inhabitable)}.", processor, room)
 
         room.inhabitable = inhabitable
 
@@ -140,7 +140,7 @@ class RoomAddressSuggestion:
                + f"{self.country}"
 
 
-def suggest_room_address_data(building: Building) -> Optional[RoomAddressSuggestion]:
+def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | None:
     """Return the most common address features of preexisting rooms in a certain building. """
 
     cols = (Address.street, Address.number, Address.zip_code,

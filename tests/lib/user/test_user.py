@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -20,9 +19,9 @@ class Test_User_Move_Out_And_Back_In(FactoryDataTestBase):
         self.processing_user = UserFactory()
 
     def test_move_out(self):
-        test_name = u"Hans"
-        test_login = u"hans66"
-        test_email = u"hans@hans.de"
+        test_name = "Hans"
+        test_login = "hans66"
+        test_email = "hans@hans.de"
         test_building = self.room.building
         test_mac = "12:11:11:11:11:11"
         test_birthdate = "1990-01-01"

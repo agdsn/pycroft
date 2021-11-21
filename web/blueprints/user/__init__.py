@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -73,7 +72,7 @@ nav = BlueprintNavigation(bp, "Nutzer", icon='fa-user', blueprint_access=access)
 
 
 @bp.route('/')
-@nav.navigate(u"Übersicht", weight=1)
+@nav.navigate("Übersicht", weight=1)
 def overview():
     stats = pycroft.lib.stats.overview_stats()
     entries = [{"title": "Mitgliedschaftsanfragen",
@@ -142,7 +141,7 @@ def static_datasheet(user_id):
 
     return make_pdf_response(generate_user_sheet(True, False, user, plain_user_password="********",
                                                  generation_purpose='reprint'),
-                             filename='user_sheet_plain_{}.pdf'.format(user_id))
+                             filename=f'user_sheet_plain_{user_id}.pdf')
 
 
 @bp.route('/json/traffic-usage')
@@ -157,12 +156,12 @@ def json_users_highest_traffic():
 
 
 T = TypeVar('T')
-def coalesce_none(value: Optional[T], *none_values: T) -> Optional[T]:
+def coalesce_none(value: T | None, *none_values: T) -> T | None:
     return None if any(value == n for n in none_values) else value
 
 
 U = TypeVar('U')
-def and_then(val: Optional[T], map: Callable[[T], U]) -> Optional[U]:
+def and_then(val: T | None, map: Callable[[T], U]) -> U | None:
     return map(val) if val is not None else None
 
 
@@ -211,12 +210,12 @@ def json_search():
 def infoflags(user):
     user_status = lib.user.status(user)
     return [
-        {'title': u"Mitglied", 'icon': "user", 'val': user_status.member},
-        {'title': u"LAN-Zugang", 'icon': "network-wired", 'val': user_status.network_access},
-        {'title': u"WLAN-Zugang", 'icon': "wifi", 'val': user_status.wifi_access},
-        {'title': u"Bezahlt", 'icon': "euro-sign", 'val': user_status.account_balanced},
-        {'title': u"Verstoßfrei", 'icon': "exclamation-triangle", 'val': not user_status.violation},
-        {'title': u"LDAP", 'icon': "cloud", 'val': user_status.ldap},
+        {'title': "Mitglied", 'icon': "user", 'val': user_status.member},
+        {'title': "LAN-Zugang", 'icon': "network-wired", 'val': user_status.network_access},
+        {'title': "WLAN-Zugang", 'icon': "wifi", 'val': user_status.wifi_access},
+        {'title': "Bezahlt", 'icon': "euro-sign", 'val': user_status.account_balanced},
+        {'title': "Verstoßfrei", 'icon': "exclamation-triangle", 'val': not user_status.violation},
+        {'title': "LDAP", 'icon': "cloud", 'val': user_status.ldap},
     ]
 
 
@@ -231,7 +230,7 @@ def user_show(user_id):
                                    author=current_user,
                                    user=user)
         session.session.commit()
-        flash(u'Kommentar hinzugefügt', 'success')
+        flash('Kommentar hinzugefügt', 'success')
 
     balance = user.account.balance
     _log_endpoint = partial(url_for, ".user_show_logs_json", user_id=user.id)
@@ -254,7 +253,7 @@ def user_show(user_id):
 
     try:
         if flask_session['user_sheet'] and lib.user.get_user_sheet(flask_session['user_sheet']):
-            flash(Markup(u'Es ist ein <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'.format(
+            flash(Markup('Es ist ein <a href="{}" target="_blank">Nutzerdatenblatt</a> verfügbar!'.format(
                 url_for('.user_sheet'))
             ))
     except KeyError:
@@ -373,11 +372,11 @@ def user_show_logs_json(user_id, logtype="all"):
     log_sources = []  # list of iterators
 
     if logtype in ["user", "all"]:
-        log_sources.append((format_user_log_entry(e) for e in user.log_entries))
+        log_sources.append(format_user_log_entry(e) for e in user.log_entries)
     if logtype in ["room", "all"] and user.room:
-        log_sources.append((format_room_log_entry(e) for e in user.room.log_entries))
+        log_sources.append(format_room_log_entry(e) for e in user.room.log_entries)
     if logtype in ["tasks", "all"]:
-        log_sources.append((format_task_log_entry(e) for e in user.task_log_entries))
+        log_sources.append(format_task_log_entry(e) for e in user.task_log_entries)
     if logtype in ["hades", "all"]:
         log_sources.append(formatted_user_hades_logs(user))
 
@@ -445,14 +444,14 @@ def add_membership(user_id):
             return abort(403)
 
         session.session.commit()
-        flash(u'Nutzer wurde der Gruppe hinzugefügt.', 'success')
+        flash('Nutzer wurde der Gruppe hinzugefügt.', 'success')
 
         return redirect(url_for(".user_show",
                                 user_id=user_id,
                                 _anchor='groups'))
 
     return render_template('user/add_membership.html',
-        page_title=u"Neue Gruppenmitgliedschaft für Nutzer {}".format(user_id),
+        page_title=f"Neue Gruppenmitgliedschaft für Nutzer {user_id}",
         user_id=user_id, form=form)
 
 
@@ -463,11 +462,11 @@ def end_membership(user_id, membership_id):
     membership = Membership.get(membership_id)
 
     if membership is None:
-        flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(membership.id), 'error')
+        flash(f"Gruppenmitgliedschaft mit ID {membership.id} existiert nicht!", 'error')
         abort(404)
 
     if membership.user.id != user_id:
-        flash(u"Gruppenmitgliedschaft {} gehört nicht zu Nutzer {}!".format(membership.id, user_id), 'error')
+        flash(f"Gruppenmitgliedschaft {membership.id} gehört nicht zu Nutzer {user_id}!", 'error')
         return abort(404)
 
     try:
@@ -479,7 +478,7 @@ def end_membership(user_id, membership_id):
 
 
     session.session.commit()
-    flash(u'Mitgliedschaft in Gruppe beendet', 'success')
+    flash('Mitgliedschaft in Gruppe beendet', 'success')
     return redirect(url_for(".user_show",
                             user_id=membership.user_id,
                             _anchor='groups'))
@@ -527,7 +526,7 @@ def json_trafficdata(user_id, days=7):
 
 
 @bp.route('/create', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen (Extern/IBR)", weight=4, icon="fa-plus-square")
+@nav.navigate("Anlegen (Extern/IBR)", weight=4, icon="fa-plus-square")
 # TODO: Namen aendern
 @access.require('user_change')
 def create():
@@ -586,14 +585,14 @@ def create():
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup(u'Benutzer angelegt.'), 'success')
+        flash(Markup('Benutzer angelegt.'), 'success')
 
         return redirect(url_for('.user_show', user_id=new_user.id))
 
     return default_response()
 
 @bp.route('/create_non_resident', methods=['GET', 'POST'])
-@nav.navigate(u"Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
+@nav.navigate("Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
 # TODO: Namen aendern
 @access.require('user_change')
 def create_non_resident():
@@ -638,7 +637,7 @@ def create_non_resident():
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup(u'Benutzer angelegt.'), 'success')
+        flash(Markup('Benutzer angelegt.'), 'success')
 
         return redirect(url_for('.user_show', user_id=new_user.id))
 
@@ -657,7 +656,7 @@ def move(user_id):
                 number=form.room_number.data,
                 level=form.level.data,
                 building_id=form.building.data.id).one():
-            flash(u"Nutzer muss in anderes Zimmer umgezogen werden!", "error")
+            flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
             refill_form_data = True
         else:
             when = form.get_execution_time(now=session.utcnow())
@@ -676,9 +675,9 @@ def move(user_id):
                 session.session.commit()
 
                 if when > session.utcnow():
-                    flash(u'Der Umzug wurde vorgemerkt.', 'success')
+                    flash('Der Umzug wurde vorgemerkt.', 'success')
                 else:
-                    flash(u'Benutzer umgezogen', 'success')
+                    flash('Benutzer umgezogen', 'success')
                     sheet = lib.user.store_user_sheet(True, False, user=user,
                                                       plain_user_password='********',
                                                       generation_purpose='user moved')
@@ -701,7 +700,7 @@ def edit_membership(user_id, membership_id):
     membership: Membership = Membership.get(membership_id)
 
     if membership is None:
-        flash(u"Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
+        flash("Gruppenmitgliedschaft mit ID {} existiert nicht!".format(
         membership_id), 'error')
         abort(404)
 
@@ -731,14 +730,14 @@ def edit_membership(user_id, membership_id):
             .to_json()
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
-        flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
+        flash('Gruppenmitgliedschaft bearbeitet', 'success')
         return redirect(url_for('.user_show',
                                 user_id=membership.user_id,
                                 _anchor='groups'))
 
     return render_template('user/user_edit_membership.html',
-                           page_title=(u"Mitgliedschaft {} für "
-                                       u"{} bearbeiten".format(
+                           page_title=("Mitgliedschaft {} für "
+                                       "{} bearbeiten".format(
                                             membership.group.name,
                                             membership.user.name)),
                            membership_id=membership_id,
@@ -834,7 +833,7 @@ def edit_user_address(user_id: int):
 
 
 @bp.route('/search', methods=['GET', 'POST'])
-@nav.navigate(u"Suchen", weight=3, icon="fa-search")
+@nav.navigate("Suchen", weight=3, icon="fa-search")
 def search():
     form = UserSearchForm()
 
@@ -869,7 +868,7 @@ def reset_password(user_id):
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup(u'Passwort erfolgreich zurückgesetzt.'),
+        flash(Markup('Passwort erfolgreich zurückgesetzt.'),
               'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_password.html', form=form, user_id=user_id)
@@ -889,7 +888,7 @@ def reset_wifi_password(user_id):
         session.session.commit()
 
         flask_session['user_sheet'] = sheet.id
-        flash(Markup(u'WIFI-Passwort erfolgreich zurückgesetzt.'),
+        flash(Markup('WIFI-Passwort erfolgreich zurückgesetzt.'),
               'success')
         return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_reset_wifi_password.html', form=form, user_id=user_id)
@@ -918,7 +917,7 @@ def block(user_id):
         except ValueError as e:
             flash(str(e), 'error')
         else:
-            flash(u'Nutzer gesperrt.', 'success')
+            flash('Nutzer gesperrt.', 'success')
             return redirect(url_for('.user_show', user_id=user_id))
     return render_template('user/user_block.html', form=form, user_id=user_id)
 
@@ -936,7 +935,7 @@ def unblock(user_id):
     except ValueError as e:
         flash(str(e), 'error')
     else:
-        flash(u'Nutzer entsperrt.', 'success')
+        flash('Nutzer entsperrt.', 'success')
         return redirect(url_for('.user_show', user_id=user_id))
 
 
@@ -968,7 +967,7 @@ def move_out(user_id):
             if when > session.utcnow():
                 flash("Der Auszug wurde vorgemerkt.", "success")
             else:
-                flash(u'Benutzer ausgezogen.', 'success')
+                flash('Benutzer ausgezogen.', 'success')
 
             return redirect(url_for('.user_show', user_id=user.id))
 
@@ -985,7 +984,7 @@ def move_in(user_id):
     user = get_user_or_404(user_id)
 
     if user.room is not None:
-        flash("Nutzer {} ist nicht ausgezogen!".format(user_id), 'error')
+        flash(f"Nutzer {user_id} ist nicht ausgezogen!", 'error')
         abort(404)
 
     if form.validate_on_submit():
@@ -1032,7 +1031,7 @@ def room_history_json(user_id):
             href=url_for('facilities.room_show', room_id=history_entry.room_id),
             title=history_entry.room.short_name
         )
-    } for history_entry in cast(List[RoomHistoryEntry], user.room_history_entries)])
+    } for history_entry in cast(list[RoomHistoryEntry], user.room_history_entries)])
 
 
 @bp.route('<int:user_id>/json/tenancies')

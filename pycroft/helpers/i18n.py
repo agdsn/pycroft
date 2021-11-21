@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -114,26 +113,26 @@ def format_timedelta(delta, granularity='second', threshold=.85,
 
 @ignore_options
 def format_bool(v):
-    return gettext(u"True") if v else gettext(u"False")
+    return gettext("True") if v else gettext("False")
 
 
 @ignore_options
 def format_none(n):
-    return gettext(u"None")
+    return gettext("None")
 
 
 def format_interval(interval, **options):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
-    return u"{0}{1}, {2}{3}".format(
-        u'[' if lower_bound.closed else u'(',
+    return "{}{}, {}{}".format(
+        '[' if lower_bound.closed else '(',
         format_param(lower_bound.value, options)
         if not lower_bound.unbounded
-        else u'-∞',
+        else '-∞',
         format_param(upper_bound.value, options)
         if not upper_bound.unbounded
-        else u'∞',
-        u']' if upper_bound.closed else u')',
+        else '∞',
+        ']' if upper_bound.closed else ')',
     )
 
 
@@ -247,8 +246,8 @@ _deserialize_type_map = {
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
 }
-deserialize_map = dict((qualified_typename(t), f)
-                       for t, f in _deserialize_type_map.items())
+deserialize_map = {qualified_typename(t): f
+                       for t, f in _deserialize_type_map.items()}
 
 
 def serialize_param(param):
@@ -331,7 +330,7 @@ schema = {
 }
 
 
-class Message(object):
+class Message:
     __slots__ = ("domain", "args", "kwargs")
 
     @classmethod
@@ -345,20 +344,20 @@ class Message(object):
         except jsonschema.ValidationError as e:
             return ErroneousMessage("Message validation failed: {} for "
                                     "message {}".format(e, json_string))
-        args = obj.get(u"args", ())
-        kwargs = obj.get(u"kwargs", {})
+        args = obj.get("args", ())
+        kwargs = obj.get("kwargs", {})
         try:
             args = tuple(deserialize_param(a) for a in args)
             kwargs = {k: deserialize_param(v) for k, v in kwargs.items()}
         except (TypeError, ValueError) as e:
-            error = u''.join(traceback.format_exception_only(type(e), e))
+            error = ''.join(traceback.format_exception_only(type(e), e))
             return ErroneousMessage("Parameter deserialization error: {} in "
                                     "message: {}".format(error, json_string))
-        if u'plural' in obj:
-            m = NumericalMessage(obj[u"singular"], obj[u"plural"], obj[u"n"],
-                                 obj.get(u"domain"))
+        if 'plural' in obj:
+            m = NumericalMessage(obj["singular"], obj["plural"], obj["n"],
+                                 obj.get("domain"))
         else:
-            m = SimpleMessage(obj[u"message"], obj.get(u"domain"))
+            m = SimpleMessage(obj["message"], obj.get("domain"))
         m.args = args
         m.kwargs = kwargs
         return m
@@ -403,16 +402,16 @@ class Message(object):
             kwargs = {k: f(v) for k, v in self.kwargs.items()}
             return msg.format(*args, **kwargs)
         except (TypeError, ValueError, IndexError, KeyError) as e:
-            error = u''.join(traceback.format_exception_only(type(e), e))
-            return gettext(u'Could not format message "{message}" '
-                           u'(args={args}, kwargs={kwargs}): {error}'
+            error = ''.join(traceback.format_exception_only(type(e), e))
+            return gettext('Could not format message "{message}" '
+                           '(args={args}, kwargs={kwargs}): {error}'
                            .format(message=msg, args=self.args,
                                    kwargs=self.kwargs, error=error))
 
 
 class ErroneousMessage(Message):
     def __init__(self, text):
-        super(ErroneousMessage, self).__init__(None)
+        super().__init__(None)
         self.text = text
 
     def _base_dict(self):
@@ -426,7 +425,7 @@ class SimpleMessage(Message):
     __slots__ = ("message",)
 
     def __init__(self, message, domain=None):
-        super(SimpleMessage, self).__init__(domain)
+        super().__init__(domain)
         self.message = message
 
     def _base_dict(self):
@@ -443,7 +442,7 @@ class NumericalMessage(Message):
     __slots__ = ("singular", "plural", "n")
 
     def __init__(self, singular, plural, n, domain=None):
-        super(NumericalMessage, self).__init__(domain)
+        super().__init__(domain)
         self.singular = singular
         self.plural = plural
         self.n = n

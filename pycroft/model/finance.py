@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -270,10 +269,10 @@ def check_transaction_on_save(mapper, connection, target):
     :raises: IllegalTransactionError if transaction contains errors
     """
     if not target.is_balanced:
-        raise IllegalTransactionError(gettext(u"Transaction is not balanced."))
+        raise IllegalTransactionError(gettext("Transaction is not balanced."))
     if len(target.splits) < 2:
-        raise IllegalTransactionError(gettext(u"Transaction must consist "
-                                              u"of at least two splits."))
+        raise IllegalTransactionError(gettext("Transaction must consist "
+                                              "of at least two splits."))
 
 
 # noinspection PyUnusedLocal
@@ -281,7 +280,7 @@ def check_transaction_on_save(mapper, connection, target):
 @event.listens_for(Split, "after_delete")
 def check_split_on_update(mapper, connection, target):
     if not target.transaction.is_balanced:
-        raise IllegalTransactionError(gettext(u"Transaction is not balanced."))
+        raise IllegalTransactionError(gettext("Transaction is not balanced."))
 
 
 event.listen(Transaction, "before_insert", check_transaction_on_save)

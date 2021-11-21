@@ -10,7 +10,7 @@ from pycroft.model.swdd import Tenancy, TenancyStatus
 swdd_hmac_key = os.environ.get('SWDD_HASH_KEY')
 
 
-def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> Optional[int]:
+def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> int | None:
     """
     Builds a hmac hash from the given parameters and searches for a match in the Tenancy view
 
@@ -25,7 +25,7 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> Optio
 
     digest_maker = hmac.new(swdd_hmac_key.encode(), digestmod="sha512")
 
-    norm_str = unicodedata.normalize("NFC", "{}_{}_{}".format(first_name, last_name, birthdate)
+    norm_str = unicodedata.normalize("NFC", f"{first_name}_{last_name}_{birthdate}"
                                                       .lower()).encode('utf-8')
 
     digest_maker.update(norm_str)
@@ -42,7 +42,7 @@ def get_relevant_tenancies(person_id: int):
         .filter(Tenancy.mietende > func.now()).order_by(Tenancy.mietbeginn.desc()).all()
 
 
-def get_first_tenancy_with_room(tenancies: List[Tenancy]):
+def get_first_tenancy_with_room(tenancies: list[Tenancy]):
     for tenancy in tenancies:
         if tenancy.room is not None:
             return tenancy

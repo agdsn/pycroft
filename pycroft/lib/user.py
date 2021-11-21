@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -62,7 +61,7 @@ password_reset_url = os.getenv('PASSWORD_RESET_URL')
 
 def encode_type1_user_id(user_id):
     """Append a type-1 error detection code to the user_id."""
-    return u"{0:04d}-{1:d}".format(user_id, Type1Code.calculate(user_id))
+    return f"{user_id:04d}-{Type1Code.calculate(user_id):d}"
 
 
 type1_user_id_pattern = re.compile(r"^(\d{4,})-(\d)$")
@@ -82,7 +81,7 @@ def decode_type1_user_id(string):
 
 def encode_type2_user_id(user_id):
     """Append a type-2 error detection code to the user_id."""
-    return u"{0:04d}-{1:02d}".format(user_id, Type2Code.calculate(user_id))
+    return f"{user_id:04d}-{Type2Code.calculate(user_id):02d}"
 
 
 type2_user_id_pattern = re.compile(r"^(\d{4,})-(\d{2})$")
@@ -207,7 +206,7 @@ def reset_password(user, processor):
     plain_password = user_helper.generate_password(12)
     user.password = plain_password
 
-    message = deferred_gettext(u"Password was reset")
+    message = deferred_gettext("Password was reset")
     log_user_event(author=processor,
                    user=user,
                    message=message.to_json())
@@ -226,7 +225,7 @@ def reset_wifi_password(user: User, processor: User) -> str:
     plain_password = generate_wifi_password()
     user.wifi_password = plain_password
 
-    message = deferred_gettext(u"WIFI-Password was reset")
+    message = deferred_gettext("WIFI-Password was reset")
     log_user_event(author=processor,
                    user=user,
                    message=message.to_json())
@@ -234,7 +233,7 @@ def reset_wifi_password(user: User, processor: User) -> str:
     return plain_password
 
 
-def maybe_setup_wifi(user: User, processor: User) -> Optional[str]:
+def maybe_setup_wifi(user: User, processor: User) -> str | None:
     """If wifi is available, sets a wifi password."""
     if user.room and user.room.building.wifi_available:
         return reset_wifi_password(user, processor)
@@ -245,7 +244,7 @@ def change_password(user, password):
     # TODO: verify password complexity
     user.password = password
 
-    message = deferred_gettext(u"Password was changed")
+    message = deferred_gettext("Password was changed")
     log_user_event(author=user,
                    user=user,
                    message=message.to_json())
@@ -257,7 +256,7 @@ def generate_wifi_password():
 
 def create_user(
     name: str, login: str, email: str, birthdate: date,
-    groups: list[PropertyGroup], processor: Optional[User], address: Address,
+    groups: list[PropertyGroup], processor: User | None, address: Address,
     passwd_hash: str = None,
     send_confirm_mail: bool = False
 ):
@@ -299,20 +298,20 @@ def create_user(
         new_user.passwd_hash = passwd_hash
         plain_password = None
 
-    account = UnixAccount(home_directory="/home/{}".format(login))
+    account = UnixAccount(home_directory=f"/home/{login}")
     new_user.unix_account = account
 
     with session.session.begin_nested():
         session.session.add(new_user)
         session.session.add(account)
-    new_user.account.name = deferred_gettext(u"User {id}").format(
+    new_user.account.name = deferred_gettext("User {id}").format(
         id=new_user.id).to_json()
 
     for group in groups:
         make_member_of(new_user, group, processor, closed(now, None))
 
     log_user_event(author=processor,
-                   message=deferred_gettext(u"User created.").to_json(),
+                   message=deferred_gettext("User created.").to_json(),
                    user=new_user)
 
     user_send_mail(new_user, UserCreatedTemplate(), True)
@@ -327,12 +326,12 @@ def create_user(
 def move_in(
     user: User,
     building_id: int, level: int, room_number: str,
-    mac: Optional[str],
-    processor: Optional[User] = None,
+    mac: str | None,
+    processor: User | None = None,
     birthdate: date = None,
     host_annex: bool = False,
     begin_membership: bool = True,
-    when: Optional[datetime] = None
+    when: datetime | None = None
 ):
     """Move in a user in a given room and do some initialization.
 
@@ -407,7 +406,7 @@ def move_in(
 
     user_send_mail(user, UserMovedInTemplate(), True)
 
-    msg = deferred_gettext(u"Moved in: {room}")
+    msg = deferred_gettext("Moved in: {room}")
 
     log_user_event(author=processor if processor is not None else user,
                    message=msg.format(room=room.short_name).to_json(),
@@ -442,13 +441,13 @@ def migrate_user_host(host, new_room, processor):
                 old_address = old_ip.address
                 session.session.delete(old_ip)
 
-                message = deferred_gettext(u"Changed IP of {mac} from {old_ip} to {new_ip}.").format(
+                message = deferred_gettext("Changed IP of {mac} from {old_ip} to {new_ip}.").format(
                     old_ip=str(old_address), new_ip=str(new_ip.address), mac=interface.mac)
                 log_user_event(author=processor, user=host.owner,
                                message=message.to_json())
 
     message = deferred_gettext(
-        u"Moved host '{name}' from {room_old} to {room_new}."
+        "Moved host '{name}' from {room_old} to {room_new}."
             .format(name=host.name,
                     room_old=old_room.short_name,
                     room_new=new_room.short_name))
@@ -508,7 +507,7 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
                                    "Comment: {comment}")
         args.update(comment=comment)
     else:
-        message = deferred_gettext(u"Moved from {old_room} to {new_room}.")
+        message = deferred_gettext("Moved from {old_room} to {new_room}.")
 
     log_user_event(
         author=processor,
@@ -543,7 +542,7 @@ def edit_name(user, name, processor):
 
     old_name = user.name
     user.name = name
-    message = deferred_gettext(u"Changed name from {} to {}.")
+    message = deferred_gettext("Changed name from {} to {}.")
     log_user_event(author=processor, user=user,
                    message=message.format(old_name, name).to_json())
     return user
@@ -576,7 +575,7 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
 
         log_user_event(author=processor, user=user,
                        message=deferred_gettext(
-                           "Set e-mail forwarding to {}.".format(email_forwarded)).to_json())
+                           f"Set e-mail forwarding to {email_forwarded}.").to_json())
 
     if is_confirmed:
         user.email_confirmed = True
@@ -596,7 +595,7 @@ def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
         user.email_confirmed = False
         user.email_confirmation_key = None
 
-    message = deferred_gettext(u"Changed e-mail from {} to {}.")
+    message = deferred_gettext("Changed e-mail from {} to {}.")
     log_user_event(author=processor, user=user,
                    message=message.format(old_email, email).to_json())
     return user
@@ -621,7 +620,7 @@ def edit_birthdate(user, birthdate, processor):
 
     old_bd = user.birthdate
     user.birthdate = birthdate
-    message = deferred_gettext(u"Changed birthdate from {} to {}.")
+    message = deferred_gettext("Changed birthdate from {} to {}.")
     log_user_event(author=processor, user=user,
                    message=message.format(old_bd, birthdate).to_json())
     return user
@@ -642,7 +641,7 @@ def edit_person_id(user: User, person_id: int, processor: User):
 
     old_person_id = user.swdd_person_id
     user.swdd_person_id = person_id
-    message = deferred_gettext(u"Changed tenant number from {} to {}.")
+    message = deferred_gettext("Changed tenant number from {} to {}.")
     log_user_event(author=processor, user=user,
                    message=message.format(str(old_person_id), str(person_id)).to_json())
 
@@ -655,11 +654,11 @@ def edit_address(
     processor: User,
     street: str,
     number: str,
-    addition: Optional[str],
+    addition: str | None,
     zip_code: str,
-    city: Optional[str],
-    state: Optional[str],
-    country: Optional[str],
+    city: str | None,
+    state: str | None,
+    country: str | None,
 ):
     """Changes the address of a user and appends a log entry.
 
@@ -733,7 +732,7 @@ def block(user, reason, processor, during=None, violation=True):
     else:
         make_member_of(user, config.blocked_group, processor, during)
 
-    message = deferred_gettext(u"Suspended during {during}. Reason: {reason}.")
+    message = deferred_gettext("Suspended during {during}. Reason: {reason}.")
     log_user_event(message=message.format(during=during, reason=reason)
                    .to_json(), author=processor, user=user)
     return user
@@ -814,19 +813,19 @@ def move_out(user, comment, processor, when, end_membership=True):
     message = None
 
     if user.room is not None:
-        message = u"Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
+        message = "Moved out of {room}: Deleted interfaces {interfaces} of {num_hosts} hosts."\
             .format(room=user.room.short_name,
                     num_hosts=num_hosts,
                     interfaces=', '.join(deleted_interfaces))
         had_custom_address = user.has_custom_address
         user.room = None
     elif num_hosts:
-        message = u"Deleted interfaces {interfaces} of {num_hosts} hosts." \
+        message = "Deleted interfaces {interfaces} of {num_hosts} hosts." \
             .format(num_hosts=num_hosts, interfaces=', '.join(deleted_interfaces))
 
     if message is not None:
         if comment:
-            message += u"\nComment: {}".format(comment)
+            message += f"\nComment: {comment}"
 
         log_user_event(
             message=deferred_gettext(message).to_json(),
@@ -837,7 +836,7 @@ def move_out(user, comment, processor, when, end_membership=True):
     return user
 
 
-admin_properties = property.property_categories[u"Nutzerverwaltung"].keys()
+admin_properties = property.property_categories["Nutzerverwaltung"].keys()
 
 
 def status(user):
@@ -945,7 +944,7 @@ def membership_begin_date(user):
     return end_date
 
 
-def user_send_mails(users: List[BaseUser], template: MailTemplate, soft_fail: bool = False,
+def user_send_mails(users: list[BaseUser], template: MailTemplate, soft_fail: bool = False,
                     use_internal: bool = True, **kwargs):
     mails = []
 
@@ -1057,15 +1056,15 @@ def check_similar_user_in_room(name: str, room: Room):
         raise UserExistsInRoomException
 
 
-def get_user_by_swdd_person_id(swdd_person_id: Optional[int]) -> Optional[User]:
+def get_user_by_swdd_person_id(swdd_person_id: int | None) -> User | None:
     if swdd_person_id is None:
         return None
 
     return User.q.filter_by(swdd_person_id=swdd_person_id).first()
 
 
-def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optional[int],
-                        room: Optional[Room], move_in_date: Optional[date],
+def check_new_user_data(login: str, email: str, name: str, swdd_person_id: int | None,
+                        room: Room | None, move_in_date: date | None,
                         ignore_similar_name: bool = False, allow_existing: bool = False):
     user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
 
@@ -1092,8 +1091,8 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: Optio
 
 @with_transaction
 def create_member_request(name: str, email: str, password: str, login: str,
-                          birthdate: date, swdd_person_id: Optional[int], room: Optional[Room],
-                          move_in_date: Optional[date], previous_dorm: Optional[str],):
+                          birthdate: date, swdd_person_id: int | None, room: Room | None,
+                          move_in_date: date | None, previous_dorm: str | None,):
     check_new_user_data(login, email, name, swdd_person_id, room, move_in_date,
                         allow_existing=previous_dorm is not None)
 
@@ -1120,7 +1119,7 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
 
 @with_transaction
-def finish_member_request(prm: PreMember, processor: Optional[User],
+def finish_member_request(prm: PreMember, processor: User | None,
                           ignore_similar_name: bool = False):
     if prm.room is None:
         raise ValueError("Room is None")
@@ -1197,11 +1196,11 @@ def get_member_requests():
 
 
 def get_name_from_first_last(first_name: str, last_name: str):
-    return "{} {}".format(first_name, last_name) if last_name else first_name
+    return f"{first_name} {last_name}" if last_name else first_name
 
 
 @with_transaction
-def delete_member_request(prm: PreMember, reason: Optional[str], processor: User,
+def delete_member_request(prm: PreMember, reason: str | None, processor: User,
                           inform_user: bool = True):
 
     if reason is None:
@@ -1282,8 +1281,8 @@ def get_possible_existing_users_for_pre_member(prm: PreMember):
     users_name = User.q.filter_by(name=prm.name).all()
     users_similar = get_similar_users_in_room(prm.name, prm.room, 0.5)
 
-    users = set([user for user in [user_swdd_person_id, user_login, user_email]
-             + users_name + users_similar if user is not None])
+    users = {user for user in [user_swdd_person_id, user_login, user_email]
+             + users_name + users_similar if user is not None}
 
     return users
 

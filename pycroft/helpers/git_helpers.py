@@ -32,7 +32,7 @@ def init_repo(repo_dir, repo_url):
     try:
         master = repo.refs['master']
     except IndexError:
-        raise OSError("Git directory {} doesn't have a master!".format(repo_dir))
+        raise OSError(f"Git directory {repo_dir} doesn't have a master!")
 
     repo.head.set_reference(master)
 
@@ -72,7 +72,7 @@ def get_repo_active_branch(repo_dir):
     except GitCommandError:
         return "Unknown"
     except TypeError:  # detatched HEAD
-        return "@{}".format(pycroft_repo.head.commit.hexsha[:8])
+        return f"@{pycroft_repo.head.commit.hexsha[:8]}"
 
 
 def get_latest_commits(repo_dir, commit_count):

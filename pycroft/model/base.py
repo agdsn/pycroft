@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -36,7 +35,7 @@ class _ModelMeta(DeclarativeMeta):
 
 
 @as_declarative(metaclass=_ModelMeta)
-class ModelBase(object):
+class ModelBase:
     """Base class for all database models."""
 
     @declared_attr
@@ -51,9 +50,9 @@ class ModelBase(object):
         return name.lower()
 
     def __repr__(self):
-        return "{0}.{1}({2})".format(
+        return "{}.{}({})".format(
             self.__module__, self.__class__.__name__,
-            ", ".join("{0}={1!r}".format(key, getattr(self, key, "<unknown>"))
+            ", ".join("{}={!r}".format(key, getattr(self, key, "<unknown>"))
                       for key in self.__mapper__.columns.keys()))
 
     import typing
@@ -68,7 +67,7 @@ class ModelBase(object):
         T = typing.TypeVar('T', bound='ModelBase')
 
         @classmethod
-        def get(cls: typing.Type[T], *a, **kw) -> T:
+        def get(cls: type[T], *a, **kw) -> T:
             pass
 
 class IntegerIdModel(ModelBase):

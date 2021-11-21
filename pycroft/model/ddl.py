@@ -37,7 +37,7 @@ class DropConstraint(schema.DropConstraint):
     Extends SQLALchemy's DropConstraint with support for IF EXISTS
     """
     def __init__(self, element, if_exists=False, cascade=False, **kw):
-        super(DropConstraint, self).__init__(element, cascade, **kw)
+        super().__init__(element, cascade, **kw)
         self.element = element
         self.if_exists = if_exists
         self.cascade = cascade
@@ -59,7 +59,7 @@ def visit_drop_constraint(drop_constraint, compiler, **kw):
 class Function(schema.DDLElement):
     on = 'postgresql'
 
-    def __init__(self, name, arguments, rtype, definition: Union[str, Selectable],
+    def __init__(self, name, arguments, rtype, definition: str | Selectable,
                  volatility='volatile',
                  strict=False, leakproof=False, language='sql', quote_tag=''):
         """
@@ -469,7 +469,7 @@ def visit_create_view(element: CreateView, compiler, **kw):
     view_name = compiler.preparer.quote(view.name)
     if view.view_options:
         opt_view_options = "WITH ({})".format(
-            ', '.join("{} = {}".format(name, value)
+            ', '.join(f"{name} = {value}"
                       for name, value in view.view_options.items()))
     else:
         opt_view_options = None
@@ -504,7 +504,7 @@ def visit_drop_view(element, compiler, **kw):
     )
 
 
-class DDLManager(object):
+class DDLManager:
     """
     Ensures that create DDL statements are registered with SQLAlchemy in the
     order they were added to the manager and registers the drop DDL statements

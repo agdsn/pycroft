@@ -32,7 +32,7 @@ def host_delete(host_id):
     host = Host.get(host_id)
 
     if host is None:
-        flash(u"Host existiert nicht.", 'error')
+        flash("Host existiert nicht.", 'error')
         abort(404)
 
     form = FlaskForm()
@@ -69,7 +69,7 @@ def host_edit(host_id):
     host = Host.get(host_id)
 
     if host is None:
-        flash(u"Host existiert nicht.", 'error')
+        flash("Host existiert nicht.", 'error')
         abort(404)
 
     form = HostForm(obj=host)
@@ -151,7 +151,7 @@ def host_interfaces_json(host_id):
     host = Host.get(host_id)
 
     if host is None:
-        flash(u"Host existiert nicht.", 'error')
+        flash("Host existiert nicht.", 'error')
         abort(404)
 
     interfaces = []
@@ -199,7 +199,7 @@ def interface_delete(interface_id):
     interface = Interface.get(interface_id)
 
     if interface is None:
-        flash(u"Interface existiert nicht.", 'error')
+        flash("Interface existiert nicht.", 'error')
         abort(404)
 
     form = FlaskForm()
@@ -235,7 +235,7 @@ def interface_edit(interface_id):
     interface = Interface.get(interface_id)
 
     if interface is None:
-        flash(u"Interface existiert nicht.", 'error')
+        flash("Interface existiert nicht.", 'error')
         abort(404)
 
     subnets = get_subnets_for_room(interface.host.room)
@@ -253,7 +253,7 @@ def interface_edit(interface_id):
         form.ips.process_data(ip for ip in current_ips)
 
     if form.validate_on_submit():
-        ips = set([IPv4Address(ip) for ip in form.ips.data])
+        ips = {IPv4Address(ip) for ip in form.ips.data}
 
         _, success = web_execute(lib_host.interface_edit,
                                  "Interface erfolgreich bearbeitet.",
@@ -287,7 +287,7 @@ def interface_create(host_id):
     host = Host.get(host_id)
 
     if host is None:
-        flash(u"Host existiert nicht.", 'error')
+        flash("Host existiert nicht.", 'error')
         abort(404)
 
     subnets = get_subnets_for_room(host.room)
@@ -302,7 +302,7 @@ def interface_create(host_id):
         form.ips.process_data([next(iter(unused_ips), None)])
 
     if form.validate_on_submit():
-        ips = set([IPv4Address(ip) for ip in form.ips.data])
+        ips = {IPv4Address(ip) for ip in form.ips.data}
 
         _, success = web_execute(lib_host.interface_create,
                                  "Interface erfolgreich erstellt.",

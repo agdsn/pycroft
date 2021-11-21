@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -18,7 +17,7 @@ from pycroft.model.host import IP, Host, Interface
 ddl = DDLManager()
 
 
-class TrafficEvent(object):
+class TrafficEvent:
     timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
     amount = Column(BigInteger, CheckConstraint('amount >= 0'),
                     nullable=False)

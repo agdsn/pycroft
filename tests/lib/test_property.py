@@ -23,8 +23,8 @@ class Test_030_Membership(FactoryDataTestBase):
             user=self.user, group=self.group)
         got = IntervalSet(m.active_during.closure for m in memberships)
         assert expected == got, "IntervalSets differ: " \
-                                "expected {0!r}" \
-                                "got      {1!r}".format(expected, got)
+                                "expected {!r}" \
+                                "got      {!r}".format(expected, got)
 
     def add_membership(self, during):
         make_member_of(self.user, self.group, self.processor, during)

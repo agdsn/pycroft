@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -151,7 +150,7 @@ class SQLAlchemyTestCase(unittest.TestCase):
     @contextmanager
     def assertUniqueViolation(self, message):
         pattern = 'duplicate key value violates unique constraint ".+_key"'
-        with self.assertRaisesRegexp(IntegrityError, pattern, msg=message) as cm:
+        with self.assertRaisesRegex(IntegrityError, pattern, msg=message) as cm:
             yield cm
 
     @staticmethod
@@ -190,9 +189,9 @@ class FrontendDataTestBase(testing.TestCase):
 
     _argument_creator_map = {
         IntegerConverter: lambda c: 1,
-        UnicodeConverter: lambda c: u"test",
+        UnicodeConverter: lambda c: "test",
     }
-    _default_argument_creator = lambda c: u"default"
+    _default_argument_creator = lambda c: "default"
 
     def _login(self, login, password):
         self.client.post(url_for("login.login"),

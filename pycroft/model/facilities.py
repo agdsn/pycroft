@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -35,7 +34,7 @@ class Building(IntegerIdModel):
 
     @property
     def street_and_number(self):
-        return "{} {}".format(self.street, self.number)
+        return f"{self.street} {self.number}"
 
 
 class Room(IntegerIdModel):
@@ -76,11 +75,11 @@ class Room(IntegerIdModel):
 
     @property
     def short_name(self):
-        return "{} {}".format(self.building.short_name, self.level_and_number)
+        return f"{self.building.short_name} {self.level_and_number}"
 
     @property
     def level_and_number(self):
-        return "{}-{}".format(self.level, self.number)
+        return f"{self.level}-{self.number}"
 
     @property
     def is_switch_room(self):

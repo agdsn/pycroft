@@ -79,7 +79,7 @@ def execute_scheduled_tasks():
                      task_and_subtypes.due <= session.utcnow())
              .all())
 
-    print("executing {} scheduled tasks".format(len(tasks)))
+    print(f"executing {len(tasks)} scheduled tasks")
 
     for task in tasks:
         repair_session()
@@ -100,7 +100,7 @@ def execute_scheduled_tasks():
             task.errors = task_impl.errors
 
             for error in task.errors:
-                print("Error while executing task: {}".format(error))
+                print(f"Error while executing task: {error}")
 
         try:
             write_task_message(
@@ -158,7 +158,7 @@ def mail_negative_members():
 
 
 @app.task(ignore_result=True, rate_limit=1, bind=True)
-def send_mails_async(self, mails: List[Mail]):
+def send_mails_async(self, mails: list[Mail]):
     success = False
     failures = len(mails)
 
@@ -171,7 +171,7 @@ def send_mails_async(self, mails: List[Mail]):
         pass
 
     if not success:
-        print("Could not send all mails! ({}/{} failed)".format(failures, len(mails)))
+        print(f"Could not send all mails! ({failures}/{len(mails)} failed)")
 
 
 app.conf.update(

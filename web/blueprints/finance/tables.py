@@ -42,7 +42,7 @@ class FinanceTable(BootstrapTable):
 
         if inverted:
             self._enforced_url_params = frozenset(
-                set([('style', 'inverted')])
+                {('style', 'inverted')}
                 .union(self._enforced_url_params)
             )
             self.saldo = -saldo

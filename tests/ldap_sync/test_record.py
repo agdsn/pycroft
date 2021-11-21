@@ -67,10 +67,10 @@ class TestRecord:
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
-                             'attributes': {'mail': u'mail', 'gecos': u'baz'},
+                             'attributes': {'mail': 'mail', 'gecos': 'baz'},
                              'raw_attributes': {'mail': b'mail'}}
         record = UserRecord.from_ldap_record(ldapsearch_record)
-        assertSubDict({'mail': [u'mail'], 'gecos': [u'baz']}, record.attrs)
+        assertSubDict({'mail': ['mail'], 'gecos': ['baz']}, record.attrs)
         for key in UserRecord.get_synced_attributes():
             assert key in record.attrs
 

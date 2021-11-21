@@ -65,11 +65,11 @@ class Test_010_BankAccount(FactoryDataTestBase):
         # test for correct dataimport
         activity = BankAccountActivity.q.filter_by(
             bank_account=self.bank_account,
-            reference=u"0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
+            reference="0000-3, SCH, AAA, ZW41D/01 99 1, SS 13"
         ).first()
         assert activity.other_account_number == "12345678"
         assert activity.other_routing_number == "80040400"
-        assert activity.other_name == u"SCH, AAA"
+        assert activity.other_name == "SCH, AAA"
         assert activity.amount == 9000.00
         assert activity.posted_on == date(2013, 1, 2)
         assert activity.valid_on == date(2013, 1, 2)
@@ -77,7 +77,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
         # verify that the right year gets chosen for the transaction
         activity = BankAccountActivity.q.filter_by(
             bank_account=self.bank_account,
-            reference=u"Pauschalen"
+            reference="Pauschalen"
         ).first()
         assert activity.posted_on == date(2012, 12, 24)
         assert activity.valid_on == date(2012, 12, 24)
@@ -89,7 +89,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
         # which is in the next year
         activity = BankAccountActivity.q.filter_by(
             bank_account=self.bank_account,
-            reference=u"BESTELLUNG SUPERMEGATOLLER SERVER"
+            reference="BESTELLUNG SUPERMEGATOLLER SERVER"
         ).first()
         assert activity.posted_on == date(2013, 12, 29)
         assert activity.valid_on == date(2013, 1, 10)
@@ -106,7 +106,7 @@ class Test_010_BankAccount(FactoryDataTestBase):
     def test_0030_simple_transaction(self):
         try:
             simple_transaction(
-                u"transaction", self.fee_account, self.user_account,
+                "transaction", self.fee_account, self.user_account,
                 Decimal(90), self.author
             )
         except Exception:
@@ -118,15 +118,15 @@ class Test_010_BankAccount(FactoryDataTestBase):
         amount = Decimal(90)
         today = session.utcnow().date()
         simple_transaction(
-            u"transaction", self.fee_account, self.user_account,
+            "transaction", self.fee_account, self.user_account,
             amount, self.author, today - timedelta(1)
         )
         simple_transaction(
-            u"transaction", self.fee_account, self.user_account,
+            "transaction", self.fee_account, self.user_account,
             amount, self.author, today
         )
         simple_transaction(
-            u"transaction", self.fee_account, self.user_account,
+            "transaction", self.fee_account, self.user_account,
             amount, self.author, today + timedelta(1)
         )
         assert (
@@ -157,17 +157,17 @@ class Test_010_BankAccount(FactoryDataTestBase):
         session.session.commit()
 
     def test_0050_cleanup_non_sepa_description(self):
-        non_sepa_description = u"1234-0 Dummy, User, with " \
-                               u"a- space at postition 28"
+        non_sepa_description = "1234-0 Dummy, User, with " \
+                               "a- space at postition 28"
         assert cleanup_description(non_sepa_description) == non_sepa_description
 
     def test_0060_cleanup_sepa_description(self):
-        clean_sepa_description = u"EREF+Long EREF 1234567890 with a parasitic " \
-                                 u"space SVWZ+A reference with parasitic " \
-                                 u"spaces at multiples of 28"
-        sepa_description = u"EREF+Long EREF 1234567890 w ith a parasitic space " \
-                           u"SVWZ+A reference with paras itic spaces at " \
-                           u"multiples of  28"
+        clean_sepa_description = "EREF+Long EREF 1234567890 with a parasitic " \
+                                 "space SVWZ+A reference with parasitic " \
+                                 "spaces at multiples of 28"
+        sepa_description = "EREF+Long EREF 1234567890 w ith a parasitic space " \
+                           "SVWZ+A reference with paras itic spaces at " \
+                           "multiples of  28"
         assert cleanup_description(sepa_description) == clean_sepa_description
 
 

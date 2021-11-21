@@ -79,7 +79,7 @@ class MACAddress(TypeDecorator):
             return value
         m = mac_regex.match(value)
         if m is None:
-            raise ValueError('"{}" is not a valid MAC address.'.format(value))
+            raise ValueError(f'"{value}" is not a valid MAC address.')
         groups = m.groupdict()
         return "".join((groups["byte1"], groups["byte2"], groups["byte3"],
                         groups["byte4"], groups["byte5"], groups["byte6"]))
@@ -125,15 +125,15 @@ class TsTzRange(TypeDecorator):
             return None
         return f"'{str(value)}'"
 
-    def process_bind_param(self, value: Optional[Interval], dialect) -> Optional[str]:
+    def process_bind_param(self, value: Interval | None, dialect) -> str | None:
         # gets PY TYPE, returns DB TYPE
         if value is None:
             return None
 
         return str(value)
 
-    def process_result_value(self, value: Optional[DateTimeTZRange], dialect)\
-            -> Optional[Interval]:
+    def process_result_value(self, value: DateTimeTZRange | None, dialect)\
+            -> Interval | None:
         if value is None:
             return None
         if not isinstance(value, DateTimeTZRange):

@@ -9,7 +9,7 @@ from web.blueprints.access import BlueprintAccess
 from web.blueprints import bake_endpoint
 
 
-class BlueprintNavigation(object):
+class BlueprintNavigation:
     """This is the blueprint navigation mechanism.
 
     Every `flask.Blueprint` module should get such a `BlueprintNavigation`

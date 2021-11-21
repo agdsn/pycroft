@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -49,7 +48,7 @@ class Address(IntegerIdModel):
     def __format__(self, spec="short"):
         """Return the address items separated by the format specifier"""
         city = self.city.upper() if self.country and self.country != DEFAULT_COUNTRY else self.city
-        items: List[str] = [f"{self.street} {self.number} // {self.addition}" if self.addition
+        items: list[str] = [f"{self.street} {self.number} // {self.addition}" if self.addition
                             else f"{self.street} {self.number}", f"{self.zip_code} {city}"]
         if self.state:
             state = self.state.upper() if self.country and self.country != DEFAULT_COUNTRY else self.state

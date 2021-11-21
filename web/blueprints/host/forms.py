@@ -24,4 +24,4 @@ class InterfaceForm(Form):
                      description="z.B. eth0, en0 oder enp0s29u1u1u5",
                      validators=[Optional()])
     mac = MacField("MAC", [MacAddress(message="MAC ist ungültig!"), UniqueMac(annex_field=None)])
-    ips = SelectMultipleField(u"IPs", validators=[Optional()])
+    ips = SelectMultipleField("IPs", validators=[Optional()])

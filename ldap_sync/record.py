@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import abc
 from typing import Optional
 
@@ -10,11 +9,11 @@ from .action import AddAction, DeleteAction, IdleAction, ModifyAction
 
 
 def dn_from_username(username, base):
-    return safe_dn(["uid={}".format(username), base])
+    return safe_dn([f"uid={username}", base])
 
 
 def dn_from_cn(name, base):
-    return safe_dn(["cn={}".format(name), base])
+    return safe_dn([f"cn={name}", base])
 
 
 def _canonicalize_to_list(value):
@@ -35,12 +34,12 @@ def _maybe_escape_filter_chars(value):
 
     Else, return the unchanged object.
     """
-    if isinstance(value, type(b'')) or isinstance(value, type(u'')):
+    if isinstance(value, bytes) or isinstance(value, str):
         return escape_filter_chars(value)
     return value
 
 
-class Record(object):
+class Record:
     """Create a new record with a dn and certain attributes.
 
     A record represents an entry which is to be synced to the LDAP,
@@ -102,7 +101,7 @@ class Record(object):
             return False
 
     def __repr__(self):
-        return "<{} dn={}>".format(type(self).__name__, self.dn)
+        return f"<{type(self).__name__} dn={self.dn}>"
 
     @classmethod
     def _validate_attributes(cls, attributes):
@@ -110,7 +109,7 @@ class Record(object):
         # we support migrating anyway?
         _missing_attributes = set(attributes.keys()) - cls.get_synced_attributes()
         assert not _missing_attributes, \
-            "get_synced_attributes() does not contain attributes {}".format(_missing_attributes)
+            f"get_synced_attributes() does not contain attributes {_missing_attributes}"
 
 
 class UserRecord(Record):
@@ -219,7 +218,7 @@ class GroupRecord(Record):
         return cls(dn=dn, attrs=attributes)
 
 
-class RecordState(object):
+class RecordState:
     """A Class representing the state (current, desired) of a record.
 
     This class is essentially a duple consisting of a current and
@@ -228,7 +227,7 @@ class RecordState(object):
     :param current: The current record
     :param desired: The desired record
     """
-    def __init__(self, current: Optional[Record] = None, desired: Optional[Record] = None):
+    def __init__(self, current: Record | None = None, desired: Record | None = None):
         self.current = current
         self.desired = desired
 
@@ -245,4 +244,4 @@ class RecordState(object):
         if self.desired:
             set_attributes.append('desired')
         attrs_string = " " + " ".join(set_attributes) if set_attributes else ''
-        return "<{cls}{attrs}>".format(cls=type(self).__name__, attrs=attrs_string)
+        return f"<{type(self).__name__}{attrs_string}>"

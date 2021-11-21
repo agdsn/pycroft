@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -40,7 +39,7 @@ nav = BlueprintNavigation(bp, "Infrastruktur", icon='fa-network-wired', blueprin
 
 
 @bp.route('/subnets')
-@nav.navigate(u"Subnetze")
+@nav.navigate("Subnetze")
 def subnets():
     return render_template(
         'infrastructure/subnets_list.html',
@@ -85,7 +84,7 @@ def subnets_json():
 
 
 @bp.route('/switches')
-@nav.navigate(u"Switche", icon='fa-random')
+@nav.navigate("Switche", icon='fa-random')
 def switches():
     return render_template(
         'infrastructure/switches_list.html',
@@ -405,7 +404,7 @@ def switch_port_delete(switch_id, switch_port_id):
 
 
 @bp.route('/vlans')
-@nav.navigate(u"VLANs", icon='fa-hashtag')
+@nav.navigate("VLANs", icon='fa-hashtag')
 def vlans():
     return render_template(
         'infrastructure/vlan_list.html',

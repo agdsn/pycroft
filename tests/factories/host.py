@@ -65,7 +65,7 @@ class SwitchPortFactory(BaseFactory):
     class Meta:
         model = SwitchPort
     switch = factory.SubFactory(SwitchFactory)
-    name = factory.Sequence(lambda n: "SwitchPort {}".format(n))
+    name = factory.Sequence(lambda n: f"SwitchPort {n}")
 
     @factory.post_generation
     def default_vlans(self, create, extracted, **kwargs):

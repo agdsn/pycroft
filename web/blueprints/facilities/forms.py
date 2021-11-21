@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -65,19 +64,19 @@ def building_query():
 
 
 class SelectRoomForm(BaseForm):
-    building = QuerySelectField(u"Wohnheim",
-                                [DataRequired(message=u"Wohnheim?")],
+    building = QuerySelectField("Wohnheim",
+                                [DataRequired(message="Wohnheim?")],
                                 get_label='short_name',
                                 query_factory=building_query)
-    level = LazyLoadSelectField(u"Etage",
-                                validators=[NumberRange(message=u"Etage?")],
+    level = LazyLoadSelectField("Etage",
+                                validators=[NumberRange(message="Etage?")],
                                 coerce=int,
                                 choices=[],
                                 conditions=["building"],
                                 data_endpoint="facilities.json_levels")
-    room_number = LazyLoadSelectField(u"Raumnummer",
+    room_number = LazyLoadSelectField("Raumnummer",
                                       validators=[
-                                          DataRequired(message=u"Raum?")],
+                                          DataRequired(message="Raum?")],
                                       coerce=str,
                                       choices=[],
                                       conditions=["building", "level"],
@@ -112,13 +111,13 @@ class EditRoomForm(CreateAddressForm):
 
 
 class BuildingForm(Form):
-    short_name = TextField(u"Kürzel")
-    number = TextField(u"Nummer")
-    street = TextField(u"Straße", validators=[Length(min=5)])
+    short_name = TextField("Kürzel")
+    number = TextField("Nummer")
+    street = TextField("Straße", validators=[Length(min=5)])
 
 
 class RoomLogEntry(Form):
-    message = TextAreaField(u"", [DataRequired()])
+    message = TextAreaField("", [DataRequired()])
 
 
 class PatchPortForm(SelectRoomForm):

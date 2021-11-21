@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2018 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -64,7 +63,7 @@ manager.add_function(
 )
 
 
-def evaluate_properties(when: Optional[datetime] = None, name='properties') -> TableValuedAlias:
+def evaluate_properties(when: datetime | None = None, name='properties') -> TableValuedAlias:
     """A sqlalchemy `func` wrapper for the `evaluate_properties` PSQL function.
 
     See `sqlalchemy.sql.selectable.FromClause.table_valued`.

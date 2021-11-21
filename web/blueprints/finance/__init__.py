@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -73,7 +72,7 @@ nav = BlueprintNavigation(bp, "Finanzen", icon='fa-euro-sign', blueprint_access=
 @bp.route('/')
 @bp.route('/bank-accounts')
 @bp.route('/bank-accounts/list')
-@nav.navigate(u"Bankkonten", icon='fa-university')
+@nav.navigate("Bankkonten", icon='fa-university')
 def bank_accounts_list():
     bank_account_table = BankAccountTable(
         data_url=url_for('.bank_accounts_list_json'),
@@ -156,7 +155,7 @@ def bank_accounts_errors_json():
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
-@nav.navigate(u"Bankkontobewegungen importieren", icon='fa-file-import')
+@nav.navigate("Bankkontobewegungen importieren", icon='fa-file-import')
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
@@ -197,17 +196,17 @@ def bank_accounts_import():
             statement, with_error = fints.get_filtered_transactions(
                 acc, start_date, end_date)
             flash(
-                "Transaktionen vom {} bis {}.".format(start_date, end_date))
+                f"Transaktionen vom {start_date} bis {end_date}.")
             if len(with_error) > 0:
                 flash("{} Statements enthielten fehlerhafte Daten und müssen "
                       "vor dem Import manuell korrigiert werden.".format(
                     len(with_error)), 'error')
 
         except (FinTSDialogError, FinTSClientPINError):
-            flash(u"Ungültige FinTS-Logindaten.", 'error')
+            flash("Ungültige FinTS-Logindaten.", 'error')
             process = False
         except KeyError:
-            flash(u'Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
+            flash('Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
                     nicht erreicht werden.', 'error')
             process = False
 
@@ -227,7 +226,7 @@ def bank_accounts_import():
             # save transactions to database
             session.add_all(transactions)
             session.commit()
-            flash(u'Bankkontobewegungen wurden importiert.')
+            flash('Bankkontobewegungen wurden importiert.')
             return redirect(url_for(".accounts_show",
                                     account_id=bank_account.account_id))
 
@@ -255,10 +254,10 @@ def bank_accounts_import_manual():
             session.add(mt940_entry)
 
             session.commit()
-            flash(u'Datensatz wurde importiert. Buchungen können jetzt importiert werden.')
+            flash('Datensatz wurde importiert. Buchungen können jetzt importiert werden.')
             return redirect(url_for(".fix_import_error", error_id=mt940_entry.id))
         else:
-            flash(u"Kein MT940 hochgeladen.", 'error')
+            flash("Kein MT940 hochgeladen.", 'error')
 
     return render_template('finance/bank_accounts_import_manual.html', form=form)
 
@@ -301,7 +300,7 @@ def fix_import_error(error_id):
                 session.add_all(transactions)
                 session.delete(error)
                 session.commit()
-                flash(u'Bankkontobewegungen wurden importiert.')
+                flash('Bankkontobewegungen wurden importiert.')
                 return redirect(url_for(".bank_accounts_import_errors"))
         else:
             flash('Es existieren weiterhin Fehler.', 'error')
@@ -334,7 +333,7 @@ def bank_accounts_create():
         return redirect(url_for('.bank_accounts_list'))
 
     return render_template('finance/bank_accounts_create.html',
-                           form=form, page_title=u"Bankkonto erstellen")
+                           form=form, page_title="Bankkonto erstellen")
 
 
 @bp.route('/bank-account-activities/<activity_id>',
@@ -343,7 +342,7 @@ def bank_account_activities_edit(activity_id):
     activity = BankAccountActivity.get(activity_id)
 
     if activity is None:
-        flash(u"Bankbewegung mit ID {} existiert nicht!".format(activity_id), 'error')
+        flash(f"Bankbewegung mit ID {activity_id} existiert nicht!", 'error')
         abort(404)
 
     if activity.transaction_id is not None:
@@ -351,7 +350,7 @@ def bank_account_activities_edit(activity_id):
             obj=activity, bank_account_name=activity.bank_account.name)
 
         if activity.transaction_id:
-            flash(u"Bankbewegung ist bereits zugewiesen!".format(activity_id),
+            flash(f"Bankbewegung ist bereits zugewiesen!",
                   'warning')
 
         form_args = {
@@ -389,7 +388,7 @@ def bank_account_activities_edit(activity_id):
 
             session.commit()
 
-            flash(u"Transaktion erfolgreich erstellt.", 'success')
+            flash("Transaktion erfolgreich erstellt.", 'success')
 
             return redirect(url_for('.bank_accounts_list'))
 
@@ -517,7 +516,7 @@ def _apply_checked_matches(matching, subform):
 
 @bp.route('/accounts/')
 @bp.route('/accounts/list')
-@nav.navigate(u"Konten", icon='fa-money-check-alt')
+@nav.navigate("Konten", icon='fa-money-check-alt')
 def accounts_list():
     accounts_by_type = {
         t[0]: list(t[1])
@@ -578,7 +577,7 @@ def accounts_show(account_id):
     account = Account.get(account_id)
 
     if account is None:
-        flash(u"Konto mit ID {} existiert nicht!".format(account_id), 'error')
+        flash(f"Konto mit ID {account_id} existiert nicht!", 'error')
         abort(404)
 
     try:
@@ -587,8 +586,8 @@ def accounts_show(account_id):
         user = None
     except MultipleResultsFound:
         user = User.q.filter_by(account_id=account.id).first()
-        flash(u"Es existieren mehrere Nutzer, die mit diesem Konto"
-              u" verbunden sind!", "warning")
+        flash("Es existieren mehrere Nutzer, die mit diesem Konto"
+              " verbunden sind!", "warning")
 
     inverted = account.type == "USER_ASSET"
 
@@ -633,14 +632,14 @@ def _format_row(split, style, prefix=None):
     }
     if prefix is None:
         return row
-    return {'{}_{}'.format(prefix, key): val for key, val in row.items()}
+    return {f'{prefix}_{key}': val for key, val in row.items()}
 
 
 def _prefixed_merge(a, prefix_a, b, prefix_b):
     result = {}
-    result.update(**{'{}_{}'.format(prefix_a, k): v
+    result.update(**{f'{prefix_a}_{k}': v
                      for k, v in a.items()})
-    result.update(**{'{}_{}'.format(prefix_b, k): v
+    result.update(**{f'{prefix_b}_{k}': v
                      for k, v in b.items()})
     return result
 
@@ -729,7 +728,7 @@ def transactions_show_json(transaction_id):
 
 
 @bp.route('/transactions/unconfirmed')
-@nav.navigate(u"Unbestätigte Transaktionen", icon='fa-question')
+@nav.navigate("Unbestätigte Transaktionen", icon='fa-question')
 def transactions_unconfirmed():
     return render_template(
         'finance/transactions_unconfirmed.html',
@@ -804,18 +803,18 @@ def transaction_confirm(transaction_id):
     transaction = Transaction.get(transaction_id)
 
     if transaction is None:
-        flash(u"Transaktion existiert nicht.", 'error')
+        flash("Transaktion existiert nicht.", 'error')
         abort(404)
 
     if transaction.confirmed:
-        flash(u"Diese Transaktion wurde bereits bestätigt.", 'error')
+        flash("Diese Transaktion wurde bereits bestätigt.", 'error')
         abort(400)
 
     lib.finance.transaction_confirm(transaction, current_user)
 
     session.commit()
 
-    flash(u'Transaktion bestätigt.', 'success')
+    flash('Transaktion bestätigt.', 'success')
     return redirect(url_for('.transactions_unconfirmed'))
 
 
@@ -852,11 +851,11 @@ def transaction_delete(transaction_id):
     transaction = Transaction.get(transaction_id)
 
     if transaction is None:
-        flash(u"Transaktion existiert nicht.", 'error')
+        flash("Transaktion existiert nicht.", 'error')
         abort(404)
 
     if transaction.confirmed:
-        flash(u"Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.",
+        flash("Diese Transaktion wurde bereits bestätigt und kann daher nicht gelöscht werden.",
               'error')
         abort(400)
 
@@ -867,7 +866,7 @@ def transaction_delete(transaction_id):
 
         session.commit()
 
-        flash(u'Transaktion gelöscht.', 'success')
+        flash('Transaktion gelöscht.', 'success')
         return redirect(url_for('.transactions_unconfirmed'))
 
     form_args = {
@@ -941,7 +940,7 @@ def transactions_all_json():
 
 
 @bp.route('/transactions/create', methods=['GET', 'POST'])
-@nav.navigate(u'Buchung erstellen', icon='fa-plus')
+@nav.navigate('Buchung erstellen', icon='fa-plus')
 @access.require('finance_change')
 def transactions_create():
     form = TransactionCreateForm()
@@ -984,7 +983,7 @@ def accounts_create():
         return redirect(url_for('.accounts_list'))
 
     return render_template('finance/accounts_create.html', form=form,
-                           page_title=u"Konto erstellen")
+                           page_title="Konto erstellen")
 
 
 @bp.route("/membership_fee/<int:fee_id>/book", methods=['GET', 'POST'])
@@ -993,7 +992,7 @@ def membership_fee_book(fee_id):
     fee = MembershipFee.get(fee_id)
 
     if fee is None:
-        flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')
         abort(404)
 
     form = FeeApplyForm()
@@ -1003,7 +1002,7 @@ def membership_fee_book(fee_id):
 
         session.commit()
 
-        flash("{} neue Buchungen erstellt.".format(len(affected_users)), "success")
+        flash(f"{len(affected_users)} neue Buchungen erstellt.", "success")
 
         return redirect(url_for(".membership_fees"))
 
@@ -1045,7 +1044,7 @@ def membership_fee_users_due_json(fee_id):
 
 
 @bp.route("/membership_fees", methods=['GET', 'POST'])
-@nav.navigate(u"Beiträge", icon='fa-hand-holding-usd')
+@nav.navigate("Beiträge", icon='fa-hand-holding-usd')
 def membership_fees():
     table = MembershipFeeTable(data_url=url_for('.membership_fees_json'))
     return render_template('finance/membership_fees.html', table=table)
@@ -1137,7 +1136,7 @@ def membership_fee_edit(fee_id):
     fee = MembershipFee.get(fee_id)
 
     if fee is None:
-        flash(u'Ein Beitrag mit dieser ID existiert nicht!', 'error')
+        flash('Ein Beitrag mit dieser ID existiert nicht!', 'error')
         abort(404)
 
     form = MembershipFeeEditForm()
@@ -1230,9 +1229,9 @@ def json_accounts_user_search():
     results = session.query(
         Account.id, User.id, User.login, User.name
     ).select_from(User).join(Account).filter(
-        or_(func.lower(User.name).like(func.lower("%{0}%".format(query))),
-            func.lower(User.login).like(func.lower("%{0}%".format(query))),
-            cast(User.id, Text).like(u"{0}%".format(query)))
+        or_(func.lower(User.name).like(func.lower(f"%{query}%")),
+            func.lower(User.login).like(func.lower(f"%{query}%")),
+            cast(User.id, Text).like(f"{query}%"))
     ).all()
     accounts = [
         {"account_id": account_id,

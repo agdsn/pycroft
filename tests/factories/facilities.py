@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -27,7 +26,7 @@ class BuildingFactory(BaseFactory):
 
     number = Sequence(lambda n: str(n))
     street = LazyAttribute(lambda b: b.site.name)
-    short_name = LazyAttribute(lambda b: "{}{}".format(b.street[:3], b.number))
+    short_name = LazyAttribute(lambda b: f"{b.street[:3]}{b.number}")
     fee_account = SubFactory(AccountFactory, type='REVENUE')
 
 

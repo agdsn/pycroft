@@ -1,11 +1,10 @@
-# -*- coding: utf-8; -*-
 import logging
 from abc import ABCMeta, abstractmethod
 
 import ldap3
 
 
-class Action(object, metaclass=ABCMeta):
+class Action(metaclass=ABCMeta):
     """An Action on an ldap record
 
     This represents an Action on a specific LDAP record, which may
@@ -30,13 +29,13 @@ class Action(object, metaclass=ABCMeta):
             self.logger.debug("Operation successful")
 
     def __repr__(self):
-        return "<{} {}>".format(type(self).__name__, self.record.dn)
+        return f"<{type(self).__name__} {self.record.dn}>"
 
 class AddAction(Action):
     def __init__(self, record):
         # We don't want to add e.g. an empty `mail` field
         record.remove_empty_attributes()
-        super(AddAction, self).__init__(record)
+        super().__init__(record)
 
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
@@ -45,7 +44,7 @@ class AddAction(Action):
         self.debug_whether_success(connection)
 
     def __repr__(self):
-        return "<{} {}>".format(type(self).__name__, self.record.dn)
+        return f"<{type(self).__name__} {self.record.dn}>"
 
 
 class ModifyAction(Action):
@@ -59,7 +58,7 @@ class ModifyAction(Action):
             if the corresponding attribute is not single-valued.
         """
         self.modifications = modifications
-        super(ModifyAction, self).__init__(record)
+        super().__init__(record)
 
     @classmethod
     def from_two_records(cls, current_record, desired_record):
@@ -96,7 +95,7 @@ class ModifyAction(Action):
 
     def __repr__(self):
         attr_string = ', '.join(self.record.attrs.keys())
-        return "<{} {} [{}]>".format(type(self).__name__, self.record.dn, attr_string)
+        return f"<{type(self).__name__} {self.record.dn} [{attr_string}]>"
 
 
 class DeleteAction(Action):

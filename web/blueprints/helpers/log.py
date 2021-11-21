@@ -51,7 +51,7 @@ def radius_description(interface, entry):
     :param RadiusLogEntry entry: A :py:cls:`RadiusLogEntry` as
         obtained from a :py:cls:`HadesLogs` lookup.
     """
-    prefix = "{port} – {mac} – ".format(port=interface, mac=entry.mac)
+    prefix = f"{interface} – {entry.mac} – "
     if not entry:
         msg = ("REJECTED - This should never happen!"
                " Please contact a root of your choice.")

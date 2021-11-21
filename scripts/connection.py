@@ -13,7 +13,7 @@ from pycroft.model import create_engine
 
 
 def try_create_connection(connection_string, wait_for_db, logger,
-                          echo: bool = False, reflections: bool = True) -> Tuple[Connection, Engine]:
+                          echo: bool = False, reflections: bool = True) -> tuple[Connection, Engine]:
     engine = create_engine(connection_string, echo=echo)
 
     if reflections:

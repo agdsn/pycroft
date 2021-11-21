@@ -25,7 +25,7 @@ def user_btn_style(user):
     glyphicons = []
     btn_class = None
     tooltips = []
-    props = set(p.property_name for p in user.current_properties)
+    props = {p.property_name for p in user.current_properties}
 
     if 'network_access' not in props:
         glyphicons.append('fa-times')
@@ -79,7 +79,7 @@ def user_button(user):
 def get_user_or_404(user_id):
     user = User.get(user_id)
     if user is None:
-        flash(u"Nutzer mit ID {} existiert nicht!".format(user_id,), 'error')
+        flash(f"Nutzer mit ID {user_id} existiert nicht!", 'error')
         abort(404)
     return user
 
@@ -87,7 +87,7 @@ def get_user_or_404(user_id):
 def get_pre_member_or_404(prm_id):
     prm = PreMember.get(prm_id)
     if prm is None:
-        flash(u"Mitgliedsanfrage mit ID {} existiert nicht!".format(prm_id,), 'error')
+        flash(f"Mitgliedsanfrage mit ID {prm_id} existiert nicht!", 'error')
         abort(404)
     return prm
 

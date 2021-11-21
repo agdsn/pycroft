@@ -117,7 +117,7 @@ def json_user_tasks():
     return jsonify(items=[task_row(task) for task in tasks])
 
 
-def get_task_or_404(task_id) -> Union[Task, NoReturn]:
+def get_task_or_404(task_id) -> Task | NoReturn:
     if task := session.session.get(Task, task_id):
         return task
     abort(404)
@@ -153,7 +153,7 @@ def cancel_user_task(task_id):
     cancel_task(task, current_user)
     session.session.commit()
 
-    flash(u'Aufgabe erfolgreich abgebrochen.', 'success')
+    flash('Aufgabe erfolgreich abgebrochen.', 'success')
     return redirect_or_404(request.args.get("redirect"))
 
 

@@ -23,7 +23,7 @@ def _infinity(name):
     Create a single instance of an class with a given name.
     """
     return type(name + "Type", (object, ), {
-        '__repr__': lambda self: "{0}.{1}".format(self.__module__, name),
+        '__repr__': lambda self: f"{self.__module__}.{name}",
         '__str__': lambda self: name,
         '__unicode__': lambda self: name,
     })()
@@ -102,7 +102,7 @@ class Bound(tuple):
         return self.value - other.value
 
     def __repr__(self):
-        return "{0}.{1}({2!r}, {3!r})".format(
+        return "{}.{}({!r}, {!r})".format(
             self.__module__, self.__class__.__name__, self.value, self.closed)
 
     def __str__(self):
@@ -153,7 +153,7 @@ class Interval(tuple, Generic[T]):
         """
         if lower_bound > upper_bound:
             raise ValueError(
-                "lower_bound > upper_bound ({0} > {1})"
+                "lower_bound > upper_bound ({} > {})"
                 .format(lower_bound, upper_bound)
             )
         # Unfortunately using namedtuple is not possible, because we have
@@ -163,8 +163,8 @@ class Interval(tuple, Generic[T]):
     @classmethod
     def from_explicit_data(
         cls,
-        lower: Optional[T], lower_closed: bool,
-        upper: Optional[T], upper_closed: bool,
+        lower: T | None, lower_closed: bool,
+        upper: T | None, upper_closed: bool,
     ) -> Interval[T]:
         return cls(Bound(_convert_begin(lower), lower_closed),
                    Bound(_convert_end(upper), upper_closed))
@@ -241,7 +241,7 @@ class Interval(tuple, Generic[T]):
         return self.lower_bound <= bound <= self.upper_bound
 
     def __str__(self):
-        return "{0}{1},{2}{3}".format(
+        return "{}{},{}{}".format(
             '[' if self.lower_bound.closed else '(',
             self.lower_bound.pg_identifier, self.upper_bound.pg_identifier,
             ']' if self.upper_bound.closed else ')',
@@ -258,7 +258,7 @@ class Interval(tuple, Generic[T]):
                 creator = "openclosed"
             else:
                 creator = "open"
-        return "{0}.{1}.{2}({3!r}, {4!r})".format(
+        return "{}.{}.{}({!r}, {!r})".format(
             self.__module__,
             self.__class__.__name__,
             creator,
@@ -603,7 +603,7 @@ class IntervalSet(collections.abc.Sequence):
                 self._intervals == other._intervals)
 
     def __repr__(self):
-        return "{0}.{1}({2!r})".format(
+        return "{}.{}({!r})".format(
             self.__module__,
             self.__class__.__name__,
             self._intervals)
@@ -612,7 +612,7 @@ class IntervalSet(collections.abc.Sequence):
         return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
 
     def __unicode__(self):
-        return u"{{{0}}}".format(u", ".join(str(i) for i in self._intervals))
+        return "{{{0}}}".format(", ".join(str(i) for i in self._intervals))
 
     def complement(self):
         return _create(_complement(self._intervals))
@@ -656,7 +656,7 @@ def _mangle_argument(arg):
         return tuple(_join(sorted(arg)))
     raise TypeError("Argument may be None, an IntervalSet, an Interval or an "
                     "iterable of Intervals. "
-                    "Was {0}.".format(type(arg).__name__))
+                    "Was {}.".format(type(arg).__name__))
 
 
 def _create(intervals):

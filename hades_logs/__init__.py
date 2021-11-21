@@ -75,7 +75,7 @@ class HadesLogs:
             routing_key = app.config.get('HADES_ROUTING_KEY', 'hades-ng')
         except KeyError as e:
             self.logger.warning("Missing config key: %s\n%s", e, _CONFIGURATION_DOCS)
-            raise KeyError("Missing config key: {}".format(e)) from e
+            raise KeyError(f"Missing config key: {e}") from e
         self.timeout = app.config.get('HADES_TIMEOUT', 5)
 
         self.celery = HadesCelery(app_name, broker=broker_uri, backend=backend_uri,
@@ -97,7 +97,7 @@ class HadesLogs:
 
         :rtype: :py:obj:`celery.Signature`
         """
-        full_task_name = '{}.{}'.format(self.celery.main, name)
+        full_task_name = f'{self.celery.main}.{name}'
         return self.celery.signature(full_task_name, args=args, kwargs=kwargs)
 
     def fetch_logs(self, nasipaddress: str, nasportid: str, limit=100, reduced=True):

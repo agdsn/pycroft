@@ -9,10 +9,10 @@ from werkzeug.utils import redirect
 
 
 def bake_endpoint(blueprint, fn):
-    return "{}.{}".format(blueprint.name, fn.__name__)
+    return f"{blueprint.name}.{fn.__name__}"
 
 
-def redirect_or_404(redirect_url: Optional[str]) -> Union[Response, NoReturn]:
+def redirect_or_404(redirect_url: str | None) -> Response | NoReturn:
     """Helper function to return a redirect or abort.
 
     **The return vaue must be used!**

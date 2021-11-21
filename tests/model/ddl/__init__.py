@@ -12,7 +12,7 @@ class LiteralInterval(postgresql_base.INTERVAL):
 
     def literal_processor(self, dialect):
         def process(value):
-            return "interval '{}'".format(value) \
+            return f"interval '{value}'" \
                 .replace(',', '').replace(' 0:00:00', '')
 
         return process
@@ -21,7 +21,7 @@ class LiteralInterval(postgresql_base.INTERVAL):
 class LiteralDate(postgresql_base.DATE):
     def literal_processor(self, dialect):
         def process(value):
-            return "date '{}'".format(value.isoformat())
+            return f"date '{value.isoformat()}'"
 
         return process
 

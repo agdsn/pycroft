@@ -33,7 +33,7 @@ default_handler.setFormatter(
 )
 
 
-def prepare_server(args) -> Tuple[PycroftFlask, Callable]:
+def prepare_server(args) -> tuple[PycroftFlask, Callable]:
     """returns both the prepared app and a callback executing `app.run`"""
     if args.echo:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)

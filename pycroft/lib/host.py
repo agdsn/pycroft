@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -23,7 +22,7 @@ def change_mac(interface, mac, processor):
     """
     old_mac = interface.mac
     interface.mac = mac
-    message = deferred_gettext(u"Changed MAC address from {} to {}.").format(
+    message = deferred_gettext("Changed MAC address from {} to {}.").format(
         old_mac, mac)
     if interface.host.owner:
         log_user_event(message.to_json(), processor, interface.host.owner)
@@ -38,7 +37,7 @@ def generate_hostname(ip_address):
     :return:
     """
     numeric_ip = int(ip_address)
-    return u"x{0:02x}{1:02x}{2:02x}{3:02x}".format((numeric_ip >> 0x18) & 0xFF,
+    return "x{:02x}{:02x}{:02x}{:02x}".format((numeric_ip >> 0x18) & 0xFF,
                                                    (numeric_ip >> 0x10) & 0xFF,
                                                    (numeric_ip >> 0x08) & 0xFF,
                                                    (numeric_ip >> 0x00) & 0xFF)
@@ -53,7 +52,7 @@ def host_create(owner, room, name, processor):
     session.add(host)
 
     message = deferred_gettext(
-        u"Created host '{name}' in {dorm} {level}-{room}."
+        "Created host '{name}' in {dorm} {level}-{room}."
         .format(name=host.name,
                 dorm=room.building.short_name,
                 level=room.level,
@@ -70,7 +69,7 @@ def host_create(owner, room, name, processor):
 def host_edit(host, owner, room, name, processor):
     if host.name != name:
         message = deferred_gettext(
-            u"Changed name of host '{}' to '{}'.".format(host.name,
+            "Changed name of host '{}' to '{}'.".format(host.name,
                                                          name))
         host.name = name
 
@@ -80,14 +79,14 @@ def host_edit(host, owner, room, name, processor):
 
     if host.owner_id != owner.id:
         message = deferred_gettext(
-            u"Transferred Host '{}' to {}.".format(host.name,
+            "Transferred Host '{}' to {}.".format(host.name,
                                                    owner.id))
         log_user_event(author=processor,
                        user=host.owner,
                        message=message.to_json())
 
         message = deferred_gettext(
-            u"Transferred Host '{}' from {}.".format(host.name,
+            "Transferred Host '{}' from {}.".format(host.name,
                                                      host.owner.id))
         log_user_event(author=processor,
                        user=owner,
@@ -103,7 +102,7 @@ def host_edit(host, owner, room, name, processor):
 
 @with_transaction
 def host_delete(host, processor):
-    message = deferred_gettext("Deleted host '{}'.".format(host.name))
+    message = deferred_gettext(f"Deleted host '{host.name}'.")
     log_user_event(author=processor,
                    user=host.owner,
                    message=message.to_json())
@@ -135,7 +134,7 @@ def interface_create(host, name, mac, ips, processor):
             session.add(IP(interface=interface, address=ip,
                            subnet=subnet))
 
-    message = deferred_gettext(u"Created interface ({}, {}) with name '{}' for host '{}'."
+    message = deferred_gettext("Created interface ({}, {}) with name '{}' for host '{}'."
                                .format(interface.mac,
                                        ', '.join(str(ip.address) for ip in
                                                  interface.ips),
@@ -150,7 +149,7 @@ def interface_create(host, name, mac, ips, processor):
 
 @with_transaction
 def interface_edit(interface, name, mac, ips, processor):
-    message = u"Edited interface ({}, {}) of host '{}'." \
+    message = "Edited interface ({}, {}) of host '{}'." \
         .format(interface.mac,
                 ', '.join(str(ip.address) for ip in
                           interface.ips),
@@ -158,11 +157,11 @@ def interface_edit(interface, name, mac, ips, processor):
 
     if interface.name != name:
         interface.name = name
-        message += " New name: '{}'.".format(interface.name)
+        message += f" New name: '{interface.name}'."
 
     if interface.mac != mac:
         interface.mac = mac
-        message += " New MAC: {}.".format(interface.mac)
+        message += f" New MAC: {interface.mac}."
 
     ips_changed = False
 
@@ -202,7 +201,7 @@ def interface_edit(interface, name, mac, ips, processor):
 
 @with_transaction
 def interface_delete(interface, processor):
-    message = deferred_gettext(u"Deleted interface {} of host {}."
+    message = deferred_gettext("Deleted interface {} of host {}."
                                .format(interface.mac, interface.host.name))
     log_user_event(author=processor,
                    user=interface.host.owner,

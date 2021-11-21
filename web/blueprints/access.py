@@ -13,7 +13,7 @@ def _check_properties(properties):
     return not missing_props
 
 
-class BlueprintAccess(object):
+class BlueprintAccess:
     """A Blueprint that requires accessing users to have a set of properties.
 
     Every `flask.Blueprint` module should be augmented with a `BlueprintAccess`

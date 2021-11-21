@@ -8,10 +8,10 @@ class UserIDField(wtforms_widgets.fields.core.StringField):
     """A User-ID Field """
 
     def __init__(self, *args, **kwargs):
-        super(UserIDField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __call__(self, **kwargs):
-        return super(UserIDField, self).__call__(
+        return super().__call__(
             **kwargs
         )
 

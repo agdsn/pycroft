@@ -45,8 +45,8 @@ class Mail:
     to_address: str
     subject: str
     body_plain: str
-    body_html: Optional[str]
-    reply_to: Optional[str] = None
+    body_html: str | None
+    reply_to: str | None = None
 
 
 class MailTemplate:
@@ -89,7 +89,7 @@ class RetryableException(PycroftLibException):
     pass
 
 
-def send_mails(mails: List[Mail]) -> (bool, int):
+def send_mails(mails: list[Mail]) -> (bool, int):
     """Send MIME text mails
 
     Returns False, if sending fails.  Else returns True.
@@ -132,11 +132,11 @@ def send_mails(mails: List[Mail]) -> (bool, int):
 
         if smtp_user:
             smtp.login(smtp_user, smtp_password)
-    except (IOError, smtplib.SMTPException) as e:
+    except (OSError, smtplib.SMTPException) as e:
         traceback.print_exc()
 
         # smtp.connect failed to connect
-        logger.critical('Unable to connect to SMTP server: {}'.format(str(e)), extra={
+        logger.critical(f'Unable to connect to SMTP server: {str(e)}', extra={
             'trace': True,
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
             'data': {'exception_arguments': e.args}
@@ -215,7 +215,7 @@ class MemberNegativeBalance(MailTemplate):
     subject =  "Deine ausstehenden Zahlungen // Your due payments"
 
 
-def send_template_mails(email_addresses: List[str], template: MailTemplate, **kwargs):
+def send_template_mails(email_addresses: list[str], template: MailTemplate, **kwargs):
     mails = []
 
     for addr in email_addresses:

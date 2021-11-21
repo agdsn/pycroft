@@ -6,7 +6,7 @@ from wtforms_widgets.fields.core import BooleanField
 from pycroft.model.facilities import Room
 
 
-def iter_prefixed_field_names(cls: typing.Type[Form], prefix: str) -> typing.Iterator[str]:
+def iter_prefixed_field_names(cls: type[Form], prefix: str) -> typing.Iterator[str]:
     return (f for f in cls.__dict__
             if hasattr(f, '_formfield') and f.startswith(prefix))
 
@@ -32,7 +32,7 @@ def refill_room_data(form, room):
         form.room_number.data = room.number
 
 
-def confirmable_div(confirm_field_id: typing.Optional[str], prefix: str = 'form-group-') -> str:
+def confirmable_div(confirm_field_id: str | None, prefix: str = 'form-group-') -> str:
     """Return an opening div tag linking this error div to a confirm field.
 
     See `confirmable-error.ts`.

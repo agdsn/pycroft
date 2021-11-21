@@ -43,7 +43,7 @@ class Column:
 
     def __init__(self, title, name=None, formatter=None, width=0,
                  cell_style=None, col_args=None, sortable=True,
-                 hide_if: Optional[Callable] = lambda: False):
+                 hide_if: Callable | None = lambda: False):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
@@ -142,8 +142,8 @@ class BtnColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
         def value(cls, btn_class: str, href: str, title: str, tooltip: str,
-                  new_tab: Optional[str] = None,
-                  icon: Optional[typing.Union[str, Iterable[str]]] = None) \
+                  new_tab: str | None = None,
+                  icon: str | Iterable[str] | None = None) \
             -> dict: ...
 
 
@@ -154,14 +154,14 @@ class MultiBtnColumn(DictListValueMixin, Column):
 
     if typing.TYPE_CHECKING:
         @classmethod
-        def single_value(cls, href: str, title: str, glyphicon: Optional[str] = None) -> dict: ...
+        def single_value(cls, href: str, title: str, glyphicon: str | None = None) -> dict: ...
 
 
 @custom_formatter_column('table.linkFormatter')
 class LinkColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
-        def value(cls, href: str, title: str, glyphicon: Optional[str] = None) -> dict: ...
+        def value(cls, href: str, title: str, glyphicon: str | None = None) -> dict: ...
 
 
 
@@ -180,8 +180,8 @@ class TextWithBooleanColumn(DictValueMixin, Column):
     if typing.TYPE_CHECKING:
         @classmethod
         def value(cls, text: str, bool: bool,
-                  icon_true: Optional[str] = None,
-                  icon_false: Optional[str] = None) -> dict: ...
+                  icon_true: str | None = None,
+                  icon_false: str | None = None) -> dict: ...
 
 
 @custom_formatter_column('table.userFormatter')
@@ -192,7 +192,7 @@ class UserColumn(Column):
 
     @classmethod
     def value_native(cls, href: str, title: str,
-                     glyphicon: typing.Optional[str] = None) -> dict:
+                     glyphicon: str | None = None) -> dict:
         return DictValueMixin.value(
             type='native', href=href, title=title, glyphicon=glyphicon,
         )
@@ -202,8 +202,8 @@ class IbanColumn(Column):
     pass
 
 
-UnboundTableArgs = FrozenSet[Tuple[str, Any]]
-TableArgs = Dict[str, str]
+UnboundTableArgs = frozenset[tuple[str, Any]]
+TableArgs = dict[str, str]
 
 
 def _infer_table_args(meta_obj, superclass_table_args: TableArgs) -> UnboundTableArgs:
@@ -232,7 +232,7 @@ class BootstrapTableMeta(type):
     - :py:attr:`_table_args`
     """
 
-    def __new__(mcls, name, bases, dct: Dict[str, Any]):
+    def __new__(mcls, name, bases, dct: dict[str, Any]):
         meta = dct.pop('Meta', None)
         cls = super().__new__(mcls, name, bases, dct)
 
@@ -274,9 +274,9 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         search, sort, order to make server-side pagination work.
     :param table_args: Additional things to be passed to table_args.
     """
-    column_attrname_map: Dict[str, str]  # provided by BootstrapTableMeta
+    column_attrname_map: dict[str, str]  # provided by BootstrapTableMeta
     _table_args: UnboundTableArgs  # provided by BootstrapTableMeta
-    _enforced_url_params: Iterable[Tuple[str, Any]]  # provided by BootstrapTableMeta
+    _enforced_url_params: Iterable[tuple[str, Any]]  # provided by BootstrapTableMeta
     table_args: TableArgs
 
     class Meta:
@@ -295,7 +295,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
         return dict(**kw)
 
     @property
-    def _columns(self) -> List[Column]:
+    def _columns(self) -> list[Column]:
         return [getattr(self, a) for a in self.column_attrname_map.values()]
 
     @property
@@ -379,7 +379,7 @@ class SplittedTable(BootstrapTable):
     have columns ``name, id``, the effective column list will be
     ``a_name, a_id, b_name, b_id``.
     """
-    splits: Iterable[Tuple[str, str]]
+    splits: Iterable[tuple[str, str]]
 
     def _iter_typed_splits(self):
         for t in self.splits:
@@ -412,7 +412,7 @@ class SplittedTable(BootstrapTable):
         yield "</thead>"
 
 
-def iso_format(dt: Optional[typing.Union[datetime, date]] = None):
+def iso_format(dt: datetime | date | None = None):
     if dt is None:
         return "n/a"
 
@@ -422,8 +422,8 @@ def iso_format(dt: Optional[typing.Union[datetime, date]] = None):
     return dt.isoformat(sep=' ')
 
 
-def date_format(dt: Optional[typing.Union[datetime, date]],
-                default: Optional[str] = None, formatter: Callable = iso_format) -> dict:
+def date_format(dt: datetime | date | None,
+                default: str | None = None, formatter: Callable = iso_format) -> dict:
     """
     Format date or datetime objects for `table.dateFormatter`.
     :param dt: a date or datetime object or None
@@ -443,8 +443,8 @@ def date_format(dt: Optional[typing.Union[datetime, date]],
         }
 
 
-def datetime_format(dt: Optional[datetime],
-                    default: Optional[str] = None,
+def datetime_format(dt: datetime | None,
+                    default: str | None = None,
                     formatter: Callable = iso_format) -> dict:
     """
     Format datetime objects for `table.dateFormatter`.
@@ -519,6 +519,6 @@ def html_params(**kwargs):
         elif v is False:
             continue
 
-        params.append('%s="%s"' % (str(k), html.escape(str(v))))
+        params.append(f'{str(k)}="{html.escape(str(v))}"')
 
     return ' '.join(params)

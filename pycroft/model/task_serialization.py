@@ -58,7 +58,7 @@ class UserMoveParams(TaskParams):
     room_number: str
     level: int
     building_id: int
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class UserMoveInSchema(Schema):
@@ -81,7 +81,7 @@ class UserMoveInParams(TaskParams):
     room_number: str
     level: int
     building_id: int
-    mac: Optional[str] = None
-    birthdate: Optional[date] = None
+    mac: str | None = None
+    birthdate: date | None = None
     begin_membership: bool = True
     host_annex: bool = False

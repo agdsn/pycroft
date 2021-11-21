@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -51,7 +50,7 @@ nav = BlueprintNavigation(bp, "Wohnheime", icon='fa-building', blueprint_access=
 def root():
     return redirect(url_for(".overview"))
 
-@nav.navigate(u"Wohnheime", icon='fa-building')
+@nav.navigate("Wohnheime", icon='fa-building')
 @bp.route('/sites/')
 def overview():
     return render_template(
@@ -90,12 +89,12 @@ def building_show(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
-        flash(u"Gebäude existiert nicht!", 'error')
+        flash("Gebäude existiert nicht!", 'error')
         abort(404)
 
     rooms_list = building.rooms
     return render_template('facilities/building_show.html',
-        page_title=u"Wohnheim " + building.short_name, rooms=rooms_list)
+        page_title="Wohnheim " + building.short_name, rooms=rooms_list)
 
 
 # ToDo: Review this!
@@ -105,7 +104,7 @@ def building_levels(building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
-        flash(u"Gebäude existiert nicht!", 'error')
+        flash("Gebäude existiert nicht!", 'error')
         abort(404)
 
     rooms_list = building.rooms
@@ -236,7 +235,7 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(building_shortname, building_id)
 
     if building is None:
-        flash(u"Gebäude existiert nicht!", 'error')
+        flash("Gebäude existiert nicht!", 'error')
         abort(404)
 
     level_l0 = f"{level:02d}"
@@ -259,7 +258,7 @@ def building_level_rooms_json(level, building_id=None, building_shortname=None):
     building = facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
-        flash(u"Gebäude existiert nicht!", 'error')
+        flash("Gebäude existiert nicht!", 'error')
         abort(404)
 
     all_users = bool(request.args.get('all_users', 0, type=int))
@@ -451,14 +450,14 @@ def room_show(room_id):
     room = Room.get(room_id)
 
     if room is None:
-        flash(u"Zimmer existiert nicht!", 'error')
+        flash("Zimmer existiert nicht!", 'error')
         abort(404)
 
     form = RoomLogEntry()
 
     if form.validate_on_submit():
         lib.logging.log_room_event(form.message.data, current_user, room)
-        flash(u'Kommentar hinzugefügt', 'success')
+        flash('Kommentar hinzugefügt', 'success')
         session.session.commit()
 
     room_log_table = RoomLogTable(
@@ -552,13 +551,13 @@ def json_rooms():
 
 @bp.route('/overcrowded', defaults={'building_id': None})
 @bp.route('/overcrowded/<int:building_id>')
-@nav.navigate(u"Mehrfachbelegungen", icon='fa-people-arrows')
+@nav.navigate("Mehrfachbelegungen", icon='fa-people-arrows')
 def overcrowded(building_id):
     page_title = "Mehrfachbelegungen"
     if building_id:
         building = facilities.determine_building(id=building_id)
         if building is None:
-            flash(u"Gebäude existiert nicht!", 'error')
+            flash("Gebäude existiert nicht!", 'error')
             abort(404)
         page_title = f"Mehrfachbelegungen {building.short_name}"
 

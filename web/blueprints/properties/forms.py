@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2014 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -23,10 +22,10 @@ def property_group_user_create_query():
 
 
 class PropertyGroupForm(Form):
-    name = TextField(u"Gruppenname", [
-        DataRequired(u"Name?"),
-        Regexp(u"^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
-               message=u"Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
-                       u" eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
+    name = TextField("Gruppenname", [
+        DataRequired("Name?"),
+        Regexp("^[a-zA-Z0-9äöüÄÖÜ ]{3,}$",
+               message="Namen ohne Sonderzeichen und mindestens 3 Buchstaben"
+                       " eingeben! (RegEx: ^[a-zA-Z0-9äöüÄÖÜ ]{3,}$)")
     ])
     permission_level = IntegerField("Berechtigungslevel")

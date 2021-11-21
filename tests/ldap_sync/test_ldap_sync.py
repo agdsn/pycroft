@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 import logging
 from unittest import TestCase
@@ -40,9 +39,9 @@ class TestEmptyLdap:
         assert isinstance(exporter.actions[0], AddAction)
 
 
-class LdapSyncLoggerMutedMixin(object):
+class LdapSyncLoggerMutedMixin:
     def setUp(self):
-        super(LdapSyncLoggerMutedMixin, self).setUp()
+        super().setUp()
         logging.getLogger('ldap_sync').addHandler(logging.NullHandler())
 
 
@@ -120,7 +119,7 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(LdapTestBase, cls).setUpClass()
+        super().setUpClass()
         try:
             cls.config = get_config(required_property='mail', use_ssl='False',
                                     ca_certs_file=None, ca_certs_data=None)
@@ -132,7 +131,7 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         cls.property_base_dn = f'ou=properties,{cls.config.base_dn}'
 
     def setUp(self):
-        super(LdapTestBase, self).setUp()
+        super().setUp()
         self.conn = self._establish_connection_and_return()
         self._clean_ldap_base()
 
@@ -232,7 +231,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
         )
 
     def setUp(self):
-        super(LdapSyncerTestBase, self).setUp()
+        super().setUp()
         self.users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         self.initial_ldap_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
         self.groups_to_sync = fetch_groups_to_sync(session)
@@ -329,7 +328,7 @@ class LdapTestCase(LdapSyncerTestBase):
 
 class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def setUp(self):
-        super(LdapOnceSyncedTestCase, self).setUp()
+        super().setUp()
         self.sync_all()
         # In comparison to `initial_ldap_users`:
         self.new_ldap_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)

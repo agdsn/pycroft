@@ -102,7 +102,7 @@ class SchemaStrategist:
         return self.create_then_stamp
 
     def run(self):
-        print("Schema is up to date (revision: {})".format(self.helper.running_version))
+        print(f"Schema is up to date (revision: {self.helper.running_version})")
 
     def upgrade(self):
         print("Running upgrade from {} to {}...".format(self.helper.running_version,

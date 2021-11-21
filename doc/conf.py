@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2012 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -43,8 +42,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Pycroft'
-copyright = u'2011, AG DSN'
+project = 'Pycroft'
+copyright = '2011, AG DSN'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -181,8 +180,8 @@ htmlhelp_basename = 'Pycroftdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Pycroft.tex', u'Pycroft Documentation',
-   u'AG DSN', 'manual'),
+  ('index', 'Pycroft.tex', 'Pycroft Documentation',
+   'AG DSN', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,6 +213,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pycroft', u'Pycroft Documentation',
-     [u'AG DSN'], 1)
+    ('index', 'pycroft', 'Pycroft Documentation',
+     ['AG DSN'], 1)
 ]

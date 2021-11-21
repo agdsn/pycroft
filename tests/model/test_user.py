@@ -25,13 +25,13 @@ class Test_User_Passwords(FactoryDataTestBase):
         self.user.passwd_hash = pw_hash
         session.session.commit()
 
-        with self.assertRaisesRegexp(AssertionError,
+        with self.assertRaisesRegex(AssertionError,
                                      "A password-hash with less than 9 chars "
                                      "is not correct!"):
             self.user.passwd_hash = password
         session.session.commit()
 
-        with self.assertRaisesRegexp(AssertionError, "Cannot clear the "
+        with self.assertRaisesRegex(AssertionError, "Cannot clear the "
                                                      "password hash!"):
             self.user.passwd_hash = None
         session.session.commit()
@@ -108,7 +108,7 @@ class Test_User_Login(FactoryDataTestBase):
                 u.login = login
 
     def test_login_cannot_be_changed(self):
-        with self.assertRaisesRegexp(AssertionError,
+        with self.assertRaisesRegex(AssertionError,
                 "user already in the database - cannot change login anymore!"):
             self.user.login = "abc"
 

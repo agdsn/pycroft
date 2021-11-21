@@ -10,7 +10,7 @@ class VLANFactory(BaseFactory):
     class Meta:
         model = VLAN
 
-    name = factory.Sequence(lambda n: "vlan{}".format(n+1))
+    name = factory.Sequence(lambda n: f"vlan{n+1}")
     vid = factory.Sequence(lambda n: n+1)
 
     class Params:

@@ -38,7 +38,7 @@ class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
 
         blockage = session.utcnow() + timedelta(days=1)
         unblockage = blockage + timedelta(days=2)
-        blocked_user = UserHelper.block(u, reason=u"test", processor=u,
+        blocked_user = UserHelper.block(u, reason="test", processor=u,
                                         during=closedopen(blockage, None))
         session.session.commit()
 

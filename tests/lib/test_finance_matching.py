@@ -11,7 +11,7 @@ class TestTeamActivityMatching(FactoryDataTestBase):
         self.team_account = AccountFactory.create(type='ASSET', name='Team Network')
         self.team_account.patterns = [AccountPattern(pattern=r"2[0-9]{3}-N\d\d")]
         self.bank_account = BankAccountFactory.create()
-        self.activity, *rest = [
+        self.activity, *rest = (
             BankAccountActivityFactory.create(bank_account=self.bank_account,
                                               reference=reference)
             for reference in [
@@ -19,7 +19,7 @@ class TestTeamActivityMatching(FactoryDataTestBase):
                 'Erstattung 2020-NN',
                 'Other reference, which should not match our regex',
             ]
-        ]
+        )
 
     def test_team_matching(self):
         assert match_activities() == ({}, {self.activity: self.team_account})

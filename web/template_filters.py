@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -87,7 +86,7 @@ def require(ctx: Context, asset: str, **kwargs) -> str:
     try:
         filename = asset_map[asset]
     except KeyError:
-        raise AssetNotFound("Asset {} not found".format(asset)) from None
+        raise AssetNotFound(f"Asset {asset} not found") from None
     kwargs['filename'] = filename
     return url_for('static', **kwargs)
 
@@ -107,7 +106,7 @@ def date_filter(dt, format=None):
     :rtype: unicode
     """
     if dt is None:
-        return u"k/A"
+        return "k/A"
     return flask_babel.format_date(dt, format)
 
 
@@ -119,7 +118,7 @@ def datetime_filter(dt, format=None):
     :rtype: unicode
     """
     if dt is None:
-        return u"k/A"
+        return "k/A"
     return flask_babel.format_datetime(dt, format)
 
 
@@ -151,7 +150,7 @@ def timesince_filter(dt, default="just now"):
     for period, singular, plural in periods:
 
         if period:
-            return "vor {:d} {}".format(period, singular if period == 1 else plural)
+            return f"vor {period:d} {singular if period == 1 else plural}"
 
     return default
 
@@ -161,9 +160,9 @@ def prefix_unit_filter(value, unit, factor, prefixes):
     if value > 0:
         n = min(int(log(value, factor).real), len(units)-1)
         #todo change decimal formatting appropriately, previous {0:,4f} is wrong
-        return "{0:,f} {1}".format(float(value)/factor**n, units[n])
+        return f"{float(value)/factor**n:,f} {units[n]}"
 
-    return "0 {0}".format(units[0])
+    return f"0 {units[0]}"
 
 
 @template_filter("byte_size")
@@ -173,7 +172,7 @@ def byte_size_filter(value):
 
 @template_filter("money")
 def money_filter(amount):
-    return (u"{:.2f}\u202f€".format(amount)).replace('.', ',')
+    return (f"{amount:.2f}\u202f€").replace('.', ',')
 
 
 @template_filter("icon")

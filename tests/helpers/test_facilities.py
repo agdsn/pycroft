@@ -18,7 +18,7 @@ def after():
 
 @pytest.fixture
 def fake_dorm():
-    class fake_dorm(object):
+    class fake_dorm:
         def __init__(self, num):
             self.number = num
             self.street = "fake street"

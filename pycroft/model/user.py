@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -130,7 +129,7 @@ class BaseUser:
         if value is None:
             return value
         if not self.email_regex.match(value):
-            raise IllegalEmailError("Illegal email '{}'".format(value))
+            raise IllegalEmailError(f"Illegal email '{value}'")
         return value
 
     @validates('passwd_hash')
@@ -180,7 +179,7 @@ class User(ModelBase, BaseUser, UserMixin):
     def __init__(self, **kwargs):
         password = kwargs.pop('password', None)
         wifi_password = kwargs.pop('password', None)
-        super(User, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if password is not None:
             self.password = password
         if wifi_password is not None:
@@ -210,7 +209,7 @@ class User(ModelBase, BaseUser, UserMixin):
         assert not has_identity(
             self), "user already in the database - cannot change login anymore!"
 
-        return super(User, self).validate_login(_, value)
+        return super().validate_login(_, value)
 
     property_groups = relationship("PropertyGroup",
                                    secondary=lambda: Membership.__table__,
@@ -251,7 +250,7 @@ class User(ModelBase, BaseUser, UserMixin):
     )
 
     @property
-    def current_properties_set(self) -> Set[str]:
+    def current_properties_set(self) -> set[str]:
         """A type-agnostic property giving the granted properties as a set of string.
 
         Utilized in the web component's access control mechanism.
@@ -294,7 +293,7 @@ class User(ModelBase, BaseUser, UserMixin):
     )
 
     @hybrid_method
-    def active_memberships(self, when: Optional[Interval] = None) -> List[Membership]:
+    def active_memberships(self, when: Interval | None = None) -> list[Membership]:
         if when is None:
             now = session.utcnow()
             when = single(now)
@@ -311,7 +310,7 @@ class User(ModelBase, BaseUser, UserMixin):
         )
 
     @hybrid_method
-    def active_property_groups(self, when: Optional[Interval] = None) -> List[PropertyGroup]:
+    def active_property_groups(self, when: Interval | None = None) -> list[PropertyGroup]:
         sess = object_session(self)
         when = when or single(session.utcnow())
         return sess.query(
@@ -333,10 +332,10 @@ class User(ModelBase, BaseUser, UserMixin):
             else Membership.active_during.contains(func.current_timestamp())
         )
 
-    def member_of(self, group: PropertyGroup, when: Optional[Interval] = None) -> bool:
+    def member_of(self, group: PropertyGroup, when: Interval | None = None) -> bool:
         return group in self.active_property_groups(when)
 
-    def has_property(self, property_name: str, when: Optional[datetime] = None) -> bool:
+    def has_property(self, property_name: str, when: datetime | None = None) -> bool:
         if when is None:
             return property_name in self.current_properties_set
 
@@ -361,7 +360,7 @@ class User(ModelBase, BaseUser, UserMixin):
 
     @property
     def email_internal(self):
-        return "{}@agdsn.me".format(self.login)
+        return f"{self.login}@agdsn.me"
 
     __table_args__ = (UniqueConstraint('swdd_person_id'),)
 
@@ -575,7 +574,7 @@ class PreMember(ModelBase, BaseUser):
 
     def __init__(self, **kwargs):
         password = kwargs.pop('password', None)
-        super(PreMember, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if password is not None:
             self.password = password
 

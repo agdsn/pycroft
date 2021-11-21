@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -48,7 +47,7 @@ def group_query():
 
 def validate_unique_login(form, field):
     if User.q.filter_by(login=field.data).first():
-        raise ValidationError(u"Nutzerlogin schon vergeben!")
+        raise ValidationError("Nutzerlogin schon vergeben!")
 
 
 class UniqueName:
@@ -59,7 +58,7 @@ class UniqueName:
 
     :param force_field: The name of the “do it anyway” checkbox field
     """
-    def __init__(self, force_field: typing.Optional[str] = 'force'):
+    def __init__(self, force_field: str | None = 'force'):
         self.force_field = force_field
         self.building_field = 'building'
         self.level_field = 'level'
@@ -71,7 +70,7 @@ class UniqueName:
                and hasattr(form, self.force_field)\
                and getattr(form, self.force_field).data
 
-    def try_get_room(self, form: Form) -> typing.Optional[Room]:
+    def try_get_room(self, form: Form) -> Room | None:
         try:
             number = getattr(form, self.room_number_field).data
             level = getattr(form, self.level_field).data
@@ -107,7 +106,7 @@ class UniqueEmail:
 
     :param force_field: The name of the “do it anyway” checkbox field
     """
-    def __init__(self, force_field: typing.Optional[str] = 'force'):
+    def __init__(self, force_field: str | None = 'force'):
         self.force_field = force_field
 
     def force_set(self, form: Form) -> bool:
@@ -136,21 +135,21 @@ class UniqueEmail:
 
 
 class UserSearchForm(Form):
-    id = TextField(u"Nutzer-ID")
-    name = TextField(u"Name")
-    login = TextField(u"Unix-Login")
-    mac = MacField(u"MAC-Adresse")
-    ip_address = TextField(u"IP-Adresse")
-    property_group_id = QuerySelectField(u"Eigenschaftsgruppe",
+    id = TextField("Nutzer-ID")
+    name = TextField("Name")
+    login = TextField("Unix-Login")
+    mac = MacField("MAC-Adresse")
+    ip_address = TextField("IP-Adresse")
+    property_group_id = QuerySelectField("Eigenschaftsgruppe",
                                 get_label='name',
                                 query_factory=property_group_query,
                                 allow_blank=True,
-                                blank_text=u"<Eigenschaftsgruppe>")
-    building_id = QuerySelectField(u"Wohnheim",
+                                blank_text="<Eigenschaftsgruppe>")
+    building_id = QuerySelectField("Wohnheim",
                                 get_label='short_name',
                                 query_factory=building_query,
                                 allow_blank=True,
-                                blank_text=u"<Wohnheim>")
+                                blank_text="<Wohnheim>")
     email = TextField("E-Mail")
     person_id = TextField("Debitorennummer")
 
@@ -160,11 +159,11 @@ class UserResetPasswordForm(Form):
 
 
 class UserEditForm(Form):
-    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!")])
-    email = TextField(u"E-Mail",
-                      [Optional(), Email(u"E-Mail-Adresse ist ungültig!")])
+    name = TextField("Name", [DataRequired(message="Name wird benötigt!")])
+    email = TextField("E-Mail",
+                      [Optional(), Email("E-Mail-Adresse ist ungültig!")])
     email_forwarded = BooleanField("E-Mail Weiterleitung", default=True)
-    birthdate = DateField(u"Geburtsdatum", [Optional()])
+    birthdate = DateField("Geburtsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()],
                              filters=[empty_to_none])
 
@@ -179,10 +178,10 @@ class UserEditAddressForm(CreateAddressForm):
 
 
 class UserMoveForm(SelectRoomForm):
-    comment = TextAreaField(u"Kommentar", description='Wenn gegeben Referenz zum Ticket',
+    comment = TextAreaField("Kommentar", description='Wenn gegeben Referenz zum Ticket',
                             render_kw={'placeholder': 'ticket#<TicketNr> / <TicketNr> / ticket:<ticketId>'})
-    now = BooleanField(u"Sofort", default=False)
-    when = DateField(u"Umzug am", [OptionalIf("now")])
+    now = BooleanField("Sofort", default=False)
+    when = DateField("Umzug am", [OptionalIf("now")])
     when_time = TimeField("Genaue Zeit", [Optional()],
                           description="Optional. In UTC angeben.",
                           render_kw={'placeholder': 'hh:mm'})
@@ -195,27 +194,27 @@ class UserMoveForm(SelectRoomForm):
 
 
 class UserBaseDataForm(Form):
-    name = TextField(u"Name", [DataRequired(message=u"Name wird benötigt!"),
+    name = TextField("Name", [DataRequired(message="Name wird benötigt!"),
                                UniqueName()])
 
-    login = TextField(u"Login", [
-        DataRequired(message=u"Login wird benötigt!"),
-        Regexp(regex=User.login_regex_ci, message=u"Login ist ungültig!"),
+    login = TextField("Login", [
+        DataRequired(message="Login wird benötigt!"),
+        Regexp(regex=User.login_regex_ci, message="Login ist ungültig!"),
         validate_unique_login
     ], filters=[to_lowercase])
-    email = TextField(u"E-Mail", [Email(message=u"E-Mail ist ungueltig!"),
+    email = TextField("E-Mail", [Email(message="E-Mail ist ungueltig!"),
                                   Optional()], filters=[empty_to_none])
 
 
 class UserCreateForm(UserBaseDataForm, SelectRoomForm):
-    birthdate = DateField(u"Geburtsdatum",
+    birthdate = DateField("Geburtsdatum",
                           [OptionalIf('mac', invert=True)])
-    mac = MacField(u"MAC",
-                   [Optional(), MacAddress(message=u"MAC ist ungültig!"), UniqueMac()])
-    property_groups = QuerySelectMultipleField(u"Gruppen",
+    mac = MacField("MAC",
+                   [Optional(), MacAddress(message="MAC ist ungültig!"), UniqueMac()])
+    property_groups = QuerySelectMultipleField("Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
-    annex = ConfirmCheckboxField(u"Host annektieren")
+    annex = ConfirmCheckboxField("Host annektieren")
     force = ConfirmCheckboxField("* Hinweise ignorieren")
 
     _order = ("name", "building", "level", "room_number")
@@ -227,8 +226,8 @@ class NonResidentUserCreateForm(UserBaseDataForm, CreateAddressForm):
     Does not contain mac, since created hosts would not have a room set, anyway.
     If necessary, a device can be created afterwards.
     """
-    birthdate = DateField(u"Geburtsdatum")
-    property_groups = QuerySelectMultipleField(u"Gruppen",
+    birthdate = DateField("Geburtsdatum")
+    property_groups = QuerySelectMultipleField("Gruppen",
                                       get_label='name',
                                       query_factory=property_group_user_create_query)
 
@@ -243,7 +242,7 @@ class PreMemberEditForm(UserBaseDataForm, SelectRoomForm):
     # overrides `email` from UserBaseDataForm
     email = TextField("E-Mail", [DataRequired("Mitgliedschaftsanfragen benötigen E-Mail"),
                                  Email(message="E-Mail ist ungueltig!")], filters=[empty_to_none])
-    birthdate = DateField(u"Geburtsdatum", [DataRequired("Das Geburtsdatum wird benötigt!")])
+    birthdate = DateField("Geburtsdatum", [DataRequired("Das Geburtsdatum wird benötigt!")])
     move_in_date = DateField("Einzugsdatum", [Optional()])
     person_id = IntegerField("Debitorennummer", [Optional()], filters=[empty_to_none])
 
@@ -271,47 +270,47 @@ class PreMemberMergeConfirmForm(Form):
 
 
 class UserMoveInForm(UserMoveForm):
-    now = BooleanField(u"Sofort", default=False)
-    when = DateField(u"Einzug am", [OptionalIf("now")])
-    birthdate = DateField(u"Geburtsdatum", [OptionalIf('mac', invert=True)])
-    mac = MacField(u"MAC", [Optional()])
-    begin_membership = BooleanField(u"Mitgliedschaft beginnen", [Optional()])
+    now = BooleanField("Sofort", default=False)
+    when = DateField("Einzug am", [OptionalIf("now")])
+    birthdate = DateField("Geburtsdatum", [OptionalIf('mac', invert=True)])
+    mac = MacField("MAC", [Optional()])
+    begin_membership = BooleanField("Mitgliedschaft beginnen", [Optional()])
 
 
 class UserLogEntry(Form):
-    message = TextAreaField(u"", [DataRequired()])
+    message = TextAreaField("", [DataRequired()])
 
 
 class OptionallyDirectBeginDateForm(Form):
-    now = BooleanField(u"Sofort", default=False)
-    date = DateField(u"Beginn", [OptionalIf("now")])
+    now = BooleanField("Sofort", default=False)
+    date = DateField("Beginn", [OptionalIf("now")])
 
 
 class OptionallyUnlimitedEndDateForm(Form):
-    unlimited = BooleanField(u"Unbegrenzte Dauer", default=False)
-    date = DateField(u"Ende", [OptionalIf("unlimited")])
+    unlimited = BooleanField("Unbegrenzte Dauer", default=False)
+    date = DateField("Ende", [OptionalIf("unlimited")])
 
 
 class UserAddGroupMembership(Form):
-    group = QuerySelectField(u"Gruppe", get_label='name',
+    group = QuerySelectField("Gruppe", get_label='name',
                              query_factory=group_query)
     begins_at = FormField(OptionallyDirectBeginDateForm)
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
 
 class UserEditGroupMembership(Form):
-    begins_at = DateField(u"Beginn", [DataRequired()])
+    begins_at = DateField("Beginn", [DataRequired()])
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
 
 
 class UserSuspendForm(Form):
     ends_at = FormField(OptionallyUnlimitedEndDateForm)
-    reason = TextAreaField(u"Grund", [DataRequired()])
+    reason = TextAreaField("Grund", [DataRequired()])
     violation = BooleanField("Verstoß")
 
 
 class UserMoveOutForm(Form):
-    now = BooleanField(u"Sofort", default=False)
-    when = DateField(u"Auszug am", [OptionalIf("now")])
-    comment = TextAreaField(u"Kommentar")
-    end_membership = BooleanField(u"Mitgliedschaft/Extern beenden", [Optional()])
+    now = BooleanField("Sofort", default=False)
+    when = DateField("Auszug am", [OptionalIf("now")])
+    comment = TextAreaField("Kommentar")
+    end_membership = BooleanField("Mitgliedschaft/Extern beenden", [Optional()])

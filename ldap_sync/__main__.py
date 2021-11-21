@@ -58,15 +58,15 @@ def fetch_and_sync(db_session, connection, base_dn, required_property=None):
     db_properties = fetch_properties_to_sync(db_session)
     logger.info("Fetched %s database properties", len(db_properties))
 
-    user_base_dn='ou=users,{}'.format(base_dn)
+    user_base_dn=f'ou=users,{base_dn}'
     ldap_users = fetch_current_ldap_users(connection, base_dn=user_base_dn)
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    group_base_dn = 'ou=groups,{}'.format(base_dn)
+    group_base_dn = f'ou=groups,{base_dn}'
     ldap_groups = fetch_current_ldap_groups(connection, base_dn=group_base_dn)
     logger.info("Fetched %s ldap groups", len(ldap_groups))
 
-    property_base_dn = 'ou=properties,{}'.format(base_dn)
+    property_base_dn = f'ou=properties,{base_dn}'
     ldap_properties = fetch_current_ldap_properties(connection, base_dn=property_base_dn)
     logger.info("Fetched %s ldap properties", len(ldap_properties))
 

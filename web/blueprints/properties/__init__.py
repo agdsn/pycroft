@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -32,14 +31,14 @@ nav = BlueprintNavigation(bp, "", icon='fa-cogs', push_right=True, blueprint_acc
 
 
 @bp.route('/property_groups')
-@nav.navigate(u"Gruppen")
+@nav.navigate("Gruppen")
 def property_groups():
     property_groups_list = PropertyGroup.q.all()
     categories = property_categories
     properties_with_description = set(chain(*(
         category.keys() for category in categories.values()
     )))
-    categories[u"Ohne Beschreibung"] = {
+    categories["Ohne Beschreibung"] = {
         p: p for p in known_properties() if p not in properties_with_description
     }
     return render_template(
@@ -58,11 +57,11 @@ def property_group_create():
                               permission_level=form.permission_level.data)
         session.session.add(group)
         session.session.commit()
-        message = u'Eigenschaftengruppe {0} angelegt.'
+        message = 'Eigenschaftengruppe {0} angelegt.'
         flash(message.format(group.name), 'success')
         return redirect(url_for('.property_groups'))
     return render_template('properties/property_group_create.html', form=form,
-        page_title = u"Neue Eigenschaftengruppe")
+        page_title = "Neue Eigenschaftengruppe")
 
 
 @bp.route('/property_group/<group_id>/grant/<property_name>')
@@ -71,12 +70,12 @@ def property_group_grant_property(group_id, property_name):
     property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
-        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
         abort(404)
 
     grant_property(property_group, property_name)
     session.session.commit()
-    message = u'Eigenschaft {0} der Gruppe {1} gewährt.'
+    message = 'Eigenschaft {0} der Gruppe {1} gewährt.'
     flash(message.format(property_name, property_group.name), 'success')
     return redirect(url_for('.property_groups'))
 
@@ -87,12 +86,12 @@ def property_group_deny_property(group_id, property_name):
     property_group = PropertyGroup.get(group_id)
 
     if property_group is None:
-        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
         abort(404)
 
     deny_property(property_group, property_name)
     session.session.commit()
-    message = u'Eigenschaft {0} der Gruppe {1} verboten.'
+    message = 'Eigenschaft {0} der Gruppe {1} verboten.'
     flash(message.format(property_name, property_group.name), 'success')
     return redirect(url_for('.property_groups'))
 
@@ -103,12 +102,12 @@ def property_group_remove_property(group_id, property_name):
     group = PropertyGroup.get(group_id)
 
     if group is None:
-        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
         abort(404)
 
     remove_property(group, property_name)
     session.session.commit()
-    message = u'Eigenschaft {0} der Gruppe {1} entfernt.'
+    message = 'Eigenschaft {0} der Gruppe {1} entfernt.'
     flash(message.format(property_name, group.name), 'success')
     return redirect(url_for('.property_groups'))
 
@@ -119,7 +118,7 @@ def property_group_edit(group_id):
     group = PropertyGroup.get(group_id)
 
     if group is None:
-        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
         abort(404)
 
     form = PropertyGroupForm(obj=group)
@@ -130,7 +129,7 @@ def property_group_edit(group_id):
 
         session.session.commit()
 
-        flash(u'Eigenschaftsgruppe bearbeitet.', 'success')
+        flash('Eigenschaftsgruppe bearbeitet.', 'success')
         return redirect(url_for('.property_groups'))
 
     form_args = {
@@ -152,7 +151,7 @@ def property_group_delete(group_id):
     group = PropertyGroup.get(group_id)
 
     if group is None:
-        flash(u"Eigenschaftengruppe mit ID {} existiert nicht!".format(group_id), 'error')
+        flash(f"Eigenschaftengruppe mit ID {group_id} existiert nicht!", 'error')
         abort(404)
 
     form = FlaskForm()
@@ -162,7 +161,7 @@ def property_group_delete(group_id):
 
         session.session.commit()
 
-        flash(u'Eigenschaftsgruppe gelöscht.', 'success')
+        flash('Eigenschaftsgruppe gelöscht.', 'success')
         return redirect(url_for('.property_groups'))
 
     form_args = {

@@ -15,13 +15,13 @@ def parse_vlan(vlan):
     stripped = vlan.strip('"')
     prefix, name = stripped[:1], stripped[1:]
     if not name:
-        raise ParsingError("VLAN identifier has no Name: {}".format(name))
+        raise ParsingError(f"VLAN identifier has no Name: {name}")
     try:
         taggedness = {'1': "tagged", '2': "untagged"}[prefix]
     except KeyError:
         raise ParsingError("VLAN identifier must start with '1' or '2': {}"
                            .format(stripped))
-    return "{} ({})".format(name, taggedness)
+    return f"{name} ({taggedness})"
 
 
 def attrlist_to_dict(attrlist):

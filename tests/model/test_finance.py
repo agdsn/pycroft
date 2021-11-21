@@ -22,7 +22,7 @@ class FinanceModelTest(FactoryDataTestBase):
 
     def create_transaction(self):
         return finance.Transaction(
-            description=u"Transaction",
+            description="Transaction",
             author=self.author
         )
 
@@ -127,7 +127,7 @@ class TestBankAccountActivity(FinanceModelTest):
 
     def tearDown(self):
         session.session.execute(text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger DEFERRED"))
-        super(TestBankAccountActivity, self).tearDown()
+        super().tearDown()
 
     def create_activity(self, amount):
         return BankAccountActivity(

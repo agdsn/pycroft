@@ -29,7 +29,7 @@ class FinTS3Client(FinTS3PinTanClient):
             hkkaz = self._find_highest_supported_command(HKKAZ5, HKKAZ6, HKKAZ7)
 
             logger.info(
-                'Start fetching from {} to {}'.format(start_date, end_date))
+                f'Start fetching from {start_date} to {end_date}')
             statement = self._fetch_with_touchdowns(
                 dialog,
                 lambda touchdown: hkkaz(
@@ -47,7 +47,7 @@ class FinTS3Client(FinTS3PinTanClient):
 
 
 
-        logger.debug('Statement: {}'.format(statement))
+        logger.debug(f'Statement: {statement}')
 
 
         return statement, self.with_error

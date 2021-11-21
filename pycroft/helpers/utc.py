@@ -45,7 +45,7 @@ def combine_ensure_tzinfo(d: date, t: time) -> DateTimeTz:
     return safe_combine(d, ensure_tzinfo(t))
 
 
-def combine_or_midnight(d: date, t: Optional[time]) -> DateTimeTz:
+def combine_or_midnight(d: date, t: time | None) -> DateTimeTz:
     if t is not None:
         return combine_ensure_tzinfo(d, t)
     return with_min_time(d)

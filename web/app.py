@@ -134,9 +134,9 @@ def make_app(debug=False):
         if code == 500:
             message = str(e)
         elif code == 403:
-            message = gettext(u"You are not allowed to access this page.")
+            message = gettext("You are not allowed to access this page.")
         elif code == 404:
-            message = gettext(u"Page not found.")
+            message = gettext("Page not found.")
         else:
             raise AssertionError()
         return render_template('error.html', error=message), code

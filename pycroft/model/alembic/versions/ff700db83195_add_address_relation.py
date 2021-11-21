@@ -87,7 +87,7 @@ class _UserAfter(_User):
 
 
 def upgrade():
-    cleanups: List[Callable] = []
+    cleanups: list[Callable] = []
     # SCHEMA MIGRATION
     # renaming constraint 'address' → 'building_address'
     op.create_unique_constraint('building_address', 'building', ['street', 'number'])

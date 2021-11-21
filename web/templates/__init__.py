@@ -10,7 +10,7 @@ PageResources = namedtuple("PageResources", ("script_files", "ready_scripts",
                                              "stylesheet_files"))
 
 
-class PageResourceRegistry(object):
+class PageResourceRegistry:
     """Register resources like script files for later inclusion in pages."""
 
     @property

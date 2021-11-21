@@ -11,16 +11,16 @@ from pycroft.model.user import User, Membership, PropertyGroup
 
 
 def user_search_query(
-    user_id: Optional[int] = None,
-    name: Optional[str] = None,
-    login: Optional[str] = None,
-    mac: Optional[str] = None,
-    ip_address: Optional[str] = None,
-    property_group_id: Optional[int] = None,
-    building_id: Optional[int] = None,
-    email: Optional[str] = None,
-    person_id: Optional[int] = None,
-    query: Optional[str] = None,
+    user_id: int | None = None,
+    name: str | None = None,
+    login: str | None = None,
+    mac: str | None = None,
+    ip_address: str | None = None,
+    property_group_id: int | None = None,
+    building_id: int | None = None,
+    email: str | None = None,
+    person_id: int | None = None,
+    query: str | None = None,
 ) -> Query:
     result = User.q
     if user_id is not None:

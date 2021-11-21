@@ -203,7 +203,7 @@ def cancel_task(task: Task, processor: User):
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot cancel a task that is not open")
 
-    log_task_event("Cancelled task {}.".format(task.id), processor, task)
+    log_task_event(f"Cancelled task {task.id}.", processor, task)
 
     task.status = TaskStatus.CANCELLED
 

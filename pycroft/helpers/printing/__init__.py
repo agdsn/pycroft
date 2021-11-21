@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2017 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
@@ -140,7 +139,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         email = user.email_internal
         email_redirect = ""
         if user.email is not None:
-            email_redirect = "Your mails are redirected to: {}".format(user.email)
+            email_redirect = f"Your mails are redirected to: {user.email}"
         need_explicit_address = not user.room or user.room.address != user.address
         data = [['Name:', user.name, 'User-ID:', user_id],
                 ['Username:', user.login, 'MAC-Address:', ', '.join(macs)],
@@ -210,11 +209,11 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
 
         # Payment details
         contribution = 500  # monthly membership contribution in EUR
-        story.append(Paragraph('''<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {0:1.2f}€ to our bank account.
+        story.append(Paragraph('''<b>Payment details:</b> As a member, you have to transfer a monthly contribution of {:1.2f}€ to our bank account.
             Paying cash is not possible. The contribution is due at the end of each month. You can pay as much in advance as you want, we will simply subtract
             the monthly contribution at the end of each month. We recommend that you pay at the beginning of each semester in advance, meaning you transact
             six monthly contributions at once.'''.format(
-            (contribution / 100)), style['JustifyText']))
+            contribution / 100), style['JustifyText']))
 
         bank = config.membership_fee_bank_account
 
@@ -241,7 +240,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
             ['IBAN:', bank.iban],
             ['BIC:', bank.bic],
             ['Purpose/Intended use/\nDescription:', purpose],
-            ['Amount', '{0:1.2f}€'.format(amount)]
+            ['Amount', f'{amount:1.2f}€']
         ]
         payment_table = Table(data, colWidths=[4 * cm, 4 * cm],
                               style=[
@@ -273,7 +272,7 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
         )
 
         if generation_purpose:
-            generation_purpose = ' ({})'.format(generation_purpose)
+            generation_purpose = f' ({generation_purpose})'
         story.append(
             Paragraph(
                 '<i>Generated on {date}{purpose}</i>'.format(

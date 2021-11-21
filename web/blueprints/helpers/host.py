@@ -16,14 +16,14 @@ class UniqueMac:
     :param annex_field: the name of the “I want to annex that host/interface” checkbox
     """
 
-    def __init__(self, annex_field: Optional[str] = 'annex'):
+    def __init__(self, annex_field: str | None = 'annex'):
         self.annex_field = annex_field
 
     def annex_set(self, form: Form) -> bool:
         return self.annex_field and getattr(form, self.annex_field).data
 
     @staticmethod
-    def conflicting_interface(mac: str, current_mac: Optional[str] = None) -> Optional[Interface]:
+    def conflicting_interface(mac: str, current_mac: str | None = None) -> Interface | None:
         return Interface.q.filter_by(mac=mac).filter(mac != current_mac).first()
 
     def __call__(self, form: Form, field: Field):

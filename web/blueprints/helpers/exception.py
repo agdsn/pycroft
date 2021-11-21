@@ -34,7 +34,7 @@ def web_execute(function, success_message, *args, **kwargs):
         session.session.rollback()
     except Exception as e:
         traceback.print_exc()
-        flash("Es ist ein unerwarteter Fehler aufgetreten: {}".format(e), "error")
+        flash(f"Es ist ein unerwarteter Fehler aufgetreten: {e}", "error")
 
     session.session.rollback()
 
