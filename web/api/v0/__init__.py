@@ -452,7 +452,8 @@ class RegistrationResource(Resource):
         # some tenants have an additional semicolon added to their last names
         if person_id is None:
             person_id = get_swdd_person_id(
-                args.first_name, args.last_name + ";", args.birthdate)
+                args.first_name, args.last_name + ";", args.birthdate
+            )
 
         if person_id is None or person_id != args.person_id:
             abort(404, message="No tenancies found for this data",
