@@ -28,8 +28,8 @@ alembic~=1.6.4
 # decimal serialization
 simplejson~=3.11.1
 #usersheet generation
-pillow~=5.4.1 # pillow >= 6.x.x breaks reportlab <= 3.5.0
-reportlab~=3.5.0
+pillow~=8.4.0
+reportlab~=3.6.2
 #fints~=3.0.0
 git+git://github.com/raphaelm/python-fints.git@846c25f5f6ae578cde5151fc30b5f7a3601a95ac#egg=fints
 mt-940~=4.19.0
