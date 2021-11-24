@@ -1,2 +1,4 @@
-deb http://deb.nodesource.com/node_10.x/ bullseye main
-deb-src http://deb.nodesource.com/node_10.x/ bullseye main
+# see https://github.com/nodesource/distributions/blob/master/deb/setup_16.x
+# …and https://nodejs.org/en/about/releases/ for version history
+deb http://deb.nodesource.com/node_16.x/ bullseye main
+deb-src http://deb.nodesource.com/node_16.x/ bullseye main
