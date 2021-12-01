@@ -727,7 +727,8 @@ def edit_membership(user_id, membership_id):
         )
 
         message = deferred_gettext("Edited the membership of group '{group}'. During: {during}")\
-            .format(group=membership.group.name, during=membership.active_during)
+            .format(group=membership.group.name, during=membership.active_during)\
+            .to_json()
         lib.logging.log_user_event(message, current_user, membership.user)
         session.session.commit()
         flash(u'Gruppenmitgliedschaft bearbeitet', 'success')
