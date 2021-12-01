@@ -44,7 +44,8 @@ from pycroft.helpers.interval import closed, closedopen, starting_from
 from pycroft.helpers.net import ip_regex, mac_regex
 from pycroft.lib.facilities import get_room
 from pycroft.lib.logging import log_user_event
-from pycroft.lib.membership import make_member_of, remove_member_of
+from pycroft.lib.membership import make_member_of, remove_member_of, \
+    change_membership_active_during
 from pycroft.lib.traffic import get_users_with_highest_traffic
 from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
@@ -809,15 +810,14 @@ def edit_membership(user_id: int, membership_id: int) -> ResponseReturnValue:
     form = UserEditGroupMembership(**membership_data)
 
     if form.validate_on_submit():
-        membership.active_during = closedopen(
-            utc.with_min_time(form.begins_at.data),
+        change_membership_active_during(
+            membership_id,
+            form.begins_at.data,
             None if form.ends_at.unlimited.data else utc.with_min_time(form.ends_at.date.data),
+            processor=current_user
         )
-
-        message = deferred_gettext("Edited the membership of group '{group}'. During: {during}")\
-            .format(group=membership.group.name, during=membership.active_during)\
-            .to_json()
-        lib.logging.log_user_event(message, current_user, membership.user)
+        
+        #todo
         session.session.commit()
         flash('Gruppenmitgliedschaft bearbeitet', 'success')
         return redirect(url_for('.user_show',
