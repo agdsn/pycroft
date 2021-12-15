@@ -4,8 +4,7 @@ from collections import OrderedDict
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
-from typing import List, Dict, Iterable, Tuple, Any, FrozenSet, Optional, \
-    Callable
+from typing import Iterable, Any, Callable
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from .lazy_join import lazy_join, LazilyJoined

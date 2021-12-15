@@ -12,7 +12,6 @@
 from __future__ import annotations
 import re
 from datetime import timedelta, date, datetime
-from typing import Optional, List, Set
 
 from flask_login import UserMixin
 from sqlalchemy import (

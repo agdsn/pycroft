@@ -5,7 +5,6 @@ import inspect
 from collections import OrderedDict
 from collections.abc import Iterable
 from functools import partial, cached_property
-from typing import Union
 
 from sqlalchemy import event as sqla_event, schema, table
 from sqlalchemy.dialects import postgresql

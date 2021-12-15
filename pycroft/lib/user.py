@@ -14,7 +14,7 @@ import re
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
-from typing import Optional, List, Iterable
+from typing import Iterable
 
 from sqlalchemy import or_, func, select, Boolean, String
 from sqlalchemy.engine import Row

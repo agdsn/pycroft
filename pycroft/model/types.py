@@ -4,7 +4,7 @@
 from datetime import datetime
 from decimal import Decimal
 from numbers import Number
-from typing import Optional, Any
+from typing import Any
 
 import ipaddr
 from psycopg2._range import DateTimeTZRange

@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from typing import NoReturn, Union
+from typing import NoReturn
 
 from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, \
     render_template

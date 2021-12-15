@@ -3,7 +3,6 @@ import os
 from itertools import chain, repeat
 
 import time
-from typing import Tuple
 
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError

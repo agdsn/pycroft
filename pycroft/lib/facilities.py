@@ -1,7 +1,6 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
 
 from sqlalchemy import func, and_, distinct, literal_column
 from sqlalchemy.orm import aliased, contains_eager, joinedload
@@ -15,7 +14,6 @@ from pycroft.model.facilities import Room, Building
 from pycroft.model.host import Host
 from pycroft.model.session import with_transaction
 from pycroft.model.user import User
-
 
 logger = logging.getLogger(__name__)
 

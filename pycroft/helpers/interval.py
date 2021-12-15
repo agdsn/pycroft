@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from __future__ import annotations
+
 import collections.abc
 import operator
 from functools import reduce
@@ -12,7 +13,7 @@ __all__ = (
     'UnboundedInterval', 'IntervalSet'
 )
 
-from typing import TypeVar, Generic, Optional
+from typing import TypeVar, Generic
 
 # TODO figure out how we can demand that T shall be a totally ordered metric space
 T = TypeVar('T')

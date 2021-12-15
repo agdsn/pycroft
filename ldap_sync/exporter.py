@@ -4,7 +4,7 @@ import sys
 from collections import Counter, defaultdict, namedtuple
 from distutils.util import strtobool
 from itertools import chain
-from typing import Iterable, List, NamedTuple
+from typing import Iterable, NamedTuple
 
 import ssl
 import ldap3

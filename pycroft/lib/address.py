@@ -1,5 +1,3 @@
-from typing import overload, Optional
-
 from pycroft.model.address import Address
 from pycroft.model.session import session, with_transaction
 

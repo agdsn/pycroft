@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from sqlalchemy import or_, func, cast, Text
 from sqlalchemy.orm import Query

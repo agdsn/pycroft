@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, Callable, TypeVar
-
 from datetime import date
+from typing import Callable, TypeVar
 
 import wrapt
 from marshmallow import Schema, fields, post_load, ValidationError

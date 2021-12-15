@@ -1,5 +1,4 @@
 import abc
-from typing import Optional
 
 from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn

@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from flask import url_for
 from wtforms import Form, Field, ValidationError

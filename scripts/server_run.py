@@ -9,7 +9,7 @@ import os
 import sys
 
 import time
-from typing import Tuple, Callable
+from typing import Callable
 
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request

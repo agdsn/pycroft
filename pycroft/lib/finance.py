@@ -13,7 +13,7 @@ from itertools import chain, islice, starmap, tee, zip_longest
 from io import StringIO
 import operator
 import re
-from typing import Optional, Callable, TypeVar
+from typing import Callable, TypeVar
 
 from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
     text, DateTime, future

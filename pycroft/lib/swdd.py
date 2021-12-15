@@ -1,7 +1,6 @@
 import hmac
 import os
 import unicodedata
-from typing import Optional, List
 
 from sqlalchemy import func
 

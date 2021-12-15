@@ -2,10 +2,8 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import re
-from typing import Optional
 
 import ipaddr
-
 # Byte represented by 2 hexadecimal digits
 from mac_vendor_lookup import MacLookup
 

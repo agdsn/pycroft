@@ -9,7 +9,6 @@ This module contains model descriptions concerning properties, groups, and membe
 
 """
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy.sql.selectable import TableValuedAlias
 

@@ -1,8 +1,6 @@
 import logging
 import os
-
 from datetime import timedelta
-from typing import List
 
 import sentry_sdk
 from celery import Celery

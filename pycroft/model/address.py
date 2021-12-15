@@ -1,13 +1,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from typing import List
 
 from sqlalchemy import Column, String, UniqueConstraint
 
 from pycroft.model import ddl
 from pycroft.model.base import IntegerIdModel
-
 
 DEFAULT_CITY = "Dresden"
 DEFAULT_COUNTRY = "Germany"

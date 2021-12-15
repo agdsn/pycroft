@@ -14,7 +14,7 @@ import re
 from datetime import datetime, timedelta
 from functools import partial
 from itertools import chain
-from typing import Optional, TypeVar, Callable, cast, List
+from typing import TypeVar, Callable, cast
 
 from web.table.table import datetime_format, date_format, LinkColumn
 from flask import (
