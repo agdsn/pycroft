@@ -23,7 +23,7 @@ psycopg2~=2.8.6
 wrapt~=1.12.1
 # only needed for ldap caching
 ldap3~=2.5.1
-celery~=5.1.1
+celery~=5.2.1
 alembic~=1.6.4
 # decimal serialization
 simplejson~=3.11.1
