@@ -6,7 +6,7 @@ from itertools import chain
 
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.base import instance_state, object_state
+from sqlalchemy.orm.base import object_state
 
 from pycroft.lib.net import get_free_ip
 from pycroft.model import host

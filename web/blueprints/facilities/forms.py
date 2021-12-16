@@ -6,17 +6,15 @@ from typing import Callable
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from wtforms.validators import Length, DataRequired, NumberRange, Optional
-from pycroft.model.facilities import Building
 from wtforms_widgets.base_form import BaseForm
 from wtforms_widgets.fields.core import TextField, BooleanField, TextAreaField, \
     QuerySelectField, IntegerField
-
+from wtforms_widgets.fields.custom import LazyLoadSelectField, static, \
+    TypeaheadField
+from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 
 from pycroft.helpers.facilities import sort_buildings
-from wtforms_widgets.fields.custom import LazyLoadSelectField, static, TypeaheadField
-from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
-from wtforms_widgets.fields.validators import OptionalIf
-
+from pycroft.model.facilities import Building
 from .address import ADDRESS_ENTITIES
 from ..helpers.form import iter_prefixed_field_names
 
@@ -29,7 +27,7 @@ class LazyString:
         return self.value_factory()
 
 
-def create_address_field(name: str, *args, type: str, render_kw: OptionalType[dict] = None, **kwargs):
+def create_address_field(name: str, *args, type: str, render_kw: dict | None = None, **kwargs):
     assert type in ADDRESS_ENTITIES, "Unknown address_type"
     return TypeaheadField(
         name,

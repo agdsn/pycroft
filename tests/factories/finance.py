@@ -3,16 +3,14 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import timedelta
 
-from factory import SubFactory, LazyAttribute, RelatedFactory, Iterator, \
+from factory import SubFactory, LazyAttribute, Iterator, \
     RelatedFactoryList
 from factory.faker import Faker
 
 from pycroft.helpers.date import last_day_of_month
 from pycroft.model import session
-
 from pycroft.model.finance import Account, BankAccount, MembershipFee, Split, \
     Transaction, BankAccountActivity
-
 from .base import BaseFactory
 
 

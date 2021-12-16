@@ -3,7 +3,6 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime
 
-import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 

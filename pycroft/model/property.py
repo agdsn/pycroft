@@ -10,13 +10,11 @@ This module contains model descriptions concerning properties, groups, and membe
 """
 from datetime import datetime
 
+from sqlalchemy import and_, func, union, literal, literal_column, select
+from sqlalchemy.orm import Query
 from sqlalchemy.sql.selectable import TableValuedAlias
 
 from pycroft.model import ddl
-from sqlalchemy import null, and_, or_, func, Column, Integer, String, union, \
-    literal, literal_column, select
-from sqlalchemy.orm import Query
-
 from .base import ModelBase
 from .ddl import View, DDLManager
 from .user import User, Property, Membership, PropertyGroup

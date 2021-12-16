@@ -5,7 +5,6 @@ import random
 import string
 
 from passlib.apps import ldap_context
-import passlib.utils
 from passlib.pwd import genword
 
 crypt_context = ldap_context.copy(

@@ -1,8 +1,6 @@
 import os
-
-from itertools import chain, repeat
-
 import time
+from itertools import chain, repeat
 
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError

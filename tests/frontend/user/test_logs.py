@@ -1,11 +1,11 @@
-import unittest
-
+from hades_logs import HadesLogs
 from tests.factories import UserFactory, RoomLogEntryFactory, UserLogEntryFactory, \
     UserWithHostFactory
 
-from hades_logs import HadesLogs
 from tests import InvalidateHadesLogsMixin
-
+from tests.factories import UserFactory, RoomLogEntryFactory, \
+    UserLogEntryFactory, \
+    UserWithHostFactory
 from . import UserLogTestBase
 from ...hades_logs import get_hades_logs_config
 

@@ -9,12 +9,12 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
-from sqlalchemy import or_, and_, func, distinct
+from sqlalchemy import and_, func, distinct
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased
 
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import UnboundedInterval, IntervalSet, closed
+from pycroft.helpers.interval import UnboundedInterval, IntervalSet
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction

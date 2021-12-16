@@ -1,4 +1,3 @@
-import json
 from dataclasses import asdict
 from typing import NoReturn
 
@@ -7,19 +6,18 @@ from flask import Blueprint, jsonify, url_for, abort, flash, redirect, request, 
 from flask_login import current_user
 
 from pycroft.exc import PycroftException
+from pycroft.lib.task import cancel_task, task_type_to_impl, \
+    manually_execute_task, reschedule_task
 from pycroft.model import session
-
-from pycroft.lib.task import cancel_task, task_type_to_impl, manually_execute_task, reschedule_task
 from pycroft.model.facilities import Building
 from pycroft.model.task import Task, TaskStatus
 from web.blueprints import redirect_or_404
-
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.task.forms import RescheduleTaskForm
-from web.table.table import datetime_format
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.navigation import BlueprintNavigation
+from web.blueprints.task.forms import RescheduleTaskForm
 from web.blueprints.task.tables import TaskTable
+from web.table.table import datetime_format
 from web.template_filters import datetime_filter
 
 bp = Blueprint('task', __name__)

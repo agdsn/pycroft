@@ -7,25 +7,21 @@ import argparse
 import logging
 import os
 import sys
-
 import time
 from typing import Callable
 
 from babel.support import Translations
 from flask import _request_ctx_stack, g, request
-from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 import pycroft
 import web
 from pycroft.helpers.i18n import set_translation_lookup, get_locale
-from pycroft.model import create_engine
 from pycroft.model.session import set_scoped_session
+from scripts.connection import try_create_connection, get_connection_string
 from scripts.schema import AlembicHelper, SchemaStrategist
 from web import make_app, PycroftFlask
-from scripts.connection import try_create_connection, get_connection_string
-
 
 default_handler = logging.StreamHandler(sys.stdout)
 default_handler.setFormatter(

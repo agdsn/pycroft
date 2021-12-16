@@ -1,6 +1,6 @@
 from pycroft.model.ddl import ConstraintTrigger, CreateConstraintTrigger, \
     Trigger, CreateTrigger
-from . import create_table, literal_compile
+from . import literal_compile
 
 
 class TestTrigger:

@@ -12,8 +12,8 @@
 from sqlalchemy import Column, ForeignKey, func
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import Integer, Text, String
+
 from pycroft.model.base import IntegerIdModel
-from pycroft.model.task import Task, UserTask
 from pycroft.model.types import DateTimeTz
 
 

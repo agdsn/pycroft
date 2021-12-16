@@ -2,16 +2,17 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
+
 from flask_wtf import FlaskForm as Form
 from wtforms import Form as WTForm, ValidationError
 from wtforms.validators import DataRequired, NumberRange, Optional, \
     InputRequired
-
 from wtforms_widgets.fields.core import (
     TextField, IntegerField, HiddenField, FileField, SelectField, FormField,
-    FieldList, StringField, DateField, MoneyField, PasswordField, DecimalField,
-    BooleanField, SelectMultipleField, QuerySelectMultipleField, TextAreaField, QuerySelectField)
+    FieldList, StringField, DateField, MoneyField, PasswordField, BooleanField,
+    QuerySelectMultipleField, TextAreaField, QuerySelectField)
 from wtforms_widgets.fields.custom import TypeaheadField, static, disabled
+
 from pycroft.helpers.i18n import gettext
 from pycroft.model.finance import BankAccount
 

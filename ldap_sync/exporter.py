@@ -1,20 +1,19 @@
 import logging
 import os
-import sys
+import ssl
 from collections import Counter, defaultdict, namedtuple
 from distutils.util import strtobool
 from itertools import chain
 from typing import Iterable, NamedTuple
 
-import ssl
 import ldap3
 from sqlalchemy import and_, func, select, join, dialects
 from sqlalchemy.orm import scoped_session, sessionmaker, foreign, joinedload
 
 from pycroft.model import create_engine
 from pycroft.model.property import CurrentProperty
-from pycroft.model.user import User, Group, Membership
 from pycroft.model.session import set_scoped_session, session as global_session
+from pycroft.model.user import User, Group, Membership
 from .record import UserRecord, GroupRecord, RecordState
 
 logger = logging.getLogger('ldap_sync')

@@ -1,5 +1,4 @@
 import re
-import traceback
 
 from flask import Blueprint, flash, abort, redirect, url_for, render_template, \
     jsonify, request
@@ -9,11 +8,10 @@ from ipaddr import IPv4Address
 
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
 from pycroft.lib import host as lib_host
-from pycroft.lib.net import get_subnets_for_room, get_unused_ips, \
-    MacExistsException
+from pycroft.lib.net import get_subnets_for_room, get_unused_ips
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.host import Host, Interface, MulticastFlagException
+from pycroft.model.host import Host, Interface
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute

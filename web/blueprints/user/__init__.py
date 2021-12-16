@@ -11,19 +11,18 @@
 """
 import operator
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import partial
 from itertools import chain
 from typing import TypeVar, Callable, cast
 
-from web.table.table import datetime_format, date_format, LinkColumn
 from flask import (
     Blueprint, Markup, abort, flash, jsonify, redirect, render_template,
     request, url_for, session as flask_session, make_response)
 from flask_login import current_user
 
-import pycroft.lib.stats
 import pycroft.lib.search
+import pycroft.lib.stats
 from pycroft import lib, config
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import gettext, deferred_gettext
@@ -37,13 +36,13 @@ from pycroft.lib.user import encode_type1_user_id, encode_type2_user_id, \
     traffic_history, generate_user_sheet, get_blocked_groups, \
     finish_member_request, send_confirmation_email, \
     delete_member_request, get_member_requests, \
-    get_possible_existing_users_for_pre_member, send_member_request_merged_email, can_target, edit_address
+    get_possible_existing_users_for_pre_member, \
+    send_member_request_merged_email, can_target, edit_address
 from pycroft.lib.user_deletion import get_archivable_members
 from pycroft.model import session
 from pycroft.model.facilities import Room
-from pycroft.model.finance import Split
 from pycroft.model.swdd import Tenancy
-from pycroft.model.user import User, Membership, PreMember, BaseUser, RoomHistoryEntry
+from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.helpers.exception import web_execute
 from web.blueprints.helpers.form import refill_room_data
@@ -56,7 +55,9 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserEditForm, UserSuspendForm, UserMoveOutForm, \
     UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
-    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, NonResidentUserCreateForm
+    PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, \
+    NonResidentUserCreateForm
+from web.table.table import datetime_format, date_format
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
                      SearchTable, TrafficTopTable, RoomHistoryTable,

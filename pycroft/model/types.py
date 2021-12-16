@@ -12,7 +12,7 @@ from sqlalchemy import String, TypeDecorator, Integer, DateTime, literal
 from sqlalchemy.dialects.postgresql import MACADDR, INET
 from sqlalchemy.dialects.postgresql.ranges import TSTZRANGE
 
-from pycroft.helpers.interval import Interval, Bound
+from pycroft.helpers.interval import Interval
 from pycroft.helpers.net import mac_regex
 from pycroft.model.exc import PycroftModelException
 

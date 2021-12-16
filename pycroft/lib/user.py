@@ -11,19 +11,18 @@ This module contains.
 """
 import os
 import re
-from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
 
-from sqlalchemy import or_, func, select, Boolean, String
+from sqlalchemy import func, select, Boolean, String
 from sqlalchemy.engine import Row
 
 from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict, utc
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import closed, closedopen, single
+from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
 from pycroft.lib.address import get_or_create_address
@@ -33,7 +32,8 @@ from pycroft.lib.finance import user_has_paid
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.mail import MailTemplate, Mail, UserConfirmEmailTemplate, \
     UserCreatedTemplate, \
-    UserMovedInTemplate, MemberRequestPendingTemplate, MemberRequestDeniedTemplate, \
+    UserMovedInTemplate, MemberRequestPendingTemplate, \
+    MemberRequestDeniedTemplate, \
     MemberRequestMergedTemplate, UserResetPasswordTemplate
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import get_free_ip, MacExistsException, \
@@ -50,7 +50,8 @@ from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
     UserMoveInParams
 from pycroft.model.traffic import TrafficHistoryEntry
-from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, RoomHistoryEntry, \
+from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, \
+    RoomHistoryEntry, \
     PropertyGroup
 from pycroft.model.webstorage import WebStorage
 from pycroft.task import send_mails_async

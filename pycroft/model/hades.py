@@ -1,4 +1,4 @@
-from sqlalchemy import literal, Column, String, BigInteger, func, union_all, Table, Integer, \
+from sqlalchemy import literal, Column, String, func, union_all, Table, Integer, \
     PrimaryKeyConstraint, null, and_
 from sqlalchemy.orm import Query, aliased, configure_mappers
 
@@ -8,8 +8,8 @@ from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, Switch, SwitchPort, Host, IP
 from pycroft.model.net import VLAN, Subnet
 from pycroft.model.port import PatchPort
-from pycroft.model.user import User
 from pycroft.model.property import current_property, CurrentProperty
+from pycroft.model.user import User
 
 # we need backref attributes to be accessible for view queries,
 # which get set in the configuration phase

@@ -1,45 +1,43 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-from abc import ABCMeta, abstractmethod
-import logging
-from collections import namedtuple
 import csv
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import difflib
-from functools import partial
-from itertools import chain, islice, starmap, tee, zip_longest
-from io import StringIO
+import logging
 import operator
 import re
+from collections import namedtuple
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from io import StringIO
+from itertools import chain, islice, tee, zip_longest
 from typing import Callable, TypeVar
 
-from sqlalchemy import or_, and_, literal_column, literal, select, exists, not_, \
-    text, DateTime, future
-from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
+from sqlalchemy import func, between, cast
+from sqlalchemy import or_, and_, literal, select, exists, not_, \
+    text, future
+from sqlalchemy.orm import aliased, contains_eager, joinedload
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import func, between, Integer, cast
 
-from pycroft import config, model
-from pycroft.helpers.i18n import deferred_gettext, gettext, Message
+from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
+from pycroft.helpers.i18n import deferred_gettext, gettext
+from pycroft.helpers.interval import (
+    closed, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.helpers.utc import with_min_time, with_max_time
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
-from pycroft.model.facilities import Room, Building, Site
+from pycroft.model.facilities import Room, Building
 from pycroft.model.finance import (
-    Account, BankAccount, BankAccountActivity, Split, Transaction, MembershipFee)
-from pycroft.helpers.interval import (
-    closed, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
+    Account, BankAccount, BankAccountActivity, Split, Transaction,
+    MembershipFee)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty, evaluate_properties
 from pycroft.model.session import with_transaction
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
-
 
 logger = logging.getLogger('pycroft.lib.finance')
 

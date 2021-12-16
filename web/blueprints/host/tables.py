@@ -1,8 +1,8 @@
 from flask import url_for
 
-from web.table.table import BootstrapTable, Column, BtnColumn, \
-    button_toolbar, MultiBtnColumn
 from web.blueprints.helpers.user import no_hosts_change
+from web.table.table import BootstrapTable, Column, button_toolbar, \
+    MultiBtnColumn
 
 
 class HostTable(BootstrapTable):

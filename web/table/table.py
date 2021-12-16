@@ -42,7 +42,7 @@ class Column:
 
     def __init__(self, title, name=None, formatter=None, width=0,
                  cell_style=None, col_args=None, sortable=True,
-                 hide_if: Callable | None = lambda: False):
+                 hide_if: Callable[[], bool] | None = lambda: False):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False

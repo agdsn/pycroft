@@ -1,5 +1,4 @@
 import factory
-import faker
 from ipaddr import IPv4Network
 
 from pycroft.model.net import VLAN, Subnet

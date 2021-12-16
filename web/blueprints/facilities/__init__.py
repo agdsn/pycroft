@@ -8,24 +8,26 @@
     This module defines view functions for /facilities
     :copyright: (c) 2012 by AG DSN.
 """
+from collections import defaultdict
 from operator import and_
 
-from collections import defaultdict
 from flask import (Blueprint, flash, jsonify, render_template, url_for,
                    redirect, request, abort)
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
-from sqlalchemy.sql import and_, select, exists
 from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.sql import and_, select, exists
 
-from pycroft import lib, config
+from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import sort_ports
 from pycroft.lib.address import get_or_create_address
-from pycroft.lib.facilities import get_overcrowded_rooms, create_room, edit_room, \
+from pycroft.lib.facilities import get_overcrowded_rooms, create_room, \
+    edit_room, \
     RoomAlreadyExistsException, suggest_room_address_data
-from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, delete_patch_port, \
+from pycroft.lib.infrastructure import create_patch_port, edit_patch_port, \
+    delete_patch_port, \
     PatchPortAlreadyExistsException
 from pycroft.model import session
 from pycroft.model.facilities import Room, Site, Building

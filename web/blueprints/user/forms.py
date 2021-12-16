@@ -1,28 +1,15 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import typing
-from datetime import datetime, timezone
+from datetime import datetime
 
 from flask import url_for
 from flask_wtf import FlaskForm as Form
 from markupsafe import escape
-from pycroft.helpers import utc
 from wtforms import Field
-from wtforms.widgets import HTMLString
-
-from pycroft.lib.user import find_similar_users
-from pycroft.model.address import Address
-from pycroft.model.facilities import Room
-from web.blueprints.helpers.host import UniqueMac
-from web.form.widgets import UserIDField
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
-
-from pycroft.model.host import Host
-from pycroft.model.user import PropertyGroup, User
-from web.blueprints.facilities.forms import building_query, SelectRoomForm, CreateAddressForm
-from web.blueprints.properties.forms import property_group_query, property_group_user_create_query
+from wtforms.widgets import HTMLString
 from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
     QuerySelectField, FormField, \
     QuerySelectMultipleField, DateField, IntegerField, TimeField
@@ -30,7 +17,20 @@ from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
 
-from ..helpers.form import confirmable_div, ConfirmCheckboxField, iter_prefixed_field_names
+from pycroft.helpers import utc
+from pycroft.lib.user import find_similar_users
+from pycroft.model.address import Address
+from pycroft.model.facilities import Room
+from pycroft.model.host import Host
+from pycroft.model.user import PropertyGroup, User
+from web.blueprints.facilities.forms import building_query, SelectRoomForm, \
+    CreateAddressForm
+from web.blueprints.helpers.host import UniqueMac
+from web.blueprints.properties.forms import property_group_query, \
+    property_group_user_create_query
+from web.form.widgets import UserIDField
+from ..helpers.form import confirmable_div, ConfirmCheckboxField, \
+    iter_prefixed_field_names
 
 
 def user_query():

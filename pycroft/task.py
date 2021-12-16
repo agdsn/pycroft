@@ -14,7 +14,8 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 from pycroft.helpers.task import DBTask
 from pycroft.lib.finance import get_negative_members
 from pycroft.lib.logging import log_task_event
-from pycroft.lib.mail import send_mails, Mail, RetryableException, TaskFailedTemplate, \
+from pycroft.lib.mail import send_mails, Mail, RetryableException, \
+    TaskFailedTemplate, \
     MemberNegativeBalance, send_template_mails
 from pycroft.lib.task import get_task_implementation
 from pycroft.model import session
@@ -113,8 +114,6 @@ def execute_scheduled_tasks():
         session.session.commit()
 
         if task.status == TaskStatus.FAILED:
-            from pycroft.lib.user import user_send_mail
-
             send_template_mails(['support@agdsn.de'], TaskFailedTemplate(), task=task)
 
 

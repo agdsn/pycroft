@@ -5,23 +5,24 @@ from flask import jsonify, request, current_app
 from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from ipaddr import IPAddress
-from pycroft.helpers import utc
 from sqlalchemy.exc import IntegrityError
 
-from pycroft import config
+from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
-from pycroft.lib.finance import build_transactions_query, estimate_balance, get_last_import_date
+from pycroft.lib.finance import build_transactions_query, estimate_balance, \
+    get_last_import_date
 from pycroft.lib.host import change_mac, host_create, interface_create, \
     host_edit
-from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.lib.net import SubnetFullException
 from pycroft.lib.swdd import get_swdd_person_id, get_relevant_tenancies, \
     get_first_tenancy_with_room
 from pycroft.lib.task import cancel_task
 from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, \
     status, traffic_history as func_traffic_history, membership_end_date, \
-    move_out, membership_ending_task, reset_wifi_password, create_member_request, \
-    NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, EmailTakenException, \
+    move_out, membership_ending_task, reset_wifi_password, \
+    create_member_request, \
+    NoTenancyForRoomException, UserExistsException, UserExistsInRoomException, \
+    EmailTakenException, \
     LoginTakenException, MoveInDateInvalidException, check_similar_user_in_room, \
     get_name_from_first_last, confirm_mail_address, get_user_by_swdd_person_id, \
     membership_begin_date, send_confirmation_email, get_user_by_id_or_login, \

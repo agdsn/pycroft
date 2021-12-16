@@ -10,26 +10,28 @@
     :copyright: (c) 2011 by AG DSN.
 """
 from __future__ import annotations
+
 import re
 from datetime import timedelta, date, datetime
 
 from flask_login import UserMixin
 from sqlalchemy import (
     Boolean, Column, ForeignKey, Integer,
-    String, and_, exists, join, not_, null, select, Sequence,
+    String, and_, exists, join, null, select, Sequence,
     Date, func, UniqueConstraint, Index, text, event)
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.orm import backref, object_session, relationship, validates, declared_attr
+from sqlalchemy.orm import backref, object_session, relationship, validates, \
+    declared_attr
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.util import has_identity
-from sqlalchemy.sql import true, false
 
-from pycroft.helpers.interval import closed, single, Interval, closedopen
-from pycroft.helpers.user import hash_password, verify_password, cleartext_password, \
+from pycroft.helpers.interval import single, Interval, closedopen
+from pycroft.helpers.user import hash_password, verify_password, \
+    cleartext_password, \
     clear_password_prefix
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans

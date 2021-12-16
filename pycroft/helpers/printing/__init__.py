@@ -11,7 +11,6 @@ from reportlab.lib.styles import StyleSheet1, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, Spacer
 from reportlab.platypus.flowables import HRFlowable, PageBreak
-from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.rl_config import defaultPageSize
 from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.barcode import qr

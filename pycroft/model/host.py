@@ -2,19 +2,19 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from sqlalchemy import Column, ForeignKey, event, UniqueConstraint
-from sqlalchemy.orm import backref, relationship, validates, object_session
+from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
+
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.net import mac_regex
-
 from pycroft.model.base import ModelBase, IntegerIdModel
 from pycroft.model.exc import PycroftModelException
 from pycroft.model.facilities import Room
 from pycroft.model.net import Subnet
-from pycroft.model.user import User
 from pycroft.model.types import (
     IPAddress, MACAddress, InvalidMACAddressException)
+from pycroft.model.user import User
 
 
 class Host(IntegerIdModel):

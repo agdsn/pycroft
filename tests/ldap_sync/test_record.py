@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 import pytest
 
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction

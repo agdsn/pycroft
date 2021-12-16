@@ -6,20 +6,17 @@ a user.
 """
 import logging
 
-from sqlalchemy import select
 from sqlalchemy.orm import Query
 
-from hades_logs import hades_logs, HadesLogs
+from hades_logs import hades_logs
 from hades_logs.exc import HadesConfigError, HadesOperationalError, HadesTimeout
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import SwitchPort
 from pycroft.model.port import PatchPort
 from pycroft.model.user import User
-
 from ..helpers.log import format_hades_log_entry, format_hades_disabled, \
     format_user_not_connected, format_hades_error, format_hades_timeout
-
 
 logger = logging.getLogger(__name__)
 

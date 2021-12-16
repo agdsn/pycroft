@@ -1,7 +1,6 @@
 from flask import url_for, flash, abort
 from flask_login import current_user
 
-from pycroft.lib.user import status
 from pycroft.model.user import User, PreMember
 
 

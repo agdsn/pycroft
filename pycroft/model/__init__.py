@@ -9,15 +9,14 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+from datetime import timezone, tzinfo
+
+import psycopg2.extensions
+from sqlalchemy import create_engine as sqa_create_engine
+
 from . import _all
 from . import base
 from . import session
-
-from datetime import timezone, tzinfo
-
-import os
-import psycopg2.extensions
-from sqlalchemy import create_engine as sqa_create_engine
 
 
 class UTCTZInfoFactory(tzinfo):

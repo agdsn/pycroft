@@ -9,12 +9,15 @@
 
     :copyright: (c) 2012 by AG DSN.
 """
-from datetime import timedelta, datetime, date
+from datetime import date
+from datetime import timedelta, datetime
 from functools import partial
 from itertools import groupby, zip_longest, chain
-from io import StringIO
 
 import wtforms
+from fints.dialog import FinTSDialogError
+from fints.exceptions import FinTSClientPINError
+from fints.utils import mt940_to_array
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
     url_for, make_response)
@@ -23,6 +26,7 @@ from flask_wtf import FlaskForm
 from sqlalchemy import or_, and_, Text, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.sql.expression import literal_column, func, select, Join
 from wtforms import BooleanField
 
 from pycroft import config, lib
@@ -33,15 +37,12 @@ from pycroft.lib.finance import end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
     match_activities, take_actions_for_payment_in_default_users, get_pid_csv
 from pycroft.lib.user import encode_type2_user_id
+from pycroft.model.finance import Account, Transaction
 from pycroft.model.finance import (
     BankAccount, BankAccountActivity, Split, MembershipFee, MT940Error)
 from pycroft.model.session import session
 from pycroft.model.user import User
-from pycroft.model.finance import Account, Transaction
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import web_execute
-from web.blueprints.helpers.fints import FinTS3Client
-from web.table.table import date_format
 from web.blueprints.finance.forms import (
     AccountCreateForm, BankAccountCreateForm, BankAccountActivityEditForm,
     BankAccountActivitiesImportForm, TransactionCreateForm,
@@ -52,17 +53,13 @@ from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     MembershipFeeTable, UsersDueTable, BankAccountTable, \
     BankAccountActivityTable, TransactionTable, ImportErrorTable, \
     UnconfirmedTransactionsTable
+from web.blueprints.helpers.api import json_agg_core
+from web.blueprints.helpers.exception import web_execute
+from web.blueprints.helpers.fints import FinTS3Client
 from web.blueprints.navigation import BlueprintNavigation
+from web.table.table import date_format
 from web.template_filters import date_filter, money_filter, datetime_filter
 from web.template_tests import privilege_check
-from web.blueprints.helpers.api import json_agg_core
-
-from sqlalchemy.sql.expression import literal_column, func, select, Join
-
-from fints.dialog import FinTSDialogError
-from fints.exceptions import FinTSClientPINError
-from fints.utils import mt940_to_array
-from datetime import date
 
 bp = Blueprint('finance', __name__)
 access = BlueprintAccess(bp, required_properties=['finance_show'])

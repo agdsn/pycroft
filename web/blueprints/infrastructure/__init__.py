@@ -11,26 +11,26 @@
 """
 
 from flask import (
-    Blueprint, abort, flash, jsonify, redirect, render_template,url_for)
+    Blueprint, abort, flash, jsonify, redirect, render_template, url_for)
 from flask_login import current_user
 from flask_wtf import FlaskForm as Form
 from ipaddr import IPAddress
 from sqlalchemy.orm import joinedload
 
-from pycroft.lib.infrastructure import create_switch, \
-    edit_switch, delete_switch, create_switch_port, patch_switch_port_to_patch_port, PatchPortAlreadyPatchedException, \
-    edit_switch_port, remove_patch_to_patch_port, delete_switch_port
-from pycroft.model.facilities import Room
-from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
-
 from pycroft.helpers import net
-from pycroft.model import session
-from pycroft.model.host import Switch, SwitchPort
-from pycroft.model.net import VLAN, Subnet
-from pycroft.model.port import PatchPort
+from pycroft.lib.infrastructure import create_switch, \
+    edit_switch, delete_switch, create_switch_port, \
+    patch_switch_port_to_patch_port, PatchPortAlreadyPatchedException, \
+    edit_switch_port, remove_patch_to_patch_port, delete_switch_port
 from pycroft.lib.net import get_subnets_with_usage
-from web.blueprints.navigation import BlueprintNavigation
+from pycroft.model import session
+from pycroft.model.facilities import Room
+from pycroft.model.host import Switch, SwitchPort
+from pycroft.model.net import VLAN
+from pycroft.model.port import PatchPort
 from web.blueprints.access import BlueprintAccess
+from web.blueprints.infrastructure.forms import SwitchForm, SwitchPortForm
+from web.blueprints.navigation import BlueprintNavigation
 from .tables import SubnetTable, SwitchTable, VlanTable, PortTable
 
 bp = Blueprint('infrastructure', __name__)

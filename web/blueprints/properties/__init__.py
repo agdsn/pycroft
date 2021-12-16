@@ -10,17 +10,18 @@
     :copyright: (c) 2012 by AG DSN.
 """
 from itertools import chain
-import operator
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, abort
+from flask import Blueprint, flash, jsonify, redirect, render_template, url_for, \
+    abort
 from flask_login import current_user
 from flask_wtf import FlaskForm
 
-from pycroft.model import session
-from pycroft.property import property_categories
-from pycroft.model.user import Property, PropertyGroup
 from pycroft.lib.membership import grant_property, deny_property, \
-    remove_property, edit_property_group, delete_property_group, known_properties
+    remove_property, edit_property_group, delete_property_group, \
+    known_properties
+from pycroft.model import session
+from pycroft.model.user import PropertyGroup
+from pycroft.property import property_categories
 from web.blueprints.access import BlueprintAccess
 from web.blueprints.navigation import BlueprintNavigation
 from web.blueprints.properties.forms import PropertyGroupForm

@@ -11,18 +11,17 @@
 """
 import pathlib
 from cmath import log
-from datetime import datetime, timedelta
+from datetime import datetime
 from itertools import chain
 from re import sub
+
 import flask_babel
 from flask import current_app, json, url_for
 from jinja2 import contextfilter
 from jinja2.runtime import Context
 
-from pycroft.model import session, _all
-#from pycroft.model.accounting import TrafficVolume
-from pycroft.model.host import Host, IP
 from pycroft.helpers.i18n import localized, gettext
+from pycroft.model import session
 
 _filter_registry = {}
 

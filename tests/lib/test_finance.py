@@ -6,7 +6,6 @@ import pkgutil
 from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
-from unittest.mock import MagicMock
 
 import pytest
 from factory import Iterator
@@ -14,7 +13,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
 from pycroft.helpers.date import last_day_of_month
-from pycroft.helpers.interval import closedopen, openclosed, single, closed
+from pycroft.helpers.interval import closedopen, openclosed, single
 from pycroft.lib import finance
 from pycroft.lib.finance import (
     cleanup_description,
@@ -26,9 +25,8 @@ from pycroft.lib.finance import (
     take_actions_for_payment_in_default_users)
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity, Transaction, Split
-from pycroft.model.user import User
 from tests import FactoryDataTestBase
-from tests.factories import MembershipFactory, ConfigFactory, BuildingFactory
+from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory, BankAccountFactory

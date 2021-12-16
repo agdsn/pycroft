@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import text, select, Table, Column, Integer, String, ForeignKey, Date
+from sqlalchemy import text, select, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import relationship, backref
 

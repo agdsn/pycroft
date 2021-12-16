@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
 from pycroft.model.ddl import Rule, CreateRule
-from . import create_table, literal_compile
+from . import literal_compile
 
 
 class TestRule:

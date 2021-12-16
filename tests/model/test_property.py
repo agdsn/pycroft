@@ -3,15 +3,15 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, text
-from sqlalchemy.future import select, Engine
-from tests.factories import UserFactory
+from sqlalchemy import func
+from sqlalchemy.future import select
 
 from pycroft.helpers.interval import closedopen
 from pycroft.model import session, user
 from pycroft.model.property import current_property, evaluate_properties
 from pycroft.model.user import Group, Membership, PropertyGroup, User
 from tests import FactoryDataTestBase, factories
+from tests.factories import UserFactory
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
 
 

@@ -2,17 +2,15 @@ import logging
 import os
 import smtplib
 import ssl
+import traceback
+from dataclasses import dataclass
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid, formatdate
 
 import jinja2
-import traceback
 
-from dataclasses import dataclass
-
-from pycroft.helpers import AutoNumber
 from pycroft.lib.exc import PycroftLibException
 
 mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')

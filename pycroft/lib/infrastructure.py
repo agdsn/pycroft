@@ -1,7 +1,7 @@
 from ipaddr import IPAddress
 
 from pycroft.lib.exc import PycroftLibException
-from pycroft.lib.logging import log_room_event, log_event
+from pycroft.lib.logging import log_room_event
 from pycroft.model.host import SwitchPort, Host, Switch
 from pycroft.model.port import PatchPort
 from pycroft.model.session import with_transaction, session

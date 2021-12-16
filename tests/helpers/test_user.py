@@ -1,11 +1,13 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import unittest
 
 import pytest
-from passlib.hash import ldap_des_crypt, ldap_sha512_crypt, ldap_md5, ldap_salted_sha1
-from pycroft.helpers.user import generate_password, hash_password, verify_password
+from passlib.hash import ldap_des_crypt, ldap_sha512_crypt, ldap_md5, \
+    ldap_salted_sha1
+
+from pycroft.helpers.user import generate_password, hash_password, \
+    verify_password
 
 
 class TestPasswordGeneration:

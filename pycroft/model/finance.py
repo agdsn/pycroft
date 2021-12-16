@@ -2,8 +2,6 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
-import operator
-
 from math import fabs
 
 from sqlalchemy import Column, ForeignKey, event, func, select, Boolean
@@ -12,7 +10,7 @@ from sqlalchemy.orm import relationship, backref, object_session
 from sqlalchemy.schema import (
     CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
 from sqlalchemy.types import (
-    Date, DateTime, Enum, Integer, Interval, String, Text)
+    Date, Enum, Integer, Interval, String, Text)
 
 from pycroft.helpers.i18n import gettext
 from pycroft.helpers.interval import closed
