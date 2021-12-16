@@ -1,9 +1,9 @@
-Click~=7.0
+Click~=8.0
 #MySQL-python==1.2.5
 Flask-Babel~=2.0.0
 Flask-Login~=0.5.0
 Flask-Testing~=0.8.1
-Flask-WTF~=0.14.2
+Flask-WTF~=1.0.0
 Flask-RESTful~=0.3.7
 Flask~=1.1.2
 # manual pin of itsdangerous: v2 does not use `simplejson` anymore,
