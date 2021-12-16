@@ -140,8 +140,7 @@ def property_group_edit(group_id):
     }
 
     return render_template('generic_form.html',
-                           page_title="Eigenschaftsgruppe '{}' bearbeiten"
-                                      .format(group.name),
+                           page_title=f"Eigenschaftsgruppe '{group.name}' bearbeiten",
                            form_args=form_args,
                            form=form)
 
@@ -173,8 +172,7 @@ def property_group_delete(group_id):
     }
 
     return render_template('generic_form.html',
-                           page_title="Eigenschaftsgruppe '{}' löschen"
-                                      .format(group.name),
+                           page_title=f"Eigenschaftsgruppe '{group.name}' löschen",
                            form_args=form_args,
                            form=form)
 

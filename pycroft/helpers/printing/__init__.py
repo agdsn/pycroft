@@ -102,10 +102,9 @@ def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_pass
                                 spaceBefore=0.0 * cm,
                                 spaceAfter=0.5 * cm))
 
-        welcome = Paragraph('''Welcome as a member of the AG DSN, {}!
-    We are proud to announce that your network access has been activated. If you encounter any problems, drop us a mail or visit us during our office hours. You can find contact information below on this page.'''
-                      .format(user.name),
-                      style['BodyText'])
+        welcome = Paragraph(f'''Welcome as a member of the AG DSN, {user.name}!
+    We are proud to announce that your network access has been activated. If you encounter any problems, drop us a mail or visit us during our office hours. You can find contact information below on this page.''',
+                            style['BodyText'])
 
         return_notice = Paragraph(
             '''<font size="9pt">Nicht nachsenden!</font>''',

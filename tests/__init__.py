@@ -242,8 +242,7 @@ class FrontendDataTestBase(testing.TestCase):
                     type(v), self._default_argument_creator
                 )(v) for k, v in converters.items()}
         except KeyError as e:
-            raise AssertionError("Cannot create mock argument for {}"
-                                 .format(e.args[0]))
+            raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
         return url_adapter.build(rule.endpoint, values, 'GET')
 
     def assert_template_get_request(self, endpoint, template):
@@ -261,8 +260,9 @@ class FrontendDataTestBase(testing.TestCase):
         try:
             callback = callback_map[method]
         except KeyError:
-            raise ValueError("{} is not a valid method. choose from {}"
-                             .format(method, list(callback_map.keys())))
+            raise ValueError(
+                f"{method} is not a valid method. choose from {list(callback_map.keys())}"
+            )
         return self._assert_response_code(response=callback(endpoint, **kwargs),
                                           code=code)
 

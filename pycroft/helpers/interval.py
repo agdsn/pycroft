@@ -154,8 +154,7 @@ class Interval(tuple, Generic[T]):
         """
         if lower_bound > upper_bound:
             raise ValueError(
-                "lower_bound > upper_bound ({} > {})"
-                .format(lower_bound, upper_bound)
+                f"lower_bound > upper_bound ({lower_bound} > {upper_bound})"
             )
         # Unfortunately using namedtuple is not possible, because we have
         # field names starting with underscores

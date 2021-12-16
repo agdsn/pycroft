@@ -418,10 +418,12 @@ class View(schema.DDLElement):
     def _init_table_columns(self):
         if self.column_names is not None:
             query_column_names = set(self.query.c.keys())
-            if set(self.column_names) != query_column_names:
-                raise ValueError("The given column_names must coincide with"
-                                 " the implicit columns of the query: {!r} != {!r}"
-                                 .format(set(self.column_names), query_column_names))
+            my_column_names = set(self.column_names)
+            if my_column_names != query_column_names:
+                raise ValueError(
+                    "The given column_names must coincide with the implicit columns of the query:"
+                    f" {my_column_names!r} != {query_column_names!r}"
+                )
         for c in self.query.selected_columns:
             # _make_proxy doesn't attach the column to the selectable (`self.table`) anymore
             # since sqla commit:aceefb508ccd0911f52ff0e50324b3fefeaa3f16 (before 1.4.0)

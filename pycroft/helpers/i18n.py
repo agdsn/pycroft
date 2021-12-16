@@ -162,8 +162,10 @@ def format_param(p, options):
     try:
         type_, formatter = next(formatters)
     except StopIteration:
-        raise TypeError("No formatter available for type {} or any supertype."
-                        .format(qualified_typename(concrete_type)))
+        raise TypeError(
+            f"No formatter available for type {qualified_typename(concrete_type)}"
+            " or any supertype."
+        )
     option_policy = getattr(formatter, '__option_policy__', None)
     if option_policy == 'ignore':
         options = {}

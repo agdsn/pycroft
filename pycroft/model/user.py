@@ -107,21 +107,19 @@ class BaseUser:
     def validate_login(self, _, value):
         if not self.login_regex.match(value):
             raise IllegalLoginError(
-                "Illegal login '{}': Logins must begin with a lower case "
+                f"Illegal login '{value}': Logins must begin with a lower case "
                 "letter and may be followed by lower case letters, digits or "
                 "punctuation (dash and dot). Punctuation "
                 "characters must be separated by at least on letter or digit."
-                    .format(value)
             )
         if value in self.blocked_logins:
             raise IllegalLoginError(
-                "Illegal login '{}': This login is blocked and may not be used."
-                    .format(value)
+                f"Illegal login '{value}': This login is blocked and may not be used."
             )
         if len(value) > self.login_character_limit:
             raise IllegalLoginError(
-                "Illegal login '{}': Logins are limited to at most {} "
-                "characters.".format(value, self.login_character_limit)
+                f"Illegal login '{value}': Logins are limited to at most"
+                f" {self.login_character_limit} characters."
             )
         return value
 

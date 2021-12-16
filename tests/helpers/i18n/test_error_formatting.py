@@ -19,8 +19,7 @@ def test_missing_positional_argument():
     kwargs = {}
     error = get_format_error_message(message, args, kwargs)
     m = deferred_gettext(message).format(*args)
-    text = ('Could not format message "{}" (args={}, kwargs={}): {}'
-            .format(message, args, kwargs, error))
+    text = f'Could not format message "{message}" (args={args}, kwargs={kwargs}): {error}'
     assertSimpleMessageCorrect(m, message, None, args, kwargs, text)
 
 
@@ -30,6 +29,5 @@ def test_missing_keyword_argument():
     kwargs = {}
     error = get_format_error_message(message, args, kwargs)
     m = deferred_gettext(message).format(*args)
-    text = ('Could not format message "{}" (args={}, kwargs={}): {}'
-            .format(message, args, kwargs, error))
+    text = f'Could not format message "{message}" (args={args}, kwargs={kwargs}): {error}'
     assertSimpleMessageCorrect(m, message, None, args, kwargs, text)

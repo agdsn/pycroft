@@ -251,8 +251,10 @@ class UserInterfaceResource(Resource):
         user = get_authenticated_user(user_id, args.password)
         interface = get_interface_or_404(interface_id)
         if interface.host.owner != user:
-            abort(404, message="User {} does not have a host with interface {}"
-                  .format(user_id, interface_id))
+            abort(
+                404,
+                message=f"User {user_id} does not have a host with interface {interface_id}"
+            )
 
         try:
             if args.host_name:

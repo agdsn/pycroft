@@ -66,8 +66,7 @@ def remove_property(group, name):
     :raises ValueError: if group doesn't have a property with the given name
     """
     if not group.properties.pop(name, None):
-        raise ValueError("Group {} doesn't have property {}"
-                         .format(group.name, name))
+        raise ValueError(f"Group {group.name} doesn't have property {name}")
 
 
 @with_transaction

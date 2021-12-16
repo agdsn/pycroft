@@ -64,8 +64,8 @@ class UserMovingOutTestCase(UserFrontendTestBase):
             'when': session.utcnow().date()
         })
         self.assert_404(response)
-        self.assert_message_flashed("Nutzer {} ist nicht ausgezogen!"
-                                    .format(self.user.id), category='error')
+        self.assert_message_flashed(f"Nutzer {self.user.id} ist nicht ausgezogen!",
+                                    category='error')
 
     def test_user_moved_out_correctly(self):
         endpoint = url_for('user.move_out', user_id=self.user.id)
@@ -91,8 +91,8 @@ class UserMovedOutTestCase(UserFrontendTestBase):
         endpoint = url_for('user.move_out', user_id=self.user.id)
         response = self.client.post(endpoint, data={'now': True, 'comment': "Ist doof"})
         self.assert_404(response)
-        self.assert_message_flashed("Nutzer {} ist aktuell nirgends eingezogen!"
-                                    .format(self.user.id), category='error')
+        self.assert_message_flashed(f"Nutzer {self.user.id} ist aktuell nirgends eingezogen!",
+                                    category='error')
 
     def test_static_datasheet(self):
         endpoint = url_for('user.static_datasheet', user_id=self.user.id)
