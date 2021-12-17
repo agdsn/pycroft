@@ -1,7 +1,9 @@
 import logging
 import traceback
+from contextlib import contextmanager
 
 from flask import flash
+from sqlalchemy.orm import Session
 
 from pycroft.exc import PycroftException
 from pycroft.lib.net import MacExistsException, SubnetFullException
@@ -14,6 +16,8 @@ logger = logging.getLogger('web.exc')
 
 
 def web_execute(function, success_message, *args, **kwargs):
+    from warnings import warn
+    warn("Use `handle_errors` context manager instead.", DeprecationWarning)
     try:
         result = function(*args, **kwargs)
 
@@ -31,6 +35,29 @@ def web_execute(function, success_message, *args, **kwargs):
     session.session.rollback()
 
     return None, False
+
+
+class UnexpectedException(PycroftException):
+    pass
+
+
+@contextmanager
+def handle_errors(session: Session):
+    """Flash a message, roll back the session, and wrap unknown errors in a ``PycroftException``
+
+    :raises PycroftException:
+    """
+    try:
+        yield
+    except PycroftException as e:
+        flash(exception_flash_message(e), 'error')
+        session.rollback()
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        flash(f"Es ist ein unerwarteter Fehler aufgetreten: {e}", "error")
+        session.rollback()
+        raise UnexpectedException from e
 
 
 def exception_flash_message(e: PycroftException) -> str:
