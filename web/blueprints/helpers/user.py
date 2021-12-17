@@ -1,3 +1,5 @@
+from typing import NoReturn
+
 from flask import url_for, flash, abort
 from flask_login import current_user
 
@@ -75,7 +77,7 @@ def user_button(user):
     }
 
 
-def get_user_or_404(user_id):
+def get_user_or_404(user_id: int) -> User | NoReturn:
     user = User.get(user_id)
     if user is None:
         flash(f"Nutzer mit ID {user_id} existiert nicht!", 'error')
