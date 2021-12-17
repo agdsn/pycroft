@@ -981,40 +981,45 @@ def move_in(user_id):
     form = UserMoveInForm()
     user = get_user_or_404(user_id)
 
+    def default_response():
+        return render_template('user/user_move_in.html', form=form, user_id=user_id), \
+               400 if form.is_submitted() else 200
+
     if user.room is not None:
         flash(f"Nutzer {user_id} ist nicht ausgezogen!", 'error')
         abort(404)
 
-    if form.validate_on_submit():
-        when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-
-        _, success = web_execute(lib.user.move_in, None,
-            user=user,
-            building_id=form.building.data.id,
-            level=form.level.data,
-            room_number=form.room_number.data,
-            mac=form.mac.data,
-            birthdate=form.birthdate.data,
-            begin_membership=form.begin_membership.data,
-            processor=current_user,
-            when=when,
-        )
-
-        if success:
-            session.session.commit()
-
-            if when > session.utcnow():
-                flash("Der Einzug wurde vorgemerkt.", 'success')
-            else:
-                flash("Benutzer eingezogen.", 'success')
-
-            return redirect(url_for('.user_show', user_id=user_id))
-
     if not form.is_submitted():
         form.birthdate.data = user.birthdate
         form.begin_membership.data = True
+        return default_response()
 
-    return render_template('user/user_move_in.html', form=form, user_id=user_id)
+    if not form.validate():
+        return default_response()
+
+    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    try:
+        with handle_errors(session.session):
+            lib.user.move_in(
+                user=user,
+                building_id=form.building.data.id,
+                level=form.level.data,
+                room_number=form.room_number.data,
+                mac=form.mac.data,
+                birthdate=form.birthdate.data,
+                begin_membership=form.begin_membership.data,
+                processor=current_user,
+                when=when,
+            )
+            session.session.commit()
+    except PycroftException:
+        return default_response()
+
+    if when > session.utcnow():
+        flash("Der Einzug wurde vorgemerkt.", 'success')
+    else:
+        flash("Benutzer eingezogen.", 'success')
+    return redirect(url_for('.user_show', user_id=user_id))
 
 
 @bp.route('<int:user_id>/json/room-history')
