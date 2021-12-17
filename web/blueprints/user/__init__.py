@@ -45,7 +45,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
 from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import web_execute, handle_errors
+from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
@@ -601,45 +601,36 @@ def create_non_resident():
         return render_template('user/user_create.html', form=form), 400 \
             if form.is_submitted() else 200
 
-    if form.validate_on_submit():
-        address, success = web_execute(
-            lib.user.get_or_create_address,
-            None,
-            **form.address_kwargs,
-        )
-        if not success:
-            return default_response()
-        result, success = web_execute(
-            lib.user.create_user,
-            None,
-            name=form.name.data,
-            login=form.login.data,
-            processor=current_user,
-            email=form.email.data,
-            birthdate=form.birthdate.data,
-            groups=form.property_groups.data,
-            address=address,
-            send_confirm_mail=True,
-        )
-        if not success:
-            return default_response()
+    if not form.validate_on_submit():
+        return default_response()
+    try:
+        with handle_errors(session.session):
+            address = lib.user.get_or_create_address(**form.address_kwargs)
+            new_user, plain_password = lib.user.create_user(
+                name=form.name.data,
+                login=form.login.data,
+                processor=current_user,
+                email=form.email.data,
+                birthdate=form.birthdate.data,
+                groups=form.property_groups.data,
+                address=address,
+                send_confirm_mail=True,
+            )
+            plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
+            sheet = lib.user.store_user_sheet(
+                True,
+                wifi=(plain_wifi_password is not None),
+                user=new_user,
+                plain_user_password=plain_password,
+                plain_wifi_password=plain_wifi_password or ''
+            )
+            session.session.commit()
+    except PycroftException:
+        return default_response()
 
-        new_user, plain_password = result
-
-        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
-
-        sheet = lib.user.store_user_sheet(True, wifi=(plain_wifi_password is not None),
-                                          user=new_user,
-                                          plain_user_password=plain_password,
-                                          plain_wifi_password=plain_wifi_password or '')
-        session.session.commit()
-
-        flask_session['user_sheet'] = sheet.id
-        flash(Markup('Benutzer angelegt.'), 'success')
-
-        return redirect(url_for('.user_show', user_id=new_user.id))
-
-    return default_response()
+    flask_session['user_sheet'] = sheet.id
+    flash(Markup('Benutzer angelegt.'), 'success')
+    return redirect(url_for('.user_show', user_id=new_user.id))
 
 
 @bp.route('/<int:user_id>/move', methods=['GET', 'POST'])
