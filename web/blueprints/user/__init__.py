@@ -943,36 +943,38 @@ def move_out(user_id):
     form = UserMoveOutForm()
     user = get_user_or_404(user_id)
 
+    def default_response():
+        return render_template('user/user_move_out.html', form=form, user_id=user_id), \
+            400 if form.is_submitted() else 200
+
     if not user.room:
-        flash("Nutzer {} ist aktuell nirgends eingezogen!".
-              format(user_id), 'error')
+        flash(f"Nutzer {user_id} ist aktuell nirgends eingezogen!", 'error')
         abort(404)
-
-    if form.validate_on_submit():
-        when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
-
-        _, success = web_execute(lib.user.move_out, None,
-            user=user,
-            comment=form.comment.data,
-            processor=current_user,
-            when=session.utcnow() if form.now.data else utc.with_min_time(form.when.data),
-            end_membership=form.end_membership.data
-        )
-
-        if success:
-            session.session.commit()
-
-            if when > session.utcnow():
-                flash("Der Auszug wurde vorgemerkt.", "success")
-            else:
-                flash('Benutzer ausgezogen.', 'success')
-
-            return redirect(url_for('.user_show', user_id=user.id))
-
     if not form.is_submitted():
         form.end_membership.data = True
+        return default_response()
+    if not form.validate():
+        return default_response()
 
-    return render_template('user/user_move_out.html', form=form, user_id=user_id)
+    when = session.utcnow() if form.now.data else utc.with_min_time(form.when.data)
+    try:
+        with handle_errors(session.session):
+            lib.user.move_out(
+                user=user,
+                comment=form.comment.data,
+                processor=current_user,
+                when=session.utcnow() if form.now.data else utc.with_min_time(form.when.data),
+                end_membership=form.end_membership.data
+            )
+            session.session.commit()
+    except PycroftException:
+        return default_response()
+
+    if when > session.utcnow():
+        flash("Der Auszug wurde vorgemerkt.", "success")
+    else:
+        flash('Benutzer ausgezogen.', 'success')
+    return redirect(url_for('.user_show', user_id=user.id))
 
 
 @bp.route('/<int:user_id>/move_in', methods=['GET', 'POST'])
