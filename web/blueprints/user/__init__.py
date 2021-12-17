@@ -463,7 +463,7 @@ def end_membership(user_id, membership_id):
     membership = Membership.get(membership_id)
 
     if membership is None:
-        flash(f"Gruppenmitgliedschaft mit ID {membership.id} existiert nicht!", 'error')
+        flash(f"Gruppenmitgliedschaft mit ID {membership_id} existiert nicht!", 'error')
         abort(404)
 
     if membership.user.id != user_id:
