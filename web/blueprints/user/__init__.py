@@ -648,18 +648,29 @@ def move(user_id):
     user = get_user_or_404(user_id)
     form = UserMoveForm()
 
-    refill_form_data = False
-    if form.validate_on_submit():
-        if user.room == Room.q.filter_by(
-                number=form.room_number.data,
-                level=form.level.data,
-                building_id=form.building.data.id).one():
-            flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
-            refill_form_data = True
-        else:
-            when = form.get_execution_time(now=session.utcnow())
+    def default_response(refill_form_data=False):
+        if not form.is_submitted() or refill_form_data:
+            if user.room is not None:
+                refill_room_data(form, user.room)
+        return render_template('user/user_move.html', user_id=user_id, form=form)
 
-            _, success = web_execute(lib.user.move, None,
+    if not form.validate_on_submit():
+        return default_response()
+
+    selected_room = Room.q.filter_by(
+        number=form.room_number.data,
+        level=form.level.data,
+        building_id=form.building.data.id
+    ).one()
+    if user.room == selected_room:
+        flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
+        return default_response(refill_form_data=True)
+
+    when = form.get_execution_time(now=session.utcnow())
+
+    try:
+        with handle_errors(session.session):
+            lib.user.move(
                 user=user,
                 building_id=form.building.data.id,
                 level=form.level.data,
@@ -668,28 +679,20 @@ def move(user_id):
                 comment=form.comment.data,
                 when=when
             )
-
-            if success:
-                session.session.commit()
-
-                if when > session.utcnow():
-                    flash('Der Umzug wurde vorgemerkt.', 'success')
-                else:
-                    flash('Benutzer umgezogen', 'success')
-                    sheet = lib.user.store_user_sheet(True, False, user=user,
-                                                      plain_user_password='********',
-                                                      generation_purpose='user moved')
-                    session.session.commit()
-
-                    flask_session['user_sheet'] = sheet.id
-
+            session.session.commit()
+            if when > session.utcnow():
+                flash('Der Umzug wurde vorgemerkt.', 'success')
                 return redirect(url_for('.user_show', user_id=user.id))
+            flash('Benutzer umgezogen', 'success')
 
-    if not form.is_submitted() or refill_form_data:
-        if user.room is not None:
-            refill_room_data(form, user.room)
-
-    return render_template('user/user_move.html', user_id=user_id, form=form)
+            sheet = lib.user.store_user_sheet(True, False, user=user,
+                                              plain_user_password='********',
+                                              generation_purpose='user moved')
+            session.session.commit()
+            flask_session['user_sheet'] = sheet.id
+            return redirect(url_for('.user_show', user_id=user.id))
+    except PycroftException:
+        return default_response()
 
 
 @bp.route('/<int:user_id>/edit_membership/<int:membership_id>', methods=['GET', 'POST'])
