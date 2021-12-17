@@ -24,6 +24,7 @@ from flask_login import current_user
 import pycroft.lib.search
 import pycroft.lib.stats
 from pycroft import lib, config
+from pycroft.exc import PycroftException
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import gettext, deferred_gettext
 from pycroft.helpers.interval import closed, closedopen
@@ -44,7 +45,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.swdd import Tenancy
 from pycroft.model.user import User, Membership, BaseUser, RoomHistoryEntry
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import web_execute
+from web.blueprints.helpers.exception import web_execute, handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404, get_pre_member_or_404
 from web.blueprints.host.tables import HostTable
@@ -538,59 +539,55 @@ def create():
         return render_template('user/user_create.html', form=form), 400 \
             if form.is_submitted() else 200
 
-    if form.validate_on_submit():
-        room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
-                        room_number=form.room_number.data)
-        if not room:
-            flash("Raum scheint nicht zu existieren…", 'error')
-            return default_response()
+    if not form.validate_on_submit():
+        return default_response()
+    room: Room = get_room(building_id=form.building.data.id, level=form.level.data,
+                          room_number=form.room_number.data)
+    if not room:
+        flash("Raum scheint nicht zu existieren…", 'error')
+        return default_response()
 
-        result, success = web_execute(
-            lib.user.create_user,
-            None,
-            name=form.name.data,
-            login=form.login.data,
-            processor=current_user,
-            email=form.email.data,
-            birthdate=form.birthdate.data,
-            groups=form.property_groups.data,
-            address=room.address,
-            send_confirm_mail=True,
-        )
-        if not success:
-            return default_response()
+    try:
+        with handle_errors(session.session):
+            new_user, plain_password = lib.user.create_user(
+                name=form.name.data,
+                login=form.login.data,
+                processor=current_user,
+                email=form.email.data,
+                birthdate=form.birthdate.data,
+                groups=form.property_groups.data,
+                address=room.address,
+                send_confirm_mail=True,
+            )
+            lib.user.move_in(
+                user=new_user,
+                building_id=form.building.data.id, level=form.level.data,
+                room_number=form.room_number.data,
+                mac=form.mac.data,
+                processor=current_user,
+                host_annex=form.annex.data,
+                # memberships have already been initiated by `create_user`
+                # (`form.property_groups`)
+                begin_membership=False,
+            )
+            plain_wifi_password = lib.user.maybe_setup_wifi(
+                new_user,
+                processor=current_user
+            )
+            sheet = lib.user.store_user_sheet(
+                True, wifi=(plain_wifi_password is not None),
+                user=new_user,
+                plain_user_password=plain_password,
+                plain_wifi_password=plain_wifi_password or ''
+            )
+            session.session.commit()
+    except PycroftException:
+        return default_response()
 
-        new_user, plain_password = result
+    flask_session['user_sheet'] = sheet.id
+    flash(Markup('Benutzer angelegt.'), 'success')
+    return redirect(url_for('.user_show', user_id=new_user.id))
 
-        _, success = web_execute(
-            lib.user.move_in,
-            None,
-            user=new_user,
-            building_id=form.building.data.id, level=form.level.data,
-            room_number=form.room_number.data,
-            mac=form.mac.data,
-            processor=current_user,
-            host_annex=form.annex.data,
-            # memberships have already been initiated by `create_user` (`form.property_groups`)
-            begin_membership=False,
-        )
-        if not success:
-            return default_response()
-
-        plain_wifi_password = lib.user.maybe_setup_wifi(new_user, processor=current_user)
-
-        sheet = lib.user.store_user_sheet(True, wifi=(plain_wifi_password is not None),
-                                          user=new_user,
-                                          plain_user_password=plain_password,
-                                          plain_wifi_password=plain_wifi_password or '')
-        session.session.commit()
-
-        flask_session['user_sheet'] = sheet.id
-        flash(Markup('Benutzer angelegt.'), 'success')
-
-        return redirect(url_for('.user_show', user_id=new_user.id))
-
-    return default_response()
 
 @bp.route('/create_non_resident', methods=['GET', 'POST'])
 @nav.navigate("Anlegen (freie Adresseingabe)", weight=5, icon="far fa-plus-square")
@@ -1152,16 +1149,15 @@ def member_request_delete(pre_member_id: int):
 @access.require('user_change')
 def member_request_finish(pre_member_id: int):
     prm = get_pre_member_or_404(pre_member_id)
-
-    user, success = web_execute(finish_member_request, "Nutzer erfolgreich erstellt.", prm,
-                                current_user, ignore_similar_name=True)
-
-    if success:
-        session.session.commit()
-
-        return redirect(url_for(".user_show", user_id=user.id))
-    else:
+    try:
+        with handle_errors(session.session):
+            user = finish_member_request(prm, processor=current_user, ignore_similar_name=True)
+            session.session.commit()
+    except PycroftException:
         return redirect(url_for(".member_request_edit", pre_member_id=prm.id))
+
+    flash("Nutzer efrfolgreich erstellt.", 'success')
+    return redirect(url_for(".user_show", user_id=user.id))
 
 
 @bp.route("member-request/<int:pre_member_id>/merge", methods=['GET', 'POST'])
