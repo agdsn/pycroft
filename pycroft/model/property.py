@@ -11,7 +11,7 @@ This module contains model descriptions concerning properties, groups, and membe
 from datetime import datetime
 
 from sqlalchemy import and_, func, union, literal, literal_column, select
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import Query, Mapped
 from sqlalchemy.sql.selectable import TableValuedAlias
 
 from pycroft.model import ddl
@@ -89,6 +89,10 @@ class CurrentProperty(ModelBase):
         'primary_key': (current_property.table.c.user_id,
                         current_property.table.c.property_name),
     }
+
+    user_id: Mapped[int]
+    property_name: Mapped[str]
+    denied: Mapped[bool]
 
 
 manager.register()
