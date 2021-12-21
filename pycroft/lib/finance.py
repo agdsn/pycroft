@@ -16,7 +16,7 @@ from typing import Callable, TypeVar
 from sqlalchemy import func, between, cast
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
-from sqlalchemy.orm import aliased, contains_eager, joinedload
+from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from pycroft import config
@@ -1058,10 +1058,9 @@ def get_pid_csv():
     return f.getvalue()
 
 
-def get_last_import_date() -> datetime | None:
-    act = BankAccountActivity.q.order_by(BankAccountActivity.imported_at.desc()).limit(1).first()
-
-    if act is None:
-        return None
-
-    return act.imported_at
+def get_last_import_date(session: Session) -> datetime | None:
+    return session.scalars(
+        select(BankAccountActivity.imported_at)
+            .order_by(BankAccountActivity.imported_at.desc())
+            .limit(1)
+    ).first()

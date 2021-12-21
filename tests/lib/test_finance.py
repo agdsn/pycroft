@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import operator
 import pkgutil
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 from decimal import Decimal
 from io import StringIO
 
@@ -29,7 +29,7 @@ from tests import FactoryDataTestBase
 from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
-    AccountFactory, BankAccountFactory
+    AccountFactory, BankAccountFactory, BankAccountActivityFactory
 from tests.factories.user import UserFactory, UserWithMembershipFactory
 
 
@@ -579,3 +579,16 @@ class TestMatching:
     def test_matching(self, reference, expected):
         result = finance.match_reference(reference, lambda uid: f"pyc-{uid}")
         assert result == expected
+
+
+class TestLastImportedAt(FactoryDataTestBase):
+    def create_factories(self):
+        super().create_factories()
+        BankAccountActivityFactory.create(
+            reference="Test transaction",
+            imported_at=datetime(2020, 1, 1),
+        )
+
+    def test_last_imported_at(self):
+        assert finance.get_last_import_date(self.session) \
+               == datetime(2020, 1, 1, tzinfo=timezone.utc)

@@ -107,7 +107,7 @@ def generate_user_data(user):
         'description': Message.from_json(split.transaction.description).localize()
     } for split in build_transactions_query(user.account, eagerload=True)]
 
-    last_finance_update = get_last_import_date().date()
+    last_finance_update = get_last_import_date(session.session).date()
 
     try:
         wifi_password = user.wifi_password
