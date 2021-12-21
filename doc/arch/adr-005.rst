@@ -1,0 +1,100 @@
+ADR005
+======
+
+:Number: 005
+:Title: Improved exception handling in views
+:Author: Lukas Juhrich
+:Created: 2021-12-21
+:Status: Approved
+
+.. contents:: Table of Contents
+
+Context
+-------
+The previous attempt to unify exception handling in blueprint views is done
+via a ``web_execute`` function, which acts as a proxy for a ``lib`` function call:
+
+.. code-block:: python
+
+   result, success = web_execute(
+       lib_function,
+       "Success message!",
+       arg1, arg2='foo',
+   )
+
+This is suboptimal in a few ways.
+
+Firstly, having a boolean result value is comparatively unpythonic.
+Context managers and exception handling are builtin language features which are
+designed to solve the problem such a boolean variable does.
+In addition, using exceptions for control flow is perfectly admissable in python.
+Looking different from usual, explicit function calls, also makes it harder to
+reason about correctness and easier to overlook errors.
+
+Secondly, it breaks code completion and signature checking of the function,
+both in IDEs and in Mypy.
+Absence of these protective mechanisms is a common source of error.
+
+The ``web_execute`` meta-function solves the following set of problems:
+1. It flashes error messages when a specific subset of internal errors occur
+2. consuming these internal exceptions
+3. It rolls back the session
+4. It flashes a success message if everything went great
+
+Nota bene: Recently a ``PycroftException`` has been introduced, making it easier
+to handle all of the relevant exceptions instead of relying on a hard-coded list
+to do that.
+
+In addition, a useful pattern recently emerged in some parts of the ``web`` code:
+The final template rendering has been extracted into a local
+``default_response`` functtion, which makes an early exit a la
+``return default_response()`` possible.
+This is a very useful pattern because it is straghtforward to reason about,
+and does not introduce any unneccessary visual complexity to this kind of
+branching, as e.g. an if/then/else/-block would.
+
+It seems appropriate to split up the responsibilities of ``web_execute`` like this:
+
+1. should be handled with a context manager, intercepting certain kinds of
+   exceptions (but not consuming then)
+2. should be handled with a ``try: … except PycroftException: pass`` block
+3. should be handled in a context manager, for convenience the same as in 1.
+4. should be issued by the view function explicitly,
+   because passing the string to a sub-function doing the flashing instead
+   has no benefit justifying this indirection.
+
+An example would look like this:
+
+.. code-block:: python
+
+  @bp.route('/foo')
+  def view():
+      form = FooForm()
+      def default_response():
+          return render_template('generic-form.html', form=form)
+
+      if not form.is_submitted():
+          _fill_defaults(form)
+          return default_response()
+      if not form.validate():
+          return default_response()
+
+      try:
+          with handle_errors(session):
+              lib.foo(bar=form.bar.data)
+              session.commit()
+      except PycroftException:
+          return default_response()
+
+      flash("Good job!", 'success')
+      return redirect(url_for('.bar'))
+
+Decision
+--------
+- Replace ``web_execute`` usages by ``handle_error`` usages
+- Promote early-exit pattern in functions which use one of the above constructs
+
+Consequences
+------------
+- Code completion for `lib` function calls will work again
+- View functions will become more readable

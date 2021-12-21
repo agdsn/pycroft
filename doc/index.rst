@@ -29,4 +29,5 @@ Architecture decision records
    ADR002 - Continue using pickle as default serializer <arch/adr-002.rst>
    ADR003 - Use ``.table_valued`` wrapper for table valued sql functions <arch/adr-003.rst>
    ADR004 - Deprecate usage of ``session`` proxy in favor of dependency injection <arch/adr-004.rst>
+   ADR005 - Improved exception handling in views <arch/adr-005.rst>
    arch/*
