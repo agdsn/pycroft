@@ -1174,7 +1174,8 @@ def membership_fee_edit(fee_id):
 def handle_payments_in_default():
     finance.end_payment_in_default_memberships(current_user)
 
-    users_pid_membership_all, users_membership_terminated_all = finance.get_users_with_payment_in_default()
+    users_pid_membership_all, users_membership_terminated_all = \
+        finance.get_users_with_payment_in_default(session)
 
     form = HandlePaymentsInDefaultForm()
 

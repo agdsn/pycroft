@@ -362,7 +362,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
     def handle_payment_in_default_users(self):
         end_payment_in_default_memberships(self.processor)
-        users_pid_membership, users_membership_terminated = get_users_with_payment_in_default()
+        users_pid_membership, users_membership_terminated = get_users_with_payment_in_default(
+            self.session
+        )
         take_actions_for_payment_in_default_users(users_pid_membership,
                                                   users_membership_terminated, self.processor)
 

@@ -665,17 +665,16 @@ def get_negative_members():
     return users
 
 
-def get_last_payment_in_default_membership(user: User) -> Membership | None:
-    return (
-        Membership.q
-            .filter(Membership.user_id == user.id)
-            .filter(Membership.group_id == config.payment_in_default_group.id)
-            .order_by(Membership.active_during.desc())
-            .first()
-    )
+def get_last_payment_in_default_membership(session: Session, user: User) -> Membership | None:
+    return session.scalars(select(Membership)
+        .filter(Membership.user_id == user.id)
+        .filter(Membership.group_id == config.payment_in_default_group.id)
+        .order_by(Membership.active_during.desc())
+        .limit(1)
+    ).first()
 
 
-def get_users_with_payment_in_default() -> tuple[set[User], set[User]]:
+def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[User]]:
     """Determine which users should be blocked and whose membership should be terminated.
 
     :returns: which users should be added to the ``payment_in_default`` group (``[0]``)
@@ -687,7 +686,7 @@ def get_users_with_payment_in_default() -> tuple[set[User], set[User]]:
     users_pid_membership: set[User] = set()
     users_membership_terminated: set[User] = set()
 
-    ts_now = session.utcnow()
+    ts_now = utcnow()
     for user in users:
         in_default_days = user.account.in_default_days
 
@@ -703,7 +702,7 @@ def get_users_with_payment_in_default() -> tuple[set[User], set[User]]:
 
         if in_default_days >= fee.payment_deadline.days:
             # Skip user if the payment in default group membership was terminated within the last week
-            last_pid_membership = get_last_payment_in_default_membership(user)
+            last_pid_membership = get_last_payment_in_default_membership(session, user)
 
             if last_pid_membership is not None:
                 end = last_pid_membership.active_during.end
