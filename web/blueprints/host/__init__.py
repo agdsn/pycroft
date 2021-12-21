@@ -6,6 +6,7 @@ from flask_login import current_user
 from flask_wtf import FlaskForm
 from ipaddr import IPv4Address
 
+from pycroft.exc import PycroftException
 from pycroft.helpers.net import mac_regex, get_interface_manufacturer
 from pycroft.lib import host as lib_host
 from pycroft.lib.net import get_subnets_for_room, get_unused_ips
@@ -14,7 +15,7 @@ from pycroft.model.facilities import Room
 from pycroft.model.host import Host, Interface
 from pycroft.model.user import User
 from web.blueprints.access import BlueprintAccess
-from web.blueprints.helpers.exception import web_execute
+from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.form import refill_room_data
 from web.blueprints.helpers.user import get_user_or_404
 from web.blueprints.host.forms import InterfaceForm, HostForm
@@ -33,29 +34,31 @@ def host_delete(host_id):
     owner = host.owner
     form = FlaskForm()
 
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('user.user_show', user_id=owner.id),
+            'submit_text': 'Löschen',
+            'actions_offset': 0
+        }
 
-    if form.is_submitted():
-        _, success = web_execute(lib_host.host_delete,
-                                 "Host erfolgreich gelöscht.",
-                                 host, current_user)
+        return render_template(
+            'generic_form.html',
+            page_title="Host löschen", form_args=form_args, form=form
+        )
 
-        if success:
+    if not form.is_submitted():
+        return default_response()
+
+    try:
+        with handle_errors(session.session):
+            lib_host.host_delete(host, current_user)
             session.session.commit()
+    except PycroftException:
+        return default_response()
 
-            return redirect(url_for('user.user_show', user_id=owner.id,
-                                    _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=owner.id),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Host löschen",
-                           form_args=form_args,
-                           form=form)
+    flash("Host erfolgreich gelöscht.", 'success')
+    return redirect(url_for('user.user_show', user_id=owner.id, _anchor='hosts'))
 
 
 @bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
@@ -66,76 +69,84 @@ def host_edit(host_id):
         abort(404)
     form = HostForm(obj=host)
 
+    def default_response():
+        form_args = {
+            'form': form, 'cancel_to':
+            url_for('user.user_show', user_id=host.owner.id)
+        }
+        return render_template(
+            'generic_form.html',
+            page_title="Host editieren", form_args=form_args, form=form
+        )
+
     if not form.is_submitted():
         refill_room_data(form, host.room)
+        return default_response()
 
-    if form.validate_on_submit():
-        room = Room.q.filter_by(number=form.room_number.data,
-                                level=form.level.data,
-                                building=form.building.data).one()
+    if not form.validate():
+        return default_response()
 
-        owner = User.q.filter_by(id=form.owner_id.data).one()
+    room = Room.q.filter_by(number=form.room_number.data,
+                            level=form.level.data,
+                            building=form.building.data).one()
+    owner = User.get(id=form.owner_id.data)
 
-        _, success = web_execute(lib_host.host_edit,
-                                 "Host erfolgreich bearbeitet.",
-                                 host, owner, room, form.name.data,
-                                 current_user)
-
-        if success:
+    try:
+        with handle_errors(session.session):
+            lib_host.host_edit(
+                host, owner, room, form.name.data,
+                processor=current_user
+            )
             session.session.commit()
+    except PycroftException:
+        return default_response()
 
-            return redirect(url_for('user.user_show', user_id=owner.id,
-                                    _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=host.owner.id)
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Host editieren",
-                           form_args=form_args,
-                           form=form)
+    flash("Host erfolgreich bearbeitet.", 'success')
+    return redirect(url_for(
+        'user.user_show',
+        user_id=owner.id, _anchor='hosts'
+    ))
 
 
 @bp.route('/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_create():
     user = get_user_or_404(request.args.get('user_id', None))
-
     form = HostForm(owner_id=user.id)
 
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('user.user_show', user_id=user.id)
+        }
+
+        return render_template(
+            'generic_form.html',
+            page_title="Host erstellen", form_args=form_args, form=form
+        )
     if not form.is_submitted():
         refill_room_data(form, user.room)
 
-    if form.validate_on_submit():
-        room = Room.q.filter_by(number=form.room_number.data,
-                                level=form.level.data,
-                                building=form.building.data).one()
+    if not form.validate_on_submit():
+        return default_response()
 
-        owner = User.q.filter_by(id=form.owner_id.data).one()
-
-        host, success = web_execute(lib_host.host_create,
-                                    "Host erfolgreich erstellt.",
-                                    owner, room, form.name.data, current_user)
-
-        if success:
+    room = Room.q.filter_by(number=form.room_number.data,
+                            level=form.level.data,
+                            building=form.building.data).one()
+    owner = User.get(id=form.owner_id.data)
+    try:
+        with handle_errors(session.session):
+            host = lib_host.host_create(
+                owner, room, form.name.data, processor=current_user
+            )
             session.session.commit()
+    except PycroftException:
+        return default_response()
 
-            return redirect(
-                url_for('.interface_create', user_id=host.owner_id,
-                        host_id=host.id,
-                        _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=user.id)
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Host erstellen",
-                           form_args=form_args,
-                           form=form)
+    return redirect(url_for(
+        '.interface_create',
+        user_id=host.owner_id, host_id=host.id, _anchor='hosts'
+    ))
 
 
 @bp.route("/<int:host_id>/interfaces")
@@ -192,29 +203,34 @@ def interface_delete(interface_id):
 
     form = FlaskForm()
 
-    if form.is_submitted():
-        _, success = web_execute(lib_host.interface_delete,
-                                 "Interface erfolgreich gelöscht.",
-                                 interface, current_user)
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id),
+            'submit_text': 'Löschen',
+            'actions_offset': 0
+        }
 
-        if success:
+        return render_template('generic_form.html',
+                               page_title="Interface löschen",
+                               form_args=form_args,
+                               form=form)
+
+    if not form.is_submitted():
+        return default_response()
+
+    try:
+        with handle_errors(session.session):
+            lib_host.interface_delete(interface, current_user)
             session.session.commit()
+    except PycroftException:
+        return default_response()
 
-            return redirect(
-                url_for('user.user_show', user_id=interface.host.owner_id,
-                        _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id),
-        'submit_text': 'Löschen',
-        'actions_offset': 0
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Interface löschen",
-                           form_args=form_args,
-                           form=form)
+    flash("Interface erfolgreich gelöscht.", 'success')
+    return redirect(url_for(
+        'user.user_show',
+        user_id=interface.host.owner_id, _anchor='hosts'
+    ))
 
 
 @bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
@@ -232,36 +248,35 @@ def interface_edit(interface_id):
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id)
+        }
+
+        return render_template('generic_form.html',
+                               page_title="Interface editieren",
+                               form_args=form_args)
+
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
+    if not form.validate:
+        return default_response()
 
-    if form.validate_on_submit():
-        ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPv4Address(ip) for ip in form.ips.data}
 
-        _, success = web_execute(lib_host.interface_edit,
-                                 "Interface erfolgreich bearbeitet.",
-                                 interface,
-                                 form.name.data,
-                                 form.mac.data,
-                                 ips,
-                                 current_user
-                                 )
-
-        if success:
+    try:
+        with handle_errors(session.session):
+            lib_host.interface_edit(
+                interface, form.name.data, form.mac.data, ips,
+                processor=current_user
+            )
             session.session.commit()
+    except PycroftException:
+        return default_response()
 
-            return redirect(
-                url_for('user.user_show', user_id=interface.host.owner_id,
-                        _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=interface.host.owner_id)
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Interface editieren",
-                           form_args=form_args)
+    flash("Interface erfolgreich bearbeitet.", 'success')
+    return redirect(url_for('user.user_show', user_id=interface.host.owner_id, _anchor='hosts'))
 
 
 @bp.route('/<int:host_id>/interface/create', methods=['GET', 'POST'])
@@ -276,35 +291,41 @@ def interface_create(host_id):
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('user.user_show', user_id=host.owner.id)
+        }
+
+        return render_template('generic_form.html',
+                               page_title="Interface erstellen",
+                               form_args=form_args)
+
     if not form.is_submitted():
         form.ips.process_data([next(iter(unused_ips), None)])
+        return default_response()
+    if not form.validate():
+        return default_response()
 
-    if form.validate_on_submit():
-        ips = {IPv4Address(ip) for ip in form.ips.data}
+    ips = {IPv4Address(ip) for ip in form.ips.data}
 
-        _, success = web_execute(lib_host.interface_create,
-                                 "Interface erfolgreich erstellt.",
-                                 host,
-                                 form.name.data,
-                                 form.mac.data,
-                                 ips,
-                                 current_user
-                                 )
+    try:
+        lib_host.interface_create(
+            host,
+            form.name.data,
+            form.mac.data,
+            ips,
+            current_user
+        )
+        session.session.commit()
+    except PycroftException:
+        return default_response()
 
-        if success:
-            session.session.commit()
-
-            return redirect(url_for('user.user_show', user_id=host.owner.id,
-                                    _anchor='hosts'))
-
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('user.user_show', user_id=host.owner.id)
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Interface erstellen",
-                           form_args=form_args)
+    flash("Interface erfolgreich erstellt.", 'success')
+    return redirect(url_for(
+        'user.user_show',
+        user_id=host.owner.id, _anchor='hosts'
+    ))
 
 
 @bp.route("/<int:user_id>")
