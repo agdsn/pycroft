@@ -340,7 +340,7 @@ class TerminateMembershipResource(Resource):
 
         user = get_user_or_404(user_id)
 
-        estimated_balance = estimate_balance(user, args.end_date)
+        estimated_balance = estimate_balance(session.session, user, args.end_date)
 
         return jsonify(estimated_balance=estimated_balance)
 

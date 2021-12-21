@@ -517,19 +517,19 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
     def check_current_and_next_month(self, base):
         # End in grace-period in current month
         end_date = session.utcnow().date().replace(day=self.membership_fee_current.booking_begin.days - 1)
-        assert base == estimate_balance(self.user, end_date)
+        assert base == estimate_balance(self.session, self.user, end_date)
 
         # End after grace-period in current month
         end_date = self.membership_fee_current.ends_on
-        assert base - 5.00 == estimate_balance(self.user, end_date)
+        assert base - 5.00 == estimate_balance(self.session, self.user, end_date)
 
         # End in the middle of next month
         end_date = session.utcnow().date().replace(day=14) + timedelta(weeks=4)
-        assert base - 10.00 == estimate_balance(self.user, end_date)
+        assert base - 10.00 == estimate_balance(self.session, self.user, end_date)
 
         # End in grace-period of next month
         end_date = end_date.replace(day=self.membership_fee_current.booking_begin.days - 1)
-        assert base - 5.00 == estimate_balance(self.user, end_date)
+        assert base - 5.00 == estimate_balance(self.session, self.user, end_date)
 
     def test_last_booked__current_not_booked(self):
         assert self.user.has_property('member')
@@ -559,7 +559,7 @@ class BalanceEstimationTestCase(FactoryDataTestBase):
         new_start = session.utcnow().replace(day=self.membership_fee_current.booking_end.days + 1)
         self.user_membership.active_during = closedopen(new_start, None)
         end_date = last_day_of_month(session.utcnow().date())
-        assert estimate_balance(self.user, end_date) == 0.00
+        assert estimate_balance(self.session, self.user, end_date) == 0.00
 
 
 class TestMatching:

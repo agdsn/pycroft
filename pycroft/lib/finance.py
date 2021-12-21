@@ -35,7 +35,7 @@ from pycroft.model.finance import (
     MembershipFee)
 from pycroft.model.functions import sign, least
 from pycroft.model.property import CurrentProperty, evaluate_properties
-from pycroft.model.session import with_transaction
+from pycroft.model.session import with_transaction, utcnow
 from pycroft.model.types import Money
 from pycroft.model.user import User, Membership, RoomHistoryEntry
 
@@ -974,31 +974,36 @@ def transaction_confirm_all(processor):
         transaction_confirm(transaction, processor)
 
 
-def fee_from_valid_date(valid_on: date, account: Account) -> Split | None:
+def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> Split | None:
     """If existent, get the membership fee split for a given date"""
-    return (
-        Split.q
-             .filter_by(account=account)
-             .join(Transaction)
-             .filter(Split.amount > 0)
-             .filter(Transaction.valid_on == valid_on)
+    return session.scalars(
+        select(Split)
+            .filter_by(account=account)
+            .join(Transaction)
+            .filter(Split.amount > 0)
+            .filter(Transaction.valid_on == valid_on)
+            .limit(1)
     ).first()
 
 
-def estimate_balance(user, end_date):
-    """
+def estimate_balance(session: Session, user, end_date):
+    """Estimate the balance a user account will have at :paramref:`end_date`.
+
+    :param session:
     :param user: The member
     :param end_date: Date of the end of the membership
     :return: Estimated balance at the end_date
     """
 
-    now = session.utcnow().date()
+    now = utcnow().date()
 
     # Use tomorrow in case that it is the last of the month, the fee for the
     # current month will be added later
     tomorrow = now + timedelta(1)
 
-    last_fee = MembershipFee.q.order_by(MembershipFee.ends_on.desc()).first()
+    last_fee = session.scalars(
+        select(MembershipFee).order_by(MembershipFee.ends_on.desc()).limit(1)
+    ).first()
 
     if last_fee is None:
         raise ValueError("no fee information available")
@@ -1020,7 +1025,7 @@ def estimate_balance(user, end_date):
     # a fee for the last month, increment months_to_pay
     last_month_last = tomorrow.replace(day=1) - timedelta(1)
     last_month_fee_outstanding = (
-        fee_from_valid_date(last_month_last, user.account) is None
+        fee_from_valid_date(session, last_month_last, user.account) is None
     )
 
     if last_month_fee_outstanding:
@@ -1033,7 +1038,7 @@ def estimate_balance(user, end_date):
 
     # If there is already a fee booked for this month, decrement months_to_pay
     this_month_fee_outstanding = (
-        fee_from_valid_date(last_day_of_month(tomorrow), user.account) is None
+        fee_from_valid_date(session, last_day_of_month(tomorrow), user.account) is None
     )
     if not this_month_fee_outstanding:
         months_to_pay -= 1
