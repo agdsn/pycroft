@@ -17,7 +17,7 @@ mail_envelope_from = os.environ.get('PYCROFT_MAIL_ENVELOPE_FROM')
 mail_from = os.environ.get('PYCROFT_MAIL_FROM')
 mail_reply_to = os.environ.get('PYCROFT_MAIL_REPLY_TO')
 smtp_host = os.environ.get('PYCROFT_SMTP_HOST')
-smtp_port = os.environ.get('PYCROFT_SMTP_PORT', 465)
+smtp_port = int(os.environ.get('PYCROFT_SMTP_PORT', 465))
 smtp_user = os.environ.get('PYCROFT_SMTP_USER')
 smtp_password = os.environ.get('PYCROFT_SMTP_PASSWORD')
 smtp_ssl = os.environ.get('PYCROFT_SMTP_SSL', 'ssl')
@@ -27,6 +27,7 @@ template_path = os.environ.get('PYCROFT_TEMPLATE_PATH', 'pycroft/templates')
 logger = logging.getLogger('mail')
 logger.setLevel(logging.INFO)
 
+template_loader: jinja2.BaseLoader
 if template_path_type == 'filesystem':
     template_loader = jinja2.FileSystemLoader(searchpath=f'{template_path}/mail')
 else:
@@ -103,6 +104,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
 
     use_ssl = smtp_ssl == 'ssl'
     use_starttls = smtp_ssl == 'starttls'
+    ssl_context = None
 
     if use_ssl or use_starttls:
         try:
@@ -115,10 +117,12 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
                 'trace': True,
                 'data': {'exception_arguments': e.args}
             })
-            return False
+            raise RetryableException
 
     try:
+        smtp: smtplib.SMTP
         if use_ssl:
+            assert ssl_context is not None
             smtp = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port,
                                     context=ssl_context)
         else:
@@ -128,6 +132,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
             smtp.starttls(context=ssl_context)
 
         if smtp_user:
+            assert smtp_password is not None
             smtp.login(smtp_user, smtp_password)
     except (OSError, smtplib.SMTPException) as e:
         traceback.print_exc()
@@ -146,6 +151,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
         for mail in mails:
             try:
                 mime_mail = compose_mail(mail)
+                assert mail_envelope_from is not None
                 smtp.sendmail(from_addr=mail_envelope_from, to_addrs=mail.to_address,
                               msg=mime_mail.as_string())
             except smtplib.SMTPException as e:
