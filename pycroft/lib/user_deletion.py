@@ -1,15 +1,14 @@
 from datetime import timedelta, datetime
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from sqlalchemy import func, nulls_last
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-from sqlalchemy.sql.elements import and_, not_
+from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.sql.elements import and_, not_, ClauseElement
 from sqlalchemy.sql.functions import current_timestamp
 
 from pycroft import Config
 from pycroft.model.property import CurrentProperty
-from pycroft.model.session import session
 from pycroft.model.user import User, Membership
 
 
@@ -19,7 +18,7 @@ class ArchivableMemberInfo(Protocol):
     mem_end: datetime
 
 
-def get_archivable_members() -> list[ArchivableMemberInfo]:
+def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
     Selected are those users
@@ -28,14 +27,15 @@ def get_archivable_members() -> list[ArchivableMemberInfo]:
     """
     # see FunctionElement.over
     mem_ends_at = func.upper(Membership.active_during)
-    window_args = {'partition_by': User.id,
-                   'order_by': nulls_last(mem_ends_at),
-                   'rows': (None, None)}
+    window_args: dict[str, ClauseElement | Sequence[ClauseElement | str] | None] = {
+        'partition_by': User.id,
+        'order_by': nulls_last(mem_ends_at),
+    }
     last_mem = (
         select(
             User.id.label('user_id'),
-            func.last_value(Membership.id).over(**window_args).label('mem_id'),
-            func.last_value(mem_ends_at).over(**window_args).label('mem_end'),
+            func.last_value(Membership.id).over(**window_args, rows=(None, None)).label('mem_id'),
+            func.last_value(mem_ends_at).over(**window_args, rows=(None, None)).label('mem_end'),
         )
         .select_from(User)
         .distinct()

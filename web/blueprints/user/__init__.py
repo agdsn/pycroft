@@ -1313,5 +1313,5 @@ def archivable_users_json():
             num_hosts=len(info.User.hosts),
             # TODO better: `DateColumn.value`
             end_of_membership=date_format(info.mem_end.date())
-        ) for info in get_archivable_members()
+        ) for info in get_archivable_members(session.session)
     ]}
