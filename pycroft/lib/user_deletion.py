@@ -64,9 +64,8 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
                  joinedload(User.account), joinedload(User.room),
                  joinedload(User.current_properties_maybe_denied))
     )
-    # The default dedupe strategy for the `mem_id` and `mem_end` columns is `id` instead of `hash`.
-    # See sqlalchemy#6769
-    return session.execute(stmt).unique(lambda row: row).all()
+
+    return session.execute(stmt).all()
 
 
 def get_invalidated_archive_memberships() -> list[Membership]:
