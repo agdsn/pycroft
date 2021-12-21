@@ -27,15 +27,12 @@ access = BlueprintAccess(bp, required_properties=['user_show'])
 @bp.route('/<int:host_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_delete(host_id):
-    host = Host.get(host_id)
-
-    if host is None:
+    if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
-
+    owner = host.owner
     form = FlaskForm()
 
-    owner = host.owner
 
     if form.is_submitted():
         _, success = web_execute(lib_host.host_delete,
@@ -64,12 +61,9 @@ def host_delete(host_id):
 @bp.route('/<int:host_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def host_edit(host_id):
-    host = Host.get(host_id)
-
-    if host is None:
+    if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
-
     form = HostForm(obj=host)
 
     if not form.is_submitted():
@@ -146,9 +140,7 @@ def host_create():
 
 @bp.route("/<int:host_id>/interfaces")
 def host_interfaces_json(host_id):
-    host = Host.get(host_id)
-
-    if host is None:
+    if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
 
@@ -194,9 +186,7 @@ def interface_table(host_id):
 @bp.route('/interface/<int:interface_id>/delete', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_delete(interface_id):
-    interface = Interface.get(interface_id)
-
-    if interface is None:
+    if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
 
@@ -230,21 +220,16 @@ def interface_delete(interface_id):
 @bp.route('/interface/<int:interface_id>/edit', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_edit(interface_id):
-    interface = Interface.get(interface_id)
-
-    if interface is None:
+    if (interface := Interface.get(interface_id)) is None:
         flash("Interface existiert nicht.", 'error')
         abort(404)
 
     subnets = get_subnets_for_room(interface.host.room)
-
-    current_ips = list(ip.address for ip in interface.ips)
+    current_ips = [ip.address for ip in interface.ips]
 
     form = InterfaceForm(obj=interface)
     form.meta.current_mac = interface.mac
-
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
-
     form.ips.choices = [(str(ip), str(ip)) for ip in current_ips + unused_ips]
 
     if not form.is_submitted():
@@ -282,18 +267,13 @@ def interface_edit(interface_id):
 @bp.route('/<int:host_id>/interface/create', methods=['GET', 'POST'])
 @access.require('hosts_change')
 def interface_create(host_id):
-    host = Host.get(host_id)
-
-    if host is None:
+    if (host := Host.get(host_id)) is None:
         flash("Host existiert nicht.", 'error')
         abort(404)
 
     subnets = get_subnets_for_room(host.room)
-
     form = InterfaceForm()
-
     unused_ips = [ip for ips in get_unused_ips(subnets).values() for ip in ips]
-
     form.ips.choices = [(str(ip), str(ip)) for ip in unused_ips]
 
     if not form.is_submitted():
