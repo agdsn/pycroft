@@ -138,7 +138,7 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
         traceback.print_exc()
 
         # smtp.connect failed to connect
-        logger.critical(f'Unable to connect to SMTP server: {str(e)}', extra={
+        logger.critical(f'Unable to connect to SMTP server: %s', e, extra={
             'trace': True,
             'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
             'data': {'exception_arguments': e.args}
@@ -156,13 +156,15 @@ def send_mails(mails: list[Mail]) -> tuple[bool, int]:
                               msg=mime_mail.as_string())
             except smtplib.SMTPException as e:
                 traceback.print_exc()
-
-                logger.critical(f'Unable to send mail: "{mail.subject}" to "{mail.to_address}": {str(e)}', extra={
-                    'trace': True,
-                    'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
-                    'data': {'exception_arguments': e.args, 'to': mail.to_address, 'subject': mail.subject}
-                })
-
+                logger.critical(
+                    'Unable to send mail: "%s" to "%s": %s', mail.subject, mail.to_address, e,
+                    extra={
+                        'trace': True,
+                        'tags': {'mailserver': f"{smtp_host}:{smtp_host}"},
+                        'data': {'exception_arguments': e.args, 'to': mail.to_address,
+                                 'subject': mail.subject}
+                    }
+                )
                 failures += 1
 
         smtp.close()
