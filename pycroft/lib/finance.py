@@ -6,12 +6,11 @@ import difflib
 import logging
 import operator
 import re
-from collections import namedtuple
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from io import StringIO
 from itertools import chain, islice, tee, zip_longest
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, NamedTuple
 
 from sqlalchemy import func, between, cast
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
@@ -405,21 +404,21 @@ def _to_date_intervals(intervals):
     return IntervalSet(_to_date_interval(i) for i in intervals)
 
 
-MT940_FIELDNAMES = [
-    'our_account_number',
-    'posted_on',
-    'valid_on',
-    'type',
-    'reference',
-    'other_name',
-    'other_account_number',
-    'other_routing_number',
-    'amount',
-    'currency',
-    'info',
-]
+class MT940Record(NamedTuple):
+    our_account_number: str
+    posted_on: str
+    valid_on: str
+    type: str
+    reference: str
+    other_name: str
+    other_account_number: str
+    other_routing_number: str
+    amount: str
+    currency: str
+    info: str
 
-MT940Record = namedtuple("MT940Record", MT940_FIELDNAMES)
+
+MT940_FIELDNAMES = MT940Record._fields
 
 
 class MT940Dialect(csv.Dialect):
@@ -719,8 +718,9 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
 
     users_membership_terminated.difference_update(users_pid_membership)
 
-    users_pid_membership = sorted(users_pid_membership, key=lambda u: u.account.balance)
-    users_membership_terminated = sorted(users_membership_terminated, key=lambda u: u.account.balance)
+    _bal = operator.attrgetter('account.balance')
+    users_pid_membership = set(sorted(users_pid_membership, key=_bal))
+    users_membership_terminated = set(sorted(users_membership_terminated, key=_bal))
 
     return users_pid_membership, users_membership_terminated
 
@@ -848,14 +848,14 @@ def match_activities() -> tuple[dict[BankAccountActivity, User], dict[BankAccoun
     """
     matching: dict[BankAccountActivity, User] = {}
     team_matching: dict[BankAccountActivity, Account] = {}
-    activity_q = (BankAccountActivity.q
-                  .options(joinedload(BankAccountActivity.bank_account))
-                  .filter(BankAccountActivity.transaction_id == None))
+    stmt = (select(BankAccountActivity)
+           .options(joinedload(BankAccountActivity.bank_account))
+           .filter(BankAccountActivity.transaction_id.is_(None)))
 
     def _fetch_normal(uid: int) -> User | None:
         return User.get(uid)
 
-    for activity in activity_q.all():
+    for activity in session.session.scalars(stmt).all():
         user = match_reference(activity.reference, fetch_normal=_fetch_normal)
 
         if user:
