@@ -267,13 +267,13 @@ class User(ModelBase, BaseUser, UserMixin):
 
         raise ValueError("Cleartext password not available.")
 
-    @hybrid_property
-    def has_wifi_access(self):
-        return self.wifi_passwd_hash is not None
-
     @wifi_password.setter
     def wifi_password(self, value):
         self.wifi_passwd_hash = cleartext_password(value)
+
+    @hybrid_property
+    def has_wifi_access(self):
+        return self.wifi_passwd_hash is not None
 
     @staticmethod
     def verify_and_get(login, plaintext_password):
