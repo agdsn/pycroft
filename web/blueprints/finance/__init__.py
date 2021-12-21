@@ -30,6 +30,7 @@ from sqlalchemy.sql.expression import literal_column, func, select, Join
 from wtforms import BooleanField
 
 from pycroft import config, lib
+from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import localized
 from pycroft.helpers.util import map_or_default
 from pycroft.lib import finance
@@ -54,7 +55,7 @@ from web.blueprints.finance.tables import FinanceTable, FinanceTableSplitted, \
     BankAccountActivityTable, TransactionTable, ImportErrorTable, \
     UnconfirmedTransactionsTable
 from web.blueprints.helpers.api import json_agg_core
-from web.blueprints.helpers.exception import web_execute
+from web.blueprints.helpers.exception import handle_errors
 from web.blueprints.helpers.fints import FinTS3Client
 from web.blueprints.navigation import BlueprintNavigation
 from web.table.table import date_format
@@ -820,26 +821,30 @@ def transaction_confirm(transaction_id):
 def transaction_confirm_all():
     form = FlaskForm()
 
-    if form.is_submitted():
-        _, success = web_execute(lib.finance.transaction_confirm_all,
-                                 "Alle Transaktionen wurden bestätigt.",
-                                 current_user)
+    def default_response():
+        form_args = {
+            'form': form,
+            'cancel_to': url_for('.transactions_unconfirmed'),
+            'submit_text': 'Alle Bestätigen',
+            'actions_offset': 0
+        }
+        return render_template('generic_form.html',
+                               page_title="Alle Transaktionen (älter als 1h) bestätigen",
+                               form_args=form_args,
+                               form=form)
 
-        session.commit()
+    if not form.is_submitted():
+        return default_response()
 
-        return redirect(url_for('.transactions_unconfirmed'))
+    try:
+        with handle_errors(session):
+            lib.finance.transaction_confirm_all(current_user)
+            session.commit()
+    except PycroftException:
+        return default_response()
 
-    form_args = {
-        'form': form,
-        'cancel_to': url_for('.transactions_unconfirmed'),
-        'submit_text': 'Alle Bestätigen',
-        'actions_offset': 0
-    }
-
-    return render_template('generic_form.html',
-                           page_title="Alle Transaktionen (älter als 1h) bestätigen",
-                           form_args=form_args,
-                           form=form)
+    flash("Alle Transaktionen wurden bestätigt.", 'success')
+    return redirect(url_for('.transactions_unconfirmed'))
 
 
 @bp.route('/transaction/<int:transaction_id>/delete', methods=['GET', 'POST'])
