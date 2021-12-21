@@ -238,6 +238,7 @@ def maybe_setup_wifi(user: User, processor: User) -> str | None:
     """If wifi is available, sets a wifi password."""
     if user.room and user.room.building.wifi_available:
         return reset_wifi_password(user, processor)
+    return None
 
 
 @with_transaction
@@ -279,7 +280,7 @@ def create_user(
     """
 
     now = session.utcnow()
-    plain_password = user_helper.generate_password(12)
+    plain_password: str | None = user_helper.generate_password(12)
     # create a new user
     new_user = User(
         login=login,
@@ -550,12 +551,12 @@ def edit_name(user, name, processor):
 
 
 @with_transaction
-def edit_email(user: User, email: str, email_forwarded: bool, processor: User,
+def edit_email(user: User, email: str | None, email_forwarded: bool, processor: User,
                is_confirmed: bool = False):
     """
     Changes the email address of a user and creates a log entry.
     :param user: User object to change
-    :param email: New email address, can be None
+    :param email: New email address (empty interpreted as ``None``)
     :param email_forwarded: Boolean if emails should be forwarded
     :param processor: User object of the processor, which issues the change
     :param is_confirmed: If the email address is already confirmed
