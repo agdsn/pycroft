@@ -54,7 +54,7 @@ class MailTemplate:
     def __init__(self, **kwargs):
         self.args = kwargs
 
-    def render(self, **kwargs) -> (str, str):
+    def render(self, **kwargs) -> tuple[str, str]:
         plain = template_env.get_template(self.template).render(mode='plain', **self.args, **kwargs)
         html = template_env.get_template(self.template).render(mode='html', **self.args, **kwargs)
 
@@ -86,7 +86,7 @@ class RetryableException(PycroftLibException):
     pass
 
 
-def send_mails(mails: list[Mail]) -> (bool, int):
+def send_mails(mails: list[Mail]) -> tuple[bool, int]:
     """Send MIME text mails
 
     Returns False, if sending fails.  Else returns True.

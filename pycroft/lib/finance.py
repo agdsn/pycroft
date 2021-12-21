@@ -844,7 +844,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
     return query
 
 
-def match_activities() -> (dict[BankAccountActivity, User], dict[BankAccountActivity, Account]):
+def match_activities() -> tuple[dict[BankAccountActivity, User], dict[BankAccountActivity, Account]]:
     """For all unmatched transactions, determine which user or team they should be matched with.
     """
     matching: dict[BankAccountActivity, User] = {}
