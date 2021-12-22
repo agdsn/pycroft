@@ -65,7 +65,7 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
                  joinedload(User.current_properties_maybe_denied))
     )
 
-    return session.execute(stmt).all()
+    return session.execute(stmt).unique().all()
 
 
 def get_invalidated_archive_memberships() -> list[Membership]:
