@@ -35,6 +35,7 @@ git+git://github.com/raphaelm/python-fints.git@846c25f5f6ae578cde5151fc30b5f7a36
 mt-940~=4.19.0
 #uwsgi~=2.0.14
 git+git://github.com/lukasjuhrich/uwsgi.git@uwsgi-2.0#egg=uwsgi
+uwsgitop~=0.11
 GitPython~=2.1.7
 mac-vendor-lookup~=0.1.11
 marshmallow~=3.11.1
