@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
+# syntax=docker/dockerfile:1.3
 FROM python:3.10-bullseye
 ARG UID=1000
 ARG GID=1000
