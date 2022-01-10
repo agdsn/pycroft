@@ -846,10 +846,13 @@ def status(user):
     :param user: User whose status we want to look at
     :return: dict of boolean status codes
     """
+
+    current_groups = user.active_property_groups()
+    has_interface = any(h.interfaces for h in user.hosts)
     return AttrDict({
-        'member': user.member_of(config.member_group),
-        'traffic_exceeded': user.member_of(config.traffic_limit_exceeded_group),
-        'network_access': user.has_property('network_access') and any(h.interfaces for h in user.hosts),
+        'member': config.member_group in current_groups,
+        'traffic_exceeded': config.traffic_limit_exceeded_group in current_groups,
+        'network_access': user.has_property('network_access') and has_interface,
         'wifi_access': user.has_wifi_access and user.has_property('network_access'),
         'account_balanced': user_has_paid(user),
         'violation': user.has_property('violation'),

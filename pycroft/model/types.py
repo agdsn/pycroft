@@ -38,6 +38,8 @@ class _IPType(TypeDecorator):
 
 
 class IPAddress(_IPType):
+    cache_ok = True
+
     def python_type(self):
         return ipaddr._BaseIP
 
@@ -48,6 +50,8 @@ class IPAddress(_IPType):
 
 
 class IPNetwork(_IPType):
+    cache_ok = True
+
     def python_type(self):
         return ipaddr._BaseNet
 

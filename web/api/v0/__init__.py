@@ -6,6 +6,8 @@ from flask_restful import Api, Resource as FlaskRestfulResource, abort, \
     reqparse, inputs
 from ipaddr import IPAddress
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload, selectinload
 
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import Message
@@ -29,6 +31,7 @@ from pycroft.lib.user import encode_type2_user_id, edit_email, change_password, 
     send_password_reset_mail, change_password_from_token
 from pycroft.model import session
 from pycroft.model.facilities import Room
+from pycroft.model.finance import Account, Split
 from pycroft.model.host import IP, Interface, Host
 from pycroft.model.types import IPAddress, InvalidMACAddressException
 from pycroft.model.user import User, IllegalEmailError, IllegalLoginError
@@ -96,16 +99,17 @@ def generate_user_data(user):
 
     interval = timedelta(days=7)
     step = timedelta(days=1)
-    traffic_history = func_traffic_history(user.id,
-                                           session.utcnow() - interval + step,
-                                           session.utcnow())
+    traffic_history = func_traffic_history(
+        user.id,
+        func.current_timestamp() - interval + step,
+        func.current_timestamp())
 
     finance_history = [{
         'valid_on': split.transaction.valid_on,
         # Invert amount, to display it from the user's point of view
         'amount': -split.amount,
         'description': Message.from_json(split.transaction.description).localize()
-    } for split in build_transactions_query(user.account, eagerload=True)]
+    } for split in user.account.splits]
 
     last_finance_update = get_last_import_date(session.session).date()
 
@@ -116,6 +120,12 @@ def generate_user_data(user):
 
     med = membership_end_date(user)
     mbd = membership_begin_date(user)
+
+    interface_info = [{
+        'id': i.id,
+        'mac': str(i.mac),
+        'ips': [str(ip.address) for ip in i.ips]
+    } for h in user.hosts for i in h.interfaces]
 
     return jsonify(
         id=user.id,
@@ -130,11 +140,7 @@ def generate_user_data(user):
             'violation': user_status.violation
         },
         room=user.room.short_name if user.room is not None else None,
-        interfaces=[
-            {'id': i.id, 'mac': str(i.mac),
-             'ips': [str(ip.address) for ip in i.ips]}
-            for h in user.hosts for i in h.interfaces
-        ],
+        interfaces=interface_info,
         mail=user.email,
         mail_forwarded=user.email_forwarded,
         mail_confirmed=user.email_confirmed,
@@ -231,10 +237,35 @@ api.add_resource(AuthenticationResource, '/user/authenticate')
 class UserByIPResource(Resource):
     def get(self):
         ipv4 = request.args.get('ip', IPAddress)
-        ip = IP.q.filter_by(address=ipv4).one_or_none()
-        if ip is None:
+
+        user = session.session.scalars(
+            select(User)
+            .join(Host)
+            .join(Interface)
+            .join(IP)
+            .where(IP.address == ipv4)
+            .options(
+                # multi-valued, but effectively one-valued:
+                # a user has only one IP (except in rare cases) → joinedload
+                joinedload(User.hosts, innerjoin=True)
+                    .joinedload(Host.interfaces, innerjoin=True)
+                    .joinedload(Interface.ips, innerjoin=True),
+                # single-valued → joinedload
+                joinedload(User.room, innerjoin=True)
+                    .joinedload(Room.building, innerjoin=True),
+                # 1 account, but many splits
+                joinedload(User.account, innerjoin=True)
+                    # many splits → load afterwards with `select/where/in`
+                    .selectinload(Account.splits)
+                    .joinedload(Split.transaction, innerjoin=True),
+                # many properties
+                selectinload(User.current_properties),
+            )
+        ).unique().one_or_none()
+
+        if user is None:
             abort(404, message=f"IP {ipv4} is not related to a user")
-        return generate_user_data(ip.interface.host.owner)
+        return generate_user_data(user)
 
 
 api.add_resource(UserByIPResource, '/user/from-ip')

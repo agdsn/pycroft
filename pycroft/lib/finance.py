@@ -1064,7 +1064,5 @@ def get_pid_csv():
 
 def get_last_import_date(session: Session) -> datetime | None:
     return session.scalars(
-        select(BankAccountActivity.imported_at)
-            .order_by(BankAccountActivity.imported_at.desc())
-            .limit(1)
+        select(func.max(BankAccountActivity.imported_at))
     ).first()
