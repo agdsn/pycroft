@@ -558,6 +558,12 @@ class RegistrationResource(Resource):
         if args.person_id is not None:
             swdd_person_id = get_swdd_person_id(args.first_name, args.last_name, args.birthdate)
 
+            # some tenants have an additional semicolon added to their last names
+            if swdd_person_id is None:
+                swdd_person_id = get_swdd_person_id(
+                    args.first_name, args.last_name + ";", args.birthdate
+                )
+
             if swdd_person_id != args.person_id:
                 abort(400, message="Person id does not match", code="person_id_mismatch")
 
