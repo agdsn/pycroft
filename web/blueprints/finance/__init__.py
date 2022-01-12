@@ -241,6 +241,9 @@ def bank_accounts_import():
 
     (transactions, old_transactions, doubtful_transactions) = \
         finance.process_transactions(bank_account, statement)
+    flash(f"Klassifizierung: {len(transactions)} neu "
+          f"/ {len(old_transactions)} alt "
+          f"/ {len(doubtful_transactions)} zu neu (Buchung >= {date.today()}T00:00Z).")
     if not form.do_import.data:
         return display_form_response(transactions, old_transactions, doubtful_transactions)
 
@@ -253,7 +256,8 @@ def bank_accounts_import():
     # save transactions to database
     session.add_all(transactions)
     session.commit()
-    flash('Bankkontobewegungen wurden importiert.', 'success')
+    flash(f'{len(transactions)} Bankkontobewegungen wurden importiert.',
+          'success' if transactions else 'info')
     return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
 
 
