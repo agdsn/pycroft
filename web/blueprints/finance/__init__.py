@@ -17,7 +17,7 @@ from itertools import groupby, zip_longest, chain
 
 import wtforms
 from fints.dialog import FinTSDialogError
-from fints.exceptions import FinTSClientPINError
+from fints.exceptions import FinTSClientPINError, FinTSError
 from fints.utils import mt940_to_array
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request,
@@ -158,6 +158,22 @@ def bank_accounts_errors_json():
             ),
         } for error in MT940Error.q.all()])
 
+from contextlib import contextmanager
+
+@contextmanager
+def flash_fints_errors():
+    try:
+        yield
+    except (FinTSDialogError, FinTSClientPINError) as e:
+        flash(f"Ungültige FinTS-Logindaten: '{e}'", 'error')
+        raise PycroftException from e
+    except FinTSError as e:
+        flash(f"Anderer FinTS-Fehler: '{e}'", 'error')
+        raise PycroftException from e
+    except KeyError as e:
+        flash('Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
+                nicht erreicht werden.', 'error')
+        raise PycroftException from e
 
 @bp.route('/bank-accounts/import', methods=['GET', 'POST'])
 @access.require('finance_change')
@@ -165,30 +181,42 @@ def bank_accounts_errors_json():
 def bank_accounts_import():
     form = BankAccountActivitiesImportForm()
     form.account.choices = [(acc.id, acc.name) for acc in BankAccount.q.all()]
-    transactions: list[BankAccountActivity] = []
-    old_transactions: list[BankAccountActivity] = []
-    doubtful_transactions: list[BankAccountActivity] = []
 
-    if request.method != 'POST':
+    def display_form_response(
+        transactions: list[BankAccountActivity],
+        old_transactions: list[BankAccountActivity],
+        doubtful_transactions: list[BankAccountActivity],
+    ):
+        return render_template(
+            'finance/bank_accounts_import.html', form=form,
+            transactions=transactions,
+            old_transactions=old_transactions,
+            doubtful_transactions=doubtful_transactions
+        )
+
+    if not form.is_submitted():
         del (form.start_date)
         form.end_date.data = date.today() - timedelta(days=1)
+        return display_form_response([], [], [])
 
-    if form.validate_on_submit():
-        bank_account = BankAccount.get(form.account.data)
+    if not form.validate():
+        return display_form_response([], [], [])
 
-        # set start_date, end_date
-        if form.start_date.data is None:
-            form.start_date.data = (
-                datetime.date(i)
-                if (i := bank_account.last_imported_at) is not None
-                else date(2018, 1, 1)
-            )
-        if form.end_date.data is None:
-            form.end_date.data = date.today()
+    bank_account = BankAccount.get(form.account.data)
 
-        # login with fints
-        process = True
-        try:
+    # set start_date, end_date
+    if form.start_date.data is None:
+        form.start_date.data = (
+            datetime.date(i)
+            if (i := bank_account.last_imported_at) is not None
+            else date(2018, 1, 1)
+        )
+    if form.end_date.data is None:
+        form.end_date.data = date.today()
+
+    # login with fints
+    try:
+        with flash_fints_errors():
             fints = FinTS3Client(
                 bank_account.routing_number,
                 form.user.data,
@@ -200,52 +228,34 @@ def bank_accounts_import():
             acc = next((a for a in fints.get_sepa_accounts()
                         if a.iban == bank_account.iban), None)
             if acc is None:
-                raise KeyError('BankAccount with IBAN {} not found.'.format(
-                    bank_account.iban)
-                )
+                raise KeyError(f'BankAccount with IBAN {bank_account.iban} not found.')
             start_date = form.start_date.data
             end_date = form.end_date.data
-            statement, with_error = fints.get_filtered_transactions(
-                acc, start_date, end_date)
-            flash(
-                f"Transaktionen vom {start_date} bis {end_date}.")
-            if len(with_error) > 0:
-                flash("{} Statements enthielten fehlerhafte Daten und müssen "
-                      "vor dem Import manuell korrigiert werden.".format(
-                    len(with_error)), 'error')
+            statement, with_error = fints.get_filtered_transactions(acc, start_date, end_date)
+            flash(f"Transaktionen vom {start_date} bis {end_date}.")
+            if with_error:
+                flash(f"{len(with_error)} Statements enthielten fehlerhafte Daten und müssen "
+                      "vor dem Import manuell korrigiert werden", 'error')
+    except PycroftException:
+        return display_form_response([], [], [])
 
-        except (FinTSDialogError, FinTSClientPINError):
-            flash("Ungültige FinTS-Logindaten.", 'error')
-            process = False
-        except KeyError:
-            flash('Das gewünschte Konto kann mit diesem Online-Banking-Zugang\
-                    nicht erreicht werden.', 'error')
-            process = False
+    (transactions, old_transactions, doubtful_transactions) = \
+        finance.process_transactions(bank_account, statement)
+    if not form.do_import.data:
+        return display_form_response(transactions, old_transactions, doubtful_transactions)
 
-        if process:
-            (transactions, old_transactions, doubtful_transactions) = finance.process_transactions(
-                bank_account, statement)
-        else:
-            (transactions, old_transactions, doubtful_transactions) = ([], [], [])
+    # save errors to database
+    for error in with_error:
+        session.add(MT940Error(mt940=error[0], exception=error[1],
+                               author=current_user,
+                               bank_account=bank_account))
 
-        if process and form.do_import.data is True:
-            # save errors to database
-            for error in with_error:
-                session.add(MT940Error(mt940=error[0], exception=error[1],
-                                       author=current_user,
-                                       bank_account=bank_account))
+    # save transactions to database
+    session.add_all(transactions)
+    session.commit()
+    flash('Bankkontobewegungen wurden importiert.', 'success')
+    return redirect(url_for(".accounts_show", account_id=bank_account.account_id))
 
-            # save transactions to database
-            session.add_all(transactions)
-            session.commit()
-            flash('Bankkontobewegungen wurden importiert.')
-            return redirect(url_for(".accounts_show",
-                                    account_id=bank_account.account_id))
-
-    return render_template('finance/bank_accounts_import.html', form=form,
-                           transactions=transactions,
-                           old_transactions=old_transactions,
-                           doubtful_transactions=doubtful_transactions)
 
 
 @bp.route('/bank-accounts/importmanual', methods=['GET', 'POST'])
