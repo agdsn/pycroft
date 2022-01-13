@@ -260,6 +260,7 @@ def interface_edit(interface_id):
 
     if not form.is_submitted():
         form.ips.process_data(ip for ip in current_ips)
+        return default_response()
     if not form.validate:
         return default_response()
 
