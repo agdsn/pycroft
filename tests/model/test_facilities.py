@@ -1,20 +1,42 @@
+import pytest
+from sqlalchemy.future import select
+
 from pycroft.model.facilities import Room
-from tests import FactoryDataTestBase, factories
+from tests import factories
 
 
-class TestRoomUsersWithSameAddress(FactoryDataTestBase):
+@pytest.fixture(autouse=True)
+def _session(session):
+    return session
 
-    def create_factories(self):
-        super().create_factories()
-        address = factories.AddressFactory()
-        self.room = factories.RoomFactory(address=address)
 
-        self.hans = factories.UserFactory(room=self.room, name="Hans", address=address)
-        self.franz = factories.UserFactory(room=self.room, name="Franz",
-                                           address=factories.AddressFactory())
+@pytest.fixture
+def room():
+    return factories.RoomFactory()
 
-    def test_users_with_same_address(self):
-        assert self.room.users_sharing_address == [self.hans]
 
-    def test_users_with_same_address_expr(self):
-        assert Room.q.filter(Room.users_sharing_address.any()).all() == [self.room]
+@pytest.fixture
+def hans(room):
+    return factories.UserFactory(room=room, name="Hans", address=room.address)
+
+
+@pytest.fixture(autouse=True)
+def other_inhabitant(session, room):
+    return factories.UserFactory(room=room, name="Franz",
+                                 address=factories.AddressFactory())
+
+
+@pytest.fixture(autouse=True)
+def other_room():
+    return factories.RoomFactory.create()
+
+
+def test_user_marked_as_inhabitant(hans):
+    assert hans.room.users_sharing_address == [hans]
+
+
+def test_users_sharing_address_expr(session, room, hans):
+    assert session.scalars(
+        select(Room)
+            .where(Room.users_sharing_address.any())
+    ).all() == [room]
