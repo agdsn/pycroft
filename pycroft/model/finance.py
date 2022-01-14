@@ -99,6 +99,7 @@ class Account(IntegerIdModel):
                        name="account_type"),
                   nullable=False)
     legacy = Column(Boolean, default=False, nullable=False)
+    splits = relationship('Split', viewonly=True, back_populates='account')
 
     @hybrid_property
     def balance(self):
@@ -184,10 +185,7 @@ class Split(IntegerIdModel):
     amount = Column(Money, nullable=False)
     account_id = Column(Integer, ForeignKey(Account.id, ondelete='CASCADE'),
                         nullable=False, index=True)
-    account = relationship(Account,
-                           backref=backref("splits",
-                                           cascade="all, delete-orphan",
-                                           cascade_backrefs=False))
+    account = relationship(Account, back_populates='splits')
 
     transaction_id = Column(Integer,
                             ForeignKey(Transaction.id, ondelete='CASCADE'),
