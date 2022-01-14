@@ -8,6 +8,7 @@ import os
 import random
 import string
 import unittest
+import warnings
 from typing import cast
 
 from flask import url_for, _request_ctx_stack
@@ -80,6 +81,8 @@ class SQLAlchemyTestCase(unittest.TestCase):
     test is test executed. Tests are rolled back after execution regardless of
     their outcome.
     """
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
+
     session: Session
 
     @classmethod
@@ -159,6 +162,8 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
+
     def setUp(self):
         super().setUp()
         logging.getLogger('factory').setLevel(logging.INFO)
@@ -170,6 +175,7 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
 
 
 class FactoryWithConfigDataTestBase(FactoryDataTestBase):
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     def create_factories(self):
         self.config: Config = ConfigFactory.create()
 
@@ -184,6 +190,7 @@ class FrontendDataTestBase(testing.TestCase):
 
     You have to provide an user in the fixtures with the needed properties.
     """
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     login = None
     password = None
 
@@ -299,6 +306,7 @@ class FrontendDataTestBase(testing.TestCase):
 
 
 class FrontendWithAdminTestBase(FrontendDataTestBase, FactoryDataTestBase):
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     def create_factories(self):
         super().create_factories()
         self.login = 'hans-der-nette-admin'
@@ -316,6 +324,7 @@ class InvalidateHadesLogsMixin(testing.TestCase):
     possibly configured `hades_logs` extension.  Useful if the default
     is :py:cls:`DummyHadesLogs`.
     """
+    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     def create_app(self):
         app = super().create_app()
         # invalidate already configured hades_logs
