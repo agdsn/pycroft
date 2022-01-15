@@ -166,6 +166,8 @@ class Transaction(IntegerIdModel):
                             viewonly=True)
 
     confirmed = Column(Boolean(), nullable=False, default=True)
+    splits = relationship('Split', back_populates='transaction',
+                          cascade="all, delete-orphan", cascade_backrefs=False)
 
     @property
     def amount(self):
@@ -190,10 +192,7 @@ class Split(IntegerIdModel):
     transaction_id = Column(Integer,
                             ForeignKey(Transaction.id, ondelete='CASCADE'),
                             nullable=False)
-    transaction = relationship(Transaction,
-                               backref=backref("splits",
-                                               cascade="all, delete-orphan",
-                                               cascade_backrefs=False))
+    transaction = relationship(Transaction, back_populates='splits')
     __table_args__ = (
         UniqueConstraint(transaction_id, account_id),
     )
