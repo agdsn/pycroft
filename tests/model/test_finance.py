@@ -1,171 +1,209 @@
-# Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
-# This file is part of the Pycroft project and licensed under the terms of
-# the Apache License, Version 2.0. See the LICENSE file for details.
+#  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
+#  This file is part of the Pycroft project and licensed under the terms of
+#  the Apache License, Version 2.0. See the LICENSE file for details
 from datetime import datetime
 
-from sqlalchemy import text
+import pytest
+from sqlalchemy import select, func, text
 from sqlalchemy.exc import IntegrityError
 
-from pycroft.model import finance, session
-from pycroft.model.finance import BankAccountActivity, IllegalTransactionError
-from .. import factories, FactoryDataTestBase
+from pycroft.model.finance import Transaction, IllegalTransactionError, Split, BankAccountActivity
+from tests.factories import AccountFactory, UserFactory
+from tests.factories.finance import BankAccountFactory
 
 
-class FinanceModelTest(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.author = factories.user.UserFactory()
-        self.asset_account = factories.finance.AccountFactory(type='ASSET')
-        self.revenue_account = factories.finance.AccountFactory(type='REVENUE')
-        self.liability_account = factories.finance.AccountFactory(type='LIABILITY')
-
-    def create_transaction(self):
-        return finance.Transaction(
-            description="Transaction",
-            author=self.author
-        )
-
-    @staticmethod
-    def create_split(transaction, account, amount):
-        return finance.Split(
-            amount=amount,
-            account=account,
-            transaction=transaction
-        )
+@pytest.fixture
+def author(session):
+    return UserFactory()
 
 
-class TestTransactionSplits(FinanceModelTest):
-    def test_empty_transaction(self):
-        t = self.create_transaction()
-        session.session.add(t)
-        self.assertRaises(IllegalTransactionError, session.session.commit)
-        session.session.rollback()
-
-    def test_fail_on_unbalanced(self):
-        t = self.create_transaction()
-        s = self.create_split(t, self.asset_account, 100)
-        session.session.add_all([t, s])
-        self.assertRaises(IllegalTransactionError, session.session.commit)
-        session.session.rollback()
-
-    def test_insert_balanced(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        session.session.add_all([t, s1, s2])
-        try:
-            session.session.commit()
-        except IllegalTransactionError:
-            session.session.rollback()
-            self.fail()
-
-    def test_delete_cascade(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        session.session.add_all([t, s1, s2])
-        session.session.commit()
-        session.session.delete(t)
-        session.session.commit()
-        assert finance.Split.q.count() == 0
-
-    def test_fail_on_self_transaction(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.asset_account, -100)
-        session.session.add_all([t, s1, s2])
-        self.assertRaises(IntegrityError, session.session.commit)
-        session.session.rollback()
-
-    def test_fail_on_multiple_split_same_account(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -50)
-        s3 = self.create_split(t, self.revenue_account, -50)
-        session.session.add_all([t, s1, s2, s3])
-        self.assertRaises(IntegrityError, session.session.commit)
-        session.session.rollback()
-
-    def test_unbalance_with_insert(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        session.session.add_all([t, s1, s2])
-        session.session.commit()
-        s3 = self.create_split(t, self.liability_account, 50)
-        session.session.add(s3)
-        self.assertRaises(IllegalTransactionError, session.session.commit)
-
-    def test_unbalance_with_update(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        session.session.add_all([t, s1, s2])
-        session.session.commit()
-        s2.amount = -50
-        self.assertRaises(IllegalTransactionError, session.session.commit)
-
-    def test_unbalance_with_delete(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        session.session.add_all([t, s1, s2])
-        session.session.commit()
-        session.session.delete(s2)
-        self.assertRaises(IllegalTransactionError, session.session.commit)
+@pytest.fixture
+def asset_account(session):
+    return AccountFactory(type='ASSET')
 
 
-class TestBankAccountActivity(FinanceModelTest):
-    def create_factories(self):
-        super().create_factories()
-        self.bank_account = factories.finance.BankAccountFactory()
+@pytest.fixture
+def revenue_account(session):
+    return AccountFactory(type='REVENUE')
 
-    def setUp(self):
-        super().setUp()
-        session.session.execute(text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger IMMEDIATE"))
 
-    def tearDown(self):
-        session.session.execute(text("SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger DEFERRED"))
-        super().tearDown()
+@pytest.fixture
+def liability_account(session):
+    return AccountFactory(type='LIABILITY')
 
-    def create_activity(self, amount):
+
+@pytest.fixture(name='t')
+def transaction(author):
+    return Transaction(description='Transaction', author=author)
+
+
+def create_split(t, account, amount):
+    return Split(amount=amount, account=account, transaction=t)
+
+
+def test_empty_t(session, t):
+    with pytest.raises(IllegalTransactionError):
+        with session.begin_nested():
+            session.add(t)
+
+
+def test_fail_on_unbalance(session, t, asset_account):
+    split = create_split(t, asset_account, 100)
+    with pytest.raises(IllegalTransactionError):
+        with session.begin_nested():
+            session.add_all([t, split])
+
+
+def test_insert_balanced(session, t, asset_account, revenue_account):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, revenue_account, -100)
+    try:
+        with session.begin_nested():
+            session.add_all([s1, s2])
+    except IllegalTransactionError:
+        pytest.fail("Threw illegalterror")
+
+
+def test_delete_cascade_transaction_to_splits(
+    session, t, asset_account, revenue_account
+):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, revenue_account, -100)
+    with session.begin_nested():
+        session.add_all([t, s1, s2])
+    with session.begin_nested():
+        session.delete(t)  # should delete associated splits
+    assert session.scalars(select(func.count(Split.id))).one() == 0
+
+
+def test_fail_on_self_transaction(session, t, asset_account):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, asset_account, -100)
+
+    with pytest.raises(IntegrityError):
+        with session.begin_nested():
+            session.add_all([t, s1, s2])
+
+
+def test_fail_on_multiple_split_same_account(
+    session, t, asset_account, revenue_account
+):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, revenue_account, -50)
+    s3 = create_split(t, revenue_account, -50)
+
+    with pytest.raises(IntegrityError):
+        with session.begin_nested():
+            session.add_all([t, s1, s2, s3])
+
+
+@pytest.fixture
+def balanced_splits(session, t, asset_account, revenue_account):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, revenue_account, -100)
+    with session.begin_nested():
+        session.add_all([t, s1, s2])
+    return s1, s2
+
+
+def test_unbalance_with_insert(
+    session, t, balanced_splits, liability_account
+):
+    s3 = create_split(t, liability_account, 50)
+
+    with pytest.raises(IllegalTransactionError):
+        with session.begin_nested():
+            session.add(s3)
+
+
+def test_unbalance_with_update(session, balanced_splits):
+    _, s2 = balanced_splits
+
+    with pytest.raises(IllegalTransactionError):
+        with session.begin_nested():
+            s2.amount = -50
+
+
+def test_unbbalance_with_delete(session, t, balanced_splits):
+    with pytest.raises(IllegalTransactionError):
+        with session.begin_nested():
+            t.splits.pop()
+
+
+@pytest.fixture(name='immediate_trigger')
+def immediate_activity_matches_split_trigger(session):
+    session.execute(text(
+        "SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger"
+        " IMMEDIATE"
+    ))
+    yield None
+    session.execute(text(
+        "SET CONSTRAINTS bank_account_activity_matches_referenced_split_trigger"
+        " DEFERRED"
+    ))
+
+
+@pytest.fixture
+def bank_account():
+    return BankAccountFactory()
+
+
+@pytest.fixture(scope='session')
+def utcnow():
+    return datetime.utcnow()
+
+
+@pytest.fixture
+def create_activity(bank_account, utcnow):
+    def _create(amount):
+        # TODO replace by factory
         return BankAccountActivity(
-            bank_account=self.bank_account,
+            bank_account=bank_account,
             reference='Reference',
             other_name='John Doe',
             other_account_number='0123456789',
             other_routing_number='01245',
             amount=amount,
-            imported_at=datetime.utcnow(),
-            posted_on=datetime.utcnow().date(),
-            valid_on=datetime.utcnow().date(),
+            imported_at=utcnow,
+            posted_on=utcnow.date(),
+            valid_on=utcnow.date(),
         )
 
-    def test_correct(self):
-        bank_account_account = self.bank_account.account
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, bank_account_account, -100)
-        a = self.create_activity(-100)
-        a.split = s2
-        session.session.add_all((t, s1, s2, a))
-        session.session.commit()
+    return _create
 
-    def test_wrong_split_amount(self):
-        bank_account_account = self.bank_account.account
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, bank_account_account, -100)
-        a = self.create_activity(-50)
-        a.split = s2
-        session.session.add_all((t, s1, s2, a))
-        self.assertRaises(IntegrityError, session.session.commit)
 
-    def test_wrong_split_account(self):
-        t = self.create_transaction()
-        s1 = self.create_split(t, self.asset_account, 100)
-        s2 = self.create_split(t, self.revenue_account, -100)
-        a = self.create_activity(-100)
-        a.split = s2
-        session.session.add_all((t, s1, s2, a))
-        self.assertRaises(IntegrityError, session.session.commit)
+def test_correct(session, create_activity, bank_account, t, asset_account):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, bank_account.account, -100)
+    a = create_activity(-10)
+    a.split = s2
+    with session.begin_nested():
+        session.add_all([t, s1, s2, a])
+
+
+def test_wrong_split_amount(
+    session, immediate_trigger,
+    create_activity, bank_account, t, asset_account
+):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, bank_account.account, -100)
+    a = create_activity(-50)
+    a.split = s2
+
+    with pytest.raises(IntegrityError):
+        with session.begin_nested():
+            session.add_all([t, s1, s2, a])
+
+
+def test_wrong_split_account(
+    session, immediate_trigger,
+    create_activity, revenue_account, t, asset_account
+):
+    s1 = create_split(t, asset_account, 100)
+    s2 = create_split(t, revenue_account, -100)
+    a = create_activity(-100)
+    a.split = s2
+
+    with pytest.raises(IntegrityError):
+        with session.begin_nested():
+            session.add_all([t, s1, s2, a])
