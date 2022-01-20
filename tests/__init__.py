@@ -8,7 +8,6 @@ import unittest
 import warnings
 from typing import cast
 
-import flask_testing as testing
 from sqlalchemy import inspect
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import IntegrityError
@@ -173,20 +172,3 @@ class FactoryWithConfigDataTestBase(FactoryDataTestBase):
         self.config: Config = ConfigFactory.create()
 
 
-class InvalidateHadesLogsMixin(testing.TestCase):
-    """Mixin Class forcing a disabled `hades_logs` extensions
-
-    This mixin class hooks into :meth:`create_app` and invalidates a
-    possibly configured `hades_logs` extension.  Useful if the default
-    is :py:cls:`DummyHadesLogs`.
-    """
-    def __init__(self, *a, **kw):
-        warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
-        super().__init__(*a, **kw)
-
-    def create_app(self):
-        app = super().create_app()
-        # invalidate already configured hades_logs
-        if 'hades_logs' in app.extensions:
-            app.extensions.pop('hades_logs')
-        return app

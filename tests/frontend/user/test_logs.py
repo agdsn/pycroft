@@ -1,8 +1,5 @@
 from hades_logs import HadesLogs
-from tests.factories import UserFactory, RoomLogEntryFactory, UserLogEntryFactory, \
-    UserWithHostFactory
-
-from tests import InvalidateHadesLogsMixin
+from ..legacy_base import InvalidateHadesLogsMixin
 from tests.factories import UserFactory, RoomLogEntryFactory, \
     UserLogEntryFactory, \
     UserWithHostFactory
