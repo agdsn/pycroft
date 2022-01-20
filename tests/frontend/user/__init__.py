@@ -1,6 +1,6 @@
 from flask import url_for
 
-from tests import FrontendWithAdminTestBase
+from tests.frontend.legacy_base import FrontendWithAdminTestBase
 from tests.factories import RoomFactory, SubnetFactory, PatchPortFactory
 
 

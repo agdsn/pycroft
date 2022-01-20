@@ -1,7 +1,7 @@
 from flask import url_for
 
 from pycroft.model._all import PropertyGroup
-from tests import FrontendWithAdminTestBase
+from tests.frontend.legacy_base import FrontendWithAdminTestBase
 
 
 class PropertiesFrontendTestCase(FrontendWithAdminTestBase):
