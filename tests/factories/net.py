@@ -23,7 +23,7 @@ class SubnetFactory(BaseFactory):
         model = Subnet
 
     address = factory.Sequence(
-        lambda n: IPv4Network((f"141.{n // 255}.{n % 255}.0", 24))
+        lambda n: IPv4Network((f"141.{n // 255}.{n % 255}.0", 30))
     )
     vlan = factory.SubFactory(VLANFactory)
     reserved_addresses_top = 0
