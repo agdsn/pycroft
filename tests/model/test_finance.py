@@ -38,7 +38,7 @@ def transaction(author):
     return Transaction(description='Transaction', author=author)
 
 
-def create_split(t, account, amount):
+def build_split(t, account, amount):
     return Split(amount=amount, account=account, transaction=t)
 
 
@@ -49,15 +49,15 @@ def test_empty_t(session, t):
 
 
 def test_fail_on_unbalance(session, t, asset_account):
-    split = create_split(t, asset_account, 100)
+    split = build_split(t, asset_account, 100)
     with pytest.raises(IllegalTransactionError):
         with session.begin_nested():
             session.add_all([t, split])
 
 
 def test_insert_balanced(session, t, asset_account, revenue_account):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, revenue_account, -100)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, revenue_account, -100)
     try:
         with session.begin_nested():
             session.add_all([s1, s2])
@@ -68,8 +68,8 @@ def test_insert_balanced(session, t, asset_account, revenue_account):
 def test_delete_cascade_transaction_to_splits(
     session, t, asset_account, revenue_account
 ):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, revenue_account, -100)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, revenue_account, -100)
     with session.begin_nested():
         session.add_all([t, s1, s2])
     with session.begin_nested():
@@ -78,8 +78,8 @@ def test_delete_cascade_transaction_to_splits(
 
 
 def test_fail_on_self_transaction(session, t, asset_account):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, asset_account, -100)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, asset_account, -100)
 
     with pytest.raises(IntegrityError):
         with session.begin_nested():
@@ -89,9 +89,9 @@ def test_fail_on_self_transaction(session, t, asset_account):
 def test_fail_on_multiple_split_same_account(
     session, t, asset_account, revenue_account
 ):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, revenue_account, -50)
-    s3 = create_split(t, revenue_account, -50)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, revenue_account, -50)
+    s3 = build_split(t, revenue_account, -50)
 
     with pytest.raises(IntegrityError):
         with session.begin_nested():
@@ -100,8 +100,8 @@ def test_fail_on_multiple_split_same_account(
 
 @pytest.fixture
 def balanced_splits(session, t, asset_account, revenue_account):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, revenue_account, -100)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, revenue_account, -100)
     with session.begin_nested():
         session.add_all([t, s1, s2])
     return s1, s2
@@ -110,7 +110,7 @@ def balanced_splits(session, t, asset_account, revenue_account):
 def test_unbalance_with_insert(
     session, t, balanced_splits, liability_account
 ):
-    s3 = create_split(t, liability_account, 50)
+    s3 = build_split(t, liability_account, 50)
 
     with pytest.raises(IllegalTransactionError):
         with session.begin_nested():
@@ -155,28 +155,28 @@ def utcnow():
 
 
 @pytest.fixture
-def create_activity(bank_account, utcnow):
+def build_activity(bank_account, utcnow):
     return partial(
         BankAccountActivityFactory.build,
         bank_account=bank_account, imported_at=utcnow,
     )
 
 
-def test_correct(session, create_activity, bank_account, t, asset_account):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, bank_account.account, -100)
-    a = create_activity(amount=-10, split=s2)
+def test_correct(session, build_activity, bank_account, t, asset_account):
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, bank_account.account, -100)
+    a = build_activity(amount=-10, split=s2)
     with session.begin_nested():
         session.add_all([t, s1, s2, a])
 
 
 def test_wrong_split_amount(
     session, immediate_trigger,
-    create_activity, bank_account, t, asset_account
+    build_activity, bank_account, t, asset_account
 ):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, bank_account.account, -100)
-    a = create_activity(amount=-50, split=s2)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, bank_account.account, -100)
+    a = build_activity(amount=-50, split=s2)
 
     with pytest.raises(IntegrityError):
         with session.begin_nested():
@@ -185,11 +185,11 @@ def test_wrong_split_amount(
 
 def test_wrong_split_account(
     session, immediate_trigger,
-    create_activity, revenue_account, t, asset_account
+    build_activity, revenue_account, t, asset_account
 ):
-    s1 = create_split(t, asset_account, 100)
-    s2 = create_split(t, revenue_account, -100)
-    a = create_activity(amount=-100, split=s2)
+    s1 = build_split(t, asset_account, 100)
+    s2 = build_split(t, revenue_account, -100)
+    a = build_activity(amount=-100, split=s2)
 
     with pytest.raises(IntegrityError):
         with session.begin_nested():
