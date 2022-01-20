@@ -12,7 +12,6 @@ from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model.host import IP
 from tests import factories
-from tests.legacy_base import FactoryDataTestBase
 
 
 @pytest.fixture
@@ -45,59 +44,84 @@ def test_hostname_generation(address: ipaddr.IPv4Address, expected: str):
     assert generate_hostname(address) == expected
 
 
-class TestIpHelper(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.subnets = factories.SubnetFactory.create_batch(10)
-        self.host = factories.HostFactory()
+@pytest.fixture
+def subnets(session):
+    return factories.SubnetFactory.create_batch(10)
 
-    @staticmethod
-    def calculate_usable_ips(net):
-        ips = ipaddr.IPNetwork(net.address).numhosts
-        reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
-        return ips - reserved - 2
 
-    def test_get_free_ip_simple(self):
-        for subnet in self.subnets:
-            ip, subnet = get_free_ip((subnet,))
-            assert ip in subnet.address
+@pytest.fixture(params=list(range(10)))
+def subnet(subnets, request):
+    return subnets[request.param]
 
-    def fill_net(self, net, interface):
-        for num in range(0, self.calculate_usable_ips(net)):
+
+@pytest.fixture
+def host(session):
+    return factories.HostFactory()
+
+
+def calculate_usable_ips(net):
+    ips = ipaddr.IPNetwork(net.address).numhosts
+    reserved = net.reserved_addresses_bottom + net.reserved_addresses_top
+    return ips - reserved - 2
+
+
+def test_get_free_ip_simple(session, subnet):
+    ip, subnet2 = get_free_ip((subnet,))
+    assert subnet2 == subnet
+    assert ip in subnet.address
+
+
+@pytest.fixture
+def interface():
+    return factories.InterfaceFactory.build()
+
+
+@pytest.fixture
+def build_full_subnet(interface):
+    # depends on the functionality of `get_free_ip` (via `calculate_usable_ips`)
+    def _build():
+        net = factories.SubnetFactory.build()
+
+        for num in range(0, calculate_usable_ips(net)):
             ip, _ = get_free_ip((net,))
-            self.session.add(IP(address=ip, subnet=net, interface=interface))
-        self.session.commit()
-
-    # TODO at least rewrite the `assert`s
-    def test_get_free_ip_next_to_full(self):
-        first_net = self.subnets[0]
-        second_net = self.subnets[1]
-        subnets = (first_net, second_net)
-        host = self.host
-
-        interface = host.interfaces[0]
-        self.fill_net(first_net, interface)
-        self.session.refresh(first_net)
-        self.assertRaises(SubnetFullException, get_free_ip, (first_net,))
-        try:
-            get_free_ip(subnets)
-        except SubnetFullException:
-            self.fail("Subnets should have free IPs.")
-        self.fill_net(subnets[1], interface)
-        self.assertRaises(SubnetFullException, get_free_ip, subnets)
-
-        self.session.delete(host)
-        self.session.commit()
+            net.ips.append(IP(address=ip, subnet=net, interface=interface))
+        return net
+    return _build
 
 
-# TODO this is actually a lib test
-class TestChangeMacInterface(FactoryDataTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.processing_user = factories.UserFactory()
-        self.interface = factories.InterfaceFactory()
+@pytest.fixture
+def full_subnet(build_full_subnet):
+    return build_full_subnet()
 
-    def test_change_mac(self):
-        new_mac = "20:00:00:00:00:00"
-        change_mac(self.interface, new_mac, self.processing_user)
-        assert self.interface.mac == new_mac
+
+@pytest.fixture
+def empty_subnet():
+    return factories.SubnetFactory.build()
+
+
+def test_no_free_ip_in_full_subnet(full_subnet):
+    with pytest.raises(SubnetFullException):
+        get_free_ip((full_subnet,))
+
+
+def test_free_ip_with_one_subnet_empty(full_subnet, empty_subnet):
+    try:
+        get_free_ip((full_subnet, empty_subnet))
+    except SubnetFullException:
+        pytest.fail("Subnets should have free IPs.")
+
+
+def test_no_free_ip_with_two_full_subnets(build_full_subnet):
+    with pytest.raises(SubnetFullException):
+        get_free_ip((build_full_subnet(), build_full_subnet()))
+
+
+def test_change_mac(session):
+    with session.begin_nested():
+        processing_user = factories.UserFactory()
+        interface = factories.InterfaceFactory()
+    new_mac = "20:00:00:00:00:00"
+
+    change_mac(interface, new_mac, processing_user)
+
+    assert interface.mac == new_mac
