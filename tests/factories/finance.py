@@ -4,7 +4,7 @@
 from datetime import timedelta
 
 from factory import SubFactory, LazyAttribute, Iterator, \
-    RelatedFactoryList
+    RelatedFactoryList, Sequence
 from factory.faker import Faker
 
 from pycroft.helpers.date import last_day_of_month
@@ -49,7 +49,7 @@ class BankAccountActivityFactory(BaseFactory):
 
     bank_account = SubFactory(BankAccountFactory)
     amount = Faker('random_number', digits=5)
-    reference = None
+    reference = Sequence(lambda n: f"Reference {n}")
     other_account_number = Faker('random_number', digits=10)
     other_routing_number = Faker('random_number', digits=8)
     other_name = Faker('word')
