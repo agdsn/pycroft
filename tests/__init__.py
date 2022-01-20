@@ -74,7 +74,10 @@ class SQLAlchemyTestCase(unittest.TestCase):
     test is test executed. Tests are rolled back after execution regardless of
     their outcome.
     """
-    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
+    def __init__(self, *a, **kw):
+        warnings.warn('Use pytest with the `session` fixture instead of SQLAlchemyTestCase',
+                      DeprecationWarning)
+        super().__init__(*a, **kw)
 
     session: Session
 
@@ -155,8 +158,6 @@ class SQLAlchemyTestCase(unittest.TestCase):
 
 
 class FactoryDataTestBase(SQLAlchemyTestCase):
-    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
-
     def setUp(self):
         super().setUp()
         logging.getLogger('factory').setLevel(logging.INFO)
@@ -168,7 +169,6 @@ class FactoryDataTestBase(SQLAlchemyTestCase):
 
 
 class FactoryWithConfigDataTestBase(FactoryDataTestBase):
-    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     def create_factories(self):
         self.config: Config = ConfigFactory.create()
 
@@ -180,7 +180,10 @@ class InvalidateHadesLogsMixin(testing.TestCase):
     possibly configured `hades_logs` extension.  Useful if the default
     is :py:cls:`DummyHadesLogs`.
     """
-    warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
+    def __init__(self, *a, **kw):
+        warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
+        super().__init__(*a, **kw)
+
     def create_app(self):
         app = super().create_app()
         # invalidate already configured hades_logs
