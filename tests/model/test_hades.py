@@ -4,7 +4,7 @@ from pycroft.helpers.interval import closedopen
 from pycroft.model import session
 from pycroft.model import hades
 from pycroft.model.net import VLAN
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, MembershipFactory, UserWithHostFactory, \
     SwitchFactory, PatchPortFactory
 

@@ -25,7 +25,7 @@ from pycroft.lib.finance import (
     take_actions_for_payment_in_default_users)
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity, Transaction, Split
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \

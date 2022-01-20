@@ -1,8 +1,8 @@
 from pycroft.lib.user import move, move_out, move_in
 from pycroft.model import session
 from pycroft.model.user import RoomHistoryEntry
-from tests import FactoryDataTestBase, ConfigFactory, UserFactory
-from tests.factories import AddressFactory, RoomFactory
+from tests.legacy_base import FactoryDataTestBase
+from tests.factories import AddressFactory, RoomFactory, ConfigFactory, UserFactory
 
 
 class UserRoomHistoryTestCase(FactoryDataTestBase):

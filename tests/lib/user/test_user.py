@@ -5,7 +5,7 @@
 from pycroft import config
 from pycroft.lib import user as UserHelper
 from pycroft.model import session
-from tests import FactoryDataTestBase
+from ...legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory
 from ... import factories
 

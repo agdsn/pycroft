@@ -5,7 +5,7 @@ import datetime
 
 from pycroft.helpers.interval import single
 from pycroft.lib.search import user_search_query
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserWithHostFactory, PropertyGroupFactory, \
     MembershipFactory
 

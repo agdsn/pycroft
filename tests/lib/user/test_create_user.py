@@ -1,5 +1,6 @@
 from pycroft.lib import user as UserHelper
-from tests import FactoryDataTestBase, factories, UserFactory
+from tests import factories, UserFactory
+from ...legacy_base import FactoryDataTestBase
 from . import ExampleUserData
 from .assertions import assert_account_name, assert_membership_groups, assert_logmessage_startswith
 

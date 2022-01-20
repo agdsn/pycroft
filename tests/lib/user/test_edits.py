@@ -1,5 +1,6 @@
 from pycroft.lib import user as UserHelper
-from tests import FactoryDataTestBase, UserFactory
+from tests.factories import UserFactory
+from tests.legacy_base import FactoryDataTestBase
 
 
 class UserEditsTestCase(FactoryDataTestBase):

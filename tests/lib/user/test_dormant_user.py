@@ -5,8 +5,9 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import session
 from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
-from tests import FactoryWithConfigDataTestBase, UserFactory, MembershipFactory
-from tests.factories import UserWithHostFactory, RoomFactory, AddressFactory
+from tests.legacy_base import FactoryWithConfigDataTestBase
+from tests.factories import UserWithHostFactory, RoomFactory, AddressFactory, UserFactory, \
+    MembershipFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
 

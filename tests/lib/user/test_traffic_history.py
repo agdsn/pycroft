@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from pycroft.lib.user import traffic_history
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import TrafficVolumeLastWeekFactory, UserWithHostFactory
 
 

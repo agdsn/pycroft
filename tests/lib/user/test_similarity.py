@@ -4,7 +4,8 @@ from sqlalchemy import func
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model.user import RoomHistoryEntry
-from tests import FactoryDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryDataTestBase
 
 THRESHOLD = 0.6
 

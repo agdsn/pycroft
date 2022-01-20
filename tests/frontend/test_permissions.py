@@ -5,11 +5,11 @@
 from flask import url_for, current_app
 from jinja2.runtime import Context
 
-from tests import FactoryDataTestBase, \
-    FactoryWithConfigDataTestBase, AdminPropertyGroupFactory, MembershipFactory
-from tests.frontend.legacy_base import FrontendDataTestBase
-from tests.factories.property import FinancePropertyGroupFactory
+from tests.factories.property import FinancePropertyGroupFactory, \
+    AdminPropertyGroupFactory, MembershipFactory
 from tests.factories.user import UserWithMembershipFactory
+from tests.frontend.legacy_base import FrontendDataTestBase
+from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
 from web.template_filters import require
 
 

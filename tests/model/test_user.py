@@ -10,7 +10,8 @@ from pycroft.helpers.user import generate_password, hash_password
 from pycroft.model import session, user
 from pycroft.model.finance import Account
 from pycroft.model.user import IllegalLoginError, Membership, PropertyGroup, User
-from tests import FactoryDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryDataTestBase
 
 
 class Test_User_Passwords(FactoryDataTestBase):

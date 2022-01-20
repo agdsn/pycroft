@@ -4,7 +4,8 @@ from pycroft import config
 from pycroft.helpers.interval import closedopen
 from pycroft.lib import user as UserHelper
 from pycroft.model import session
-from tests import FactoryWithConfigDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryWithConfigDataTestBase
 
 
 class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):

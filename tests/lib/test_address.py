@@ -2,7 +2,7 @@ from sqlalchemy import inspect
 
 from pycroft.lib import address
 from pycroft.model.address import Address
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories.address import AddressFactory
 
 

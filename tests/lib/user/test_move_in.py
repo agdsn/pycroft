@@ -4,7 +4,8 @@ from pycroft.lib import user as UserHelper
 from pycroft.model import session
 from pycroft.model.task import Task, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveInParams
-from tests import FactoryDataTestBase, factories, UserFactory, FactoryWithConfigDataTestBase
+from tests import factories, UserFactory
+from ...legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
 from . import ExampleUserData
 from .task_helpers import create_task_and_execute
 

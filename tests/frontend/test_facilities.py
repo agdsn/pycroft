@@ -2,9 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from tests import FactoryWithConfigDataTestBase, AdminPropertyGroupFactory
+from tests.legacy_base import FactoryWithConfigDataTestBase
 from tests.frontend.legacy_base import FrontendDataTestBase
-from tests.factories import RoomFactory
+from tests.factories import RoomFactory, AdminPropertyGroupFactory
 from tests.factories.user import UserWithMembershipFactory
 
 

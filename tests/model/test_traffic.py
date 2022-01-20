@@ -1,7 +1,7 @@
 from pycroft.model import session
 from pycroft.model.traffic import TrafficVolume, pmacct_traffic_egress, \
     pmacct_traffic_ingress
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserWithHostFactory
 
 

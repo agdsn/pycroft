@@ -11,7 +11,7 @@ from sqlalchemy.orm.base import object_state
 from pycroft.lib.net import get_free_ip
 from pycroft.model import host
 from pycroft.model.types import InvalidMACAddressException
-from tests import FactoryDataTestBase
+from ..legacy_base import FactoryDataTestBase
 from .. import factories
 
 

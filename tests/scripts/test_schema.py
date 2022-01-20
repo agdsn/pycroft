@@ -7,7 +7,7 @@ from tempfile import mkdtemp
 from sqlalchemy import text
 
 from scripts.schema import AlembicHelper, SchemaStrategist
-from tests import SQLAlchemyTestCase, get_engine_and_connection
+from tests.legacy_base import get_engine_and_connection, SQLAlchemyTestCase
 
 
 class MockedStrategist(SchemaStrategist):

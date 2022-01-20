@@ -2,7 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.lib.host import change_mac
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory, UserWithHostFactory, InterfaceFactory
 
 

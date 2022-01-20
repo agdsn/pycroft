@@ -10,7 +10,7 @@ from sqlalchemy.future import select
 from pycroft.helpers.interval import open, closed, openclosed, closedopen, single
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import TsTzRange, DateTimeTz
-from tests import SQLAlchemyTestCase
+from tests.legacy_base import SQLAlchemyTestCase
 
 
 class TableWithInterval(IntegerIdModel):

@@ -2,7 +2,8 @@ from sqlalchemy.exc import IntegrityError
 
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.facilities import create_room, edit_room
-from tests import FactoryDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryDataTestBase
 
 
 class OneBuildingTestCase(FactoryDataTestBase):

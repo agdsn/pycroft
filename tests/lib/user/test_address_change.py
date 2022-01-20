@@ -1,6 +1,6 @@
 from pycroft.lib.user import edit_address
 from pycroft.model.user import User
-from tests import FactoryDataTestBase
+from ...legacy_base import FactoryDataTestBase
 
 from ...factories import UserFactory, UserWithoutRoomFactory
 

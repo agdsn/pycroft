@@ -4,7 +4,7 @@ from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker
 from pycroft.model import session as pyc_session
 from web import make_app
 
-from .. import teardown, setup, get_engine_and_connection
+from ..legacy_base import setup, get_engine_and_connection, teardown
 
 
 @pytest.fixture(scope='session')

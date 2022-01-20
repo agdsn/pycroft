@@ -13,8 +13,9 @@ from flask import url_for, _request_ctx_stack
 from werkzeug.routing import IntegerConverter, UnicodeConverter
 
 from pycroft.model import _all
-from tests import FactoryDataTestBase, UserFactory, AdminPropertyGroupFactory, \
+from tests.factories import UserFactory, AdminPropertyGroupFactory, \
     MembershipFactory, ConfigFactory
+from tests.legacy_base import FactoryDataTestBase
 
 
 class FrontendDataTestBase(testing.TestCase):

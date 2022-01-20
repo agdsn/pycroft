@@ -11,7 +11,8 @@ from pycroft.helpers.net import sort_ports
 from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model.host import IP
-from tests import FactoryDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryDataTestBase
 
 
 @pytest.fixture

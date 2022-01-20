@@ -10,7 +10,8 @@ from pycroft.helpers.interval import closedopen
 from pycroft.model import session, user
 from pycroft.model.property import current_property, evaluate_properties
 from pycroft.model.user import Group, Membership, PropertyGroup, User
-from tests import FactoryDataTestBase, factories
+from tests import factories
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory
 from tests.factories.property import MembershipFactory, PropertyGroupFactory
 

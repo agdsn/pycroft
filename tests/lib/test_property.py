@@ -8,7 +8,7 @@ from pycroft.lib.membership import grant_property, deny_property, \
     remove_property, make_member_of, remove_member_of, known_properties
 from pycroft.model import session
 from pycroft.model.user import Membership, Property
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory
 
 

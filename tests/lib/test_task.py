@@ -7,7 +7,7 @@ from pycroft.lib.task import cancel_task, manually_execute_task, reschedule_task
 from pycroft.model import session
 from pycroft.model.task import TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory, UserTaskFactory, RoomFactory
 
 

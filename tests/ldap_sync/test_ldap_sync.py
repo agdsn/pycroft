@@ -14,8 +14,8 @@ from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, \
 from ldap_sync.record import UserRecord, GroupRecord, RecordState, \
     dn_from_username
 from pycroft.model.session import session
-from tests import FactoryDataTestBase, UserFactory, MembershipFactory
-from tests.factories import PropertyGroupFactory
+from tests.legacy_base import FactoryDataTestBase
+from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
 from tests.factories.user import UserWithMembershipFactory
 
 

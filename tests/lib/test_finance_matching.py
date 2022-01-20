@@ -1,6 +1,6 @@
 from pycroft.lib.finance import match_activities
 from pycroft.model.finance import AccountPattern
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import AccountFactory
 from tests.factories.finance import BankAccountFactory, BankAccountActivityFactory
 

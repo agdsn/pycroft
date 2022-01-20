@@ -6,7 +6,7 @@ from datetime import timedelta
 from pycroft.lib.logging import log_user_event, log_room_event
 from pycroft.model import session
 from pycroft.model.logging import RoomLogEntry, LogEntry
-from tests import FactoryDataTestBase
+from tests.legacy_base import FactoryDataTestBase
 from tests.factories import UserFactory, RoomFactory
 
 
