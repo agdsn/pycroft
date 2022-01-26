@@ -89,7 +89,7 @@ def host_edit(host_id):
     room = Room.q.filter_by(number=form.room_number.data,
                             level=form.level.data,
                             building=form.building.data).one()
-    owner = User.get(id=form.owner_id.data)
+    owner = User.get(form.owner_id.data)
 
     try:
         with handle_errors(session.session):
