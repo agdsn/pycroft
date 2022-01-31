@@ -133,7 +133,7 @@ def host_create():
     room = Room.q.filter_by(number=form.room_number.data,
                             level=form.level.data,
                             building=form.building.data).one()
-    owner = User.get(id=form.owner_id.data)
+    owner = User.get(form.owner_id.data)
     try:
         with handle_errors(session.session):
             host = lib_host.host_create(
