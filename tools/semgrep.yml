@@ -1,0 +1,34 @@
+# run with `pip install semgrep && semgrep --config=tools/semgrep.yml pycroft web` 
+# …or let `pre-commit` do the heavy lifting for you!
+rules:
+  - id: f-string-in-deferred-gettext
+    pattern: pycroft.helpers.i18n.deferred_gettext(f"...")
+    message: Don't use f-strings in `deferred_gettext`
+    languages: [python]
+    severity: ERROR
+  - id: format-in-deferred-gettext
+    pattern: pycroft.helpers.i18n.deferred_gettext("$MESSAGE".format($ARGS))
+    fix: deferred_gettext("$MESSAGE").format($ARGS).to_json()
+    message: Don't use formatted literals in `deferred_gettext`
+    languages: [python]
+    severity: ERROR
+  - id: log_event_with_format
+    patterns:
+      - pattern: ("$MESSAGE".format($ARGS))
+      - pattern-inside: $LOG_FN(...)
+      - metavariable-regex:
+          metavariable: $LOG_FN
+          regex: log_.*event
+    message: Don't use $LOG_FN with a pre-formatted string literal. Use `deferred-gettext` instead.
+    fix: $LOG_FN(deferred_gettext("$MESSAGE").format($ARGS).to_json())
+    languages: [python]
+    severity: ERROR
+  - id: do-not-call-get-with-keywords
+    pattern-either: 
+      - pattern: pycroft.model.$C.get(id=$ARG)
+      - pattern: pycroft.model._all.$C.get(id=$ARG)
+      - pattern: pycroft.model.$MODULE.$C.get(id=$ARG)
+    message: don't use `$C.get()` with a keyword argument
+    fix: $C.get($ARG)
+    languages: [python]
+    severity: ERROR

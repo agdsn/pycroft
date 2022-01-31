@@ -5,3 +5,9 @@ repos:
     hooks:
     -   id: pyupgrade
         args: ["--py310-plus"]
+- repo: https://github.com/returntocorp/semgrep
+  rev: 'v0.80.0'
+  hooks:
+  - id: semgrep
+    # See semgrep.dev/rulesets to select a ruleset and copy its URL
+    args: ['--config', 'tools/semgrep.yml', '--error', '--skip-unknown-extensions']    
