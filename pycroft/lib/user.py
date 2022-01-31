@@ -576,8 +576,8 @@ def edit_email(user: User, email: str | None, email_forwarded: bool, processor: 
         user.email_forwarded = email_forwarded
 
         log_user_event(author=processor, user=user,
-                       message=deferred_gettext(
-                           f"Set e-mail forwarding to {email_forwarded}.").to_json())
+                       message=deferred_gettext("Set e-mail forwarding to {}.")
+                               .format(email_forwarded).to_json())
 
     if is_confirmed:
         user.email_confirmed = True

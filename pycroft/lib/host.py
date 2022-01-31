@@ -102,7 +102,7 @@ def host_edit(host, owner, room, name, processor):
 
 @with_transaction
 def host_delete(host, processor):
-    message = deferred_gettext(f"Deleted host '{host.name}'.")
+    message = deferred_gettext("Deleted host '{}'.").format(host.name)
     log_user_event(author=processor,
                    user=host.owner,
                    message=message.to_json())

@@ -103,14 +103,16 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
         room.inhabitable = inhabitable
 
     if room.swdd_vo_suchname != vo_suchname:
-        log_room_event("Changed VO id from {} to {}.".format(room.swdd_vo_suchname,
-                                                             vo_suchname), processor, room)
-
+        log_room_event(
+            deferred_gettext("Changed VO id from {} to {}.")
+                .format(room.swdd_vo_suchname, vo_suchname).to_json(),
+            processor, room
+        )
         room.swdd_vo_suchname = vo_suchname
 
     if room.address != address:
         room.address = address
-        log_room_event(deferred_gettext(f"Changed address to {address}").to_json(),
+        log_room_event(deferred_gettext("Changed address to {}").format(str(address)).to_json(),
                        processor, room)
         for user in room.users_sharing_address:
             user.address = room.address
