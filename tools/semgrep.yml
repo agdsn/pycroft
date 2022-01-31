@@ -32,3 +32,23 @@ rules:
     fix: $C.get($ARG)
     languages: [python]
     severity: ERROR
+
+  - id: secure-name-for-password-fields
+    patterns:
+      - pattern: $FIELD = $CLASS($...ARGS)
+      - pattern-inside: |
+            class $FORMCLASS: ...
+      - metavariable-pattern:
+          metavariable: $CLASS
+          pattern-either:
+            - pattern: wtforms_widgets.fields.core.PasswordField
+            - pattern: wtforms.fields.PasswordField
+            - pattern: PasswordField
+      - metavariable-pattern:
+          metavariable: $FIELD
+          patterns:
+            - pattern-not-regex: (password|secret)
+    message: $FIELD is not a secure name
+    fix: secret_$FIELD = PasswordField($...ARGS)
+    languages: [python]
+    severity: ERROR
