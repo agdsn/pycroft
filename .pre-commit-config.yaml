@@ -10,4 +10,4 @@ repos:
   hooks:
   - id: semgrep
     # See semgrep.dev/rulesets to select a ruleset and copy its URL
-    args: ['--config', 'tools/semgrep.yml', '--error', '--skip-unknown-extensions']    
+    args: ['--config', 'tools/semgrep.yml', '--metrics=off', '--error', '--skip-unknown-extensions']    
