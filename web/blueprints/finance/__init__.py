@@ -178,7 +178,7 @@ def bank_accounts_import():
             fints = FinTS3Client(
                 bank_account.routing_number,
                 form.user.data,
-                form.pin.data,
+                form.secret_pin.data,
                 bank_account.fints_endpoint,
                 product_id=config.fints_product_id
             )
