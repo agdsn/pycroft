@@ -18,18 +18,18 @@ def author(session):
     return UserFactory()
 
 
-@pytest.fixture
-def asset_account(session):
+@pytest.fixture(scope='module')
+def asset_account(module_session):
     return AccountFactory(type='ASSET')
 
 
-@pytest.fixture
-def revenue_account(session):
+@pytest.fixture(scope='module')
+def revenue_account(module_session):
     return AccountFactory(type='REVENUE')
 
 
-@pytest.fixture
-def liability_account(session):
+@pytest.fixture(scope='module')
+def liability_account(module_session):
     return AccountFactory(type='LIABILITY')
 
 
