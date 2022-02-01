@@ -5,12 +5,11 @@ Revises: f85ef1ef556c
 Create Date: 2019-10-03 19:15:55.716640
 
 """
-from typing import List, Callable
+from typing import Callable
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
-
 from sqlalchemy.orm import declarative_base
 
 # revision identifiers, used by Alembic.

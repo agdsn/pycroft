@@ -5,10 +5,8 @@ Revises: 38fa5154b920
 Create Date: 2019-10-13 21:24:39.752497
 
 """
-from alembic import op
 import sqlalchemy as sa
-import pycroft
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'ce8c8cebcbf4'

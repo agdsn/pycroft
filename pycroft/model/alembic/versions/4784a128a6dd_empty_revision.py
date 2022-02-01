@@ -12,11 +12,6 @@ Create Date: 2017-12-13 00:48:12.079431
 
 """
 
-from alembic import op
-import sqlalchemy as sa
-import pycroft
-
-
 # revision identifiers, used by Alembic.
 revision = '4784a128a6dd'
 down_revision = None

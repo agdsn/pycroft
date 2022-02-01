@@ -7,9 +7,8 @@ Create Date: 2018-11-01 14:57:25.498035
 """
 from datetime import timedelta
 
-from alembic import op
 import sqlalchemy as sa
-import pycroft
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.

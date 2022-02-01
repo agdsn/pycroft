@@ -6,9 +6,6 @@ Create Date: 2019-03-05 23:22:32.642764
 
 """
 from alembic import op
-import sqlalchemy as sa
-import pycroft
-
 
 # revision identifiers, used by Alembic.
 revision = '7855ecffe722'
@@ -35,9 +32,9 @@ def upgrade():
           ELSE
             s := COALESCE(NEW, OLD);
           END IF;
-          
+
           SELECT COUNT(*) = 0 INTO transaction_deleted FROM "transaction" WHERE "id" = s.transaction_id;
-            
+
           SELECT COUNT(*), SUM(amount) INTO STRICT count, balance FROM split
               WHERE transaction_id = s.transaction_id;
           IF count < 2 AND NOT transaction_deleted THEN
