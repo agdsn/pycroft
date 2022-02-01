@@ -12,15 +12,16 @@ rules:
     message: Don't use formatted literals in `deferred_gettext`
     languages: [python]
     severity: ERROR
-  - id: log_event_with_format
+
+  - id: log-event-with-format
     patterns:
-      - pattern: ("$MESSAGE".format($ARGS))
+      - pattern: ("$MESSAGE".format($...ARGS))
       - pattern-inside: $LOG_FN(...)
       - metavariable-regex:
           metavariable: $LOG_FN
           regex: log_.*event
     message: Don't use $LOG_FN with a pre-formatted string literal. Use `deferred-gettext` instead.
-    fix: $LOG_FN(deferred_gettext("$MESSAGE").format($ARGS).to_json())
+    fix: deferred_gettext("$MESSAGE").format($...ARGS).to_json()
     languages: [python]
     severity: ERROR
   - id: do-not-call-get-with-keywords
