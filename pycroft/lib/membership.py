@@ -143,9 +143,9 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
 
 @with_transaction
 def edit_property_group(group, name, permission_level, processor):
-    log_event("Edited property group {} -> {}.".format((group.name, group.permission_level),
-                                                      (name, permission_level)),
-              processor)
+    message = deferred_gettext("Edited property group {} -> {}.")\
+        .format((group.name, group.permission_level), (name, permission_level))
+    log_event(message.to_json(), processor)
 
     group.name = name
     group.permission_level = permission_level
