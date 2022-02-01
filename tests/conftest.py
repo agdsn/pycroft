@@ -49,14 +49,23 @@ def connection(clean_engine):
     transaction.rollback()
     connection.close()
 
+@pytest.fixture(scope='module')
+def module_transaction(connection):
+    nested = connection.begin_nested()
+    yield nested
+    # if the transaction is still associated, this means it has e.g. pending trigger events.
+    transaction_associated = nested.connection._transaction == nested
+    if transaction_associated:
+        nested.rollback()
+
 
 @pytest.fixture(scope='module')
-def module_session(connection):
+def module_session(connection, module_transaction):
     """Provides a session to a created database.
 
     Rolled back after use
     """
-    nested = connection.begin_nested()
+    nested = module_transaction
     s = scoped_session(sessionmaker(bind=connection, future=True))
     set_scoped_session(s)
     session = cast(Session, s())
@@ -73,15 +82,29 @@ def module_session(connection):
     # close_all_sessions()
     session.rollback()
     Session.remove()
-    # if the transaction is still associated, this means it has e.g. pending trigger events.
-    transaction_associated = nested.connection._transaction == nested
-    if transaction_associated:
-        nested.rollback()
+
+
+def _maybe_rollback_transaction(session):
+    # flushes pass the exception to their parents
+    if (t := session._transaction) and t._rollback_exception:
+        t.rollback()
+
+
+@pytest.fixture(scope='class')
+def class_session(module_session, module_transaction):
+    # starts a transaction & rolls it back after each class' test
+    session = module_session
+    _maybe_rollback_transaction(session)
+    nested = session.begin_nested()
+    yield session
+    nested.rollback()
 
 
 @pytest.fixture()
-def session(connection, module_session):
+def session(class_session):
     # starts a transaction & rolls it back after each test
-    module_session.begin_nested()
-    yield module_session
-    module_session.rollback()
+    session = class_session
+    _maybe_rollback_transaction(session)
+    nested = session.begin_nested()
+    yield session
+    nested.rollback()
