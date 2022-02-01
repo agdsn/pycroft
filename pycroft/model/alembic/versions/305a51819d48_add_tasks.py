@@ -5,9 +5,8 @@ Revises: ae8f4b63876a
 Create Date: 2019-05-24 09:38:15.831712
 
 """
-from alembic import op
 import sqlalchemy as sa
-import pycroft
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -25,9 +24,9 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('task_type', sa.String(length=50), nullable=True),
     sa.Column('type', task_type, nullable=False),
-    sa.Column('due', pycroft.model.types.DateTimeTz(), nullable=False),
+    sa.Column('due', sa.types.DateTime(timezone=True), nullable=False),
     sa.Column('parameters', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-    sa.Column('created', pycroft.model.types.DateTimeTz(), nullable=False),
+    sa.Column('created', sa.types.DateTime(timezone=True), nullable=False),
     sa.Column('creator_id', sa.Integer(), nullable=False),
     sa.Column('status', task_status, nullable=False),
     sa.Column('errors', postgresql.JSONB(astext_type=sa.Text()), nullable=True),

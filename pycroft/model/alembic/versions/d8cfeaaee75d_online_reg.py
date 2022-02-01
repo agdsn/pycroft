@@ -8,8 +8,6 @@ Create Date: 2020-08-18 15:04:02.034638
 import sqlalchemy as sa
 from alembic import op
 
-import pycroft
-
 # revision identifiers, used by Alembic.
 revision = 'd8cfeaaee75d'
 down_revision = 'c11d3d8b16ae'
@@ -23,7 +21,7 @@ def upgrade():
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('login', sa.String(length=40), nullable=False),
                     sa.Column('name', sa.String(length=255), nullable=False),
-                    sa.Column('registered_at', pycroft.model.types.DateTimeTz(), nullable=False),
+                    sa.Column('registered_at', sa.types.DateTime(timezone=True), nullable=False),
                     sa.Column('passwd_hash', sa.String(), nullable=False),
                     sa.Column('email', sa.String(length=255), nullable=True),
                     sa.Column('email_confirmed', sa.Boolean(), server_default='False',
