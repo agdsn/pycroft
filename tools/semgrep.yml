@@ -52,3 +52,32 @@ rules:
     fix: secret_$FIELD = PasswordField($...ARGS)
     languages: [python]
     severity: ERROR
+
+  - id: dont-use-datetimetz-in-migrations
+    pattern-either:
+      - pattern: pycroft.model.types.DateTimeTz()
+    fix: sa.types.DateTime(timezone=True)
+    message: use sqlalchemys own DateTime instead of DateTimeTz for migrations
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - "**/alembic/versions"
+
+  - id: dont-use-models-in-migrations
+    patterns:
+      - pattern-either:
+        - pattern: import pycroft
+        - pattern: import pycroft.model
+        - pattern: from pycroft import $FOO
+        - pattern: from pycroft.model import $FOO
+    message: |
+      Don't use pycroft models or other code in migrations!
+      The migrations must be able to run at any time regardless of how the code changes.
+      Custom data types have to be replaced by their sqlalchemy qualifier as well.
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - "**/alembic/versions"
+
