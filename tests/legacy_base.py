@@ -9,6 +9,7 @@ import warnings
 from contextlib import contextmanager
 from typing import cast
 
+import pytest
 from sqlalchemy import inspect
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import IntegrityError
@@ -66,6 +67,7 @@ def teardown():
     connection = None
 
 
+@pytest.mark.legacy
 class SQLAlchemyTestCase(unittest.TestCase):
     """Base class for test cases that require an initialized database
 

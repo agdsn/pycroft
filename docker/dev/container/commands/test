@@ -10,7 +10,8 @@ readonly DESCRIPTION=(
 
 run() {
 	cd /opt/pycroft/app
-	exec pytest -v "$@"
+	exec pytest -v -m 'not legacy' "$@"
+	exec pytest -v -m 'legacy' "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
