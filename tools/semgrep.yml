@@ -6,6 +6,7 @@ rules:
     message: Don't use f-strings in `deferred_gettext`
     languages: [python]
     severity: ERROR
+
   - id: format-in-deferred-gettext
     pattern: pycroft.helpers.i18n.deferred_gettext("$MESSAGE".format($ARGS))
     fix: deferred_gettext("$MESSAGE").format($ARGS).to_json()
@@ -24,6 +25,22 @@ rules:
     fix: deferred_gettext("$MESSAGE").format($...ARGS).to_json()
     languages: [python]
     severity: ERROR
+
+  - id: log-event-with-f-string
+    patterns:
+      - pattern-either:
+        - pattern: ("$MESSAGE".format($...ARGS))
+        - pattern: (f"$MESSAGE")
+      - pattern-inside: $LOG_FN(...)
+      - metavariable-regex:
+          metavariable: $LOG_FN
+          regex: log_.*event
+    message: |
+      Don't use $LOG_FN with a pre-formatted string literal (`$MESSAGE`).
+      Replace the message by `deferred_gettext(...).format(...).to_json()`.
+    languages: [python]
+    severity: ERROR
+
   - id: do-not-call-get-with-keywords
     pattern-either: 
       - pattern: pycroft.model.$C.get(id=$ARG)
