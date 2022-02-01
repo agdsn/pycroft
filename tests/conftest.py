@@ -34,7 +34,7 @@ def clean_engine(engine):
     return engine
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def connection(clean_engine):
     engine = clean_engine
     connection = engine.connect()
@@ -50,8 +50,8 @@ def connection(clean_engine):
     connection.close()
 
 
-@pytest.fixture()
-def session(connection):
+@pytest.fixture(scope='module')
+def module_session(connection):
     """Provides a session to a created database.
 
     Rolled back after use
@@ -77,3 +77,11 @@ def session(connection):
     transaction_associated = nested.connection._transaction == nested
     if transaction_associated:
         nested.rollback()
+
+
+@pytest.fixture()
+def session(connection, module_session):
+    # starts a transaction & rolls it back after each test
+    module_session.begin_nested()
+    yield module_session
+    module_session.rollback()
