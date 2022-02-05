@@ -90,6 +90,11 @@ def _maybe_rollback_transaction(session):
         t.rollback()
 
 
+def _rollback_if_active(transaction):
+    if transaction.is_active:
+        transaction.rollback()
+
+
 @pytest.fixture(scope='class')
 def class_session(module_session, module_transaction):
     # starts a transaction & rolls it back after each class' test
@@ -97,7 +102,7 @@ def class_session(module_session, module_transaction):
     _maybe_rollback_transaction(session)
     nested = session.begin_nested()
     yield session
-    nested.rollback()
+    _rollback_if_active(nested)
 
 
 @pytest.fixture()
@@ -107,4 +112,4 @@ def session(class_session):
     _maybe_rollback_transaction(session)
     nested = session.begin_nested()
     yield session
-    nested.rollback()
+    _rollback_if_active(nested)
