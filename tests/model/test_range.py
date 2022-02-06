@@ -3,6 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 from datetime import datetime, timedelta
 
+import pytest
 import pytz
 from sqlalchemy import Column, literal, cast, TEXT, func
 from sqlalchemy.future import select
@@ -10,7 +11,6 @@ from sqlalchemy.future import select
 from pycroft.helpers.interval import open, closed, openclosed, closedopen, single
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import TsTzRange, DateTimeTz
-from tests.legacy_base import SQLAlchemyTestCase
 
 
 class TableWithInterval(IntegerIdModel):
@@ -19,59 +19,55 @@ class TableWithInterval(IntegerIdModel):
 
 NOW = datetime.utcnow().replace(tzinfo=pytz.utc)
 
-class TestTsTzRange(SQLAlchemyTestCase):
-    def test_select_as_text(self):
-        stmt = select(cast(literal(open(None, None), TsTzRange), TEXT))
-        assert self.session.scalar(stmt) == '(,)'
-
-    def test_declarative_insert_and_select(self):
-        for interval in [
-            open(NOW, NOW + timedelta(days=1)),
-            closed(NOW, NOW + timedelta(days=1)),
-            open(NOW, NOW + timedelta(days=1)),
-            open(None, None),
-            open(None, NOW),
-            openclosed(None, NOW),
-            closedopen(None, NOW),
-        ]:
-            with self.subTest(interval=interval):
-                mem = TableWithInterval(value=interval)
-
-                self.session.add(mem)
-                self.session.commit()
-
-                assert mem.value == interval
-
-    def test_literal_select(self):
-        for interval in [
-            open(NOW, NOW + timedelta(days=1)),
-        ]:
-            with self.subTest(interval=interval):
-                stmt = select(cast(literal(interval, TsTzRange), TsTzRange))
-                assert self.session.scalar(stmt) == interval
+def test_select_as_text(session):
+    stmt = select(cast(literal(open(None, None), TsTzRange), TEXT))
+    assert session.scalar(stmt) == '(,)'
 
 
-class TestTsTzRangeOperators(SQLAlchemyTestCase):
-    def setUp(self):
-        super().setUp()
-        interval = closedopen(NOW, NOW + timedelta(days=1))
-        self.session.add(TableWithInterval(value=interval))
-        self.session.commit()
+@pytest.mark.parametrize('interval', [
+    open(NOW, NOW + timedelta(days=1)),
+    closed(NOW, NOW + timedelta(days=1)),
+    open(NOW, NOW + timedelta(days=1)),
+    open(None, None),
+    open(None, NOW),
+    openclosed(None, NOW),
+    closedopen(None, NOW),
+])
+def test_declarative_insert_and_select(session, interval):
+    mem = TableWithInterval(value=interval)
+    with session.begin_nested():
+        session.add(mem)
+    assert mem.value == interval
 
-    def test_containmment(self):
-        for value, expected in [
-            (literal(NOW, DateTimeTz), True),
-            (NOW, True),
-            (func.current_timestamp(), True),
-            (NOW + timedelta(hours=6), True),
-            (single(NOW), True),
-            (closedopen(NOW, NOW + timedelta(days=1)), True),
-            (open(NOW, NOW + timedelta(days=1)), True),
 
-            (NOW - timedelta(days=1), False),
-            (NOW - timedelta(seconds=1), False),
-            (literal(NOW - timedelta(seconds=1), DateTimeTz), False),
-            (closed(NOW, NOW + timedelta(days=1)), False),
-        ]:
-            stmt = select(TableWithInterval.value.contains(value))
-            assert self.session.execute(stmt).scalar() is expected
+@pytest.mark.parametrize('interval', [
+        open(NOW, NOW + timedelta(days=1)),
+])
+def test_literal_select(session, interval):
+    stmt = select(cast(literal(interval, TsTzRange), TsTzRange))
+    assert session.scalar(stmt) == interval
+
+
+@pytest.fixture
+def table_with_interval(session):
+    interval = closedopen(NOW, NOW + timedelta(days=1))
+    with session.begin_nested():
+        session.add(TableWithInterval(value=interval))
+
+@pytest.mark.parametrize('value, expected', [
+    (literal(NOW, DateTimeTz), True),
+    (NOW, True),
+    (func.current_timestamp(), True),
+    (NOW + timedelta(hours=6), True),
+    (single(NOW), True),
+    (closedopen(NOW, NOW + timedelta(days=1)), True),
+    (open(NOW, NOW + timedelta(days=1)), True),
+
+    (NOW - timedelta(days=1), False),
+    (NOW - timedelta(seconds=1), False),
+    (literal(NOW - timedelta(seconds=1), DateTimeTz), False),
+    (closed(NOW, NOW + timedelta(days=1)), False),
+])
+def test_containmment(session, table_with_interval, value, expected):
+    stmt = select(TableWithInterval.value.contains(value))
+    assert session.execute(stmt).scalar() is expected
