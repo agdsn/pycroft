@@ -90,8 +90,8 @@ class BaseUser:
                       "isatap", "it", "localdomain", "localhost",
                       "lp", "mail", "mailer-daemon", "news", "uucp", "proxy",
                       # ground control to
-                      "majordom", "marketing", "mis", "noc", "website", "api"
-                                                                        "noreply", "no-reply",
+                      "majordom", "marketing", "mis", "noc", "website", "api",
+                      "noreply", "no-reply",
                       "pop", "pop3", "postmaster",
                       "postgres", "sales", "smtp", "ssladmin", "status",
                       "ssladministrator", "sslwebmaster", "support",
