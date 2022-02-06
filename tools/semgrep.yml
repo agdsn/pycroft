@@ -1,4 +1,4 @@
-# run with `pip install semgrep && semgrep --config=tools/semgrep.yml pycroft web` 
+# run with `pip install semgrep && semgrep --config=tools/semgrep.yml pycroft web`
 # …or let `pre-commit` do the heavy lifting for you!
 rules:
   - id: f-string-in-deferred-gettext
@@ -42,7 +42,7 @@ rules:
     severity: ERROR
 
   - id: do-not-call-get-with-keywords
-    pattern-either: 
+    pattern-either:
       - pattern: pycroft.model.$C.get(id=$ARG)
       - pattern: pycroft.model._all.$C.get(id=$ARG)
       - pattern: pycroft.model.$MODULE.$C.get(id=$ARG)
@@ -99,3 +99,17 @@ rules:
       include:
         - "**/alembic/versions"
 
+  - id: dont-commit-session-in-tests
+    pattern: session.commit()
+    message: |
+      Don't commit the session in tests.
+      The pytest fixtures provide one long-running session with nested transactions.
+      Since committing the session commits the transaction, a commit would make
+      all the previous savepoints inaccessible (by implicitly committing _all_
+      nested transactions), breaking the fixture reuse mechanism.
+    fix: session.flush()
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - "tests"
