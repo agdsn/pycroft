@@ -1,7 +1,6 @@
 #  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-from datetime import datetime
 from functools import partial
 
 import pytest
@@ -147,11 +146,6 @@ def immediate_activity_matches_split_trigger(session):
 @pytest.fixture
 def bank_account():
     return BankAccountFactory()
-
-
-@pytest.fixture(scope='session')
-def utcnow():
-    return datetime.utcnow()
 
 
 @pytest.fixture
