@@ -109,11 +109,8 @@ def balanced_splits(session, t, asset_account, revenue_account):
 def test_unbalance_with_insert(
     session, t, balanced_splits, liability_account
 ):
-    s3 = build_split(t, liability_account, 50)
-
-    with pytest.raises(IllegalTransactionError):
-        with session.begin_nested():
-            session.add(s3)
+    with pytest.raises(IllegalTransactionError), session.begin_nested():
+        session.add(build_split(t, liability_account, 50))
 
 
 def test_unbalance_with_update(session, balanced_splits):
@@ -124,7 +121,7 @@ def test_unbalance_with_update(session, balanced_splits):
             s2.amount = -50
 
 
-def test_unbbalance_with_delete(session, t, balanced_splits):
+def test_unbalance_with_delete(session, t, balanced_splits):
     with pytest.raises(IllegalTransactionError):
         with session.begin_nested():
             t.splits.pop()
@@ -160,8 +157,8 @@ def test_correct(session, build_activity, bank_account, t, asset_account):
     s1 = build_split(t, asset_account, 100)
     s2 = build_split(t, bank_account.account, -100)
     a = build_activity(amount=-10, split=s2)
-    with session.begin_nested():
-        session.add_all([t, s1, s2, a])
+    session.add_all([t, s1, s2, a])
+    session.flush()
 
 
 def test_wrong_split_amount(

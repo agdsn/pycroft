@@ -84,14 +84,12 @@ class TestIpModel:
     def test_correct_subnet_and_ip(self, session, subnet, interface):
         ip_address, _ = get_free_ip((subnet, ))
 
-        ip = IP(interface=interface, address=ip_address, subnet=subnet)
         with session.begin_nested():
-            session.add(ip)
+            session.add(IP(interface=interface, address=ip_address, subnet=subnet))
 
         ip_address, _ = get_free_ip((subnet, ))
-        ip = IP(address=ip_address, subnet=subnet, interface=interface)
         with session.begin_nested():
-            session.add(ip)
+            session.add(IP(address=ip_address, subnet=subnet, interface=interface))
 
         with session.begin_nested():
             IP.q.filter(IP.interface == interface).delete()
@@ -100,12 +98,11 @@ class TestIpModel:
         ip_address, _ = get_free_ip((subnet, ))
         ip = IP(interface=interface, address=ip_address)
         with pytest.raises(IntegrityError), session.begin_nested():
-                session.add(ip)
+            session.add(ip)
 
     def test_missing_ip(self, session, interface, subnet):
-        ip = IP(interface=interface, subnet=subnet)
         with pytest.raises(IntegrityError), session.begin_nested():
-            session.add(ip)
+            session.add(IP(interface=interface, subnet=subnet))
 
     def test_wrong_subnet(self, interface, subnet, subnet2):
         ip_address, _ = get_free_ip((subnet, ))
