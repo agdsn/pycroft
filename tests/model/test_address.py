@@ -3,6 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 
 import pytest
+from sqlalchemy.future import select
 
 from pycroft.model.address import Address
 from tests.factories import AddressFactory, RoomFactory, UserFactory
@@ -10,8 +11,8 @@ from tests.factories.base import copy_factory
 from tests.model.conftest import assert_unique_violation
 
 
-def assert_address_count(session, count):
-    assert session.query(Address).count() == count
+def all_addrs(session) -> list[Address]:
+    return session.scalars(select(Address)).all()
 
 
 @pytest.mark.parametrize('address_kw', [
@@ -44,13 +45,13 @@ def test_room_update_cleanup(session, room):
     with session.begin_nested():
         room.address = AddressFactory()
         session.add(room)
-    assert_address_count(session, 1)
+    assert all_addrs(session) == [room.address]
 
 
 def test_room_delete_cleanup(session, room):
     with session.begin_nested():
         session.delete(room)
-    assert_address_count(session, 0)
+    assert all_addrs(session) == []
 
 
 @pytest.fixture
@@ -63,14 +64,14 @@ def test_user_update_cleanup(session, user_no_room):
     with session.begin_nested():
         user.address = AddressFactory()  # other address
         session.add(user)
-    assert_address_count(session, 1)
+    assert all_addrs(session) == [user.address]
 
 
 def test_user_delete_cleanup(session, user_no_room):
     user = user_no_room
     with session.begin_nested():
         session.delete(user)
-    assert_address_count(session, 0)
+    assert all_addrs(session) == []
 
 
 @pytest.fixture
@@ -82,11 +83,12 @@ def test_address_stays_after_room_delete(session, user_with_room):
     user = user_with_room
     with session.begin_nested():
         session.delete(user.room)
-    assert_address_count(session, 1)
+    assert all_addrs(session) == [user.address]
 
 
 def test_address_stays_after_user_delete(session, user_with_room):
+    room_addr = user_with_room.room.address
     user = user_with_room
     with session.begin_nested():
         session.delete(user)
-    assert_address_count(session, 1)
+    assert all_addrs(session) == [room_addr]
