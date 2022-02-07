@@ -5,9 +5,9 @@ from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.task import Task, UserTask, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveParams
-from tests import factories, UserFactory
+from tests import factories
 from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
-from tests.factories import UserWithHostFactory, RoomFactory
+from tests.factories import UserFactory, UserWithHostFactory, RoomFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
 
