@@ -28,7 +28,7 @@ class RoomEditTestCase(FactoryDataTestBase):
         super().create_factories()
         self.room = factories.RoomFactory()
         factories.UserFactory.create_batch(3, room=self.room)
-        self.processor = factories.UserWithoutRoomFactory()
+        self.processor = factories.UserFactory(without_room=True)
 
     def test_change_number_and_address(self):
         new_address = get_or_create_address(street='Wundtstraße', number='5', addition='Keller',

@@ -1,8 +1,8 @@
 from pycroft.lib.user import edit_address
 from pycroft.model.user import User
+from ...factories import UserFactory
 from ...legacy_base import FactoryDataTestBase
 
-from ...factories import UserFactory, UserWithoutRoomFactory
 
 class TestUserChangeAddressTestCase(FactoryDataTestBase):
 
@@ -42,7 +42,7 @@ class TestUserChangeAddressTestCase(FactoryDataTestBase):
         assert log_entry.author == self.admin
 
     def test_plain_user_address_add(self):
-        self.assert_user_address_change(UserWithoutRoomFactory(), self.address_args)
+        self.assert_user_address_change(UserFactory(without_room=True), self.address_args)
 
     def test_user_with_room_different_address(self):
         self.assert_user_address_change(UserFactory(), self.address_args)

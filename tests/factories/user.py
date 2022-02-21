@@ -60,6 +60,10 @@ class UserFactory(BaseFactory):
         )
         # needs either with_host or a room!
         patched = factory.Trait(room__patched_with_subnet=True)
+        without_room = factory.Trait(
+            room=None,
+            address=factory.SubFactory('tests.factories.address.AddressFactory'),
+        )
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):
@@ -71,11 +75,6 @@ class UserFactory(BaseFactory):
 
             for key, value in kwargs.items():
                 setattr(rhe, key, value)
-
-
-class UserWithoutRoomFactory(UserFactory):
-    room = None
-    address = factory.SubFactory('tests.factories.address.AddressFactory')
 
 
 class UnixAccountFactory(BaseFactory):

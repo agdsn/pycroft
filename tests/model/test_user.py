@@ -296,7 +296,7 @@ class TestUserAddress:
         self.assert_custom_address(session, user)
 
     def test_user_without_room(self, session):
-        user = factories.UserWithoutRoomFactory()
+        user = factories.UserFactory(without_room=True)
         self.assert_no_custom_address(session, user)
 
         user.address = factories.AddressFactory()
