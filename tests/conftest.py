@@ -8,7 +8,7 @@ from coverage.annotate import os
 from sqlalchemy import event
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.future import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
 from sqlalchemy.pool import SingletonThreadPool
 
 from pycroft.model import drop_db_model, create_db_model
@@ -60,7 +60,7 @@ def module_transaction(connection):
 
 
 @pytest.fixture(scope='module')
-def module_session(connection, module_transaction):
+def module_session(connection, module_transaction) -> Session:
     """Provides a session to a created database.
 
     Rolled back after use
@@ -96,7 +96,7 @@ def _rollback_if_active(transaction):
 
 
 @pytest.fixture(scope='class')
-def class_session(module_session, module_transaction):
+def class_session(module_session, module_transaction) -> Session:
     # starts a transaction & rolls it back after each class' test
     session = module_session
     _maybe_rollback_transaction(session)
@@ -106,7 +106,7 @@ def class_session(module_session, module_transaction):
 
 
 @pytest.fixture()
-def session(class_session):
+def session(class_session) -> Session:
     # starts a transaction & rolls it back after each test
     session = class_session
     _maybe_rollback_transaction(session)

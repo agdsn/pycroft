@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker
+from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker, Session
 
 from pycroft.model import session as pyc_session
 from web import make_app
@@ -26,7 +26,7 @@ def rollback(transaction):
 
 
 @pytest.fixture
-def session(connection, request):
+def session(connection, request) -> Session:
     transaction = connection.begin_nested()
     request.addfinalizer(lambda: rollback(transaction))
     s = scoped_session(sessionmaker(bind=connection))
