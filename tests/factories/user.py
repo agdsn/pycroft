@@ -1,6 +1,8 @@
 # Copyright (c) 2016 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import warnings
+
 import factory
 from factory.faker import Faker
 
@@ -52,6 +54,12 @@ class UserFactory(BaseFactory):
             membership=factory.RelatedFactory('tests.factories.property.MembershipFactory',
                                               'user')
         )
+        with_host = factory.Trait(
+            host=factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
+                                        room=factory.SelfAttribute('..room'))
+        )
+        # needs either with_host or a room!
+        patched = factory.Trait(room__patched_with_subnet=True)
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):
@@ -71,6 +79,7 @@ class UserWithoutRoomFactory(UserFactory):
 
 
 class UserWithHostFactory(UserFactory):
+    warnings.warn("Use `UserFactory(with_host=True)` instead!", DeprecationWarning)
     host = factory.RelatedFactory('tests.factories.host.HostFactory', 'owner',
                                   room=factory.SelfAttribute('..room'))
 
