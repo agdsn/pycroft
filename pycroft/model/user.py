@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship, validates, \
-    declared_attr
+    declared_attr, deferred
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound
@@ -58,7 +58,9 @@ class BaseUser:
     login = Column(String(40), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     registered_at = Column(DateTimeTz, nullable=False)
-    passwd_hash = Column(String)
+    @declared_attr
+    def passwd_hash(self):
+        return deferred(Column(String))
     email = Column(String(255), nullable=True)
     email_confirmed = Column(Boolean, server_default="False", nullable=False)
     email_confirmation_key = Column(String, nullable=True)
@@ -159,7 +161,7 @@ class BaseUser:
 
 
 class User(ModelBase, BaseUser, UserMixin):
-    wifi_passwd_hash = Column(String)
+    wifi_passwd_hash = deferred(Column(String))
 
     # one to one from User to Account
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False, index=True)

@@ -53,8 +53,12 @@ class ModelBase:
         return "{}.{}({})".format(
             self.__module__, self.__class__.__name__,
             ", ".join("{}={!r}".format(key, getattr(self, key, "<unknown>"))
-                      for key in self.__mapper__.columns.keys()))
+                      for key in self.__mapper__.columns.keys()
+                      if 'passwd' not in key and 'password' not in key)
+        )
+
     # __table__: Table
+
     import typing
     if typing.TYPE_CHECKING:
         # uncomment that to get the deprecation warnings.
