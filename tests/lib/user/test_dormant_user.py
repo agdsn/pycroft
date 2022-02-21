@@ -6,7 +6,7 @@ from pycroft.model import session
 from pycroft.model.task import Task, TaskType, TaskStatus
 from pycroft.model.task_serialization import UserMoveOutParams
 from tests.legacy_base import FactoryWithConfigDataTestBase
-from tests.factories import UserWithHostFactory, RoomFactory, AddressFactory, UserFactory, \
+from tests.factories import RoomFactory, AddressFactory, UserFactory, \
     MembershipFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
@@ -16,7 +16,7 @@ class MovedInUserTestCase(FactoryWithConfigDataTestBase):
         # We want a user who lives somewhere with a membership!
         super().create_factories()
         self.processor = UserFactory.create()
-        self.user = UserWithHostFactory.create()
+        self.user = UserFactory.create(with_host=True)
         self.membership = MembershipFactory.create(user=self.user,
                                                    group=self.config.member_group)
         self.other_room = RoomFactory.create()
@@ -67,9 +67,10 @@ class MoveOutSchedulingTestCase(FactoryWithConfigDataTestBase):
         # We want a user who lives somewhere with a membership!
         super().create_factories()
         self.processor = UserFactory.create()
-        self.user = UserWithHostFactory.create(
+        self.user = UserFactory.create(
             with_membership=True,
             membership__group=self.config.member_group,
+            with_host=True,
         )
 
     def test_move_out_gets_scheduled(self, end_membership=None):
@@ -92,9 +93,10 @@ class MoveOutImplTestCase(FactoryWithConfigDataTestBase):
     def create_factories(self):
         # We want a user who lives somewhere with a membership!
         super().create_factories()
-        self.user = UserWithHostFactory.create(
+        self.user = UserFactory.create(
             with_membership=True,
             membership__group=self.config.member_group,
+            with_host=True
         )
 
     def test_move_out_implementation(self):

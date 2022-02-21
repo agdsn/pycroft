@@ -4,7 +4,7 @@ from pycroft import config
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.webstorage import WebStorage
-from tests.factories import UserWithHostFactory, MembershipFactory, UserFactory
+from tests.factories import MembershipFactory, UserFactory
 from . import UserFrontendTestBase
 from ...factories.address import AddressFactory
 
@@ -24,7 +24,7 @@ class UserViewingPagesTestCase(UserFrontendTestBase):
 class UserBlockingTestCase(UserFrontendTestBase):
     def create_factories(self):
         super().create_factories()
-        self.test_user = UserWithHostFactory.create()
+        self.test_user = UserFactory.create(with_host=True)
         MembershipFactory.create(user=self.test_user, group=self.config.member_group)
         self.test_user_id = self.test_user.id
 
@@ -47,7 +47,7 @@ class UserBlockingTestCase(UserFrontendTestBase):
 class UserMovingOutTestCase(UserFrontendTestBase):
     def create_factories(self):
         super().create_factories()
-        self.user = UserWithHostFactory.create()
+        self.user = UserFactory.create(with_host=True)
         MembershipFactory.create(user=self.user, group=self.config.member_group)
         self.test_user_id = self.user.id
 
@@ -147,7 +147,7 @@ class NewUserDatasheetTest(UserFrontendTestBase):
 
     def test_user_host_annexation(self):
         mac = "00:de:ad:be:ef:00"
-        other_user = UserWithHostFactory(host__interface__mac=mac)
+        other_user = UserFactory(with_host=True, host__interface__mac=mac)
         session.session.commit()
         assert len(other_user.hosts) == 1
 

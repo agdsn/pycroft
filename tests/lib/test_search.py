@@ -5,9 +5,9 @@ import datetime
 
 from pycroft.helpers.interval import single
 from pycroft.lib.search import user_search_query
-from tests.legacy_base import FactoryDataTestBase
-from tests.factories import UserWithHostFactory, PropertyGroupFactory, \
+from tests.factories import UserFactory, PropertyGroupFactory, \
     MembershipFactory
+from tests.legacy_base import FactoryDataTestBase
 
 
 def s(**kw):
@@ -19,14 +19,15 @@ class UserBase(FactoryDataTestBase):
         super().create_factories()
         # this user exists so that a malfunction a la „every user is returned“
         # is distinguishable from the case „the (one) correct user is returned“.
-        UserWithHostFactory.create(name='Franz', login='franz', email='fr@a.nz')
+        UserFactory.create(name='Franz', login='franz', email='fr@a.nz', with_host=True)
 
 
 class SearchUserBaseDataTest(UserBase):
     def create_factories(self):
         super().create_factories()
         self.property_group = PropertyGroupFactory.create()
-        self.user = UserWithHostFactory.create(
+        self.user = UserFactory.create(
+            with_host=True,
             name='Hans Müller',
             login='hans.mueller',
             email='hans@mueller.com',
@@ -55,7 +56,8 @@ class UserTest(UserBase):
     def create_factories(self):
         super().create_factories()
         self.group, self.old_group = PropertyGroupFactory.create_batch(2)
-        self.user = UserWithHostFactory.create(
+        self.user = UserFactory.create(
+            with_host=True,
             host__interface__mac='00:de:ad:be:ef:00',
             with_membership=True,
             membership__group=self.group,

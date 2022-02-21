@@ -2,13 +2,13 @@ from datetime import datetime, timedelta
 
 from pycroft.lib.user import traffic_history
 from tests.legacy_base import FactoryDataTestBase
-from tests.factories import TrafficVolumeLastWeekFactory, UserWithHostFactory
+from tests.factories import TrafficVolumeLastWeekFactory, UserFactory
 
 
 class TestTrafficHistory(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
-        self.user = UserWithHostFactory()
+        self.user = UserFactory(with_host=True)
         TrafficVolumeLastWeekFactory.create_batch(7,
                                                   ip=self.user.hosts[0].interfaces[0].ips[0],
                                                   user=self.user)

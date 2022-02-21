@@ -1,9 +1,8 @@
 from hades_logs import HadesLogs
-from ..legacy_base import InvalidateHadesLogsMixin
 from tests.factories import UserFactory, RoomLogEntryFactory, \
-    UserLogEntryFactory, \
-    UserWithHostFactory
+    UserLogEntryFactory
 from . import UserLogTestBase
+from ..legacy_base import InvalidateHadesLogsMixin
 from ...hades_logs import get_hades_logs_config
 
 
@@ -54,7 +53,7 @@ class IntegrationTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
     """
     def create_factories(self):
         super().create_factories()
-        self.relevant_user = UserWithHostFactory(patched=True)
+        self.relevant_user = UserFactory(with_host=True, patched=True)
         self.other_user = UserFactory.create()
         self.room_log_entry = RoomLogEntryFactory(author=self.admin, room=self.relevant_user.room)
         self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)

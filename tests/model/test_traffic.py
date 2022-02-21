@@ -2,7 +2,7 @@ import pytest
 
 from pycroft.model.traffic import TrafficVolume, pmacct_traffic_egress, \
     pmacct_traffic_ingress
-from tests.factories import UserWithHostFactory
+from tests.factories import UserFactory
 
 ip = '141.30.228.39'
 bad_ip = '141.30.228.1'
@@ -12,7 +12,7 @@ ingress_table = pmacct_traffic_ingress.table
 
 @pytest.fixture(scope='module')
 def user(module_session):
-    return UserWithHostFactory(host__interface__ip__str_address=ip)
+    return UserFactory(with_host=True, host__interface__ip__str_address=ip)
 
 
 def traffic_insert(stamp, table, ip_key, **kwargs):

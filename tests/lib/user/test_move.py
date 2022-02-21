@@ -7,7 +7,7 @@ from pycroft.model.task import Task, UserTask, TaskStatus, TaskType
 from pycroft.model.task_serialization import UserMoveParams
 from tests import factories
 from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
-from tests.factories import UserFactory, UserWithHostFactory, RoomFactory
+from tests.factories import UserFactory, RoomFactory
 from tests.lib.user.task_helpers import create_task_and_execute
 
 
@@ -16,7 +16,8 @@ class Test_User_Move(FactoryDataTestBase):
         super().create_factories()
         # we just create the subnet to ensure it stays the same when in the same building
         subnet = factories.SubnetFactory()
-        self.user = UserWithHostFactory(
+        self.user = UserFactory(
+            with_host=True,
             room__patched_with_subnet=True,
             room__patch_ports__switch_port__default_vlans__subnets=[subnet]
         )
@@ -71,9 +72,10 @@ class MoveImplTestCase(FactoryWithConfigDataTestBase):
     def create_factories(self):
         # We want a user who lives somewhere with a membership!
         super().create_factories()
-        self.user = UserWithHostFactory.create(
+        self.user = UserFactory.create(
             with_membership=True,
             membership__group=self.config.member_group,
+            with_host=True,
         )
         self.old_room = self.user.room
         self.new_room: Room = RoomFactory.create()

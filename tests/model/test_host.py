@@ -124,7 +124,7 @@ class TestIpModel:
 class TestVariousCascades:
     @pytest.fixture(scope='class')
     def user(self, class_session):
-        user = factories.UserWithHostFactory.build()
+        user = factories.UserFactory.build(with_host=True)
         class_session.add(user)
         return user
 

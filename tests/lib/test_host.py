@@ -2,15 +2,15 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 from pycroft.lib.host import change_mac
+from tests.factories import UserFactory, InterfaceFactory
 from tests.legacy_base import FactoryDataTestBase
-from tests.factories import UserFactory, UserWithHostFactory, InterfaceFactory
 
 
 class ChangeMacTest(FactoryDataTestBase):
     def create_factories(self):
         super().create_factories()
         self.interface = InterfaceFactory.create()
-        UserWithHostFactory.create(host__interface=self.interface)
+        UserFactory.create(with_host=True, host__interface=self.interface)
         self.processor = UserFactory.create()
 
     def test_change_mac(self):

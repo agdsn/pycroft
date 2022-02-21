@@ -3,12 +3,10 @@ from datetime import datetime, timedelta
 import pytest
 
 from pycroft.helpers.interval import closedopen
-from pycroft.model import session
 from pycroft.model import hades
 from pycroft.model.net import VLAN
-
-from tests.factories import PropertyGroupFactory, MembershipFactory, UserWithHostFactory, \
-    SwitchFactory, PatchPortFactory
+from tests.factories import PropertyGroupFactory, MembershipFactory, \
+    SwitchFactory, PatchPortFactory, UserFactory
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -39,7 +37,7 @@ def traffic_limit_exceeded_group(module_session):
 
 @pytest.fixture(scope='module', autouse=True)
 def user(module_session):
-    return UserWithHostFactory()
+    return UserFactory(with_host=True)
 
 
 @pytest.fixture(scope='module', autouse=True)
