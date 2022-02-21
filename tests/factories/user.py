@@ -67,6 +67,20 @@ class UserFactory(BaseFactory):
             room=None,
             address=factory.SubFactory('tests.factories.address.AddressFactory'),
         )
+        with_creation_log_entry = factory.Trait(
+            log_entry=factory.RelatedFactory(
+                'tests.factories.log.UserLogEntryFactory', 'user',
+                created_at=factory.SelfAttribute('..registered_at'),
+                message="User created",
+            )
+        )
+        with_random_task = factory.Trait(
+            task=factory.RelatedFactory(
+                'tests.factories.task.UserTaskFactory', 'user',
+                self_created=True,
+                due_yesterday=True,
+            )
+        )
 
     @factory.post_generation
     def room_history_entries(self, create, extracted, **kwargs):

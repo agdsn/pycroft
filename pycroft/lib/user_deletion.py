@@ -90,10 +90,10 @@ def get_archivable_members(session: Session, delta: timedelta = timedelta(days=1
     return cast(list[ArchivableMemberInfo], session.execute(stmt).unique().all())
 
 
-def get_invalidated_archive_memberships() -> list[Membership]:
-    """Get all memberships in `to_be_archived` of users who have an active `do-not-archive` property.
-
-    This can happen if archivability is detected, and later the user becomes a member again,
-    or if for some reason the user shall not be archived.
-    """
+def archive_users(session: Session, user_ids: Sequence[int]) -> None:
+    # todo remove hosts
+    # todo remove tasks
+    # todo remove log entries
+    # todo insert these users into an archival log
+    # todo add membership in archival group
     pass

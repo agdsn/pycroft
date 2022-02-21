@@ -6,7 +6,7 @@ from datetime import datetime, date
 import pytest
 
 from pycroft.helpers.interval import closed, closedopen
-from pycroft.lib.user_deletion import get_archivable_members
+from pycroft.lib.user_deletion import get_archivable_members, archive_users
 from tests.factories import UserFactory, ConfigFactory, MembershipFactory, \
     PropertyGroupFactory, \
     HostFactory
@@ -91,3 +91,31 @@ class TestUserDeletion:
             session.add(old_user)
         members = get_archivable_members(session)
         assert_archivable_members(members, old_user, date(2020, 3, 1))
+
+
+class TestUserArchival:
+    @pytest.fixture(scope='class')
+    def archivable_users(self, class_session, config):
+        return UserFactory.create_batch(
+            3,
+            with_membership=True,
+            membership__active_during=closed(datetime(2020, 1, 1), datetime(2020, 3, 1)),
+            membership__group=config.member_group,
+            with_host=True, patched=True,
+            with_creation_log_entry=True,
+            with_random_task=True,
+        )
+
+    @pytest.fixture(scope='class')
+    def archived_users(self, class_session, archivable_users):
+        archive_users(class_session, [u.id for u in archivable_users])
+        return archivable_users
+
+    @pytest.mark.parametrize('index', [0, 1, 2])
+    def test_user_archival(self, archived_users, index):
+        user = archived_users[index]
+        assert user.tasks == [], "archival did not delete tasks"
+        assert [le for le in user.log_entries
+                if le.created_at == user.registered_at] == [], "archival did not delete logs"
+        assert user.hosts == [], "archival did not delete hosts"
+        assert 'archived' in user.current_properties

@@ -1,6 +1,6 @@
 import datetime
 
-import factory
+import factory.fuzzy
 
 from pycroft.model.task import UserTask, TaskType, Task, TaskStatus
 from tests.factories.base import BaseFactory
@@ -14,7 +14,7 @@ class TaskFactory(BaseFactory):
     class Meta:
         model = Task
 
-    type: TaskType = None
+    type: TaskType = factory.fuzzy.FuzzyChoice(TaskType)
     due = None
     parameters_json = None
     created = None
@@ -34,3 +34,8 @@ class UserTaskFactory(TaskFactory):
         model = UserTask
 
     user = factory.SubFactory('tests.factories.UserFactory')
+
+    class Params:
+        self_created = factory.Trait(
+            creator=factory.SelfAttribute('user')
+        )
