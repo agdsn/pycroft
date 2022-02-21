@@ -6,7 +6,7 @@ This module contains methods concerning user archival and deletion.
 """
 from __future__ import annotations
 from datetime import timedelta, datetime
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, cast
 
 from sqlalchemy import func, nulls_last, and_, not_
 from sqlalchemy.future import select
@@ -82,7 +82,7 @@ def get_archivable_members(session: Session, delta: timedelta = timedelta(days=1
                  joinedload(User.current_properties_maybe_denied))
     )
 
-    return session.execute(stmt).unique().all()
+    return cast(list[ArchivableMemberInfo], session.execute(stmt).unique().all())
 
 
 def get_invalidated_archive_memberships() -> list[Membership]:
