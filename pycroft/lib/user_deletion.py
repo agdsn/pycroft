@@ -24,12 +24,16 @@ class ArchivableMemberInfo(Protocol):
     mem_end: datetime
 
 
-def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
+def get_archivable_members(session: Session, delta: timedelta = timedelta(days=14)) \
+        -> Sequence[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
     Selected are those users
     - whose last membership in the member_group ended two weeks in the past,
     - excluding users who currently have the `do-not-archive` property.
+
+    :param session:
+    :param delta: how far back the end of membership has to lie (positive timedelta).
     """
     # see FunctionElement.over
     mem_ends_at = func.upper(Membership.active_during)
@@ -71,7 +75,7 @@ def get_archivable_members(session: Session) -> Sequence[ArchivableMemberInfo]:
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - timedelta(days=14))  # type: ignore[no-untyped-call]
+        .filter(last_mem.c.mem_end < current_timestamp() - delta)  # type: ignore[no-untyped-call]
         .order_by(last_mem.c.mem_end)
         .options(joinedload(User.hosts), # joinedload(User.current_memberships),
                  joinedload(User.account, innerjoin=True), joinedload(User.room),
