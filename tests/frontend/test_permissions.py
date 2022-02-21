@@ -7,7 +7,7 @@ from jinja2.runtime import Context
 
 from tests.factories.property import FinancePropertyGroupFactory, \
     AdminPropertyGroupFactory, MembershipFactory
-from tests.factories.user import UserWithMembershipFactory
+from tests.factories.user import UserFactory
 from tests.frontend.legacy_base import FrontendDataTestBase
 from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
 from web.template_filters import require
@@ -22,25 +22,28 @@ class PermissionsTestBase(FrontendDataTestBase, FactoryWithConfigDataTestBase):
     def create_factories(self):
         super().create_factories()
         self.admin_group = AdminPropertyGroupFactory.create()
-        self.admin = UserWithMembershipFactory.create(
+        self.admin = UserFactory.create(
             login=self.admin_login,
             password=self.password,
+            with_membership=True,
             membership__group=self.admin_group,
             membership__includes_today=True,
         )
         self.finance_group = FinancePropertyGroupFactory.create()
-        self.head_of_finance = UserWithMembershipFactory.create(
+        self.head_of_finance = UserFactory.create(
             login=self.finance_login,
             password=self.password,
+            with_membership=True,
             membership__group=self.finance_group,
             membership__includes_today=True,
         )
         # finanzer is also an admin
         MembershipFactory.create(group=self.admin_group, user=self.head_of_finance,
                                  includes_today=True)
-        self.member = UserWithMembershipFactory.create(
+        self.member = UserFactory.create(
             login=self.member_login,
             password=self.password,
+            with_membership=True,
             membership__group=self.config.member_group,
             membership__includes_today=True,
         )

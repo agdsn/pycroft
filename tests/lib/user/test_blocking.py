@@ -11,7 +11,8 @@ from tests.legacy_base import FactoryWithConfigDataTestBase
 class UserWithNetworkAccessTestCase(FactoryWithConfigDataTestBase):
     def create_factories(self):
         super().create_factories()
-        self.user_to_block = factories.user.UserWithMembershipFactory.create(
+        self.user_to_block = factories.user.UserFactory.create(
+            with_membership=True,
             membership__includes_today=True,
             membership__group=self.config.member_group,
         )

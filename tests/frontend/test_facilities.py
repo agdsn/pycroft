@@ -2,10 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
-from tests.legacy_base import FactoryWithConfigDataTestBase
+from tests.factories import RoomFactory, AdminPropertyGroupFactory, UserFactory
 from tests.frontend.legacy_base import FrontendDataTestBase
-from tests.factories import RoomFactory, AdminPropertyGroupFactory
-from tests.factories.user import UserWithMembershipFactory
+from tests.legacy_base import FactoryWithConfigDataTestBase
 
 
 class TestBuilding(FrontendDataTestBase, FactoryWithConfigDataTestBase):
@@ -14,9 +13,10 @@ class TestBuilding(FrontendDataTestBase, FactoryWithConfigDataTestBase):
 
     def create_factories(self):
         super().create_factories()
-        self.user = UserWithMembershipFactory(
+        self.user = UserFactory(
             login=self.login,
             password=self.password,
+            with_membership=True,
             membership__group=AdminPropertyGroupFactory.create(),
         )
         self.room = RoomFactory()

@@ -40,7 +40,6 @@ from ldap_sync.sources.ldap import (
 )
 from pycroft.model.session import session
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
-from tests.factories.user import UserWithMembershipFactory
 from tests.legacy_base import FactoryDataTestBase
 
 
@@ -78,8 +77,9 @@ class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
             name="my propgroup",
             granted={self.PROPNAME, 'ldap_login_enabled'}
         )
-        self.user = UserWithMembershipFactory.create(
+        self.user = UserFactory.create(
             name="Hans Wurst", login="hans",
+            with_membership=True,
             membership__group=self.propgroup,
             membership__includes_today=True,
             with_unix_account=True,
@@ -113,8 +113,9 @@ class MultipleUsersFilterTestCase(FactoryDataTestBase):
             name="my property group",
             granted={'mail', 'ldap_login_enabled'},
         )
-        self.user1, self.user2 = UserWithMembershipFactory.create_batch(
+        self.user1, self.user2 = UserFactory.create_batch(
             2,
+            with_membership=True,
             membership__group=self.propgroup,
             membership__includes_today=True,
             with_unix_account=True,
@@ -239,7 +240,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
         pg_member = PropertyGroupFactory.create(name='member',
                                                 granted={'mail', 'ldap_login_enabled'})
 
-        UserWithMembershipFactory.create(membership__group=p_dummy, with_unix_account=True)
+        UserFactory.create(with_membership=True, membership__group=p_dummy, with_unix_account=True)
         for user in [u1, u2, inconsistent]:
             MembershipFactory.create(group=pg_member, user=user)
 

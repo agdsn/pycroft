@@ -30,7 +30,8 @@ from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
 from tests.factories.finance import MembershipFeeFactory, TransactionFactory, \
     AccountFactory, BankAccountFactory, BankAccountActivityFactory
-from tests.factories.user import UserFactory, UserWithMembershipFactory
+from tests.factories.user import UserFactory
+from tests.legacy_base import FactoryDataTestBase
 
 
 class Test_010_BankAccount(FactoryDataTestBase):
@@ -222,8 +223,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
     def create_user_from1y(self, **kwargs):
         reg_date = session.utcnow() - timedelta(weeks=52)
 
-        return UserWithMembershipFactory(
+        return UserFactory(
             registered_at=reg_date,
+            with_membership=True,
             membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group,
             **kwargs
@@ -232,8 +234,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
     def create_user_move_in_grace(self):
         reg_date = self.last_month_last.replace(day=self.membership_fee_last.booking_end.days) + timedelta(1)
 
-        return UserWithMembershipFactory(
+        return UserFactory(
             registered_at=reg_date,
+            with_membership=True,
             membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group
         )
@@ -241,8 +244,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
     def create_user_move_in_no_grace(self):
         reg_date = self.last_month_last.replace(day=self.membership_fee_last.booking_end.days)
 
-        return UserWithMembershipFactory(
+        return UserFactory(
             registered_at=reg_date,
+            with_membership=True,
             membership__active_during=closedopen(reg_date, None),
             membership__group=config.member_group
         )
@@ -252,8 +256,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
 
         membership_end_date = self.last_month_last.replace(day=self.membership_fee_last.booking_begin.days) - timedelta(1)
 
-        return UserWithMembershipFactory(
+        return UserFactory(
             registered_at=reg_date,
+            with_membership=True,
             membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
             room_history_entries__active_during=closedopen(reg_date, membership_end_date),
@@ -263,8 +268,9 @@ class MembershipFeeTestCase(FactoryDataTestBase):
         reg_date = session.utcnow() - timedelta(weeks=52)
         membership_end_date = self.last_month_last.replace(day=self.membership_fee_last.booking_begin.days)
 
-        return UserWithMembershipFactory(
+        return UserFactory(
             registered_at=reg_date,
+            with_membership=True,
             membership__active_during=closedopen(reg_date, membership_end_date),
             membership__group=config.member_group,
             room_history_entries__active_during=closedopen(reg_date, membership_end_date),
