@@ -6,10 +6,10 @@ from datetime import datetime, date
 import pytest
 
 from pycroft.helpers.interval import closed, closedopen
-from tests.factories import UserFactory, ConfigFactory, MembershipFactory, PropertyGroupFactory, \
-    HostFactory
-
 from pycroft.lib.user_deletion import get_archivable_members
+from tests.factories import UserFactory, ConfigFactory, MembershipFactory, \
+    PropertyGroupFactory, \
+    HostFactory
 
 
 @pytest.fixture(scope='module')
@@ -69,6 +69,10 @@ class TestUserDeletion:
     def test_old_users_in_deletion_list(self, session, old_user):
         members = get_archivable_members(session)
         assert_archivable_members(members, old_user, date(2020, 3, 1))
+
+    def test_old_user_not_in_list_with_long_delta(self, session, old_user):
+        delta = date.today() - date(2020, 1, 1)  # before 2020-03-01
+        assert get_archivable_members(session, delta) == []
 
     def test_user_with_do_not_archive_not_in_list(self, session, old_user,
                                                   do_not_archive_membership):
