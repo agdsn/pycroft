@@ -56,6 +56,13 @@ rules:
     languages: [python]
     severity: ERROR
 
+  - id: use-format-instead-of-strftime
+    pattern: $DT.strftime("$FORMAT")
+    message: Don't use strftime, use an f-string instead
+    languages: [python]
+    severity: WARNING
+    fix: f"{$DT:$FORMAT}"
+
   - id: do-not-call-get-with-keywords
     pattern-either:
       - pattern: pycroft.model.$C.get(id=$ARG)

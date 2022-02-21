@@ -51,7 +51,7 @@ def task_row(task: Task):
         "parameters": format_parameters(asdict(task.parameters)),
         "errors": task.errors if task.errors is not None else list(),
         "due": datetime_format(task.due, default='', formatter=datetime_filter),
-        "created": task.created.strftime("%Y-%m-%d %H:%M:%S"),
+        "created": f"{task.created:%Y-%m-%d %H:%M:%S}",
         "creator": T.creator.value(
             href=url_for('user.user_show', user_id=task.creator.id),
             title=task.creator.name
