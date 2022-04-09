@@ -30,7 +30,7 @@
     "jquery": "^3.3.1",
     "list.js": "^1.5.0",
     "matchheight": "^0.1.2",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "nvd3": "^1.8.6",
     "regenerator-runtime": "^0.13.5",
     "typeahead.js": "^0.11.1",
