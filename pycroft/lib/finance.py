@@ -740,7 +740,18 @@ def take_actions_for_payment_in_default_users(users_pid_membership,
 
     for user in users_membership_terminated:
         if user.member_of(config.member_group):
-            move_out(user, "Zahlungsrückstand", processor, ts_now - timedelta(seconds=1), True)
+            in_default_days = user.account.in_default_days
+
+            try:
+                fee_date = ts_now - timedelta(days=in_default_days)
+
+                fee = get_membership_fee_for_date(fee_date)
+            except NoResultFound:
+                fee = get_last_applied_membership_fee()
+
+            end_membership_date = utcnow() - (timedelta(days=in_default_days) - fee.payment_deadline_final)
+
+            move_out(user, "Zahlungsrückstand", processor, end_membership_date, True)
 
             log_user_event("Mitgliedschaftsende wegen Zahlungsrückstand.",
                            processor, user)
