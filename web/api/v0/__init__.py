@@ -111,6 +111,8 @@ def generate_user_data(user):
         'description': Message.from_json(split.transaction.description).localize()
     } for split in user.account.splits]
 
+    finance_history = sorted(finance_history, key=lambda e: e['valid_on'], reverse=True)
+
     last_import_ts = get_last_import_date(session.session)
     last_finance_update = last_import_ts and last_import_ts.date() or None
 
