@@ -949,8 +949,12 @@ def membership_begin_date(user):
     return end_date
 
 
-def user_send_mails(users: list[BaseUser], template: MailTemplate, soft_fail: bool = False,
-                    use_internal: bool = True, **kwargs):
+def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
+                    soft_fail: bool = False,
+                    use_internal: bool = True,
+                    body_plain: str = None,
+                    subject: str = None,
+                    **kwargs):
     mails = []
 
     for user in users:
@@ -964,13 +968,34 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate, soft_fail: bo
             else:
                 raise ValueError("No contact email address available.")
 
-        body_plain, body_html = template.render(user=user,
-                                                user_id=encode_type2_user_id(user.id),
-                                                **kwargs)
+        if template is not None:
+            body_plain, body_html = template.render(user=user,
+                                                    user_id=encode_type2_user_id(user.id),
+                                                    **kwargs)
+            subject = template.subject
+        else:
+            if not isinstance(user, User):
+                raise ValueError("Plaintext email not supported for other User types.")
+
+            body_html = None
+            body_plain = body_plain.format(
+                name=user.name,
+                login=user.login,
+                id=encode_type2_user_id(user.id),
+                email=user.email if user.email else '-',
+                email_internal=user.email_internal,
+                room_short=user.room.short_name
+                if user.room_id is not None else '-',
+                swdd_person_id=user.swdd_person_id
+                if user.swdd_person_id else '-',
+            )
+
+        if body_plain is None or subject is None:
+            raise ValueError("No plain body supplied.")
 
         mail = Mail(to_name=user.name,
                     to_address=email,
-                    subject=template.subject,
+                    subject=subject,
                     body_plain=body_plain,
                     body_html=body_html)
         mails.append(mail)
@@ -981,6 +1006,15 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate, soft_fail: bo
 def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False,
                    use_internal: bool = True, **kwargs):
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
+
+
+def group_send_mail(group: PropertyGroup, subject: str, body_plain: str):
+    active_memberships = User.active_memberships()
+
+    users = User.q.join(active_memberships)\
+        .filter(active_memberships.c.group_id == group.id).distinct().all()
+
+    user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 
 def send_member_request_merged_email(user: PreMember, merged_to: User, password_merged: bool):

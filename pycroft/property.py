@@ -25,6 +25,7 @@ property_categories = OrderedDict((
         ("user_show",  "darf Nutzerdaten einsehen"),
         ("user_change",  "darf Nutzer anlegen, ändern, löschen"),
         ("user_hosts_change",  "darf Hosts & Interfaces ändern"),
+        ("mail_group",  "darf Rundmails an Gruppen senden"),
     ))),
     ("Finanzen", OrderedDict((
         ("finance_show",  "darf Finanzendaten einsehen"),

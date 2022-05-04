@@ -167,6 +167,7 @@ class UserEditForm(Form):
     person_id = IntegerField("Debitorennummer", [Optional()],
                              filters=[empty_to_none])
 
+
 class UserEditAddressForm(CreateAddressForm):
     def set_defaults_from_adress(self, address: Address):
         self.address_street.data = address.street
@@ -314,3 +315,12 @@ class UserMoveOutForm(Form):
     when = DateField("Auszug am", [OptionalIf("now")])
     comment = TextAreaField("Kommentar")
     end_membership = BooleanField("Mitgliedschaft/Extern beenden", [Optional()])
+
+
+class GroupMailForm(Form):
+    group = QuerySelectField("Gruppe", [DataRequired()], get_label='name', query_factory=group_query)
+    subject = TextField("Betreff", [DataRequired()])
+    body_plain = TextAreaField("E-Mail (plaintext)", [DataRequired()],
+                               description="Verfügbar: {name}, {login}, {id}, {email}, "
+                                           "{email_internal}, {room_short}, {swdd_person_id}")
+    confirm = BooleanField("Bestätigung", [DataRequired()], default=False)

@@ -57,7 +57,7 @@ from web.blueprints.user.forms import UserSearchForm, UserCreateForm, \
     UserEditGroupMembership, \
     UserResetPasswordForm, UserMoveInForm, PreMemberEditForm, PreMemberDenyForm, \
     PreMemberMergeForm, PreMemberMergeConfirmForm, UserEditAddressForm, \
-    NonResidentUserCreateForm
+    NonResidentUserCreateForm, GroupMailForm
 from web.table.table import datetime_format, date_format
 from .log import formatted_user_hades_logs
 from .tables import (LogTableExtended, LogTableSpecific, MembershipTable,
@@ -1315,3 +1315,32 @@ def archivable_users_json():
             end_of_membership=date_format(info.mem_end.date())
         ) for info in get_archivable_members(session.session)
     ]}
+
+
+@nav.navigate('Rundmail', weight=10, icon='fa-envelope')
+@bp.route('/groupmail', methods=['GET', 'POST'])
+@access.require('mail_group')
+def mail_group():
+    form = GroupMailForm()
+
+    form_args = {
+        'form': form,
+        'cancel_to': url_for('.overview'),
+        'submit_text': 'Absenden',
+        'form_render_mode': 'basic',
+        'field_render_mode': 'basic',
+    }
+
+    if form.validate_on_submit():
+        lib.user.group_send_mail(
+            group=form.group.data,
+            subject=form.subject.data,
+            body_plain=form.body_plain.data,
+        )
+
+        flash("Rundmail versendet!", "success")
+        return redirect(url_for(".mail_group"))
+
+    return render_template("generic_form.html",
+                           page_title="Rundmail an Gruppe",
+                           form_args=form_args)

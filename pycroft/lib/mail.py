@@ -43,7 +43,7 @@ class Mail:
     to_address: str
     subject: str
     body_plain: str
-    body_html: str | None
+    body_html: str | None = None
     reply_to: str | None = None
 
 
@@ -70,10 +70,10 @@ def compose_mail(mail: Mail) -> MIMEMultipart:
     msg['Subject'] = mail.subject
     msg['Date'] = formatdate(localtime=True)
 
-    msg.attach(MIMEText(mail.body_plain, 'plain'))
+    msg.attach(MIMEText(mail.body_plain, 'plain', _charset='utf-8'))
 
     if mail.body_html is not None:
-        msg.attach(MIMEText(mail.body_html, 'html'))
+        msg.attach(MIMEText(mail.body_html, 'html', _charset='utf-8'))
 
     if mail.reply_to is not None or mail.reply_to is not None:
         msg['Reply-To'] = mail_reply_to if mail.reply_to is None else mail.reply_to
@@ -215,6 +215,7 @@ class TaskFailedTemplate(MailTemplate):
     template = "task_failed.html"
     subject = "Aufgabe fehlgeschlagen // Task failed"
 
+
 class MemberNegativeBalance(MailTemplate):
     template = "member_negative_balance.html"
     subject =  "Deine ausstehenden Zahlungen // Your due payments"
@@ -231,6 +232,21 @@ def send_template_mails(email_addresses: list[str], template: MailTemplate, **kw
                     subject=template.subject,
                     body_plain=body_plain,
                     body_html=body_html)
+        mails.append(mail)
+
+    from pycroft.task import send_mails_async
+
+    send_mails_async.delay(mails)
+
+
+def send_plain_mails(email_addresses: list[str], subject: str, body_plain: str):
+    mails = []
+
+    for addr in email_addresses:
+        mail = Mail(to_name='',
+                    to_address=addr,
+                    subject=subject,
+                    body_plain=body_plain)
         mails.append(mail)
 
     from pycroft.task import send_mails_async
