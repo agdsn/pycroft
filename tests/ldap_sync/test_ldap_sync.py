@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring
+import functools
 import logging
 from unittest import TestCase
 
@@ -207,6 +208,9 @@ class LdapFunctionalityTestCase(LdapTestBase):
         relevant_entries = [r for r in self.conn.response if r['dn'] != self.base_dn]
         assert len(relevant_entries) == 1
 
+def try_unbind(conn):
+    if conn:
+        conn.unbind()
 
 class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
     def create_factories(self):
@@ -229,6 +233,11 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
                 granted={'mail'},  # weird, because grants mail, but not ldap_login_enabled
             ),
         )
+
+    def establish_and_return_ldap_connection(self, *a, **kw):
+        conn = establish_and_return_ldap_connection(*a, **kw)
+        self.addCleanup(functools.partial(try_unbind, conn))
+        return conn
 
     def setUp(self):
         super().setUp()
@@ -289,7 +298,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
 
 class LdapTestCase(LdapSyncerTestBase):
     def test_connection_works(self):
-        conn = establish_and_return_ldap_connection(
+        conn = self.establish_and_return_ldap_connection(
             host=self.config.host, port=self.config.port,
             use_ssl=self.config.use_ssl, ca_certs_file=None, ca_certs_data=None,
             bind_dn=self.config.bind_dn, bind_pw=self.config.bind_pw
