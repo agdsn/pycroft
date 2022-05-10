@@ -401,7 +401,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         mod_dn = UserRecord.from_db_user(modified_user, self.user_base_dn).dn
         modified_user.email = 'bar@agdsn.de'
         session.add(modified_user)
-        session.commit()
+        session.flush()
 
         self.users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         self.sync_all()
@@ -418,7 +418,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         mod_dn = UserRecord.from_db_user(mod_user, self.user_base_dn).dn
         mod_user.email = 'bar@agdsn.de'
         session.add(mod_user)
-        session.commit()
+        session.flush()
 
         users_to_sync = fetch_users_to_sync(session, self.config.required_property)
         exporter = self.build_user_exporter(current_users=self.new_ldap_users,
