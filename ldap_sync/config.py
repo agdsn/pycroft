@@ -2,16 +2,25 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import os
-from collections import namedtuple
+from typing import NamedTuple
 from distutils.util import strtobool
 
 from ldap_sync import logger
 
-_sync_config = namedtuple(
-    'LdapSyncConfig',
-    ['host', 'port', 'use_ssl', 'ca_certs_file', 'ca_certs_data', 'bind_dn',
-     'bind_pw', 'base_dn', 'db_uri', 'required_property']
-)
+
+class SyncConfig(NamedTuple):
+    # DB-related
+    db_uri: str
+    # LDAP-related
+    host: str
+    port: int
+    use_ssl: bool
+    ca_certs_file: str | None
+    ca_certs_data: str | None
+    bind_dn: str
+    bind_pw: str
+    base_dn: str
+    required_property: str
 
 
 def _from_environ_or_defaults(key, defaults):
@@ -28,15 +37,13 @@ def get_config(**defaults):
     config_dict = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: _from_environ_or_defaults(key, defaults)
-        for key in _sync_config._fields if key != 'db_uri'
+        for key in SyncConfig._fields if key != 'db_uri'
     }
     config_dict['port'] = int(config_dict['port'])
     if 'use_ssl' in config_dict:
         config_dict['use_ssl'] = bool(strtobool(config_dict['use_ssl']))
     config_dict['db_uri'] = os.environ['PYCROFT_DB_URI']
-    config = _sync_config(**config_dict)
-
-    return config
+    return SyncConfig(**config_dict)
 
 
 def get_config_or_exit(**defaults):
