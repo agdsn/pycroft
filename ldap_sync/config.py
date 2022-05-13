@@ -23,7 +23,7 @@ class SyncConfig(NamedTuple):
     required_property: str
 
 
-def _from_environ_or_defaults(key, defaults):
+def _from_environ_or_defaults(key: str, defaults: dict[str, str]) -> str:
     try:
         return os.environ[f'PYCROFT_LDAP_{key.upper()}']
     except KeyError as e:
@@ -33,20 +33,24 @@ def _from_environ_or_defaults(key, defaults):
         return defaults[key]
 
 
-def get_config(**defaults):
-    config_dict = {
+def get_config(**defaults: str) -> SyncConfig:
+    db_uri = os.environ["PYCROFT_DB_URI"]
+    config_dict: dict[str, str] = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: _from_environ_or_defaults(key, defaults)
         for key in SyncConfig._fields if key != 'db_uri'
     }
-    config_dict['port'] = int(config_dict['port'])
-    if 'use_ssl' in config_dict:
-        config_dict['use_ssl'] = bool(strtobool(config_dict['use_ssl']))
-    config_dict['db_uri'] = os.environ['PYCROFT_DB_URI']
-    return SyncConfig(**config_dict)
+    port = int(config_dict.pop("port"))
+    use_ssl = bool(strtobool(config_dict.pop("use_ssl")))
+    return SyncConfig(
+        db_uri=db_uri,
+        port=port,
+        use_ssl=use_ssl,
+        **config_dict,
+    )
 
 
-def get_config_or_exit(**defaults):
+def get_config_or_exit(**defaults: str) -> SyncConfig:
     try:
         return get_config(**defaults)
     except KeyError as exc:
