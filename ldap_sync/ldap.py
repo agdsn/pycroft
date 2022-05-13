@@ -6,16 +6,23 @@ import ssl
 import ldap3
 
 from ldap_sync import logger
+from .config import SyncConfig
 
 
-def establish_and_return_ldap_connection(host, port, use_ssl, ca_certs_file,
-                                         ca_certs_data, bind_dn, bind_pw):
+def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:
     tls = None
-    if ca_certs_file or ca_certs_data:
-        tls = ldap3.Tls(ca_certs_file=ca_certs_file,
-                        ca_certs_data=ca_certs_data, validate=ssl.CERT_REQUIRED)
-    server = ldap3.Server(host=host, port=port, use_ssl=use_ssl, tls=tls)
-    return ldap3.Connection(server, user=bind_dn, password=bind_pw, auto_bind=True)
+    if config.ca_certs_file or config.ca_certs_data:
+        tls = ldap3.Tls(
+            ca_certs_file=config.ca_certs_file,
+            ca_certs_data=config.ca_certs_data,
+            validate=ssl.CERT_REQUIRED,
+        )
+    server = ldap3.Server(
+        host=config.host, port=config.port, use_ssl=config.use_ssl, tls=tls
+    )
+    return ldap3.Connection(
+        server, user=config.bind_dn, password=config.bind_pw, auto_bind=True
+    )
 
 
 def fetch_ldap_entries(connection, base_dn, search_filter=None, attributes=ldap3.ALL_ATTRIBUTES):

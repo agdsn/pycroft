@@ -8,7 +8,7 @@ import pytest
 
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from ldap_sync.exporter import LdapExporter, sync_all
-from ldap_sync.config import get_config
+from ldap_sync.config import get_config, SyncConfig
 from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
     fetch_current_ldap_groups, fetch_current_ldap_properties
 from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \
@@ -118,6 +118,8 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
 
     (The LDAP we use is mocked, however.)
     """
+
+    config: SyncConfig
 
     @classmethod
     def setUpClass(cls):
@@ -299,11 +301,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
 
 class LdapTestCase(LdapSyncerTestBase):
     def test_connection_works(self):
-        conn = self.establish_and_return_ldap_connection(
-            host=self.config.host, port=self.config.port,
-            use_ssl=self.config.use_ssl, ca_certs_file=None, ca_certs_data=None,
-            bind_dn=self.config.bind_dn, bind_pw=self.config.bind_pw
-        )
+        conn = self.establish_and_return_ldap_connection(config=self.config)
         assert conn.bound
         result = conn.search(self.base_dn, '(objectclass=*)', ldap3.BASE)
         assert result
