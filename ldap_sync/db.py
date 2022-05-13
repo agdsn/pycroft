@@ -59,7 +59,7 @@ def fetch_users_to_sync(session, required_property=None) -> list[UserProxyType]:
         User.q
         .options(joinedload(User.unix_account))
         .join(User.current_properties)
-        .filter(CurrentProperty.property_name == required_property,
+        .filter((CurrentProperty.property_name == required_property) if required_property else True,
                 User.unix_account != None)
 
         # additional info:
