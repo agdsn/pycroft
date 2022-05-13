@@ -2,11 +2,12 @@ import argparse
 import logging
 import os
 
-from .exporter import add_stdout_logging, establish_and_return_ldap_connection, \
-    establish_and_return_session, fake_connection, fetch_current_ldap_users, \
-    fetch_current_ldap_groups, fetch_current_ldap_properties, fetch_users_to_sync, \
-    fetch_groups_to_sync, fetch_properties_to_sync, get_config_or_exit, logger, sync_all
-
+from .exporter import add_stdout_logging, get_config_or_exit, sync_all
+from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
+    fetch_current_ldap_groups, fetch_current_ldap_properties, fake_connection
+from ldap_sync import logger
+from ldap_sync.db import establish_and_return_session, fetch_users_to_sync, \
+    fetch_groups_to_sync, fetch_properties_to_sync
 
 logger = logging.getLogger('ldap_sync')
 

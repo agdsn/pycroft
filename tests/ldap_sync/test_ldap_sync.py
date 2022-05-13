@@ -7,11 +7,11 @@ import ldap3
 import pytest
 
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
-from ldap_sync.exporter import LdapExporter, fetch_users_to_sync, \
-    fetch_groups_to_sync, \
-    fetch_properties_to_sync, get_config, establish_and_return_ldap_connection, \
-    fetch_current_ldap_users, fetch_current_ldap_groups, \
-    fetch_current_ldap_properties, sync_all
+from ldap_sync.exporter import LdapExporter, get_config, sync_all
+from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
+    fetch_current_ldap_groups, fetch_current_ldap_properties
+from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \
+    fetch_properties_to_sync
 from ldap_sync.record import UserRecord, GroupRecord, RecordState, \
     dn_from_username
 from pycroft.model.session import session
