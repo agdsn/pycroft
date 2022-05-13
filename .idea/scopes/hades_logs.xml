@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="hades_logs" pattern="file[pycroft]:hades_logs//*||file[pycroft]:tests/hades_logs//*" />
+</component>
