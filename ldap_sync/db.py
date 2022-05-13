@@ -43,12 +43,13 @@ def fetch_users_to_sync(session, required_property=None) -> list[UserProxyType]:
 
     count_exportable_but_no_account = no_unix_account_q.count()
 
-    if required_property:
-        logger.warning("%s users have the '%s' property but not a unix_account",
-                       count_exportable_but_no_account, required_property)
-    else:
-        logger.warning("%s users applicable to exporting don't have a unix_account",
-                       count_exportable_but_no_account)
+    if count_exportable_but_no_account:
+        if required_property:
+            logger.warning("%s users have the '%s' property but not a unix_account",
+                           count_exportable_but_no_account, required_property)
+        else:
+            logger.warning("%s users applicable to exporting don't have a unix_account",
+                           count_exportable_but_no_account)
 
     # used for second join against CurrentProperty
     not_blocked_property = CurrentProperty.__table__.alias('ldap_login_enabled')
