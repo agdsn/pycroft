@@ -1,11 +1,48 @@
 import logging
 from collections import Counter, defaultdict
-from itertools import chain
-from typing import Iterable
+from typing import Iterable, Iterator
 
 from . import logger
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
-from .record import UserRecord, GroupRecord, RecordState
+from .record import UserRecord, GroupRecord, RecordState, Record
+
+
+def iter_current_records(
+    ldap_users: Iterable[dict],
+    ldap_groups: Iterable[dict],
+    ldap_properties: Iterable[dict],
+) -> Iterator[Record]:
+    yield from (UserRecord.from_ldap_record(u) for u in ldap_users)
+    yield from (GroupRecord.from_ldap_record(g) for g in ldap_groups)
+    yield from (GroupRecord.from_ldap_record(p) for p in ldap_properties)
+
+
+def iter_desired_records(
+    db_users: Iterable[UserProxyType],
+    db_groups: Iterable[GroupProxyType],
+    db_properties: Iterable[PropertyProxyType],
+    user_base_dn: str,
+    group_base_dn: str,
+    property_base_dn: str,
+) -> Iterator[Record]:
+    # restrict members of groups/properties to those actually exported to the LDAP
+    exported_users = {u.User.login for u in db_users}
+    for u in db_users:
+        yield UserRecord.from_db_user(u.User, user_base_dn, u.should_be_blocked)
+    for g in db_groups:
+        yield GroupRecord.from_db_group(
+            name=g.Group.name,
+            members=(m for m in g.members if m in exported_users),
+            base_dn=group_base_dn,
+            user_base_dn=user_base_dn,
+        )
+    for p in db_properties:
+        yield GroupRecord.from_db_group(
+            name=p.name,
+            members=(m for m in p.members if m in exported_users),
+            base_dn=property_base_dn,
+            user_base_dn=user_base_dn,
+        )
 
 
 class LdapExporter:
@@ -60,35 +97,22 @@ class LdapExporter:
         :param property_base_dn:
         :return:
         """
-        current = []
-        current.append(UserRecord.from_ldap_record(x) for x in ldap_users)
-        if ldap_groups:
-            current.append(GroupRecord.from_ldap_record(x) for x in ldap_groups)
-        if ldap_properties:
-            current.append(GroupRecord.from_ldap_record(x) for x in ldap_properties)
-
-
-        desired = []
-        desired.append(UserRecord.from_db_user(x.User, user_base_dn, x.should_be_blocked)
-                    for x in db_users)
-
-        # Remove members that are not exported from groups/properties
-        exported_users = { u.User.login for u in db_users }
-
-        if db_groups:
-            desired.append(
-                GroupRecord.from_db_group(x.Group.name,
-                                          (m for m in x.members if m in exported_users),
-                                          group_base_dn, user_base_dn)
-                for x in db_groups)
-        if db_properties:
-            desired.append(
-                GroupRecord.from_db_group(x.name,
-                                          (m for m in x.members if m in exported_users),
-                                          property_base_dn, user_base_dn)
-                for x in db_properties)
-
-        return cls(chain.from_iterable(current), chain.from_iterable(desired))
+        import warnings
+        warnings.warn("Use the explicit constructor and iter_{current,desired}_records instead",
+                      DeprecationWarning)
+        return cls(
+            current=iter_current_records(
+                ldap_users, ldap_groups or iter(()), ldap_properties or iter(())
+            ),
+            desired=iter_desired_records(
+                db_users,
+                db_groups or iter(()),
+                db_properties or iter(()),
+                user_base_dn,
+                group_base_dn,
+                property_base_dn,
+            ),
+        )
 
     def compile_actions(self):
         """Consolidate current and desired records into necessary actions"""
