@@ -3,7 +3,7 @@ import logging
 import os
 
 from .config import get_config_or_exit
-from .exporter import add_stdout_logging, sync_all
+from .exporter import sync_all
 from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
     fetch_current_ldap_groups, fetch_current_ldap_properties, fake_connection
 from ldap_sync import logger
@@ -105,3 +105,11 @@ def main():
 
 if __name__ == '__main__':
     exit(main())
+
+
+def add_stdout_logging(logger, level=logging.INFO):
+    handler = logging.StreamHandler()
+    fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
+    handler.setFormatter(fmt)
+    logger.addHandler(handler)
+    logger.setLevel(level)
