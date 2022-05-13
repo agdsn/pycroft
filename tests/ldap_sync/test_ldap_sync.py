@@ -7,7 +7,8 @@ import ldap3
 import pytest
 
 from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
-from ldap_sync.exporter import LdapExporter, get_config, sync_all
+from ldap_sync.exporter import LdapExporter, sync_all
+from ldap_sync.config import get_config
 from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
     fetch_current_ldap_groups, fetch_current_ldap_properties
 from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \

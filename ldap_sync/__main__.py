@@ -2,7 +2,8 @@ import argparse
 import logging
 import os
 
-from .exporter import add_stdout_logging, get_config_or_exit, sync_all
+from .config import get_config_or_exit
+from .exporter import add_stdout_logging, sync_all
 from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
     fetch_current_ldap_groups, fetch_current_ldap_properties, fake_connection
 from ldap_sync import logger
