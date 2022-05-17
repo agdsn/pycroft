@@ -1,5 +1,6 @@
 from __future__ import annotations
 import abc
+import dataclasses
 import typing
 
 from ldap3.utils.conv import escape_filter_chars
@@ -234,30 +235,12 @@ class GroupRecord(Record):
         return cls(dn=dn, attrs=attributes)
 
 
+@dataclasses.dataclass
 class RecordState:
     """A Class representing the state (current, desired) of a record.
 
     This class is essentially a duple consisting of a current and
     desired record to represent the difference.
-
-    :param current: The current record
-    :param desired: The desired record
     """
-    def __init__(self, current: Record | None = None, desired: Record | None = None):
-        self.current = current
-        self.desired = desired
-
-    def __eq__(self, other):
-        try:
-            return self.current == other.current and self.desired == other.desired
-        except KeyError:
-            return False
-
-    def __repr__(self):
-        set_attributes = []
-        if self.current:
-            set_attributes.append('current')
-        if self.desired:
-            set_attributes.append('desired')
-        attrs_string = " " + " ".join(set_attributes) if set_attributes else ''
-        return f"<{type(self).__name__}{attrs_string}>"
+    current: Record | None = None
+    desired: Record | None = None
