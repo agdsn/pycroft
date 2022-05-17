@@ -251,7 +251,7 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
         self.properties_to_sync = fetch_properties_to_sync(session)
         self.initial_ldap_properties = fetch_current_ldap_properties(self.conn, base_dn=self.property_base_dn)
 
-    def build_exporter(self):
+    def build_exporter(self) -> LdapExporter:
         """Return an LdapExporter.
 
         It does not compile actions.
@@ -268,7 +268,9 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
             property_base_dn=self.property_base_dn,
         )
 
-    def build_user_exporter(self, current_users=None, desired_users=None):
+    def build_user_exporter(
+        self, current_users=None, desired_users=None
+    ) -> LdapExporter:
         """Return an LdapExporter from ldap and orm users.
 
         It does not compile actions.

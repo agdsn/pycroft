@@ -1,21 +1,27 @@
+from __future__ import annotations
 import abc
+import typing
 
 from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
-from .action import AddAction, DeleteAction, IdleAction, ModifyAction
+from .action import AddAction, DeleteAction, IdleAction, ModifyAction, Action
+from .types import LdapRecord
 
 
-def dn_from_username(username, base):
+def dn_from_username(username: str, base: str) -> str:
     return safe_dn([f"uid={username}", base])
 
 
-def dn_from_cn(name, base):
+def dn_from_cn(name: str, base: str) -> str:
     return safe_dn([f"cn={name}", base])
 
 
-def _canonicalize_to_list(value):
+T = typing.TypeVar("T")
+
+
+def _canonicalize_to_list(value: T | list[T]) -> list[T]:
     """Canonicalize a value to a list.
 
     If value is a list, return it.  If it is None or an empty string,
@@ -28,7 +34,11 @@ def _canonicalize_to_list(value):
     return [value]
 
 
-def _maybe_escape_filter_chars(value):
+# the “true” type is not expressible with mypy: it's the overload
+# bytes | str -> str
+# T -> T
+# …but mypy rejects this because we have an argument overlap with incompatible return types.
+def _maybe_escape_filter_chars(value: T) -> T | str:
     """Escape and return according to RFC04515 if type is string-like.
 
     Else, return the unchanged object.
@@ -38,7 +48,7 @@ def _maybe_escape_filter_chars(value):
     return value
 
 
-class Record:
+class Record(abc.ABC):
     """Create a new record with a dn and certain attributes.
 
     A record represents an entry which is to be synced to the LDAP,
@@ -52,7 +62,11 @@ class Record:
         between two records, as well as escaped according to RFC04515.
         Additionally, the keys are fixed to a certain set.
     """
-    def __init__(self, dn, attrs):
+
+    dn: str
+    attrs: dict[str, str]
+
+    def __init__(self, dn: str, attrs: dict[str, str]):
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
         for key in self.get_synced_attributes():
@@ -64,18 +78,18 @@ class Record:
 
     @classmethod
     @abc.abstractmethod
-    def get_synced_attributes(cls):
+    def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         """Returns the attributes to be synced."""
-        return
+        raise NotImplementedError
 
     @classmethod
-    def from_ldap_record(cls, record):
+    def from_ldap_record(cls, record: LdapRecord):
         return cls(dn=record['dn'], attrs=record['attributes'])
 
     def remove_empty_attributes(self):
         self.attrs = {key: val for key, val in self.attrs.items() if val}
 
-    def __sub__(self, other):
+    def __sub__(self, other: Record | None) -> Action:
         """Return the action needed to transform another record into this one"""
         if other is None:
             return AddAction(record=self)
@@ -88,12 +102,12 @@ class Record:
 
         return ModifyAction.from_two_records(desired_record=self, current_record=other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Record | None) -> DeleteAction:
         if other is None:
             return DeleteAction(record=self)
         return NotImplemented
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # `__eq__` must be total, hence no type restrictions/hints
         try:
             return self.dn == other.dn and self.attrs == other.attrs
         except AttributeError:
@@ -103,7 +117,7 @@ class Record:
         return f"<{type(self).__name__} dn={self.dn}>"
 
     @classmethod
-    def _validate_attributes(cls, attributes):
+    def _validate_attributes(cls, attributes: dict[str, str]):
         # sanity check: did we forget something in `cls.get_synced_attributes()` that
         # we support migrating anyway?
         _missing_attributes = set(attributes.keys()) - cls.get_synced_attributes()
@@ -114,7 +128,7 @@ class Record:
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-    def __init__(self, dn, attrs):
+    def __init__(self, dn: str, attrs: dict[str, str]):
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
@@ -132,8 +146,9 @@ class UserRecord(Record):
         return cls.SYNCED_ATTRIBUTES
 
     @classmethod
-    def from_db_user(cls, user, base_dn, should_be_blocked=False):
-        # type: (User, str, bool) -> Record
+    def from_db_user(
+        cls, user: User, base_dn: str, should_be_blocked: bool = False
+    ) -> Record:
         dn = dn_from_username(user.login, base=base_dn)
         if user.unix_account is None:
             raise ValueError("User object must have a UnixAccount")
@@ -172,7 +187,7 @@ class UserRecord(Record):
 
         return cls(dn=dn, attrs=attributes)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Record | None) -> Action:
         action = super().__sub__(other)
 
         # Do not try to delete pwdAccountLockedTime if password is changed,
@@ -202,9 +217,11 @@ class GroupRecord(Record):
         return cls.SYNCED_ATTRIBUTES
 
     @classmethod
-    def from_db_group(cls, name, members, base_dn, user_base_dn):
+    def from_db_group(
+        cls, name: str, members: typing.Iterable[str], base_dn: str, user_base_dn: str
+    ):
         dn = dn_from_cn(name, base=base_dn)
-        members_dn = [dn_from_username(member, user_base_dn) for member in members]
+        members_dn: list[str] = [dn_from_username(member, user_base_dn) for member in members]
 
         attributes = {
             # REQ – required, MAY – optional, SV – single valued

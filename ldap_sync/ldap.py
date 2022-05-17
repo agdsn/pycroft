@@ -2,11 +2,13 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import ssl
+import typing
 
 import ldap3
 
 from ldap_sync import logger
 from .config import SyncConfig
+from .types import LdapRecord
 
 
 def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:
@@ -25,10 +27,15 @@ def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection
     )
 
 
-def fetch_ldap_entries(connection, base_dn, search_filter=None, attributes=ldap3.ALL_ATTRIBUTES):
-    success = connection.search(search_base=base_dn,
-                                search_filter=search_filter,
-                                attributes=attributes)
+def fetch_ldap_entries(
+    connection: ldap3.Connection,
+    base_dn: str,
+    search_filter: str | None = None,
+    attributes: str | typing.Collection[str] = ldap3.ALL_ATTRIBUTES,
+) -> list[LdapRecord]:
+    success = connection.search(
+        search_base=base_dn, search_filter=search_filter, attributes=attributes
+    )
     if not success:
         logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []
@@ -36,21 +43,34 @@ def fetch_ldap_entries(connection, base_dn, search_filter=None, attributes=ldap3
     return [r for r in connection.response if r['dn'] != base_dn]
 
 
-def fetch_current_ldap_users(connection, base_dn):
-    return fetch_ldap_entries(connection, base_dn,
-                              search_filter='(objectclass=inetOrgPerson)',
-                              attributes=[ldap3.ALL_ATTRIBUTES, 'pwdAccountLockedTime'])
+def fetch_current_ldap_users(
+    connection: ldap3.Connection, base_dn: str
+) -> list[LdapRecord]:
+    return fetch_ldap_entries(
+        connection,
+        base_dn,
+        search_filter="(objectclass=inetOrgPerson)",
+        attributes=[ldap3.ALL_ATTRIBUTES, "pwdAccountLockedTime"],
+    )
 
 
-def fetch_current_ldap_groups(connection, base_dn):
-    return fetch_ldap_entries(connection, base_dn, search_filter='(objectclass=groupOfMembers)')
+def fetch_current_ldap_groups(
+    connection: ldap3.Connection, base_dn: str
+) -> list[LdapRecord]:
+    return fetch_ldap_entries(
+        connection, base_dn, search_filter="(objectclass=groupOfMembers)"
+    )
 
 
-def fetch_current_ldap_properties(connection, base_dn):
-    return fetch_ldap_entries(connection, base_dn, search_filter='(objectclass=groupOfMembers)')
+def fetch_current_ldap_properties(
+    connection: ldap3.Connection, base_dn: str
+) -> list[LdapRecord]:
+    return fetch_ldap_entries(
+        connection, base_dn, search_filter="(objectclass=groupOfMembers)"
+    )
 
 
-def fake_connection():
+def fake_connection() -> ldap3.Connection:
     server = ldap3.Server('mocked')
     connection = ldap3.Connection(server, client_strategy=ldap3.MOCK_SYNC)
     connection.open()
