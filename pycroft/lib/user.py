@@ -949,12 +949,41 @@ def membership_begin_date(user):
     return end_date
 
 
+def format_user_mail(user: User, text: str):
+    return text.format(
+        name=user.name,
+        login=user.login,
+        id=encode_type2_user_id(user.id),
+        email=user.email if user.email else '-',
+        email_internal=user.email_internal,
+        room_short=user.room.short_name
+        if user.room_id is not None else '-',
+        swdd_person_id=user.swdd_person_id
+        if user.swdd_person_id else '-',
+    )
+
+
 def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
                     soft_fail: bool = False,
                     use_internal: bool = True,
                     body_plain: str = None,
                     subject: str = None,
                     **kwargs):
+    """
+    Send a mail to a list of users
+
+    :param users: Users who should receive the mail
+    :param template: The template that should be used. Can be None if body_plain is supplied.
+    :param soft_fail: Do not raise an exception if a user does not have an email and use_internal
+    is set to True
+    :param use_internal: If internal mail addresses can be used (@agdsn.me)
+    (Set to False to only send to external mail addresses)
+    :param body_plain: Alternative plain body if not template supplied
+    :param subject:  Alternative subject if no template supplied
+    :param kwargs: kwargs that will be used during rendering the template
+    :return:
+    """
+
     mails = []
 
     for user in users:
@@ -974,26 +1003,18 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
                 raise ValueError("No contact email address available.")
 
         if template is not None:
-            body_plain, body_html = template.render(user=user,
-                                                    user_id=encode_type2_user_id(user.id),
-                                                    **kwargs)
+            # Template given, render...
+            plaintext, html = template.render(user=user,
+                                              user_id=encode_type2_user_id(user.id),
+                                              **kwargs)
             subject = template.subject
         else:
+            # No template given, use formatted body_mail instead.
             if not isinstance(user, User):
                 raise ValueError("Plaintext email not supported for other User types.")
 
-            body_html = None
-            body_plain = body_plain.format(
-                name=user.name,
-                login=user.login,
-                id=encode_type2_user_id(user.id),
-                email=user.email if user.email else '-',
-                email_internal=user.email_internal,
-                room_short=user.room.short_name
-                if user.room_id is not None else '-',
-                swdd_person_id=user.swdd_person_id
-                if user.swdd_person_id else '-',
-            )
+            html = None
+            plaintext = format_user_mail(user, body_plain)
 
         if body_plain is None or subject is None:
             raise ValueError("No plain body supplied.")
@@ -1001,8 +1022,8 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
         mail = Mail(to_name=user.name,
                     to_address=email,
                     subject=subject,
-                    body_plain=body_plain,
-                    body_html=body_html)
+                    body_plain=plaintext,
+                    body_html=html)
         mails.append(mail)
 
     send_mails_async.delay(mails)
