@@ -987,10 +987,9 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
     mails = []
 
     for user in users:
-        if use_internal and \
-            ((isinstance(user, User) and
-              (not user.email_forwarded or not user.email)
-              and user.has_property('mail'))):
+        if isinstance(user, User) and all((use_internal,
+                                           not (user.email_forwarded and user.email),
+                                           user.has_property('mail'))):
             # Use internal email
             email = user.email_internal
         elif user.email:
