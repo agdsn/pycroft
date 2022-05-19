@@ -1,7 +1,7 @@
 import path from 'path';
 import process from 'process';
 import webpack from "webpack";
-import ManifestPlugin from "webpack-manifest-plugin";
+import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 import TerserPlugin from "terser-webpack-plugin";
