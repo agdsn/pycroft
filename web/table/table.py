@@ -38,17 +38,31 @@ class Column:
         ``data-cell-style``.
     :param hide_if: When this callable returns true, the column returns
         an empty string when rendered.
+    :param escape: sets `data-escape`.
+        Should be set to ``False`` if you use a formatter expecting something other than a string,
+        because ``bootstrap-table``s builtin escaper forcefully casts to string otherwise.
     """
 
-    def __init__(self, title, name=None, formatter=None, width=0,
-                 cell_style=None, col_args=None, sortable=True,
-                 hide_if: Callable[[], bool] | None = lambda: False):
+    def __init__(
+        self,
+        title,
+        name=None,
+        formatter=None,
+        width=0,
+        cell_style=None,
+        col_args=None,
+        sortable=True,
+        hide_if: Callable[[], bool] | None = lambda: False,
+        escape: bool | None = None,
+    ):
         self.name = name
         self.title = title
         self.formatter = formatter if formatter is not None else False
         self.cell_style = cell_style if cell_style is not None else False
         self.width = width
         self.col_args = col_args if col_args is not None else {}
+        if escape is not None:
+            self.col_args['data-escape'] = "true" if escape else "false"
         self.sortable = sortable
         self.hide_if = hide_if
 
@@ -127,6 +141,7 @@ class custom_formatter_column:
         old_init = cls.__init__
 
         def __init__(obj, *a, **kw):
+            kw.setdefault('escape', False)
             old_init(obj, *a, formatter=self.formatter_name, **kw)
 
         cls.__init__ = __init__
