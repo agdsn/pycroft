@@ -131,26 +131,6 @@ export default {
                     },
                 },
             },
-            // Inject 'bootstrap' symbol into bootstrap-table`
-            // This is required because the BS5 version detection requires that:
-            // `constants/index.js` probes `bootstrap.Tooltip.VERSION`
-            // and assumes BS4 if that does not work for whatever reason.
-            {
-                test: /\.js$/,
-                use: {
-                    loader: "imports-loader",
-                    options: {
-                        // generates `const bootstrap = require('bootstrap')`
-                        type: 'commonjs',
-                        imports: {
-                            'syntax': 'single',
-                            'moduleName': 'bootstrap',
-                            'name': 'bootstrap',
-                        },
-                    },
-                },
-                include: path.join(dep, "bootstrap-table")
-            },
             // Inject jQuery import into bootstrap-datepicker locales
             {
                 test: /\.js$/,
