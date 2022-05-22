@@ -126,7 +126,7 @@ export function userFormatter(value, row, index) {
     } else if (value['type'] === 'native') {
         return linkFormatter(value, row, index);
     } else {
-        console.log("ERROR: The following object could not be formatted by a userLogger:", value);
+        console.error("The following object could not be formatted by a userLogger:", value);
         return "Invalid format";
     }
 }
