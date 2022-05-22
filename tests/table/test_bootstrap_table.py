@@ -199,10 +199,17 @@ class TestEmptyTableDefaults:
 
     def test_table_args_set(self, EmptyTable):
         assert hasattr(EmptyTable, '_table_args'), "Attribute _table_args not set after class creation"
-        assert dict(EmptyTable._table_args) == {'data-toggle': "table"}
+        assert dict(EmptyTable._table_args) == {
+            'data-toggle': "table",
+            "data-icons-prefix": "fa",
+        }
 
     def test_table_args_after_instantiation(self, EmptyTable):
-        assert EmptyTable("#").table_args == {'data-toggle': "table", 'data-url': "#"}
+        assert EmptyTable("#").table_args == {
+            'data-toggle': "table",
+            "data-icons-prefix": "fa",
+            'data-url': "#",
+        }
 
 
 class TestTableArgs:

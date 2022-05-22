@@ -294,7 +294,7 @@ class BootstrapTable(metaclass=BootstrapTableMeta):
     table_args: TableArgs
 
     class Meta:
-        table_args = {'data-toggle': "table"}
+        table_args = {'data-toggle': "table", "data-icons-prefix": "fa"}
 
     def __init__(self, data_url, table_args=None):
         self.data_url = enforce_url_params(data_url, dict(self._enforced_url_params))

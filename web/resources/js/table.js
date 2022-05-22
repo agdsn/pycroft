@@ -11,6 +11,19 @@ import TimeAgo from 'javascript-time-ago'
 import de from 'javascript-time-ago/locale/de'
 
 $.extend($.fn.bootstrapTable.defaults, $.fn.bootstrapTable.locales['de-DE'])
+$.extend($.fn.bootstrapTable.defaults.icons, {
+    paginationSwitchDown: 'fa-caret-square-down',
+    paginationSwitchUp: 'fa-caret-square-up',
+    refresh: 'fa-sync',
+    toggleOff: 'fa-toggle-off',
+    toggleOn: 'fa-toggle-on',
+    columns: 'fa-th-list',
+    detailOpen: 'fa-plus',
+    detailClose: 'fa-minus',
+    fullscreen: 'fa-arrows-alt',
+    search: 'fa-search',
+    clearSearch: 'fa-trash',
+});
 TimeAgo.addDefaultLocale(de)
 const timeAgo = new TimeAgo('de-DE')
 
