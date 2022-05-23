@@ -73,6 +73,6 @@
   },
   "scripts": {
     "webpack": "webpack",
-    "build": "webpack --require @babel/register --config webpack.config.babel.js"
+    "build": "webpack --config webpack.config.babel.js"
   }
 }

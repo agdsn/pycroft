@@ -20,7 +20,7 @@ run() {
 	echo "## ./node_modules/webpack/bin:"
 	echo "## $(ls -l ./node_modules/webpack/bin)"
 	chmod +x ./node_modules/webpack/bin/*
-	exec npm run -- webpack --require @babel/register --config webpack.config.babel.js "$@"
+	exec npm run -- webpack --config webpack.config.babel.js "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
