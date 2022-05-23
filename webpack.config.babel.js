@@ -64,7 +64,7 @@ export default {
             }),
         ],
         runtimeChunk: {
-            name: "main",
+            name: "runtime",
         },
         splitChunks: {
             cacheGroups: {

@@ -143,6 +143,7 @@
     {# See http://flask.pocoo.org/docs/patterns/jquery/#where-is-my-site #}
     var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
+<script type="text/javascript" src="{{ 'runtime.js' | require }}"></script>
 <script type="text/javascript" src="{{ 'main.js' | require }}"></script>
 {{ resources.linked_script_files() }}
 {{ resources.ready_scripts() }}
