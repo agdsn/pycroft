@@ -15,6 +15,12 @@ from celery import Celery
 app = Celery('dummy_tasks', broker=os.environ['TEST_HADES_BROKER_URI'],
              backend=os.environ['TEST_HADES_RESULT_BACKEND_URI'])
 
+app.conf.update(
+    broker_transport_options={
+        "client_properties": {"connection_name": "pycroft hades_logs stub worker"},
+    },
+)
+
 
 def _vlan_as_attrlist(vlan):
     return [('Egress-VLAN-Name', vlan)] if vlan is not None else []

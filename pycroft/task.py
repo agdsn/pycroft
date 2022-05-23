@@ -195,4 +195,7 @@ app.conf.update(
     accept_content={'pickle'},
     task_serializer='pickle',
     result_serializer='pickle',
+    broker_transport_options={
+        "client_properties": {"connection_name": "pycroft celery worker"},
+    },
 )

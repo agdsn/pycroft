@@ -1,6 +1,14 @@
 from celery import Celery
 
 
+def http_worker_name() -> str | None:
+    try:
+        import uwsgi
+    except ImportError:
+        return "dev"
+    return f"uwsgi worker {uwsgi.worker_id()}"
+
+
 class HadesCelery(Celery):
     """Celery subclass complying with the Hades RPC API
 
@@ -27,6 +35,9 @@ class HadesCelery(Celery):
             "interval_start": 0,
             "interval_step": 0.2,
             "interval_max": 0.5,
+            "client_properties": {
+                "connection_name": f"pycroft hades_logs client @{http_worker_name()}"
+            },
         }
 
     def signature(self, *a, **kw):
