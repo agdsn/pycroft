@@ -13,6 +13,9 @@ if __name__ == "__main__":
         j = json.load(f)
 
     COLS = "current wanted latest dependent".split()  # don't care about location
+    if not j:
+        print(f"### :white_check_mark: All NPM packages up-to-date")
+        exit(0)
     print(f"### :warning: {len(j)} Outdated NPM packages")
     print()
     print(md_row("package", *COLS))
