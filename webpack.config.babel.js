@@ -91,6 +91,14 @@ export default {
         hashDigestLength: 32,
         pathinfo: !PROD,
     },
+    cache: {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+          // If you have other things the build depends on you can add them here
+          // Note that webpack, loaders and all modules referenced from your config are automatically added
+        },
+    },
     watchOptions: {
         aggregateTimeout: 1000,
         ignored: [
