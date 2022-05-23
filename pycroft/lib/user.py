@@ -1015,7 +1015,7 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
             html = None
             plaintext = format_user_mail(user, body_plain)
 
-        if body_plain is None or subject is None:
+        if plaintext is None or subject is None:
             raise ValueError("No plain body supplied.")
 
         mail = Mail(to_name=user.name,
