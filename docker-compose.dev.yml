@@ -26,7 +26,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: dev
-    command: ["webpack", "--watch", "--info-verbosity", "verbose"]
+    command: ["webpack", "--watch"]
   dev-db:
     extends:
       file: docker-compose.base.yml
