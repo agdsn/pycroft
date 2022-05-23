@@ -12,8 +12,8 @@ COPY --chown=pycroft:pycroft ./deps ./deps
 RUN /opt/pycroft/venv/bin/pip wheel --wheel-dir /opt/pycroft/wheel -r requirements.txt
 
 # Download JS/CSS dependencies
-COPY --chown=pycroft:pycroft package.json .
-RUN npm install \
+COPY --chown=pycroft:pycroft package.json package-lock.json ./
+RUN npm ci \
     npm outdated
 
 # Build Pycroft wheel

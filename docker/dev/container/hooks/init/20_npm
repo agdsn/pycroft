@@ -8,4 +8,4 @@ if [[ -d node_modules ]] && $(shopt -s nullglob dotglob; files=(node_modules/*);
 	exit
 fi
 
-npm install
+npm ci

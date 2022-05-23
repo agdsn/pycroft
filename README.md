@@ -360,7 +360,7 @@ alias drc=docker-compose
 Re-Install everything using npm, and re-run the webpack entrypoint.
 
 ```sh
-drc run --rm dev-app shell npm install
+drc run --rm dev-app shell npm ci
 drc run --rm dev-app webpack
 ```
 
