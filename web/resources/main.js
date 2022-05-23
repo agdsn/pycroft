@@ -13,7 +13,6 @@ import 'd3';
 import 'dc';
 import 'javascript-time-ago';
 import 'jquery';
-import 'list.js';
 import 'matchheight';
 import 'moment';
 import 'moment/dist/locale/de.js';
