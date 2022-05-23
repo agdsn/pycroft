@@ -19,22 +19,67 @@ export default {
     target: 'web',
     context: src,
     entry: {
-        'advanced-search': './js/advanced-search.js',
-        'balance-chart': './js/balance-chart.js',
-        'lazy-load-select': './js/lazy-load-select.js',
-        'mac-address-input': './js/mac-address-input.js',
-        'confirmable-error': './js/confirmable-error.ts',
         'main': './main.js',
-        'navigation': './js/navigation.js',
-        'tooltip': './js/tooltip.js',
-        'table-fixed-header': './js/table-fixed-header.js',
-        'traffic-graph': './js/traffic-graph.js',
-        'transaction-chart': './js/transaction-chart.js',
-        'transaction-form': './js/transaction-form.js',
-        'unlimited-end-date': './js/unlimited-end-date.js',
-        'select-multiple-improvement': './js/select-multiple-improvement.js',
-        'tab-anchor': './js/tab-anchor.ts',
-        'rooms-table': './js/rooms-table.ts',
+        'advanced-search': {
+            import: './js/advanced-search.js',
+            dependOn: 'main',
+        },
+        'balance-chart': {
+            import: './js/balance-chart.js',
+            dependOn: 'main',
+        },
+        'lazy-load-select': {
+            import: './js/lazy-load-select.js',
+            dependOn: 'main',
+        },
+        'mac-address-input': {
+            import: './js/mac-address-input.js',
+            dependOn: 'main',
+        },
+        'confirmable-error': {
+            import: './js/confirmable-error.ts',
+            dependOn: 'main',
+        },
+        'navigation': {
+            import: './js/navigation.js',
+            dependOn: 'main',
+        },
+        'tooltip': {
+            import: './js/tooltip.js',
+            dependOn: 'main',
+        },
+        'table-fixed-header': {
+            import: './js/table-fixed-header.js',
+            dependOn: 'main',
+        },
+        'traffic-graph': {
+            import: './js/traffic-graph.js',
+            dependOn: 'main',
+        },
+        'transaction-chart': {
+            import: './js/transaction-chart.js',
+            dependOn: 'main',
+        },
+        'transaction-form': {
+            import: './js/transaction-form.js',
+            dependOn: 'main',
+        },
+        'unlimited-end-date': {
+            import: './js/unlimited-end-date.js',
+            dependOn: 'main',
+        },
+        'select-multiple-improvement': {
+            import: './js/select-multiple-improvement.js',
+            dependOn: 'main',
+        },
+        'tab-anchor': {
+            import: './js/tab-anchor.ts',
+            dependOn: 'main',
+        },
+        'rooms-table': {
+            import: './js/rooms-table.ts',
+            dependOn: 'main',
+        },
     },
     output: {
         path: dst,
