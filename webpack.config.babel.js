@@ -194,6 +194,7 @@ export default {
                     /\.(?:eot|otf|ttf|woff|woff2)$/, // Fonts
                     /\.(?:xml)$/, // static XML initial for openSearch
                 ],
+                exclude: dep,
                 use: {
                     loader: 'file-loader',
                     options: {
