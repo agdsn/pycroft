@@ -57,12 +57,12 @@ export default {
         extensions: ['.js', '.ts'],
     },
     optimization: {
-        minimizer: [
+        minimizer: PROD ? [
             // Compress JavaScript
             new TerserPlugin({
                 parallel: true,
             }),
-        ],
+        ] : [],
         runtimeChunk: {
             name: "runtime",
         },
