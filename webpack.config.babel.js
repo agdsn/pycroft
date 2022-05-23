@@ -85,6 +85,7 @@ export default {
         path: dst,
         publicPath: '',
         filename: `[name].[chunkhash].${PROD ? 'min.js' : 'js'}`,
+        assetModuleFilename: "[path][name].[hash][ext]",
         hashFunction: 'md5',
         hashDigest: 'hex',
         hashDigestLength: 32,
@@ -235,14 +236,7 @@ export default {
                     /\.(?:xml)$/, // static XML initial for openSearch
                 ],
                 exclude: dep,
-                use: {
-                    loader: 'file-loader',
-                    options: {
-                        name: "[path][name].[hash].[ext]",
-                        publicPath: './',
-                        esModule: false,
-                    },
-                },
+                type: "asset/resource",
             },
         ],
     },
