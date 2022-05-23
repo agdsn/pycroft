@@ -24,6 +24,8 @@ jobs:
     - run: npm run build
     - run: |
         (npm outdated --json | tee outdated.json) || [[ $? == 1 ]]
+    - run: |
+        python ./scripts/render_outdated.py outdated.json >> "${GITHUB_STEP_SUMMARY}"
   build:
     runs-on: ubuntu-latest
     steps:
