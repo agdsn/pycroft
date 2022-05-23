@@ -12,7 +12,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.3  
+    - uses: pre-commit/action@v2.0.3
+  npm-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: npm ci
+    - run: npm run build
+    - run: |
+        (npm outdated --json | tee outdated.json) || [[ $? == 1 ]]
   build:
     runs-on: ubuntu-latest
     steps:
