@@ -76,16 +76,11 @@ export default {
                 },
             },
         },
+        moduleIds: 'deterministic',
     },
     plugins: [
         // Clean the destination
         new CleanWebpackPlugin(),
-        // Create stable module IDs
-        new webpack.ids.HashedModuleIdsPlugin({
-            hashFunction: 'md5',
-            hashDigest: 'hex',
-            hashDigestLength: 32,
-        }),
         // Put CSS into a separate file
         new MiniCssExtractPlugin({
             filename: '[name].[hash].css',
