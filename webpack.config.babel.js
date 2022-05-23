@@ -83,8 +83,8 @@ export default {
         new CleanWebpackPlugin(),
         // Put CSS into a separate file
         new MiniCssExtractPlugin({
-            filename: '[name].[hash].css',
-            chunkFilename: '[id].[hash].css',
+            filename: '[name].[contenthash].css',
+            chunkFilename: '[id].[contenthash].css',
         }),
         // Generate a manifest file, that maps entries and assets to their
         // output file.
