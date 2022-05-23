@@ -38,6 +38,7 @@ export default {
     },
     output: {
         path: dst,
+        publicPath: '',
         filename: `[name].[chunkhash].${PROD ? 'min.js' : 'js'}`,
         hashFunction: 'md5',
         hashDigest: 'hex',
@@ -59,9 +60,7 @@ export default {
         minimizer: [
             // Compress JavaScript
             new TerserPlugin({
-                cache: true,
                 parallel: true,
-                sourceMap: true,
             }),
         ],
         runtimeChunk: {
@@ -82,7 +81,7 @@ export default {
         // Clean the destination
         new CleanWebpackPlugin(),
         // Create stable module IDs
-        new webpack.HashedModuleIdsPlugin({
+        new webpack.ids.HashedModuleIdsPlugin({
             hashFunction: 'md5',
             hashDigest: 'hex',
             hashDigestLength: 32,
@@ -91,11 +90,10 @@ export default {
         new MiniCssExtractPlugin({
             filename: '[name].[hash].css',
             chunkFilename: '[id].[hash].css',
-            allChunks: true,
         }),
         // Generate a manifest file, that maps entries and assets to their
         // output file.
-        new ManifestPlugin(),
+        new WebpackManifestPlugin({}),
     ].concat(PROD ? [
         // PROD plugins
     ] : [
