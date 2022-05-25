@@ -21,6 +21,7 @@ import 'typeahead.js/dist/bloodhound';
 import 'underscore';
 import 'url-polyfill';
 
+import '@eonasdan/tempus-dominus/dist/css/tempus-dominus.min.css'
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-datepicker/dist/css/bootstrap-datepicker3.css';
 import 'bootstrap-table/dist/bootstrap-table.css';
@@ -33,6 +34,7 @@ import './js/alerts';
 import './js/balance-chart';
 import './js/d3locale';
 import './js/form';
+import './js/td-datetimepicker'
 import './js/quick-search';
 import './js/table';
 import './js/table-fixed-header';
