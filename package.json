@@ -15,6 +15,7 @@
   "homepage": "https://github.com/agdsn/pycroft#readme",
   "dependencies": {
     "@babel/runtime": "^7.18.0",
+    "@eonasdan/tempus-dominus": "^6.0.0-beta7",
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@popperjs/core": "^2.9.2",
     "bootstrap": "^5.0.1",
