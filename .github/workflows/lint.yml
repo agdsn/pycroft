@@ -1,0 +1,9 @@
+on:
+  - push
+jobs:
+  annotation_test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: test annotations
+      run: |
+        echo "::warning file=web/templates/user/user_move.html,line=14,col=15,endcol=26,title=Bad class attributes::don't use box here."
