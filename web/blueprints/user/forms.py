@@ -10,9 +10,18 @@ from wtforms import Field
 from wtforms.validators import (
     Regexp, ValidationError, DataRequired, Email, Optional)
 from wtforms.widgets import HTMLString
-from wtforms_widgets.fields.core import TextField, TextAreaField, BooleanField, \
-    QuerySelectField, FormField, \
-    QuerySelectMultipleField, DateField, IntegerField, TimeField
+from wtforms_widgets.fields.core import (
+    TextField,
+    TextAreaField,
+    BooleanField,
+    QuerySelectField,
+    FormField,
+    QuerySelectMultipleField,
+    DateField,
+    IntegerField,
+    TimeField,
+    DateTimeField,
+)
 from wtforms_widgets.fields.custom import MacField
 from wtforms_widgets.fields.filters import empty_to_none, to_lowercase
 from wtforms_widgets.fields.validators import OptionalIf, MacAddress
@@ -182,16 +191,11 @@ class UserMoveForm(SelectRoomForm):
     comment = TextAreaField("Kommentar", description='Wenn gegeben Referenz zum Ticket',
                             render_kw={'placeholder': 'ticket#<TicketNr> / <TicketNr> / ticket:<ticketId>'})
     now = BooleanField("Sofort", default=False)
-    when = DateField("Umzug am", [OptionalIf("now")])
-    when_time = TimeField("Genaue Zeit", [Optional()],
-                          description="Optional. In UTC angeben.",
-                          render_kw={'placeholder': 'hh:mm'})
-
-    def get_execution_time(self, now: datetime) -> datetime:
-        if self.now.data:
-            return now
-        assert self.when.data, "`now` checkbox deselected but no date given!"
-        return utc.combine_or_midnight(self.when.data, self.when_time.data)
+    when = DateTimeField(
+        "Umzug am",
+        [OptionalIf("now")],
+        render_kw={"placeholder": "YYYY-MM-DDThh:mm:ssZ"},
+    )
 
 
 class UserBaseDataForm(Form):

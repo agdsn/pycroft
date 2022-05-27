@@ -667,7 +667,7 @@ def move(user_id):
         flash("Nutzer muss in anderes Zimmer umgezogen werden!", "error")
         return default_response(refill_form_data=True)
 
-    when = form.get_execution_time(now=session.utcnow())
+    when = session.utcnow() if form.now.data else form.when.data
 
     try:
         with handle_errors(session.session):
