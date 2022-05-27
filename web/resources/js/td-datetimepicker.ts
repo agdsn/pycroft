@@ -35,9 +35,63 @@ class IsoPlugin {
 td.extend(new IsoPlugin(), {});
 
 const selector = 'form [data-role=datetimepicker]';
+/** Initialize TempusDominus on all elements with `[data-role=datetimepicker]`. */
+function InitTdDatetimePickers() {
+    document
+        .querySelectorAll<HTMLElement>(selector)
+        .forEach(el => new td.TempusDominus(el));
+}
+
+const linkedStartSelector = 'form [data-role=datetimepicker-start]'
+
+/** Initialize TempusDominus and Eventhook on all elements with `[data-role=datetimepicker-start]`.
+ *
+ * You need to reference the picker for the end date
+ * via `data-td-datetimepicker-end=$end_id`.
+ * */
+function InitTdRangePickers() {
+    document
+        .querySelectorAll<HTMLElement>(linkedStartSelector)
+        .forEach(
+            elStart => {
+                const idEnd = elStart.dataset?.tdDatetimepickerEnd;
+                if (!idEnd) {
+                    console.error(
+                        "Datetimepicker marked as `datetimepicker-start`" +
+                        " is missing value for `data-td-datetimepicker-end`."
+                    )
+                    return;
+                }
+                const elEnd = document.getElementById(idEnd);
+                if (!elEnd) {
+                    console.error(
+                        `Referenced datetimepicker #${idEnd} does not exist`
+                    )
+                }
+
+                const pickerStart = new td.TempusDominus(elStart);
+                const pickerEnd = new td.TempusDominus(elEnd!, {
+                    useCurrent: false,
+                });
+                elStart.addEventListener(td.Namespace.events.change, e => {
+                    pickerEnd.updateOptions({
+                        restrictions: {
+                            minDate: (e as CustomEvent).detail.date
+                        }
+                    });
+                });
+                elEnd!.addEventListener(td.Namespace.events.change, e => {
+                    pickerStart.updateOptions({
+                        restrictions: {
+                            maxDate: (e as CustomEvent).detail.date
+                        }
+                    });
+                });
+            }
+        )
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    document
-        .querySelectorAll<HTMLAnchorElement>(selector)
-        .forEach(el => new td.TempusDominus(el))
+    InitTdDatetimePickers();
+    InitTdRangePickers();
 });
