@@ -194,7 +194,6 @@ class UserMoveForm(SelectRoomForm):
     when = DateTimeField(
         "Umzug am",
         [OptionalIf("now")],
-        render_kw={"placeholder": "YYYY-MM-DDThh:mm:ssZ"},
     )
 
 
