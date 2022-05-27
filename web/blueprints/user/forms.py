@@ -298,8 +298,25 @@ class OptionallyUnlimitedEndDateForm(Form):
 class UserAddGroupMembership(Form):
     group = QuerySelectField("Gruppe", get_label='name',
                              query_factory=group_query)
-    begins_at = FormField(OptionallyDirectBeginDateForm)
-    ends_at = FormField(OptionallyUnlimitedEndDateForm)
+    now = BooleanField("Sofort", default=False)
+    begins_at = DateTimeField(
+        "Beginn",
+        [OptionalIf("now")],
+        id="begins_at",
+        render_kw={
+            "data-role": "datetimepicker-start",
+            "data-td-datetimepicker-end": "ends_at",
+        },
+    )
+    never = BooleanField("Nie", default=False)
+    ends_at = DateTimeField(
+        "Ende",
+        [OptionalIf("never")],
+        id="ends_at",
+        render_kw={
+            "data-role": "datetimepicker-end",
+        },
+    )
 
 
 class UserEditGroupMembership(Form):

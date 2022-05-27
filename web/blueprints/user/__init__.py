@@ -438,14 +438,8 @@ def add_membership(user_id):
     form = UserAddGroupMembership()
 
     if form.validate_on_submit():
-        if form.begins_at.date.data:
-            begins_at = utc.with_min_time(form.begins_at.date.data)
-        else:
-            begins_at = session.utcnow()
-        if not form.ends_at.unlimited.data:
-            ends_at = utc.with_min_time(form.ends_at.date.data)
-        else:
-            ends_at = None
+        begins_at = form.begins_at.data or session.utcnow()
+        ends_at = form.ends_at.data or None
 
         try:
             make_member_of(user, form.group.data, current_user,
