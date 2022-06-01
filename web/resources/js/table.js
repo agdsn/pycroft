@@ -256,7 +256,9 @@ export function relativeDateFormatter(value, row, index) {
 dateFormatter.attributes = { sortName: 'timestamp' };
 
 export function euroFormatter(value, row, index){
-    return `${(value.toFixed(2).replace('.', ','))} €`;
+    const eur = parseFloat(value).toFixed(2).replace('.', ',');
+
+    return `${eur} €`;
 }
 
 export function booleanFormatter(value, row, index) {
