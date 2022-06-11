@@ -171,12 +171,14 @@ def switch_create():
     form = SwitchForm()
 
     if form.validate_on_submit():
+        sess = session.session
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
-        switch = create_switch(form.name.data, IPAddress(form.management_ip.data), room, current_user)
-
-        session.session.commit()
+        switch = create_switch(
+            sess, form.name.data, IPAddress(form.management_ip.data), room, current_user
+        )
+        sess.commit()
 
         flash("Die Switch wurde erfolgreich erstellt.", "success")
 

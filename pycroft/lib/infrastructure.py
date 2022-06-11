@@ -1,5 +1,6 @@
 import ipaddr
 from ipaddr import IPAddress
+from sqlalchemy.orm import Session
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.lib.exc import PycroftLibException
@@ -172,9 +173,12 @@ def edit_switch(switch, name, management_ip, room, processor):
         switch.management_ip = management_ip
 
 
-@with_transaction
 def create_switch(
-    name: str, management_ip: ipaddr.IPv4Address, room: Room, processor: User
+    session: Session,
+    name: str,
+    management_ip: ipaddr.IPv4Address,
+    room: Room,
+    processor: User,
 ):
     switch = Switch(
         management_ip=management_ip, host=Host(room=room, owner=User.get(0), name=name)
