@@ -1,8 +1,10 @@
+import ipaddr
 from ipaddr import IPAddress
 
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_room_event
+from pycroft.model.facilities import Room
 from pycroft.model.host import SwitchPort, Host, Switch
 from pycroft.model.port import PatchPort
 from pycroft.model.session import with_transaction, session
@@ -171,9 +173,12 @@ def edit_switch(switch, name, management_ip, room, processor):
 
 
 @with_transaction
-def create_switch(name, management_ip, room, processor):
-    switch = Switch(management_ip=management_ip, host=Host(room=room, owner=User.get(0), name=name))
-
+def create_switch(
+    name: str, management_ip: ipaddr.IPv4Address, room: Room, processor: User
+):
+    switch = Switch(
+        management_ip=management_ip, host=Host(room=room, owner=User.get(0), name=name)
+    )
     session.add(switch)
 
     message = deferred_gettext("Created switch '{}' with management IP {}.")\
