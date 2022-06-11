@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing
 from datetime import date, datetime, time, timedelta
 from functools import partial
 
@@ -202,6 +203,24 @@ def qualified_typename(type_):
     return type_.__module__ + '.' + type_.__name__
 
 
+# pycharm does not support building this dynamically.
+# Thus, we need to hard-code this type alias.
+Serializable = typing.Union[
+    None,
+    bool,
+    str,
+    int,
+    float,
+    Decimal,
+    Money,
+    date,
+    datetime,
+    time,
+    timedelta,
+    Interval,
+]
+
+
 serialize_map = {
     type(None): identity,
     bool: identity,
@@ -366,8 +385,8 @@ class Message:
 
     def __init__(self, domain=None):
         self.domain = domain
-        self.args = ()
-        self.kwargs = {}
+        self.args: typing.Iterable[Serializable] = ()
+        self.kwargs: dict[str, Serializable] = {}
 
     def _base_dict(self):
         raise NotImplementedError()
@@ -386,7 +405,7 @@ class Message:
                              for k, v in self.kwargs.items()}
         return json.dumps(obj, ensure_ascii=False)
 
-    def format(self, *args, **kwargs):
+    def format(self, *args: Serializable, **kwargs: Serializable):
         self.args = args
         self.kwargs = kwargs
         return self
