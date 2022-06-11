@@ -466,17 +466,17 @@ def localized(json_string, options=None):
     return Message.from_json(json_string).localize(options)
 
 
-def deferred_gettext(message):
+def deferred_gettext(message) -> SimpleMessage:
     return SimpleMessage(message)
 
 
-def deferred_dgettext(domain, message):
+def deferred_dgettext(domain, message) -> SimpleMessage:
     return SimpleMessage(message, domain)
 
 
-def deferred_ngettext(singular, plural, n):
+def deferred_ngettext(singular, plural, n) -> NumericalMessage:
     return NumericalMessage(singular, plural, n)
 
 
-def deferred_dngettext(domain, singular, plural, n):
+def deferred_dngettext(domain, singular, plural, n) -> NumericalMessage:
     return NumericalMessage(singular, plural, n, domain)
