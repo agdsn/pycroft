@@ -15,7 +15,6 @@ $(function () {
         const $messages = $(".flash-messages");
         if (!$messages.length)
             return;
-        const offset = $messages.offset().top;
         const top = $window.scrollTop();
 
         if (isFixed) {
