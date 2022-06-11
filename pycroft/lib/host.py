@@ -51,12 +51,16 @@ def host_create(owner, room, name, processor):
 
     session.add(host)
 
-    message = deferred_gettext(
-        "Created host '{name}' in {dorm} {level}-{room}."
-        .format(name=host.name,
-                dorm=room.building.short_name,
-                level=room.level,
-                room=room.number))
+    message = (
+        deferred_gettext("Created host '{name}' in {dorm} {level}-{room}.")
+        .format(
+            name=host.name,
+            dorm=room.building.short_name,
+            level=room.level,
+            room=room.number,
+        )
+        .to_json()
+    )
 
     log_user_event(author=processor,
                    user=owner,
@@ -68,9 +72,11 @@ def host_create(owner, room, name, processor):
 @with_transaction
 def host_edit(host, owner, room, name, processor):
     if host.name != name:
-        message = deferred_gettext(
-            "Changed name of host '{}' to '{}'.".format(host.name,
-                                                         name))
+        message = (
+            deferred_gettext("Changed name of host '{}' to '{}'.")
+            .format(host.name, name)
+            .to_json()
+        )
         host.name = name
 
         log_user_event(author=processor,
@@ -78,19 +84,15 @@ def host_edit(host, owner, room, name, processor):
                        message=message.to_json())
 
     if host.owner_id != owner.id:
-        message = deferred_gettext(
-            "Transferred Host '{}' to {}.".format(host.name,
-                                                   owner.id))
-        log_user_event(author=processor,
-                       user=host.owner,
-                       message=message.to_json())
+        message = deferred_gettext("Transferred Host '{}' to {}.").format(
+            host.name, owner.id
+        )
+        log_user_event(author=processor, user=host.owner, message=message.to_json())
 
-        message = deferred_gettext(
-            "Transferred Host '{}' from {}.".format(host.name,
-                                                     host.owner.id))
-        log_user_event(author=processor,
-                       user=owner,
-                       message=message.to_json())
+        message = deferred_gettext("Transferred Host '{}' from {}.").format(
+            host.name, host.owner.id
+        )
+        log_user_event(author=processor, user=owner, message=message.to_json())
 
         host.owner = owner
 
@@ -134,15 +136,15 @@ def interface_create(host, name, mac, ips, processor):
             session.add(IP(interface=interface, address=ip,
                            subnet=subnet))
 
-    message = deferred_gettext("Created interface ({}, {}) with name '{}' for host '{}'."
-                               .format(interface.mac,
-                                       ', '.join(str(ip.address) for ip in
-                                                 interface.ips),
-                                       interface.name,
-                                       interface.host.name))
-    log_user_event(author=processor,
-                   user=host.owner,
-                   message=message.to_json())
+    message = deferred_gettext(
+        "Created interface ({}, {}) with name '{}' for host '{}'."
+    ).format(
+        interface.mac,
+        ", ".join(str(ip.address) for ip in interface.ips),
+        interface.name,
+        interface.host.name,
+    )
+    log_user_event(author=processor, user=host.owner, message=message.to_json())
 
     return interface
 
@@ -201,10 +203,11 @@ def interface_edit(interface, name, mac, ips, processor):
 
 @with_transaction
 def interface_delete(interface, processor):
-    message = deferred_gettext("Deleted interface {} of host {}."
-                               .format(interface.mac, interface.host.name))
-    log_user_event(author=processor,
-                   user=interface.host.owner,
-                   message=message.to_json())
+    message = deferred_gettext("Deleted interface {} of host {}.").format(
+        interface.mac, interface.host.name
+    )
+    log_user_event(
+        author=processor, user=interface.host.owner, message=message.to_json()
+    )
 
     session.delete(interface)

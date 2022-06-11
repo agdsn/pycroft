@@ -404,11 +404,15 @@ class Message:
             kwargs = {k: f(v) for k, v in self.kwargs.items()}
             return msg.format(*args, **kwargs)
         except (TypeError, ValueError, IndexError, KeyError) as e:
-            error = ''.join(traceback.format_exception_only(type(e), e))
-            return gettext('Could not format message "{message}" '
-                           '(args={args}, kwargs={kwargs}): {error}'
-                           .format(message=msg, args=self.args,
-                                   kwargs=self.kwargs, error=error))
+            error = "".join(traceback.format_exception_only(type(e), e))
+            return (
+                gettext(
+                    'Could not format message "{message}" '
+                    "(args={args}, kwargs={kwargs}): {error}"
+                )
+                .format(message=msg, args=self.args, kwargs=self.kwargs, error=error)
+                .to_json()
+            )
 
 
 class ErroneousMessage(Message):

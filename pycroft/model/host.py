@@ -148,8 +148,11 @@ class IP(IntegerIdModel):
         if address is None or subnet is None:
             return
         if address not in subnet:
-            message = gettext('IP address {} is not contained in its subnet {}'
-                              .format(address, subnet))
+            message = (
+                gettext("IP address {} is not contained in its subnet {}")
+                .format(address, subnet)
+                .to_json()
+            )
             raise ValueError(message)
 
     @validates('subnet')
