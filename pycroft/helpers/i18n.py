@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from __future__ import annotations
 import typing
 from datetime import date, datetime, time, timedelta
 from functools import partial
@@ -355,7 +356,7 @@ class Message:
     __slots__ = ("domain", "args", "kwargs")
 
     @classmethod
-    def from_json(cls, json_string):
+    def from_json(cls, json_string) -> Message:
         try:
             obj = json.loads(json_string)
         except ValueError:
@@ -374,6 +375,7 @@ class Message:
             error = ''.join(traceback.format_exception_only(type(e), e))
             return ErroneousMessage("Parameter deserialization error: {} in "
                                     "message: {}".format(error, json_string))
+        m: Message
         if 'plural' in obj:
             m = NumericalMessage(obj["singular"], obj["plural"], obj["n"],
                                  obj.get("domain"))
