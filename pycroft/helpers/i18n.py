@@ -40,11 +40,11 @@ def set_translation_lookup(lookup_func):
     _translations_lookup = lookup_func
 
 
-def gettext(message):
+def gettext(message) -> str:
     return get_translations().ugettext(message)
 
 
-def dgettext(domain, message):
+def dgettext(domain, message) -> str:
     return get_translations().udgettext(domain, message)
 
 
