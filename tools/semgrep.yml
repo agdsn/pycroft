@@ -33,14 +33,14 @@ rules:
   - id: log-event-with-f-string
     patterns:
       - pattern-either:
-        - pattern: ("$MESSAGE".format($...ARGS))
-        - pattern: (f"$MESSAGE")
+        - pattern: ("...".format($...ARGS))
+        - pattern: (f"...")
       - pattern-inside: $LOG_FN(...)
       - metavariable-regex:
           metavariable: $LOG_FN
-          regex: log_.*event
+          regex: (pycroft.lib.logging.)?log_.*event
     message: |
-      Don't use $LOG_FN with a pre-formatted string literal (`$MESSAGE`).
+      Don't use $LOG_FN with a pre-formatted string literal.
       Replace the message by `deferred_gettext(...).format(...).to_json()`.
     languages: [python]
     severity: ERROR
