@@ -411,7 +411,6 @@ class Message:
                     "(args={args}, kwargs={kwargs}): {error}"
                 )
                 .format(message=msg, args=self.args, kwargs=self.kwargs, error=error)
-                .to_json()
             )
 
 
