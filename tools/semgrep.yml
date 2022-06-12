@@ -7,14 +7,25 @@ rules:
     languages: [python]
     severity: ERROR
 
+  - id: format-in-deferred-gettext
+    patterns:
+      - pattern: $GETTEXT_FN($MESSAGE.format($...ARGS))
+      - metavariable-regex:
+          metavariable: $GETTEXT_FN
+          regex: (pycroft.helpers.i18n.)?deferred_gettext
+    fix: $GETTEXT_FN($MESSAGE).format($...ARGS).to_json()
+    message: Don't use formatted literals in `deferred_gettext`
+    languages: [python]
+    severity: ERROR
+
   - id: format-in-gettext
     patterns:
       - pattern: $GETTEXT_FN($MESSAGE.format($...ARGS))
       - metavariable-regex:
           metavariable: $GETTEXT_FN
-          regex: (pycroft.helpers.i18n.)?(deferred_)?gettext
-    fix: $GETTEXT_FN($MESSAGE).format($...ARGS).to_json()
-    message: Don't use formatted literals in `gettext`/`deferred_gettext`
+          regex: (pycroft.helpers.i18n.)?gettext
+    fix: $GETTEXT_FN($MESSAGE).format($...ARGS)
+    message: Don't use formatted literals in `gettext`
     languages: [python]
     severity: ERROR
 
