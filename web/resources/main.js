@@ -6,7 +6,7 @@ import 'autocomplete.js/src/jquery/plugin';
 import 'bootstrap';
 import 'bootstrap-datepicker';
 import 'bootstrap-datepicker/dist/locales/bootstrap-datepicker.de.min.js';
-import 'bootstrap-table';
+import 'bootstrap-table/dist/bootstrap-table';
 import 'bootstrap-table/dist/locale/bootstrap-table-de-DE.js';
 import 'bootstrap-table/dist/locale/bootstrap-table-en-US.js';
 import 'd3';

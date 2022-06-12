@@ -6,7 +6,6 @@
 
 import _ from "underscore";
 import $ from 'jquery';
-import 'bootstrap-table';
 import TimeAgo from 'javascript-time-ago'
 import de from 'javascript-time-ago/locale/de'
 

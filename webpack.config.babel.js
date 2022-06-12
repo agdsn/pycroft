@@ -178,7 +178,8 @@ export default {
                     },
                 },
             },
-            // Inject jQuery import into bootstrap-datepicker locales
+            // Inject jQuery import into bootstrap-table
+            // and bootstrap-datepicker/locales
             {
                 test: /\.js$/,
                 use: {
@@ -191,7 +192,10 @@ export default {
                         }
                     },
                 },
-                include: path.join(dep, "bootstrap-datepicker", "dist", "locales"),
+                include: [
+                    path.join(dep, "bootstrap-table", "dist"),
+                    path.join(dep, "bootstrap-datepicker", "dist", "locales"),
+                ],
             },
             // Transpile modern JavaScript for older browsers.
             {
