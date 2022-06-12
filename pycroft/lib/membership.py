@@ -152,9 +152,8 @@ def edit_property_group(group, name, permission_level, processor):
 
 @with_transaction
 def delete_property_group(group, processor):
-    log_event(f"Deleted property group '{group.name}'.",
-              processor)
-
+    message = deferred_gettext("Deleted property group '{}'.").format(group.name)
+    log_event(message, processor)
     session.session.delete(group)
 
 

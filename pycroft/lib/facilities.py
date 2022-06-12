@@ -93,13 +93,19 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
         if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
             raise RoomAlreadyExistsException()
 
-        log_room_event(f"Renamed room from {room.number} to {number}.", processor, room)
-
+        message = (
+            deferred_gettext("Renamed room from {} to {}.")
+            .format(room.number, number)
+        )
+        log_room_event(message, processor, room)
         room.number = number
 
     if room.inhabitable != inhabitable:
-        log_room_event(f"Changed inhabitable status to {str(inhabitable)}.", processor, room)
-
+        message = (
+            deferred_gettext("Changed inhabitable status to {}.")
+            .format(inhabitable)
+        )
+        log_room_event(message, processor, room)
         room.inhabitable = inhabitable
 
     if room.swdd_vo_suchname != vo_suchname:

@@ -26,8 +26,12 @@ def create_patch_port(name, room, switch_room, processor):
     patch_port = PatchPort(name=name, room=room, switch_room=switch_room)
     session.add(patch_port)
 
-    log_room_event(f"Created patch-port {patch_port.name} to {room.short_name}.", processor, switch_room)
-
+    message = (
+        deferred_gettext("Created patch-port {} to {}.")
+        .format(patch_port.name, room.short_name)
+        .to_json()
+    )
+    log_room_event(message, processor, switch_room)
     return patch_port
 
 
@@ -67,7 +71,15 @@ def patch_switch_port_to_patch_port(switch_port, patch_port, processor):
     if patch_port.switch_port:
         raise PatchPortAlreadyPatchedException()
 
-    log_room_event(f"Added patch from {switch_port.switch.host.name}/{switch_port.name} to {patch_port.name}.",
+    message = (
+        deferred_gettext("Added patch from {host}/{switch_port} to {patch_port}.")
+        .format(
+            host=switch_port.switch.host.name,
+            switch_port=switch_port.name,
+            patch_port=patch_port.name,
+        )
+    )
+    log_room_event(message,
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = switch_port
@@ -80,7 +92,15 @@ def remove_patch_to_patch_port(patch_port, processor):
 
     switch_port = patch_port.switch_port
 
-    log_room_event(f"Removed patch from {switch_port.switch.host.name}/{switch_port.name} to {patch_port.name}.",
+    message = (
+        deferred_gettext("Removed patch from {host}/{switch_port} to {patch_port}.")
+        .format(
+            host=switch_port.switch.host.name,
+            switch_port=switch_port.name,
+            patch_port=patch_port.name,
+        )
+    )
+    log_room_event(message,
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = None
@@ -166,7 +186,8 @@ def create_switch(name, management_ip, room, processor):
 
 @with_transaction
 def delete_switch(switch, processor):
-    log_room_event(f"Deleted switch {switch.host.name}.", processor, switch.host.room)
+    message = deferred_gettext("Deleted switch {}.").format(switch.host.name)
+    log_room_event(message, processor, switch.host.room)
 
     session.delete(switch)
     session.delete(switch.host)
