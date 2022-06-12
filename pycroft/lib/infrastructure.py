@@ -150,7 +150,14 @@ def delete_switch_port(switch_port, processor):
 
 
 @with_transaction
-def edit_switch(switch, name, management_ip, room, processor):
+def edit_switch(
+    session: Session,
+    switch: Switch,
+    name: str,
+    management_ip: str,
+    room: Room,
+    processor: User,
+):
     if switch.host.name != name:
         message = deferred_gettext("Changed switch name from '{old}' to '{new}'.")\
             .format(old=switch.host.name, new=name)
@@ -171,6 +178,7 @@ def edit_switch(switch, name, management_ip, room, processor):
         log_room_event(message.to_json(), processor, switch.host.room)
 
         switch.management_ip = management_ip
+    session.add(switch)
 
 
 def create_switch(
@@ -193,8 +201,7 @@ def create_switch(
     return switch
 
 
-@with_transaction
-def delete_switch(switch, processor):
+def delete_switch(session: Session, switch: Switch, processor: User):
     message = deferred_gettext("Deleted switch {}.").format(switch.host.name).to_json()
     log_room_event(message, processor, switch.host.room)
 

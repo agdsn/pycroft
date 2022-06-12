@@ -29,6 +29,7 @@ def test_create_switch(session, switch_room, processor):
 
 def test_edit_switch_name(session, switch, processor):
     infra.edit_switch(
+        session,
         switch=switch,
         name="New Name",
         management_ip="10.10.10.1",
@@ -41,6 +42,7 @@ def test_edit_switch_name(session, switch, processor):
 
 def test_edit_switch_ip(session, switch, processor):
     infra.edit_switch(
+        session,
         switch=switch,
         name=switch.host.name,
         management_ip="10.10.10.2",
@@ -55,6 +57,7 @@ def test_edit_switch_ip(session, switch, processor):
 def test_edit_switch_room(session, switch, processor):
     new_room = factories.RoomFactory(inhabitable=False)
     infra.edit_switch(
+        session,
         switch=switch,
         name=switch.host.name,
         management_ip="10.10.10.1",
@@ -67,6 +70,6 @@ def test_edit_switch_room(session, switch, processor):
 
 def test_delete_switch(session, switch, processor):
     room = switch.host.room
-    infra.delete_switch(switch, processor=processor)
+    infra.delete_switch(session, switch, processor=processor)
     session.flush()
     assert room.hosts == []

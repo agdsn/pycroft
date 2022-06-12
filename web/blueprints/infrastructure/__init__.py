@@ -207,13 +207,12 @@ def switch_edit(switch_id):
                       level=switch.host.room.level, room_number=switch.host.room.number)
 
     if form.validate_on_submit():
+        sess = session.session
         room = Room.q.filter_by(number=form.room_number.data,
                                 level=form.level.data, building=form.building.data).one()
 
-        edit_switch(switch, form.name.data, form.management_ip.data, room, current_user)
-
-        session.session.commit()
-
+        edit_switch(sess, switch, form.name.data, form.management_ip.data, room)
+        sess.commit()
         flash("Die Switch wurde erfolgreich bearbeitet.", "success")
 
         return redirect(url_for('.switches'))
@@ -240,10 +239,9 @@ def switch_delete(switch_id):
     form = Form()
 
     if form.validate_on_submit():
-        delete_switch(switch, current_user)
-
-        session.session.commit()
-
+        sess = session.session
+        with sess.begin():
+            delete_switch(sess, switch, current_user)
         flash("Die Switch wurde erfolgreich gelöscht.", "success")
 
         return redirect(url_for('.switches'))
