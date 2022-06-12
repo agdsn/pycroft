@@ -151,7 +151,6 @@ class IP(IntegerIdModel):
             message = (
                 gettext("IP address {} is not contained in its subnet {}")
                 .format(address, subnet)
-                .to_json()
             )
             raise ValueError(message)
 
