@@ -9,12 +9,12 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
-from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING
+from typing import overload, TypeVar, Callable, Any, TYPE_CHECKING, cast
 
 from werkzeug.local import LocalProxy
 import wrapt
 
-from sqlalchemy import func
+from sqlalchemy import func, orm
 
 
 class NullScopedSession:
@@ -29,7 +29,7 @@ class NullScopedSession:
 
 
 Session = LocalProxy(lambda: NullScopedSession())
-session = LocalProxy(lambda: Session())
+session: orm.Session = cast(orm.Session, LocalProxy(lambda: Session()))
 
 if TYPE_CHECKING:
     def session():
