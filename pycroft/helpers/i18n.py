@@ -19,52 +19,76 @@ from pycroft.helpers.interval import (
 
 _unspecified_locale = Locale('en', 'US')
 _null_translations = Translations()
-_locale_lookup = lambda: _unspecified_locale
-_translations_lookup = lambda: _null_translations
+_locale_lookup: typing.Callable[[], Locale] = lambda: _unspecified_locale
+_translations_lookup: typing.Callable[[], Translations] = lambda: _null_translations
 
 
-def get_locale():
+def get_locale() -> Locale:
     return _locale_lookup()
 
 
-def get_translations():
+def get_translations() -> Translations:
     return _translations_lookup()
 
 
-def set_locale_lookup(lookup_func):
+def set_locale_lookup(lookup_func: typing.Callable[[], Locale]) -> None:
     global _locale_lookup
     _locale_lookup = lookup_func
 
 
-def set_translation_lookup(lookup_func):
+def set_translation_lookup(lookup_func: typing.Callable[[], Translations]) -> None:
     global _translations_lookup
     _translations_lookup = lookup_func
 
 
-def gettext(message) -> str:
-    return get_translations().ugettext(message)
+def gettext(message: str) -> str:
+    return typing.cast(str, get_translations().ugettext(message))
 
 
-def dgettext(domain, message) -> str:
-    return get_translations().udgettext(domain, message)
+def dgettext(domain: str, message: str) -> str:
+    return typing.cast(str, get_translations().udgettext(domain, message))
 
 
-def ngettext(singular, plural, n):
-    return get_translations().ungettext(singular, plural, n)
+def ngettext(singular: str, plural: str, n: int) -> str:
+    return typing.cast(str, get_translations().ungettext(singular, plural, n))
 
 
-def dngettext(domain, singular, plural, n):
-    return get_translations().udngettext(domain, singular, plural, n)
+def dngettext(domain: str, singular: str, plural: str, n: int) -> str:
+    return typing.cast(str, get_translations().udngettext(domain, singular, plural, n))
 
 
-def type_specific_options(formatter):
-    formatter.__option_policy__ = 'type-specific'
-    return formatter
+T = typing.TypeVar("T", covariant=True)
+P = typing.ParamSpec("P")
 
 
-def ignore_options(formatter):
-    formatter.__option_policy__ = 'ignore'
-    return formatter
+class Formattable(typing.Protocol):
+    def __format__(self, format_spec: str) -> str:
+        ...
+
+
+OptionPolicy = typing.Literal["type-specific", "ignore"]
+TypeSpecificOptions: typing.TypeAlias = dict[str, typing.Any]
+Options: typing.TypeAlias = dict[type, TypeSpecificOptions]
+
+
+class Formatter(typing.Protocol[T, P]):
+    __option_policy__: OptionPolicy
+    __call__: typing.Callable[typing.Concatenate[T, P], Formattable]
+    __name__: str
+
+
+def type_specific_options(
+    formatter: typing.Callable[typing.Concatenate[T, P], Formattable]
+) -> Formatter[T, P]:
+    formatter.__option_policy__ = "type-specific"  # type: ignore
+    return typing.cast(Formatter[T, P], formatter)
+
+
+def ignore_options(
+    formatter: typing.Callable[typing.Concatenate[T, P], Formattable]
+) -> Formatter[T, P]:
+    formatter.__option_policy__ = "ignore"  # type: ignore
+    return typing.cast(Formatter[T, P], formatter)
 
 
 @type_specific_options
@@ -84,7 +108,7 @@ Money = collections.namedtuple("Money", ["value", "currency"])
 
 
 @type_specific_options
-def format_currency(money, format=None):
+def format_currency(money: Money, format=None):
     return numbers.format_currency(*money, format=format, locale=get_locale())
 
 
@@ -123,25 +147,33 @@ def format_none(n):
     return gettext("None")
 
 
-def format_interval(interval, **options):
+# NB: `interval` is actually generic in its (ordered) bound type,
+#  so whether we have any type specific options or not cannot be determined statically.
+#  however, we only have intervals of `date`s and `datetimes` in practice.
+@type_specific_options
+def format_interval(interval, **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
+    assert type(lower_bound) == type(upper_bound)
+    generic_options: Options = {type(lower_bound): options}
     return "{}{}, {}{}".format(
         '[' if lower_bound.closed else '(',
-        format_param(lower_bound.value, options)
+        format_param(lower_bound.value, generic_options)
         if not lower_bound.unbounded
         else '-∞',
-        format_param(upper_bound.value, options)
+        format_param(upper_bound.value, generic_options)
         if not upper_bound.unbounded
         else '∞',
         ']' if upper_bound.closed else ')',
     )
 
 
-identity = ignore_options(lambda x: x)
+@ignore_options
+def identity(x):
+    return x
 
 
-formatter_map = {
+formatter_map: dict[type, Formatter] = {
     type(None): identity,
     bool: identity,
     str: identity,
@@ -157,7 +189,7 @@ formatter_map = {
 }
 
 
-def format_param(p, options):
+def format_param(p, options: dict[type, dict[str, typing.Any]]) -> Formattable:
     concrete_type = type(p)
     formatters = ((type_, formatter_map[type_])
                   for type_ in concrete_type.__mro__ if type_ in formatter_map)
@@ -168,12 +200,16 @@ def format_param(p, options):
             f"No formatter available for type {qualified_typename(concrete_type)}"
             " or any supertype."
         )
-    option_policy = getattr(formatter, '__option_policy__', None)
-    if option_policy == 'ignore':
-        options = {}
+    option_policy: OptionPolicy | None = getattr(formatter, "__option_policy__", None)
+    if option_policy == "ignore":
+        formatter_options: dict[str, typing.Any] = {}
     elif option_policy == 'type-specific':
-        options = options.get(type_, {})
-    return formatter(p, **options)
+        formatter_options = options.get(type_, {})
+    else:
+        raise RuntimeError(
+            f"Invalid Value {option_policy!r} for {formatter.__name__}.__option_policy__"
+        )
+    return formatter(p, **formatter_options)
 
 
 def deserialize_money(v):
@@ -183,11 +219,7 @@ def deserialize_money(v):
         raise ValueError()
 
 
-def serialize_interval(interval):
-    """
-    :param Interval interval:
-    :return:
-    """
+def serialize_interval(interval: Interval) -> dict[str, typing.Any]:
     lower = interval.lower_bound
     upper = interval.upper_bound
     lower_value = serialize_param(lower.value) if not lower.unbounded else None
@@ -200,7 +232,7 @@ def serialize_interval(interval):
     }
 
 
-def qualified_typename(type_):
+def qualified_typename(type_: type) -> str:
     return type_.__module__ + '.' + type_.__name__
 
 
@@ -222,7 +254,8 @@ Serializable = typing.Union[
 ]
 
 
-serialize_map = {
+# TODO be more specific about return type
+serialize_map: dict[type, typing.Callable] = {
     type(None): identity,
     bool: identity,
     float: identity,
@@ -239,7 +272,7 @@ serialize_map = {
 }
 
 
-def deserialize_interval(value):
+def deserialize_interval(value: dict[str, typing.Any]) -> Interval:
     try:
         lower_value = (deserialize_param(value['lower_value'])
                        if value['lower_value'] is not None
@@ -254,7 +287,7 @@ def deserialize_interval(value):
     return Interval(lower_bound, upper_bound)
 
 
-_deserialize_type_map = {
+_deserialize_type_map: dict[type, typing.Callable] = {
     type(None): identity,
     bool: identity,
     str: identity,
@@ -268,8 +301,11 @@ _deserialize_type_map = {
     timedelta: lambda v: timedelta(**v),
     Interval: deserialize_interval,
 }
-deserialize_map = {qualified_typename(t): f
-                       for t, f in _deserialize_type_map.items()}
+
+# TODO be more specific
+deserialize_map: dict[str, typing.Callable] = {
+    qualified_typename(t): f for t, f in _deserialize_type_map.items()
+}
 
 
 def serialize_param(param):
@@ -355,11 +391,12 @@ schema = {
 TMessage = typing.TypeVar("TMessage", bound="Message")
 
 
+# TODO turn into ABC && properly type subclasses
 class Message:
     __slots__ = ("domain", "args", "kwargs")
 
     @classmethod
-    def from_json(cls, json_string) -> Message:
+    def from_json(cls, json_string: str) -> Message:
         try:
             obj = json.loads(json_string)
         except ValueError:
@@ -388,15 +425,15 @@ class Message:
         m.kwargs = kwargs
         return m
 
-    def __init__(self, domain=None):
+    def __init__(self, domain: str | None = None):
         self.domain = domain
         self.args: typing.Iterable[Serializable] = ()
         self.kwargs: dict[str, Serializable] = {}
 
-    def _base_dict(self):
+    def _base_dict(self) -> dict[str, typing.Any]:
         raise NotImplementedError()
 
-    def _gettext(self):
+    def _gettext(self) -> str:
         raise NotImplementedError()
 
     def to_json(self) -> str:
@@ -415,7 +452,7 @@ class Message:
         self.kwargs = kwargs
         return self
 
-    def localize(self, options=None):
+    def localize(self, options: Options = None) -> str:
         if options is None:
             options = dict()
 
@@ -486,7 +523,7 @@ class NumericalMessage(Message):
             return ngettext(self.singular, self.plural, self.n)
 
 
-def localized(json_string, options=None):
+def localized(json_string: str, options: Options | None = None):
     return Message.from_json(json_string).localize(options)
 
 
@@ -494,7 +531,7 @@ def deferred_gettext(message) -> SimpleMessage:
     return SimpleMessage(message)
 
 
-def deferred_dgettext(domain, message) -> SimpleMessage:
+def deferred_dgettext(domain: str, message: str) -> SimpleMessage:
     return SimpleMessage(message, domain)
 
 
