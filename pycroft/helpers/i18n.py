@@ -351,6 +351,9 @@ schema = {
     },
 }
 
+# TODO remove in py3.11 (replace `TSelf` by `Self`)
+TMessage = typing.TypeVar("TMessage", bound="Message")
+
 
 class Message:
     __slots__ = ("domain", "args", "kwargs")
@@ -396,7 +399,7 @@ class Message:
     def _gettext(self):
         raise NotImplementedError()
 
-    def to_json(self):
+    def to_json(self) -> str:
         obj = self._base_dict()
         if self.domain is not None:
             obj["domain"] = self.domain
@@ -407,7 +410,7 @@ class Message:
                              for k, v in self.kwargs.items()}
         return json.dumps(obj, ensure_ascii=False)
 
-    def format(self, *args: Serializable, **kwargs: Serializable):
+    def format(self: TMessage, *args: Serializable, **kwargs: Serializable) -> TMessage:
         self.args = args
         self.kwargs = kwargs
         return self
