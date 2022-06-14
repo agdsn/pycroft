@@ -24,6 +24,8 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
+      - name: ensure presence of `wheel`
+        run: pip install wheel
       - name: install pip dependencies
         run: pip install -r requirements.txt -r requirements.dev.txt
       - name: Execute mypy
