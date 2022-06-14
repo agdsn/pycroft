@@ -143,8 +143,8 @@ def remove_member_of(user, group, processor, during=UnboundedInterval):
 
 @with_transaction
 def edit_property_group(group, name, permission_level, processor):
-    message = deferred_gettext("Edited property group {} -> {}.")\
-        .format((group.name, group.permission_level), (name, permission_level))
+    message = deferred_gettext("Edited property group ({}, {}) -> ({}, {}).")\
+        .format(group.name, group.permission_level, name, permission_level)
     log_event(message.to_json(), processor)
 
     group.name = name
@@ -153,7 +153,7 @@ def edit_property_group(group, name, permission_level, processor):
 @with_transaction
 def delete_property_group(group, processor):
     message = deferred_gettext("Deleted property group '{}'.").format(group.name)
-    log_event(message, processor)
+    log_event(message.to_json(), processor)
     session.session.delete(group)
 
 
