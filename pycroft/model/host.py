@@ -1,6 +1,7 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+from __future__ import annotations
 from sqlalchemy import Column, ForeignKey, event, UniqueConstraint
 from sqlalchemy.orm import backref, relationship, validates
 from sqlalchemy.schema import Table
@@ -91,6 +92,7 @@ class Interface(IntegerIdModel):
     host = relationship(Host,
                         backref=backref("interfaces",
                                         cascade="all, delete-orphan", cascade_backrefs=False))
+    ips: list[IP]  # added by backref
 
 
 # See the `SwitchPort.default_vlans` relationship

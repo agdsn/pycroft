@@ -57,11 +57,14 @@ class ModelBase:
 
     import typing
     if typing.TYPE_CHECKING:
-        @classmethod
-        def q(cls):
-            import warnings
-            warnings.warn("Deprecated: Use `session.execute()` and `select()` instead",
-                          DeprecationWarning)
+        # uncomment that to get the deprecation warnings.
+        # unfortunately, this breaks mypy linting because we can't
+        # reinterpret a `Callable` as something else, say using a cast.
+        # @classmethod
+        # def q(cls):
+        #     import warnings
+        #     warnings.warn("Deprecated: Use `session.execute()` and `select()` instead",
+        #                   DeprecationWarning)
         q: Query
 
         T = typing.TypeVar('T', bound='ModelBase')
