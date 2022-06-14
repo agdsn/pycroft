@@ -59,12 +59,10 @@ def host_create(owner, room, name, processor):
             level=room.level,
             room=room.number,
         )
-        .to_json()
     )
-
     log_user_event(author=processor,
                    user=owner,
-                   message=message.to_json())\
+                   message=message.to_json())
 
     return host
 
@@ -75,7 +73,6 @@ def host_edit(host, owner, room, name, processor):
         message = (
             deferred_gettext("Changed name of host '{}' to '{}'.")
             .format(host.name, name)
-            .to_json()
         )
         host.name = name
 

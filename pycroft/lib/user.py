@@ -453,7 +453,6 @@ def migrate_user_host(host, new_room, processor):
         .format(
             name=host.name, room_old=old_room.short_name, room_new=new_room.short_name
         )
-        .to_json()
     )
 
     log_user_event(author=processor,
