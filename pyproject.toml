@@ -13,7 +13,7 @@ ignore_missing_imports = true
 # this list shall slowly grow until it covers the whole codebase.
 files = [
     "pycroft/helpers/i18n.py",
-    "pycroft/lib/host.py",
+    "pycroft/lib",
 ]
 mypy_path = "stubs"
 namespace_packages = true
