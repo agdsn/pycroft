@@ -30,8 +30,13 @@ jobs:
         run: pip install -r requirements.txt -r requirements.dev.txt
       - name: Execute mypy
         run: |
-          mypy | tee mypy_results.log
+          # we don't want errexit
+          set -uo pipefail
+
+          mypy pycroft/lib/traffic.py | tee mypy_results.log;
+          export mypy_status=$?
           python ./scripts/render_mypy_results.py mypy_results.log
+          exit $mypy_status
   npm-build:
     runs-on: ubuntu-latest
     steps:
