@@ -364,27 +364,6 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
     return affected_users
 
 
-def diff(posted, computed, insert_only=False):
-    sequence_matcher = difflib.SequenceMatcher(None, posted, computed)
-    missing_postings = []
-    erroneous_postings = []
-    for tag, i1, i2, j1, j2 in sequence_matcher.get_opcodes():
-        if 'replace' == tag:
-            if insert_only:
-                continue
-
-            erroneous_postings.extend(islice(posted, i1, i2))
-            missing_postings.extend(islice(computed, j1, j2))
-        if 'delete' == tag:
-            if insert_only:
-                continue
-
-            erroneous_postings.extend(islice(posted, i1, i2))
-        if 'insert' == tag:
-            missing_postings.extend(islice(computed, j1, j2))
-    return missing_postings, erroneous_postings
-
-
 def _to_date_interval(interval):
     """
     :param Interval[datetime] interval:
