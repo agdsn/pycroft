@@ -34,6 +34,8 @@ class Host(IntegerIdModel):
     # should not delete a host being there
     room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
                      index=True)
+    interfaces: list[Interface]  # added by backref
+    ips: list[IP]  # added by backref
 
 
 class Switch(ModelBase):

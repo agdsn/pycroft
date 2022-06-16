@@ -27,9 +27,10 @@ class TaskStatus(AutoNumber):
 
 
 TSchema = TypeVar('TSchema')
+TParams = TypeVar("TParams", bound=TaskParams)
 
 
-class Task(IntegerIdModel, Generic[TSchema]):
+class Task(IntegerIdModel, Generic[TSchema, TParams]):
     """The task model
 
     The task model needs to hold three types of data:
@@ -61,7 +62,7 @@ class Task(IntegerIdModel, Generic[TSchema]):
         return task_type_to_schema[self.type]
 
     @property
-    def parameters(self) -> TaskParams:
+    def parameters(self) -> TParams:
         """(Lazily) deserialized dict corresponding to the parameters.
 
         The deserialization happens according to what schema is referenced in self.schema.

@@ -9,6 +9,8 @@
 
     :copyright: (c) 2011 by AG DSN.
 """
+import typing
+
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.local import LocalProxy
 from pycroft.model.config import Config
@@ -21,4 +23,4 @@ def _get_config():
     return config
 
 
-config = LocalProxy(_get_config, "config")
+config: Config = typing.cast(Config, LocalProxy(_get_config, "config"))

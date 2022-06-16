@@ -1,4 +1,5 @@
 import logging
+import typing
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Mapping, TypeVar, Generic
@@ -15,12 +16,16 @@ from pycroft.model.task_serialization import UserMoveOutParams, UserMoveParams, 
     TaskParams
 from pycroft.model.user import User
 
-TTask = TypeVar('TTask')
-TParams = TypeVar('TParams')
+TParams = TypeVar('TParams', bound=TaskParams)
+TTask = TypeVar('TTask', bound=Task)
 
 logger = logging.getLogger('pycroft.task')
 
 
+# the generic parameters don't actually matter because
+# to determine the type parameter at construction we would need
+# dependent types, so we're always just instantiating
+# `TaskImpl = TaskImpl[Any, Any]`, anyway.
 class TaskImpl(ABC, Generic[TTask, TParams]):
     @property
     @abstractmethod
@@ -33,7 +38,7 @@ class TaskImpl(ABC, Generic[TTask, TParams]):
         ...
 
     new_status = None
-    errors = list()
+    errors: list[str] = list()
 
     @abstractmethod
     @with_transaction
@@ -41,12 +46,12 @@ class TaskImpl(ABC, Generic[TTask, TParams]):
         ...
 
     @with_transaction
-    def execute(self, task: Task):
+    def execute(self, task: TTask):
         self.new_status = TaskStatus.FAILED
         self.errors = list()
 
         try:
-            parameters: TParams = task.parameters
+            parameters: TParams = typing.cast(TParams, task.parameters)
         except ValidationError as e:
             self.errors.append(f"Failed to parse parameters: {e.messages}")
             logger.error('Failed to deserialize parameters', exc_info=True)

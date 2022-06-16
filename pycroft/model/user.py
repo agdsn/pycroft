@@ -164,7 +164,7 @@ class User(ModelBase, BaseUser, UserMixin):
     account = relationship("Account", backref=backref("user", uselist=False, viewonly=True))
 
     unix_account_id = Column(Integer, ForeignKey('unix_account.id'), nullable=True, unique=True)
-    unix_account = relationship('UnixAccount')  # backref not really needed.
+    unix_account: UnixAccount = relationship('UnixAccount')  # backref not really needed.
 
     address_id = Column(Integer, ForeignKey(Address.id), index=True, nullable=False)
     address = relationship(Address, backref=backref("inhabitants", viewonly=True))

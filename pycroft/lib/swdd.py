@@ -23,16 +23,13 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> int |
         raise ValueError("No hmac key set")
 
     digest_maker = hmac.new(swdd_hmac_key.encode(), digestmod="sha512")
-
     norm_str = unicodedata.normalize("NFC", f"{first_name}_{last_name}_{birthdate}"
                                                       .lower()).encode('utf-8')
-
     digest_maker.update(norm_str)
-
     person_hash = digest_maker.hexdigest().upper()
-
-    tenancy = Tenancy.q.filter_by(person_hash=person_hash, status_id=TenancyStatus.ESTABLISHED.value).first()
-
+    tenancy: Tenancy | None = Tenancy.q.filter_by(
+        person_hash=person_hash, status_id=TenancyStatus.ESTABLISHED.value
+    ).first()
     return tenancy.person_id if tenancy is not None else None
 
 

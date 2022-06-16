@@ -6,6 +6,7 @@ import difflib
 import logging
 import operator
 import re
+import typing
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from io import StringIO
@@ -28,6 +29,7 @@ from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
 from pycroft.model import session
+from pycroft.model.base import ModelBase
 from pycroft.model.facilities import Room, Building
 from pycroft.model.finance import (
     Account, BankAccount, BankAccountActivity, Split, Transaction,
@@ -122,7 +124,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
 def complex_transaction(description, author, splits, valid_on=None, confirmed=True):
     if valid_on is None:
         valid_on = session.utcnow().date()
-    objects = []
+    objects: list[ModelBase] = []
     new_transaction = Transaction(
         description=description,
         author=author,
@@ -185,6 +187,11 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 
 
+# this „2.0-style select“ is only completely supported on a typing level when we have the v2.0
+#  typing infrastructure (post-mypy plugin).
+#  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
+# See also #562
+@typing.no_type_check
 def users_eligible_for_fee_query(membership_fee):
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
@@ -622,7 +629,9 @@ def user_has_paid(user):
     return user.account.balance <= 0
 
 
-def get_typed_splits(splits):
+def get_typed_splits(
+    splits: typing.Sequence[Split],
+) -> typing.Iterable[tuple[Split, Split]]:
     splits = sorted(splits, key=lambda s: s.transaction.posted_at, reverse=True)
     return zip_longest(
         (s for s in splits if s.amount >= 0),
@@ -644,9 +653,14 @@ def get_transaction_type(transaction):
 
 @with_transaction
 def end_payment_in_default_memberships(processor):
-    users = User.q.join(User.current_properties) \
-                .filter(CurrentProperty.property_name == 'payment_in_default') \
-                .join(Account).filter(Account.balance <= 0).all()
+    # TODO remove `type: ignore` once on SQLA2.0 (#562)
+    users = (
+        User.q.join(User.current_properties)
+        .filter(CurrentProperty.property_name == "payment_in_default")
+        .join(Account)
+        .filter(Account.balance <= 0)  # type: ignore
+        .all()
+    )
 
     for user in users:
         if user.member_of(config.payment_in_default_group):
@@ -657,20 +671,29 @@ def end_payment_in_default_memberships(processor):
 
 
 def get_negative_members():
-    users = User.q.join(User.current_properties) \
-        .filter(CurrentProperty.property_name == 'membership_fee') \
-        .join(Account).filter(Account.balance > 0).all()
+    # TODO remove `type: ignore` once on SQLA2.0 (#562)
+    users = (
+        User.q.join(User.current_properties)
+        .filter(CurrentProperty.property_name == "membership_fee")
+        .join(Account)
+        .filter(Account.balance > 0)  # type: ignore
+        .all()
+    )
 
     return users
 
 
-def get_last_payment_in_default_membership(session: Session, user: User) -> Membership | None:
-    return session.scalars(select(Membership)
+def get_last_payment_in_default_membership(
+    session: Session, user: User
+) -> Membership | None:
+    membership: Membership | None = session.scalars(
+        select(Membership)
         .filter(Membership.user_id == user.id)
         .filter(Membership.group_id == config.payment_in_default_group.id)
         .order_by(Membership.active_during.desc())
         .limit(1)
     ).first()
+    return membership
 
 
 def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[User]]:
@@ -986,14 +1009,15 @@ def transaction_confirm_all(processor):
 
 def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> Split | None:
     """If existent, get the membership fee split for a given date"""
-    return session.scalars(
+    fee: Split | None = session.scalars(
         select(Split)
-            .filter_by(account=account)
-            .join(Transaction)
-            .filter(Split.amount > 0)
-            .filter(Transaction.valid_on == valid_on)
-            .limit(1)
+        .filter_by(account=account)
+        .join(Transaction)
+        .filter(Split.amount > 0)
+        .filter(Transaction.valid_on == valid_on)
+        .limit(1)
     ).first()
+    return fee
 
 
 def estimate_balance(session: Session, user, end_date):
@@ -1074,6 +1098,7 @@ def get_pid_csv():
 
 
 def get_last_import_date(session: Session) -> datetime | None:
-    return session.scalars(
+    date: datetime | None = session.scalars(
         select(func.max(BankAccountActivity.imported_at))
     ).first()
+    return date

@@ -11,6 +11,7 @@ This module contains.
 """
 import os
 import re
+import typing
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
@@ -252,7 +253,7 @@ def change_password(user, password):
                    message=message.to_json())
 
 
-def generate_wifi_password():
+def generate_wifi_password() -> str:
     return user_helper.generate_password(12)
 
 
@@ -1125,7 +1126,10 @@ def get_user_by_swdd_person_id(swdd_person_id: int | None) -> User | None:
     if swdd_person_id is None:
         return None
 
-    return User.q.filter_by(swdd_person_id=swdd_person_id).first()
+    return typing.cast(
+        User | None,
+        User.q.filter_by(swdd_person_id=swdd_person_id).first()
+    )
 
 
 def check_new_user_data(login: str, email: str, name: str, swdd_person_id: int | None,

@@ -1,3 +1,5 @@
+import typing
+
 from pycroft.model.address import Address
 from pycroft.model.session import session, with_transaction
 
@@ -29,7 +31,7 @@ def get_or_create_address(
     )
     num_matching = query.count()
     if num_matching == 1:
-        return query.one()
+        return typing.cast(Address, query.one())
 
     if num_matching > 1:
         raise RuntimeError("Found more than one address")

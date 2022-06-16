@@ -164,9 +164,9 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
 
     rows = query.all()
     if not rows:
-        return
+        return None
 
-    def row_to_suggestion(row):
+    def row_to_suggestion(row) -> RoomAddressSuggestion:
         return RoomAddressSuggestion(*list(row[:-1]))
 
     row, *rest = rows
