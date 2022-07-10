@@ -221,6 +221,13 @@ export function listFormatter(value, row, index) {
         return;
     }
     let ret = '<ul style="margin:0;">';
+    if (typeof value == 'string') {
+        console.error(
+            "Received string in column which should receive listFormatter." +
+            " Did you forget to set `data-escape=\"false\"`?"
+        );
+        return value;
+    }
     for (const item of value) {
         ret += `<li>${item}</li>`;
     }
