@@ -8,7 +8,7 @@ from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction, Action
-from .types import LdapRecord, Attributes
+from .types import LdapRecord, Attributes, NormalizedAttributes
 
 
 def dn_from_username(username: str, base: str) -> str:
@@ -29,7 +29,7 @@ def _canonicalize_to_list(value: T | list[T]) -> list[T]:
     return an empty list.  Else, return value.
     """
     if isinstance(value, list):
-        return value
+        return list(value)
     if value == '' or value is None:
         return []
     return [value]
@@ -65,7 +65,7 @@ class Record(abc.ABC):
     """
 
     dn: str
-    attrs: Attributes
+    attrs: NormalizedAttributes
 
     def __init__(self, dn: str, attrs: Attributes):
         self.dn = dn
@@ -73,9 +73,13 @@ class Record(abc.ABC):
         for key in self.get_synced_attributes():
             attrs.setdefault(key, [])
         # escape_filter_chars is idempotent ⇒ no double escaping
-        self.attrs = {key: [_maybe_escape_filter_chars(x)
-                            for x in _canonicalize_to_list(val)]
-                      for key, val in attrs.items()}
+        self.attrs = {
+            key: [
+                _maybe_escape_filter_chars(x)
+                for x in typing.cast(list[str], _canonicalize_to_list(val))
+            ]
+            for key, val in attrs.items()
+        }
 
     @classmethod
     @abc.abstractmethod

@@ -5,6 +5,10 @@ import typing
 
 
 Attributes = dict[str, str | typing.Collection[str]]
+# Depending on the LDAP scheme, attributes may be single-valued or multi-valued
+# (e.g. `mail`, `memberOf`, `objectClass` as opposed to `uid`)
+# canonicalized to a list
+NormalizedAttributes = dict[str, typing.Collection[str]]
 
 
 class LdapRecord(typing.TypedDict):
