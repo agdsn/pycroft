@@ -4,6 +4,9 @@
 import typing
 
 
+Attributes = dict[str, str | typing.Collection[str]]
+
+
 class LdapRecord(typing.TypedDict):
     dn: str
-    attributes: dict[str, str]
+    attributes: Attributes

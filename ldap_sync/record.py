@@ -8,7 +8,7 @@ from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
 from .action import AddAction, DeleteAction, IdleAction, ModifyAction, Action
-from .types import LdapRecord
+from .types import LdapRecord, Attributes
 
 
 def dn_from_username(username: str, base: str) -> str:
@@ -57,17 +57,17 @@ class Record(abc.ABC):
     provided for SQLAlchemy ORM objects as well as entries of an ldap
     search response.
 
-    :param str dn: The DN of the record
-    :param dict attrs: The attributes of the record.  Every value will
+    :param dn: The DN of the record
+    :param attrs: The attributes of the record.  Every value will
         be canonicalized to a list to allow for a senseful comparison
         between two records, as well as escaped according to RFC04515.
         Additionally, the keys are fixed to a certain set.
     """
 
     dn: str
-    attrs: dict[str, str]
+    attrs: Attributes
 
-    def __init__(self, dn: str, attrs: dict[str, str]):
+    def __init__(self, dn: str, attrs: Attributes):
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
         for key in self.get_synced_attributes():
@@ -118,7 +118,7 @@ class Record(abc.ABC):
         return f"<{type(self).__name__} dn={self.dn}>"
 
     @classmethod
-    def _validate_attributes(cls, attributes: dict[str, str]):
+    def _validate_attributes(cls, attributes: Attributes):
         # sanity check: did we forget something in `cls.get_synced_attributes()` that
         # we support migrating anyway?
         _missing_attributes = set(attributes.keys()) - cls.get_synced_attributes()
@@ -129,7 +129,7 @@ class Record(abc.ABC):
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-    def __init__(self, dn: str, attrs: dict[str, str]):
+    def __init__(self, dn: str, attrs: Attributes):
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
