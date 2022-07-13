@@ -67,7 +67,7 @@ class Record(abc.ABC):
     dn: str
     attrs: NormalizedAttributes
 
-    def __init__(self, dn: str, attrs: Attributes):
+    def __init__(self, dn: str, attrs: Attributes) -> None:
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
         for key in self.get_synced_attributes():
@@ -133,7 +133,7 @@ class Record(abc.ABC):
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-    def __init__(self, dn: str, attrs: Attributes):
+    def __init__(self, dn: str, attrs: Attributes) -> None:
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
@@ -209,7 +209,7 @@ class GroupRecord(Record):
     """Create a new groupOfMembers record with a dn and certain attributes.
     Used to represent groups and properties.
     """
-    def __init__(self, dn, attrs):
+    def __init__(self, dn, attrs) -> None:
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([

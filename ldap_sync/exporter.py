@@ -65,7 +65,7 @@ class LdapExporter:
     :param iterable desired: An iterable of the desired
         :class:`Record`s
     """
-    def __init__(self, current, desired):
+    def __init__(self, current, desired) -> None:
         self.states_dict = defaultdict(RecordState)
         l = 0
         for l, record in enumerate(current, 1):

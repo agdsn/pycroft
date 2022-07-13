@@ -13,7 +13,7 @@ class Action(metaclass=ABCMeta):
     :py:obj:`ldap3.Connection`
     """
 
-    def __init__(self, record, logger=None):
+    def __init__(self, record, logger=None) -> None:
         self.record = record
         self.logger = (logger if logger is not None
                        else logging.getLogger('ldap_sync.action'))
@@ -32,7 +32,7 @@ class Action(metaclass=ABCMeta):
         return f"<{type(self).__name__} {self.record.dn}>"
 
 class AddAction(Action):
-    def __init__(self, record):
+    def __init__(self, record) -> None:
         # We don't want to add e.g. an empty `mail` field
         record.remove_empty_attributes()
         super().__init__(record)
@@ -48,7 +48,7 @@ class AddAction(Action):
 
 
 class ModifyAction(Action):
-    def __init__(self, record, modifications):
+    def __init__(self, record, modifications) -> None:
         """Initialize a new ModifyAction operating on `record` with
         `modifications`
 
