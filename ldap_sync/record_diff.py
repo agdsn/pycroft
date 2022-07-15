@@ -34,23 +34,27 @@ def modify_from_records(current_record: T, desired_record: T) -> action.ModifyAc
 
 
 def diff_records(desired: T | None, current: T | None) -> action.Action:
-    if current is None:
-        return action.AddAction(record=desired)
-    if desired is None:
-        assert current is not None
-        return action.DeleteAction(record=current)
-
-    if desired.dn != getattr(current, 'dn', object()):
-        raise TypeError("Cannot compute difference to record with different dn")
-    if desired == current:
-        return action.IdleAction(desired)
-
-    a = modify_from_records(desired_record=desired, current_record=current)
-    if isinstance(desired, record.UserRecord):
-        # Do not try to delete pwdAccountLockedTime if password is changed,
-        # as the ppolicy overlay already takes care of that.
-        password_changed = 'userPassword' in a.modifications
-        locked_time_present_or_none = not a.modifications.get('pwdAccountLockedTime')
-        if password_changed and locked_time_present_or_none:
-            a.modifications.pop('pwdAccountLockedTime', None)
-    return a
+    match (current, desired):
+        case (None, None):
+            raise ValueError("cannot diff two nonexistent records")
+        case (None, desired):
+            return action.AddAction(record=desired)
+        case (current, None):
+            return action.DeleteAction(record=current)
+        case (c, d) if c == d:
+            return action.IdleAction(record=d)
+        case (record.Record(dn=dn1), record.Record(dn=dn2)) if dn1 != dn2:
+            raise TypeError("Cannot compute difference between records of different dn")
+        case (record.UserRecord() as c, record.UserRecord() as d):
+            a = modify_from_records(desired_record=d, current_record=c)
+            # Do not try to delete pwdAccountLockedTime if password is changed,
+            # as the ppolicy overlay already takes care of that.
+            password_changed = 'userPassword' in a.modifications
+            locked_time_present_or_none = not a.modifications.get('pwdAccountLockedTime')
+            if password_changed and locked_time_present_or_none:
+                a.modifications.pop('pwdAccountLockedTime', None)
+            return a
+        case (record.GroupRecord() as c, record.GroupRecord() as d):
+            return modify_from_records(desired_record=d, current_record=c)
+        case (c, d):
+            raise TypeError(f"Cannot diff {type(c).__name__} and {type(d).__name__}")
