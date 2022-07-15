@@ -1,7 +1,7 @@
 import pytest
 
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
-from ldap_sync.record_diff import modify_from_records
+from ldap_sync.record_diff import diff_records, diff_attributes
 from ldap_sync.record import UserRecord
 from . import validate_attribute_type, get_all_objects
 
@@ -25,7 +25,7 @@ class TestModifyActionConstructor:
     def test_desired_record_passed(self):
         desired = UserRecord(dn=None, attrs={'gecos': 'test'})
         current = UserRecord(dn=None, attrs={})
-        action = modify_from_records(desired_record=desired, current_record=current)
+        action = diff_records(desired=desired, current=current)
         assert action.record == desired
 
     @pytest.mark.parametrize('attrs_current, attrs_desired, modifications', [
@@ -43,11 +43,15 @@ class TestModifyActionConstructor:
          {'gecos': ['bar']},),
     ])
     def test_modify_action(self, attrs_current, attrs_desired, modifications):
-        action = modify_from_records(
-            desired_record=UserRecord(dn=None, attrs=attrs_desired),
-            current_record=UserRecord(dn=None, attrs=attrs_current)
+        # TODO expand these tests a lot && move to `test_diff`
+        # pass it through UserRecord for normalization of attributes
+        current = UserRecord(dn=None, attrs=attrs_current)
+        desired = UserRecord(dn=None, attrs=attrs_desired)
+        assert current.attrs['uidNumber'] == []  # litmus test for user-relative normalization
+        assert (
+            diff_attributes(desired_attrs=desired.attrs, current_attrs=current.attrs)
+            == modifications
         )
-        assert action.modifications == modifications
 
 
 class TestAddAction:
