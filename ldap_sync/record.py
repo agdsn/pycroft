@@ -49,6 +49,10 @@ def _maybe_escape_filter_chars(value: T) -> T | str:
     return value
 
 
+# TODO: replace with the py3.11 Self type
+TRecord = typing.TypeVar("TRecord", bound="Record")
+
+
 class Record(abc.ABC):
     """Create a new record with a dn and certain attributes.
 
@@ -88,29 +92,20 @@ class Record(abc.ABC):
         raise NotImplementedError
 
     @classmethod
-    def from_ldap_record(cls, record: LdapRecord):
+    def from_ldap_record(cls: type[TRecord], record: LdapRecord) -> TRecord:
         return cls(dn=record['dn'], attrs=record['attributes'])
 
-    def remove_empty_attributes(self):
+    def remove_empty_attributes(self) -> None:
         self.attrs = {key: val for key, val in self.attrs.items() if val}
 
     def __sub__(self, other: Record | None) -> Action:
         """Return the action needed to transform another record into this one"""
-        if other is None:
-            return AddAction(record=self)
-
-        if self.dn != getattr(other, 'dn', object()):
-            raise TypeError("Cannot compute difference to record with different dn")
-
-        if self == other:
-            return IdleAction(self)
-
-        return ModifyAction.from_two_records(desired_record=self, current_record=other)
+        from . import record_diff
+        return record_diff.diff_records(desired=self, current=other)
 
     def __rsub__(self, other: Record | None) -> DeleteAction:
-        if other is None:
-            return DeleteAction(record=self)
-        return NotImplemented
+        from . import record_diff
+        return typing.cast(DeleteAction, record_diff.diff_records(desired=other, current=self))
 
     def __eq__(self, other):  # `__eq__` must be total, hence no type restrictions/hints
         try:
