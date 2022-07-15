@@ -5,6 +5,7 @@ from typing import Iterable, Iterator
 from . import logger
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .record import UserRecord, GroupRecord, RecordState, Record
+from .record_diff import diff_records
 
 
 def iter_current_records(
@@ -119,7 +120,7 @@ class LdapExporter:
         if self.actions:
             raise RuntimeError("Actions can only be compiled once")
         for state in self.states_dict.values():
-            self.actions.append(state.desired - state.current)
+            self.actions.append(diff_records(desired=state.desired, current=state.current))
 
     def execute_all(self, *a, **kw):
         for action in self.actions:

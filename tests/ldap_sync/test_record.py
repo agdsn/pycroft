@@ -1,6 +1,7 @@
 import pytest
 
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
+from ldap_sync.record_diff import diff_records
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
 
 
@@ -41,12 +42,12 @@ class TestRecord:
         assert record == UserRecord(dn='test', attrs={'mail': ['shizzle']})
 
     def test_record_subtraction_with_none_adds(self, record):
-        difference = record - None
+        difference = diff_records(record, None)
         assert isinstance(difference, AddAction)
         assert difference.record == record
 
     def test_none_subtracted_by_record_deletes(self, record):
-        difference = None - record
+        difference = diff_records(None, record)
         assert isinstance(difference, DeleteAction)
         assert difference.record == record
 
@@ -56,11 +57,11 @@ class TestRecord:
             record - UserRecord(dn='notatest', attrs={})
 
     def test_same_record_subtraction_idles(self, record):
-        difference = record - record
+        difference = diff_records(record, record)
         assert isinstance(difference, IdleAction)
 
     def test_correctly_different_record_modifies(self, record):
-        difference = record - UserRecord(dn='test', attrs={'mail': ''})
+        difference = diff_records(record, UserRecord(dn='test', attrs={'mail': ''}))
         assert isinstance(difference, ModifyAction)
 
     def test_record_from_ldap_record(self):

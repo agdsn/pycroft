@@ -7,7 +7,6 @@ from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
-from .action import AddAction, DeleteAction, IdleAction, ModifyAction, Action
 from .types import LdapRecord, Attributes, NormalizedAttributes
 
 
@@ -98,15 +97,6 @@ class Record(abc.ABC):
     def remove_empty_attributes(self) -> None:
         self.attrs = {key: val for key, val in self.attrs.items() if val}
 
-    def __sub__(self, other: Record | None) -> Action:
-        """Return the action needed to transform another record into this one"""
-        from . import record_diff
-        return record_diff.diff_records(desired=self, current=other)
-
-    def __rsub__(self, other: Record | None) -> DeleteAction:
-        from . import record_diff
-        return typing.cast(DeleteAction, record_diff.diff_records(desired=other, current=self))
-
     def __eq__(self, other):  # `__eq__` must be total, hence no type restrictions/hints
         try:
             return self.dn == other.dn and self.attrs == other.attrs
@@ -186,18 +176,6 @@ class UserRecord(Record):
         cls._validate_attributes(attributes)
 
         return cls(dn=dn, attrs=attributes)
-
-    def __sub__(self, other: Record | None) -> Action:
-        action = super().__sub__(other)
-
-        # Do not try to delete pwdAccountLockedTime if password is changed,
-        # as the ppolicy overlay already takes care of that.
-        if isinstance(action, ModifyAction):
-            if 'userPassword' in action.modifications and not action.modifications.get(
-                    'pwdAccountLockedTime', None):
-                action.modifications.pop('pwdAccountLockedTime', None)
-
-        return action
 
 
 class GroupRecord(Record):
