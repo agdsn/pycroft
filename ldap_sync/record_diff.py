@@ -21,14 +21,12 @@ def diff_attributes(
     won't end up in the modification dict.  Removing attributes
     has to be done by explicitly setting them to an empty string.
     """
-    updated_attrs = desired_attrs
-    for key, old_value in current_attrs.items():
-        if key not in updated_attrs:
-            continue
-        if old_value == updated_attrs[key]:
-            # we don't need to execute anupdate if the value doesn't change
-            updated_attrs.pop(key)
-    return updated_attrs
+    return {
+        attr: desired_value
+        for attr, desired_value in desired_attrs.items()
+        if attr not in current_attrs  # attribute is new
+        or current_attrs[attr] != desired_value  # attribute has changed
+    }
 
 
 def diff_user_attributes(
