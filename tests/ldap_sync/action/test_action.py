@@ -22,9 +22,9 @@ class TestActionSubclass:
 
 
 class TestModifyActionConstructor:
-    def test_desired_record_passed(self):
-        desired = UserRecord(dn=None, attrs={'gecos': 'test'})
-        current = UserRecord(dn=None, attrs={})
+    def test_desired_record_passed(self, dn):
+        desired = UserRecord(dn=dn, attrs={'gecos': 'test'})
+        current = UserRecord(dn=dn, attrs={})
         action = diff_records(desired=desired, current=current)
         assert action.record == desired
 
@@ -42,11 +42,11 @@ class TestModifyActionConstructor:
          {'gecos':  'bar', 'mail': 'admin@sci.hub'},
          {'gecos': ['bar']},),
     ])
-    def test_modify_action(self, attrs_current, attrs_desired, modifications):
+    def test_modify_action(self, dn, attrs_current, attrs_desired, modifications):
         # TODO expand these tests a lot && move to `test_diff`
         # pass it through UserRecord for normalization of attributes
-        current = UserRecord(dn=None, attrs=attrs_current)
-        desired = UserRecord(dn=None, attrs=attrs_desired)
+        current = UserRecord(dn=dn, attrs=attrs_current)
+        desired = UserRecord(dn=dn, attrs=attrs_desired)
         assert current.attrs['uidNumber'] == []  # litmus test for user-relative normalization
         assert (
             diff_attributes(desired_attrs=desired.attrs, current_attrs=current.attrs)
