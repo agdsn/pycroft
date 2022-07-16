@@ -52,6 +52,16 @@ def _maybe_escape_filter_chars(value: T) -> T | str:
 TRecord = typing.TypeVar("TRecord", bound="Record")
 
 
+def escape_and_normalize_attrs(attrs: Attributes) -> NormalizedAttributes:
+    return {
+        key: [
+            _maybe_escape_filter_chars(x)
+            for x in typing.cast(list[str], _canonicalize_to_list(val))
+        ]
+        for key, val in attrs.items()
+    }
+
+
 class Record(abc.ABC):
     """Create a new record with a dn and certain attributes.
 
@@ -76,13 +86,7 @@ class Record(abc.ABC):
         for key in self.get_synced_attributes():
             attrs.setdefault(key, [])
         # escape_filter_chars is idempotent ⇒ no double escaping
-        self.attrs = {
-            key: [
-                _maybe_escape_filter_chars(x)
-                for x in typing.cast(list[str], _canonicalize_to_list(val))
-            ]
-            for key, val in attrs.items()
-        }
+        self.attrs = escape_and_normalize_attrs(attrs)
 
     @classmethod
     @abc.abstractmethod
