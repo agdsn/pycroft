@@ -7,7 +7,7 @@ from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
-from .types import LdapRecord, Attributes, NormalizedAttributes, DN
+from .types import LdapRecord, Attributes, NormalizedAttributes, DN, AttributeValues
 
 
 def dn_from_username(username: str, base: DN) -> DN:
@@ -21,7 +21,7 @@ def dn_from_cn(name: str, base: DN) -> DN:
 T = typing.TypeVar("T")
 
 
-def _canonicalize_to_list(value: T | list[T]) -> list[T]:
+def _canonicalize_to_list(value: AttributeValues) -> list[str] | list[bytes] | list[int]:
     """Canonicalize a value to a list.
 
     If value is a list, return it.  If it is None or an empty string,
@@ -29,9 +29,10 @@ def _canonicalize_to_list(value: T | list[T]) -> list[T]:
     """
     if isinstance(value, list):
         return list(value)
-    if value == '' or value is None:
-        return []
-    return [value]
+    if value == '' or value == b'' or value is None:
+        return []  # type: ignore
+    # str, byte, int – or unknown. But good fallback.
+    return [value]  # type: ignore
 
 
 # the “true” type is not expressible with mypy: it's the overload
