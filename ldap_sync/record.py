@@ -101,17 +101,19 @@ class Record(abc.ABC):
     def from_ldap_record(cls: type[TRecord], record: LdapRecord) -> TRecord:
         return cls(dn=record['dn'], attrs=record['attributes'])
 
-    def __eq__(self, other):  # `__eq__` must be total, hence no type restrictions/hints
+    # `__eq__` must be total, hence no type restrictions/hints
+    def __eq__(self, other: object) -> bool:
         try:
-            return self.dn == other.dn and self.attrs == other.attrs
+            return self.dn == other.dn and self.attrs == other.attrs  # type: ignore
         except AttributeError:
             return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} dn={self.dn}>"
 
     @classmethod
-    def _validate_attributes(cls, attributes: Attributes):
+    # we don't care about the values, hence not typing as `Attributes`
+    def _validate_attributes(cls, attributes: dict[str, typing.Any]) -> None:
         # sanity check: did we forget something in `cls.get_synced_attributes()` that
         # we support migrating anyway?
         _missing_attrs = cls.get_synced_attributes() - set(attributes.keys())
@@ -123,7 +125,6 @@ class Record(abc.ABC):
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-
     SYNCED_ATTRIBUTES = frozenset([
         'objectClass',
         'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
@@ -135,13 +136,16 @@ class UserRecord(Record):
     PWD_POLICY_BLOCKED = "login_disabled"
 
     @classmethod
-    def get_synced_attributes(cls):
+    def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         return cls.SYNCED_ATTRIBUTES
 
     @classmethod
     def from_db_user(
         cls, user: User, base_dn: DN, should_be_blocked: bool = False
-    ) -> Record:
+    ) -> UserRecord:
+        assert user.login is not None, "user must be persisted and have a login!"
+        assert user.name is not None, "user must be persisted and have a name!"
+
         dn = dn_from_username(user.login, base=base_dn)
         if user.unix_account is None:
             raise ValueError("User object must have a UnixAccount")
@@ -151,7 +155,7 @@ class UserRecord(Record):
         pwd_hash_prefix = "!" if should_be_blocked else ""
         passwd_hash = pwd_hash_prefix + user.passwd_hash if user.passwd_hash else None
 
-        attributes = {
+        attributes: Attributes = {
             # REQ – required, MAY – optional, SV – single valued
             'objectClass': cls.LDAP_OBJECTCLASSES,
             'uid': user.login,  # REQ by posixAccount, shadowAccount
@@ -188,26 +192,23 @@ class GroupRecord(Record):
     """Create a new groupOfMembers record with a dn and certain attributes.
     Used to represent groups and properties.
     """
-    def __init__(self, dn, attrs) -> None:
-        super().__init__(dn, attrs)
-
     SYNCED_ATTRIBUTES = frozenset([
         'objectClass', 'cn', 'member'
     ])
     LDAP_OBJECTCLASSES = ['groupOfMembers']
 
     @classmethod
-    def get_synced_attributes(cls):
+    def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         return cls.SYNCED_ATTRIBUTES
 
     @classmethod
     def from_db_group(
         cls, name: str, members: typing.Iterable[str], base_dn: DN, user_base_dn: DN
-    ):
+    ) -> GroupRecord:
         dn = dn_from_cn(name, base=base_dn)
         members_dn: list[str] = [dn_from_username(member, user_base_dn) for member in members]
 
-        attributes = {
+        attributes: Attributes = {
             # REQ – required, MAY – optional, SV – single valued
             'objectClass': cls.LDAP_OBJECTCLASSES,
             'cn': name,  # REQ by groupOfMembers

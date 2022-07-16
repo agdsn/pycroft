@@ -6,6 +6,7 @@ Actions (Add/Delete/Modify/Nothing) and how to execute them.
 """
 import dataclasses
 import logging
+import typing
 from abc import ABC, abstractmethod
 
 import ldap3
@@ -89,7 +90,7 @@ class DeleteAction(Action):
 class IdleAction(Action):
     """Do nothing."""
 
-    def execute(self, *a, **kw) -> None:
+    def execute(self, *a: typing.Any, **kw: typing.Any) -> None:
         # logging here would be useless noise, and would contradict the nature
         # of an “idle” action.
         pass
