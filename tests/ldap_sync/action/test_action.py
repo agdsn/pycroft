@@ -1,9 +1,7 @@
-import typing
-
+import ldap3
 import pytest
 
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
-from ldap_sync.record_diff import diff_records, diff_attributes
 from ldap_sync.record import UserRecord
 from . import validate_attribute_type, get_all_objects
 
@@ -21,40 +19,6 @@ class TestActionSubclass:
             A(record_dn=dn)
         except TypeError as e:
             pytest.fail(f"Subclassing raised Exception {e}")
-
-
-class TestModifyActionConstructor:
-    def test_desired_record_passed(self, dn):
-        desired = UserRecord(dn=dn, attrs={'gecos': 'test'})
-        current = UserRecord(dn=dn, attrs={})
-        action = typing.cast(ModifyAction, diff_records(current=current, desired=desired))
-        assert action.record_dn == desired.dn
-        assert action.modifications == {'gecos': ['test']}
-
-    @pytest.mark.parametrize('attrs_current, attrs_desired, modifications', [
-        ({'gecos': 'bar'},
-         {'gecos': None},
-         {'gecos': []},),
-        ({'foo': 'bar'},
-         {'foo': 'bar', 'mail': 'admin@sci.hub'},
-         {'mail': ['admin@sci.hub']},),
-        ({'gecos': 'bar', 'mail': 'admin@sci.hub'},
-         {'gecos': 'bar', 'mail': ''},
-         {'mail': []},),
-        ({'gecos': 'baz', 'mail': 'admin@sci.hub'},
-         {'gecos':  'bar', 'mail': 'admin@sci.hub'},
-         {'gecos': ['bar']},),
-    ])
-    def test_modify_action(self, dn, attrs_current, attrs_desired, modifications):
-        # TODO expand these tests a lot && move to `test_diff`
-        # pass it through UserRecord for normalization of attributes
-        current = UserRecord(dn=dn, attrs=attrs_current)
-        desired = UserRecord(dn=dn, attrs=attrs_desired)
-        assert current.attrs['uidNumber'] == []  # litmus test for user-relative normalization
-        assert (
-            diff_attributes(desired_attrs=desired.attrs, current_attrs=current.attrs)
-            == modifications
-        )
 
 
 class TestAddAction:

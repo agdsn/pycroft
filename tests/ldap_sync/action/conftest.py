@@ -1,11 +1,12 @@
 import ldap3
 import pytest
 
+from ldap_sync import types
 from ldap_sync.record import dn_from_username
 
 
 @pytest.fixture(scope='class')
-def connection():
+def connection() -> ldap3.Connection:
     server = ldap3.Server('fake_server', get_info=ldap3.ALL)
     connection = ldap3.Connection(server, user='cn=test', password='pw',
                                   client_strategy=ldap3.MOCK_SYNC)
@@ -20,7 +21,7 @@ def base() -> types.DN:
 
 
 @pytest.fixture(scope='session')
-def uid():
+def uid() -> str:
     return 'shizzle'
 
 
