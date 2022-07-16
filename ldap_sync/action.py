@@ -4,12 +4,14 @@
 """
 Actions (Add/Delete/Modify/Nothing) and how to execute them.
 """
+import dataclasses
 import logging
 from abc import ABCMeta, abstractmethod
 
 import ldap3
 
-from . import record, types
+from . import types
+from .record import Record  # shadowing…
 
 
 def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) -> None:
@@ -20,19 +22,13 @@ def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) 
         logger.debug("Operation successful")
 
 
+@dataclasses.dataclass
 class Action(metaclass=ABCMeta):
-    """An Action on an ldap record
-
-    This represents an Action on a specific LDAP record, which may
-    result in addition, deletion or modification.  In any way, a
-    subclass must implement the :py:meth:`execute` method acting on an
-    :py:obj:`ldap3.Connection`
-    """
-
-    def __init__(self, record_dn: str, logger: logging.Logger | None = None) -> None:
-        self.record_dn = record_dn
-        self.logger = (logger if logger is not None
-                       else logging.getLogger('ldap_sync.action'))
+    record_dn: str
+    _: dataclasses.KW_ONLY  # pushes `logger=` back in generated `__init__`
+    logger: logging.Logger = dataclasses.field(
+        default_factory=lambda: logging.getLogger("ldap_sync.action")
+    )
 
     @abstractmethod
     def execute(self, connection):
@@ -41,8 +37,12 @@ class Action(metaclass=ABCMeta):
     def __repr__(self):
         return f"<{type(self).__name__} {self.record_dn}>"
 
+
 class AddAction(Action):
-    def __init__(self, record: record.Record) -> None:
+    """Add an LDAP record"""
+    record: Record
+
+    def __init__(self, record: Record) -> None:
         # We don't want to add e.g. an empty `mail` field
         super().__init__(record_dn=record.dn)
         self.record = record
@@ -58,19 +58,14 @@ class AddAction(Action):
         return f"<{type(self).__name__} {self.record.dn}>"
 
 
+# noinspection PyDataclass
+@dataclasses.dataclass
 class ModifyAction(Action):
-    def __init__(self, record_dn, modifications: types.NormalizedAttributes) -> None:
-        """Initialize a new ModifyAction operating on `record` with
-        `modifications`
+    """Modify an LDAP record by changing its attributes."""
 
-        :param record_dn:
-        :param dict modifications: a dict with entries of the form
-            ``'attribute_name': new_value``, where the value is a list
-            if the corresponding attribute is not single-valued.
-            :param record_dn:
-        """
-        super().__init__(record_dn=record_dn)
-        self.modifications = modifications
+    #: a dict with entries of the form ``'attribute_name': new_value``,
+    #: where the value is a list if the corresponding attribute is not single-valued.
+    modifications: types.NormalizedAttributes
 
     def execute(self, connection):
         self.logger.debug("Executing %s for %s (%s)", type(self).__name__, self.record_dn,
@@ -88,6 +83,7 @@ class ModifyAction(Action):
 
 
 class DeleteAction(Action):
+    """Delete an LDAP record."""
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record_dn)
         connection.delete(self.record_dn)
@@ -95,6 +91,7 @@ class DeleteAction(Action):
 
 
 class IdleAction(Action):
+    """Do nothing."""
     def execute(self, *a, **kw):
         # logging here would be useless noise, and would contradict the nature
         # of an “idle” action.
