@@ -10,7 +10,10 @@ Attributes = dict[str, str | typing.Collection[str]]
 # canonicalized to a list
 NormalizedAttributes = dict[str, typing.Collection[str]]
 
+#: An LDAP Distinguished Name
+DN = typing.NewType('DN', str)
+
 
 class LdapRecord(typing.TypedDict):
-    dn: str
+    dn: DN
     attributes: Attributes

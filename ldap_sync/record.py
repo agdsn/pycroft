@@ -7,15 +7,15 @@ from ldap3.utils.conv import escape_filter_chars
 from ldap3.utils.dn import safe_dn
 
 from pycroft.model.user import User
-from .types import LdapRecord, Attributes, NormalizedAttributes
+from .types import LdapRecord, Attributes, NormalizedAttributes, DN
 
 
-def dn_from_username(username: str, base: str) -> str:
-    return safe_dn([f"uid={username}", base])
+def dn_from_username(username: str, base: DN) -> DN:
+    return DN(safe_dn([f"uid={username}", base]))
 
 
-def dn_from_cn(name: str, base: str) -> str:
-    return safe_dn([f"cn={name}", base])
+def dn_from_cn(name: str, base: DN) -> DN:
+    return DN(safe_dn([f"cn={name}", base]))
 
 
 T = typing.TypeVar("T")
@@ -67,10 +67,10 @@ class Record(abc.ABC):
         Additionally, the keys are fixed to a certain set.
     """
 
-    dn: str
+    dn: DN
     attrs: NormalizedAttributes
 
-    def __init__(self, dn: str, attrs: Attributes) -> None:
+    def __init__(self, dn: DN, attrs: Attributes) -> None:
         self.dn = dn
         attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
         for key in self.get_synced_attributes():
@@ -118,7 +118,7 @@ class Record(abc.ABC):
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-    def __init__(self, dn: str, attrs: Attributes) -> None:
+    def __init__(self, dn: DN, attrs: Attributes) -> None:
         super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
@@ -137,7 +137,7 @@ class UserRecord(Record):
 
     @classmethod
     def from_db_user(
-        cls, user: User, base_dn: str, should_be_blocked: bool = False
+        cls, user: User, base_dn: DN, should_be_blocked: bool = False
     ) -> Record:
         dn = dn_from_username(user.login, base=base_dn)
         if user.unix_account is None:
@@ -196,7 +196,7 @@ class GroupRecord(Record):
 
     @classmethod
     def from_db_group(
-        cls, name: str, members: typing.Iterable[str], base_dn: str, user_base_dn: str
+        cls, name: str, members: typing.Iterable[str], base_dn: DN, user_base_dn: DN
     ):
         dn = dn_from_cn(name, base=base_dn)
         members_dn: list[str] = [dn_from_username(member, user_base_dn) for member in members]

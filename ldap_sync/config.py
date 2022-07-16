@@ -5,7 +5,7 @@ import os
 from typing import NamedTuple
 from distutils.util import strtobool
 
-from ldap_sync import logger
+from . import logger, types
 
 
 class SyncConfig(NamedTuple):
@@ -17,9 +17,9 @@ class SyncConfig(NamedTuple):
     use_ssl: bool
     ca_certs_file: str | None
     ca_certs_data: str | None
-    bind_dn: str
+    bind_dn: types.DN
     bind_pw: str
-    base_dn: str
+    base_dn: types.DN
     required_property: str
 
 
@@ -42,10 +42,15 @@ def get_config(**defaults: str) -> SyncConfig:
     }
     port = int(config_dict.pop("port"))
     use_ssl = bool(strtobool(config_dict.pop("use_ssl")))
+    bind_dn = types.DN(config_dict.pop("bind_dn"))
+    base_dn = types.DN(config_dict.pop("base_dn"))
+
     return SyncConfig(
         db_uri=db_uri,
         port=port,
         use_ssl=use_ssl,
+        bind_dn=bind_dn,
+        base_dn=base_dn,
         **config_dict,
     )
 

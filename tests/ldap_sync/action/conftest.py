@@ -15,8 +15,8 @@ def connection():
 
 
 @pytest.fixture(scope='session')
-def base():
-    return 'ou=Nutzer,ou=Pycroft,dc=AG DSN,dc=de'
+def base() -> types.DN:
+    return types.DN('ou=Nutzer,ou=Pycroft,dc=AG DSN,dc=de')
 
 
 @pytest.fixture(scope='session')
@@ -25,5 +25,5 @@ def uid():
 
 
 @pytest.fixture(scope='session')
-def dn(uid, base):
+def dn(uid, base) -> types.DN:
     return dn_from_username(uid, base=base)

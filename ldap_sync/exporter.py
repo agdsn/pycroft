@@ -2,7 +2,7 @@ import logging
 from collections import Counter, defaultdict
 from typing import Iterable, Iterator
 
-from . import logger
+from . import logger, types
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .record import UserRecord, GroupRecord, RecordState, Record
 from .record_diff import diff_records
@@ -22,9 +22,9 @@ def iter_desired_records(
     db_users: Iterable[UserProxyType],
     db_groups: Iterable[GroupProxyType],
     db_properties: Iterable[PropertyProxyType],
-    user_base_dn: str,
-    group_base_dn: str,
-    property_base_dn: str,
+    user_base_dn: types.DN,
+    group_base_dn: types.DN,
+    property_base_dn: types.DN,
 ) -> Iterator[Record]:
     # restrict members of groups/properties to those actually exported to the LDAP
     exported_users = {u.User.login for u in db_users}
@@ -52,7 +52,8 @@ class LdapExporter:
     Usage:
 
         >>> from ldap_sync.record import UserRecord
-        >>> record = UserRecord(dn='cn=admin,ou=users,dc=agdsn,dc=de', attrs={})
+        >>> from ldap_sync.types import DN
+        >>> record = UserRecord(dn=DN('cn=admin,ou=users,dc=agdsn,dc=de'), attrs={})
         >>> exporter = LdapExporter(current=[], desired=[record])
         >>> exporter.compile_actions()
         >>> exporter.execute_all()

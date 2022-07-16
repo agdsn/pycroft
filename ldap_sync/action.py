@@ -24,7 +24,7 @@ def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) 
 
 @dataclasses.dataclass  # type: ignore  # see https://github.com/python/mypy/issues/5374
 class Action(ABC):
-    record_dn: str
+    record_dn: types.DN
     _: dataclasses.KW_ONLY  # pushes `logger=` back in generated `__init__`
     logger: logging.Logger = dataclasses.field(
         default_factory=lambda: logging.getLogger("ldap_sync.action")
