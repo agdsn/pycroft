@@ -19,7 +19,18 @@ files = [
 mypy_path = "stubs"
 namespace_packages = true
 
+# global rules
 check_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
 no_strict_optional = true
+
+# stricter rules
+[[tool.mypy.overrides]]
+module = [
+    "ldap_sync.*",
+]
+disallow_untyped_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_globals = true
