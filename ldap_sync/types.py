@@ -14,6 +14,9 @@ NormalizedAttributes = dict[str, typing.Collection[str]]
 DN = typing.NewType('DN', str)
 
 
+# an ldap record, as represented by the `ldap3` response dict.
+# see https://ldap3.readthedocs.io/en/latest/connection.html#responses
 class LdapRecord(typing.TypedDict):
     dn: DN
     attributes: Attributes
+    raw_attributes: dict[str, list[bytes]]

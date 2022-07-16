@@ -1,7 +1,7 @@
 import pytest
 
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
-from ldap_sync.types import DN
+from ldap_sync.types import DN, LdapRecord
 
 
 def assertSubDict(subdict, container):
@@ -41,9 +41,11 @@ class TestRecord:
         assert record == UserRecord(dn=DN("test"), attrs={'mail': ['shizzle']})
 
     def test_record_from_ldap_record(self):
-        ldapsearch_record = {'dn': 'somedn',
-                             'attributes': {'mail': 'mail', 'gecos': 'baz'},
-                             'raw_attributes': {'mail': b'mail'}}
+        ldapsearch_record: LdapRecord = {
+            "dn": DN("somedn"),
+            "attributes": {"mail": "mail", "gecos": "baz"},
+            "raw_attributes": {"mail": [b"mail"]}
+        }
         record = UserRecord.from_ldap_record(ldapsearch_record)
         assertSubDict({'mail': ['mail'], 'gecos': ['baz']}, record.attrs)
         for key in UserRecord.get_synced_attributes():
