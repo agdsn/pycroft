@@ -6,7 +6,7 @@ Actions (Add/Delete/Modify/Nothing) and how to execute them.
 """
 import dataclasses
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 import ldap3
 
@@ -22,8 +22,8 @@ def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) 
         logger.debug("Operation successful")
 
 
-@dataclasses.dataclass
-class Action(metaclass=ABCMeta):
+@dataclasses.dataclass  # type: ignore  # see https://github.com/python/mypy/issues/5374
+class Action(ABC):
     record_dn: str
     _: dataclasses.KW_ONLY  # pushes `logger=` back in generated `__init__`
     logger: logging.Logger = dataclasses.field(
@@ -31,10 +31,10 @@ class Action(metaclass=ABCMeta):
     )
 
     @abstractmethod
-    def execute(self, connection):
+    def execute(self, connection: ldap3.Connection) -> None:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.record_dn}>"
 
 
@@ -48,13 +48,13 @@ class AddAction(Action):
         self.record = record
         record.remove_empty_attributes()
 
-    def execute(self, connection):
+    def execute(self, connection: ldap3.Connection) -> None:
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         self.logger.debug("Attributes used: %s", self.record.attrs)
         connection.add(self.record.dn, attributes=self.record.attrs)
         debug_whether_success(self.logger, connection)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.record.dn}>"
 
 
@@ -67,7 +67,7 @@ class ModifyAction(Action):
     #: where the value is a list if the corresponding attribute is not single-valued.
     modifications: types.NormalizedAttributes
 
-    def execute(self, connection):
+    def execute(self, connection: ldap3.Connection) -> None:
         self.logger.debug("Executing %s for %s (%s)", type(self).__name__, self.record_dn,
                           ', '.join(self.modifications))
         connection.modify(dn=self.record_dn, changes={
@@ -77,14 +77,15 @@ class ModifyAction(Action):
         })
         debug_whether_success(self.logger, connection)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attr_string = ', '.join(self.modifications.keys())
         return f"<{type(self).__name__} {self.record_dn} [{attr_string}]>"
 
 
 class DeleteAction(Action):
     """Delete an LDAP record."""
-    def execute(self, connection):
+
+    def execute(self, connection: ldap3.Connection) -> None:
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record_dn)
         connection.delete(self.record_dn)
         debug_whether_success(self.logger, connection)
@@ -92,7 +93,8 @@ class DeleteAction(Action):
 
 class IdleAction(Action):
     """Do nothing."""
-    def execute(self, *a, **kw):
+
+    def execute(self, *a, **kw) -> None:
         # logging here would be useless noise, and would contradict the nature
         # of an “idle” action.
         pass
