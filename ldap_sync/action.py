@@ -40,23 +40,18 @@ class Action(ABC):
 
 class AddAction(Action):
     """Add an LDAP record"""
-    record: Record
+    nonempty_attrs: types.NormalizedAttributes
 
     def __init__(self, record: Record) -> None:
         # We don't want to add e.g. an empty `mail` field
         super().__init__(record_dn=record.dn)
-        self.record = record
-        record.remove_empty_attributes()
+        self.nonempty_attrs = {key: val for key, val in record.attrs.items() if val}
 
     def execute(self, connection: ldap3.Connection) -> None:
-        self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
-        self.logger.debug("Attributes used: %s", self.record.attrs)
-        connection.add(self.record.dn, attributes=self.record.attrs)
+        self.logger.debug("Executing %s for %s", type(self).__name__, self.record_dn)
+        self.logger.debug("Attributes used: %s", self.nonempty_attrs)
+        connection.add(self.record_dn, attributes=self.nonempty_attrs)
         debug_whether_success(self.logger, connection)
-
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__} {self.record.dn}>"
-
 
 # noinspection PyDataclass
 @dataclasses.dataclass

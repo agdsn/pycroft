@@ -23,7 +23,13 @@ def record(dn) -> UserRecord:
 def test_record_subtraction_with_none_adds(record):
     difference = diff_records(None, record)
     assert isinstance(difference, AddAction)
-    assert difference.record == record
+    assert difference.record_dn == record.dn
+    assert difference.nonempty_attrs.items() <= record.attrs.items()
+    assert all((
+        not val
+        for key, val in record.attrs.items()
+        if key not in difference.nonempty_attrs
+    ))
 
 
 def test_none_subtracted_by_record_deletes(record):

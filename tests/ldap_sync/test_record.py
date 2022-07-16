@@ -60,10 +60,6 @@ class TestEmptyAttributeRecord:
     def test_attribute_is_empty_list(self, record):
         assert record.attrs['mail'] == []
 
-    def test_empty_attribute_removed(self, record):
-        record.remove_empty_attributes()
-        assert 'mail' not in record.attrs
-
 
 class TestRecordFromOrm:
     @pytest.fixture(scope='class')

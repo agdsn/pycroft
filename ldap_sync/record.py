@@ -62,6 +62,7 @@ def escape_and_normalize_attrs(attrs: Attributes) -> NormalizedAttributes:
     }
 
 
+@dataclasses.dataclass(frozen=True)
 class Record(abc.ABC):
     """Create a new record with a dn and certain attributes.
 
@@ -81,12 +82,12 @@ class Record(abc.ABC):
     attrs: NormalizedAttributes
 
     def __init__(self, dn: DN, attrs: Attributes) -> None:
-        self.dn = dn
+        object.__setattr__(self, "dn", dn)
         attrs = {k: v for k, v in attrs.items() if k in self.get_synced_attributes()}
         for key in self.get_synced_attributes():
             attrs.setdefault(key, [])
         # escape_filter_chars is idempotent ⇒ no double escaping
-        self.attrs = escape_and_normalize_attrs(attrs)
+        object.__setattr__(self, "attrs", escape_and_normalize_attrs(attrs))
 
     @classmethod
     @abc.abstractmethod
@@ -97,9 +98,6 @@ class Record(abc.ABC):
     @classmethod
     def from_ldap_record(cls: type[TRecord], record: LdapRecord) -> TRecord:
         return cls(dn=record['dn'], attrs=record['attributes'])
-
-    def remove_empty_attributes(self) -> None:
-        self.attrs = {key: val for key, val in self.attrs.items() if val}
 
     def __eq__(self, other):  # `__eq__` must be total, hence no type restrictions/hints
         try:
@@ -122,8 +120,6 @@ class Record(abc.ABC):
 class UserRecord(Record):
     """Create a new user record with a dn and certain attributes.
     """
-    def __init__(self, dn: DN, attrs: Attributes) -> None:
-        super().__init__(dn, attrs)
 
     SYNCED_ATTRIBUTES = frozenset([
         'objectClass',
