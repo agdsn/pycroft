@@ -3,6 +3,7 @@ import pytest
 from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
 from ldap_sync.record_diff import diff_records
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
+from ldap_sync.types import DN
 
 
 def assertSubDict(subdict, container):
@@ -14,7 +15,7 @@ def assertSubDict(subdict, container):
 class TestRecordDirectInit:
     @pytest.fixture(scope='class')
     def record(self):
-        return UserRecord(dn='test', attrs={'userPassword': "{CRYPT}**shizzle",
+        return UserRecord(dn=DN("test"), attrs={'userPassword': "{CRYPT}**shizzle",
                                             'mail': None, 'cn': "User", 'uid': 50})
 
     def test_empty_attr_converted_to_list(self, record):
@@ -33,13 +34,14 @@ class TestRecordDirectInit:
 class TestRecord:
     @pytest.fixture(scope='class')
     def record(self):
-        return UserRecord(dn='test', attrs={'mail': 'shizzle'})
+        return UserRecord(dn=DN("test"), attrs={'mail': 'shizzle'})
 
     def test_record_equality(self, record):
-        assert record == UserRecord(dn='test', attrs={'mail': 'shizzle'})
+        assert record == UserRecord(dn=DN("test"), attrs={'mail': 'shizzle'})
 
     def test_record_noncanonical_equality(self, record):
         assert record == UserRecord(dn='test', attrs={'mail': ['shizzle']})
+        return UserRecord(dn=DN("test"), attrs={'mail': 'shizzle'})
 
     def test_record_subtraction_with_none_adds(self, record):
         difference = diff_records(None, record)
@@ -54,14 +56,14 @@ class TestRecord:
     def test_different_dn_raises_typeerror(self, record):
         with pytest.raises(TypeError):
             # pylint: disable=expression-not-assigned
-            record - UserRecord(dn='notatest', attrs={})
+            record - UserRecord(dn=DN("notatest"), attrs={})
 
     def test_same_record_subtraction_idles(self, record):
         difference = diff_records(record, record)
         assert isinstance(difference, IdleAction)
 
     def test_correctly_different_record_modifies(self, record):
-        difference = diff_records(UserRecord(dn='test', attrs={'mail': ''}), record)
+        difference = diff_records(UserRecord(dn=DN("test"), attrs={'mail': ''}), record)
         assert isinstance(difference, ModifyAction)
 
     def test_record_from_ldap_record(self):
@@ -77,7 +79,7 @@ class TestRecord:
 class TestEmptyAttributeRecord:
     @pytest.fixture(scope='class')
     def record(self):
-        return UserRecord(dn='test', attrs={'mail': None})
+        return UserRecord(dn=DN("test"), attrs={'mail': None})
 
     def test_attribute_is_empty_list(self, record):
         assert record.attrs['mail'] == []
@@ -103,7 +105,7 @@ class TestRecordFromOrm:
                 login_shell = '/bin/bash'
             passwd_hash = 'somehash'
 
-        return UserRecord.from_db_user(complete_user, base_dn='o=test').attrs
+        return UserRecord.from_db_user(complete_user, base_dn=DN("o=test")).attrs
 
     def test_uid_correct(self, attrs):
         assert attrs['uid'] == ['shizzle']
@@ -149,7 +151,7 @@ def test_canonicalization(value, expected):
 class TestRecordState:
     @pytest.fixture(scope='class')
     def record(self):
-        return UserRecord(dn='test', attrs={})
+        return UserRecord(dn=DN("test"), attrs={})
 
     def test_equality_both_none(self):
         assert RecordState() == RecordState()
