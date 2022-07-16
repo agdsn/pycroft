@@ -12,6 +12,14 @@ import ldap3
 from . import record, types
 
 
+def debug_whether_success(logger: logging.Logger, connection: ldap3.Connection) -> None:
+    """Communicate whether the last operation on `connection` has been successful."""
+    if connection.result['result']:
+        logger.warning("Operation unsuccessful: %s", connection.result)
+    else:
+        logger.debug("Operation successful")
+
+
 class Action(metaclass=ABCMeta):
     """An Action on an ldap record
 
@@ -30,12 +38,6 @@ class Action(metaclass=ABCMeta):
     def execute(self, connection):
         pass
 
-    def debug_whether_success(self, connection):
-        if connection.result['result']:
-            self.logger.warning("Operation unsuccessful: %s", connection.result)
-        else:
-            self.logger.debug("Operation successful")
-
     def __repr__(self):
         return f"<{type(self).__name__} {self.record_dn}>"
 
@@ -50,7 +52,7 @@ class AddAction(Action):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record.dn)
         self.logger.debug("Attributes used: %s", self.record.attrs)
         connection.add(self.record.dn, attributes=self.record.attrs)
-        self.debug_whether_success(connection)
+        debug_whether_success(self.logger, connection)
 
     def __repr__(self):
         return f"<{type(self).__name__} {self.record.dn}>"
@@ -78,7 +80,7 @@ class ModifyAction(Action):
             attr: (ldap3.MODIFY_REPLACE, new_value)
             for attr, new_value in self.modifications.items()
         })
-        self.debug_whether_success(connection)
+        debug_whether_success(self.logger, connection)
 
     def __repr__(self):
         attr_string = ', '.join(self.modifications.keys())
@@ -89,7 +91,7 @@ class DeleteAction(Action):
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record_dn)
         connection.delete(self.record_dn)
-        self.debug_whether_success(connection)
+        debug_whether_success(self.logger, connection)
 
 
 class IdleAction(Action):
