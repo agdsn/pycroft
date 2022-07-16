@@ -28,7 +28,8 @@ class TestModifyActionConstructor:
         desired = UserRecord(dn=dn, attrs={'gecos': 'test'})
         current = UserRecord(dn=dn, attrs={})
         action = typing.cast(ModifyAction, diff_records(desired=desired, current=current))
-        assert action.record == desired
+        assert action.record_dn == desired.dn
+        assert action.modifications == {'gecos': ['test']}
 
     @pytest.mark.parametrize('attrs_current, attrs_desired, modifications', [
         ({'gecos': 'bar'},
@@ -95,7 +96,7 @@ class TestDeleteAction:
     def objects(self, dn, connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
-        DeleteAction(record=record).execute(connection)
+        DeleteAction(record_dn=record.dn).execute(connection)
         return get_all_objects(connection, base)
 
     def test_no_objects(self, objects):
@@ -104,10 +105,10 @@ class TestDeleteAction:
 
 class TestModifyAction:
     @pytest.fixture(scope='class')
-    def objects(self, dn, connection, base):
+    def objects(self, dn, connection: ldap3.Connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
-        action = ModifyAction(record=record, modifications={'mail': 'new@shizzle.de'})
+        action = ModifyAction(record_dn=record.dn, modifications={'mail': 'new@shizzle.de'})
         action.execute(connection)
         return get_all_objects(connection, base)
 

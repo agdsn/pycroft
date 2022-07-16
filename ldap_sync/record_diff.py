@@ -50,18 +50,18 @@ def diff_records(desired: T | None, current: T | None) -> action.Action:
         case (None, desired):
             return action.AddAction(record=desired)
         case (current, None):
-            return action.DeleteAction(record=current)
+            return action.DeleteAction(record_dn=current.dn)
         case (c, d) if c == d:
-            return action.IdleAction(record=d)
+            return action.IdleAction(record_dn=d.dn)
         case (record.Record(dn=dn1), record.Record(dn=dn2)) if dn1 != dn2:
             raise TypeError("Cannot compute difference between records of different dn")
         case (record.UserRecord() as c, record.UserRecord() as d):
             return action.ModifyAction(
-                record=d, modifications=diff_user_attributes(c.attrs, d.attrs)
+                record_dn=d.dn, modifications=diff_user_attributes(c.attrs, d.attrs)
             )
         case (record.GroupRecord() as c, record.GroupRecord() as d):
             return action.ModifyAction(
-                record=d, modifications=diff_attributes(c.attrs, d.attrs)
+                record_dn=d.dn, modifications=diff_attributes(c.attrs, d.attrs)
             )
         case (c, d):
             raise TypeError(f"Cannot diff {type(c).__name__} and {type(d).__name__}")

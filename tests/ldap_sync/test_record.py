@@ -49,7 +49,7 @@ class TestRecord:
     def test_none_subtracted_by_record_deletes(self, record):
         difference = diff_records(None, record)
         assert isinstance(difference, DeleteAction)
-        assert difference.record == record
+        assert difference.record_dn == record.dn
 
     def test_different_dn_raises_typeerror(self, record):
         with pytest.raises(TypeError):

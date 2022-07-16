@@ -57,18 +57,17 @@ class AddAction(Action):
 
 
 class ModifyAction(Action):
-    def __init__(self, record: record.Record, modifications: types.NormalizedAttributes) -> None:
+    def __init__(self, record_dn, modifications: types.NormalizedAttributes) -> None:
         """Initialize a new ModifyAction operating on `record` with
         `modifications`
 
-        :param Record record:
+        :param record_dn:
         :param dict modifications: a dict with entries of the form
             ``'attribute_name': new_value``, where the value is a list
             if the corresponding attribute is not single-valued.
+            :param record_dn:
         """
-        # TODO just ask for DN and remove this property
-        self.record = record
-        super().__init__(record_dn=record.dn)
+        super().__init__(record_dn=record_dn)
         self.modifications = modifications
 
     def execute(self, connection):
@@ -87,11 +86,6 @@ class ModifyAction(Action):
 
 
 class DeleteAction(Action):
-    def __init__(self, record: record.Record):
-        # TODO just ask for DN
-        super().__init__(record_dn=record.dn)
-        self.record = record
-
     def execute(self, connection):
         self.logger.debug("Executing %s for %s", type(self).__name__, self.record_dn)
         connection.delete(self.record_dn)
@@ -99,10 +93,6 @@ class DeleteAction(Action):
 
 
 class IdleAction(Action):
-    def __init__(self, record: record.Record):
-        # TODO just ask for DN
-        super().__init__(record_dn=record.dn)
-
     def execute(self, *a, **kw):
         # logging here would be useless noise, and would contradict the nature
         # of an “idle” action.
