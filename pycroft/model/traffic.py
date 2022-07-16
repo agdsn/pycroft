@@ -17,16 +17,14 @@ from pycroft.model.host import IP, Host, Interface
 ddl = DDLManager()
 
 
-class TrafficEvent:
+class TrafficVolume(ModelBase):
+    __table_args__ = (
+        PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
+    )
     timestamp = Column(DateTimeTz, server_default=func.current_timestamp(), nullable=False)
     amount = Column(BigInteger, CheckConstraint('amount >= 0'),
                     nullable=False)
 
-
-class TrafficVolume(TrafficEvent, ModelBase):
-    __table_args__ = (
-        PrimaryKeyConstraint('ip_id', 'type', 'timestamp'),
-    )
     type = Column(Enum("Ingress", "Egress", name="traffic_direction"),
                   nullable=False)
     ip_id = Column(Integer, ForeignKey(IP.id, ondelete="CASCADE"),
