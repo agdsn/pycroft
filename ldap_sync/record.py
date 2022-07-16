@@ -62,7 +62,7 @@ def escape_and_normalize_attrs(attrs: Attributes) -> NormalizedAttributes:
     }
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)  # type: ignore
 class Record(abc.ABC):
     """Create a new record with a dn and certain attributes.
 
@@ -75,7 +75,8 @@ class Record(abc.ABC):
     :param attrs: The attributes of the record.  Every value will
         be canonicalized to a list to allow for a senseful comparison
         between two records, as well as escaped according to RFC04515.
-        Additionally, the keys are fixed to a certain set.
+        Additionally, the keys are fixed to what's given by
+        :meth:`get_synced_attributes`.
     """
 
     dn: DN
@@ -112,9 +113,10 @@ class Record(abc.ABC):
     def _validate_attributes(cls, attributes: Attributes):
         # sanity check: did we forget something in `cls.get_synced_attributes()` that
         # we support migrating anyway?
-        _missing_attributes = set(attributes.keys()) - cls.get_synced_attributes()
-        assert not _missing_attributes, \
-            f"get_synced_attributes() does not contain attributes {_missing_attributes}"
+        _missing_attrs = cls.get_synced_attributes() - set(attributes.keys())
+        assert not _missing_attrs, f"Missing attributes: {_missing_attrs}"
+        _superfluous_attrs = set(attributes.keys()) - cls.get_synced_attributes()
+        assert not _superfluous_attrs, f"Superfluous attributes: {_superfluous_attrs}"
 
 
 class UserRecord(Record):
@@ -172,9 +174,12 @@ class UserRecord(Record):
             # The value 0 should not be used as it is interpreted as either
             # an account with no expiration, or as an expiration on Jan 1, 1970.
             attributes['shadowExpire'] = 1
-
+        else:
+            attributes |= {
+                "pwdAccountLockedTime": [],
+                "shadowExpire": [],
+            }
         cls._validate_attributes(attributes)
-
         return cls(dn=dn, attrs=attributes)
 
 

@@ -1,6 +1,10 @@
-import pytest
+import typing
 
-from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
+import pytest
+from attr import validate
+from ldap_sync import types
+
+from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list, Record
 from ldap_sync.types import DN, LdapRecord
 
 
@@ -50,6 +54,27 @@ class TestRecord:
         assertSubDict({'mail': ['mail'], 'gecos': ['baz']}, record.attrs)
         for key in UserRecord.get_synced_attributes():
             assert key in record.attrs
+
+class TestRecordValidation:
+    @pytest.fixture(scope='class')
+    def validate(self) -> typing.Callable[[types.Attributes], None]:
+        class RecordWithOneSyncedAttribute(Record):
+            @classmethod
+            def get_synced_attributes(cls) -> typing.AbstractSet[str]:
+                return {"a"}
+
+        return RecordWithOneSyncedAttribute._validate_attributes
+
+    def test_valid_attributes_dict(self, validate):
+        validate({"a": "foo"})
+
+    def test_missing_attribute(self, validate):
+        with pytest.raises(AssertionError, match="Missing attributes: {'a'}"):
+            validate({})
+
+    def test_superfluous_attribute(self, validate):
+        with pytest.raises(AssertionError, match="Superfluous attributes: {'b'}"):
+            validate({"a": 1, "b": 5})
 
 
 class TestEmptyAttributeRecord:
