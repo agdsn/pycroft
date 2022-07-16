@@ -33,6 +33,7 @@ def diff_user_attributes(
     current_attrs: types.NormalizedAttributes,
     desired_attrs: types.NormalizedAttributes,
 ) -> types.NormalizedAttributes:
+    """Like `diff_attributes`, but aware of the ``ppolicy`` overlay."""
     modifications = diff_attributes(current_attrs, desired_attrs)
     # Do not try to delete pwdAccountLockedTime if password is changed,
     # as the ppolicy overlay already takes care of that.
@@ -44,6 +45,7 @@ def diff_user_attributes(
 
 
 def diff_records(desired: T | None, current: T | None) -> action.Action:
+    """Determines an action to take, given a desired and a current record."""
     match (current, desired):
         case (None, None):
             raise ValueError("cannot diff two nonexistent records")
