@@ -33,9 +33,8 @@ def test_none_subtracted_by_record_deletes(record):
 
 
 def test_different_dn_raises_typeerror(record):
-    with pytest.raises(TypeError):
-        # pylint: disable=expression-not-assigned
-        record - UserRecord(dn=DN("notatest"), attrs={})
+    with pytest.raises(TypeError, match="different dn"):
+        _ = diff_records(UserRecord(dn=DN("notatest"), attrs={}), record)
 
 
 def test_same_record_subtraction_idles(record):
