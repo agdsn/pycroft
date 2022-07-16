@@ -44,8 +44,12 @@ def diff_user_attributes(
     return modifications
 
 
-def diff_records(desired: T | None, current: T | None) -> action.Action:
-    """Determines an action to take, given a desired and a current record."""
+def diff_records(current: T | None, desired: T | None) -> action.Action:
+    """Determines an action to take, given a desired and a current record.
+
+    :param current: the present state
+    :param desired: the future state
+    """
     match (current, desired):
         case (None, None):
             raise ValueError("cannot diff two nonexistent records")

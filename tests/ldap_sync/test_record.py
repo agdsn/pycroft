@@ -42,12 +42,12 @@ class TestRecord:
         assert record == UserRecord(dn='test', attrs={'mail': ['shizzle']})
 
     def test_record_subtraction_with_none_adds(self, record):
-        difference = diff_records(record, None)
+        difference = diff_records(None, record)
         assert isinstance(difference, AddAction)
         assert difference.record == record
 
     def test_none_subtracted_by_record_deletes(self, record):
-        difference = diff_records(None, record)
+        difference = diff_records(record, None)
         assert isinstance(difference, DeleteAction)
         assert difference.record_dn == record.dn
 
@@ -61,7 +61,7 @@ class TestRecord:
         assert isinstance(difference, IdleAction)
 
     def test_correctly_different_record_modifies(self, record):
-        difference = diff_records(record, UserRecord(dn='test', attrs={'mail': ''}))
+        difference = diff_records(UserRecord(dn='test', attrs={'mail': ''}), record)
         assert isinstance(difference, ModifyAction)
 
     def test_record_from_ldap_record(self):

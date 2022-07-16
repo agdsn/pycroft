@@ -121,7 +121,7 @@ class LdapExporter:
         if self.actions:
             raise RuntimeError("Actions can only be compiled once")
         for state in self.states_dict.values():
-            self.actions.append(diff_records(desired=state.desired, current=state.current))
+            self.actions.append(diff_records(current=state.current, desired=state.desired))
 
     def execute_all(self, *a, **kw):
         for action in self.actions:

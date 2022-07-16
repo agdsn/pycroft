@@ -27,7 +27,7 @@ class TestModifyActionConstructor:
     def test_desired_record_passed(self, dn):
         desired = UserRecord(dn=dn, attrs={'gecos': 'test'})
         current = UserRecord(dn=dn, attrs={})
-        action = typing.cast(ModifyAction, diff_records(desired=desired, current=current))
+        action = typing.cast(ModifyAction, diff_records(current=current, desired=desired))
         assert action.record_dn == desired.dn
         assert action.modifications == {'gecos': ['test']}
 
