@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
@@ -7,16 +9,16 @@ from . import validate_attribute_type, get_all_objects
 
 
 class TestActionSubclass:
-    def test_instantiation_fails(self):
+    def test_instantiation_fails(self, dn):
         with pytest.raises(TypeError):
-            Action(record=None)
+            Action(record_dn=dn)
 
-    def test_subclassing_with_execute_works(self):
+    def test_subclassing_with_execute_works(self, dn):
         class A(Action):
             def execute(self, **kwargs):
                 pass
         try:
-            A(record=None)
+            A(record_dn=dn)
         except TypeError as e:
             pytest.fail(f"Subclassing raised Exception {e}")
 
@@ -25,7 +27,7 @@ class TestModifyActionConstructor:
     def test_desired_record_passed(self, dn):
         desired = UserRecord(dn=dn, attrs={'gecos': 'test'})
         current = UserRecord(dn=dn, attrs={})
-        action = diff_records(desired=desired, current=current)
+        action = typing.cast(ModifyAction, diff_records(desired=desired, current=current))
         assert action.record == desired
 
     @pytest.mark.parametrize('attrs_current, attrs_desired, modifications', [
@@ -117,4 +119,5 @@ class TestModifyAction:
 
 
 def test_execute_does_nothing():
-    IdleAction(record=(UserRecord(dn='test', attrs={}))).execute()
+    record = UserRecord(dn='test', attrs={})
+    IdleAction(record_dn=record.dn).execute()
