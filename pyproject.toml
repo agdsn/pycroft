@@ -14,6 +14,7 @@ ignore_missing_imports = true
 files = [
     "pycroft/helpers/i18n.py",
     "pycroft/lib",
+    "ldap_sync",
 ]
 mypy_path = "stubs"
 namespace_packages = true
