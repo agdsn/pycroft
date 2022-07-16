@@ -1,7 +1,5 @@
 import pytest
 
-from ldap_sync.action import AddAction, DeleteAction, IdleAction, ModifyAction
-from ldap_sync.record_diff import diff_records
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list
 from ldap_sync.types import DN
 
@@ -40,31 +38,7 @@ class TestRecord:
         assert record == UserRecord(dn=DN("test"), attrs={'mail': 'shizzle'})
 
     def test_record_noncanonical_equality(self, record):
-        assert record == UserRecord(dn='test', attrs={'mail': ['shizzle']})
-        return UserRecord(dn=DN("test"), attrs={'mail': 'shizzle'})
-
-    def test_record_subtraction_with_none_adds(self, record):
-        difference = diff_records(None, record)
-        assert isinstance(difference, AddAction)
-        assert difference.record == record
-
-    def test_none_subtracted_by_record_deletes(self, record):
-        difference = diff_records(record, None)
-        assert isinstance(difference, DeleteAction)
-        assert difference.record_dn == record.dn
-
-    def test_different_dn_raises_typeerror(self, record):
-        with pytest.raises(TypeError):
-            # pylint: disable=expression-not-assigned
-            record - UserRecord(dn=DN("notatest"), attrs={})
-
-    def test_same_record_subtraction_idles(self, record):
-        difference = diff_records(record, record)
-        assert isinstance(difference, IdleAction)
-
-    def test_correctly_different_record_modifies(self, record):
-        difference = diff_records(UserRecord(dn=DN("test"), attrs={'mail': ''}), record)
-        assert isinstance(difference, ModifyAction)
+        assert record == UserRecord(dn=DN("test"), attrs={'mail': ['shizzle']})
 
     def test_record_from_ldap_record(self):
         ldapsearch_record = {'dn': 'somedn',
