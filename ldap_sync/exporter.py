@@ -51,12 +51,12 @@ class LdapExporter:
 
     Usage:
 
-        >>> from ldap_sync.record import UserRecord
+        >>> from ldap_sync.record import UserRecord
         >>> from ldap_sync.types import DN
-        >>> record = UserRecord(dn=DN('cn=admin,ou=users,dc=agdsn,dc=de'), attrs={})
-        >>> exporter = LdapExporter(current=[], desired=[record])
-        >>> exporter.compile_actions()
-        >>> exporter.execute_all()
+        >>> record = UserRecord(dn=DN('cn=admin,ou=users,dc=agdsn,dc=de'), attrs={})
+        >>> exporter = LdapExporter(current=[], desired=[record])
+        >>> exporter.compile_actions()
+        >>> exporter.execute_all()
 
     Since the desired state is to be represented by a postgres
     database and the current state by the LDAP being synced to,
