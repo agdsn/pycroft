@@ -45,7 +45,7 @@ def _maybe_escape_filter_chars(value: T) -> T | str:
     Else, return the unchanged object.
     """
     if isinstance(value, bytes) or isinstance(value, str):
-        return escape_filter_chars(value)
+        return typing.cast(str, escape_filter_chars(value))
     return value
 
 

@@ -71,3 +71,4 @@ def diff_records(current: T | None, desired: T | None) -> action.Action:
             )
         case (c, d):
             raise TypeError(f"Cannot diff {type(c).__name__} and {type(d).__name__}")
+    assert False  # see https://github.com/python/mypy/issues/12534

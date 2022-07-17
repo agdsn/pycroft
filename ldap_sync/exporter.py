@@ -1,17 +1,22 @@
+from __future__ import annotations
+
 import logging
+import typing
 from collections import Counter, defaultdict
 from typing import Iterable, Iterator
 
-from . import logger, types
+import ldap3
+
+from . import logger, types, action
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .record import UserRecord, GroupRecord, RecordState, Record
 from .record_diff import diff_records
 
 
 def iter_current_records(
-    ldap_users: Iterable[dict],
-    ldap_groups: Iterable[dict],
-    ldap_properties: Iterable[dict],
+    ldap_users: Iterable[types.LdapRecord],
+    ldap_groups: Iterable[types.LdapRecord],
+    ldap_properties: Iterable[types.LdapRecord],
 ) -> Iterator[Record]:
     yield from (UserRecord.from_ldap_record(u) for u in ldap_users)
     yield from (GroupRecord.from_ldap_record(g) for g in ldap_groups)
@@ -46,6 +51,9 @@ def iter_desired_records(
         )
 
 
+TExporter = typing.TypeVar("TExporter", bound="LdapExporter")
+
+
 class LdapExporter:
     """The ldap Exporter
 
@@ -67,9 +75,10 @@ class LdapExporter:
     :param iterable desired: An iterable of the desired
         :class:`Record`s
     """
-    def __init__(self, current, desired) -> None:
-        self.states_dict = defaultdict(RecordState)
-        l = 0
+
+    def __init__(self, current: Iterable[Record], desired: Iterable[Record]) -> None:
+        self.states_dict: dict[types.DN, RecordState] = defaultdict(RecordState)
+        l = -1
         for l, record in enumerate(current, 1):
             self.states_dict[record.dn].current = record
         logger.info("Gathered %d records of current state", l)
@@ -78,14 +87,21 @@ class LdapExporter:
             self.states_dict[record.dn].desired = record
         logger.info("Gathered %d records of desired state", l)
 
-        self.actions = []
+        self.actions: list[action.Action] = []
 
     @classmethod
     def from_orm_objects_and_ldap_result(
-            cls, ldap_users: dict, db_users: Iterable[UserProxyType], user_base_dn,
-            ldap_groups: dict = None, db_groups: Iterable[GroupProxyType] = None,
-            group_base_dn=None, ldap_properties: dict = None,
-            db_properties: Iterable[PropertyProxyType] = None, property_base_dn=None):
+        cls: type[TExporter],
+        ldap_users: Iterable[types.LdapRecord],
+        db_users: Iterable[UserProxyType],
+        user_base_dn: types.DN,
+        ldap_groups: Iterable[types.LdapRecord] | None = None,
+        db_groups: Iterable[GroupProxyType] | None = None,
+        group_base_dn: types.DN | None = None,
+        ldap_properties: Iterable[types.LdapRecord] | None = None,
+        db_properties: Iterable[PropertyProxyType] | None = None,
+        property_base_dn: types.DN = None,
+    ) -> TExporter:
         """Construct an exporter instance with non-raw parameters
 
         :param ldap_users: An iterable of records as returned by :func:`fetch_current_ldap_users`.
@@ -116,14 +132,14 @@ class LdapExporter:
             ),
         )
 
-    def compile_actions(self):
+    def compile_actions(self) -> None:
         """Consolidate current and desired records into necessary actions"""
         if self.actions:
             raise RuntimeError("Actions can only be compiled once")
         for state in self.states_dict.values():
             self.actions.append(diff_records(current=state.current, desired=state.desired))
 
-    def execute_all(self, *a, **kw):
+    def execute_all(self, *a: typing.Any, **kw: typing.Any) -> None:
         for action in self.actions:
             action.execute(*a, **kw)
 
@@ -131,7 +147,7 @@ class LdapExporter:
 #### TODO move to `ldap` (or `ldap_fetch`? or `sources.ldap`?) module
 
 
-def add_stdout_logging(logger, level=logging.INFO):
+def add_stdout_logging(logger: logging.Logger, level: int = logging.INFO) -> None:
     handler = logging.StreamHandler()
     fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
     handler.setFormatter(fmt)
@@ -139,15 +155,22 @@ def add_stdout_logging(logger, level=logging.INFO):
     logger.setLevel(level)
 
 
-def sync_all(connection, ldap_users: dict, db_users: Iterable[UserProxyType], user_base_dn,
-             ldap_groups: dict = None, db_groups: Iterable[GroupProxyType] = None,
-             group_base_dn=None, ldap_properties: dict = None,
-             db_properties: Iterable[PropertyProxyType] = None, property_base_dn=None):
+def sync_all(
+    connection: ldap3.Connection,
+    ldap_users: Iterable[types.LdapRecord],
+    db_users: Iterable[UserProxyType],
+    user_base_dn: types.DN,
+    ldap_groups: Iterable[types.LdapRecord] | None = None,
+    db_groups: Iterable[GroupProxyType] | None = None,
+    group_base_dn: types.DN | None = None,
+    ldap_properties: Iterable[types.LdapRecord] | None = None,
+    db_properties: Iterable[PropertyProxyType] | None = None,
+    property_base_dn: types.DN | None = None,
+) -> None:
     """Execute the LDAP sync given a connection and state data.
 
-    :param connection: An LDAP connection
-
-    For the other parameters see :func:`LdapExporter.from_orm_objects_and_ldap_result`.
+    For the meaning of the last n-1 parameters see
+    :func:`LdapExporter.from_orm_objects_and_ldap_result`.
     """
     exporter = LdapExporter.from_orm_objects_and_ldap_result(
         ldap_users, db_users, user_base_dn, ldap_groups, db_groups, group_base_dn, ldap_properties,
