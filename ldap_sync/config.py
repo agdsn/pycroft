@@ -23,7 +23,7 @@ class SyncConfig(NamedTuple):
     required_property: str
 
 
-def _from_environ_or_defaults(key: str, defaults: dict[str, str]) -> str:
+def _from_environ_or_defaults(key: str, defaults: dict[str, str | None]) -> str | None:
     try:
         return os.environ[f'PYCROFT_LDAP_{key.upper()}']
     except KeyError as e:
@@ -33,9 +33,9 @@ def _from_environ_or_defaults(key: str, defaults: dict[str, str]) -> str:
         return defaults[key]
 
 
-def get_config(**defaults: str) -> SyncConfig:
+def get_config(**defaults: str | None) -> SyncConfig:
     db_uri = os.environ["PYCROFT_DB_URI"]
-    config_dict: dict[str, str] = {
+    config_dict: dict[str, str | None] = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
         key: _from_environ_or_defaults(key, defaults)
         for key in SyncConfig._fields if key != 'db_uri'
@@ -55,7 +55,7 @@ def get_config(**defaults: str) -> SyncConfig:
     )
 
 
-def get_config_or_exit(**defaults: str) -> SyncConfig:
+def get_config_or_exit(**defaults: str | int | bool | None) -> SyncConfig:
     try:
         return get_config(**defaults)
     except KeyError as exc:
