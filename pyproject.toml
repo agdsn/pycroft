@@ -28,6 +28,7 @@ no_strict_optional = true
 # stricter rules
 [[tool.mypy.overrides]]
 module = [
+    "ldap_sync",
     "ldap_sync.*",
 ]
 disallow_untyped_defs = true
