@@ -1,6 +1,8 @@
 #  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+from __future__ import annotations
+
 import os
 from typing import NamedTuple
 from distutils.util import strtobool
@@ -40,10 +42,16 @@ def get_config(**defaults: str | None) -> SyncConfig:
         key: _from_environ_or_defaults(key, defaults)
         for key in SyncConfig._fields if key != 'db_uri'
     }
-    port = int(config_dict.pop("port"))
-    use_ssl = bool(strtobool(config_dict.pop("use_ssl")))
-    bind_dn = types.DN(config_dict.pop("bind_dn"))
-    base_dn = types.DN(config_dict.pop("base_dn"))
+
+    def _get_or_fail(dict: dict[str, str | None], key: str) -> str:
+        if (str_value := dict.pop(key)) is None:
+            raise ValueError(f"{key} not found in environ or defaults")
+        return str_value
+
+    port = int(_get_or_fail(config_dict, "port"))
+    use_ssl = bool(strtobool(_get_or_fail(config_dict, "use_ssl")))
+    bind_dn = types.DN(_get_or_fail(config_dict, "bind_dn"))
+    base_dn = types.DN(_get_or_fail(config_dict, "base_dn"))
 
     return SyncConfig(
         db_uri=db_uri,
@@ -55,7 +63,7 @@ def get_config(**defaults: str | None) -> SyncConfig:
     )
 
 
-def get_config_or_exit(**defaults: str | int | bool | None) -> SyncConfig:
+def get_config_or_exit(**defaults: str | None) -> SyncConfig:
     try:
         return get_config(**defaults)
     except KeyError as exc:
