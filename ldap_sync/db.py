@@ -1,10 +1,12 @@
 #  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
+import typing
 from typing import NamedTuple
 
-from sqlalchemy import and_, func, select, join, dialects
-from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, foreign
+from sqlalchemy import and_, func, select, join
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, foreign, Session
 
 from ldap_sync import logger
 from pycroft.model import create_engine
@@ -13,10 +15,10 @@ from pycroft.model.session import set_scoped_session, session as global_session
 from pycroft.model.user import User, Group, Membership
 
 
-def establish_and_return_session(connection_string):
+def establish_and_return_session(connection_string: str) -> Session:
     engine = create_engine(connection_string)
     set_scoped_session(scoped_session(sessionmaker(bind=engine)))
-    return global_session  # from pycroft.model.session
+    return typing.cast(Session, global_session)  # from pycroft.model.session
 
 
 class UserProxyType(NamedTuple):
@@ -25,7 +27,9 @@ class UserProxyType(NamedTuple):
     should_be_blocked: bool
 
 
-def fetch_users_to_sync(session, required_property=None) -> list[UserProxyType]:
+def fetch_users_to_sync(
+    session: Session, required_property: str | None = None
+) -> list[UserProxyType]:
     """Fetch the users who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -54,7 +58,8 @@ def fetch_users_to_sync(session, required_property=None) -> list[UserProxyType]:
     # used for second join against CurrentProperty
     not_blocked_property = CurrentProperty.__table__.alias('ldap_login_enabled')
 
-    return (
+    return typing.cast(
+        list[UserProxyType],
         # Grab all users with the required property
         User.q
         .options(joinedload(User.unix_account))
@@ -80,14 +85,15 @@ class GroupProxyType(NamedTuple):
     members: list[str]
 
 
-def fetch_groups_to_sync(session) -> list[GroupProxyType]:
+def fetch_groups_to_sync(session: Session) -> list[GroupProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
 
     :returns: An iterable of `(Group, members)` ResultProxies.
     """
-    return (
+    return typing.cast(
+        list[GroupProxyType],
         Group.q
         # uids of the members of the group
         .add_columns(func.coalesce(select(func.array_agg(User.login))
@@ -96,8 +102,9 @@ def fetch_groups_to_sync(session) -> list[GroupProxyType]:
                 .where(Membership.active_during.contains(func.current_timestamp()))
                 .group_by(Group.id)
                 .scalar_subquery(),
-                func.cast('{}', dialects.postgresql.ARRAY(User.login.type))).label('members'))
-        .all()
+                func.cast("{}", postgresql.ARRAY(User.login.type)),
+            ).label("members")
+        ).all(),
     )
 
 
@@ -107,7 +114,7 @@ class PropertyProxyType(NamedTuple):
     members: list[str]
 
 
-def fetch_properties_to_sync(session) -> list[PropertyProxyType]:
+def fetch_properties_to_sync(session: Session) -> list[PropertyProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
