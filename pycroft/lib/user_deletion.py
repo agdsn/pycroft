@@ -36,11 +36,7 @@ def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User,
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem")
     return (
-        select(
-            User,
-            last_mem.c.mem_id,
-            last_mem.c.mem_end,
-        )
+        select()
         .select_from(last_mem)
         # Join the granted `do-not-archive` property, if existent
         .join(CurrentProperty,
@@ -53,7 +49,11 @@ def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User,
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - delta)
         .order_by(last_mem.c.mem_end)
-
+        .add_columns(
+            User,
+            last_mem.c.mem_id,
+            last_mem.c.mem_end,
+        )
     )
 
 
