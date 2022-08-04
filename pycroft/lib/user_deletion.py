@@ -6,15 +6,14 @@ This module contains methods concerning user archival and deletion.
 """
 from __future__ import annotations
 import typing as t
-from datetime import timedelta, datetime
-from typing import Protocol, cast
 from collections.abc import Sequence
+from datetime import datetime
+from typing import Protocol, cast
 
 from sqlalchemy import func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.sql import Select
-from sqlalchemy.sql.functions import current_timestamp
 
 from pycroft.model.property import CurrentProperty
 from pycroft.model.user import User
@@ -32,7 +31,9 @@ class _WindowArgs[TP, TO](t.TypedDict):
     partition_by: TP
     order_by: TO
 
-def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User, int, datetime]]
+def select_archivable_members(
+    current_year: int,
+) -> Select:  # Select[Tuple[User, int, datetime]]
     # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem")
     return (
@@ -47,7 +48,7 @@ def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User,
         # …and use that to filter out the `do-not-archive` occurrences.
         .filter(CurrentProperty.property_name.is_(None))
         .join(User, User.id == last_mem.c.user_id)
-        .filter(last_mem.c.mem_end < current_timestamp() - delta)
+        .filter(func.extract("year", last_mem.c.mem_end) + 2 <= current_year)
         .order_by(last_mem.c.mem_end)
         .add_columns(
             User,
@@ -58,7 +59,8 @@ def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User,
 
 
 def get_archivable_members(
-    session: Session, delta: timedelta = timedelta(days=14)
+    session: Session,
+    current_year: int | None = None,
 ) -> Sequence[ArchivableMemberInfo]:
     """Return all the users that qualify for being archived right now.
 
@@ -73,13 +75,18 @@ def get_archivable_members(
     - current_properties_maybe_denied
 
     :param session:
-    :param delta: how far back the end of membership has to lie (positive timedelta).
+    :param current_year: dependency injection of the current year.
+        defaults to the current year.
     """
     return cast(
         list[ArchivableMemberInfo],
         session.execute(
-            select_archivable_members(delta)
-            .options(
+            select_archivable_members(
+                # I know we're sloppy with time zones,
+                # but ±2h around new year's eve don't matter.
+                current_year=current_year
+                or datetime.now().year
+            ).options(
                 joinedload(User.hosts),
                 # joinedload(User.current_memberships),
                 joinedload(User.account, innerjoin=True),
