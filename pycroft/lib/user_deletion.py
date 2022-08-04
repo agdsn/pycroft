@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from sqlalchemy import func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.sql import Select
 from sqlalchemy.sql.functions import current_timestamp
 
 from pycroft.model.property import CurrentProperty
@@ -31,20 +32,10 @@ class _WindowArgs[TP, TO](t.TypedDict):
     partition_by: TP
     order_by: TO
 
-
-def get_archivable_members(session: Session, delta: timedelta = timedelta(days=14)) \
-        -> Sequence[ArchivableMemberInfo]:
-    """Return all the users that qualify for being archived right now.
-
-    Selected are those users
-    - whose last membership in the member_group ended two weeks in the past,
-    - excluding users who currently have the `do-not-archive` property.
-
-    :param session:
-    :param delta: how far back the end of membership has to lie (positive timedelta).
-    """
+def select_archivable_members(delta: timedelta) -> Select:  # Select[Tuple[User, int, datetime]]
+    # last_mem: (user_id, mem_id, mem_end)
     last_mem = select_user_and_last_mem().cte("last_mem")
-    stmt = (
+    return (
         select(
             User,
             last_mem.c.mem_id,
@@ -62,12 +53,41 @@ def get_archivable_members(session: Session, delta: timedelta = timedelta(days=1
         .join(User, User.id == last_mem.c.user_id)
         .filter(last_mem.c.mem_end < current_timestamp() - delta)
         .order_by(last_mem.c.mem_end)
-        .options(joinedload(User.hosts), # joinedload(User.current_memberships),
-                 joinedload(User.account, innerjoin=True), joinedload(User.room),
-                 joinedload(User.current_properties_maybe_denied))
+
     )
 
-    return cast(list[ArchivableMemberInfo], session.execute(stmt).unique().all())
+
+def get_archivable_members(
+    session: Session, delta: timedelta = timedelta(days=14)
+) -> Sequence[ArchivableMemberInfo]:
+    """Return all the users that qualify for being archived right now.
+
+    Selected are those users
+    - whose last membership in the member_group ended two weeks in the past,
+    - excluding users who currently have the `do-not-archive` property.
+
+    We joined load the following information:
+    - hosts
+    - account
+    - room
+    - current_properties_maybe_denied
+
+    :param session:
+    :param delta: how far back the end of membership has to lie (positive timedelta).
+    """
+    return cast(
+        list[ArchivableMemberInfo],
+        session.execute(
+            select_archivable_members(delta)
+            .options(
+                joinedload(User.hosts),
+                # joinedload(User.current_memberships),
+                joinedload(User.account, innerjoin=True),
+                joinedload(User.room),
+                joinedload(User.current_properties_maybe_denied),
+            )
+        ).unique().all(),
+    )
 
 
 def archive_users(session: Session, user_ids: Sequence[int]) -> None:
