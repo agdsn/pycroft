@@ -9,7 +9,7 @@ import pytest
 from pycroft.helpers.interval import closed, closedopen
 from pycroft.helpers.utc import with_min_time
 from pycroft.lib.user_deletion import (
-    get_archivable_members,
+    select_archivable_members,
     archive_users,
     ArchivableMemberInfo,
 )
@@ -17,6 +17,11 @@ from pycroft.model.user import User
 from tests.factories import UserFactory, ConfigFactory, MembershipFactory, \
     PropertyGroupFactory, \
     HostFactory
+
+
+def get_archivable_members(session, current_year=2022):
+    """Like `get_archivable_members`, just without all the joinedloads."""
+    return session.execute(select_archivable_members(current_year)).all()
 
 
 @pytest.fixture(scope='module')
@@ -95,7 +100,7 @@ class TestArchivableUserSelection:
             active_during=closedopen(datetime(2020, 1, 1), None),
         )
 
-    @pytest.mark.parametrize("year", [2022, 2023, 2024])
+    @pytest.mark.parametrize("year", [2022, 2023])
     def test_old_users_in_deletion_list_after(self, session, old_user, year, end_date):
         members = get_archivable_members(session, current_year=year)
         assert_member_present(members, old_user, end_date)
@@ -106,7 +111,7 @@ class TestArchivableUserSelection:
             get_archivable_members(session, current_year=year), old_user
         )
 
-    @pytest.mark.parametrize("year", list(range(2018, 2023)))
+    @pytest.mark.parametrize("year", list(range(2019, 2023)))
     def test_user_with_do_not_archive_not_in_list(
         self, session, old_user, do_not_archive_membership, year
     ):
