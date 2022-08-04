@@ -18,7 +18,8 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -27,7 +28,16 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.viewcode']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "guzzle_sphinx_theme",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -89,11 +99,25 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 
+intersphinx_mapping = {
+    "python":     ("https://docs.python.org/3/", None),
+    "netaddr":    ("https://netaddr.readthedocs.io/en/latest/", None),
+    "flask":      ("https://flask.palletsprojects.com/en/1.1.x/", None),
+    "jinja2":     ("https://jinja.palletsprojects.com/en/2.11.x/", None),
+    "celery":     ("https://docs.celeryq.dev/en/stable/", None),
+    "psycopg2":   ("https://www.psycopg.org/docs/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
+    "sphinx":     ("https://www.sphinx-doc.org/en/master/", None),
+}
+
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'guzzle_sphinx_theme'
+import guzzle_sphinx_theme
+html_theme_path = guzzle_sphinx_theme.html_theme_path()
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
