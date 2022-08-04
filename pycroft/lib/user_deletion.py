@@ -10,14 +10,14 @@ from datetime import timedelta, datetime
 from typing import Protocol, cast
 from collections.abc import Sequence
 
-from sqlalchemy import func, nulls_last, and_, not_
+from sqlalchemy import func, and_, not_
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.sql.functions import current_timestamp
 
-from pycroft import Config
 from pycroft.model.property import CurrentProperty
-from pycroft.model.user import User, Membership
+from pycroft.model.user import User
+from pycroft.lib.membership import select_user_and_last_mem
 
 
 class ArchivableMemberInfo(Protocol):
@@ -44,26 +44,7 @@ def get_archivable_members(session: Session, delta: timedelta = timedelta(days=1
     :param delta: how far back the end of membership has to lie (positive timedelta).
     """
     # see FunctionElement.over
-    mem_ends_at = func.upper(Membership.active_during)
-    window_args: _WindowArgs = {
-        'partition_by': User.id,
-        'order_by': nulls_last(mem_ends_at),
-    }
-    last_mem = (
-        select(
-            User.id.label('user_id'),
-            func.last_value(Membership.id)
-            .over(**window_args, rows=(None, None))
-            .label("mem_id"),
-            func.last_value(mem_ends_at)
-            .over(**window_args, rows=(None, None))
-            .label("mem_end"),
-        )
-        .select_from(User)
-        .distinct()
-        .join(Membership)
-        .join(Config, Config.member_group_id == Membership.group_id)
-    ).cte("last_mem")
+    last_mem = select_user_and_last_mem().cte("last_mem")
     stmt = (
         select(
             User,

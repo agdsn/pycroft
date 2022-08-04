@@ -9,12 +9,15 @@ This module contains functions concerning groups, membership, and property
 management.
 
 """
+from __future__ import annotations
 import typing as t
 
-from sqlalchemy import and_, func, distinct, Result
+from sqlalchemy import and_, func, distinct, Result, nulls_last
 from sqlalchemy.future import select
 from sqlalchemy.orm import aliased, Session
+from sqlalchemy.sql import Select, ClauseElement
 
+from pycroft import Config
 from pycroft.helpers import utc
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import UnboundedInterval, IntervalSet, Interval, closedopen
@@ -239,3 +242,30 @@ def change_membership_active_during(
         .to_json()
     )
     log_user_event(message, processor, membership.user)
+
+
+def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
+    """Select users with their last membership of a user in the ``member`` group.
+
+    :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.
+    """
+    mem_ends_at = func.upper(Membership.active_during)
+    window_args: dict[str, ClauseElement | t.Sequence[ClauseElement | str] | None] = {
+        "partition_by": User.id,
+        "order_by": nulls_last(mem_ends_at),
+    }
+    return (
+        select(
+            User.id.label("user_id"),
+            func.last_value(Membership.id)
+            .over(**window_args, rows=(None, None))
+            .label("mem_id"),
+            func.last_value(mem_ends_at)
+            .over(**window_args, rows=(None, None))
+            .label("mem_end"),
+        )
+        .select_from(User)
+        .distinct()
+        .join(Membership)
+        .join(Config, Config.member_group_id == Membership.group_id)
+    )
