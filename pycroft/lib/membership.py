@@ -250,12 +250,18 @@ def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
     :returns: a select statement with columns ``user_id``, ``mem_id``, ``mem_end``.
     """
     mem_ends_at = func.upper(Membership.active_during)
+    # see FunctionElement.over for documentation on `partition_by`, `order_by`
     window_args: dict[str, ClauseElement | t.Sequence[ClauseElement | str] | None] = {
         "partition_by": User.id,
         "order_by": nulls_last(mem_ends_at),
     }
     return (
-        select(
+        select()
+        .select_from(User)
+        .distinct()
+        .join(Membership)
+        .join(Config, Config.member_group_id == Membership.group_id)
+        .add_columns(
             User.id.label("user_id"),
             func.last_value(Membership.id)
             .over(**window_args, rows=(None, None))
@@ -264,8 +270,4 @@ def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
             .over(**window_args, rows=(None, None))
             .label("mem_end"),
         )
-        .select_from(User)
-        .distinct()
-        .join(Membership)
-        .join(Config, Config.member_group_id == Membership.group_id)
     )

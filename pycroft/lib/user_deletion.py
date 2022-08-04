@@ -43,7 +43,6 @@ def get_archivable_members(session: Session, delta: timedelta = timedelta(days=1
     :param session:
     :param delta: how far back the end of membership has to lie (positive timedelta).
     """
-    # see FunctionElement.over
     last_mem = select_user_and_last_mem().cte("last_mem")
     stmt = (
         select(
