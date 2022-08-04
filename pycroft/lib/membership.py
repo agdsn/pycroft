@@ -251,6 +251,8 @@ def select_user_and_last_mem() -> Select:  # Select[Tuple[int, int, str]]
     """
     mem_ends_at = func.upper(Membership.active_during)
     # see FunctionElement.over for documentation on `partition_by`, `order_by`
+    # ideally, sqlalchemy would support named windows;
+    # instead, we have to re-use the arguments.
     window_args: dict[str, ClauseElement | t.Sequence[ClauseElement | str] | None] = {
         "partition_by": User.id,
         "order_by": nulls_last(mem_ends_at),
