@@ -26,40 +26,48 @@ from pycroft.model.exc import PycroftModelException
 
 class _IPType(TypeDecorator):
     impl = String(50)
-
+    #:
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
+        """"""
         if dialect.name == 'postgresql':
             return dialect.type_descriptor(INET)
         else:
             return dialect.type_descriptor(self.impl)
 
     def process_bind_param(self, value, dialect):
+        """"""
         if value is None:
             return value
         return str(value)
 
 
 class IPAddress(_IPType):
+    #:
     cache_ok = True
 
     def python_type(self):
+        """"""
         return ipaddr._BaseIP
 
     def process_result_value(self, value, dialect):
+        """"""
         if value is None:
             return value
         return ipaddr.IPAddress(value)
 
 
 class IPNetwork(_IPType):
+    #:
     cache_ok = True
 
     def python_type(self):
+        """"""
         return ipaddr._BaseNet
 
     def process_result_value(self, value, dialect):
+        """"""
         if value is None:
             return value
         return ipaddr.IPNetwork(value)
@@ -67,22 +75,25 @@ class IPNetwork(_IPType):
 
 class MACAddress(TypeDecorator):
     impl = String(10)
-
+    #:
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
+        """"""
         if dialect.name == 'postgresql':
             return dialect.type_descriptor(MACADDR)
         else:
             return dialect.type_descriptor(self.impl)
 
     def process_result_value(self, value, dialect):
+        """"""
         if dialect.name == 'postgresql':
             return value
         return "{}:{}:{}:{}:{}:{}".format(value[0:2], value[2:4], value[4:6],
                                           value[6:8], value[8:10], value[10:12])
 
     def process_bind_param(self, value, dialect):
+        """"""
         if value is None:
             return value
         m = mac_regex.match(value)
@@ -93,19 +104,22 @@ class MACAddress(TypeDecorator):
                         groups["byte4"], groups["byte5"], groups["byte6"]))
 
     def python_type(self):
+        """"""
         return str
 
 
 class Money(TypeDecorator):
     impl = Integer
-
+    #:
     cache_ok = True
 
     def python_type(self):
+        """"""
         return Decimal
 
     @staticmethod
     def process_bind_param(value, dialect):
+        """"""
         if not isinstance(value, Number):
             raise ValueError("{} is not a valid money amount".format(
                 repr(value)))
@@ -118,23 +132,27 @@ class Money(TypeDecorator):
 
     @staticmethod
     def process_result_value(value, dialect):
+        """"""
         return Decimal(value).scaleb(-2)
 
 
 class TsTzRange(TypeDecorator):
     impl = TSTZRANGE
+    #:
     cache_ok = True
 
     def python_type(self):
+        """"""
         return Interval
 
     def process_literal_param(self, value, dialect):
+        """"""
         if value is None:
             return None
         return f"'{str(value)}'"
 
     def process_bind_param(self, value: Interval | None, dialect) -> str | None:
-        # gets PY TYPE, returns DB TYPE
+        """gets PY TYPE, returns DB TYPE"""
         if value is None:
             return None
 
@@ -142,6 +160,7 @@ class TsTzRange(TypeDecorator):
 
     def process_result_value(self, value: DateTimeTZRange | None, dialect)\
             -> Interval | None:
+        """"""
         if value is None:
             return None
         if not isinstance(value, DateTimeTZRange):
