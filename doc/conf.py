@@ -108,6 +108,14 @@ intersphinx_mapping = {
     "psycopg2":   ("https://www.psycopg.org/docs/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "sphinx":     ("https://www.sphinx-doc.org/en/master/", None),
+    "marshmallow": ("https://marshmallow.readthedocs.io/en/stable/", None),
+}
+
+# see https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_default_options
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'undoc-members': True,
 }
 
 # -- Options for HTML output ---------------------------------------------------

@@ -1,3 +1,7 @@
+"""
+pycroft.lib.stats
+~~~~~~~~~~~~~~~~~
+"""
 from dataclasses import dataclass
 
 from sqlalchemy import func

@@ -1,3 +1,7 @@
+"""
+pycroft.lib.infrastructure
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
 import ipaddr
 from ipaddr import IPAddress
 from sqlalchemy.orm import Session

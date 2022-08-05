@@ -1,3 +1,7 @@
+"""
+pycroft.lib.task
+~~~~~~~~~~~~~~~~
+"""
 import logging
 import typing
 from abc import ABC, abstractmethod

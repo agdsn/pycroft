@@ -1,3 +1,7 @@
+"""
+pycroft.lib.swdd
+~~~~~~~~~~~~~~~~
+"""
 import hmac
 import os
 import unicodedata

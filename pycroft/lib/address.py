@@ -1,3 +1,7 @@
+"""
+pycroft.lib.address
+~~~~~~~~~~~~~~~~~~~
+"""
 import typing
 
 from pycroft.model.address import Address

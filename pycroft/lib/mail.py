@@ -1,3 +1,7 @@
+"""
+pycroft.lib.mail
+~~~~~~~~~~~~~~~~
+"""
 import logging
 import os
 import smtplib

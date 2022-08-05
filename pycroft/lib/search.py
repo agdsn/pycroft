@@ -1,3 +1,7 @@
+"""
+pycroft.lib.search
+~~~~~~~~~~~~~~~~~~
+"""
 import re
 
 from sqlalchemy import or_, func, cast, Text

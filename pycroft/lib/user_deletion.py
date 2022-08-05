@@ -1,3 +1,10 @@
+"""
+pycroft.lib.user_deletion
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains methods concerning user archival and deletion.
+"""
+from __future__ import annotations
 from datetime import timedelta, datetime
 from typing import Protocol, Sequence
 
