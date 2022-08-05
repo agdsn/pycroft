@@ -1,3 +1,12 @@
+"""
+pycroft.task
+~~~~~~~~~~~~
+
+This module defines celery tasks to run tasks
+(as persisted in the database by means of `pycroft.model.task`)
+by using implementations as defined in `pycroft.lib.task`
+(see :class:`TaskImpl <pycroft.lib.task.TaskImpl>`).
+"""
 import logging
 import os
 from datetime import timedelta
@@ -25,11 +34,6 @@ from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
 from pycroft.model.traffic import TrafficVolume
 
-"""
-This module defines celery tasks to run tasks
-(as persisted in the database by means of `pycroft.model.task`)
-by using implementations as defined in `pycroft.lib.task` (see `TaskImpl`).
-"""
 
 if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
     logging_integration = LoggingIntegration(

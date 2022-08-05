@@ -16,3 +16,7 @@ Subpackages
 
 Submodules
 ----------
+.. automodule:: pycroft.exc
+.. automodule:: pycroft.property
+    :undoc-members:
+.. automodule:: pycroft.task
