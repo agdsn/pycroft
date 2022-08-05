@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
     pycroft.model.session
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     This module contains the session stuff for db actions.
 

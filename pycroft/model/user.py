@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
     pycroft.model.user
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~
 
     This module contains the class User.
 

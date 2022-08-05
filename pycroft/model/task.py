@@ -1,3 +1,7 @@
+"""
+pycroft.model.task
+~~~~~~~~~~~~~~~~~~
+"""
 import builtins
 from collections.abc import Mapping
 

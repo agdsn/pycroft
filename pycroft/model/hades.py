@@ -1,3 +1,7 @@
+"""
+pycroft.model.hades
+~~~~~~~~~~~~~~~~~~~
+"""
 from sqlalchemy import literal, Column, String, func, union_all, Table, Integer, \
     PrimaryKeyConstraint, null, and_
 from sqlalchemy.orm import Query, aliased, configure_mappers

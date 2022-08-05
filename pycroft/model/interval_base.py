@@ -1,7 +1,10 @@
 #  Copyright (c) 2021. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-
+"""
+pycroft.model.interval_base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
 from sqlalchemy import Column, func, CheckConstraint, and_, or_, null, literal
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import object_session, validates

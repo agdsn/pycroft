@@ -2,6 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
+pycroft.model.functions
+~~~~~~~~~~~~~~~~~~~~~~~
+
 Add support for various functions present in Postgres to the SQLite SQLAlchemy
 dialect.
 """

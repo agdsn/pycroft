@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
 pycroft.model._all
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Dummy module to get all the mapped stuff in one namespace.
 This is necessary for things like sqlalchemy-schemadisplay.

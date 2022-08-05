@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
     pycroft.model.logging
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     This module contains the classes LogEntry, UserLogEntry, TrafficVolume.
 

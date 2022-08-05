@@ -1,3 +1,7 @@
+"""
+pycroft.model.swdd
+~~~~~~~~~~~~~~~~~~
+"""
 from enum import Enum
 
 from sqlalchemy import text, select, Column, Integer, String, ForeignKey, Date
