@@ -36,7 +36,7 @@ jobs:
       - name: Publish sphinx docs as pages artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: docs/_build/html
+          path: doc/_build/html
       - name: Deploy sphinx docs to GitHub Pages
         if: ${{ github.ref == 'refs/heads/develop' }}
         uses: actions/deploy-pages@main
