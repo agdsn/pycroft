@@ -160,7 +160,7 @@ class InvalidateHadesLogsMixin(testing.TestCase):
 
     This mixin class hooks into :meth:`create_app` and invalidates a
     possibly configured `hades_logs` extension.  Useful if the default
-    is :py:cls:`DummyHadesLogs`.
+    is :class:`DummyHadesLogs`.
     """
     def __init__(self, *a, **kw):
         warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)

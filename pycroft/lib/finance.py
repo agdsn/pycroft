@@ -817,7 +817,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
     :param Account account: The finance Account to filter by
     :param str search: The string to be included, insensitive
     :param str sort_by: The column to sort by.  Must be a column of
-        :cls:`Transaction` or :cls:`Split`.
+        :class:`Transaction` or :class:`Split`.
     :param str sort_order: Trigger descending sort order if the value
         is ``'desc'``.  See also the effect of :attr:`positive`.
     :param int offset:

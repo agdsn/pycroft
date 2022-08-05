@@ -80,7 +80,7 @@ def formatted_user_hades_logs(user):
     """Iterate over the user's hades logs if configured correctly
 
     In case of misconfiguration, i.e. if
-    :py:func:`get_user_hades_logs` raises a :py:cls:`RuntimeError`, a
+    :py:func:`get_user_hades_logs` raises a :class:`RuntimeError`, a
     dummy log entry containing a warning is yielded.
 
     :param User user: the user whose logs to display

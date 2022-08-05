@@ -51,11 +51,11 @@ class LdapExporter:
     Since the desired state is to be represented by a postgres
     database and the current state by the LDAP being synced to,
     :py:meth:`from_orm_objects_and_ldap_result` is there to not
-    have to convert the entries to :py:cls:`Record`s manually.
+    have to convert the entries to :class:`Record`s manually.
 
-    :param iterable current: An iterable of :py:cls:`Record`s
+    :param iterable current: An iterable of :class:`Record`s
     :param iterable desired: An iterable of the desired
-        :py:cls:`Record`s
+        :class:`Record`s
     """
     def __init__(self, current, desired):
         self.states_dict = defaultdict(RecordState)
