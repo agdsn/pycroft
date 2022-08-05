@@ -29,7 +29,7 @@ class RoomAlreadyExistsException(PycroftLibException):
 def get_overcrowded_rooms(building_id=None):
     """
     :param building_id: Limit to rooms of the building.
-    Returns a dict of overcrowded rooms with their inhabitants
+        Returns a dict of overcrowded rooms with their inhabitants.
     :return: dict
     """
 

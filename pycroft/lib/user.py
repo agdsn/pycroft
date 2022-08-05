@@ -73,9 +73,10 @@ def decode_type1_user_id(string):
     """
     If a given string is a type1 user id return a (user_id, code) tuple else
     return None.
+
     :param unicode string: Type1 encoded user ID
-    :returns (number, code) pair or None
-    :rtype (Integral, Integral) | None
+    :returns: (number, code) pair or None
+    :rtype: (Integral, Integral) | None
     """
     match = type1_user_id_pattern.match(string)
     return match.groups() if match else None
@@ -93,9 +94,10 @@ def decode_type2_user_id(string):
     """
     If a given string is a type2 user id return a (user_id, code) tuple else
     return None.
+
     :param unicode string: Type2 encoded user ID
-    :returns (number, code) pair or None
-    :rtype (Integral, Integral) | None
+    :returns: (number, code) pair or None
+    :rtype: (Integral, Integral) | None
     """
     match = type2_user_id_pattern.match(string)
     return match.groups() if match else None
@@ -104,9 +106,10 @@ def decode_type2_user_id(string):
 def check_user_id(string):
     """
     Check if the given string is a valid user id (type1 or type2).
+
     :param string: Type1 or Type2 encoded user ID
-    :returns True if user id was valid, otherwise False
-    :rtype Boolean
+    :returns: True if user id was valid, otherwise False
+    :rtype: Boolean
     """
     if not string:
         return False
@@ -149,25 +152,15 @@ def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=
                      generation_purpose='', plain_wifi_password=''):
     """Generate a user sheet and store it in the WebStorage.
 
-    Returns the generated `WebStorage` object holding the pdf.
+    Returns the generated :class:`WebStorage <pycroft.model.WebStorage>` object holding the pdf.
 
     :param bool new_user: generate page with user details
     :param bool wifi: generate page with wifi credantials
     :param int timeout: The lifetime in minutes
-
-    Necessary in every case:
-    :param User user: A pycroft user
-
-    Only necessary if new_user=True:
-    :param str plain_user_password:
-
-    Only necessary if wifi=True:
-    :param str plain_wifi_password: The password for wifi
-
-    Optional:
-    :param str generation_purpose:
-
-
+    :param User user: A pycroft user. Necessary in every case
+    :param str plain_user_password: Only necessary if ``new_user is True``
+    :param str plain_wifi_password: The password for wifi.  Only necessary if ``wifi is True``
+    :param str generation_purpose: Optional
     """
 
     pdf_data = generate_user_sheet(
@@ -422,6 +415,7 @@ def migrate_user_host(host, new_room, processor):
     """
     Migrate a UserHost to a new room and if necessary to a new subnet.
     If the host changes subnet, it will get a new IP address.
+
     :param Host host: Host to be migrated
     :param Room new_room: new room of the host
     :param User processor: User processing the migration
@@ -530,8 +524,8 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
 
 @with_transaction
 def edit_name(user, name, processor):
-    """
-    Changes the name of the user and creates a log entry.
+    """Changes the name of the user and creates a log entry.
+
     :param user: The user object.
     :param name: The new full name.
     :return: The changed user object.
@@ -557,6 +551,7 @@ def edit_email(user: User, email: str | None, email_forwarded: bool, processor: 
                is_confirmed: bool = False):
     """
     Changes the email address of a user and creates a log entry.
+
     :param user: User object to change
     :param email: New email address (empty interpreted as ``None``)
     :param email_forwarded: Boolean if emails should be forwarded
@@ -609,6 +604,7 @@ def edit_email(user: User, email: str | None, email_forwarded: bool, processor: 
 def edit_birthdate(user, birthdate, processor):
     """
     Changes the birthdate of a user and creates a log entry.
+
     :param user: User object to change
     :param birthdate: New birthdate
     :param processor:User object of the processor, which issues the change
@@ -634,6 +630,7 @@ def edit_birthdate(user, birthdate, processor):
 def edit_person_id(user: User, person_id: int, processor: User):
     """
     Changes the swdd_person_id of the user and creates a log entry.
+
     :param user: The user object.
     :param person_id: The new person_id.
     :return: The changed user object.
@@ -691,7 +688,7 @@ def has_balance_of_at_least(user, amount):
     :param User user: The user we are interested in.
     :param Integral amount: The amount we want to check for.
     :return: True if and only if the user's balance is at least the given
-    amount (and False otherwise).
+        amount (and False otherwise).
     """
     balance = user.account.balance if user.account else 0
     return balance >= amount
@@ -977,9 +974,9 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
     :param users: Users who should receive the mail
     :param template: The template that should be used. Can be None if body_plain is supplied.
     :param soft_fail: Do not raise an exception if a user does not have an email and use_internal
-    is set to True
+        is set to True
     :param use_internal: If internal mail addresses can be used (@agdsn.me)
-    (Set to False to only send to external mail addresses)
+        (Set to False to only send to external mail addresses)
     :param body_plain: Alternative plain body if not template supplied
     :param subject:  Alternative subject if no template supplied
     :param kwargs: kwargs that will be used during rendering the template

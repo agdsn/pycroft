@@ -38,11 +38,12 @@ class Task(IntegerIdModel, Generic[TSchema, TParams]):
     """The task model
 
     The task model needs to hold three types of data:
+
     - Metadata (creation, status, …)
     - A type (e.g. USER_MOVE)
     - the `parameters_json` json dict.
 
-    The parameters should actually be accessed via :ref:`parameters`,
+    The parameters should actually be accessed via :attr:`parameters`,
     as this already takes care of validation and (de-)serialization.
     The `type` field is essentially only needed for filtering in a query.
     """

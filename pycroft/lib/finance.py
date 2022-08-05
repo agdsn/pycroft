@@ -92,7 +92,7 @@ def simple_transaction(description, debit_account, credit_account, amount,
     :param Decimal amount: Amount in Eurocents
     :param User author: User who created the transaction
     :param date valid_on: Date, when the transaction should be valid. Current
-    database date, if omitted.
+        database date, if omitted.
     :type valid_on: date or None
     :param confirmed: If transaction should be created as confirmed
     :rtype: Transaction
@@ -431,8 +431,7 @@ def is_ordered(iterable, relation=operator.le):
 
     :param iterable[T] iterable: an iterable
     :param (T,T) -> bool op: a binary relation (i.e. a function that returns a bool)
-    :return: True, if each element and its successor yield True under the given
-    relation.
+    :return: True, if each element and its successor yield True under the given relation.
     :rtype: bool
     """
     a, b = tee(iterable)

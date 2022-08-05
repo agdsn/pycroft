@@ -24,7 +24,7 @@ def _create_log_entry(class_, message, author, created_at=None, **kwargs):
     :param unicode message: the log message text
     :param User author: user responsible for the entry
     :param datetime|None created_at: Creation time of the entry. Defaults to
-    current database time if None.
+        current database time if None.
     :param kwargs: Additional arguments.
     :return: the newly created LogEntry.
     """
@@ -44,7 +44,7 @@ def log_event(message, author, created_at=None):
     :param unicode message: the log message text
     :param User author: user responsible for the entry
     :param datetime|None created_at: Creation time of the entry. Defaults to
-    current database time if None.
+        current database time if None.
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry(LogEntry, message, author, created_at)
@@ -58,7 +58,7 @@ def log_task_event(message, author, task, created_at=None):
     :param User author: user responsible for the entry
     :param Task task: the task for which the log should be created
     :param datetime|None created_at: Creation time of the entry. Defaults to
-    current database time if None.
+        current database time if None.
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry(TaskLogEntry, message, author, created_at,
@@ -73,7 +73,7 @@ def log_user_event(message, author, user, created_at=None):
     :param User author: user responsible for the entry
     :param User user: the user for which the log should be created
     :param datetime|None created_at: Creation time of the entry. Defaults to
-    current database time if None.
+        current database time if None.
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry(UserLogEntry, message, author, created_at,
@@ -88,7 +88,7 @@ def log_room_event(message, author, room, created_at=None):
     :param User author: user responsible for the entry
     :param Room room: the room for which the log should be created
     :param datetime|None created_at: Creation time of the entry. Defaults to
-    current database time if None.
+        current database time if None.
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry(RoomLogEntry, message, author, created_at,
