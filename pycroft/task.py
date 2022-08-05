@@ -47,8 +47,8 @@ if dsn := os.getenv('PYCROFT_SENTRY_DSN'):
         traces_sample_rate=1.0,
     )
 
-app = Celery('tasks', backend=os.environ['PYCROFT_CELERY_RESULT_BACKEND_URI'],
-             broker=os.environ['PYCROFT_CELERY_BROKER_URI'])
+app = Celery('tasks', backend=os.getenv('PYCROFT_CELERY_RESULT_BACKEND_URI'),
+             broker=os.getenv('PYCROFT_CELERY_BROKER_URI'))
 
 logger = get_task_logger(__name__)
 
