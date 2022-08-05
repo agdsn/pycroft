@@ -30,6 +30,16 @@ jobs:
         run: pip install -r requirements.txt -r requirements.dev.txt
       - name: Execute mypy
         run: ./scripts/run_mypy.sh
+      # docs stuff
+      - name: Build sphinx docs
+        run: sphinx-build -b html --color -aE doc/ doc/_build/html
+      - name: Publish sphinx docs as pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs/_build/html
+      - name: Deploy sphinx docs to GitHub Pages
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        uses: actions/deploy-pages@main
   npm-build:
     runs-on: ubuntu-latest
     steps:
