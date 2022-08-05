@@ -90,7 +90,7 @@ as there is a direct way to verify what has or has not been done with the sessio
 at the time of function call.
 
 In a similar way, this should clear up confusion as to how a ``pytest`` fixture-based test setup should look like.
-Since that ``pytest``s fixture system is designed with a dependency-injection based approach in its purest form,
+Since that ``pytest`` s fixture system is designed with a dependency-injection based approach in its purest form,
 we are forced to deal with the session explicitly anyway.
 Handling the session in such a way in the rest of the codebase removes an additional point of friction.
 
@@ -133,6 +133,7 @@ Decision
 Consequences
 ------------
 Immediate:
+
 - The ``session`` proxy has to be marked as ``deprecated``
 - A way to pass the ``session`` to view functions has to be found
 - Modifications on the ``lib`` code now

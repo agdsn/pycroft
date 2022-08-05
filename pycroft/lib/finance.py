@@ -47,15 +47,14 @@ from pycroft.model.user import User, Membership, RoomHistoryEntry
 logger = logging.getLogger('pycroft.lib.finance')
 
 
-def get_membership_fee_for_date(target_date):
+def get_membership_fee_for_date(target_date) -> MembershipFee:
     """
     Get the membership fee which contains a given target date.
-    :param date target_date: The date for which a corresponding membership
-    fee should be found.
-    :rtype: MembershipFee
-    :raises sqlalchemy.orm.exc.NoResultFound if no membership fee was found
-    :raises sqlalchemy.orm.exc.MultipleResultsFound if multiple membership fees
-    were found.
+
+    :param date target_date: The date for which a corresponding membership fee should be found.
+    :raises sqlalchemy.exc.NoResultFound: if no membership fee was found
+    :raises sqlalchemy.exc.MultipleResultsFound: if multiple membership fees
+        were found:
     """
     return MembershipFee.q.filter(
         between(target_date, MembershipFee.begins_on,
@@ -63,21 +62,15 @@ def get_membership_fee_for_date(target_date):
     ).one()
 
 
-def get_last_applied_membership_fee():
-    """
-    Get the last applied membership fee.
-    :rtype: MembershipFee
-    """
+def get_last_applied_membership_fee() -> MembershipFee:
+    """Get the last applied membership fee."""
     return MembershipFee.q.filter(
         MembershipFee.ends_on <= func.current_timestamp()) \
         .order_by(MembershipFee.ends_on.desc()).first()
 
 
-def get_first_applied_membership_fee():
-    """
-    Get the first applied membership fee.
-    :rtype: MembershipFee
-    """
+def get_first_applied_membership_fee() -> MembershipFee:
+    """Get the first applied membership fee."""
     return MembershipFee.q.order_by(
         MembershipFee.ends_on.desc()).first()
 
@@ -85,13 +78,14 @@ def get_first_applied_membership_fee():
 @with_transaction
 def simple_transaction(description, debit_account, credit_account, amount,
                        author, valid_on=None, confirmed=True):
-    """
-    Posts a simple transaction.
+    """ Posts a simple transaction.
+
     A simple transaction is a transaction that consists of exactly two splits,
     where one account is debited and another different account is credited with
     the same amount.
     The current system date will be used as transaction date, an optional valid
     date may be specified.
+
     :param unicode description: Description
     :param Account debit_account: Debit (germ. Soll) account.
     :param Account credit_account: Credit (germ. Haben) account
@@ -154,6 +148,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
 
     The interval boundaries may be None, which indicates no lower and upper
     bound respectively.
+
     :param Account from_account: source account
     :param Account to_account: destination account
     :param Interval[date] when: Interval in which transactions became valid
@@ -433,6 +428,7 @@ class CSVImportError(PycroftLibException):
 def is_ordered(iterable, relation=operator.le):
     """
     Check that an iterable is ordered with respect to a given relation.
+
     :param iterable[T] iterable: an iterable
     :param (T,T) -> bool op: a binary relation (i.e. a function that returns a bool)
     :return: True, if each element and its successor yield True under the given
@@ -456,6 +452,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
 
     The new activities are merged with the activities that are already saved to
     the database.
+
     :param csv_file:
     :param expected_balance:
     :param imported_at:
