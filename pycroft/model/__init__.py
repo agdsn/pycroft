@@ -13,6 +13,7 @@ from datetime import timezone, tzinfo
 
 import psycopg2.extensions
 from sqlalchemy import create_engine as sqa_create_engine
+from sqlalchemy.future import Engine
 
 from . import _all
 from . import base
@@ -52,7 +53,7 @@ class UTCTZInfoCursorFactory(psycopg2.extensions.cursor):
         self.tzinfo_factory = UTCTZInfoFactory
 
 
-def create_engine(connection_string, **kwargs):
+def create_engine(connection_string, **kwargs) -> Engine:
     kwargs.setdefault('connect_args', {}).update(
         options=r"-c TimeZone=UTC -c search_path=pycroft,\ public",
         cursor_factory=UTCTZInfoCursorFactory,

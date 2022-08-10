@@ -39,7 +39,7 @@ if TYPE_CHECKING:
                       DeprecationWarning)
 
 
-def set_scoped_session(scoped_session):
+def set_scoped_session(scoped_session: orm.Session) -> None:
     Session.remove()
     # noinspection PyCallByClass
     object.__setattr__(Session, '_LocalProxy__local', lambda: scoped_session)

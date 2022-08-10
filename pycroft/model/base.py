@@ -54,7 +54,7 @@ class ModelBase:
             self.__module__, self.__class__.__name__,
             ", ".join("{}={!r}".format(key, getattr(self, key, "<unknown>"))
                       for key in self.__mapper__.columns.keys()))
-    __table__: Table
+    # __table__: Table
     import typing
     if typing.TYPE_CHECKING:
         # uncomment that to get the deprecation warnings.
