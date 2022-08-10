@@ -13,6 +13,7 @@ Contents:
 
    self
    api/pycroft
+   api/ldap_sync
 
 
 Indices and tables

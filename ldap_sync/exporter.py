@@ -1,3 +1,7 @@
+"""
+ldap_sync.exporter
+~~~~~~~~~~~~~~~~~~
+"""
 from __future__ import annotations
 
 import logging

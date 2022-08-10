@@ -1,3 +1,7 @@
+"""
+ldap_sync.__main__
+~~~~~~~~~~~~~~~~~~
+"""
 import argparse
 import logging
 import os
