@@ -722,7 +722,7 @@ export function cleanPortName(name) {
 
     const match = name.match(/^\?\? \((.+)\)$/);
 
-    if (match.length > 1) {
+    if (match != null && match.length > 1) {
         return match[1];
     }
 
