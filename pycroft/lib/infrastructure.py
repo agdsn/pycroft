@@ -86,7 +86,7 @@ def patch_switch_port_to_patch_port(switch_port, patch_port, processor):
             patch_port=patch_port.name,
         )
     )
-    log_room_event(message,
+    log_room_event(message.to_json(),
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = switch_port
@@ -107,7 +107,7 @@ def remove_patch_to_patch_port(patch_port, processor):
             patch_port=patch_port.name,
         )
     )
-    log_room_event(message,
+    log_room_event(message.to_json(),
                    processor, switch_port.switch.host.room)
 
     patch_port.switch_port = None

@@ -101,7 +101,7 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
             deferred_gettext("Renamed room from {} to {}.")
             .format(room.number, number)
         )
-        log_room_event(message, processor, room)
+        log_room_event(message.to_json(), processor, room)
         room.number = number
 
     if room.inhabitable != inhabitable:
@@ -109,7 +109,7 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
             deferred_gettext("Changed inhabitable status to {}.")
             .format(inhabitable)
         )
-        log_room_event(message, processor, room)
+        log_room_event(message.to_json(), processor, room)
         room.inhabitable = inhabitable
 
     if room.swdd_vo_suchname != vo_suchname:
