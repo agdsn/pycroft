@@ -41,6 +41,8 @@ services:
       SWDD_HASH_KEY: key
       MAIL_CONFIRM_URL: "http://localhost/sipa/register/confirm/{}"
       PASSWORD_RESET_URL: "http://localhost/sipa/reset-password/{}"
+    depends_on:
+      - base
   dev:
     extends: dev-base
     volumes:
