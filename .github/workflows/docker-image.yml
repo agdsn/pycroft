@@ -79,7 +79,7 @@ jobs:
       - name: Fix permissions
         run: sudo chmod -R a+rw .
       - name: Build the Docker image
-        run: docker-compose -f docker-compose.prod.yml build
+        run: docker compose -f docker-compose.prod.yml build
       - name: Login to GitLab Registry
         uses: docker/login-action@v1
         with:
@@ -100,13 +100,13 @@ jobs:
       - name: Fix permissions
         run: sudo chmod -R a+rw .
       - name: Build
-        run: docker-compose -f docker-compose.test.yml build
+        run: docker compose -f docker-compose.test.yml build
       - name: Run test-app entrypoints
-        run: docker-compose -f docker-compose.test.yml run --rm test-app /bin/true
+        run: docker compose -f docker-compose.test.yml run --rm test-app /bin/true
       - name: Start
-        run: docker-compose -f docker-compose.test.yml up -d
+        run: docker compose -f docker-compose.test.yml up -d
       - name: Run webpack
-        run: docker-compose -f docker-compose.test.yml run --rm test-app webpack --mode production
+        run: docker compose -f docker-compose.test.yml run --rm test-app webpack --mode production
       - name: Run tests
-        run: docker-compose -f docker-compose.test.yml run --rm test-app test
+        run: docker compose -f docker-compose.test.yml run --rm test-app test
 
