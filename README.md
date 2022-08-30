@@ -26,7 +26,7 @@ You will need at least docker engine `17.06.0+` and a docker compose `1.16.0+`.
 Also, note that you might have to add your user to the `docker` group
 for running docker as a non-root:
 
-```
+```sh
 sudo usermod -aG docker $(whoami)
 ```
 
