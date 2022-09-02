@@ -18,14 +18,19 @@ Contents:
 Indices and tables
 ------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :caption: Indices and tables
+
+   genindex
+   modindex
+   search
 
 Architecture decision records
 -----------------------------
 
 .. toctree::
+   :caption: Architecture decision records
+   :name: ADRs
    :maxdepth: 1
    :glob:
 

@@ -8,3 +8,8 @@ dt.sig>.sig-prename {
     font-size: small;
     color: grey;
 }
+
+#indices-and-tables p.caption,
+#architecture-decision-records p.caption {
+    display: None
+}
