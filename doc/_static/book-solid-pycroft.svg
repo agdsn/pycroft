@@ -18,6 +18,22 @@
      id="title1747">Book icon with a P (based on Fontawesome)</title>
   <defs
      id="defs420" />
+  <style>
+  path#book {
+    fill: #000;
+  }
+  path#letter {
+    fill: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    path#book {
+      fill: #fff;
+    }
+    path#letter {
+      fill: #000;
+    }
+  }
+  </style>
   <sodipodi:namedview
      id="namedview418"
      pagecolor="#ffffff"
@@ -53,7 +69,7 @@
   <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
   <path
      d="M 128,0 C 75,0 32,43 32,96 v 320 c 0,53 43,96 96,96 h 288 32 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 v -64 c 17.7,0 32,-14.3 32,-32 V 32 C 480,14.3 465.7,0 448,0 h -32 z m 0,384 h 256 v 64 H 128 c -17.7,0 -32,-14.3 -32,-32 0,-17.7 14.3,-32 32,-32 z"
-     id="path414"
+     id="book"
      sodipodi:nodetypes="sssscssccssscssccsss"
      style="display:inline"
      inkscape:label="Book" />
@@ -64,8 +80,8 @@
      inkscape:label="P">
     <path
        d="m 192.76507,320 c -10.08157,0 -18.12282,-2.88045 -24.12375,-8.64135 -5.7609,-6.00093 -8.64135,-14.04218 -8.64135,-24.12375 V 94.604941 c 0,-9.841531 2.64041,-17.402707 7.92124,-22.683528 5.28082,-5.280821 12.84199,-7.921232 22.68352,-7.921232 h 92.17434 c 28.08437,0 49.92776,7.20112 65.53019,21.60336 15.60243,14.162199 23.40364,33.965279 23.40364,59.409239 0,25.20392 -7.92123,45.007 -23.76369,59.40924 -15.60243,14.40224 -37.32581,21.60336 -65.17014,21.60336 L 224,226.02495 v 61.20952 c 0,10.08157 -0.75019,18.12325 -6.75112,24.12418 C 211.24795,317.11955 203.08668,320 192.76507,320 Z m 81.0126,-143.66235 c 12.24191,1.1e-4 21.24331,-2.52039 27.0042,-7.56117 6.00093,-5.04079 9.0014,-12.842 9.0014,-23.40364 0,-20.88325 -12.00187,-33.37242 -36.0056,-33.37263 L 224,111.99979 v 64.33743 z"
-       style="font-family:'Nunito Black';-inkscape-font-specification:'Nunito Black, ';fill:#ffffff"
-       id="path363"
+       style="font-family:'Nunito Black';-inkscape-font-specification:'Nunito Black, '"
+       id="letter"
        sodipodi:nodetypes="scssssscscscscsscssccs" />
   </g>
   <metadata
