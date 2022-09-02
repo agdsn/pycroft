@@ -4,10 +4,18 @@
  * the Apache License, Version 2.0. See the LICENSE file for details
  */
 
+/* sidebar adjustments */
+.sidebar-toc p.caption {
+  padding: 0px 5px;
+}
+
+/* misc */
 dt.sig>.sig-prename {
     font-size: small;
     color: grey;
 }
+
+/* content hacks */
 
 #indices-and-tables p.caption,
 #architecture-decision-records p.caption {
