@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg416"
+   sodipodi:docname="book-solid-pycroft.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   width="512"
+   height="512"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title1747">Book icon with a P (based on Fontawesome)</title>
+  <defs
+     id="defs420" />
+  <sodipodi:namedview
+     id="namedview418"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="true"
+     inkscape:zoom="1.7519531"
+     inkscape:cx="219.75474"
+     inkscape:cy="158.96544"
+     inkscape:window-width="2560"
+     inkscape:window-height="1440"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="text1687"
+     showguides="false"
+     inkscape:lockguides="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid_32_32"
+       originx="0"
+       originy="0"
+       spacingx="16"
+       spacingy="16"
+       visible="true"
+       enabled="true"
+       dotted="false" />
+  </sodipodi:namedview>
+  <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+  <path
+     d="M 128,0 C 75,0 32,43 32,96 v 320 c 0,53 43,96 96,96 h 288 32 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 v -64 c 17.7,0 32,-14.3 32,-32 V 32 C 480,14.3 465.7,0 448,0 h -32 z m 0,384 h 256 v 64 H 128 c -17.7,0 -32,-14.3 -32,-32 0,-17.7 14.3,-32 32,-32 z"
+     id="path414"
+     sodipodi:nodetypes="sssscssccssscssccsss"
+     style="display:inline"
+     inkscape:label="Book" />
+  <g
+     aria-label="P"
+     id="text1687"
+     style="font-size:360.056px;line-height:125%;letter-spacing:0px;word-spacing:0px;stroke-width:0.900141px"
+     inkscape:label="P">
+    <path
+       d="m 192.76507,320 c -10.08157,0 -18.12282,-2.88045 -24.12375,-8.64135 -5.7609,-6.00093 -8.64135,-14.04218 -8.64135,-24.12375 V 94.604941 c 0,-9.841531 2.64041,-17.402707 7.92124,-22.683528 5.28082,-5.280821 12.84199,-7.921232 22.68352,-7.921232 h 92.17434 c 28.08437,0 49.92776,7.20112 65.53019,21.60336 15.60243,14.162199 23.40364,33.965279 23.40364,59.409239 0,25.20392 -7.92123,45.007 -23.76369,59.40924 -15.60243,14.40224 -37.32581,21.60336 -65.17014,21.60336 L 224,226.02495 v 61.20952 c 0,10.08157 -0.75019,18.12325 -6.75112,24.12418 C 211.24795,317.11955 203.08668,320 192.76507,320 Z m 81.0126,-143.66235 c 12.24191,1.1e-4 21.24331,-2.52039 27.0042,-7.56117 6.00093,-5.04079 9.0014,-12.842 9.0014,-23.40364 0,-20.88325 -12.00187,-33.37242 -36.0056,-33.37263 L 224,111.99979 v 64.33743 z"
+       style="font-family:'Nunito Black';-inkscape-font-specification:'Nunito Black, ';fill:#ffffff"
+       id="path363"
+       sodipodi:nodetypes="scssssscscscscsscssccs" />
+  </g>
+  <metadata
+     id="metadata1745">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Book icon with a P (based on Fontawesome)</dc:title>
+        <dc:description>Based on Fontawesome:
+Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.
+Letter is based on Nunito Black: https://www.fontsquirrel.com/fonts/nunito (some nodes have been aligned on a 16x16-grid)</dc:description>
+        <dc:source>https://fontawesome.com/icons/book?s=solid&amp;f=classic</dc:source>
+        <dc:identifier>fa-book</dc:identifier>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>fontawesome book fa-book pycroft</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title>AG DSN</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>fontawesome, AG DSN</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>Lukas Juhrich</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>
