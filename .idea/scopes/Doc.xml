@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Doc" pattern="file[pycroft*]:doc//*||file[pycroft*]:README*" />
+</component>
