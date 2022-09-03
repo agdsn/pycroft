@@ -56,23 +56,33 @@ def get_membership_fee_for_date(target_date) -> MembershipFee:
     :raises sqlalchemy.exc.MultipleResultsFound: if multiple membership fees
         were found:
     """
-    return MembershipFee.q.filter(
-        between(target_date, MembershipFee.begins_on,
-                MembershipFee.ends_on)
-    ).one()
+    # TODO use `select` API
+    return typing.cast(
+        MembershipFee,
+        MembershipFee.q.filter(
+            between(target_date, MembershipFee.begins_on, MembershipFee.ends_on)
+        ).one()
+    )
 
 
 def get_last_applied_membership_fee() -> MembershipFee:
     """Get the last applied membership fee."""
-    return MembershipFee.q.filter(
-        MembershipFee.ends_on <= func.current_timestamp()) \
+    # TODO use `select` API
+    return typing.cast(
+        MembershipFee,
+        MembershipFee.q
+        .filter(MembershipFee.ends_on <= func.current_timestamp())
         .order_by(MembershipFee.ends_on.desc()).first()
+    )
 
 
 def get_first_applied_membership_fee() -> MembershipFee:
     """Get the first applied membership fee."""
-    return MembershipFee.q.order_by(
-        MembershipFee.ends_on.desc()).first()
+    # TODO use `select` API
+    return typing.cast(
+        MembershipFee,
+        MembershipFee.q.order_by(MembershipFee.ends_on.desc()).first()
+    )
 
 
 @with_transaction
@@ -314,7 +324,8 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                           .select_from(users)
                           .cte("membership_fee_numbered_users"))
 
-        transactions = (Transaction.__table__.insert()
+        # TODO use new-style insert(Transaction)
+        transactions = (Transaction.__table__.insert()  # type: ignore
              .from_select([Transaction.description,
                            Transaction.author_id,
                            Transaction.posted_at,
@@ -332,7 +343,8 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
              .select_from(transactions)
              .cte('membership_fee_numbered_transactions'))
 
-        split_insert_fee_account = (Split.__table__.insert()
+        # TODO use new-style insert(Split)
+        split_insert_fee_account = (Split.__table__.insert()  # type: ignore
             .from_select([Split.amount, Split.account_id, Split.transaction_id],
                          select(literal(-membership_fee.regular_fee, type_=Money),
                                 numbered_users.c.fee_account_id,
@@ -343,7 +355,8 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
             .returning(Split.id)
             .cte('membership_fee_split_fee_account'))
 
-        split_insert_user = (Split.__table__.insert().from_select(
+        # TODO use new-style insert(Split)
+        split_insert_user = (Split.__table__.insert().from_select(  # type: ignore
             [Split.amount, Split.account_id, Split.transaction_id],
             select(literal(membership_fee.regular_fee, type_=Money),
                    numbered_users.c.account_id,
@@ -833,8 +846,9 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
     """
     query = Split.q.join(Transaction).filter(Split.account == account)
 
-    if not (sort_by in Transaction.__table__.columns
-            or sort_by in Split.__table__.columns):
+    # see #562
+    if not (sort_by in Transaction.__table__.columns  # type: ignore
+            or sort_by in Split.__table__.columns):  # type: ignore
         sort_by = "valid_on"
 
     descending = (sort_order == "desc") ^ (positive == False)
