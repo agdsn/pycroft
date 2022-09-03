@@ -14,7 +14,7 @@ from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_l
 from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \
     fetch_properties_to_sync
 from ldap_sync.record import UserRecord, GroupRecord, RecordState
-from ldap_sync.conversion import dn_from_username
+from ldap_sync.conversion import dn_from_username, db_user_to_record, db_group_to_record
 from pycroft.model.session import session
 from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
@@ -367,8 +367,11 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_user_attributes_synced_correctly(self):
         records = {}
         for result in self.users_to_sync:
-            record = UserRecord.from_db_user(result.User, self.user_base_dn,
-                                         should_be_blocked=result.should_be_blocked)
+            record = db_user_to_record(
+                result.User,
+                self.user_base_dn,
+                should_be_blocked=result.should_be_blocked,
+            )
             records[record.dn] = record
 
         for ldap_user in self.new_ldap_users:
@@ -382,8 +385,12 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_group_attributes_synced_correctly(self):
         records = {}
         for group in self.groups_to_sync:
-            record = GroupRecord.from_db_group(group.Group.name, self.filter_members(group.members),
-                                               self.group_base_dn, self.user_base_dn)
+            record = db_group_to_record(
+                group.Group.name,
+                self.filter_members(group.members),
+                self.group_base_dn,
+                self.user_base_dn,
+            )
             records[record.dn] = record
 
         for ldap_group in self.new_ldap_groups:
@@ -393,8 +400,12 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_property_attributes_synced_correctly(self):
         records = {}
         for property in self.properties_to_sync:
-            record = GroupRecord.from_db_group(property.name, self.filter_members(property.members),
-                                               self.property_base_dn, self.user_base_dn)
+            record = db_group_to_record(
+                property.name,
+                self.filter_members(property.members),
+                self.property_base_dn,
+                self.user_base_dn,
+            )
             records[record.dn] = record
 
         for ldap_property in self.new_ldap_properties:
@@ -408,7 +419,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             raise RuntimeError("Fixtures do not provide a syncable user with a mail address")
 
         modified_user = users_with_mail[0].User
-        mod_dn = UserRecord.from_db_user(modified_user, self.user_base_dn).dn
+        mod_dn = db_user_to_record(modified_user, self.user_base_dn).dn
         modified_user.email = 'bar@agdsn.de'
         session.add(modified_user)
         session.flush()
@@ -425,7 +436,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         if not users_without_mail:
             raise RuntimeError("Fixtures do not provide a syncable user without a mail address")
         mod_user = users_without_mail[0].User
-        mod_dn = UserRecord.from_db_user(mod_user, self.user_base_dn).dn
+        mod_dn = db_user_to_record(mod_user, self.user_base_dn).dn
         mod_user.email = 'bar@agdsn.de'
         session.add(mod_user)
         session.flush()
@@ -446,9 +457,13 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         assert modified_ldap_record['attributes']['mail'] == [mod_user.email]
 
     def test_change_property_membership(self):
-        mail_property =  next(p for p in  self.properties_to_sync if p.name == 'mail')
-        mail_property_dn = GroupRecord.from_db_group(mail_property.name, mail_property.members,
-                                                     self.property_base_dn, self.user_base_dn).dn
+        mail_property = next(p for p in self.properties_to_sync if p.name == "mail")
+        mail_property_dn = db_group_to_record(
+            mail_property.name,
+            mail_property.members,
+            self.property_base_dn,
+            self.user_base_dn,
+        ).dn
 
         member = self.filter_members(mail_property.members)[0]
         member_dn = dn_from_username(member, self.user_base_dn)

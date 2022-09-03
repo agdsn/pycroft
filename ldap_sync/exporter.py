@@ -12,6 +12,7 @@ from typing import Iterable, Iterator
 import ldap3
 
 from . import logger, types, action
+from .conversion import db_user_to_record, db_group_to_record
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .record import UserRecord, GroupRecord, RecordState, Record
 from .record_diff import diff_records
@@ -38,16 +39,16 @@ def iter_desired_records(
     # restrict members of groups/properties to those actually exported to the LDAP
     exported_users = {u.User.login for u in db_users}
     for u in db_users:
-        yield UserRecord.from_db_user(u.User, user_base_dn, u.should_be_blocked)
+        yield db_user_to_record(u.User, user_base_dn, u.should_be_blocked)
     for g in db_groups:
-        yield GroupRecord.from_db_group(
+        yield db_group_to_record(
             name=g.Group.name,
             members=(m for m in g.members if m in exported_users),
             base_dn=group_base_dn,
             user_base_dn=user_base_dn,
         )
     for p in db_properties:
-        yield GroupRecord.from_db_group(
+        yield db_group_to_record(
             name=p.name,
             members=(m for m in p.members if m in exported_users),
             base_dn=property_base_dn,

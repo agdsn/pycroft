@@ -10,7 +10,6 @@ import typing
 
 from ldap3.utils.conv import escape_filter_chars
 
-from pycroft.model.user import User
 from .types import LdapRecord, Attributes, NormalizedAttributes, DN, AttributeValues
 
 T = typing.TypeVar("T")
@@ -134,15 +133,6 @@ class UserRecord(Record):
     def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         return cls.SYNCED_ATTRIBUTES
 
-    @classmethod
-    def from_db_user(
-        cls, user: User, base_dn: DN, should_be_blocked: bool = False
-    ) -> UserRecord:
-        import warnings
-        warnings.warn("Use `conversion.db_user_to_record` instead")
-        from .conversion import db_user_to_record
-        return db_user_to_record(user, base_dn, should_be_blocked)
-
 
 class GroupRecord(Record):
     """Create a new groupOfMembers record with a dn and certain attributes.
@@ -156,15 +146,6 @@ class GroupRecord(Record):
     @classmethod
     def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         return cls.SYNCED_ATTRIBUTES
-
-    @classmethod
-    def from_db_group(
-        cls, name: str, members: typing.Iterable[str], base_dn: DN, user_base_dn: DN
-    ) -> GroupRecord:
-        import warnings
-        warnings.warn("Use `conversion.db_user_to_record` instead")
-        from .conversion import db_group_to_record
-        return db_group_to_record(name, members, base_dn, user_base_dn)
 
 
 @dataclasses.dataclass

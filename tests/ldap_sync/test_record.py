@@ -3,6 +3,7 @@ import typing
 import pytest
 from attr import validate
 from ldap_sync import types
+from ldap_sync.conversion import db_user_to_record
 
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list, Record
 from ldap_sync.types import DN, LdapRecord
@@ -102,7 +103,7 @@ class TestRecordFromOrm:
                 login_shell = '/bin/bash'
             passwd_hash = 'somehash'
 
-        return UserRecord.from_db_user(complete_user, base_dn=DN("o=test")).attrs
+        return db_user_to_record(complete_user, base_dn=DN("o=test")).attrs
 
     def test_uid_correct(self, attrs):
         assert attrs['uid'] == ['shizzle']
