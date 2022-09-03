@@ -1,5 +1,5 @@
-Reference documentation (ldap_sync)
-===================================
+ldap_sync
+=========
 
 .. contents:: Table of Contents
    :local:
@@ -9,8 +9,6 @@ Reference documentation (ldap_sync)
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
 .. automodule:: ldap_sync.__main__
     :undoc-members:
 .. automodule:: ldap_sync.exporter

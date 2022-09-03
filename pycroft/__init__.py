@@ -2,12 +2,18 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft
-    ~~~~~~~~~~~~~~
 
-    This package contains everything.
+:copyright: (c) 2011 by AG DSN.
 
-    :copyright: (c) 2011 by AG DSN.
+What belongs in this package
+----------------------------
+This is the “backend” package, and as such mainly contains
+
+* things related to the ``pycroft`` business logic (i.e., :mod:`pycroft.lib`)
+* a definition of the database model (i.e., :mod:`pycroft.model`).
+
+In particular, this means that *at no point* should there be any dependencies to ``flask`` or
+other frontend-specific libraries.
 """
 import typing
 

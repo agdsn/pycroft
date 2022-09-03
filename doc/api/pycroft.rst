@@ -1,5 +1,8 @@
-Reference documentation (pycroft)
-=================================
+pycroft
+=======
+
+.. contents:: Contents
+    :local:
 
 .. automodule:: pycroft
     :members:

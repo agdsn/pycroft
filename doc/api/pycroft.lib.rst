@@ -1,10 +1,11 @@
 pycroft.lib
 ===========
 
+.. contents:: Table of Contents
+   :local:
+
 .. automodule:: pycroft.lib
 
-Submodules
------------
 .. automodule:: pycroft.lib.address
 .. automodule:: pycroft.lib.exc
 .. automodule:: pycroft.lib.facilities

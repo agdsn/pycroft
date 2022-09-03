@@ -21,6 +21,7 @@ dt.sig>.sig-prename {
 
 /* content hacks */
 
+#reference-documentation p.caption,
 #indices-and-tables p.caption,
 #architecture-decision-records p.caption {
     display: None

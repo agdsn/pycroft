@@ -1,10 +1,11 @@
 pycroft.model
 =============
 
+.. contents:: Table of Contents
+   :local:
+
 .. automodule:: pycroft.model
 
-Submodules
-----------
 .. automodule:: pycroft.model._all
 .. automodule:: pycroft.model.address
 .. automodule:: pycroft.model.base

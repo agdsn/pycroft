@@ -12,6 +12,13 @@ Contents:
    :maxdepth: 2
 
    self
+
+Reference Documentation
+-----------------------
+.. toctree::
+   :caption: Reference documentation
+   :maxdepth: 2
+
    api/pycroft
    api/ldap_sync
 
