@@ -30,12 +30,6 @@ class Action:
         default_factory=lambda: logging.getLogger("ldap_sync.action")
     )
 
-    def execute(self, connection: ldap3.Connection) -> None:
-        from warnings import warn
-        warn("use execution.execute_real instead", DeprecationWarning)
-        from .execution import execute_real
-        return execute_real(self, connection)
-
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.record_dn}>"
 

@@ -14,6 +14,7 @@ import ldap3
 from . import logger, types, action
 from .conversion import db_user_to_record, db_group_to_record
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
+from .execution import execute_real
 from .record import UserRecord, GroupRecord, RecordState, Record
 from .record_diff import diff_records
 
@@ -145,7 +146,7 @@ class LdapExporter:
 
     def execute_all(self, *a: typing.Any, **kw: typing.Any) -> None:
         for action in self.actions:
-            action.execute(*a, **kw)
+            execute_real(action, *a, **kw)
 
 
 #### TODO move to `ldap` (or `ldap_fetch`? or `sources.ldap`?) module

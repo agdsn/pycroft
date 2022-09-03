@@ -2,6 +2,7 @@ import ldap3
 import pytest
 
 from ldap_sync.action import IdleAction, AddAction, ModifyAction, DeleteAction
+from ldap_sync.execution import execute_real
 from ldap_sync.record import UserRecord
 from . import validate_attribute_type, get_all_objects
 
@@ -18,7 +19,7 @@ class TestAddAction:
     def objects(self, connection, attributes, uid, dn, base):
         """Objects after executing an AddAction"""
         action = AddAction(record=UserRecord(dn=dn, attrs=attributes))
-        action.execute(connection)
+        execute_real(action, connection)
         return get_all_objects(connection, base)
 
     def test_dn_correct(self, objects, dn):
@@ -45,7 +46,7 @@ class TestDeleteAction:
     def objects(self, dn, connection, base):
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
-        DeleteAction(record_dn=record.dn).execute(connection)
+        execute_real(DeleteAction(record_dn=record.dn), connection)
         return get_all_objects(connection, base)
 
     def test_no_objects(self, objects):
@@ -58,7 +59,7 @@ class TestModifyAction:
         connection.add(dn, UserRecord.LDAP_OBJECTCLASSES)
         record = UserRecord(dn=dn, attrs={})
         action = ModifyAction(record_dn=record.dn, modifications={'mail': 'new@shizzle.de'})
-        action.execute(connection)
+        execute_real(action, connection)
         return get_all_objects(connection, base)
 
     def test_one_object_changed(self, objects):
@@ -70,4 +71,4 @@ class TestModifyAction:
 
 def test_execute_does_nothing():
     record = UserRecord(dn='test', attrs={})
-    IdleAction(record_dn=record.dn).execute(connection=None)  # type: ignore
+    execute_real(IdleAction(record_dn=record.dn), connection=None)  # type: ignore
