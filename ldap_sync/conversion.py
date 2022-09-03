@@ -13,7 +13,7 @@ import typing
 from ldap3.utils.dn import safe_dn
 
 from ldap_sync.record import UserRecord, GroupRecord
-from ldap_sync.types import DN, Attributes
+from ldap_sync.types import DN, Attributes, LdapRecord
 from pycroft.model.user import User
 
 
@@ -93,3 +93,11 @@ def dn_from_username(username: str, base: DN) -> DN:
 
 def dn_from_cn(name: str, base: DN) -> DN:
     return DN(safe_dn([f"cn={name}", base]))
+
+
+def ldap_user_to_record(record: LdapRecord) -> UserRecord:
+    return UserRecord(dn=record["dn"], attrs=record["attributes"])
+
+
+def ldap_group_to_record(record: LdapRecord) -> GroupRecord:
+    return GroupRecord(dn=record["dn"], attrs=record["attributes"])

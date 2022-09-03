@@ -91,10 +91,6 @@ class Record(abc.ABC):
         """Returns the attributes to be synced."""
         raise NotImplementedError
 
-    @classmethod
-    def from_ldap_record(cls: type[TRecord], record: LdapRecord) -> TRecord:
-        return cls(dn=record['dn'], attrs=record['attributes'])
-
     # `__eq__` must be total, hence no type restrictions/hints
     def __eq__(self, other: object) -> bool:
         try:

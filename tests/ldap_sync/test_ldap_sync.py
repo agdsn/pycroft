@@ -14,7 +14,13 @@ from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_l
 from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \
     fetch_properties_to_sync
 from ldap_sync.record import UserRecord, GroupRecord, RecordState
-from ldap_sync.conversion import dn_from_username, db_user_to_record, db_group_to_record
+from ldap_sync.conversion import (
+    dn_from_username,
+    db_user_to_record,
+    db_group_to_record,
+    ldap_user_to_record,
+    ldap_group_to_record,
+)
 from pycroft.model.session import session
 from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
@@ -375,7 +381,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             records[record.dn] = record
 
         for ldap_user in self.new_ldap_users:
-            ldap_record = UserRecord.from_ldap_record(ldap_user)
+            ldap_record = ldap_user_to_record(ldap_user)
             self.assert_attributes_equal(records[ldap_record.dn], ldap_record)
 
     def filter_members(self, members):
@@ -394,7 +400,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             records[record.dn] = record
 
         for ldap_group in self.new_ldap_groups:
-            ldap_record = GroupRecord.from_ldap_record(ldap_group)
+            ldap_record = ldap_group_to_record(ldap_group)
             self.assert_attributes_equal(records[ldap_record.dn], ldap_record)
 
     def test_property_attributes_synced_correctly(self):
@@ -409,7 +415,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             records[record.dn] = record
 
         for ldap_property in self.new_ldap_properties:
-            ldap_record = GroupRecord.from_ldap_record(ldap_property)
+            ldap_record = ldap_group_to_record(ldap_property)
             self.assert_attributes_equal(records[ldap_record.dn], ldap_record)
 
 

@@ -2,6 +2,7 @@ import typing
 
 import pytest
 from ldap_sync import types
+from ldap_sync.conversion import ldap_user_to_record
 
 from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list, Record
 from ldap_sync.types import DN, LdapRecord
@@ -49,7 +50,7 @@ class TestRecord:
             "attributes": {"mail": "mail", "gecos": "baz"},
             "raw_attributes": {"mail": [b"mail"]}
         }
-        record = UserRecord.from_ldap_record(ldapsearch_record)
+        record = ldap_user_to_record(ldapsearch_record)
         assertSubDict({'mail': ['mail'], 'gecos': ['baz']}, record.attrs)
         for key in UserRecord.get_synced_attributes():
             assert key in record.attrs

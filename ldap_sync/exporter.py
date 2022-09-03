@@ -12,10 +12,15 @@ from typing import Iterable, Iterator
 import ldap3
 
 from . import logger, types, action
-from .conversion import db_user_to_record, db_group_to_record
+from .conversion import (
+    db_user_to_record,
+    db_group_to_record,
+    ldap_group_to_record,
+    ldap_user_to_record,
+)
 from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .execution import execute_real
-from .record import UserRecord, GroupRecord, RecordState, Record
+from .record import RecordState, Record
 from .record_diff import diff_records
 
 
@@ -24,9 +29,9 @@ def iter_current_records(
     ldap_groups: Iterable[types.LdapRecord],
     ldap_properties: Iterable[types.LdapRecord],
 ) -> Iterator[Record]:
-    yield from (UserRecord.from_ldap_record(u) for u in ldap_users)
-    yield from (GroupRecord.from_ldap_record(g) for g in ldap_groups)
-    yield from (GroupRecord.from_ldap_record(p) for p in ldap_properties)
+    yield from (ldap_user_to_record(u) for u in ldap_users)
+    yield from (ldap_group_to_record(g) for g in ldap_groups)
+    yield from (ldap_group_to_record(p) for p in ldap_properties)
 
 
 def iter_desired_records(
