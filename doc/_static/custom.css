@@ -10,6 +10,10 @@
 }
 
 /* misc */
+
+/* De-emphasizes the module name in `<module>.<function>`.
+ * not necessary anymore due to `add_module_names = False`.
+ */
 dt.sig>.sig-prename {
     font-size: small;
     color: grey;
