@@ -23,6 +23,9 @@ def diff_attributes(
     keys, meaning keys not given in :paramref:`desired_attrs`
     won't end up in the modification dict.  Removing attributes
     has to be done by explicitly setting them to an empty string.
+
+    :param current_attrs: the attributes of the entity currently in the system.
+    :param desired_attrs: the attributes we want the entity to have.
     """
     return {
         attr: desired_value
@@ -36,7 +39,8 @@ def diff_user_attributes(
     current_attrs: types.NormalizedAttributes,
     desired_attrs: types.NormalizedAttributes,
 ) -> types.NormalizedAttributes:
-    """Like `diff_attributes`, but aware of the ``ppolicy`` overlay."""
+    """Like :func:`diff_attributes`, but aware of the
+    `ppolicy <https://linux.die.net/man/5/slapo-ppolicy>`_ overlay."""
     modifications = diff_attributes(current_attrs, desired_attrs)
     # Do not try to delete pwdAccountLockedTime if password is changed,
     # as the ppolicy overlay already takes care of that.

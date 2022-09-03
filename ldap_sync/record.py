@@ -44,7 +44,7 @@ def _canonicalize_to_list(value: AttributeValues) -> list[str] | list[bytes] | l
 # T -> T
 # …but mypy rejects this because we have an argument overlap with incompatible return types.
 def _maybe_escape_filter_chars(value: T) -> T | str:
-    """Escape and return according to RFC04515 if type is string-like.
+    """Escape and return according to :rfc:`04515` if type is string-like.
 
     Else, return the unchanged object.
     """
@@ -79,7 +79,7 @@ class Record(abc.ABC):
     :param dn: The DN of the record
     :param attrs: The attributes of the record.  Every value will
         be canonicalized to a list to allow for a senseful comparison
-        between two records, as well as escaped according to RFC04515.
+        between two records, as well as escaped according to :rfc:`04515`.
         Additionally, the keys are fixed to what's given by
         :meth:`get_synced_attributes`.
     """

@@ -40,6 +40,13 @@ def _from_environ_or_defaults(key: str, defaults: dict[str, str | None]) -> str 
 
 
 def get_config(**defaults: str | None) -> SyncConfig:
+    """Fetch the config from the environments, filling in defaults as specified.
+
+    Values are converted in accordance to the types hints of :class:`SyncConfig`.
+
+    The environment variables need to be of the format is ``PYCROFT_LDAP_$VAR``, e.g.
+    ``PYCROFT_LDAP_PORT``.
+    """
     db_uri = os.environ["PYCROFT_DB_URI"]
     config_dict: dict[str, str | None] = {
         # e.g. 'host': 'PYCROFT_LDAP_HOST'
@@ -68,6 +75,7 @@ def get_config(**defaults: str | None) -> SyncConfig:
 
 
 def get_config_or_exit(**defaults: str | None) -> SyncConfig:
+    """See :func:`get_config`"""
     try:
         return get_config(**defaults)
     except KeyError as exc:

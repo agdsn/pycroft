@@ -4,6 +4,14 @@
 """
 ldap_sync.db
 ~~~~~~~~~~~~
+
+This module is responsible for fetching the list of desired records from the DB.
+Most prominently:
+
+* :func:`fetch_users_to_sync`
+* :func:`fetch_properties_to_sync`
+* :func:`fetch_groups_to_sync`
+
 """
 import typing
 from typing import NamedTuple
@@ -39,8 +47,8 @@ def fetch_users_to_sync(
     :param session: The SQLAlchemy session to use
     :param str required_property: the property required to export users
 
-    :returns: An iterable of `(User, should_be_blocked)` ResultProxies
-        having the property `required_property' and a unix_account.
+    :returns: An iterable of ``(User, should_be_blocked)`` ResultProxies
+        having the property ``required_property`` and a unix_account.
     """
     if required_property:
         no_unix_account_q = User.q.join(User.current_properties)\

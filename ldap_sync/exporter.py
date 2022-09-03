@@ -73,11 +73,10 @@ class LdapExporter:
     Since the desired state is to be represented by a postgres
     database and the current state by the LDAP being synced to,
     :py:meth:`from_orm_objects_and_ldap_result` is there to not
-    have to convert the entries to :class:`Record`s manually.
+    have to convert the entries to :class:`Records <Record>` manually.
 
-    :param iterable current: An iterable of :class:`Record`s
-    :param iterable desired: An iterable of the desired
-        :class:`Record`s
+    :param current: The records currently in the system
+    :param desired: The records we want to be in the system
     """
 
     def __init__(self, current: Iterable[Record], desired: Iterable[Record]) -> None:
@@ -173,7 +172,7 @@ def sync_all(
 ) -> None:
     """Execute the LDAP sync given a connection and state data.
 
-    For the meaning of the last n-1 parameters see
+    For the meaning of the last :math:`n-1` parameters see
     :func:`LdapExporter.from_orm_objects_and_ldap_result`.
     """
     exporter = LdapExporter.from_orm_objects_and_ldap_result(
