@@ -18,10 +18,10 @@ from .conversion import (
     ldap_group_to_record,
     ldap_user_to_record,
 )
-from .db import UserProxyType, GroupProxyType, PropertyProxyType
 from .execution import execute_real
 from .record import RecordState, Record
 from .record_diff import diff_records
+from .sources.db import UserProxyType, GroupProxyType, PropertyProxyType
 
 
 def iter_current_records(

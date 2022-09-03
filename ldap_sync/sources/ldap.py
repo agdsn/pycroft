@@ -10,9 +10,9 @@ import typing
 
 import ldap3
 
-from ldap_sync import logger
-from .config import SyncConfig
-from .types import LdapRecord
+from .. import logger
+from ..config import SyncConfig
+from ..types import LdapRecord
 
 
 def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:
@@ -44,7 +44,7 @@ def fetch_ldap_entries(
         logger.warning("LDAP search not successful.  Result: %s", connection.result)
         return []
 
-    return [r for r in connection.response if r['dn'] != base_dn]
+    return [r for r in connection.response if r["dn"] != base_dn]
 
 
 def fetch_current_ldap_users(
@@ -75,7 +75,7 @@ def fetch_current_ldap_properties(
 
 
 def fake_connection() -> ldap3.Connection:
-    server = ldap3.Server('mocked')
+    server = ldap3.Server("mocked")
     connection = ldap3.Connection(server, client_strategy=ldap3.MOCK_SYNC)
     connection.open()
     return connection

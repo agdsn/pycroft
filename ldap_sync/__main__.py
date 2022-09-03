@@ -12,11 +12,20 @@ from sqlalchemy.orm import Session
 
 from .config import get_config_or_exit
 from .exporter import sync_all
-from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_ldap_users, \
-    fetch_current_ldap_groups, fetch_current_ldap_properties, fake_connection
+from .sources.ldap import (
+    establish_and_return_ldap_connection,
+    fetch_current_ldap_users,
+    fetch_current_ldap_groups,
+    fetch_current_ldap_properties,
+    fake_connection,
+)
 from ldap_sync import logger, types
-from ldap_sync.db import establish_and_return_session, fetch_users_to_sync, \
-    fetch_groups_to_sync, fetch_properties_to_sync
+from .sources.db import (
+    establish_and_return_session,
+    fetch_users_to_sync,
+    fetch_groups_to_sync,
+    fetch_properties_to_sync,
+)
 
 
 def sync_production() -> None:

@@ -3,7 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import pytest
 
-from ldap_sync.db import fetch_users_to_sync, UserProxyType
+from ldap_sync.sources.db import fetch_users_to_sync, UserProxyType
 from tests import factories
 
 
