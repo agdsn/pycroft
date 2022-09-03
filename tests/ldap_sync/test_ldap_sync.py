@@ -13,8 +13,8 @@ from ldap_sync.ldap import establish_and_return_ldap_connection, fetch_current_l
     fetch_current_ldap_groups, fetch_current_ldap_properties
 from ldap_sync.db import fetch_users_to_sync, fetch_groups_to_sync, \
     fetch_properties_to_sync
-from ldap_sync.record import UserRecord, GroupRecord, RecordState, \
-    dn_from_username
+from ldap_sync.record import UserRecord, GroupRecord, RecordState
+from ldap_sync.conversion import dn_from_username
 from pycroft.model.session import session
 from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory

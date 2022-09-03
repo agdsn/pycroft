@@ -2,7 +2,7 @@ import ldap3
 import pytest
 
 from ldap_sync import types
-from ldap_sync.record import dn_from_username
+from ldap_sync.conversion import dn_from_username
 
 
 @pytest.fixture(scope='class')

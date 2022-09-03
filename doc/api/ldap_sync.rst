@@ -27,5 +27,7 @@ Submodules
     :undoc-members:
 .. automodule:: ldap_sync.record_diff
     :undoc-members:
+.. automodule:: ldap_sync.conversion
+    :undoc-members:
 .. automodule:: ldap_sync.types
     :undoc-members:
