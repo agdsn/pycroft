@@ -14,3 +14,4 @@ types-Jinja2~=2.11.9
 types-babel~=2.9.2
 celery-types~=0.9.3
 types-jsonschema~=4.3.0
+sphinx-paramlinks~=0.5.4

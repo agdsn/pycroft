@@ -38,6 +38,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "guzzle_sphinx_theme",
+    "sphinx_paramlinks",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
