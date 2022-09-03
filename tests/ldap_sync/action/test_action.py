@@ -1,24 +1,9 @@
 import ldap3
 import pytest
 
-from ldap_sync.action import Action, IdleAction, AddAction, ModifyAction, DeleteAction
+from ldap_sync.action import IdleAction, AddAction, ModifyAction, DeleteAction
 from ldap_sync.record import UserRecord
 from . import validate_attribute_type, get_all_objects
-
-
-class TestActionSubclass:
-    def test_instantiation_fails(self, dn):
-        with pytest.raises(TypeError):
-            Action(record_dn=dn)
-
-    def test_subclassing_with_execute_works(self, dn):
-        class A(Action):
-            def execute(self, **kwargs):
-                pass
-        try:
-            A(record_dn=dn)
-        except TypeError as e:
-            pytest.fail(f"Subclassing raised Exception {e}")
 
 
 class TestAddAction:
@@ -85,4 +70,4 @@ class TestModifyAction:
 
 def test_execute_does_nothing():
     record = UserRecord(dn='test', attrs={})
-    IdleAction(record_dn=record.dn).execute()
+    IdleAction(record_dn=record.dn).execute(connection=None)  # type: ignore
