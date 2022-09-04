@@ -6,7 +6,7 @@ from unittest import TestCase
 import ldap3
 import pytest
 
-from ldap_sync.action import AddAction, IdleAction, DeleteAction, ModifyAction
+from ldap_sync.concepts.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from ldap_sync.exporter import LdapExporter, sync_all
 from ldap_sync.config import get_config, SyncConfig
 from ldap_sync.sources.ldap import (
@@ -20,7 +20,7 @@ from ldap_sync.sources.db import (
     fetch_groups_to_sync,
     fetch_properties_to_sync,
 )
-from ldap_sync.record import UserRecord, RecordState
+from ldap_sync.concepts.record import UserRecord, RecordState
 from ldap_sync.conversion import (
     dn_from_username,
     db_user_to_record,

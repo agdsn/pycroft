@@ -1,9 +1,9 @@
 import ldap3
 import pytest
 
-from ldap_sync.action import IdleAction, AddAction, ModifyAction, DeleteAction
+from ldap_sync.concepts.action import IdleAction, AddAction, ModifyAction, DeleteAction
 from ldap_sync.execution import execute_real
-from ldap_sync.record import UserRecord
+from ldap_sync.concepts.record import UserRecord
 from . import validate_attribute_type, get_all_objects
 
 

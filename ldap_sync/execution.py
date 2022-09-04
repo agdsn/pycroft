@@ -12,7 +12,13 @@ import logging
 
 import ldap3
 
-from ldap_sync.action import Action, AddAction, DeleteAction, ModifyAction, IdleAction
+from ldap_sync.concepts.action import (
+    Action,
+    AddAction,
+    DeleteAction,
+    ModifyAction,
+    IdleAction,
+)
 
 
 @functools.singledispatch

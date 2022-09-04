@@ -15,13 +15,13 @@ ldap_sync
     :undoc-members:
 .. automodule:: ldap_sync.config
     :undoc-members:
-.. automodule:: ldap_sync.action
+.. automodule:: ldap_sync.entities.action
     :undoc-members:
-.. automodule:: ldap_sync.db
+.. automodule:: ldap_sync.entities.record
     :undoc-members:
-.. automodule:: ldap_sync.ldap
+.. automodule:: ldap_sync.sources.db
     :undoc-members:
-.. automodule:: ldap_sync.record
+.. automodule:: ldap_sync.sources.ldap
     :undoc-members:
 .. automodule:: ldap_sync.record_diff
     :undoc-members:

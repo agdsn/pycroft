@@ -2,6 +2,10 @@
 ldap_sync.record
 ~~~~~~~~~~~~~~~~
 """
+#  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
+#  This file is part of the Pycroft project and licensed under the terms of
+#  the Apache License, Version 2.0. See the LICENSE file for details
+
 from __future__ import annotations
 
 import abc
@@ -10,12 +14,20 @@ import typing
 
 from ldap3.utils.conv import escape_filter_chars
 
-from .types import LdapRecord, Attributes, NormalizedAttributes, DN, AttributeValues
+from ..types import (
+    LdapRecord,
+    Attributes,
+    NormalizedAttributes,
+    DN,
+    AttributeValues,
+)
 
 T = typing.TypeVar("T")
 
 
-def _canonicalize_to_list(value: AttributeValues) -> list[str] | list[bytes] | list[int]:
+def _canonicalize_to_list(
+    value: AttributeValues,
+) -> list[str] | list[bytes] | list[int]:
     """Canonicalize a value to a list.
 
     If value is a list, return it.  If it is None or an empty string,
@@ -23,7 +35,7 @@ def _canonicalize_to_list(value: AttributeValues) -> list[str] | list[bytes] | l
     """
     if isinstance(value, list):
         return list(value)
-    if value == '' or value == b'' or value is None:
+    if value == "" or value == b"" or value is None:
         return []  # type: ignore
     # str, byte, int – or unknown. But good fallback.
     return [value]  # type: ignore
@@ -113,16 +125,27 @@ class Record(abc.ABC):
 
 
 class UserRecord(Record):
-    """Create a new user record with a dn and certain attributes.
-    """
-    SYNCED_ATTRIBUTES = frozenset([
-        'objectClass',
-        'mail', 'sn', 'cn', 'loginShell', 'gecos', 'userPassword',
-        'homeDirectory', 'gidNumber', 'uidNumber', 'uid',
-        'pwdAccountLockedTime', 'shadowExpire'
-    ])
-    LDAP_OBJECTCLASSES = ['top', 'inetOrgPerson', 'posixAccount', 'shadowAccount']
-    LDAP_LOGIN_ENABLED_PROPERTY = 'ldap_login_enabled'
+    """Create a new user record with a dn and certain attributes."""
+
+    SYNCED_ATTRIBUTES = frozenset(
+        [
+            "objectClass",
+            "mail",
+            "sn",
+            "cn",
+            "loginShell",
+            "gecos",
+            "userPassword",
+            "homeDirectory",
+            "gidNumber",
+            "uidNumber",
+            "uid",
+            "pwdAccountLockedTime",
+            "shadowExpire",
+        ]
+    )
+    LDAP_OBJECTCLASSES = ["top", "inetOrgPerson", "posixAccount", "shadowAccount"]
+    LDAP_LOGIN_ENABLED_PROPERTY = "ldap_login_enabled"
     PWD_POLICY_BLOCKED = "login_disabled"
 
     @classmethod
@@ -134,10 +157,9 @@ class GroupRecord(Record):
     """Create a new groupOfMembers record with a dn and certain attributes.
     Used to represent groups and properties.
     """
-    SYNCED_ATTRIBUTES = frozenset([
-        'objectClass', 'cn', 'member'
-    ])
-    LDAP_OBJECTCLASSES = ['groupOfMembers']
+
+    SYNCED_ATTRIBUTES = frozenset(["objectClass", "cn", "member"])
+    LDAP_OBJECTCLASSES = ["groupOfMembers"]
 
     @classmethod
     def get_synced_attributes(cls) -> typing.AbstractSet[str]:
@@ -151,5 +173,6 @@ class RecordState:
     This class is essentially a duple consisting of a current and
     desired record to represent the difference.
     """
+
     current: Record | None = None
     desired: Record | None = None

@@ -4,7 +4,12 @@ import pytest
 from ldap_sync import types
 from ldap_sync.conversion import ldap_user_to_record
 
-from ldap_sync.record import UserRecord, RecordState, _canonicalize_to_list, Record
+from ldap_sync.concepts.record import (
+    UserRecord,
+    RecordState,
+    _canonicalize_to_list,
+    Record,
+)
 from ldap_sync.types import DN, LdapRecord
 
 

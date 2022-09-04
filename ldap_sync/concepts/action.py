@@ -11,7 +11,7 @@ import logging
 
 import ldap3
 
-from . import types
+from .. import types
 from .record import Record  # shadowing…
 
 
@@ -24,6 +24,7 @@ class Action:
     * refers to a record (i.e. something with a DN)
     * can be executed (provided an LDAP connection).
     """
+
     record_dn: types.DN
     _: dataclasses.KW_ONLY  # pushes `logger=` back in generated `__init__`
     logger: logging.Logger = dataclasses.field(
@@ -36,6 +37,7 @@ class Action:
 
 class AddAction(Action):
     """Add an LDAP record"""
+
     nonempty_attrs: types.NormalizedAttributes
 
     def __init__(self, record: Record) -> None:
@@ -54,7 +56,7 @@ class ModifyAction(Action):
     modifications: types.NormalizedAttributes
 
     def __repr__(self) -> str:
-        attr_string = ', '.join(self.modifications.keys())
+        attr_string = ", ".join(self.modifications.keys())
         return f"<{type(self).__name__} {self.record_dn} [{attr_string}]>"
 
 
