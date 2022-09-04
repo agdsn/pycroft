@@ -14,7 +14,7 @@ from ldap_sync.concepts.action import (
     ModifyAction,
     Action,
 )
-from ldap_sync.concepts.record import UserRecord, RecordState, GroupRecord
+from ldap_sync.concepts.record import UserRecord, GroupRecord
 from ldap_sync.config import get_config, SyncConfig
 from ldap_sync.conversion import (
     dn_from_cn,
@@ -22,7 +22,6 @@ from ldap_sync.conversion import (
     db_user_to_record,
 )
 from ldap_sync.execution import execute_real
-from ldap_sync.exporter import LdapExporter
 from ldap_sync.record_diff import bulk_diff_records
 from ldap_sync.sources.db import (
     _fetch_db_users,
@@ -49,20 +48,6 @@ class TestEmptyLdap:
     @pytest.fixture(scope='class')
     def desired_user(self):
         return UserRecord(dn=types.DN("user"), attrs={})
-
-    @pytest.fixture(scope='class')
-    def exporter(self, desired_user):
-        return LdapExporter(desired=[desired_user], current=[])
-
-    def test_one_record_state(self, exporter, desired_user):
-        assert len(exporter.states_dict) == 1
-        state = exporter.states_dict[desired_user.dn]
-        assert state == RecordState(current=None, desired=desired_user)
-
-    def test_one_action_is_add(self, exporter):
-        exporter.compile_actions()
-        assert len(exporter.actions) == 1
-        assert isinstance(exporter.actions[0], AddAction)
 
 
 class LdapSyncLoggerMutedMixin:
