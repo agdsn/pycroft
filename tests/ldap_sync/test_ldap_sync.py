@@ -8,8 +8,15 @@ import pytest
 
 from ldap_sync.concepts import types
 from ldap_sync.concepts.action import AddAction, IdleAction, DeleteAction, ModifyAction
-from ldap_sync.exporter import LdapExporter, sync_all
+from ldap_sync.execution import execute_real
+from ldap_sync.exporter import (
+    LdapExporter,
+    sync_all,
+    iter_current_records,
+    iter_desired_records,
+)
 from ldap_sync.config import get_config, SyncConfig
+from ldap_sync.record_diff import bulk_diff_records
 from ldap_sync.sources.ldap import (
     establish_and_return_ldap_connection,
     fetch_current_ldap_users,
@@ -265,40 +272,24 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
         self.properties_to_sync = fetch_properties_to_sync(session)
         self.initial_ldap_properties = fetch_current_ldap_properties(self.conn, base_dn=self.property_base_dn)
 
-    def build_exporter(self) -> LdapExporter:
-        """Return an LdapExporter.
-
-        It does not compile actions.
-        """
-        return LdapExporter.from_orm_objects_and_ldap_result(
-            db_users=self.users_to_sync,
-            ldap_users=self.initial_ldap_users,
-            user_base_dn=self.user_base_dn,
-            db_groups=self.groups_to_sync,
-            ldap_groups=self.initial_ldap_groups,
-            group_base_dn=self.group_base_dn,
-            db_properties=self.properties_to_sync,
-            ldap_properties=self.initial_ldap_properties,
-            property_base_dn=self.property_base_dn,
-        )
-
-    def build_user_exporter(
-        self, current_users=None, desired_users=None
-    ) -> LdapExporter:
-        """Return an LdapExporter from ldap and orm users.
-
-        It does not compile actions.
-        """
-        if current_users is None:
-            current_users = self.initial_ldap_users
-
-        if desired_users is None:
-            desired_users = self.users_to_sync
-
-        return LdapExporter.from_orm_objects_and_ldap_result(
-            db_users=desired_users,
-            ldap_users=current_users,
-            user_base_dn=self.user_base_dn,
+    @property
+    def actions(self):
+        return list(
+            bulk_diff_records(
+                current_records=iter_current_records(
+                    ldap_users=self.initial_ldap_users,
+                    ldap_groups=self.initial_ldap_groups,
+                    ldap_properties=self.initial_ldap_properties,
+                ),
+                desired_records=iter_desired_records(
+                    db_users=self.users_to_sync,
+                    user_base_dn=self.user_base_dn,
+                    db_groups=self.groups_to_sync,
+                    group_base_dn=self.group_base_dn,
+                    db_properties=self.properties_to_sync,
+                    property_base_dn=self.property_base_dn,
+                ),
+            ).values()
         )
 
     def sync_all(self):
@@ -340,13 +331,13 @@ class LdapTestCase(LdapSyncerTestBase):
         self.assert_entries_synced()
 
     def test_exporter_compiles_all_addactions(self):
-        exporter = self.build_exporter()
-        exporter.compile_actions()
-        assert len(exporter.actions) \
-            == len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync)
-        assert (isinstance(a, AddAction) for a in exporter.actions)
+        assert len(self.actions) == len(self.users_to_sync) + len(
+            self.groups_to_sync
+        ) + len(self.properties_to_sync)
+        assert (isinstance(a, AddAction) for a in self.actions)
 
-        exporter.execute_all(self.conn)
+        for a in self.actions:
+            return execute_real(a, self.conn)
         self.assert_entries_synced()
 
 
@@ -391,14 +382,17 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             == {k: v for k, v in actual.attrs.items() if k in effective_attributes_in_db}
 
     def test_user_attributes_synced_correctly(self):
-        records = {}
-        for result in self.users_to_sync:
-            record = db_user_to_record(
-                result.User,
-                self.user_base_dn,
-                should_be_blocked=result.should_be_blocked,
+        records = {
+            r.dn: r
+            for r in (
+                db_user_to_record(
+                    res.User,
+                    self.user_base_dn,
+                    res.should_be_blocked,
+                )
+                for res in self.users_to_sync
             )
-            records[record.dn] = record
+        }
 
         for ldap_user in self.new_ldap_users:
             ldap_record = ldap_user_to_record(ldap_user)
@@ -468,14 +462,21 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         session.flush()
 
         users_to_sync = fetch_users_to_sync(session, self.config.required_property)
-        exporter = self.build_user_exporter(current_users=self.new_ldap_users,
-                                       desired_users=users_to_sync)
-        exporter.compile_actions()
-        relevant_actions = [a for a in exporter.actions if not isinstance(a, IdleAction)]
+        actions = list(
+            bulk_diff_records(
+                current_records=(ldap_user_to_record(u) for u in self.new_ldap_users),
+                desired_records=(
+                    db_user_to_record(r.User, self.user_base_dn, r.should_be_blocked)
+                    for r in users_to_sync
+                ),
+            ).values()
+        )
+        relevant_actions = [a for a in actions if not isinstance(a, IdleAction)]
         print(relevant_actions)
         assert len(relevant_actions) == 1
         assert type(relevant_actions[0]) == ModifyAction
-        exporter.execute_all(self.conn)
+        for a in actions:
+            execute_real(a, self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
         modified_ldap_record = self.get_by_dn(newest_users, mod_dn)
@@ -512,16 +513,17 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
             in self.get_by_dn(newest_ldap_properties, mail_property_dn)['attributes']['member']
 
     def test_no_desired_records_removes_everything(self):
-        exporter = self.build_user_exporter(current_users=self.new_ldap_users, desired_users=[])
-        exporter.compile_actions()
+        actions_dict = bulk_diff_records(
+            current_records=[ldap_user_to_record(u) for u in self.new_ldap_users],
+            desired_records=[],
+        )
 
-        # Test the actions are correct
-        assert len(exporter.actions) == len(self.new_ldap_users)
-        for action in exporter.actions:
+        assert len(actions_dict) == len(self.new_ldap_users)
+        for action in actions_dict.values():
             assert type(action) == DeleteAction
 
-        # Actually execute these and check they delete everything
-        exporter.execute_all(self.conn)
+        for action in actions_dict.values():
+            execute_real(action, self.conn)
 
         newest_users = fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
         assert newest_users == []
