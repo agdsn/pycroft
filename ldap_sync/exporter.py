@@ -180,21 +180,44 @@ def sync_all(
 ) -> None:
     """Execute the LDAP sync given a connection and state data.
 
-    For the meaning of the last :math:`n-1` parameters see
-    :func:`LdapExporter.from_orm_objects_and_ldap_result`.
+    :param connection: the connection to use for execution
+    :param ldap_users: the users currently in the ldap
+    :param db_users: the users currently in the db
+    :param user_base_dn: the user base DN
+    :param ldap_groups: the groups currently in the ldap
+    :param db_groups: the groups currently in the ldap
+    :param group_base_dn: the group base DN. Has to be set if one of
+        :paramref:`ldap_groups` or :paramref:`db_groups` is set.
+    :param ldap_properties: the properties currently in the ldap
+    :param db_properties: the properties currently in the db
+    :param property_base_dn: the property base DN. Has to be set if one of
+        :paramref:`ldap_properties` or :paramref:`db_groups` is set.
     """
-    exporter = LdapExporter.from_orm_objects_and_ldap_result(
-        ldap_users, db_users, user_base_dn, ldap_groups, db_groups, group_base_dn, ldap_properties,
-        db_properties, property_base_dn)
-    logger.info("Initialized LdapExporter (%s unique objects in total) from fetched objects",
-                len(exporter.states_dict))
+    from . import record_diff
 
-    exporter.compile_actions()
-    action_types = Counter(type(a).__name__ for a in exporter.actions)
-    logger.info("Compiled %s actions (%s)", len(exporter.actions),
+    desired_records = iter_desired_records(
+        db_users,
+        db_groups or iter(()),
+        db_properties or iter(()),
+        user_base_dn,
+        group_base_dn,
+        property_base_dn,
+    )
+    current_records = iter_current_records(
+        ldap_users, ldap_groups or iter(()), ldap_properties or iter(())
+    )
+    actions_by_dn = record_diff.bulk_diff_records(
+        current_records=current_records,
+        desired_records=desired_records,
+    )
+
+    action_types = Counter(type(a).__name__ for a in actions_by_dn)
+    logger.info("Compiled %s actions (%s)", len(actions_by_dn),
                 ", ".join(f"{type_}: {count}"
                           for type_, count in action_types.items()))
 
     logger.info("Executing actions")
-    exporter.execute_all(connection)
-    logger.info("Executed %s actions", len(exporter.actions))
+    for action in actions_by_dn.values():
+        logger.debug("Executing %s", action)
+        execute_real(action, connection=connection)
+    logger.info("Execution finished.")
