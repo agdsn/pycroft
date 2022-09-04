@@ -1,7 +1,7 @@
 import ldap3
 import pytest
 
-from ldap_sync import types
+from ldap_sync.concepts import types
 from ldap_sync.conversion import dn_from_username
 
 

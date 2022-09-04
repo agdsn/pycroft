@@ -3,11 +3,11 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import pytest
 
-from ldap_sync import types
+from ldap_sync.concepts import types
 from ldap_sync.concepts.action import AddAction, DeleteAction, IdleAction, ModifyAction
 from ldap_sync.concepts.record import UserRecord, escape_and_normalize_attrs
 from ldap_sync.record_diff import diff_records, diff_attributes
-from ldap_sync.types import DN
+from ldap_sync.concepts.types import DN
 
 
 @pytest.fixture(scope="module")

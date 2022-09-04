@@ -4,7 +4,7 @@
 import pytest
 
 from ldap_sync.conversion import db_user_to_record
-from ldap_sync.types import DN
+from ldap_sync.concepts.types import DN
 
 
 class TestRecordFromOrm:

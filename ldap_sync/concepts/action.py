@@ -9,9 +9,7 @@ Actions (Add/Delete/Modify/Nothing)
 import dataclasses
 import logging
 
-import ldap3
-
-from .. import types
+from . import types
 from .record import Record  # shadowing…
 
 

@@ -11,8 +11,8 @@ from typing import Iterable, Iterator
 
 import ldap3
 
-from . import logger, types
-from .concepts import action
+from . import logger
+from .concepts import action, types
 from .conversion import (
     db_user_to_record,
     db_group_to_record,

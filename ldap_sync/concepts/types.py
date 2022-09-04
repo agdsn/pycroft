@@ -4,6 +4,7 @@
 """
 ldap_sync.types
 ~~~~~~~~~~~~~~~
+Type aliases, :py:`NewTypes <typing.NewType>`, etc.
 """
 import typing
 from typing import Union

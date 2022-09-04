@@ -1,7 +1,7 @@
 import typing
 
 import pytest
-from ldap_sync import types
+from ldap_sync.concepts import types
 from ldap_sync.conversion import ldap_user_to_record
 
 from ldap_sync.concepts.record import (
@@ -10,7 +10,7 @@ from ldap_sync.concepts.record import (
     _canonicalize_to_list,
     Record,
 )
-from ldap_sync.types import DN, LdapRecord
+from ldap_sync.concepts.types import DN, LdapRecord
 
 
 def assertSubDict(subdict, container):

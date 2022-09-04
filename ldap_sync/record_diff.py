@@ -7,8 +7,7 @@ ldap_sync.record_diff
 """
 import typing
 
-from . import types
-from .concepts import record, action
+from .concepts import record, action, types
 
 T = typing.TypeVar("T", bound="record.Record")
 

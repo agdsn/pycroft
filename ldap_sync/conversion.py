@@ -13,7 +13,7 @@ import typing
 from ldap3.utils.dn import safe_dn
 
 from ldap_sync.concepts.record import UserRecord, GroupRecord
-from ldap_sync.types import DN, Attributes, LdapRecord
+from ldap_sync.concepts.types import DN, Attributes, LdapRecord
 from pycroft.model.user import User
 
 

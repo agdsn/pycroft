@@ -12,7 +12,7 @@ import ldap3
 
 from .. import logger
 from ..config import SyncConfig
-from ..types import LdapRecord
+from ..concepts.types import LdapRecord
 
 
 def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:

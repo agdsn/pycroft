@@ -11,7 +11,8 @@ import os
 from typing import NamedTuple
 from distutils.util import strtobool
 
-from . import logger, types
+from . import logger
+from .concepts import types
 
 
 class SyncConfig(NamedTuple):

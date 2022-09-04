@@ -19,7 +19,8 @@ from .sources.ldap import (
     fetch_current_ldap_properties,
     fake_connection,
 )
-from ldap_sync import logger, types
+from ldap_sync import logger
+from ldap_sync.concepts import types
 from .sources.db import (
     establish_and_return_session,
     fetch_users_to_sync,

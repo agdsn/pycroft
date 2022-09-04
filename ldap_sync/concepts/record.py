@@ -14,8 +14,7 @@ import typing
 
 from ldap3.utils.conv import escape_filter_chars
 
-from ..types import (
-    LdapRecord,
+from .types import (
     Attributes,
     NormalizedAttributes,
     DN,
