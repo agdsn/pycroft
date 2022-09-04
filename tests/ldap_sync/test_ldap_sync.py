@@ -6,6 +6,7 @@ from unittest import TestCase
 import ldap3
 import pytest
 
+from ldap_sync.concepts import types
 from ldap_sync.concepts.action import AddAction, IdleAction, DeleteAction, ModifyAction
 from ldap_sync.exporter import LdapExporter, sync_all
 from ldap_sync.config import get_config, SyncConfig
@@ -37,7 +38,7 @@ from tests.factories.user import UserWithMembershipFactory
 class TestEmptyLdap:
     @pytest.fixture(scope='class')
     def desired_user(self):
-        return UserRecord(dn='user', attrs={})
+        return UserRecord(dn=types.DN("user"), attrs={})
 
     @pytest.fixture(scope='class')
     def exporter(self, desired_user):
@@ -143,9 +144,9 @@ class LdapTestBase(LdapSyncLoggerMutedMixin, TestCase):
         except KeyError as e:
             raise RuntimeError(f"Environment variable {e.args[0]} must be set")
         cls.base_dn = cls.config.base_dn
-        cls.user_base_dn = f'ou=users,{cls.config.base_dn}'
-        cls.group_base_dn = f'ou=groups,{cls.config.base_dn}'
-        cls.property_base_dn = f'ou=properties,{cls.config.base_dn}'
+        cls.user_base_dn = types.DN(f"ou=users,{cls.config.base_dn}")
+        cls.group_base_dn = types.DN(f"ou=groups,{cls.config.base_dn}")
+        cls.property_base_dn = types.DN(f"ou=properties,{cls.config.base_dn}")
 
     def setUp(self):
         super().setUp()
