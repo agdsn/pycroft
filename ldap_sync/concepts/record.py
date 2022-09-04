@@ -68,8 +68,8 @@ def escape_and_normalize_attrs(attrs: Attributes) -> NormalizedAttributes:
     }
 
 
-@dataclasses.dataclass(frozen=True)  # type: ignore
-class Record(abc.ABC):
+@dataclasses.dataclass(frozen=True)
+class Record:
     """Create a new record with a dn and certain attributes.
 
     A record represents an entry which is to be synced to the LDAP,
@@ -87,6 +87,7 @@ class Record(abc.ABC):
 
     dn: DN
     attrs: NormalizedAttributes
+    SYNCED_ATTRIBUTES: typing.ClassVar[typing.AbstractSet[str]]
 
     def __init__(self, dn: DN, attrs: Attributes) -> None:
         object.__setattr__(self, "dn", dn)
@@ -96,11 +97,17 @@ class Record(abc.ABC):
         # escape_filter_chars is idempotent ⇒ no double escaping
         object.__setattr__(self, "attrs", escape_and_normalize_attrs(attrs))
 
+    def __init_subclass__(cls, **kwargs: dict[str, typing.Any]) -> None:
+        if "SYNCED_ATTRIBUTES" not in cls.__dict__:
+            raise TypeError("Subclasses of Record must implement the SYNCED_ATTRIBUTES field")
+        super().__init_subclass__(**kwargs)
+
     @classmethod
-    @abc.abstractmethod
     def get_synced_attributes(cls) -> typing.AbstractSet[str]:
         """Returns the attributes to be synced."""
-        raise NotImplementedError
+        import warnings
+        warnings.warn("directly use SYNCED_ATTRIBUTES instead", DeprecationWarning)
+        return cls.SYNCED_ATTRIBUTES
 
     # `__eq__` must be total, hence no type restrictions/hints
     def __eq__(self, other: object) -> bool:

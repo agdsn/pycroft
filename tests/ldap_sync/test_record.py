@@ -18,6 +18,19 @@ def assertSubDict(subdict, container):
     if subdict != container_subdict:
         pytest.fail(f"{subdict} not a subdict of {container}")
 
+class TestRecordSubclassing:
+    def test_subclassing_without_attributes_fails(self):
+        with pytest.raises(TypeError, match="SYNCED_ATTRIBUTES"):
+            class _(Record):
+                ...
+
+    def test_subclassing_with_attributes_works(self):
+        try:
+            class _(Record):
+                SYNCED_ATTRIBUTES = frozenset({})
+        except TypeError:
+            pytest.fail("Subclassing failed")
+
 
 class TestRecordDirectInit:
     @pytest.fixture(scope='class')
@@ -64,9 +77,7 @@ class TestRecordValidation:
     @pytest.fixture(scope='class')
     def validate(self) -> typing.Callable[[types.Attributes], None]:
         class RecordWithOneSyncedAttribute(Record):
-            @classmethod
-            def get_synced_attributes(cls) -> typing.AbstractSet[str]:
-                return {"a"}
+            SYNCED_ATTRIBUTES = frozenset({"a"})
 
         return RecordWithOneSyncedAttribute._validate_attributes
 
@@ -74,11 +85,11 @@ class TestRecordValidation:
         validate({"a": "foo"})
 
     def test_missing_attribute(self, validate):
-        with pytest.raises(AssertionError, match="Missing attributes: {'a'}"):
+        with pytest.raises(AssertionError, match="Missing attributes: .*{'a'}"):
             validate({})
 
     def test_superfluous_attribute(self, validate):
-        with pytest.raises(AssertionError, match="Superfluous attributes: {'b'}"):
+        with pytest.raises(AssertionError, match="Superfluous attributes: .*{'b'}"):
             validate({"a": 1, "b": 5})
 
 
