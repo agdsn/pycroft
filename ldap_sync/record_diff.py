@@ -78,3 +78,29 @@ def diff_records(current: T | None, desired: T | None) -> action.Action:
         case (c, d):
             raise TypeError(f"Cannot diff {type(c).__name__} and {type(d).__name__}")
     assert False  # see https://github.com/python/mypy/issues/12534
+
+
+TKey = typing.TypeVar("TKey")
+TVal1 = typing.TypeVar("TVal1")
+TVal2 = typing.TypeVar("TVal2")
+
+
+def iter_zip_dicts(
+    d1: dict[TKey, TVal1],
+    d2: dict[TKey, TVal2],
+) -> typing.Iterator[tuple[TKey, tuple[TVal1 | None, TVal2 | None]]]:
+    for k in d1.keys() | d2.keys():
+        yield k, (d1.get(k), d2.get(k))
+
+
+def bulk_diff_records(
+    current_records: typing.Iterable[record.Record],
+    desired_records: typing.Iterable[record.Record],
+) -> dict[types.DN, action.Action]:
+    return {
+        dn: diff_records(cur, des)
+        for dn, (cur, des) in iter_zip_dicts(
+            {r.dn: r for r in current_records},
+            {r.dn: r for r in desired_records},
+        )
+    }
