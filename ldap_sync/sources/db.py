@@ -24,7 +24,9 @@ from pycroft.model import create_engine
 from pycroft.model.property import CurrentProperty
 from pycroft.model.session import set_scoped_session, session as global_session
 from pycroft.model.user import User, Group, Membership
-from .. import logger
+from .. import logger, conversion
+from ..concepts import types
+from ..concepts.record import UserRecord, GroupRecord
 
 
 def establish_and_return_session(connection_string: str) -> Session:
@@ -105,6 +107,21 @@ def fetch_users_to_sync(
     )
 
 
+def fetch_user_records_to_sync(
+    session: Session,
+    base_dn: types.DN,
+    required_property: str | None = None,
+) -> typing.Iterator[UserRecord]:
+    """Fetch the users to be synced (in the form of :class:`UserRecords <UserRecord>`).
+
+    :param session: the SQLAlchemy database session
+    :param base_dn: the user base dn
+    :param required_property: which property the users need to currently have in order to be synced
+    """
+    for res in fetch_users_to_sync(session, required_property=required_property):
+        yield conversion.db_user_to_record(res.User, base_dn, res.should_be_blocked)
+
+
 class GroupProxyType(NamedTuple):
     """Representation of a group as returned by :func:`fetch_groups_to_sync`."""
 
@@ -135,6 +152,26 @@ def fetch_groups_to_sync(session: Session) -> list[GroupProxyType]:
             ).label("members")
         ).all(),
     )
+
+
+def fetch_group_records_to_sync(
+    session: Session,
+    base_dn: types.DN,
+    user_base_dn: types.DN,
+) -> typing.Iterator[GroupRecord]:
+    """Fetch the groups to be synced (in the form of :cls:`GroupRecords <GroupRecord>`).
+
+    :param session: the SQLAlchemy database session
+    :param base_dn: the group base dn
+    :param user_base_dn: the base dn of users. Used to infer DNs of the group's members.
+    """
+    for res in fetch_groups_to_sync(session):
+        yield conversion.db_group_to_record(
+            name=res.Group.name,
+            members=res.members,
+            base_dn=base_dn,
+            user_base_dn=user_base_dn,
+        )
 
 
 class PropertyProxyType(NamedTuple):
@@ -168,6 +205,27 @@ def fetch_properties_to_sync(session: Session) -> list[PropertyProxyType]:
     return [PropertyProxyType(p.name, p.members) for p in properties] + [
         PropertyProxyType(p, []) for p in missing_properties
     ]
+
+
+def fetch_property_records_to_sync(
+    session: Session,
+    base_dn: types.DN,
+    user_base_dn: types.DN,
+) -> typing.Iterator[GroupRecord]:
+    """Fetch the properties to be synced (in the form of :cls:`GroupRecords <GroupRecord>`).
+
+    :param session: the SQLAlchemy database session
+    :param base_dn: the property base dn
+    :param user_base_dn: the base dn of users. Used to infer DNs of the users who are currently
+        carrying this property.
+    """
+    for res in fetch_properties_to_sync(session):
+        yield conversion.db_group_to_record(
+            name=res.name,
+            members=res.members,
+            base_dn=base_dn,
+            user_base_dn=user_base_dn,
+        )
 
 
 EXPORTED_PROPERTIES = frozenset(

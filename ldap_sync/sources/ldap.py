@@ -10,9 +10,11 @@ import typing
 
 import ldap3
 
-from .. import logger
+from .. import logger, conversion
+from ..concepts.record import UserRecord, GroupRecord
 from ..config import SyncConfig
 from ..concepts.types import LdapRecord
+from ..conversion import ldap_user_to_record, ldap_group_to_record
 
 
 def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection:
@@ -58,6 +60,13 @@ def fetch_current_ldap_users(
     )
 
 
+def fetch_current_ldap_user_records(
+    connection: ldap3.Connection, base_dn: str
+) -> typing.Iterator[UserRecord]:
+    for r in fetch_current_ldap_users(connection, base_dn):
+        yield conversion.ldap_user_to_record(r)
+
+
 def fetch_current_ldap_groups(
     connection: ldap3.Connection, base_dn: str
 ) -> list[LdapRecord]:
@@ -66,12 +75,26 @@ def fetch_current_ldap_groups(
     )
 
 
+def fetch_current_ldap_group_records(
+    connection: ldap3.Connection, base_dn: str
+) -> typing.Iterator[GroupRecord]:
+    for r in fetch_current_ldap_groups(connection, base_dn):
+        yield conversion.ldap_group_to_record(r)
+
+
 def fetch_current_ldap_properties(
     connection: ldap3.Connection, base_dn: str
 ) -> list[LdapRecord]:
     return fetch_ldap_entries(
         connection, base_dn, search_filter="(objectclass=groupOfMembers)"
     )
+
+
+def fetch_current_ldap_property_records(
+    connection: ldap3.Connection, base_dn: str
+) -> typing.Iterator[GroupRecord]:
+    for r in fetch_current_ldap_properties(connection, base_dn):
+        yield conversion.ldap_group_to_record(r)
 
 
 def fake_connection() -> ldap3.Connection:

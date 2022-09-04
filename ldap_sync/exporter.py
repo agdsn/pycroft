@@ -178,7 +178,7 @@ def sync_all(
     db_properties: Iterable[PropertyProxyType] | None = None,
     property_base_dn: types.DN | None = None,
 ) -> None:
-    """Execute the LDAP sync given a connection and state data.
+    """Convert objects to Records, diff them, and execute the inferred actions.
 
     :param connection: the connection to use for execution
     :param ldap_users: the users currently in the ldap

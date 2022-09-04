@@ -10,6 +10,8 @@ from ldap3.utils.dn import safe_dn
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
+from ldap_sync.execution import execute_real
+from ldap_sync.record_diff import bulk_diff_records
 from .config import get_config_or_exit
 from .exporter import sync_all
 from .sources.ldap import (
@@ -18,6 +20,9 @@ from .sources.ldap import (
     fetch_current_ldap_groups,
     fetch_current_ldap_properties,
     fake_connection,
+    fetch_current_ldap_user_records,
+    fetch_current_ldap_group_records,
+    fetch_current_ldap_property_records,
 )
 from ldap_sync import logger
 from ldap_sync.concepts import types
@@ -26,6 +31,9 @@ from .sources.db import (
     fetch_users_to_sync,
     fetch_groups_to_sync,
     fetch_properties_to_sync,
+    fetch_user_records_to_sync,
+    fetch_group_records_to_sync,
+    fetch_property_records_to_sync,
 )
 
 
@@ -60,35 +68,63 @@ def fetch_and_sync(
     base_dn: types.DN,
     required_property: str | None = None,
 ) -> None:
-    db_users = fetch_users_to_sync(
-        session=db_session,
-        required_property=required_property,
+    user_base_dn = types.DN(safe_dn(["ou=users", base_dn]))
+    group_base_dn = types.DN(safe_dn(["ou=groups", base_dn]))
+    property_base_dn = types.DN(safe_dn(["ou=properties", base_dn]))
+
+    db_users = list(
+        fetch_user_records_to_sync(
+            session=db_session,
+            base_dn=user_base_dn,
+            required_property=required_property,
+        )
     )
     logger.info("Fetched %s database users", len(db_users))
 
-    db_groups = fetch_groups_to_sync(db_session)
+    db_groups = list(
+        fetch_group_records_to_sync(
+            session=db_session,
+            base_dn=group_base_dn,
+            user_base_dn=user_base_dn,
+        )
+    )
     logger.info("Fetched %s database groups", len(db_groups))
 
-    db_properties = fetch_properties_to_sync(db_session)
+    db_properties = list(
+        fetch_property_records_to_sync(
+            session=db_session,
+            base_dn=property_base_dn,
+            user_base_dn=user_base_dn,
+        )
+    )
     logger.info("Fetched %s database properties", len(db_properties))
 
-    user_base_dn = types.DN(safe_dn(["ou=users", base_dn]))
-    ldap_users = fetch_current_ldap_users(connection, base_dn=user_base_dn)
+    ldap_users = list(fetch_current_ldap_user_records(connection, base_dn=user_base_dn))
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    group_base_dn = types.DN(safe_dn(["ou=groups", base_dn]))
-    ldap_groups = fetch_current_ldap_groups(connection, base_dn=group_base_dn)
+    ldap_groups = list(
+        fetch_current_ldap_group_records(connection, base_dn=group_base_dn)
+    )
     logger.info("Fetched %s ldap groups", len(ldap_groups))
 
-    property_base_dn = types.DN(safe_dn(["ou=properties", base_dn]))
-    ldap_properties = fetch_current_ldap_properties(
-        connection, base_dn=property_base_dn
+    ldap_properties = list(
+        fetch_current_ldap_property_records(connection, base_dn=property_base_dn)
     )
     logger.info("Fetched %s ldap properties", len(ldap_properties))
 
-    sync_all(connection, ldap_users, db_users, user_base_dn, ldap_groups,
-             db_groups, group_base_dn, ldap_properties, db_properties,
-             property_base_dn)
+    actions = [
+        *bulk_diff_records(
+            current_records=ldap_users, desired_records=db_users
+        ).values(),
+        *bulk_diff_records(
+            current_records=ldap_groups, desired_records=db_groups
+        ).values(),
+        *bulk_diff_records(
+            current_records=ldap_properties, desired_records=db_properties
+        ).values(),
+    ]
+    for a in actions:
+        execute_real(a, connection)
 
 
 NAME_LEVEL_MAPPING: dict[str, int] = {

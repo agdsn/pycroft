@@ -97,6 +97,9 @@ class Record:
         # escape_filter_chars is idempotent ⇒ no double escaping
         object.__setattr__(self, "attrs", escape_and_normalize_attrs(attrs))
 
+    def __getitem__(self, item: str) -> typing.Any:
+        return self.attrs.__getitem__(item)
+
     def __init_subclass__(cls, **kwargs: dict[str, typing.Any]) -> None:
         if "SYNCED_ATTRIBUTES" not in cls.__dict__:
             raise TypeError("Subclasses of Record must implement the SYNCED_ATTRIBUTES field")
