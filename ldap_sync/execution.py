@@ -4,7 +4,7 @@
 """
 ldap_sync.execution
 ~~~~~~~~~~~~~~~~~~~
-Execution strategies for an :cls:`Action`.
+Execution strategies for an :class:`Action`.
 Concretely, the real one and the dry-run.
 """
 import functools

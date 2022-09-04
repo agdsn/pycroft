@@ -4,7 +4,7 @@
 """
 ldap_sync.conversion
 ~~~~~~~~~~~~~~~~~~~~
-Converts DB information to :class:`record.Record` instances.
+Converts DB information to :class:`.concepts.record.Record` instances.
 """
 from __future__ import annotations
 

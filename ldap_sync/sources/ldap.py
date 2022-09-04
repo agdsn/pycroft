@@ -2,8 +2,8 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 """
-ldap_sync.ldap
-~~~~~~~~~~~~~~
+ldap_sync.sources.ldap
+~~~~~~~~~~~~~~~~~~~~~~
 """
 import ssl
 import typing

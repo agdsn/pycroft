@@ -2,9 +2,9 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 """
-ldap_sync.types
-~~~~~~~~~~~~~~~
-Type aliases, :py:`NewTypes <typing.NewType>`, etc.
+ldap_sync.concepts.types
+~~~~~~~~~~~~~~~~~~~~~~~~
+Type aliases, :class:`NewTypes <typing.NewType>`, etc.
 """
 import typing
 from typing import Union

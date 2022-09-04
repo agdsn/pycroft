@@ -11,21 +11,24 @@ ldap_sync
 
 .. automodule:: ldap_sync.__main__
     :undoc-members:
-.. automodule:: ldap_sync.exporter
+
+.. automodule:: ldap_sync.concepts.action
     :undoc-members:
-.. automodule:: ldap_sync.config
+.. automodule:: ldap_sync.concepts.record
     :undoc-members:
-.. automodule:: ldap_sync.entities.action
+.. automodule:: ldap_sync.concepts.types
     :undoc-members:
-.. automodule:: ldap_sync.entities.record
-    :undoc-members:
+
 .. automodule:: ldap_sync.sources.db
     :undoc-members:
 .. automodule:: ldap_sync.sources.ldap
     :undoc-members:
-.. automodule:: ldap_sync.record_diff
+
+.. automodule:: ldap_sync.config
     :undoc-members:
 .. automodule:: ldap_sync.conversion
     :undoc-members:
-.. automodule:: ldap_sync.types
+.. automodule:: ldap_sync.execution
+    :undoc-members:
+.. automodule:: ldap_sync.record_diff
     :undoc-members:

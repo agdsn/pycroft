@@ -2,15 +2,15 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 """
-ldap_sync.db
-~~~~~~~~~~~~
+ldap_sync.sources.db
+~~~~~~~~~~~~~~~~~~~~
 
 This module is responsible for fetching the list of desired records from the DB.
 Most prominently:
 
-* :func:`fetch_users_to_sync`
-* :func:`fetch_properties_to_sync`
-* :func:`fetch_groups_to_sync`
+* :func:`fetch_db_users`
+* :func:`fetch_db_properties`
+* :func:`fetch_db_groups`
 
 """
 import typing
@@ -35,8 +35,8 @@ def establish_and_return_session(connection_string: str) -> Session:
     return typing.cast(Session, global_session)  # from pycroft.model.session
 
 
-class UserProxyType(NamedTuple):
-    """Representation of a user as returned by :func:`fetch_users_to_sync`."""
+class _UserProxyType(NamedTuple):
+    """Representation of a user as returned by :func:`_fetch_db_users`."""
 
     User: User
     should_be_blocked: bool
@@ -44,7 +44,7 @@ class UserProxyType(NamedTuple):
 
 def _fetch_db_users(
     session: Session, required_property: str | None = None
-) -> list[UserProxyType]:
+) -> list[_UserProxyType]:
     """Fetch the users who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -59,7 +59,7 @@ def _fetch_db_users(
     not_blocked_property = CurrentProperty.__table__.alias("ldap_login_enabled")
 
     return typing.cast(
-        list[UserProxyType],
+        list[_UserProxyType],
         # Grab all users with the required property
         User.q.options(joinedload(User.unix_account))
         .join(User.current_properties)
@@ -133,14 +133,14 @@ def _warn_users_without_accounts(
         )
 
 
-class GroupProxyType(NamedTuple):
-    """Representation of a group as returned by :func:`fetch_groups_to_sync`."""
+class _GroupProxyType(NamedTuple):
+    """Representation of a group as returned by :func:`_fetch_db_groups`."""
 
     Group: Group
     members: list[str]
 
 
-def _fetch_db_groups(session: Session) -> list[GroupProxyType]:
+def _fetch_db_groups(session: Session) -> list[_GroupProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -148,7 +148,7 @@ def _fetch_db_groups(session: Session) -> list[GroupProxyType]:
     :returns: An iterable of `(Group, members)` ResultProxies.
     """
     return typing.cast(
-        list[GroupProxyType],
+        list[_GroupProxyType],
         Group.q
         # uids of the members of the group
         .add_columns(
@@ -170,7 +170,7 @@ def fetch_db_groups(
     base_dn: types.DN,
     user_base_dn: types.DN,
 ) -> typing.Iterator[GroupRecord]:
-    """Fetch the groups to be synced (in the form of :cls:`GroupRecords <GroupRecord>`).
+    """Fetch the groups to be synced (in the form of :class:`GroupRecords <GroupRecord>`).
 
     :param session: the SQLAlchemy database session
     :param base_dn: the group base dn
@@ -185,14 +185,14 @@ def fetch_db_groups(
         )
 
 
-class PropertyProxyType(NamedTuple):
-    """Representation of a property as returned by :func:`fetch_properties_to_sync`."""
+class _PropertyProxyType(NamedTuple):
+    """Representation of a property as returned by :func:`_fetch_db_properties`."""
 
     name: str
     members: list[str]
 
 
-def _fetch_db_properties(session: Session) -> list[PropertyProxyType]:
+def _fetch_db_properties(session: Session) -> list[_PropertyProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -213,8 +213,8 @@ def _fetch_db_properties(session: Session) -> list[PropertyProxyType]:
 
     missing_properties = EXPORTED_PROPERTIES - {p.name for p in properties}
     # Return mutable copy instead of SQLAlchemy's immutable RowProxy
-    return [PropertyProxyType(p.name, p.members) for p in properties] + [
-        PropertyProxyType(p, []) for p in missing_properties
+    return [_PropertyProxyType(p.name, p.members) for p in properties] + [
+        _PropertyProxyType(p, []) for p in missing_properties
     ]
 
 
@@ -223,7 +223,7 @@ def fetch_db_properties(
     base_dn: types.DN,
     user_base_dn: types.DN,
 ) -> typing.Iterator[GroupRecord]:
-    """Fetch the properties to be synced (in the form of :cls:`GroupRecords <GroupRecord>`).
+    """Fetch the properties to be synced (in the form of :class:`GroupRecords <GroupRecord>`).
 
     :param session: the SQLAlchemy database session
     :param base_dn: the property base dn
