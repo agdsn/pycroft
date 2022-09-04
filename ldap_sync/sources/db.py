@@ -53,30 +53,7 @@ def fetch_users_to_sync(
     :returns: An iterable of ``(User, should_be_blocked)`` ResultProxies
         having the property ``required_property`` and a unix_account.
     """
-    no_unix_account_stmt = select().select_from(User)
-    # two method calls don't count as method chaining
-    # fmt: off
-    if required_property:
-        no_unix_account_stmt = no_unix_account_stmt\
-            .join(User.current_properties)\
-            .filter(CurrentProperty.property_name == required_property)
-    no_unix_account_stmt = no_unix_account_stmt\
-        .filter(User.unix_account_id.is_(None))\
-        .add_columns(func.count())
-    # fmt: on
-
-    if count := session.scalar(no_unix_account_stmt):
-        if required_property:
-            logger.warning(
-                "%s users have the '%s' property but not a unix_account",
-                count,
-                required_property,
-            )
-        else:
-            logger.warning(
-                "%s users applicable to exporting don't have a unix_account",
-                count,
-            )
+    _warn_users_without_accounts(session, required_property)
 
     # used for second join against CurrentProperty
     not_blocked_property = CurrentProperty.__table__.alias("ldap_login_enabled")
@@ -122,6 +99,32 @@ def fetch_user_records_to_sync(
     """
     for res in fetch_users_to_sync(session, required_property=required_property):
         yield conversion.db_user_to_record(res.User, base_dn, res.should_be_blocked)
+
+
+def _warn_users_without_accounts(session, required_property):
+    no_unix_account_stmt = select().select_from(User)
+    # two method calls don't count as method chaining
+    # fmt: off
+    if required_property:
+        no_unix_account_stmt = no_unix_account_stmt \
+            .join(User.current_properties) \
+            .filter(CurrentProperty.property_name == required_property)
+    no_unix_account_stmt = no_unix_account_stmt \
+        .filter(User.unix_account_id.is_(None)) \
+        .add_columns(func.count())
+    # fmt: on
+    if count := session.scalar(no_unix_account_stmt):
+        if required_property:
+            logger.warning(
+                "%s users have the '%s' property but not a unix_account",
+                count,
+                required_property,
+            )
+        else:
+            logger.warning(
+                "%s users applicable to exporting don't have a unix_account",
+                count,
+            )
 
 
 class GroupProxyType(NamedTuple):
