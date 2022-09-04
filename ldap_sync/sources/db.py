@@ -101,7 +101,10 @@ def fetch_user_records_to_sync(
         yield conversion.db_user_to_record(res.User, base_dn, res.should_be_blocked)
 
 
-def _warn_users_without_accounts(session, required_property):
+def _warn_users_without_accounts(
+    session: Session,
+    required_property: str | None
+) -> None:
     no_unix_account_stmt = select().select_from(User)
     # two method calls don't count as method chaining
     # fmt: off
@@ -113,18 +116,21 @@ def _warn_users_without_accounts(session, required_property):
         .filter(User.unix_account_id.is_(None)) \
         .add_columns(func.count())
     # fmt: on
-    if count := session.scalar(no_unix_account_stmt):
-        if required_property:
-            logger.warning(
-                "%s users have the '%s' property but not a unix_account",
-                count,
-                required_property,
-            )
-        else:
-            logger.warning(
-                "%s users applicable to exporting don't have a unix_account",
-                count,
-            )
+
+    if not (count := session.scalar(no_unix_account_stmt)):
+        return
+
+    if required_property:
+        logger.warning(
+            "%s users have the '%s' property but not a unix_account",
+            count,
+            required_property,
+        )
+    else:
+        logger.warning(
+            "%s users applicable to exporting don't have a unix_account",
+            count,
+        )
 
 
 class GroupProxyType(NamedTuple):
