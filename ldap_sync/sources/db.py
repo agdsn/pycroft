@@ -42,7 +42,7 @@ class UserProxyType(NamedTuple):
     should_be_blocked: bool
 
 
-def fetch_users_to_sync(
+def _fetch_db_users(
     session: Session, required_property: str | None = None
 ) -> list[UserProxyType]:
     """Fetch the users who should be synced
@@ -86,7 +86,7 @@ def fetch_users_to_sync(
     )
 
 
-def fetch_user_records_to_sync(
+def fetch_db_users(
     session: Session,
     base_dn: types.DN,
     required_property: str | None = None,
@@ -97,7 +97,7 @@ def fetch_user_records_to_sync(
     :param base_dn: the user base dn
     :param required_property: which property the users need to currently have in order to be synced
     """
-    for res in fetch_users_to_sync(session, required_property=required_property):
+    for res in _fetch_db_users(session, required_property=required_property):
         yield conversion.db_user_to_record(res.User, base_dn, res.should_be_blocked)
 
 
@@ -140,7 +140,7 @@ class GroupProxyType(NamedTuple):
     members: list[str]
 
 
-def fetch_groups_to_sync(session: Session) -> list[GroupProxyType]:
+def _fetch_db_groups(session: Session) -> list[GroupProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -165,7 +165,7 @@ def fetch_groups_to_sync(session: Session) -> list[GroupProxyType]:
     )
 
 
-def fetch_group_records_to_sync(
+def fetch_db_groups(
     session: Session,
     base_dn: types.DN,
     user_base_dn: types.DN,
@@ -176,7 +176,7 @@ def fetch_group_records_to_sync(
     :param base_dn: the group base dn
     :param user_base_dn: the base dn of users. Used to infer DNs of the group's members.
     """
-    for res in fetch_groups_to_sync(session):
+    for res in _fetch_db_groups(session):
         yield conversion.db_group_to_record(
             name=res.Group.name,
             members=res.members,
@@ -192,7 +192,7 @@ class PropertyProxyType(NamedTuple):
     members: list[str]
 
 
-def fetch_properties_to_sync(session: Session) -> list[PropertyProxyType]:
+def _fetch_db_properties(session: Session) -> list[PropertyProxyType]:
     """Fetch the groups who should be synced
 
     :param session: The SQLAlchemy session to use
@@ -218,7 +218,7 @@ def fetch_properties_to_sync(session: Session) -> list[PropertyProxyType]:
     ]
 
 
-def fetch_property_records_to_sync(
+def fetch_db_properties(
     session: Session,
     base_dn: types.DN,
     user_base_dn: types.DN,
@@ -230,7 +230,7 @@ def fetch_property_records_to_sync(
     :param user_base_dn: the base dn of users. Used to infer DNs of the users who are currently
         carrying this property.
     """
-    for res in fetch_properties_to_sync(session):
+    for res in _fetch_db_properties(session):
         yield conversion.db_group_to_record(
             name=res.name,
             members=res.members,

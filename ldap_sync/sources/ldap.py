@@ -33,7 +33,7 @@ def establish_and_return_ldap_connection(config: SyncConfig) -> ldap3.Connection
     )
 
 
-def fetch_ldap_entries(
+def _fetch_ldap_entries(
     connection: ldap3.Connection,
     base_dn: str,
     search_filter: str | None = None,
@@ -49,10 +49,8 @@ def fetch_ldap_entries(
     return [r for r in connection.response if r["dn"] != base_dn]
 
 
-def fetch_current_ldap_users(
-    connection: ldap3.Connection, base_dn: str
-) -> list[LdapRecord]:
-    return fetch_ldap_entries(
+def _fetch_ldap_users(connection: ldap3.Connection, base_dn: str) -> list[LdapRecord]:
+    return _fetch_ldap_entries(
         connection,
         base_dn,
         search_filter="(objectclass=inetOrgPerson)",
@@ -60,40 +58,38 @@ def fetch_current_ldap_users(
     )
 
 
-def fetch_current_ldap_user_records(
+def fetch_ldap_users(
     connection: ldap3.Connection, base_dn: str
 ) -> typing.Iterator[UserRecord]:
-    for r in fetch_current_ldap_users(connection, base_dn):
+    for r in _fetch_ldap_users(connection, base_dn):
         yield conversion.ldap_user_to_record(r)
 
 
-def fetch_current_ldap_groups(
-    connection: ldap3.Connection, base_dn: str
-) -> list[LdapRecord]:
-    return fetch_ldap_entries(
+def _fetch_ldap_groups(connection: ldap3.Connection, base_dn: str) -> list[LdapRecord]:
+    return _fetch_ldap_entries(
         connection, base_dn, search_filter="(objectclass=groupOfMembers)"
     )
 
 
-def fetch_current_ldap_group_records(
+def fetch_ldap_groups(
     connection: ldap3.Connection, base_dn: str
 ) -> typing.Iterator[GroupRecord]:
-    for r in fetch_current_ldap_groups(connection, base_dn):
+    for r in _fetch_ldap_groups(connection, base_dn):
         yield conversion.ldap_group_to_record(r)
 
 
-def fetch_current_ldap_properties(
+def _fetch_ldap_properties(
     connection: ldap3.Connection, base_dn: str
 ) -> list[LdapRecord]:
-    return fetch_ldap_entries(
+    return _fetch_ldap_entries(
         connection, base_dn, search_filter="(objectclass=groupOfMembers)"
     )
 
 
-def fetch_current_ldap_property_records(
+def fetch_ldap_properties(
     connection: ldap3.Connection, base_dn: str
 ) -> typing.Iterator[GroupRecord]:
-    for r in fetch_current_ldap_properties(connection, base_dn):
+    for r in _fetch_ldap_properties(connection, base_dn):
         yield conversion.ldap_group_to_record(r)
 
 

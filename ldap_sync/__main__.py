@@ -16,24 +16,24 @@ from .config import get_config_or_exit
 from .exporter import sync_all
 from .sources.ldap import (
     establish_and_return_ldap_connection,
-    fetch_current_ldap_users,
-    fetch_current_ldap_groups,
-    fetch_current_ldap_properties,
+    _fetch_ldap_users,
+    _fetch_ldap_groups,
+    _fetch_ldap_properties,
     fake_connection,
-    fetch_current_ldap_user_records,
-    fetch_current_ldap_group_records,
-    fetch_current_ldap_property_records,
+    fetch_ldap_users,
+    fetch_ldap_groups,
+    fetch_ldap_properties,
 )
 from ldap_sync import logger
 from ldap_sync.concepts import types
 from .sources.db import (
     establish_and_return_session,
-    fetch_users_to_sync,
-    fetch_groups_to_sync,
-    fetch_properties_to_sync,
-    fetch_user_records_to_sync,
-    fetch_group_records_to_sync,
-    fetch_property_records_to_sync,
+    _fetch_db_users,
+    _fetch_db_groups,
+    _fetch_db_properties,
+    fetch_db_users,
+    fetch_db_groups,
+    fetch_db_properties,
 )
 
 
@@ -73,7 +73,7 @@ def fetch_and_sync(
     property_base_dn = types.DN(safe_dn(["ou=properties", base_dn]))
 
     db_users = list(
-        fetch_user_records_to_sync(
+        fetch_db_users(
             session=db_session,
             base_dn=user_base_dn,
             required_property=required_property,
@@ -82,7 +82,7 @@ def fetch_and_sync(
     logger.info("Fetched %s database users", len(db_users))
 
     db_groups = list(
-        fetch_group_records_to_sync(
+        fetch_db_groups(
             session=db_session,
             base_dn=group_base_dn,
             user_base_dn=user_base_dn,
@@ -91,7 +91,7 @@ def fetch_and_sync(
     logger.info("Fetched %s database groups", len(db_groups))
 
     db_properties = list(
-        fetch_property_records_to_sync(
+        fetch_db_properties(
             session=db_session,
             base_dn=property_base_dn,
             user_base_dn=user_base_dn,
@@ -99,17 +99,13 @@ def fetch_and_sync(
     )
     logger.info("Fetched %s database properties", len(db_properties))
 
-    ldap_users = list(fetch_current_ldap_user_records(connection, base_dn=user_base_dn))
+    ldap_users = list(fetch_ldap_users(connection, base_dn=user_base_dn))
     logger.info("Fetched %s ldap users", len(ldap_users))
 
-    ldap_groups = list(
-        fetch_current_ldap_group_records(connection, base_dn=group_base_dn)
-    )
+    ldap_groups = list(fetch_ldap_groups(connection, base_dn=group_base_dn))
     logger.info("Fetched %s ldap groups", len(ldap_groups))
 
-    ldap_properties = list(
-        fetch_current_ldap_property_records(connection, base_dn=property_base_dn)
-    )
+    ldap_properties = list(fetch_ldap_properties(connection, base_dn=property_base_dn))
     logger.info("Fetched %s ldap properties", len(ldap_properties))
 
     actions = [

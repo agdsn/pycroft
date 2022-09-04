@@ -20,19 +20,19 @@ from ldap_sync.config import get_config, SyncConfig
 from ldap_sync.record_diff import bulk_diff_records
 from ldap_sync.sources.ldap import (
     establish_and_return_ldap_connection,
-    fetch_current_ldap_users,
-    fetch_current_ldap_properties,
-    fetch_current_ldap_group_records,
-    fetch_current_ldap_property_records,
-    fetch_current_ldap_user_records,
+    _fetch_ldap_users,
+    _fetch_ldap_properties,
+    fetch_ldap_groups,
+    fetch_ldap_properties,
+    fetch_ldap_users,
 )
 from ldap_sync.sources.db import (
-    fetch_users_to_sync,
-    fetch_groups_to_sync,
-    fetch_properties_to_sync,
-    fetch_user_records_to_sync,
-    fetch_group_records_to_sync,
-    fetch_property_records_to_sync,
+    _fetch_db_users,
+    _fetch_db_groups,
+    _fetch_db_properties,
+    fetch_db_users,
+    fetch_db_groups,
+    fetch_db_properties,
 )
 from ldap_sync.concepts.record import UserRecord, RecordState, GroupRecord, Record
 from ldap_sync.conversion import (
@@ -85,7 +85,7 @@ class EmptyDatabaseTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
         self.session = session
 
     def test_no_users_fetched(self):
-        assert fetch_users_to_sync(self.session) == []
+        assert _fetch_db_users(self.session) == []
 
 
 class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
@@ -105,18 +105,22 @@ class OneUserFetchTestCase(LdapSyncLoggerMutedMixin, FactoryDataTestBase):
         )
 
     def test_one_user_fetched(self):
-        users = fetch_users_to_sync(session, required_property=self.PROPNAME)
+        users = _fetch_db_users(session, required_property=self.PROPNAME)
         assert len(users) == 1, f"Not a list of length one: {users}"
 
     def test_one_group_fetched(self):
-        groups = [group for group in fetch_groups_to_sync(session)
-                  if group.Group.name == self.propgroup.name]
+        groups = [
+            group
+            for group in _fetch_db_groups(session)
+            if group.Group.name == self.propgroup.name
+        ]
         assert len(groups) == 1
         assert set(groups[0].members) == {self.user.login}
 
     def test_one_property_fetched(self):
-        properties = [prop for prop in fetch_properties_to_sync(session)
-                      if prop.name == self.PROPNAME]
+        properties = [
+            prop for prop in _fetch_db_properties(session) if prop.name == self.PROPNAME
+        ]
         assert len(properties) == 1
         assert set(properties[0].members) == {self.user.login}
 
@@ -136,7 +140,7 @@ class MultipleUsersFilterTestCase(FactoryDataTestBase):
         )
 
     def test_correct_users_fetched(self):
-        users = fetch_users_to_sync(session, required_property='mail')
+        users = _fetch_db_users(session, required_property="mail")
         expected_logins = {self.user1.login, self.user2.login}
         assert {u.User.login for u in users} == expected_logins
 
@@ -274,38 +278,38 @@ class LdapSyncerTestBase(LdapTestBase, FactoryDataTestBase):
     def setUp(self):
         super().setUp()
         self.user_records_to_sync = list(
-            fetch_user_records_to_sync(
+            fetch_db_users(
                 self.session, self.user_base_dn, self.config.required_property
             )
         )
         self.initial_ldap_user_records = list(
-            fetch_current_ldap_user_records(
+            fetch_ldap_users(
                 self.conn,
                 base_dn=self.user_base_dn,
             )
         )
 
         self.group_records_to_sync = list(
-            fetch_group_records_to_sync(
+            fetch_db_groups(
                 self.session, base_dn=self.group_base_dn, user_base_dn=self.user_base_dn
             )
         )
         self.initial_ldap_group_records = list(
-            fetch_current_ldap_group_records(
+            fetch_ldap_groups(
                 self.conn,
                 base_dn=self.group_base_dn,
             )
         )
 
         self.property_records_to_sync = list(
-            fetch_property_records_to_sync(
+            fetch_db_properties(
                 session=self.session,
                 base_dn=self.property_base_dn,
                 user_base_dn=self.user_base_dn,
             )
         )
         self.initial_ldap_property_records = list(
-            fetch_current_ldap_property_records(
+            fetch_ldap_properties(
                 self.conn,
                 base_dn=self.property_base_dn,
             )
@@ -348,18 +352,12 @@ class LdapTestCase(LdapSyncerTestBase):
         assert self.initial_ldap_property_records == []
 
     def assert_entries_synced(self):
-        new_users = list(
-            fetch_current_ldap_user_records(self.conn, base_dn=self.user_base_dn)
-        )
+        new_users = list(fetch_ldap_users(self.conn, base_dn=self.user_base_dn))
         assert len(new_users) == len(self.user_records_to_sync)
-        new_groups = list(
-            fetch_current_ldap_group_records(self.conn, base_dn=self.group_base_dn)
-        )
+        new_groups = list(fetch_ldap_groups(self.conn, base_dn=self.group_base_dn))
         assert len(new_groups) == len(self.group_records_to_sync)
         new_properties = list(
-            fetch_current_ldap_property_records(
-                self.conn, base_dn=self.property_base_dn
-            )
+            fetch_ldap_properties(self.conn, base_dn=self.property_base_dn)
         )
         assert len(new_properties) == len(self.property_records_to_sync)
 
@@ -387,13 +385,13 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         super().setUp()
         self.sync_all()
         self.new_ldap_user_records = list(
-            fetch_current_ldap_user_records(self.conn, self.user_base_dn)
+            fetch_ldap_users(self.conn, self.user_base_dn)
         )
         self.new_ldap_group_records = list(
-            fetch_current_ldap_group_records(self.conn, self.group_base_dn)
+            fetch_ldap_groups(self.conn, self.group_base_dn)
         )
         self.new_ldap_property_records = list(
-            fetch_current_ldap_property_records(self.conn, self.property_base_dn)
+            fetch_ldap_properties(self.conn, self.property_base_dn)
         )
 
     def test_idempotency_of_two_syncs(self):
@@ -463,7 +461,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_mail_deletion(self):
         users_with_mail = [
             u
-            for u in fetch_users_to_sync(self.session, self.config.required_property)
+            for u in _fetch_db_users(self.session, self.config.required_property)
             if u.User.email is not None
         ]
         if not users_with_mail:
@@ -479,7 +477,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         id = modified_user.id
 
         self.user_records_to_sync = list(
-            fetch_user_records_to_sync(
+            fetch_db_users(
                 session,
                 self.user_base_dn,
                 self.config.required_property,
@@ -493,7 +491,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
 
         modified_user = next(
             r
-            for r in fetch_current_ldap_users(self.conn, base_dn=self.user_base_dn)
+            for r in _fetch_ldap_users(self.conn, base_dn=self.user_base_dn)
             if r["dn"] == mod_dn
         )
         assert "mail" not in modified_user
@@ -501,7 +499,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     def test_mail_creation(self):
         users_without_mail = [
             u
-            for u in fetch_users_to_sync(self.session, self.config.required_property)
+            for u in _fetch_db_users(self.session, self.config.required_property)
             if u.User.email is None
         ]
         if not users_without_mail:
@@ -513,7 +511,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         session.flush()
 
         user_records_to_sync = list(
-            fetch_user_records_to_sync(
+            fetch_db_users(
                 self.session, self.user_base_dn, self.config.required_property
             )
         )
@@ -530,9 +528,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         for a in actions:
             execute_real(a, self.conn)
 
-        newest_users = list(
-            fetch_current_ldap_user_records(self.conn, base_dn=self.user_base_dn)
-        )
+        newest_users = list(fetch_ldap_users(self.conn, base_dn=self.user_base_dn))
         modified_ldap_record = self.get_by_dn(newest_users, mod_dn)
         assert modified_ldap_record.attrs.get("mail") == [mod_user.email]
 
@@ -543,7 +539,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
     )
     def test_change_property_membership(self):
         mail_property = next(
-            p for p in fetch_properties_to_sync(self.session) if p.name == "mail"
+            p for p in _fetch_db_properties(self.session) if p.name == "mail"
         )
         mail_property_dn = dn_from_cn(
             name=mail_property.name, base=self.property_base_dn
@@ -563,7 +559,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.initial_ldap_property_records = self.new_ldap_property_records
         self.sync_all()
         newest_ldap_properties = list(
-            fetch_current_ldap_property_records(self.conn, self.property_base_dn)
+            fetch_ldap_properties(self.conn, self.property_base_dn)
         )
         assert (
             member_dn
@@ -576,7 +572,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.initial_ldap_property_records = newest_ldap_properties
         self.sync_all()
         newest_ldap_properties = list(
-            fetch_current_ldap_property_records(self.conn, self.property_base_dn)
+            fetch_ldap_properties(self.conn, self.property_base_dn)
         )
         assert (
             member_dn
@@ -596,7 +592,5 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         for action in actions_dict.values():
             execute_real(action, self.conn)
 
-        newest_users = list(
-            fetch_current_ldap_user_records(self.conn, base_dn=self.user_base_dn)
-        )
+        newest_users = list(fetch_ldap_users(self.conn, base_dn=self.user_base_dn))
         assert newest_users == []

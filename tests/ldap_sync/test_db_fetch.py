@@ -3,7 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import pytest
 
-from ldap_sync.sources.db import fetch_users_to_sync, UserProxyType
+from ldap_sync.sources.db import _fetch_db_users, UserProxyType
 from tests import factories
 
 
@@ -33,22 +33,22 @@ def user(module_session, group):
 
 
 def test_one_user_fetch(session, user):
-    assert fetch_users_to_sync(session) == [
+    assert _fetch_db_users(session) == [
         tuple(UserProxyType(user, should_be_blocked=False))
     ]
 
 
 def test_one_user_fetch_with_property(session, user):
-    assert fetch_users_to_sync(session, required_property="nonexistent") == []
+    assert _fetch_db_users(session, required_property="nonexistent") == []
 
 
 def test_one_user_fetch_with_existent_property(session, user):
-    assert fetch_users_to_sync(session, required_property='ldap') == [
+    assert _fetch_db_users(session, required_property="ldap") == [
         tuple(UserProxyType(user, should_be_blocked=False))
     ]
 
 
 def test_one_user_fetch_with_blockage(session, user, deny_membership):
-    assert fetch_users_to_sync(session, required_property='ldap') == [
+    assert _fetch_db_users(session, required_property="ldap") == [
         tuple(UserProxyType(user, should_be_blocked=True))
     ]
