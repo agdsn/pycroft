@@ -10,30 +10,23 @@ from ldap3.utils.dn import safe_dn
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
+from ldap_sync import logger
+from ldap_sync.concepts import types
 from ldap_sync.execution import execute_real
 from ldap_sync.record_diff import bulk_diff_records
 from .config import get_config_or_exit
-from .exporter import sync_all
+from .sources.db import (
+    establish_and_return_session,
+    fetch_db_users,
+    fetch_db_groups,
+    fetch_db_properties,
+)
 from .sources.ldap import (
     establish_and_return_ldap_connection,
-    _fetch_ldap_users,
-    _fetch_ldap_groups,
-    _fetch_ldap_properties,
     fake_connection,
     fetch_ldap_users,
     fetch_ldap_groups,
     fetch_ldap_properties,
-)
-from ldap_sync import logger
-from ldap_sync.concepts import types
-from .sources.db import (
-    establish_and_return_session,
-    _fetch_db_users,
-    _fetch_db_groups,
-    _fetch_db_properties,
-    fetch_db_users,
-    fetch_db_groups,
-    fetch_db_properties,
 )
 
 

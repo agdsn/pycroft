@@ -14,18 +14,16 @@ from ldap_sync.concepts.action import (
     ModifyAction,
     Action,
 )
+from ldap_sync.concepts.record import UserRecord, RecordState, GroupRecord
+from ldap_sync.config import get_config, SyncConfig
+from ldap_sync.conversion import (
+    dn_from_cn,
+    dn_from_username,
+    db_user_to_record,
+)
 from ldap_sync.execution import execute_real
 from ldap_sync.exporter import LdapExporter
-from ldap_sync.config import get_config, SyncConfig
 from ldap_sync.record_diff import bulk_diff_records
-from ldap_sync.sources.ldap import (
-    establish_and_return_ldap_connection,
-    _fetch_ldap_users,
-    _fetch_ldap_properties,
-    fetch_ldap_groups,
-    fetch_ldap_properties,
-    fetch_ldap_users,
-)
 from ldap_sync.sources.db import (
     _fetch_db_users,
     _fetch_db_groups,
@@ -34,19 +32,17 @@ from ldap_sync.sources.db import (
     fetch_db_groups,
     fetch_db_properties,
 )
-from ldap_sync.concepts.record import UserRecord, RecordState, GroupRecord, Record
-from ldap_sync.conversion import (
-    dn_from_cn,
-    dn_from_username,
-    db_user_to_record,
-    db_group_to_record,
-    ldap_user_to_record,
-    ldap_group_to_record,
+from ldap_sync.sources.ldap import (
+    establish_and_return_ldap_connection,
+    _fetch_ldap_users,
+    fetch_ldap_groups,
+    fetch_ldap_properties,
+    fetch_ldap_users,
 )
 from pycroft.model.session import session
-from tests.legacy_base import FactoryDataTestBase
 from tests.factories import PropertyGroupFactory, UserFactory, MembershipFactory
 from tests.factories.user import UserWithMembershipFactory
+from tests.legacy_base import FactoryDataTestBase
 
 
 class TestEmptyLdap:
