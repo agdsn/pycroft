@@ -53,27 +53,29 @@ def fetch_users_to_sync(
     :returns: An iterable of ``(User, should_be_blocked)`` ResultProxies
         having the property ``required_property`` and a unix_account.
     """
+    no_unix_account_stmt = select().select_from(User)
+    # two method calls don't count as method chaining
+    # fmt: off
     if required_property:
-        no_unix_account_q = User.q.join(User.current_properties).filter(
-            CurrentProperty.property_name == required_property,
-            User.unix_account == None,
-        )
-    else:
-        no_unix_account_q = User.q.filter(User.unix_account == None)
+        no_unix_account_stmt = no_unix_account_stmt\
+            .join(User.current_properties)\
+            .filter(CurrentProperty.property_name == required_property)
+    no_unix_account_stmt = no_unix_account_stmt\
+        .filter(User.unix_account_id.is_(None))\
+        .add_columns(func.count())
+    # fmt: on
 
-    count_exportable_but_no_account = no_unix_account_q.count()
-
-    if count_exportable_but_no_account:
+    if count := session.scalar(no_unix_account_stmt):
         if required_property:
             logger.warning(
                 "%s users have the '%s' property but not a unix_account",
-                count_exportable_but_no_account,
+                count,
                 required_property,
             )
         else:
             logger.warning(
                 "%s users applicable to exporting don't have a unix_account",
-                count_exportable_but_no_account,
+                count,
             )
 
     # used for second join against CurrentProperty
