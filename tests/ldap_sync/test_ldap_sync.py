@@ -360,12 +360,24 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         self.new_ldap_properties = fetch_current_ldap_properties(self.conn, base_dn=self.property_base_dn)
 
     def test_idempotency_of_two_syncs(self):
-        self.sync_all()
-        exporter = self.build_exporter()
-        exporter.compile_actions()
-        assert len(exporter.actions) \
+        actions = list(bulk_diff_records(
+            current_records=iter_current_records(
+                ldap_users=self.new_ldap_users,
+                ldap_groups=self.new_ldap_groups,
+                ldap_properties=self.new_ldap_properties,
+            ),
+            desired_records=iter_desired_records(
+                db_users=self.users_to_sync,
+                user_base_dn=self.user_base_dn,
+                db_groups=self.groups_to_sync,
+                group_base_dn=self.group_base_dn,
+                db_properties=self.properties_to_sync,
+                property_base_dn=self.property_base_dn,
+            )
+        ).values())
+        assert len(actions) \
             == len(self.users_to_sync) + len(self.groups_to_sync) + len(self.properties_to_sync)
-        assert (isinstance(a, IdleAction) for a in exporter.actions)
+        assert all([isinstance(a, IdleAction) for a in actions])
 
     def assert_attributes_equal(self, expected, actual):
         # Due to the canonicalization, empty attributes will appear in
