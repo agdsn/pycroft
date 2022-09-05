@@ -21,8 +21,12 @@ ldap_sync
 
 .. automodule:: ldap_sync.sources.db
     :undoc-members:
+    :private-members: _fetch_db_users, _fetch_db_groups, _fetch_db_properties
+    :member-order: groupwise
 .. automodule:: ldap_sync.sources.ldap
     :undoc-members:
+    :private-members:
+    :member-order: groupwise
 
 .. automodule:: ldap_sync.config
     :undoc-members:

@@ -45,7 +45,10 @@ class _UserProxyType(NamedTuple):
 def _fetch_db_users(
     session: Session, required_property: str | None = None
 ) -> list[_UserProxyType]:
-    """Fetch the users who should be synced
+    """Fetch users to be synced, plus whether ``ldap_login_enabled`` is set.
+
+    If the `` ldap_login_enabled`` flag is not present,
+    we interpret this as ``should_be_blocked``.
 
     :param session: The SQLAlchemy session to use
     :param str required_property: the property required to export users
@@ -141,7 +144,7 @@ class _GroupProxyType(NamedTuple):
 
 
 def _fetch_db_groups(session: Session) -> list[_GroupProxyType]:
-    """Fetch the groups who should be synced
+    """Fetch all groups together with all members
 
     :param session: The SQLAlchemy session to use
 
@@ -193,7 +196,10 @@ class _PropertyProxyType(NamedTuple):
 
 
 def _fetch_db_properties(session: Session) -> list[_PropertyProxyType]:
-    """Fetch the groups who should be synced
+    """Fetch the groups who should be synced.
+
+    Explicitly, this returns everything in :ref:`EXPORTED_PROPERTIES` together with
+    the current users having the respective property as members.
 
     :param session: The SQLAlchemy session to use
 
