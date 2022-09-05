@@ -498,8 +498,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         )
         actions = list(
             bulk_diff_records(
-                current_records=self.new_ldap_user_records,
-                desired_records=user_records_to_sync,
+                current=self.new_ldap_user_records, desired=user_records_to_sync
             ).values()
         )
         relevant_actions = [a for a in actions if not isinstance(a, IdleAction)]
@@ -561,10 +560,7 @@ class LdapOnceSyncedTestCase(LdapSyncerTestBase):
         )
 
     def test_no_desired_records_removes_everything(self):
-        actions_dict = bulk_diff_records(
-            current_records=self.new_ldap_user_records,
-            desired_records=[],
-        )
+        actions_dict = bulk_diff_records(current=self.new_ldap_user_records, desired=[])
 
         assert len(actions_dict) == len(self.new_ldap_user_records)
         for action in actions_dict.values():

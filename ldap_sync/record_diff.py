@@ -94,13 +94,12 @@ def iter_zip_dicts(
 
 
 def bulk_diff_records(
-    current_records: typing.Iterable[record.Record],
-    desired_records: typing.Iterable[record.Record],
+    current: typing.Iterable[record.Record], desired: typing.Iterable[record.Record]
 ) -> dict[types.DN, action.Action]:
     return {
         dn: diff_records(cur, des)
         for dn, (cur, des) in iter_zip_dicts(
-            {r.dn: r for r in current_records},
-            {r.dn: r for r in desired_records},
+            {r.dn: r for r in current},
+            {r.dn: r for r in desired},
         )
     }

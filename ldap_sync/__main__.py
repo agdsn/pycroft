@@ -102,15 +102,9 @@ def fetch_and_sync(
     logger.info("Fetched %s ldap properties", len(ldap_properties))
 
     actions = [
-        *bulk_diff_records(
-            current_records=ldap_users, desired_records=db_users
-        ).values(),
-        *bulk_diff_records(
-            current_records=ldap_groups, desired_records=db_groups
-        ).values(),
-        *bulk_diff_records(
-            current_records=ldap_properties, desired_records=db_properties
-        ).values(),
+        *bulk_diff_records(current=ldap_users, desired=db_users).values(),
+        *bulk_diff_records(current=ldap_groups, desired=db_groups).values(),
+        *bulk_diff_records(current=ldap_properties, desired=db_properties).values(),
     ]
     for a in actions:
         execute_real(a, connection)
