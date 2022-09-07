@@ -255,7 +255,6 @@ EXPORTED_PROPERTIES = frozenset(
         "member",
         "ldap_login_enabled",
         "userdb",
-        "cache_access",
         "membership_fee",
     ]
 )
