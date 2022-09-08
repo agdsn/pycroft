@@ -5,8 +5,10 @@ ldap_sync.__main__
 import argparse
 import logging
 import os
+import typing
 
 from ldap3.utils.dn import safe_dn
+from sentry_sdk.integrations.logging import LoggingIntegration
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
@@ -127,12 +129,48 @@ parser.add_argument("-l", "--log", dest='loglevel', type=str,
                     help="Set the loglevel")
 parser.add_argument("-d", "--debug", dest='loglevel', action='store_const',
                     const='debug', help="Short for --log=debug")
+parser.add_argument("--test-sentry", action='store_true', default=False,
+                    help="Trigger exception/log message to test the sentry integration")
+
+
+def try_setup_sentry() -> None:
+    try:
+        import sentry_sdk
+    except ImportError:
+        logger.info("Sentry not installed. Skipping setup.")
+        return
+    if not (dsn := os.getenv('PYCROFT_SENTRY_DSN')):
+        logger.info("Sentry DSN not set. Skipping setup.")
+        return
+
+    logging_integration = LoggingIntegration(
+        level=logging.INFO,  # INFO / WARN create breadcrumbs, just as SQL queries
+        event_level=logging.WARNING,  # warnings and above create events
+    )
+    sentry_sdk.init(
+        dsn=dsn,
+        integrations=[logging_integration],
+        traces_sample_rate=1.0,
+    )  # type: ignore
+
+
+def trigger_sentry() -> typing.NoReturn:
+    logger.info("Testing sentry integration...")
+    try:
+        raise ValueError("Sentry test exception (caught, then reported)!")
+    except ValueError:
+        logger.exception("Sentry test error log!")
+    raise ValueError("Sentry test exception (uncaught)!")
 
 
 def main() -> int:
     args = parser.parse_args()
+    try_setup_sentry()
 
     add_stdout_logging(logger, level=NAME_LEVEL_MAPPING[args.loglevel])
+
+    if args.test_sentry:
+        trigger_sentry()
 
     try:
         if args.fake:
