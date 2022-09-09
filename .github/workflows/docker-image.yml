@@ -32,7 +32,9 @@ jobs:
         run: ./scripts/run_mypy.sh
       # docs stuff
       - name: Build sphinx docs
-        run: sphinx-build -b html --color -aE doc/ doc/_build/html
+        run: make SPHINXOPTS="-EN -w sphinx.log" -C doc html
+      - name: Render sphinx warnings as annotations
+        run: python ./scripts/render_sphinx_log.py doc/sphinx.log
       - name: Publish sphinx docs as pages artifact
         uses: actions/upload-pages-artifact@v1
         with:
