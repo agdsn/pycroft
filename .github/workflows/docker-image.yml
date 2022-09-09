@@ -39,7 +39,7 @@ jobs:
           path: doc/_build/html
   # see https://github.com/actions/deploy-pages#usage
   deploy-docs:
-    if: (github.event_name == 'push') && (github.ref == 'develop' || github.ref == 'master')
+    if: (github.event_name == 'push') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')
     # Add a dependency to the build job
     needs: python-lint
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
