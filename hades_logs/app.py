@@ -29,7 +29,7 @@ class HadesCelery(Celery):
         self.conf["task_default_exchange"] = task_default_exchange
         self.conf["result_exchange"] = result_exchange
         self.conf["result_exchange_type"] = "direct"
-        self.conf["task_default_exchange_type"] = "direct"
+        self.conf["task_default_exchange_type"] = "topic"
         self.conf["task_create_missing_queues"] = False
         self.conf['task_serializer'] = 'json'
         self.conf['event_serializer'] = 'json'
