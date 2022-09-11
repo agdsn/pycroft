@@ -262,7 +262,13 @@ nas = Table(
 dhcphost = View(
     name='dhcphost',
     query=(
-        Query([Interface.mac.label('Mac'), func.host(IP.address).label('IpAddress')])
+        Query(
+            [
+                Interface.mac.label("Mac"),
+                func.host(IP.address).label("IpAddress"),
+                Host.name.label("HostName"),
+            ]
+        )
         .select_from(User)
         .join(User.current_properties)
         .join(Host)

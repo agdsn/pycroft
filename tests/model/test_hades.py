@@ -147,7 +147,7 @@ class TestHadesView:
         assert len(rows) == 1
         row = rows[0]
         host = user.hosts[0]
-        assert row == (host.interfaces[0].mac, str(host.ips[0].address))
+        assert row == (host.interfaces[0].mac, str(host.ips[0].address), host.name)
 
 
 class TestHadesBlockedView:
