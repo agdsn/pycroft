@@ -72,14 +72,24 @@ class HadesLogs:
             app_name = app.config['HADES_CELERY_APP_NAME']
             broker_uri = app.config['HADES_BROKER_URI']
             backend_uri = app.config['HADES_RESULT_BACKEND_URI']
-            routing_key = app.config.get('HADES_ROUTING_KEY', 'hades-ng')
+            routing_key = app.config.get('HADES_ROUTING_KEY', 'masters.root.agdsn')
         except KeyError as e:
             self.logger.warning("Missing config key: %s\n%s", e, _CONFIGURATION_DOCS)
             raise KeyError(f"Missing config key: {e}") from e
         self.timeout = app.config.get('HADES_TIMEOUT', 5)
+        task_default_exchange = app.config.get(
+            "HADES_TASK_DEFAULT_EXCHANGE", "hades.rpc-call"
+        )
+        result_exchange = app.config.get("HADES_RESULT_EXCHANGE", "hades.rpc-result")
 
-        self.celery = HadesCelery(app_name, broker=broker_uri, backend=backend_uri,
-                                  routing_key=routing_key)
+        self.celery = HadesCelery(
+            app_name,
+            broker=broker_uri,
+            backend=backend_uri,
+            task_default_exchange=task_default_exchange,
+            result_exchange=result_exchange,
+            routing_key=routing_key,
+        )
         # Gets run only on success
         self.logger.info("Initialization complete, registering 'hades_logs' extension")
         app.extensions['hades_logs'] = self

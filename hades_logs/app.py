@@ -21,12 +21,16 @@ class HadesCelery(Celery):
         usually of the format ``<site>`` or ``<site>.<node>``.  If not
         set, behavior of :meth:`signature` is unchanged.
     """
-    def __init__(self, *a, routing_key=None, **kw):
+
+    def __init__(self, *a, task_default_exchange, result_exchange, routing_key, **kw):
         super().__init__(*a, **kw)
         self.routing_key = routing_key
-        self.conf['task_default_exchange'] = 'hades.agent.rpc'
-        self.conf['task_default_exchange_type'] = 'topic'
-        self.conf['task_create_missing_queues'] = True
+        self.conf["task_default_routing_key"] = routing_key
+        self.conf["task_default_exchange"] = task_default_exchange
+        self.conf["result_exchange"] = result_exchange
+        self.conf["result_exchange_type"] = "direct"
+        self.conf["task_default_exchange_type"] = "direct"
+        self.conf["task_create_missing_queues"] = False
         self.conf['task_serializer'] = 'json'
         self.conf['event_serializer'] = 'json'
         self.conf['result_serializer'] = 'json'
