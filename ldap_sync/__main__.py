@@ -163,6 +163,14 @@ def trigger_sentry() -> typing.NoReturn:
     raise ValueError("Sentry test exception (uncaught)!")
 
 
+def add_stdout_logging(logger: logging.Logger, level: int = logging.INFO) -> None:
+    handler = logging.StreamHandler()
+    fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
+    handler.setFormatter(fmt)
+    logger.addHandler(handler)
+    logger.setLevel(level)
+
+
 def main() -> int:
     args = parser.parse_args()
     try_setup_sentry()
@@ -187,10 +195,3 @@ def main() -> int:
 if __name__ == '__main__':
     exit(main())
 
-
-def add_stdout_logging(logger: logging.Logger, level: int = logging.INFO) -> None:
-    handler = logging.StreamHandler()
-    fmt = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
-    handler.setFormatter(fmt)
-    logger.addHandler(handler)
-    logger.setLevel(level)
