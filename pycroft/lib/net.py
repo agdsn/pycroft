@@ -5,29 +5,31 @@
 pycroft.lib.net
 ~~~~~~~~~~~~~~~
 """
-from itertools import islice
-from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 import sys
+import typing as t
+from itertools import islice
 
+from ipaddr import IPv4Address, IPv6Address, IPv4Network, IPv6Network
 from sqlalchemy import func, and_, cast
 
 from pycroft.lib.exc import PycroftLibException
 from pycroft.model import session
+from pycroft.model.facilities import Room
 from pycroft.model.host import IP
 from pycroft.model.net import Subnet
 from pycroft.model.types import IPAddress
 
 class SubnetFullException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Subnet full")
 
 
 class MacExistsException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("MAC address already exists")
 
 
-def get_subnet_unused_ips(subnet):
+def get_subnet_unused_ips(subnet: Subnet) -> t.Iterator[IPv4Address]:
     reserved_bottom = subnet.reserved_addresses_bottom or 0
     reserved_top = subnet.reserved_addresses_top or 0
     used_ips = frozenset(ip.address for ip in subnet.ips)
@@ -39,11 +41,13 @@ def get_subnet_unused_ips(subnet):
     return (ip for ip in unreserved if ip not in used_ips)
 
 
-def get_unused_ips(subnets):
+def get_unused_ips(
+    subnets: t.Iterable[Subnet],
+) -> dict[Subnet, t.Iterator[IPv4Address]]:
     return {subnet: get_subnet_unused_ips(subnet) for subnet in subnets}
 
 
-def get_free_ip(subnets):
+def get_free_ip(subnets: t.Iterable[Subnet]) -> tuple[IPv4Address, Subnet]:
     unused = get_unused_ips(subnets)
 
     for subnet, ips in unused.items():
@@ -59,7 +63,7 @@ def get_free_ip(subnets):
 
 
 #TODO: Implement this in the model
-def get_subnets_for_room(room):
+def get_subnets_for_room(room: Room) -> list[Subnet]:
     if not room:
         return list()
 
@@ -69,7 +73,7 @@ def get_subnets_for_room(room):
                if s.address.version == 4]
 
 
-def get_subnets_with_usage():
+def get_subnets_with_usage() -> list[Subnet]:
     is_unreserved_ip = and_(
         IP.address >= cast(func.host(func.network(
             Subnet.address) + Subnet.reserved_addresses_bottom + 1), IPAddress),
@@ -97,13 +101,9 @@ def get_subnets_with_usage():
     return subnets
 
 
-def ptr_name(network, ip_address):
-    """
-    :param IPv4Network|IPv6Network network:
-    :param IPv4Address|IPv6Address ip_address:
-    :rtype: str
-    :return:
-    """
+def ptr_name(
+    network: IPv4Network | IPv6Network, ip_address: IPv4Address | IPv6Address
+) -> str:
     hostbits = network.max_prefixlen - network.prefixlen
     if isinstance(ip_address, IPv4Address):
         num_octets = min((hostbits + 7 // 8), 1)
