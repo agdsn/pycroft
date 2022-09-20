@@ -37,12 +37,13 @@ def get_swdd_person_id(first_name: str, last_name: str, birthdate: str) -> int |
     return tenancy.person_id if tenancy is not None else None
 
 
-def get_relevant_tenancies(person_id: int):
+def get_relevant_tenancies(person_id: int) -> list[Tenancy]:
     return Tenancy.q.filter_by(person_id=person_id, status_id=TenancyStatus.ESTABLISHED.value)\
         .filter(Tenancy.mietende > func.now()).order_by(Tenancy.mietbeginn.desc()).all()
 
 
-def get_first_tenancy_with_room(tenancies: list[Tenancy]):
+def get_first_tenancy_with_room(tenancies: list[Tenancy]) -> Tenancy | None:
     for tenancy in tenancies:
         if tenancy.room is not None:
             return tenancy
+    return None
