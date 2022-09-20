@@ -947,12 +947,10 @@ def transactions_all_json():
 def transactions_create():
     form = TransactionCreateForm()
     if form.validate_on_submit():
-        splits = []
-        for split_form in form.splits:
-            splits.append((
-                Account.get(split_form.account_id.data),
-                split_form.amount.data
-            ))
+        splits = [(
+            Account.get(split_form.account_id.data),
+            split_form.amount.data
+        ) for split_form in form.splits]
         transaction = finance.complex_transaction(
             description=form.description.data,
             author=current_user,
