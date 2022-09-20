@@ -5,27 +5,36 @@
 pycroft.lib.logging
 ~~~~~~~~~~~~~~~~~~~
 """
+import typing as t
 from datetime import datetime
+
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.logging import UserLogEntry, RoomLogEntry, LogEntry, \
     TaskLogEntry
 from pycroft.model.session import with_transaction
+from pycroft.model.task import Task
 from pycroft.model.user import User
 
 
+TLogEntry = t.TypeVar("TLogEntry", bound=LogEntry)
 @with_transaction
-def _create_log_entry(class_, message, author, created_at=None, **kwargs):
+def _create_log_entry(
+    class_: t.Type[TLogEntry],
+    message: str,
+    author: User,
+    created_at: datetime | None = None,
+    **kwargs: t.Any,
+) -> TLogEntry:
     """
     This method will create a new LogEntry of the given type with the given
     arguments.
 
-    :param type type: A subclass of LogEntry which should be created.
-    :param unicode message: the log message text
-    :param User author: user responsible for the entry
-    :param datetime|None created_at: Creation time of the entry. Defaults to
-        current database time if None.
-    :param kwargs: Additional arguments.
+    :param class_: A subclass of LogEntry which should be created.
+    :param message: the log message text
+    :param author: user responsible for the entry
+    :param created_at: Creation time of the entry. Defaults to current database time if None.
+    :param kwargs: Additional arguments to use for instantiation.
     :return: the newly created LogEntry.
     """
     if created_at is not None:
@@ -37,58 +46,62 @@ def _create_log_entry(class_, message, author, created_at=None, **kwargs):
     return entry
 
 
-def log_event(message, author, created_at=None):
+def log_event(
+    message: str, author: User, created_at: datetime | None = None
+) -> LogEntry:
     """
     This method will create a new LogEntry.
 
-    :param unicode message: the log message text
-    :param User author: user responsible for the entry
-    :param datetime|None created_at: Creation time of the entry. Defaults to
-        current database time if None.
+    :param message: the log message text
+    :param author: user responsible for the entry
+    :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry(LogEntry, message, author, created_at)
 
 
-def log_task_event(message, author, task, created_at=None):
+def log_task_event(
+    message: str, author: User, task: Task, created_at: datetime | None = None
+) -> TaskLogEntry:
     """
     This method will create a new TaskLogEntry.
 
-    :param unicode message: the log message text
-    :param User author: user responsible for the entry
-    :param Task task: the task for which the log should be created
-    :param datetime|None created_at: Creation time of the entry. Defaults to
-        current database time if None.
+    :param message: the log message text
+    :param author: user responsible for the entry
+    :param task: the task for which the log should be created
+    :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry(TaskLogEntry, message, author, created_at,
                              task=task)
 
 
-def log_user_event(message, author, user, created_at=None):
+def log_user_event(
+    message: str, author: User, user: User, created_at: datetime | None = None
+) -> UserLogEntry:
     """
     This method will create a new UserLogEntry.
 
-    :param unicode message: the log message text
-    :param User author: user responsible for the entry
-    :param User user: the user for which the log should be created
-    :param datetime|None created_at: Creation time of the entry. Defaults to
-        current database time if None.
+    :param message: the log message text
+    :param author: user responsible for the entry
+    :param user: the user for which the log should be created
+    :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created UserLogEntry.
     """
     return _create_log_entry(UserLogEntry, message, author, created_at,
                              user=user)
 
 
-def log_room_event(message, author, room, created_at=None):
+def log_room_event(
+    message: str, author: User, room: Room, created_at: datetime | None = None
+) -> RoomLogEntry:
     """
     This method will create a new RoomLogEntry.
 
-    :param unicode message: the log message text
-    :param User author: user responsible for the entry
-    :param Room room: the room for which the log should be created
-    :param datetime|None created_at: Creation time of the entry. Defaults to
-        current database time if None.
+    :param message: the log message text
+    :param author: user responsible for the entry
+    :param room: the room for which the log should be created
+    :param created_at: Creation time of the entry. Defaults to current database time if None.
     :return: the newly created RoomLogEntry.
     """
     return _create_log_entry(RoomLogEntry, message, author, created_at,

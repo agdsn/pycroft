@@ -30,6 +30,7 @@ no_strict_optional = true
 module = [
     "ldap_sync",
     "ldap_sync.*",
+    "pycroft.lib.logging",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true
