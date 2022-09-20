@@ -147,10 +147,7 @@ class IP(IntegerIdModel):
 
     subnet_id = Column(Integer, ForeignKey(Subnet.id, ondelete="CASCADE"),
                        nullable=False, index=True)
-    subnet = relationship(Subnet,
-                          backref=backref("ips", cascade="all, delete-orphan",
-                                          cascade_backrefs=False),
-                          lazy='joined')
+    subnet = relationship(Subnet, back_populates="ips", lazy="joined")
 
     def _check_subnet_valid(self, address, subnet):
         if address is None or subnet is None:

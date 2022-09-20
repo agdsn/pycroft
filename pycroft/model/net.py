@@ -37,6 +37,12 @@ class Subnet(IntegerIdModel):
 
     vlan_id = Column(Integer, ForeignKey(VLAN.id), nullable=False, index=True)
     vlan = relationship(VLAN, back_populates="subnets")
+    ips = relationship(
+        "IP",
+        cascade="all, delete-orphan",
+        cascade_backrefs=False,
+        back_populates="subnet",
+    )
 
 
 # Ensure that the gateway is contained in the subnet
