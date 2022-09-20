@@ -5,16 +5,22 @@
 pycroft.lib.host
 ~~~~~~~~~~~~~~~~
 """
+import typing as t
+
+import ipaddr
+
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import get_subnets_for_room, get_free_ip
 from pycroft.lib.user import migrate_user_host
+from pycroft.model.facilities import Room
 from pycroft.model.host import Interface, IP, Host
 from pycroft.model.session import with_transaction, session
+from pycroft.model.user import User
 
 
 @with_transaction
-def change_mac(interface, mac, processor):
+def change_mac(interface: Interface, mac: str, processor: User) -> Interface:
     """
     This method will change the mac address of the given interface to the new
     mac address.
@@ -33,25 +39,19 @@ def change_mac(interface, mac, processor):
     return interface
 
 
-def generate_hostname(ip_address):
-    """
-
-    :param IPv4Address ip_address:
-    :rtype: unicode
-    :return:
-    """
+def generate_hostname(ip_address: ipaddr.IPv4Address) -> str:
     numeric_ip = int(ip_address)
-    return "x{:02x}{:02x}{:02x}{:02x}".format((numeric_ip >> 0x18) & 0xFF,
-                                                   (numeric_ip >> 0x10) & 0xFF,
-                                                   (numeric_ip >> 0x08) & 0xFF,
-                                                   (numeric_ip >> 0x00) & 0xFF)
+    return "x{:02x}{:02x}{:02x}{:02x}".format(
+        (numeric_ip >> 0x18) & 0xFF,
+        (numeric_ip >> 0x10) & 0xFF,
+        (numeric_ip >> 0x08) & 0xFF,
+        (numeric_ip >> 0x00) & 0xFF,
+    )
 
 
 @with_transaction
-def host_create(owner, room, name, processor):
-    host = Host(name=name,
-                owner_id=owner.id,
-                room=room)
+def host_create(owner: User, room: Room, name: str, processor: User) -> Host:
+    host = Host(name=name, owner_id=owner.id, room=room)
 
     session.add(host)
 
@@ -72,11 +72,10 @@ def host_create(owner, room, name, processor):
 
 
 @with_transaction
-def host_edit(host, owner, room, name, processor):
+def host_edit(host: Host, owner: User, room: Room, name: str, processor: User) -> None:
     if host.name != name:
-        message = (
-            deferred_gettext("Changed name of host '{}' to '{}'.")
-            .format(host.name, name)
+        message = deferred_gettext("Changed name of host '{}' to '{}'.").format(
+            host.name, name
         )
         host.name = name
 
@@ -101,29 +100,30 @@ def host_edit(host, owner, room, name, processor):
         migrate_user_host(host, room, processor)
 
 
-
-
 @with_transaction
-def host_delete(host, processor):
+def host_delete(host: Host, processor: User) -> None:
     message = deferred_gettext("Deleted host '{}'.").format(host.name)
-    log_user_event(author=processor,
-                   user=host.owner,
-                   message=message.to_json())
+    log_user_event(author=processor, user=host.owner, message=message.to_json())
 
-    session.delete(host)\
+    session.delete(host)
 
 
 @with_transaction
-def interface_create(host, name, mac, ips, processor):
-    interface = Interface(host=host,
-                          mac=mac,
-                          name=name)
+def interface_create(
+    host: Host,
+    name: str,
+    mac: str,
+    ips: t.Iterable[ipaddr.IPv4Address] | None,
+    processor: User,
+) -> Interface:
+    interface = Interface(host=host, mac=mac, name=name)
 
     session.add(interface)
 
     subnets = get_subnets_for_room(interface.host.room)
 
     if ips is None:
+        # this happens in only one call
         ip, _ = get_free_ip(subnets)
         ips = {ip}
 
@@ -141,7 +141,7 @@ def interface_create(host, name, mac, ips, processor):
         "Created interface ({}, {}) with name '{}' for host '{}'."
     ).format(
         interface.mac,
-        ", ".join(str(ip.address) for ip in interface.ips),
+        ", ".join(str(ip_.address) for ip_ in interface.ips),
         interface.name,
         interface.host.name,
     )
@@ -151,12 +151,18 @@ def interface_create(host, name, mac, ips, processor):
 
 
 @with_transaction
-def interface_edit(interface, name, mac, ips, processor):
-    message = "Edited interface ({}, {}) of host '{}'." \
-        .format(interface.mac,
-                ', '.join(str(ip.address) for ip in
-                          interface.ips),
-                interface.host.name)
+def interface_edit(
+    interface: Interface,
+    name: str,
+    mac: str,
+    ips: t.Iterable[ipaddr.IPv4Address],
+    processor: User,
+) -> None:
+    message = "Edited interface ({}, {}) of host '{}'.".format(
+        interface.mac,
+        ", ".join(str(ip.address) for ip in interface.ips),
+        interface.host.name,
+    )
 
     if interface.name != name:
         interface.name = name
@@ -203,7 +209,7 @@ def interface_edit(interface, name, mac, ips, processor):
 
 
 @with_transaction
-def interface_delete(interface, processor):
+def interface_delete(interface: Interface, processor: User) -> None:
     message = deferred_gettext("Deleted interface {} of host {}.").format(
         interface.mac, interface.host.name
     )
