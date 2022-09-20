@@ -11,6 +11,7 @@ import logging
 import operator
 import re
 import typing
+import typing as t
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from io import StringIO
@@ -20,8 +21,9 @@ from typing import Callable, TypeVar, NamedTuple
 from sqlalchemy import func, between, cast
 from sqlalchemy import or_, and_, literal, select, exists, not_, \
     text, future
-from sqlalchemy.orm import aliased, contains_eager, joinedload, Session
+from sqlalchemy.orm import aliased, contains_eager, joinedload, Session, Query
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import Select
 
 from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
@@ -47,11 +49,11 @@ from pycroft.model.user import User, Membership, RoomHistoryEntry
 logger = logging.getLogger('pycroft.lib.finance')
 
 
-def get_membership_fee_for_date(target_date) -> MembershipFee:
+def get_membership_fee_for_date(target_date: date) -> MembershipFee:
     """
     Get the membership fee which contains a given target date.
 
-    :param date target_date: The date for which a corresponding membership fee should be found.
+    :param target_date: The date for which a corresponding membership fee should be found.
     :raises sqlalchemy.exc.NoResultFound: if no membership fee was found
     :raises sqlalchemy.exc.MultipleResultsFound: if multiple membership fees
         were found:
@@ -86,8 +88,15 @@ def get_first_applied_membership_fee() -> MembershipFee:
 
 
 @with_transaction
-def simple_transaction(description, debit_account, credit_account, amount,
-                       author, valid_on=None, confirmed=True):
+def simple_transaction(
+    description: str,
+    debit_account: Account,
+    credit_account: Account,
+    amount: Decimal,
+    author: User,
+    valid_on: date | None = None,
+    confirmed: bool = True,
+) -> Transaction:
     """ Posts a simple transaction.
 
     A simple transaction is a transaction that consists of exactly two splits,
@@ -96,16 +105,13 @@ def simple_transaction(description, debit_account, credit_account, amount,
     The current system date will be used as transaction date, an optional valid
     date may be specified.
 
-    :param unicode description: Description
-    :param Account debit_account: Debit (germ. Soll) account.
-    :param Account credit_account: Credit (germ. Haben) account
-    :param Decimal amount: Amount in Eurocents
-    :param User author: User who created the transaction
-    :param date valid_on: Date, when the transaction should be valid. Current
-        database date, if omitted.
-    :type valid_on: date or None
+    :param description: Description
+    :param debit_account: Debit (germ. Soll) account.
+    :param credit_account: Credit (germ. Haben) account
+    :param amount: Amount in Eurocents
+    :param author: User who created the transaction
+    :param valid_on: Date, when the transaction should be valid. Current database date, if omitted.
     :param confirmed: If transaction should be created as confirmed
-    :rtype: Transaction
     """
     if valid_on is None:
         valid_on = session.utcnow().date()
@@ -129,7 +135,13 @@ def simple_transaction(description, debit_account, credit_account, amount,
 
 
 @with_transaction
-def complex_transaction(description, author, splits, valid_on=None, confirmed=True):
+def complex_transaction(
+    description: str,
+    author: User,
+    splits: t.Iterable[tuple[Account, Decimal]],
+    valid_on: date | None = None,
+    confirmed: bool = True,
+) -> Transaction:
     if valid_on is None:
         valid_on = session.utcnow().date()
     objects: list[ModelBase] = []
@@ -148,7 +160,11 @@ def complex_transaction(description, author, splits, valid_on=None, confirmed=Tr
     return new_transaction
 
 
-def transferred_amount(from_account, to_account, when=UnboundedInterval):
+def transferred_amount(
+    from_account: Account,
+    to_account: Account,
+    when: Interval[date] = UnboundedInterval,
+) -> Decimal:
     """
     Determine how much has been transferred from one account to another in a
     given interval.
@@ -159,10 +175,9 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
     The interval boundaries may be None, which indicates no lower and upper
     bound respectively.
 
-    :param Account from_account: source account
-    :param Account to_account: destination account
-    :param Interval[date] when: Interval in which transactions became valid
-    :rtype: int
+    :param from_account: source account
+    :param to_account: destination account
+    :param when: Interval in which transactions became valid
     """
     split1 = aliased(Split)
     split2 = aliased(Split)
@@ -190,7 +205,7 @@ def transferred_amount(from_account, to_account, when=UnboundedInterval):
         query = query.filter(Transaction.valid_on >= when.begin)
     elif when.end is not None:
         query = query.filter(Transaction.valid_on <= when.end)
-    return query.scalar()
+    return t.cast(Decimal, query.scalar())
 
 
 membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
@@ -201,7 +216,7 @@ membership_fee_description = deferred_gettext("Mitgliedsbeitrag {fee_name}")
 #  See https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html#mypy-pep-484-support-for-orm-mappings
 # See also #562
 @typing.no_type_check
-def users_eligible_for_fee_query(membership_fee):
+def users_eligible_for_fee_query(membership_fee: MembershipFee) -> Select:
     split_user_account = Split.__table__.alias()
     split_fee_account = Split.__table__.alias()
 
@@ -288,9 +303,16 @@ def users_eligible_for_fee_query(membership_fee):
             .distinct()
             .cte('membership_fee_users'))
 
+class AffectedUserInfo(t.TypedDict):
+    id: int
+    name: str
+    fee_account_id: int
+
 
 @with_transaction
-def post_transactions_for_membership_fee(membership_fee, processor, simulate=False):
+def post_transactions_for_membership_fee(
+    membership_fee: MembershipFee, processor: User, simulate: bool = False
+) -> list[AffectedUserInfo]:
     """
     Posts transactions (and splits) for users where the specified membership fee
     was not posted yet.
@@ -371,16 +393,13 @@ def post_transactions_for_membership_fee(membership_fee, processor, simulate=Fal
                                                              split_insert_user.c.id ==
                                                              split_insert_fee_account.c.id)))
 
-    affected_users = [dict(user._mapping) for user in affected_users_raw]
+    return [
+        t.cast(AffectedUserInfo, dict(user._mapping)) for user in affected_users_raw
+    ]
 
-    return affected_users
 
-
-def _to_date_interval(interval):
-    """
-    :param Interval[datetime] interval:
-    :rtype: Interval[date]
-    """
+def _to_date_interval(interval: Interval[datetime]) -> Interval[date]:
+    """This applies ``λx→x.date()`` to the interval's values."""
     if interval.lower_bound.unbounded:
         lower_bound = interval.lower_bound
     else:
@@ -394,11 +413,7 @@ def _to_date_interval(interval):
     return Interval(lower_bound, upper_bound)
 
 
-def _to_date_intervals(intervals):
-    """
-    :param IntervalSet[datetime] intervals:
-    :rtype: IntervalSet[date]
-    """
+def _to_date_intervals(intervals: t.Iterable[Interval[datetime]]) -> IntervalSet[date]:
     return IntervalSet(_to_date_interval(i) for i in intervals)
 
 
@@ -429,7 +444,7 @@ class MT940Dialect(csv.Dialect):
 
 
 class CSVImportError(PycroftLibException):
-    def __init__(self, message, cause=None):
+    def __init__(self, message: str, cause: t.Any | None = None) -> None:
         if cause is not None:
             message = gettext("{0}\nCaused by:\n{1}").format(
                 message, cause
@@ -438,14 +453,19 @@ class CSVImportError(PycroftLibException):
         super().__init__(message)
 
 
-def is_ordered(iterable, relation=operator.le):
+T = t.TypeVar("T")
+
+
+def is_ordered(
+    iterable: t.Iterable[T],
+    relation: t.Callable[[T, T], bool] = operator.le,  # type: ignore
+) -> bool:
     """
     Check that an iterable is ordered with respect to a given relation.
 
-    :param iterable[T] iterable: an iterable
-    :param (T,T) -> bool op: a binary relation (i.e. a function that returns a bool)
-    :return: True, if each element and its successor yield True under the given relation.
-    :rtype: bool
+    :param iterable: an iterable
+    :param relation: a binary relation
+    :return: Whether each element and its successor yield True under the given relation.
     """
     a, b = tee(iterable)
     try:
@@ -457,8 +477,11 @@ def is_ordered(iterable, relation=operator.le):
 
 
 @with_transaction
-def import_bank_account_activities_csv(csv_file, expected_balance,
-                                       imported_at=None):
+def import_bank_account_activities_csv(
+    csv_file: StringIO,
+    expected_balance: Decimal,
+    imported_at: date | None = None,
+) -> None:
     """
     Import bank account activities from a MT940 CSV file into the database.
 
@@ -541,7 +564,7 @@ def import_bank_account_activities_csv(csv_file, expected_balance,
         raise CSVImportError(message.format(balance, expected_balance))
 
 
-def remove_space_characters(field):
+def remove_space_characters(field: str | None) -> str | None:
     """Remove every 28th character if it is a space character."""
     if field is None:
         return None
@@ -551,7 +574,7 @@ def remove_space_characters(field):
 # Banks are using the original reference field to store several subfields with
 # SEPA. Subfields start with a four letter tag name and the plus sign, they
 # are separated by space characters.
-sepa_description_field_tags = (
+sepa_description_field_tags: tuple[str, ...] = (
     'EREF', 'KREF', 'MREF', 'CRED', 'DEBT', 'SVWZ', 'ABWA', 'ABWE'
 )
 sepa_description_pattern = re.compile(''.join(chain(
@@ -562,14 +585,14 @@ sepa_description_pattern = re.compile(''.join(chain(
 )), re.UNICODE)
 
 
-def cleanup_description(description):
+def cleanup_description(description: str) -> str:
     match = sepa_description_pattern.match(description)
     if match is None:
         return description
     return ' '.join(remove_space_characters(f) for f in match.groups() if f is not None)
 
 
-def restore_record(record):
+def restore_record(record: MT940Record) -> str:
     string_buffer = StringIO()
     csv.DictWriter(
         string_buffer, MT940_FIELDNAMES, dialect=MT940Dialect
@@ -579,7 +602,9 @@ def restore_record(record):
     return restored_record
 
 
-def process_record(index, record, imported_at):
+def process_record(
+    index: int, record: MT940Record, imported_at: datetime
+) -> tuple[Decimal, int, str, str, str, str, str, datetime, date, date]:
     if record.currency != "EUR":
         message = gettext("Unsupported currency {0}. Record {1}: {2}")
         raw_record = restore_record(record)
@@ -617,8 +642,8 @@ def process_record(index, record, imported_at):
             posted_on, valid_on)
 
 
-def user_has_paid(user):
-    return user.account.balance <= 0
+def user_has_paid(user: User) -> bool:
+    return t.cast(int, user.account.balance) <= 0
 
 
 def get_typed_splits(
@@ -631,20 +656,20 @@ def get_typed_splits(
     )
 
 
-def get_transaction_type(transaction):
-
-    credited = [split.account for split in transaction.splits if split.amount>0]
-    debited = [split.account for split in transaction.splits if split.amount<0]
+def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
+    credited = [split.account for split in transaction.splits if split.amount > 0]
+    debited = [split.account for split in transaction.splits if split.amount < 0]
 
     cd_accs = (credited, debited)
     # all involved accounts have the same type:
     if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs)\
             and all(len(accs)>0 for accs in cd_accs):
         return (cd_accs[0][0].type, cd_accs[1][0].type)
+    return None
 
 
 @with_transaction
-def end_payment_in_default_memberships(processor):
+def end_payment_in_default_memberships(processor: User) -> list[User]:
     # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
@@ -662,7 +687,7 @@ def end_payment_in_default_memberships(processor):
     return users
 
 
-def get_negative_members():
+def get_negative_members() -> list[User]:
     # TODO remove `type: ignore` once on SQLA2.0 (#562)
     users = (
         User.q.join(User.current_properties)
@@ -741,9 +766,11 @@ def get_users_with_payment_in_default(session: Session) -> tuple[set[User], set[
 
 
 @with_transaction
-def take_actions_for_payment_in_default_users(users_pid_membership,
-                                              users_membership_terminated,
-                                              processor):
+def take_actions_for_payment_in_default_users(
+    users_pid_membership: t.Iterable[User],
+    users_membership_terminated: t.Iterable[User],
+    processor: User,
+) -> None:
     ts_now = session.utcnow()
 
     for user in users_pid_membership:
@@ -772,7 +799,16 @@ def take_actions_for_payment_in_default_users(users_pid_membership,
                            processor, user)
 
 
-def process_transactions(bank_account, statement):
+class FintsTransaction(t.Protocol):
+    data: dict
+
+
+def process_transactions(
+    bank_account: BankAccount,
+    statement: t.Iterable[FintsTransaction],
+) -> tuple[
+    list[BankAccountActivity], list[BankAccountActivity], list[BankAccountActivity]
+]:
     transactions = []  # new transactions which would be imported
     old_transactions = []  # transactions which are already imported
     doubtful_transactions = [] # transactions which may be changed by the bank because they are to new
@@ -822,27 +858,33 @@ def process_transactions(bank_account, statement):
     return (transactions, old_transactions, doubtful_transactions)
 
 
-def build_transactions_query(account, search=None, sort_by='valid_on', sort_order=None,
-                             offset=None, limit=None, positive=None, eagerload=False):
+def build_transactions_query(
+    account: Account,
+    search: str = None,
+    sort_by: str = "valid_on",
+    sort_order: str = None,
+    offset: int = None,
+    limit: int = None,
+    positive: bool = None,
+    eagerload: bool = False,
+) -> Query:
     """Build a query returning the Splits for a finance account
 
-    :param Account account: The finance Account to filter by
-    :param str search: The string to be included, insensitive
-    :param str sort_by: The column to sort by.  Must be a column of
+    :param account: The finance Account to filter by
+    :param search: The string to be included, insensitive
+    :param sort_by: The column to sort by.  Must be a column of
         :class:`Transaction` or :class:`Split`.
-    :param str sort_order: Trigger descending sort order if the value
+    :param sort_order: Trigger descending sort order if the value
         is ``'desc'``.  See also the effect of :attr:`positive`.
-    :param int offset:
-    :param int limit:
-    :param bool positive: if positive is set to ``True``, only get
+    :param offset:
+    :param limit:
+    :param positive: if positive is set to ``True``, only get
         splits with amount ≥ 0, and amount < 0 if ``False``.  In the
         latter case, the effect of the :attr:`sort_order` parameter is
         being reversed.
-    :param bool eagerload: Eagerly load involved transactions.
+    :param eagerload: Eagerly load involved transactions.
 
     :returns: The prepared SQLAlchemy query
-
-    :rtype: Query
     """
     query = Split.q.join(Transaction).filter(Split.account == account)
 
@@ -852,7 +894,7 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
         sort_by = "valid_on"
 
     descending = (sort_order == "desc") ^ (positive == False)
-    ordering = sort_by+" desc" if descending else sort_by
+    ordering = sort_by + " desc" if descending else sort_by
     if search:
         query = query.filter(Transaction.description.ilike(f'%{search}%'))
 
@@ -870,9 +912,10 @@ def build_transactions_query(account, search=None, sort_by='valid_on', sort_orde
     return query
 
 
-def match_activities() -> tuple[dict[BankAccountActivity, User], dict[BankAccountActivity, Account]]:
-    """For all unmatched transactions, determine which user or team they should be matched with.
-    """
+def match_activities() -> tuple[
+    dict[BankAccountActivity, User], dict[BankAccountActivity, Account]
+]:
+    """For all unmatched transactions, determine which user or team they should be matched with."""
     matching: dict[BankAccountActivity, User] = {}
     team_matching: dict[BankAccountActivity, Account] = {}
     stmt = (select(BankAccountActivity)
@@ -895,7 +938,6 @@ def match_activities() -> tuple[dict[BankAccountActivity, User], dict[BankAccoun
     return matching, team_matching
 
 
-T = TypeVar('T')
 U = TypeVar('U')
 TUser = TypeVar('TUser')
 
@@ -913,9 +955,9 @@ def match_reference(reference: str, fetch_normal: Callable[[int], TUser | None])
     Passing lambdas allows us to write fast, db-independent tests.
     """
     # preprocessing
-    reference = reference\
-        .replace('AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111', '')\
-        .strip()
+    reference = reference.replace(
+        "AWV-MELDEPFLICHT BEACHTENHOTLINE BUNDESBANK.(0800) 1234-111", ""
+    ).strip()
 
     pyc_user = _and_then(match_pycroft_reference(reference), fetch_normal)
     if pyc_user:
@@ -969,7 +1011,7 @@ def match_team_transaction(activity: BankAccountActivity) -> Account | None:
 
 
 @with_transaction
-def transaction_delete(transaction, processor):
+def transaction_delete(transaction: Transaction, processor: User) -> None:
     if transaction.confirmed:
         raise ValueError("transaction already confirmed")
 
@@ -980,7 +1022,7 @@ def transaction_delete(transaction, processor):
 
 
 @with_transaction
-def transaction_confirm(transaction, processor):
+def transaction_confirm(transaction: Transaction, processor: User) -> None:
     if transaction.confirmed:
         raise ValueError("transaction already confirmed")
 
@@ -991,10 +1033,11 @@ def transaction_confirm(transaction, processor):
 
 
 @with_transaction
-def transaction_confirm_all(processor):
+def transaction_confirm_all(processor: User) -> None:
     # Confirm all transactions older than one hour that are not confirmed yet
-    transactions = Transaction.q.filter_by(confirmed=False)\
-        .filter(Transaction.posted_at < session.utcnow() - timedelta(hours=1))
+    transactions = Transaction.q.filter_by(confirmed=False).filter(
+        Transaction.posted_at < session.utcnow() - timedelta(hours=1)
+    )
 
     for transaction in transactions:
         transaction_confirm(transaction, processor)
@@ -1013,7 +1056,7 @@ def fee_from_valid_date(session: Session, valid_on: date, account: Account) -> S
     return fee
 
 
-def estimate_balance(session: Session, user, end_date):
+def estimate_balance(session: Session, user: User, end_date: date) -> int:
     """Estimate the balance a user account will have at :paramref:`end_date`.
 
     :param session:
@@ -1070,10 +1113,12 @@ def estimate_balance(session: Session, user, end_date):
     if not this_month_fee_outstanding:
         months_to_pay -= 1
 
-    return (-user.account.balance) - (months_to_pay * last_fee.regular_fee)
+    return t.cast(int, (-user.account.balance) - (months_to_pay * last_fee.regular_fee))
 
 
-def get_pid_csv():
+def get_pid_csv() -> str:
+    """Generate a CSV file containing all members with negative balance
+    (“payment in default”)."""
     from pycroft.lib.user import encode_type2_user_id
 
     users = get_negative_members()

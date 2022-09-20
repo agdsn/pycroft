@@ -16,6 +16,8 @@ import wrapt
 
 from sqlalchemy import func, orm
 
+from pycroft.helpers.utc import DateTimeTz
+
 
 class NullScopedSession:
     def __getattr__(self, item):
@@ -64,5 +66,5 @@ def with_transaction(wrapped, instance, args, kwargs):
         raise
 
 
-def utcnow():
+def utcnow() -> DateTimeTz:
     return session.query(func.current_timestamp()).scalar()
