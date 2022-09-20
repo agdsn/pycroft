@@ -113,24 +113,12 @@ def check_user_id(string):
     """
     if not string:
         return False
-
     idsplit = string.split("-")
     if len(idsplit) != 2:
         return False
-    uid = idsplit[0]
-    code = idsplit[1]
-
-    if len(code) == 2:
-        # Type2 code
-        verify = encode_type2_user_id(int(uid))
-    else:
-        # Type1 code
-        verify = encode_type1_user_id(int(uid))
-
-    if string == verify:
-        return True
-    else:
-        return False
+    uid, code = idsplit
+    encode = encode_type2_user_id if len(code) == 2 else encode_type1_user_id
+    return string == encode(int(uid))
 
 
 class HostAliasExists(ValueError):
