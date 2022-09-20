@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import collections.abc
 import operator
+import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
 
@@ -32,15 +33,16 @@ def _infinity(name):
 
 PositiveInfinity = _infinity("PositiveInfinity")
 NegativeInfinity = _infinity("NegativeInfinity")
+TWithInfinity: t.TypeAlias = T | t.Literal[PositiveInfinity, NegativeInfinity]
 
 
-class Bound(tuple):
+class Bound(tuple, Generic[T]):
     @property
-    def value(self):
+    def value(self) -> TWithInfinity:
         return self[0]
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self[1]
 
     @property
@@ -56,7 +58,7 @@ class Bound(tuple):
             return ''
         return str(self.value)
 
-    def __new__(cls, value, is_closed):
+    def __new__(cls, value: TWithInfinity, is_closed: bool) -> Bound[T]:
         if value is NegativeInfinity or value is PositiveInfinity:
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
@@ -141,7 +143,7 @@ class Interval(tuple, Generic[T]):
     """
     __slots__ = ()
 
-    def __new__(cls, lower_bound, upper_bound):
+    def __new__(cls, lower_bound: Bound[T], upper_bound: Bound[T]) -> Interval[T]:
         """
         Create a new Interval instance.
 
@@ -563,8 +565,13 @@ def empty(point):
 UnboundedInterval = open(None, None)
 
 
-class IntervalSet(collections.abc.Sequence):
-    def __init__(self, intervals=None):
+class IntervalSet(collections.abc.Sequence[T], Generic[T]):
+    _intervals: tuple[Interval[T], ...]
+
+    def __init__(
+        self,
+        intervals: Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None = None,
+    ):
         self._intervals = _mangle_argument(intervals)
 
     def __hash__(self):
@@ -645,7 +652,9 @@ class IntervalSet(collections.abc.Sequence):
     __sub__ = difference
 
 
-def _mangle_argument(arg):
+def _mangle_argument(
+    arg: Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None,
+) -> tuple[Interval[T], ...]:
     if arg is None:
         return ()
     if isinstance(arg, IntervalSet):
