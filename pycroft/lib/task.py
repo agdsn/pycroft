@@ -4,6 +4,7 @@ pycroft.lib.task
 """
 import logging
 import typing
+import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Mapping, TypeVar, Generic
@@ -12,6 +13,7 @@ from marshmallow import ValidationError
 from sqlalchemy.orm import with_polymorphic
 
 from pycroft.helpers.i18n import deferred_gettext
+from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.logging import log_task_event
 from pycroft.model import session
 from pycroft.model.session import with_transaction
@@ -33,24 +35,19 @@ logger = logging.getLogger('pycroft.task')
 class TaskImpl(ABC, Generic[TTask, TParams]):
     @property
     @abstractmethod
-    def name(self):
+    def name(self) -> str:
         ...
 
     @property
     @abstractmethod
-    def type(self):
+    def type(self) -> TaskType:
         ...
 
-    new_status = None
+    new_status: TaskStatus | None = None
     errors: list[str] = list()
 
-    @abstractmethod
     @with_transaction
-    def schedule(self, *args, **kwargs):
-        ...
-
-    @with_transaction
-    def execute(self, task: TTask):
+    def execute(self, task: TTask) -> None:
         self.new_status = TaskStatus.FAILED
         self.errors = list()
 
@@ -63,12 +60,14 @@ class TaskImpl(ABC, Generic[TTask, TParams]):
             self._execute(task, parameters)
 
     @abstractmethod
-    def _execute(self, task: TTask, parameters: TParams):
+    def _execute(self, task: TTask, parameters: TParams) -> None:
         ...
 
 
-class UserTaskImpl(TaskImpl, ABC):
-    def schedule(self, due, user, parameters, processor):
+class UserTaskImpl(TaskImpl[UserTask, TParams], ABC, Generic[TParams]):
+    def schedule(
+        self, due: DateTimeTz, user: User, parameters: TParams, processor: User
+    ) -> UserTask:
         if due < session.utcnow():
             raise ValueError("the due date must be in the future")
 
@@ -83,11 +82,11 @@ class UserTaskImpl(TaskImpl, ABC):
         return task
 
 
-class UserMoveOutTaskImpl(UserTaskImpl):
+class UserMoveOutTaskImpl(UserTaskImpl[UserMoveOutParams]):
     name = "Auszug"
     type = TaskType.USER_MOVE_OUT
 
-    def _execute(self, task: UserTask, parameters: UserMoveOutParams):
+    def _execute(self, task: UserTask, parameters: UserMoveOutParams) -> None:
         from pycroft.lib import user as lib_user
         if task.user.room is None:
             self.errors.append("Tried to move out user, but user was not living in a dormitory")
@@ -102,11 +101,11 @@ class UserMoveOutTaskImpl(UserTaskImpl):
         self.new_status = TaskStatus.EXECUTED
 
 
-class UserMoveTaskImpl(UserTaskImpl):
+class UserMoveTaskImpl(UserTaskImpl[UserMoveParams]):
     name = "Umzug"
     type = TaskType.USER_MOVE
 
-    def _execute(self, task, parameters: UserMoveParams):
+    def _execute(self, task: UserTask, parameters: UserMoveParams) -> None:
         from pycroft.lib import user as lib_user
         if task.user.room is None:
             self.errors.append("Tried to move in user, "
@@ -139,7 +138,7 @@ class UserMoveInTaskImpl(UserTaskImpl):
     name = "Einzug"
     type = TaskType.USER_MOVE_IN
 
-    def _execute(self, task, parameters: UserMoveInParams):
+    def _execute(self, task: UserTask, parameters: UserMoveInParams) -> None:
         from pycroft.lib import user as lib_user
 
         if task.user.room is not None:
@@ -184,7 +183,13 @@ def get_task_implementation(task: Task) -> TaskImpl:
 
 
 @with_transaction
-def schedule_user_task(task_type, due, user, parameters: TaskParams, processor):
+def schedule_user_task(
+    task_type: TaskType,
+    due: DateTimeTz,
+    user: User,
+    parameters: TaskParams,
+    processor: User,
+) -> UserTask:
     if due < session.utcnow():
         raise ValueError("the due date must be in the future")
 
@@ -200,7 +205,7 @@ def schedule_user_task(task_type, due, user, parameters: TaskParams, processor):
     return task
 
 
-def get_active_tasks_by_type(type):
+def get_active_tasks_by_type(type: TaskType) -> list[Task]:
     task_and_subtypes = with_polymorphic(Task, "*")
     return session.session.query(
         task_and_subtypes.where(task_and_subtypes.type == type)
@@ -208,7 +213,7 @@ def get_active_tasks_by_type(type):
 
 
 @with_transaction
-def cancel_task(task: Task, processor: User):
+def cancel_task(task: Task, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot cancel a task that is not open")
 
@@ -217,7 +222,7 @@ def cancel_task(task: Task, processor: User):
     task.status = TaskStatus.CANCELLED
 
 
-def manually_execute_task(task: Task, processor: User):
+def manually_execute_task(task: Task, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
@@ -229,7 +234,7 @@ def manually_execute_task(task: Task, processor: User):
     task.status = TaskStatus.EXECUTED
 
 
-def reschedule_task(task: Task, due: datetime, processor: User):
+def reschedule_task(task: Task, due: datetime, processor: User) -> None:
     if task.status != TaskStatus.OPEN:
         raise ValueError("Cannot execute a task that is not open")
 
