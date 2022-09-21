@@ -53,6 +53,7 @@ from pycroft.model.task import TaskType, UserTask, TaskStatus
 from pycroft.model.task_serialization import UserMoveParams, UserMoveOutParams, \
     UserMoveInParams
 from pycroft.model.traffic import TrafficHistoryEntry
+from pycroft.model.traffic import traffic_history as func_traffic_history
 from pycroft.model.user import User, UnixAccount, PreMember, BaseUser, \
     RoomHistoryEntry, \
     PropertyGroup
@@ -684,7 +685,7 @@ def traffic_history(
 ) -> list[TrafficHistoryEntry]:
     result: list[Row] = session.session.execute(
         select('*').select_from(
-            func.traffic_history(user_id, start, end))).fetchall()
+            func_traffic_history(user_id, start, end))).fetchall()
     return [TrafficHistoryEntry(**dict(row)) for row in result]
 
 

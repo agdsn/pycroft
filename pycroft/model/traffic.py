@@ -210,6 +210,16 @@ ddl.add_function(
     traffic_history_function
 )
 
+def traffic_history(
+    user_id: int, start: utc.DateTimeTz, end: utc.DateTimeTz, name='traffic_history'
+) -> TableValuedAlias:
+    """A sqlalchemy `func` wrapper for the `evaluate_properties` PSQL function.
+
+    See `sqlalchemy.sql.selectable.FromClause.table_valued`.
+    """
+    return func.traffic_history(user_id, start, end)\
+        .table_valued("timestamp", "ingress", "egress", name=name)
+
 
 class TrafficHistoryEntry:
     def __init__(self, timestamp, ingress, egress):
