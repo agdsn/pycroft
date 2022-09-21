@@ -147,11 +147,8 @@ def format_none(n):
     return gettext("None")
 
 
-# NB: `interval` is actually generic in its (ordered) bound type,
-#  so whether we have any type specific options or not cannot be determined statically.
-#  however, we only have intervals of `date`s and `datetimes` in practice.
 @type_specific_options
-def format_interval(interval, **options: TypeSpecificOptions):
+def format_interval(interval: Interval[T], **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
     assert type(lower_bound) == type(upper_bound)
@@ -272,19 +269,37 @@ serialize_map: dict[type, typing.Callable] = {
 }
 
 
-def deserialize_interval(value: dict[str, typing.Any]) -> Interval:
+def deserialize_interval(value: dict[str, typing.Any]) -> Interval[T]:
     try:
-        lower_value = (deserialize_param(value['lower_value'])
-                       if value['lower_value'] is not None
-                       else NegativeInfinity)
-        lower_bound = Bound(lower_value, value['lower_closed'])
-        upper_value = (deserialize_param(value['upper_value'])
-                       if value['upper_value'] is not None
-                       else PositiveInfinity)
-        upper_bound = Bound(upper_value, value['upper_closed'])
-    except KeyError:
-        raise ValueError()
-    return Interval(lower_bound, upper_bound)
+        lower_value = (
+            deserialize_param(u)
+            if (u := value["lower_value"]) is not None
+            else NegativeInfinity
+        )
+        lower_closed = value["lower_closed"]
+        upper_value = (
+            deserialize_param(u)
+            if (u := value["upper_value"]) is not None
+            else PositiveInfinity
+        )
+        upper_closed = value["upper_closed"]
+    except KeyError as e:
+        raise ValueError("Could not deserialized from interval (missing key)") from e
+
+    if not isinstance(lower_closed, bool):
+        raise ValueError(
+            "Could not deserialize to interval: "
+            f"expected ['lower_closed'] to be bool, got {type(lower_closed)}"
+        )
+    if not isinstance(upper_closed, bool):
+        raise ValueError(
+            "Could not deserialize to interval: "
+            f"expected ['upper_closed'] to be bool, got {type(upper_closed)}"
+        )
+    return Interval(
+        lower_bound=Bound[T](lower_value, lower_closed),
+        upper_bound=Bound[T](upper_value, upper_closed),
+    )
 
 
 _deserialize_type_map: dict[type, typing.Callable] = {
