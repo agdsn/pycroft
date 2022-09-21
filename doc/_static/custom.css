@@ -9,6 +9,14 @@
   padding: 0px 5px;
 }
 
+.sidebar-toc ul li a {
+    padding-right: 5px !important;
+}
+.sidebar-toc ul li.toctree-l4 a {
+    padding-left: 85px;
+    font-size: smaller;
+}
+
 /* misc */
 
 /* De-emphasizes the module name in `<module>.<function>`.

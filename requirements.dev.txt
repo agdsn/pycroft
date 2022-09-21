@@ -15,3 +15,4 @@ types-babel~=2.9.2
 celery-types~=0.9.3
 types-jsonschema~=4.3.0
 sphinx-paramlinks~=0.5.4
+sphinxcontrib-fulltoc~=1.2.0
