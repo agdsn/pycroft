@@ -3,15 +3,4 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
 This package contains different helper modules
-
-:copyright: (c) 2022 by AG DSN.
 """
-from enum import Enum
-
-
-class AutoNumber(Enum):
-    def __new__(cls):
-        value = len(cls.__members__) + 1
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj

@@ -3,6 +3,7 @@ pycroft.model.task
 ~~~~~~~~~~~~~~~~~~
 """
 import builtins
+import enum
 from collections.abc import Mapping
 
 from marshmallow import Schema
@@ -11,23 +12,22 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, backref
 from typing import TypeVar, Generic
 
-from pycroft.helpers import AutoNumber
 from pycroft.model.base import IntegerIdModel
 from pycroft.model.types import DateTimeTz
 from .task_serialization import UserMoveOutSchema, UserMoveSchema, UserMoveInSchema, TaskParams
 
 
-class TaskType(AutoNumber):
-    USER_MOVE_OUT = ()
-    USER_MOVE_IN = ()
-    USER_MOVE = ()
+class TaskType(enum.Enum):
+    USER_MOVE_OUT = enum.auto()
+    USER_MOVE_IN = enum.auto()
+    USER_MOVE = enum.auto()
 
 
-class TaskStatus(AutoNumber):
-    OPEN = ()
-    EXECUTED = ()
-    FAILED = ()
-    CANCELLED = ()
+class TaskStatus(enum.Enum):
+    OPEN = enum.auto()
+    EXECUTED = enum.auto()
+    FAILED = enum.auto()
+    CANCELLED = enum.auto()
 
 
 TSchema = TypeVar('TSchema')
