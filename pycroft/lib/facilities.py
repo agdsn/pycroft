@@ -3,6 +3,7 @@ pycroft.lib.facilities
 ~~~~~~~~~~~~~~~~~~~~~~
 """
 import logging
+import typing as t
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -26,11 +27,11 @@ class RoomAlreadyExistsException(PycroftLibException):
     pass
 
 
-def get_overcrowded_rooms(building_id=None):
+def get_overcrowded_rooms(building_id: int = None) -> dict[int, list[User]]:
     """
     :param building_id: Limit to rooms of the building.
         Returns a dict of overcrowded rooms with their inhabitants.
-    :return: dict
+    :return: a dict mapping room ids to inhabitants
     """
 
     oc_rooms_filter = []
@@ -71,8 +72,15 @@ def get_overcrowded_rooms(building_id=None):
 
 
 @with_transaction
-def create_room(building, level, number, processor, address,
-                inhabitable=True, vo_suchname: str | None = None):
+def create_room(
+    building: Building,
+    level: int,
+    number: str,
+    processor: User,
+    address: Address,
+    inhabitable: bool = True,
+    vo_suchname: str | None = None,
+) -> Room:
     if Room.q.filter_by(number=number, level=level, building=building).first() is not None:
         raise RoomAlreadyExistsException
 
@@ -92,7 +100,14 @@ def create_room(building, level, number, processor, address,
 
 
 @with_transaction
-def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, processor: User):
+def edit_room(
+    room: Room,
+    number: str,
+    inhabitable: bool,
+    vo_suchname: str,
+    address: Address,
+    processor: User,
+) -> Room:
     if room.number != number:
         if Room.q.filter_by(number=number, level=room.level, building=room.building).filter(Room.id!=room.id).first() is not None:
             raise RoomAlreadyExistsException()
@@ -130,9 +145,13 @@ def edit_room(room, number, inhabitable, vo_suchname: str, address: Address, pro
     return room
 
 
-def get_room(building_id, level, room_number):
-    return Room.q.filter_by(number=room_number,
-                            level=level, building_id=building_id).one_or_none()
+def get_room(building_id: int, level: int, room_number: str) -> Room | None:
+    return t.cast(
+        Room | None,
+        Room.q.filter_by(
+            number=room_number, level=level, building_id=building_id
+        ).one_or_none(),
+    )
 
 
 @dataclass
@@ -144,7 +163,7 @@ class RoomAddressSuggestion:
     state: str
     country: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.street} {self.number}, {self.zip_code} {self.city}," \
                + (f" {self.state}, " if self.state else "") \
                + f"{self.country}"
@@ -170,7 +189,7 @@ def suggest_room_address_data(building: Building) -> RoomAddressSuggestion | Non
     if not rows:
         return None
 
-    def row_to_suggestion(row) -> RoomAddressSuggestion:
+    def row_to_suggestion(row: t.Any) -> RoomAddressSuggestion:
         return RoomAddressSuggestion(*list(row[:-1]))
 
     row, *rest = rows
