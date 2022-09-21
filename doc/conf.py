@@ -120,6 +120,9 @@ autodoc_default_options = {
     'member-order': 'bysource',
     'undoc-members': True,
 }
+autodoc_type_aliases = {
+    'IntervalSetSource': 'pycroft.helpers.interval.IntervalSetSource',
+}
 # see https://github.com/sphinx-doc/sphinx/issues/10480#issuecomment-1221396022
 import sphinx.ext.autodoc
 sphinx.ext.autodoc.NewTypeDataDocumenter.directivetype = 'class'

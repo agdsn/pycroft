@@ -30,12 +30,23 @@ def _infinity(name):
     })()
 
 
+#: +∞
 PositiveInfinity = _infinity("PositiveInfinity")
+#: -∞
 NegativeInfinity = _infinity("NegativeInfinity")
 TWithInfinity: t.TypeAlias = T | t.Literal[PositiveInfinity, NegativeInfinity]
 
 
 class Bound(tuple, Generic[T]):
+    """Represents a bound of an interval, i.e. value + closedness.
+
+    The value is either:
+
+    * a direct value (of the underlying, totally ordeered value type ``T``)
+    * :data:`PositiveInfinity`
+    * :data:`NegativeInfinity`
+    """
+
     @property
     def value(self) -> TWithInfinity:
         return self[0]
@@ -176,7 +187,6 @@ class Interval(tuple, Generic[T]):
     @property
     def lower_bound(self) -> Bound[T]:
         """
-        :rtype: Bound
         :returns: The lower bound object
         """
         return self[0]
@@ -184,7 +194,6 @@ class Interval(tuple, Generic[T]):
     @property
     def upper_bound(self) -> Bound[T]:
         """
-        :rtype: Bound
         :returns: The upper bound object
         """
         return self[1]
@@ -207,18 +216,15 @@ class Interval(tuple, Generic[T]):
 
     @property
     def empty(self) -> bool:
-        """
-        Tests if the interval is empty
-        :return:
-        """
+        """Tests whether the interval is empty"""
         return (self.lower_bound.value == self.upper_bound.value and
                 not (self.lower_bound.closed and self.upper_bound.closed))
 
     @property
     def length(self) -> t.Any:  # actually return type of `T.__sub__`
-        """
-        Compute the interval's length
-        :returns: None if the interval is unbound else end - begin
+        """Compute the interval's length
+
+        :returns: ``None`` if the interval is unbounded else ``end - begin``
         """
         return None if self.unbounded else self.upper_bound - self.lower_bound
 
@@ -267,174 +273,132 @@ class Interval(tuple, Generic[T]):
             self.upper_bound.value
         )
 
-    def strictly_before(self, other):
+    def strictly_before(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is strictly before another interval.
 
         An interval is strictly before another if its end is less than the
         other's begin.
 
-        Note: This is not the same as self < other.
-        :param Interval other: another interval
-        :returns: True if this interval is strictly before the other else False
-        :rtype: bool
+        .. note:: This is not the same as ``self < other``.
         """
         return self.upper_bound < other.lower_bound
 
-    def before(self, other):
+    def before(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is before another interval.
 
         An interval is before another if its end is less than or equal to the
         other's begin.
 
-        Note: This is not the same as self <= other.
-        :param Interval other: another interval
-        :returns: True if this interval is before the other else False
-        :rtype: bool
+        .. note:: This is not the same as ``self <= other``.
         """
         return self.upper_bound <= other.lower_bound
 
-    def strictly_after(self, other):
+    def strictly_after(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is strictly after another interval.
 
         An interval is strictly after another if its begin is greater than the
         other's end.
 
-        Note: This is not the same as self > other.
-        :param Interval other: another interval
-        :returns: True if this interval is strictly after the other else False
-        :rtype: bool
+        .. note:: This is not the same as ``self > other``.
         """
         return other.strictly_before(self)
 
-    def after(self, other):
+    def after(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is after another interval.
 
         An interval is after another if its begin is greater than or equal to
         the other's end.
 
-        Note: This is not the same as self >= other.
-        :param Interval other: another interval
-        :returns: True if this interval is after the other else False
-        :rtype: bool
+        .. note:: This is not the same as ``self >= other``.
         """
         return other.before(self)
 
-    def meets(self, other):
+    def meets(self, other: Interval[T]) -> bool:
         """
         Tests if this interval meets another interval.
 
         Two intervals meet if the end of the first interval is equal to the
         begin of the second interval and at least one of the bounds is closed.
         This means that the intervals do not necessarily have to overlap.
-        :param Interval other: another interval
-        :returns: True if this intervals meets the other else False
-        :rtype: bool
         """
         return (self.upper_bound.value == other.lower_bound.value and
                 (self.upper_bound.closed or self.lower_bound.closed))
 
-    def strictly_overlaps(self, other):
+    def strictly_overlaps(self, other: Interval[T]) -> bool:
         """
         Tests if this interval overlaps strictly with another interval.
 
         Two intervals overlap if each begin is strictly before the other's end.
         This means that the intervals may not be equal.
-        :param Interval other: an interval
-        :returns: True if this interval overlaps strictly with the other else
-        False
-        :rtype: bool
         """
         return (self.lower_bound < other.upper_bound and
                 other.lower_bound < self.upper_bound)
 
-    def overlaps(self, other):
+    def overlaps(self, other: Interval[T]) -> bool:
         """
         Tests if this interval overlaps with another interval.
 
         Two intervals overlap if each begin is before the other's end.
-        :param Interval other: an interval
-        :returns: True if this interval overlaps with the other else False
-        :rtype: bool
         """
         return (self.lower_bound <= other.upper_bound and
                 other.lower_bound <= self.upper_bound)
 
-    def strictly_during(self, other):
+    def strictly_during(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is strictly during (strictly contained in)
         another interval.
 
         An interval is strictly during another if its begin is greater than
         the other's and its end is less than the other's.
-        :param Interval other: an interval
-        :returns: True if this interval is strictly during the other else False
-        :rtype: bool
         """
         return (other.lower_bound < self.lower_bound and
                 self.upper_bound < other.upper_bound)
 
-    def during(self, other):
+    def during(self, other: Interval[T]) -> bool:
         """
         Tests if this interval is during (contained in) another interval.
 
         An interval is during another if its begin is greather than or equal to
         the other's and its end is less than or equal to the other's.
-        :param Interval other: an interval
-        :returns: True if this interval is during the other else False
-        :rtype: bool
         """
         return (other.lower_bound <= self.lower_bound and
                 self.upper_bound <= other.upper_bound)
 
-    def strictly_contains(self, other):
+    def strictly_contains(self, other: Interval[T]) -> bool:
         """
         Tests if this interval strictly contains another interval.
 
         An interval strictly contains another if its begin is less than the
         other's and its end is greater than the other's.
-        :param Interval other: an interval
-        :returns: True if this interval contains the other else False
-        :rtype: bool
         """
         return other.strictly_during(self)
 
-    def contains(self, other):
+    def contains(self, other: Interval[T]) -> bool:
         """
         Tests if this interval contains another interval.
 
         An interval contains another if its begin is less than or equal to the
         other's and its end greater than or equal to the other's.
-        :param Interval other: an interval
-        :returns: True if this interval strictly contains the other else False
-        :rtype: bool
         """
         return other.during(self)
 
-    def starts(self, other):
-        """
-        :param Interval other: an interval
-        :rtype: bool
-        """
+    def starts(self, other: Interval[T]) -> bool:
+        """Tests whether both intervals start at the same value."""
         return self.lower_bound == other.lower_bound
 
-    def finishes(self, other):
-        """
-        :param Interval other: an interval
-        :rtype: bool
-        """
+    def finishes(self, other: Interval[T]) -> bool:
+        """Tests whether both intervals finish at the same value."""
         return self.upper_bound == other.upper_bound
 
-    def intersect(self, other):
+    def intersect(self, other: Interval[T]) -> Interval[T] | None:
         """
         Intersect this interval with another one.
 
-        :param Interval other: an interval
-        :rtype: Interval|None
-        :returns: None if the intervals do not overlap else the intersection
+        :returns: ``None`` if the intervals do not overlap else the intersection
         """
         if not self.overlaps(other):
             return None
@@ -446,11 +410,10 @@ class Interval(tuple, Generic[T]):
     __and__ = intersect
     __mul__ = intersect
 
-    def join(self, other):
+    def join(self, other: Interval[T]) -> Interval[T] | None:
         """
         Join this interval with an interval that overlaps or meets this one.
-        :param Interval other:
-        :rtype: Interval|None
+
         :returns: None if the intervals do not overlap or meet else the union
         """
         if not self.overlaps(other) and not self.meets(other):
@@ -469,7 +432,7 @@ class Interval(tuple, Generic[T]):
     __or__ = join
     __add__ = join
 
-    def __sub__(self, other: Interval):
+    def __sub__(self, other: Interval[T]):
         if not (other.upper_bound.unbounded or other.lower_bound.unbounded):
             raise ValueError("You can only subtract a ray from an interval!")
         diff_set = IntervalSet([self]) - other
@@ -489,10 +452,7 @@ def closed(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a closed interval.
 
-    :param begin: begin
-    :param end: end
     :return: closed interval [begin, end]
-    :rtype: Interval
     """
     begin = _convert_begin(begin)
     end = _convert_end(end)
@@ -503,10 +463,7 @@ def closedopen(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-closed/right-open interval.
 
-    :param begin: begin
-    :param end: end
     :return: left-closed/right-open interval [begin, end)
-    :rtype: Interval
     """
     begin = _convert_begin(begin)
     end = _convert_end(end)
@@ -517,10 +474,7 @@ def openclosed(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-open/right-closed interval.
 
-    :param begin: begin
-    :param end: end
     :return: left-open/right-closed interval (begin, end]
-    :rtype: Interval
     """
     begin = _convert_begin(begin)
     end = _convert_end(end)
@@ -531,10 +485,7 @@ def open(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create an open interval.
 
-    :param begin: begin
-    :param end: end
     :return: open interval (begin, end)
-    :rtype: Interval
     """
     begin = _convert_begin(begin)
     end = _convert_end(end)
@@ -561,6 +512,7 @@ def empty(point: T) -> Interval[T]:
     return Interval(bound, bound)
 
 
+#:
 UnboundedInterval = open(None, None)
 
 
@@ -647,14 +599,11 @@ class IntervalSet(collections.abc.Sequence[T], Generic[T]):
     __sub__ = difference
 
 
-IntervalSetSource: t.TypeAlias = (
-    Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None
-)
+#:
+IntervalSetSource = Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None
 
 
-def _mangle_argument(
-    arg: Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None,
-) -> tuple[Interval[T], ...]:
+def _mangle_argument(arg: IntervalSetSource) -> tuple[Interval[T], ...]:
     if arg is None:
         return ()
     if isinstance(arg, IntervalSet):
@@ -668,25 +617,16 @@ def _mangle_argument(
                     "Was {}.".format(type(arg).__name__))
 
 
-def _create(intervals):
-    """
-    Create an IntervalSet directly from a sorted Interval iterable.
-    :param iterable[Interval] intervals:
-    :rtype: IntervalSet
-    :return:
-    """
+def _create(intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
+    """Create an IntervalSet directly from a sorted Interval iterable."""
     interval_set = IntervalSet(())
     interval_set._intervals = tuple(intervals)
     return interval_set
 
 
-def _chain_ordered(left, right):
-    """
-    :param iterable[Interval] left:
-    :param iterable[Interval] right:
-    :rtype: iterable[Interval]
-    :return:
-    """
+def _chain_ordered(
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     a = next(left, None)
@@ -708,13 +648,7 @@ def _chain_ordered(left, right):
             yield b
 
 
-def _complement(intervals):
-    """
-
-    :param iterable[Interval] intervals:
-    :return:
-    :rtype: iterable[Interval]
-    """
+def _complement(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     intervals = iter(intervals)
     try:
         first = next(intervals)
@@ -732,16 +666,16 @@ def _complement(intervals):
         yield Interval(~last.upper_bound, Bound(PositiveInfinity, False))
 
 
-def _join(intervals):
+def _join(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     """
     Join a possibly overlapping, ordered iterable of intervals, removing any
     empty intervals.
 
     The intervals must be sorted according to begin primarily and
     end secondarily.
-    :param iterable[Interval] intervals: sorted iterable of intervals
+
+    :param intervals: sorted iterable of intervals
     :returns: merged list of intervals
-    :rtype: iterable[Interval]
     """
     intervals = filterfalse(operator.attrgetter("empty"), iter(intervals))
     try:
@@ -758,14 +692,9 @@ def _join(intervals):
     yield top
 
 
-def _intersect(left, right):
-    """
-
-    :param iterable[Interval] left:
-    :param iterable[Interval] right:
-    :rtype: iterable[Interval]
-    :return:
-    """
+def _intersect(
+    left: t.Iterable[Interval[T]], right: t.Iterable[Interval[T]]
+) -> t.Iterator[Interval[T]]:
     left = iter(left)
     right = iter(right)
     try:

@@ -32,6 +32,8 @@ module = [
     "ldap_sync.*",
     "pycroft.lib",
     "pycroft.lib.*",
+    "pycroft.helpers",
+    "pycroft.helpers.interval",
     "pycroft.helpers.errorcode",
 ]
 disallow_untyped_defs = true
