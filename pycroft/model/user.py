@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from datetime import timedelta, date, datetime
 
 from flask_login import UserMixin
@@ -152,7 +153,7 @@ class BaseUser:
         raise RuntimeError("Password can not be read, only set")
 
     @password.setter
-    def password(self, value):
+    def password(self, value: str):
         self.passwd_hash = hash_password(value)
 
 
@@ -175,7 +176,7 @@ class User(ModelBase, BaseUser, UserMixin):
 
     password_reset_token = Column(String, nullable=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)
         wifi_password = kwargs.pop('password', None)
         super().__init__(**kwargs)

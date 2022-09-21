@@ -12,6 +12,7 @@ This module contains.
 import os
 import re
 import typing
+import typing as t
 from datetime import datetime, timedelta, date
 from difflib import SequenceMatcher
 from typing import Iterable
@@ -23,9 +24,10 @@ from pycroft import config, property
 from pycroft.helpers import user as user_helper, AttrDict, utc
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
-from pycroft.helpers.interval import closed, closedopen
+from pycroft.helpers.interval import closed, closedopen, Interval
 from pycroft.helpers.printing import generate_user_sheet as generate_pdf
 from pycroft.helpers.user import generate_random_str
+from pycroft.helpers.utc import DateTimeTz
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.facilities import get_room
@@ -61,7 +63,7 @@ mail_confirm_url = os.getenv('MAIL_CONFIRM_URL')
 password_reset_url = os.getenv('PASSWORD_RESET_URL')
 
 
-def encode_type1_user_id(user_id):
+def encode_type1_user_id(user_id: int) -> str:
     """Append a type-1 error detection code to the user_id."""
     return f"{user_id:04d}-{Type1Code.calculate(user_id):d}"
 
@@ -69,20 +71,19 @@ def encode_type1_user_id(user_id):
 type1_user_id_pattern = re.compile(r"^(\d{4,})-(\d)$")
 
 
-def decode_type1_user_id(string):
+def decode_type1_user_id(string: str) -> tuple[str, str] | None:
     """
     If a given string is a type1 user id return a (user_id, code) tuple else
     return None.
 
-    :param unicode string: Type1 encoded user ID
+    :param ustring: Type1 encoded user ID
     :returns: (number, code) pair or None
-    :rtype: (Integral, Integral) | None
     """
     match = type1_user_id_pattern.match(string)
-    return match.groups() if match else None
+    return t.cast(tuple[str, str], match.groups()) if match else None
 
 
-def encode_type2_user_id(user_id):
+def encode_type2_user_id(user_id: int) -> str:
     """Append a type-2 error detection code to the user_id."""
     return f"{user_id:04d}-{Type2Code.calculate(user_id):02d}"
 
@@ -90,7 +91,7 @@ def encode_type2_user_id(user_id):
 type2_user_id_pattern = re.compile(r"^(\d{4,})-(\d{2})$")
 
 
-def decode_type2_user_id(string):
+def decode_type2_user_id(string: str) -> tuple[str, str] | None:
     """
     If a given string is a type2 user id return a (user_id, code) tuple else
     return None.
@@ -100,10 +101,10 @@ def decode_type2_user_id(string):
     :rtype: (Integral, Integral) | None
     """
     match = type2_user_id_pattern.match(string)
-    return match.groups() if match else None
+    return t.cast(tuple[str, str], match.groups()) if match else None
 
 
-def check_user_id(string):
+def check_user_id(string: str) -> bool:
     """
     Check if the given string is a valid user id (type1 or type2).
 
@@ -125,7 +126,7 @@ class HostAliasExists(ValueError):
     pass
 
 
-def setup_ipv4_networking(host):
+def setup_ipv4_networking(host: Host) -> None:
     """Add suitable ips for every interface of a host"""
     subnets = get_subnets_for_room(host.room)
 
@@ -136,19 +137,26 @@ def setup_ipv4_networking(host):
         session.session.add(new_ip)
 
 
-def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=None,
-                     generation_purpose='', plain_wifi_password=''):
+def store_user_sheet(
+    new_user: bool,
+    wifi: bool,
+    user: User | None = None,
+    timeout: int = 15,
+    plain_user_password: str = None,
+    generation_purpose: str = "",
+    plain_wifi_password: str = "",
+) -> WebStorage:
     """Generate a user sheet and store it in the WebStorage.
 
     Returns the generated :class:`WebStorage <pycroft.model.WebStorage>` object holding the pdf.
 
-    :param bool new_user: generate page with user details
-    :param bool wifi: generate page with wifi credantials
-    :param int timeout: The lifetime in minutes
-    :param User user: A pycroft user. Necessary in every case
-    :param str plain_user_password: Only necessary if ``new_user is True``
-    :param str plain_wifi_password: The password for wifi.  Only necessary if ``wifi is True``
-    :param str generation_purpose: Optional
+    :param new_user: generate page with user details
+    :param wifi: generate page with wifi credantials
+    :param user: A pycroft user. Necessary in every case
+    :param timeout: The lifetime in minutes
+    :param plain_user_password: Only necessary if ``new_user is True``
+    :param plain_wifi_password: The password for wifi.  Only necessary if ``wifi is True``
+    :param generation_purpose: Optional
     """
 
     pdf_data = generate_user_sheet(
@@ -165,7 +173,7 @@ def store_user_sheet(new_user, wifi, user=None, timeout=15, plain_user_password=
     return pdf_storage
 
 
-def get_user_sheet(sheet_id):
+def get_user_sheet(sheet_id: int) -> bytes | None:
     """Fetch the storage object given an id.
 
     If not existent, return None.
@@ -181,13 +189,13 @@ def get_user_sheet(sheet_id):
 
 
 @with_transaction
-def reset_password(user, processor):
+def reset_password(user: User, processor: User) -> str:
     if not can_target(user, processor):
         raise PermissionError("cannot reset password of a user with a"
                               " greater or equal permission level.")
 
     plain_password = user_helper.generate_password(12)
-    user.password = plain_password
+    user.password = plain_password  # type: ignore
 
     message = deferred_gettext("Password was reset")
     log_user_event(author=processor,
@@ -196,7 +204,7 @@ def reset_password(user, processor):
 
     return plain_password
 
-def can_target(user, processor):
+def can_target(user: User, processor: User) -> bool:
     if user != processor:
         return user.permission_level < processor.permission_level
     else:
@@ -224,9 +232,9 @@ def maybe_setup_wifi(user: User, processor: User) -> str | None:
 
 
 @with_transaction
-def change_password(user, password):
+def change_password(user: User, password: str) -> None:
     # TODO: verify password complexity
-    user.password = password
+    user.password = password  # type: ignore
 
     message = deferred_gettext("Password was changed")
     log_user_event(author=user,
@@ -243,7 +251,7 @@ def create_user(
     groups: list[PropertyGroup], processor: User | None, address: Address,
     passwd_hash: str = None,
     send_confirm_mail: bool = False
-):
+) -> tuple[User, str]:
     """Create a new member
 
     Create a new user with a generated password, finance- and unix account, and make him member
@@ -316,14 +324,14 @@ def move_in(
     host_annex: bool = False,
     begin_membership: bool = True,
     when: datetime | None = None
-):
+) -> User:
     """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
     UnixAccount, a finance Account, and is made member of important
     groups.  Networking is set up.
 
-    :param User user: The user to move in
+    :param user: The user to move in
     :param building_id:
     :param level:
     :param room_number:
@@ -399,14 +407,14 @@ def move_in(
     return user
 
 
-def migrate_user_host(host, new_room, processor):
+def migrate_user_host(host: Host, new_room: Room, processor: User) -> None:
     """
     Migrate a UserHost to a new room and if necessary to a new subnet.
     If the host changes subnet, it will get a new IP address.
 
-    :param Host host: Host to be migrated
-    :param Room new_room: new room of the host
-    :param User processor: User processing the migration
+    :param host: Host to be migrated
+    :param new_room: new room of the host
+    :param processor: User processing the migration
     :return:
     """
     old_room = host.room
@@ -445,7 +453,15 @@ def migrate_user_host(host, new_room, processor):
 
 #TODO ensure serializability
 @with_transaction
-def move(user, building_id, level, room_number, processor, comment=None, when=None):
+def move(
+    user: User,
+    building_id: int,
+    level: int,
+    room_number: str,
+    processor: User,
+    comment: str | None = None,
+    when: DateTimeTz | None = None,
+) -> User:
     """Moves the user into another room.
 
     :param user: The user to be moved.
@@ -458,7 +474,6 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
     :param when: The date at which the user should be moved
 
     :return: The user object of the moved user.
-    :rtype: User
     """
 
     if when and when > session.utcnow():
@@ -511,7 +526,7 @@ def move(user, building_id, level, room_number, processor, comment=None, when=No
 
 
 @with_transaction
-def edit_name(user, name, processor):
+def edit_name(user: User, name: str, processor: User) -> User:
     """Changes the name of the user and creates a log entry.
 
     :param user: The user object.
@@ -535,8 +550,13 @@ def edit_name(user, name, processor):
 
 
 @with_transaction
-def edit_email(user: User, email: str | None, email_forwarded: bool, processor: User,
-               is_confirmed: bool = False):
+def edit_email(
+    user: User,
+    email: str | None,
+    email_forwarded: bool,
+    processor: User,
+    is_confirmed: bool = False,
+) -> User:
     """
     Changes the email address of a user and creates a log entry.
 
@@ -589,7 +609,7 @@ def edit_email(user: User, email: str | None, email_forwarded: bool, processor: 
 
 
 @with_transaction
-def edit_birthdate(user, birthdate, processor):
+def edit_birthdate(user: User, birthdate: date, processor: User) -> User:
     """
     Changes the birthdate of a user and creates a log entry.
 
@@ -615,7 +635,7 @@ def edit_birthdate(user, birthdate, processor):
 
 
 @with_transaction
-def edit_person_id(user: User, person_id: int, processor: User):
+def edit_person_id(user: User, person_id: int, processor: User) -> User:
     """
     Changes the swdd_person_id of the user and creates a log entry.
 
@@ -648,7 +668,7 @@ def edit_address(
     city: str | None,
     state: str | None,
     country: str | None,
-):
+) -> None:
     """Changes the address of a user and appends a log entry.
 
     Should do nothing if the user already has an address.
@@ -659,22 +679,24 @@ def edit_address(
                    processor, user)
 
 
-def traffic_history(user_id, start, end) -> list[TrafficHistoryEntry]:
+def traffic_history(
+    user_id: int, start: DateTimeTz, end: DateTimeTz
+) -> list[TrafficHistoryEntry]:
     result: list[Row] = session.session.execute(
         select('*').select_from(
             func.traffic_history(user_id, start, end))).fetchall()
     return [TrafficHistoryEntry(**dict(row)) for row in result]
 
 
-def has_balance_of_at_least(user, amount):
+def has_balance_of_at_least(user: User, amount: int) -> bool:
     """Check whether the given user's balance is at least the given
     amount.
 
     If a user does not have an account, we treat his balance as if it
     were exactly zero.
 
-    :param User user: The user we are interested in.
-    :param Integral amount: The amount we want to check for.
+    :param user: The user we are interested in.
+    :param amount: The amount we want to check for.
     :return: True if and only if the user's balance is at least the given
         amount (and False otherwise).
     """
@@ -682,7 +704,7 @@ def has_balance_of_at_least(user, amount):
     return balance >= amount
 
 
-def has_positive_balance(user):
+def has_positive_balance(user: User) -> bool:
     """Check whether the given user's balance is (weakly) positive.
 
     :param user: The user we are interested in.
@@ -691,25 +713,31 @@ def has_positive_balance(user):
     return has_balance_of_at_least(user, 0)
 
 
-def get_blocked_groups():
+def get_blocked_groups() -> list[PropertyGroup]:
     return [config.violation_group, config.payment_in_default_group,
                       config.blocked_group]
 
 
 @with_transaction
-def block(user, reason, processor, during=None, violation=True):
+def block(
+    user: User,
+    reason: str,
+    processor: User,
+    during: Interval[DateTimeTz] = None,
+    violation: bool = True,
+) -> User:
     """Suspend a user during a given interval.
 
     The user is added to violation_group or blocked_group in a given
     interval.  A reason needs to be provided.
 
-    :param User user: The user to be suspended.
-    :param unicode reason: The reason for suspending.
-    :param User processor: The admin who suspended the user.
-    :param Interval|None during: The interval in which the user is
+    :param user: The user to be suspended.
+    :param reason: The reason for suspending.
+    :param processor: The admin who suspended the user.
+    :param during: The interval in which the user is
         suspended.  If None the user will be suspendeded from now on
         without an upper bound.
-    :param Boolean violation: If the user should be added to the violation group
+    :param violation: If the user should be added to the violation group
 
     :return: The suspended user.
     """
@@ -728,7 +756,7 @@ def block(user, reason, processor, during=None, violation=True):
 
 
 @with_transaction
-def unblock(user, processor, when=None):
+def unblock(user: User, processor: User, when: DateTimeTz | None = None) -> User:
     """Unblocks a user.
 
     This removes his membership of the violation, blocken and payment_in_default
@@ -737,9 +765,9 @@ def unblock(user, processor, when=None):
     Note that for unblocking, no further asynchronous action has to be
     triggered, as opposed to e.g. membership termination.
 
-    :param User user: The user to be unblocked.
-    :param User processor: The admin who unblocked the user.
-    :param datetime when: The time of membership termination.  Note
+    :param user: The user to be unblocked.
+    :param processor: The admin who unblocked the user.
+    :param when: The time of membership termination.  Note
         that in comparison to :py:func:`suspend`, you don't provide an
         _interval_, but a point in time, defaulting to the current
         time.  Will be converted to ``closedopen(when, None)``.
@@ -758,7 +786,13 @@ def unblock(user, processor, when=None):
 
 
 @with_transaction
-def move_out(user, comment, processor, when, end_membership=True):
+def move_out(
+    user: User,
+    comment: str,
+    processor: User,
+    when: DateTimeTz,
+    end_membership: bool = True,
+) -> User:
     """Move out a user and may terminate relevant memberships.
 
     The user's room is set to ``None`` and all hosts are deleted.
@@ -766,12 +800,11 @@ def move_out(user, comment, processor, when, end_membership=True):
     :py:obj:`config.member_group` are terminated.  A log message is
     created including the number of deleted hosts.
 
-    :param User user: The user to move out.
-    :param unicode|None comment: An optional comment
-    :param User processor: The admin who is going to move out the
-        user.
-    :param datetime when: The time the user is going to move out.
-    :param bool end_membership: Ends membership if true
+    :param user: The user to move out.
+    :param comment: An optional comment
+    :param processor: The admin who is going to move out the user.
+    :param when: The time the user is going to move out.
+    :param end_membership: Ends membership if true
 
     :return: The user that moved out.
     """
@@ -828,28 +861,40 @@ def move_out(user, comment, processor, when, end_membership=True):
 admin_properties = property.property_categories["Nutzerverwaltung"].keys()
 
 
-def status(user):
-    """
-    :param user: User whose status we want to look at
-    :return: dict of boolean status codes
-    """
+class UserStatus(t.NamedTuple):
+    member: bool
+    traffic_exceeded: bool
+    network_access: bool
+    wifi_access: bool
+    account_balanced: bool
+    violation: bool
+    ldap: bool
+    admin: bool
 
+
+def status(user: User) -> UserStatus:
     current_groups = user.active_property_groups()
     has_interface = any(h.interfaces for h in user.hosts)
-    return AttrDict({
-        'member': config.member_group in current_groups,
-        'traffic_exceeded': config.traffic_limit_exceeded_group in current_groups,
-        'network_access': user.has_property('network_access') and has_interface,
-        'wifi_access': user.has_wifi_access and user.has_property('network_access'),
-        'account_balanced': user_has_paid(user),
-        'violation': user.has_property('violation'),
-        'ldap': user.has_property('ldap'),
-        'admin': any(user.has_property(prop) for prop in admin_properties),
-    })
+    return UserStatus(
+        member=config.member_group in current_groups,
+        traffic_exceeded=config.traffic_limit_exceeded_group in current_groups,
+        network_access=user.has_property("network_access") and has_interface,
+        wifi_access=user.has_wifi_access and user.has_property("network_access"),
+        account_balanced=user_has_paid(user),
+        violation=user.has_property("violation"),
+        ldap=user.has_property("ldap"),
+        admin=any(user.has_property(prop) for prop in admin_properties),
+    )
 
 
-def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, generation_purpose='',
-                        plain_wifi_password=''):
+def generate_user_sheet(
+    new_user: bool,
+    wifi: bool,
+    user: User | None = None,
+    plain_user_password: str | None = None,
+    generation_purpose: str = "",
+    plain_wifi_password: str = "",
+) -> bytes:
     """Create a new datasheet for the given user.
     This usersheet can hold information about a user or about the wifi credentials of a user.
 
@@ -861,14 +906,14 @@ def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, gen
     depends on `encode_type2_user_id` and is required by
     `(store|get)_user_sheet`, both in this module.
 
-    :param bool new_user: Generate a page for a new created user
-    :param bool wifi: Generate a page with the wifi credantials
+    :param new_user: Generate a page for a new created user
+    :param wifi: Generate a page with the wifi credantials
 
     Necessary in every case:
-    :param User user: A pycroft user
+    :param user: A pycroft user
 
     Only necessary if new_user=True:
-    :param str plain_user_password: The password
+    :param plain_user_password: The password
 
     Only necessary if wifi=True:
     :param generation_purpose: Optional purpose why this usersheet was printed
@@ -879,7 +924,7 @@ def generate_user_sheet(new_user, wifi, user=None, plain_user_password=None, gen
                         plain_wifi_password=plain_wifi_password)
 
 
-def membership_ending_task(user):
+def membership_ending_task(user: User) -> UserTask:
     """
     :return: Next task that will end the membership of the user
     """
@@ -895,7 +940,7 @@ def membership_ending_task(user):
     return task
 
 
-def membership_end_date(user):
+def membership_end_date(user: User) -> date | None:
     """
     :return: The due date of the task that will end the membership; None if not
              existent
@@ -908,7 +953,7 @@ def membership_end_date(user):
     return end_date
 
 
-def membership_beginning_task(user):
+def membership_beginning_task(user: User) -> UserTask:
     """
     :return: Next task that will end the membership of the user
     """
@@ -923,7 +968,7 @@ def membership_beginning_task(user):
     return task
 
 
-def membership_begin_date(user):
+def membership_begin_date(user: User) -> date | None:
     """
     :return: The due date of the task that will begin a membership; None if not
              existent
@@ -936,7 +981,7 @@ def membership_begin_date(user):
     return end_date
 
 
-def format_user_mail(user: User, text: str):
+def format_user_mail(user: User, text: str) -> str:
     return text.format(
         name=user.name,
         login=user.login,
@@ -950,12 +995,15 @@ def format_user_mail(user: User, text: str):
     )
 
 
-def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
-                    soft_fail: bool = False,
-                    use_internal: bool = True,
-                    body_plain: str = None,
-                    subject: str = None,
-                    **kwargs):
+def user_send_mails(
+    users: list[BaseUser],
+    template: MailTemplate | None = None,
+    soft_fail: bool = False,
+    use_internal: bool = True,
+    body_plain: str = None,
+    subject: str = None,
+    **kwargs: t.Any,
+) -> None:
     """
     Send a mail to a list of users
 
@@ -1015,12 +1063,17 @@ def user_send_mails(users: list[BaseUser], template: MailTemplate | None = None,
     send_mails_async.delay(mails)
 
 
-def user_send_mail(user: BaseUser, template: MailTemplate, soft_fail: bool = False,
-                   use_internal: bool = True, **kwargs):
+def user_send_mail(
+    user: BaseUser,
+    template: MailTemplate,
+    soft_fail: bool = False,
+    use_internal: bool = True,
+    **kwargs: t.Any,
+) -> None:
     user_send_mails([user], template, soft_fail, use_internal, **kwargs)
 
 
-def group_send_mail(group: PropertyGroup, subject: str, body_plain: str):
+def group_send_mail(group: PropertyGroup, subject: str, body_plain: str) -> None:
     active_memberships = User.active_memberships()
 
     users = User.q.join(active_memberships)\
@@ -1029,15 +1082,21 @@ def group_send_mail(group: PropertyGroup, subject: str, body_plain: str):
     user_send_mails(users, soft_fail=True, body_plain=body_plain, subject=subject)
 
 
-def send_member_request_merged_email(user: PreMember, merged_to: User, password_merged: bool):
-    user_send_mail(user, MemberRequestMergedTemplate(merged_to=merged_to,
-                                                     merged_to_user_id=encode_type2_user_id(
-                                                         merged_to.id),
-                                                     password_merged=password_merged))
+def send_member_request_merged_email(
+    user: PreMember, merged_to: User, password_merged: bool
+) -> None:
+    user_send_mail(
+        user,
+        MemberRequestMergedTemplate(
+            merged_to=merged_to,
+            merged_to_user_id=encode_type2_user_id(merged_to.id),
+            password_merged=password_merged,
+        ),
+    )
 
 
 @with_transaction
-def send_confirmation_email(user: BaseUser):
+def send_confirmation_email(user: BaseUser) -> None:
     user.email_confirmed = False
     user.email_confirmation_key = generate_random_str(64)
 
@@ -1049,36 +1108,36 @@ def send_confirmation_email(user: BaseUser):
 
 
 class LoginTakenException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Login already taken")
 
 
 class EmailTakenException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("E-Mail address already in use")
 
 
 class UserExistsInRoomException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("A user with a similar name already lives in this room")
 
 
 class UserExistsException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("This user already exists")
 
 
 class NoTenancyForRoomException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("This user has no tenancy in that room")
 
 
 class MoveInDateInvalidException(PycroftLibException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("The move-in date is invalid (in the past or more than 6 months in the future)")
 
 
-def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75):
+def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75) -> list[User]:
     """
     Get users with a 75% name match already exists in the room
     """
@@ -1093,7 +1152,7 @@ def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75):
     ]
 
 
-def check_similar_user_in_room(name: str, room: Room):
+def check_similar_user_in_room(name: str, room: Room) -> None:
     """
     Raise an error if an user with a 75% name match already exists in the room
     """
@@ -1112,9 +1171,16 @@ def get_user_by_swdd_person_id(swdd_person_id: int | None) -> User | None:
     )
 
 
-def check_new_user_data(login: str, email: str, name: str, swdd_person_id: int | None,
-                        room: Room | None, move_in_date: date | None,
-                        ignore_similar_name: bool = False, allow_existing: bool = False):
+def check_new_user_data(
+    login: str,
+    email: str,
+    name: str,
+    swdd_person_id: int | None,
+    room: Room | None,
+    move_in_date: date | None,
+    ignore_similar_name: bool = False,
+    allow_existing: bool = False,
+) -> None:
     user_swdd_person_id = get_user_by_swdd_person_id(swdd_person_id)
 
     if user_swdd_person_id and not allow_existing:
@@ -1139,11 +1205,26 @@ def check_new_user_data(login: str, email: str, name: str, swdd_person_id: int |
 
 
 @with_transaction
-def create_member_request(name: str, email: str, password: str, login: str,
-                          birthdate: date, swdd_person_id: int | None, room: Room | None,
-                          move_in_date: date | None, previous_dorm: str | None,):
-    check_new_user_data(login, email, name, swdd_person_id, room, move_in_date,
-                        allow_existing=previous_dorm is not None)
+def create_member_request(
+    name: str,
+    email: str,
+    password: str,
+    login: str,
+    birthdate: date,
+    swdd_person_id: int | None,
+    room: Room | None,
+    move_in_date: date | None,
+    previous_dorm: str | None,
+) -> PreMember:
+    check_new_user_data(
+        login,
+        email,
+        name,
+        swdd_person_id,
+        room,
+        move_in_date,
+        allow_existing=previous_dorm is not None,
+    )
 
     if swdd_person_id is not None and room is not None:
         tenancies = get_relevant_tenancies(swdd_person_id)
@@ -1168,8 +1249,9 @@ def create_member_request(name: str, email: str, password: str, login: str,
 
 
 @with_transaction
-def finish_member_request(prm: PreMember, processor: User | None,
-                          ignore_similar_name: bool = False):
+def finish_member_request(
+    prm: PreMember, processor: User | None, ignore_similar_name: bool = False
+) -> User:
     if prm.room is None:
         raise ValueError("Room is None")
 
@@ -1205,7 +1287,12 @@ def finish_member_request(prm: PreMember, processor: User | None,
 
 
 @with_transaction
-def confirm_mail_address(key):
+def confirm_mail_address(
+    key: str,
+) -> tuple[
+    t.Literal["pre_member", "user"],
+    t.Literal["account_created", "request_pending"] | None,
+]:
     if not key:
         raise ValueError("No key given")
 
@@ -1221,6 +1308,7 @@ def confirm_mail_address(key):
         mr.email_confirmed = True
         mr.email_confirmation_key = None
 
+        reg_result: t.Literal["account_created", "request_pending"]
         if mr.swdd_person_id is not None and mr.room is not None and mr.previous_dorm is None \
            and mr.is_adult:
             finish_member_request(mr, None)
@@ -1237,20 +1325,21 @@ def confirm_mail_address(key):
         return 'user', None
 
 
-def get_member_requests():
+def get_member_requests() -> list[PreMember]:
     prms = PreMember.q.order_by(PreMember.email_confirmed.desc())\
         .order_by(PreMember.registered_at.asc()).all()
 
     return prms
 
 
-def get_name_from_first_last(first_name: str, last_name: str):
+def get_name_from_first_last(first_name: str, last_name: str) -> str:
     return f"{first_name} {last_name}" if last_name else first_name
 
 
 @with_transaction
-def delete_member_request(prm: PreMember, reason: str | None, processor: User,
-                          inform_user: bool = True):
+def delete_member_request(
+    prm: PreMember, reason: str | None, processor: User, inform_user: bool = True
+) -> None:
 
     if reason is None:
         reason = "Keine Begründung angegeben."
@@ -1265,9 +1354,17 @@ def delete_member_request(prm: PreMember, reason: str | None, processor: User,
 
 
 @with_transaction
-def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_email: bool,
-                         merge_person_id: bool, merge_room: bool, merge_password: bool,
-                         merge_birthdate: bool, processor: User):
+def merge_member_request(
+    user: User,
+    prm: PreMember,
+    merge_name: bool,
+    merge_email: bool,
+    merge_person_id: bool,
+    merge_room: bool,
+    merge_password: bool,
+    merge_birthdate: bool,
+    processor: User,
+) -> None:
     if prm.move_in_date is not None and prm.move_in_date < session.utcnow().date():
         prm.move_in_date = session.utcnow().date()
 
@@ -1322,7 +1419,7 @@ def merge_member_request(user: User, prm: PreMember, merge_name: bool, merge_ema
     session.session.delete(prm)
 
 
-def get_possible_existing_users_for_pre_member(prm: PreMember):
+def get_possible_existing_users_for_pre_member(prm: PreMember) -> set[User]:
     user_swdd_person_id = get_user_by_swdd_person_id(prm.swdd_person_id)
     user_login = User.q.filter_by(login=prm.login).first()
     user_email = User.q.filter(func.lower(User.email) == prm.email.lower()).first()
@@ -1336,7 +1433,7 @@ def get_possible_existing_users_for_pre_member(prm: PreMember):
     return users
 
 
-def get_user_by_id_or_login(ident: str, email: str):
+def get_user_by_id_or_login(ident: str, email: str) -> User:
     re_uid1 = r"^\d{4,6}-\d{1}$"
     re_uid2 = r"^\d{4,6}-\d{2}$"
 
@@ -1365,7 +1462,7 @@ def get_user_by_id_or_login(ident: str, email: str):
 
 
 @with_transaction
-def send_password_reset_mail(user: User):
+def send_password_reset_mail(user: User) -> bool:
     user.password_reset_token = generate_random_str(64)
 
     if not password_reset_url:
@@ -1383,7 +1480,7 @@ def send_password_reset_mail(user: User):
 
 
 @with_transaction
-def change_password_from_token(token, password):
+def change_password_from_token(token: str | None, password: str) -> bool:
     if token is None:
         return False
 

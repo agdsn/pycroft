@@ -15,7 +15,7 @@ class WebStorage(IntegerIdModel):
     expiry = Column(DateTimeTz, nullable=False)
 
     @staticmethod
-    def auto_expire():
+    def auto_expire() -> None:
         """Delete all expired items from the database"""
         WebStorage.q.filter(WebStorage.expiry <= func.current_timestamp()).delete(False)
         session.commit()
