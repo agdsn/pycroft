@@ -26,7 +26,6 @@ from .blueprints import (
 from .blueprints.login import login_manager
 from .commands import register_commands
 from .templates import page_resources
-from pycroft.helpers.git_helpers import get_repo_active_branch, get_latest_commits
 
 
 class PycroftFlask(Flask):
@@ -144,13 +143,6 @@ def make_app(debug=False):
     @app.route('/')
     def redirect_to_index():
         return redirect(url_for('user.overview'))
-
-    @app.route('/version/')
-    def version():
-        pycroft_dir = './'
-        return render_template('version.html',
-                               active_branch=get_repo_active_branch(pycroft_dir),
-                               commits=get_latest_commits(pycroft_dir, 20))
 
     @app.route('/debug-sentry')
     def debug_sentry():
