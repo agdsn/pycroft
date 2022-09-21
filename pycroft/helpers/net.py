@@ -23,23 +23,6 @@ SEP2_PATTERN = r'\.'
 SEP3_PATTERN = r'-'
 
 
-"""Regular expression object for matching MAC addresses in different formats.
-A valid MAC address is a sequence of 6 bytes coded as hexadecimal digits
-separated by a symbol after either one, two or three bytes. It is also possible
-that there is no separating symbol.
-
-The following examples all encode the same MAC address:
-001122334455
-00-11-22-33-44-55
-00:11:22:33:44:55
-0011.2233.4455
-001122-334455
-
-After a successful match, the individual bytes bytes, as well as the
-separator symbols can be accessed using symbolic group names.
-byte1, byte2, byte3, byte4, byte5, byte6: The n-th byte
-sep1, sep2, sep3: The one, two or three byte separator char or None
-"""
 mac_regex = re.compile(r"""
     # MAC-Addresses are in big endian, hence we rightmost is the highest
     # byte.
@@ -77,7 +60,31 @@ mac_regex = re.compile(r"""
     """.format(BYTE_PATTERN=BYTE_PATTERN, SEP1_PATTERN=SEP1_PATTERN,
                SEP2_PATTERN=SEP2_PATTERN, SEP3_PATTERN=SEP3_PATTERN),
     re.VERBOSE | re.IGNORECASE)
+"""Regular expression object for matching MAC addresses in different formats.
+A valid MAC address is a sequence of 6 bytes coded as hexadecimal digits
+separated by a symbol after either one, two or three bytes. It is also possible
+that there is no separating symbol.
 
+The following examples all encode the same MAC address:
+
+* ``001122334455``
+* ``00-11-22-33-44-55``
+* ``00:11:22:33:44:55``
+* ``0011.2233.4455``
+* ``001122-334455``
+
+After a successful match, the individual bytes bytes, as well as the
+separator symbols can be accessed using the following symbolic group names
+(see :meth:`groupdict() <re.Match.groupdict>`):
+
+byte1, byte2, byte3, byte4, byte5, byte6
+    The n-th byte
+
+sep1, sep2, sep3
+    The one, two or three byte separator char or None
+"""
+
+#: regex matching (not necessarily valid) ip addresses
 ip_regex = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
 
