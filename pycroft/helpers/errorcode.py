@@ -1,10 +1,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 from abc import ABCMeta, abstractmethod
 
 
-def digits(n, base=10):
+def digits(n: int, base: int = 10) -> t.Iterator[int]:
     """
     Generate all digits of number in a given base starting with the least
     significant digit.
@@ -27,10 +28,10 @@ class ErrorCode(metaclass=ABCMeta):
     Subclasses must implement at least the calculate method.
     """
     @abstractmethod
-    def calculate(self, number):
+    def calculate(self, number: int) -> int:
         pass
 
-    def is_valid(self, number, code):
+    def is_valid(self, number: int, code: int) -> bool:
         """
         Validates a (number, code) pair by calculating the code and comparing.
         """
@@ -42,10 +43,11 @@ class DigitSumModNCode(ErrorCode):
     Digit sum mod-n error detection code.
     Does not catch digit transposition errors.
     """
-    def __init__(self, mod):
+
+    def __init__(self, mod: int):
         self.mod = mod
 
-    def calculate(self, number):
+    def calculate(self, number: int) -> int:
         return sum(digits(number)) % self.mod
 
 
@@ -58,10 +60,11 @@ class Mod97Code(ErrorCode):
     This is a more advanced error detection code based on the IBAN check digits
     scheme.
     """
-    def calculate(self, number):
+
+    def calculate(self, number: int) -> int:
         return 98 - (number * 100) % 97
 
-    def is_valid(self, number, code):
+    def is_valid(self, number: int, code: int) -> bool:
         return (number * 100 + code) % 97 == 1
 
 
