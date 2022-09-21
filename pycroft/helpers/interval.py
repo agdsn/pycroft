@@ -462,7 +462,7 @@ class Interval(tuple, Generic[T]):
         )
 
     @property
-    def closure(self):
+    def closure(self) -> Interval[T]:
         """Return a closed variant of this interval"""
         return Interval(Bound(self.lower_bound.value, is_closed=True),
                         Bound(self.upper_bound.value, is_closed=True))
@@ -570,7 +570,7 @@ class IntervalSet(collections.abc.Sequence[T], Generic[T]):
 
     def __init__(
         self,
-        intervals: Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None = None,
+        intervals: IntervalSetSource = None,
     ):
         self._intervals = _mangle_argument(intervals)
 
@@ -599,7 +599,7 @@ class IntervalSet(collections.abc.Sequence[T], Generic[T]):
             (i.length for i in self._intervals)
         )
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[Interval[T]]:
         return iter(self._intervals)
 
     def __getitem__(self, item):
@@ -627,29 +627,30 @@ class IntervalSet(collections.abc.Sequence[T], Generic[T]):
     __invert__ = complement
     __neg__ = complement
 
-    def union(self, other):
-        """
-        :param IntervalSet other:
-        :return:
-        """
+    def union(self, other: IntervalSetSource) -> IntervalSet[T]:
         other_intervals = _mangle_argument(other)
         return _create(_join(_chain_ordered(self._intervals, other_intervals)))
 
     __or__ = union
     __add__ = union
 
-    def intersect(self, other):
+    def intersect(self, other: IntervalSetSource) -> IntervalSet[T]:
         other_intervals = _mangle_argument(other)
         return _create(_intersect(self._intervals, other_intervals))
 
     __and__ = intersect
     __mul__ = intersect
 
-    def difference(self, other):
+    def difference(self, other: IntervalSetSource) -> IntervalSet[T]:
         other_intervals = _mangle_argument(other)
         return self.intersect(_complement(other_intervals))
 
     __sub__ = difference
+
+
+IntervalSetSource: t.TypeAlias = (
+    Interval[T] | IntervalSet[T] | t.Iterable[Interval[T]] | None
+)
 
 
 def _mangle_argument(

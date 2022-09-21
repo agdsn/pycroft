@@ -34,6 +34,7 @@ from pycroft.helpers.interval import single, Interval, closedopen
 from pycroft.helpers.user import hash_password, verify_password, \
     cleartext_password, \
     clear_password_prefix
+from pycroft.helpers import utc
 from pycroft.model import session, ddl
 from pycroft.model.address import Address, address_remove_orphans
 from pycroft.model.base import ModelBase, IntegerIdModel
@@ -450,7 +451,7 @@ class Group(IntegerIdModel):
 
 
 class Membership(IntegerIdModel):
-    active_during: Interval = Column(TsTzRange, nullable=False)
+    active_during: Interval[utc.DateTimeTz] = Column(TsTzRange, nullable=False)
 
     def disable(self, at=None):
         if at is None:
@@ -499,6 +500,7 @@ class PropertyGroup(Group):
         "properties", "granted",
         creator=lambda k, v: Property(name=k, granted=v)
     )
+    properties: dict[str, Property]
 
 
 class Property(IntegerIdModel):
