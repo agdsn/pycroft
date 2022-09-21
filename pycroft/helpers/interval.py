@@ -12,11 +12,12 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
-
 from typing import TypeVar, Generic
 
+from _typeshed import SupportsAllComparisons
+
 # TODO figure out how we can demand that T shall be a totally ordered metric space
-T = TypeVar('T')
+T = TypeVar("T", bound=SupportsAllComparisons)
 
 
 def _infinity(name):
@@ -32,9 +33,25 @@ def _infinity(name):
 
 #: +∞
 PositiveInfinity = _infinity("PositiveInfinity")
+
+
+class PositiveInfinityType:
+    """dummy placeholder type to work around mypy limitations"""
+
+    pass
+
+
 #: -∞
 NegativeInfinity = _infinity("NegativeInfinity")
-TWithInfinity: t.TypeAlias = T | t.Literal[PositiveInfinity, NegativeInfinity]
+
+
+class NegativeInfinityType:
+    """dummy placeholder type to work around mypy limitations"""
+
+    pass
+
+
+TWithInfinity: t.TypeAlias = T | PositiveInfinityType | NegativeInfinityType
 
 
 class Bound(tuple, Generic[T]):
@@ -53,7 +70,7 @@ class Bound(tuple, Generic[T]):
 
     @property
     def closed(self) -> bool:
-        return self[1]
+        return t.cast(bool, self[1])
 
     @property
     def pg_identifier(self) -> str:
@@ -73,10 +90,10 @@ class Bound(tuple, Generic[T]):
             is_closed = False
         return tuple.__new__(cls, (value, is_closed))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self[0], self[1]))
 
-    def __le__(self, other):
+    def __le__(self, other: Bound[T]) -> bool:  # type: ignore
         if self.value is PositiveInfinity:
             return other.value is PositiveInfinity
         if self.value is NegativeInfinity:
@@ -87,9 +104,9 @@ class Bound(tuple, Generic[T]):
             return False
         if self.value == other.value:
             return self.closed and other.closed
-        return self.value <= other.value
+        return t.cast(T, self.value) <= t.cast(T, other.value)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Bound[T]) -> bool:  # type: ignore
         if self.value is PositiveInfinity:
             return other.value is PositiveInfinity
         if self.value is NegativeInfinity:
@@ -98,15 +115,15 @@ class Bound(tuple, Generic[T]):
             return True
         if other.value is NegativeInfinity:
             return False
-        return self.value < other.value
+        return t.cast(T, self.value) < t.cast(T, other.value)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Bound[T]) -> bool:  # type: ignore
         return other < self
 
-    def __ge__(self, other):
+    def __ge__(self, other: Bound[T]) -> bool:  # type: ignore
         return other <= self
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (isinstance(other, Bound) and
                 self.value == other.value and
                 self.closed == other.closed)
@@ -128,7 +145,7 @@ class Bound(tuple, Generic[T]):
         return Bound(self.value, not self.closed)
 
     @property
-    def unbounded(self):
+    def unbounded(self) -> bool:
         return self.value is NegativeInfinity or self.value is PositiveInfinity
 
 
@@ -150,6 +167,10 @@ class Interval(tuple, Generic[T]):
 
     It implements the relations from Allen's interval algebra, i.e. before,
     during, overlaps, starts, finishes and equals.
+
+    .. todo:: replace by generic namedtuple once we're on
+        `Python 3.11 <https://docs.python.org/3.11/whatsnew/3.11.html#typing>`_
+        for nicer typing behavior
     """
     __slots__ = ()
 
@@ -189,26 +210,26 @@ class Interval(tuple, Generic[T]):
         """
         :returns: The lower bound object
         """
-        return self[0]
+        return t.cast(Bound[T], self[0])
 
     @property
     def upper_bound(self) -> Bound[T]:
         """
         :returns: The upper bound object
         """
-        return self[1]
+        return t.cast(Bound[T], self[1])
 
     @property
     def begin(self) -> T | None:
         if self.lower_bound.value is NegativeInfinity:
             return None
-        return self.lower_bound.value
+        return t.cast(T, self.lower_bound.value)
 
     @property
     def end(self) -> T | None:
         if self.upper_bound.value is PositiveInfinity:
             return None
-        return self.upper_bound.value
+        return t.cast(T, self.upper_bound.value)
 
     @property
     def unbounded(self) -> bool:
@@ -228,23 +249,23 @@ class Interval(tuple, Generic[T]):
         """
         return None if self.unbounded else self.upper_bound - self.lower_bound
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (isinstance(other, Interval) and
                 self.lower_bound == other.lower_bound and
                 self.upper_bound == other.upper_bound)
 
-    def __le__(self, other):
+    def __le__(self, other: Interval[T]) -> bool:  # type: ignore
         return (self.lower_bound < other.lower_bound or
                 (self.lower_bound == other.lower_bound and
                  self.upper_bound <= other.upper_bound))
 
-    def __lt__(self, other):
+    def __lt__(self, other: Interval[T]) -> bool:  # type: ignore
         return (self.lower_bound < other.lower_bound or
                 (self.lower_bound == other.lower_bound and
                  self.upper_bound < other.upper_bound))
 
-    def __contains__(self, point: T) -> bool:
-        bound = Bound(point, True)
+    def __contains__(self, point: T) -> bool:  # type: ignore
+        bound = Bound[T](point, True)
         return self.lower_bound <= bound <= self.upper_bound
 
     def __str__(self):
@@ -408,7 +429,7 @@ class Interval(tuple, Generic[T]):
         )
 
     __and__ = intersect
-    __mul__ = intersect
+    __mul__ = intersect  # type: ignore
 
     def join(self, other: Interval[T]) -> Interval[T] | None:
         """
@@ -430,22 +451,22 @@ class Interval(tuple, Generic[T]):
                         Bound(self.upper_bound.value, is_closed=True))
 
     __or__ = join
-    __add__ = join
+    __add__ = join  # type: ignore
 
     def __sub__(self, other: Interval[T]):
         if not (other.upper_bound.unbounded or other.lower_bound.unbounded):
             raise ValueError("You can only subtract a ray from an interval!")
-        diff_set = IntervalSet([self]) - other
+        diff_set = IntervalSet[T]([self]) - other
         assert len(diff_set) == 1
         return diff_set[0]
 
 
-def _convert_begin(begin: T | None) -> Bound[T]:
-    return NegativeInfinity if begin is None else begin
+def _convert_begin(begin: T | None) -> TWithInfinity:
+    return t.cast(TWithInfinity, NegativeInfinity) if begin is None else begin
 
 
-def _convert_end(end: T | None) -> Bound[T]:
-    return PositiveInfinity if end is None else end
+def _convert_end(end: T | None) -> TWithInfinity:
+    return t.cast(TWithInfinity, PositiveInfinity) if end is None else end
 
 
 def closed(begin: T | None, end: T | None) -> Interval[T]:
@@ -454,9 +475,9 @@ def closed(begin: T | None, end: T | None) -> Interval[T]:
 
     :return: closed interval [begin, end]
     """
-    begin = _convert_begin(begin)
-    end = _convert_end(end)
-    return Interval(Bound(begin, True), Bound(end, True))
+    begin_ = _convert_begin(begin)
+    end_ = _convert_end(end)
+    return Interval(Bound(begin_, True), Bound(end_, True))
 
 
 def closedopen(begin: T | None, end: T | None) -> Interval[T]:
@@ -465,9 +486,9 @@ def closedopen(begin: T | None, end: T | None) -> Interval[T]:
 
     :return: left-closed/right-open interval [begin, end)
     """
-    begin = _convert_begin(begin)
-    end = _convert_end(end)
-    return Interval(Bound(begin, True), Bound(end, False))
+    begin_ = _convert_begin(begin)
+    end_ = _convert_end(end)
+    return Interval(Bound(begin_, True), Bound(end_, False))
 
 
 def openclosed(begin: T | None, end: T | None) -> Interval[T]:
@@ -476,9 +497,9 @@ def openclosed(begin: T | None, end: T | None) -> Interval[T]:
 
     :return: left-open/right-closed interval (begin, end]
     """
-    begin = _convert_begin(begin)
-    end = _convert_end(end)
-    return Interval(Bound(begin, False), Bound(end, True))
+    begin_ = _convert_begin(begin)
+    end_ = _convert_end(end)
+    return Interval(Bound(begin_, False), Bound(end_, True))
 
 
 def open(begin: T | None, end: T | None) -> Interval[T]:
@@ -487,16 +508,16 @@ def open(begin: T | None, end: T | None) -> Interval[T]:
 
     :return: open interval (begin, end)
     """
-    begin = _convert_begin(begin)
-    end = _convert_end(end)
-    return Interval(Bound(begin, False), Bound(end, False))
+    begin_ = _convert_begin(begin)
+    end_ = _convert_end(end)
+    return Interval(Bound(begin_, False), Bound(end_, False))
 
 
 def single(point: T) -> Interval[T]:
     """
     Create an interval containing only a single point.
     """
-    bound = Bound(point, True)
+    bound = Bound[T](point, True)
     return Interval(bound, bound)
 
 
@@ -508,7 +529,7 @@ def empty(point: T) -> Interval[T]:
     eases the implementation of an interval a lot, as the empty interval
     does not need to be handled specially.
     """
-    bound = Bound(point, False)
+    bound = Bound[T](point, False)
     return Interval(bound, bound)
 
 
@@ -516,7 +537,7 @@ def empty(point: T) -> Interval[T]:
 UnboundedInterval = open(None, None)
 
 
-class IntervalSet(collections.abc.Sequence[T], Generic[T]):
+class IntervalSet(collections.abc.Sequence[Interval[T]], Generic[T]):
     _intervals: tuple[Interval[T], ...]
 
     def __init__(
@@ -579,21 +600,21 @@ class IntervalSet(collections.abc.Sequence[T], Generic[T]):
     __neg__ = complement
 
     def union(self, other: IntervalSetSource) -> IntervalSet[T]:
-        other_intervals = _mangle_argument(other)
+        other_intervals: tuple[Interval[T], ...] = _mangle_argument(other)
         return _create(_join(_chain_ordered(self._intervals, other_intervals)))
 
     __or__ = union
     __add__ = union
 
     def intersect(self, other: IntervalSetSource) -> IntervalSet[T]:
-        other_intervals = _mangle_argument(other)
+        other_intervals: tuple[Interval[T], ...] = _mangle_argument(other)
         return _create(_intersect(self._intervals, other_intervals))
 
     __and__ = intersect
     __mul__ = intersect
 
     def difference(self, other: IntervalSetSource) -> IntervalSet[T]:
-        other_intervals = _mangle_argument(other)
+        other_intervals: tuple[Interval[T], ...] = _mangle_argument(other)
         return self.intersect(_complement(other_intervals))
 
     __sub__ = difference
@@ -619,7 +640,7 @@ def _mangle_argument(arg: IntervalSetSource) -> tuple[Interval[T], ...]:
 
 def _create(intervals: t.Iterable[Interval[T]]) -> IntervalSet[T]:
     """Create an IntervalSet directly from a sorted Interval iterable."""
-    interval_set = IntervalSet(())
+    interval_set = IntervalSet[T](())
     interval_set._intervals = tuple(intervals)
     return interval_set
 
@@ -653,7 +674,7 @@ def _complement(intervals: t.Iterable[Interval[T]]) -> t.Iterator[Interval[T]]:
     try:
         first = next(intervals)
     except StopIteration:
-        yield UnboundedInterval
+        yield t.cast(Interval[T], UnboundedInterval)
         return
     if not first.lower_bound.unbounded:
         yield Interval(Bound(NegativeInfinity, False), ~first.lower_bound)

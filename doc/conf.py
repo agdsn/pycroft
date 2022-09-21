@@ -127,6 +127,7 @@ autodoc_type_aliases = {
 import sphinx.ext.autodoc
 sphinx.ext.autodoc.NewTypeDataDocumenter.directivetype = 'class'
 
+todo_include_todos = True
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
