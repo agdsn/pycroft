@@ -24,7 +24,7 @@ from pycroft.lib.finance import (
     end_payment_in_default_memberships,
     take_actions_for_payment_in_default_users)
 from pycroft.model import session
-from pycroft.model.finance import BankAccountActivity, Transaction, Split
+from pycroft.model.finance import BankAccountActivity, Transaction, Split, Account
 from tests.legacy_base import FactoryDataTestBase
 from tests.factories import MembershipFactory, ConfigFactory
 from tests.factories.address import AddressFactory
@@ -478,6 +478,56 @@ class TestIsOrdered:
 
     def test_custom_operator(self):
         assert is_ordered((3, 2, 1), relation=operator.gt)
+
+class TestSplitTypes:
+    @pytest.fixture
+    def a_user(self) -> Account:
+        return Account(name="user_account", type="USER_ASSET")
+
+    @pytest.fixture
+    def a_bank(self) -> Account:
+        return Account(name="bank", type="BANK_ASSET")
+
+    @pytest.fixture
+    def a_liability(self) -> Account:
+        return Account(name="liabilities", type="LIABILITY")
+
+    @pytest.fixture
+    def a_fees(self) -> Account:
+        return Account(name="fees", type="REVENUE")
+
+    @pytest.fixture
+    def t(self) -> Transaction:
+        """An empty transaction"""
+        return TransactionFactory.build(splits=[])
+
+    def test_empty_transaction(self, t):
+        assert finance.get_transaction_type(t) is None
+
+    def test_simple_transaction(self, t, a_user, a_fees):
+        t.splits = [Split(amount=300, account=a_user), Split(amount=-300, account=a_fees)]
+        assert finance.get_transaction_type(t) == ("USER_ASSET", "REVENUE")
+
+    def test_simple_transaction_flipped(self, t, a_user, a_fees):
+        t.splits = [Split(amount=-300, account=a_user), Split(amount=300, account=a_fees)]
+        assert finance.get_transaction_type(t) == ("REVENUE", "USER_ASSET")
+
+    def test_complex_transaction(self, t, a_user, a_fees):
+        t.splits = [
+            Split(amount=-300, account=a_user),
+            Split(amount=-100, account=a_user),
+            Split(amount=150, account=a_fees),
+            Split(amount=350, account=a_fees),
+        ]
+        assert finance.get_transaction_type(t) == ("REVENUE", "USER_ASSET")
+
+    def test_heterogeneous_transaction(self, t, a_user, a_fees, a_liability):
+        t.splits = [
+            Split(amount=300, account=a_user),
+            Split(amount=-100, account=a_fees),
+            Split(amount=-200, account=a_liability),
+        ]
+        assert finance.get_transaction_type(t) is None
 
 
 class BalanceEstimationTestCase(FactoryDataTestBase):

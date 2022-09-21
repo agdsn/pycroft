@@ -657,18 +657,16 @@ def get_typed_splits(
 
 
 def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
-    credited: list[Account] = [
-        split.account for split in transaction.splits if split.amount > 0
-    ]
-    debited: list[Account] = [
-        split.account for split in transaction.splits if split.amount < 0
-    ]
-
-    cd_accs = (credited, debited)
-    # all involved accounts have the same type:
-    if all(all(a.type == accs[0].type for a in accs) for accs in cd_accs)\
-            and all(len(accs)>0 for accs in cd_accs):
-        return (cd_accs[0][0].type, cd_accs[1][0].type)
+    credited_types = {
+        split.account.type for split in transaction.splits if split.amount > 0
+    }
+    debited_types = {
+        split.account.type for split in transaction.splits if split.amount < 0
+    }
+    if len(credited_types) == len(debited_types) == 1:
+        [cred_type] = credited_types
+        [deb_type] = debited_types
+        return cred_type, deb_type
     return None
 
 
