@@ -9,12 +9,6 @@ This package contains different helper modules
 from enum import Enum
 
 
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
 class AutoNumber(Enum):
     def __new__(cls):
         value = len(cls.__members__) + 1

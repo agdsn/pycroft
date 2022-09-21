@@ -21,7 +21,7 @@ from sqlalchemy import func, select, Boolean, String
 from sqlalchemy.engine import Row
 
 from pycroft import config, property
-from pycroft.helpers import user as user_helper, AttrDict, utc
+from pycroft.helpers import user as user_helper, utc
 from pycroft.helpers.errorcode import Type1Code, Type2Code
 from pycroft.helpers.i18n import deferred_gettext
 from pycroft.helpers.interval import closed, closedopen, Interval
