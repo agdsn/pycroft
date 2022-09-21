@@ -7,11 +7,13 @@ pycroft.helpers.user
 """
 import random
 import string
+import typing as t
 
 from passlib.apps import ldap_context
+from passlib.context import CryptContext
 from passlib.pwd import genword
 
-crypt_context = ldap_context.copy(
+crypt_context: CryptContext = ldap_context.copy(
     default="ldap_sha512_crypt",
     deprecated=["ldap_plaintext", "ldap_md5", "ldap_sha1", "ldap_salted_md5",
                 "ldap_des_crypt", "ldap_bsdi_crypt", "ldap_md5_crypt"])
@@ -31,10 +33,10 @@ def generate_password(length: int) -> str:
     # without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
               ":;-_#+23456789ABCDEFGHIJKLMNPQRSTUVWXYZ"
-    return genword(length=length, chars=charset)
+    return t.cast(str, genword(length=length, chars=charset))
 
 
-def hash_password(plaintext_passwd):
+def hash_password(plaintext_passwd: str) -> str:
     """Generate a :rfc:`2307` complaint hash from given plaintext.
 
     The passlib CryptContext is configured to generate the very secure
@@ -43,7 +45,7 @@ def hash_password(plaintext_passwd):
     return crypt_context.hash(plaintext_passwd)
 
 
-def cleartext_password(plaintext_passwd):
+def cleartext_password(plaintext_passwd: str) -> str:
     """Generate a :rfc:`2307` complaint hash from given plaintext.
 
     The passlib CryptContext is configured to generate the very secure
@@ -52,7 +54,7 @@ def cleartext_password(plaintext_passwd):
     return f"{clear_password_prefix}{plaintext_passwd}"
 
 
-def verify_password(plaintext_password, hash):
+def verify_password(plaintext_password: str, hash: str) -> bool:
     """Verifies a plain password string against a given password hash.
 
     It uses a crypt_context to verify :rfc:`2307` hashes.
@@ -69,8 +71,7 @@ def generate_random_str(length: int) -> str:
     Generates an aplhanumeric random string
 
     """
-    key = ''.join(
-        random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
-        range(length))
-
-    return key
+    return ''.join(
+        random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
+        for _ in range(length)
+    )
