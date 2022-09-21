@@ -23,7 +23,8 @@ SEP2_PATTERN = r'\.'
 SEP3_PATTERN = r'-'
 
 
-mac_regex = re.compile(r"""
+mac_regex = re.compile(
+    rf"""
     # MAC-Addresses are in big endian, hence we rightmost is the highest
     # byte.
 
@@ -57,9 +58,9 @@ mac_regex = re.compile(r"""
     (?P<byte6>{BYTE_PATTERN})
     # End of string:
     \Z
-    """.format(BYTE_PATTERN=BYTE_PATTERN, SEP1_PATTERN=SEP1_PATTERN,
-               SEP2_PATTERN=SEP2_PATTERN, SEP3_PATTERN=SEP3_PATTERN),
-    re.VERBOSE | re.IGNORECASE)
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
 """Regular expression object for matching MAC addresses in different formats.
 A valid MAC address is a sequence of 6 bytes coded as hexadecimal digits
 separated by a symbol after either one, two or three bytes. It is also possible
