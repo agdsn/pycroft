@@ -5,8 +5,11 @@ pycroft.helpers.utc
 from datetime import datetime, time, timezone, date
 from typing import NewType
 
+#: A time with timezone information
 TimeTz = NewType('TimeTz', time)
+#: A datetime with timezone information
 DateTimeTz = NewType('DateTimeTz', datetime)
+#: A datetime without timezone information
 DateTimeNoTz = NewType('DateTimeNoTz', datetime)
 
 
