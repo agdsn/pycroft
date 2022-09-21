@@ -13,11 +13,6 @@ import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
 
-__all__ = (
-    'Interval', 'closed', 'closedopen', 'openclosed', 'open', 'single', 'empty',
-    'UnboundedInterval', 'IntervalSet'
-)
-
 from typing import TypeVar, Generic
 
 # TODO figure out how we can demand that T shall be a totally ordered metric space
