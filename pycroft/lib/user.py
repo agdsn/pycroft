@@ -1452,19 +1452,15 @@ def get_user_by_id_or_login(ident: str, email: str) -> User | None:
     user = User.q.filter(func.lower(User.email) == email.lower())
 
     if re.match(re_uid1, ident):
-        if check_user_id(ident):
-            user_id = decode_type1_user_id(ident)
-
-            user = user.filter_by(id=user_id[0])
-        else:
+        if not check_user_id(ident):
             return None
+        user_id, _ = decode_type1_user_id(ident)
+        user = user.filter_by(id=user_id)
     elif re.match(re_uid2, ident):
-        if check_user_id(ident):
-            user_id = decode_type2_user_id(ident)
-
-            user = user.filter_by(id=user_id[0])
-        else:
+        if not check_user_id(ident):
             return None
+        user_id, _ = decode_type2_user_id(ident)
+        user = user.filter_by(id=user_id)
     elif re.match(BaseUser.login_regex, ident):
         user = user.filter_by(login=ident)
 
