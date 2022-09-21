@@ -20,7 +20,7 @@ class OverviewStats:
     not_paid_members: int
 
 
-def overview_stats():
+def overview_stats() -> OverviewStats:
     return OverviewStats(
         member_requests=PreMember.q.count(),
         users_in_db=User.q.count(),

@@ -7,6 +7,7 @@ import os
 import smtplib
 import ssl
 import traceback
+import typing as t
 from dataclasses import dataclass
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
@@ -56,10 +57,10 @@ class MailTemplate:
     subject: str
     args: dict
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: t.Any) -> None:
         self.args = kwargs
 
-    def render(self, **kwargs) -> tuple[str, str]:
+    def render(self, **kwargs: t.Any) -> tuple[str, str]:
         plain = template_env.get_template(self.template).render(mode='plain', **self.args, **kwargs)
         html = template_env.get_template(self.template).render(mode='html', **self.args, **kwargs)
 
@@ -225,7 +226,9 @@ class MemberNegativeBalance(MailTemplate):
     subject =  "Deine ausstehenden Zahlungen // Your due payments"
 
 
-def send_template_mails(email_addresses: list[str], template: MailTemplate, **kwargs):
+def send_template_mails(
+    email_addresses: list[str], template: MailTemplate, **kwargs: t.Any
+) -> None:
     mails = []
 
     for addr in email_addresses:
@@ -243,7 +246,7 @@ def send_template_mails(email_addresses: list[str], template: MailTemplate, **kw
     send_mails_async.delay(mails)
 
 
-def send_plain_mails(email_addresses: list[str], subject: str, body_plain: str):
+def send_plain_mails(email_addresses: list[str], subject: str, body_plain: str) -> None:
     mails = []
 
     for addr in email_addresses:
