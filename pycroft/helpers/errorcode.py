@@ -13,8 +13,9 @@ def digits(n: int, base: int = 10) -> t.Iterator[int]:
     """
     Generate all digits of number in a given base starting with the least
     significant digit.
-    :param Integral n: An integral number
-    :param Integral base: Defaults to 10.
+
+    :param n: An integral number
+    :param base: Defaults to 10.
     """
     if base < 2:
         raise ValueError("base mustn't be less than 2.")
