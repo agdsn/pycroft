@@ -22,9 +22,11 @@ clear_password_prefix = '{clear}'
 def generate_password(length: int) -> str:
     """Generate a password of a certain length.
 
-    The password is generated as :param:`length` independent choices
+    The password is generated as :paramref:`length` independent choices
     of a certain charset.  The charset does not include ambiguous
     characters like ``l``, ``1``, ``0`` and ``O``.
+
+    :param: length
     """
     # without hard to distinguish characters l/1 0/O
     charset = "abcdefghijkmnopqrstuvwxyz!$%&()=.," \
@@ -33,7 +35,7 @@ def generate_password(length: int) -> str:
 
 
 def hash_password(plaintext_passwd):
-    """Generate a RFC 2307 complaint hash from given plaintext.
+    """Generate a :rfc:`2307` complaint hash from given plaintext.
 
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
@@ -42,7 +44,7 @@ def hash_password(plaintext_passwd):
 
 
 def cleartext_password(plaintext_passwd):
-    """Generate a RFC 2307 complaint hash from given plaintext.
+    """Generate a :rfc:`2307` complaint hash from given plaintext.
 
     The passlib CryptContext is configured to generate the very secure
     ldap_sha512_crypt hashes (a crypt extension available since glibc 2.7).
@@ -53,7 +55,7 @@ def cleartext_password(plaintext_passwd):
 def verify_password(plaintext_password, hash):
     """Verifies a plain password string against a given password hash.
 
-    It uses a crypt_context to verify RFC 2307 hashes.
+    It uses a crypt_context to verify :rfc:`2307` hashes.
     """
     try:
         return crypt_context.verify(plaintext_password, hash)
