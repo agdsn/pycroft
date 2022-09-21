@@ -12,7 +12,7 @@ follow_imports = "silent"
 ignore_missing_imports = true
 # this list shall slowly grow until it covers the whole codebase.
 files = [
-    "pycroft/helpers/i18n.py",
+    "pycroft/helpers",
     "pycroft/lib",
     "ldap_sync",
 ]
