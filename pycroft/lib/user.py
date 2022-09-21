@@ -1086,16 +1086,11 @@ def get_similar_users_in_room(name: str, room: Room, ratio: float = 0.75):
     if room is None:
         return []
 
-    users = User.q.filter_by(room=room).all()
-    users_match = []
-
-    for user in users:
-        ratio_is = SequenceMatcher(None, name, user.name).ratio()
-
-        if ratio_is > ratio:
-            users_match.append(user)
-
-    return users_match
+    return [
+        user
+        for user in (User.q.filter_by(room=room).all())
+        if SequenceMatcher(None, name, user.name).ratio() > ratio
+    ]
 
 
 def check_similar_user_in_room(name: str, room: Room):
