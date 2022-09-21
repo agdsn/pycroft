@@ -175,7 +175,7 @@ class Interval(tuple, Generic[T]):
         return hash((self[0], self[1]))
 
     @property
-    def lower_bound(self):
+    def lower_bound(self) -> Bound[T]:
         """
         :rtype: Bound
         :returns: The lower bound object
@@ -183,7 +183,7 @@ class Interval(tuple, Generic[T]):
         return self[0]
 
     @property
-    def upper_bound(self):
+    def upper_bound(self) -> Bound[T]:
         """
         :rtype: Bound
         :returns: The upper bound object
@@ -191,23 +191,23 @@ class Interval(tuple, Generic[T]):
         return self[1]
 
     @property
-    def begin(self):
+    def begin(self) -> T | None:
         if self.lower_bound.value is NegativeInfinity:
             return None
         return self.lower_bound.value
 
     @property
-    def end(self):
+    def end(self) -> T | None:
         if self.upper_bound.value is PositiveInfinity:
             return None
         return self.upper_bound.value
 
     @property
-    def unbounded(self):
+    def unbounded(self) -> bool:
         return self.lower_bound.unbounded or self.upper_bound.unbounded
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         """
         Tests if the interval is empty
         :return:
@@ -216,7 +216,7 @@ class Interval(tuple, Generic[T]):
                 not (self.lower_bound.closed and self.upper_bound.closed))
 
     @property
-    def length(self):
+    def length(self) -> t.Any:  # actually return type of `T.__sub__`
         """
         Compute the interval's length
         :returns: None if the interval is unbound else end - begin
@@ -238,7 +238,7 @@ class Interval(tuple, Generic[T]):
                 (self.lower_bound == other.lower_bound and
                  self.upper_bound < other.upper_bound))
 
-    def __contains__(self, point):
+    def __contains__(self, point: T) -> bool:
         bound = Bound(point, True)
         return self.lower_bound <= bound <= self.upper_bound
 

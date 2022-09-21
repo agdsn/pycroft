@@ -401,12 +401,12 @@ def post_transactions_for_membership_fee(
 def _to_date_interval(interval: Interval[datetime]) -> Interval[date]:
     """This applies ``λx→x.date()`` to the interval's values."""
     if interval.lower_bound.unbounded:
-        lower_bound = interval.lower_bound
+        lower_bound = t.cast(Bound[date], interval.lower_bound)
     else:
         lower_bound = Bound(interval.lower_bound.value.date(),
                             interval.lower_bound.closed)
     if interval.upper_bound.unbounded:
-        upper_bound = interval.upper_bound
+        upper_bound = t.cast(Bound[date], interval.upper_bound)
     else:
         upper_bound = Bound(interval.upper_bound.value.date(),
                             interval.upper_bound.closed)
