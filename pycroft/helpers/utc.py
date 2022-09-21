@@ -23,6 +23,7 @@ def datetime_max() -> DateTimeTz:
 
 
 def with_min_time(d: date) -> DateTimeTz:
+    """Return the datetime corresponding to 00:00 UTC at the given date."""
     return DateTimeTz(datetime.combine(d, time_min()))
 
 

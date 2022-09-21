@@ -6,11 +6,12 @@ pycroft.model.finance
 ~~~~~~~~~~~~~~~~~~~~~
 """
 import datetime
+import typing as t
 from math import fabs
 
 from sqlalchemy import Column, ForeignKey, event, func, select, Boolean
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, backref, object_session
+from sqlalchemy.orm import relationship, backref, object_session, Mapped
 from sqlalchemy.schema import (
     CheckConstraint, ForeignKeyConstraint, UniqueConstraint)
 from sqlalchemy.types import (
@@ -92,16 +93,22 @@ class Semester(IntegerIdModel):
     )
 
 
+AccountType = t.Literal[
+    "ASSET",  # Aktivkonto
+    "USER_ASSET",  # Aktivkonto for users
+    "BANK_ASSET",  # Aktivkonto for bank accounts
+    "LIABILITY",  # Passivkonto
+    "EXPENSE",  # Aufwandskonto
+    "REVENUE",  # Ertragskonto
+]
+
+
 class Account(IntegerIdModel):
     name = Column(String(127), nullable=False)
-    type = Column(Enum("ASSET",       # Aktivkonto
-                       "USER_ASSET",  # Aktivkonto for users
-                       "BANK_ASSET",  # Aktivkonto for bank accounts
-                       "LIABILITY",   # Passivkonto
-                       "EXPENSE",     # Aufwandskonto
-                       "REVENUE",     # Ertragskonto
-                       name="account_type"),
-                  nullable=False)
+    # noinspection PyUnresolvedReferences
+    type: Mapped[AccountType] = Column(
+        Enum(*AccountType.__args__, name="account_type"), nullable=False
+    )
     legacy = Column(Boolean, default=False, nullable=False)
     splits = relationship('Split', viewonly=True, back_populates='account')
 

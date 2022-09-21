@@ -30,7 +30,7 @@ from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.helpers.interval import (
     closed, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
-from pycroft.helpers.utc import with_min_time, with_max_time
+from pycroft.helpers.utc import with_min_time, with_max_time, DateTimeTz
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
 from pycroft.lib.membership import make_member_of, remove_member_of
@@ -163,7 +163,7 @@ def complex_transaction(
 def transferred_amount(
     from_account: Account,
     to_account: Account,
-    when: Interval[date] = UnboundedInterval,
+    when: Interval[date] = t.cast(Interval[date], UnboundedInterval),
 ) -> Decimal:
     """
     Determine how much has been transferred from one account to another in a
@@ -480,7 +480,7 @@ def is_ordered(
 def import_bank_account_activities_csv(
     csv_file: StringIO,
     expected_balance: Decimal,
-    imported_at: date | None = None,
+    imported_at: DateTimeTz | None = None,
 ) -> None:
     """
     Import bank account activities from a MT940 CSV file into the database.
@@ -603,7 +603,7 @@ def restore_record(record: MT940Record) -> str:
 
 
 def process_record(
-    index: int, record: MT940Record, imported_at: datetime
+    index: int, record: MT940Record, imported_at: DateTimeTz
 ) -> tuple[Decimal, int, str, str, str, str, str, datetime, date, date]:
     if record.currency != "EUR":
         message = gettext("Unsupported currency {0}. Record {1}: {2}")
@@ -657,8 +657,12 @@ def get_typed_splits(
 
 
 def get_transaction_type(transaction: Transaction) -> tuple[str, str] | None:
-    credited = [split.account for split in transaction.splits if split.amount > 0]
-    debited = [split.account for split in transaction.splits if split.amount < 0]
+    credited: list[Account] = [
+        split.account for split in transaction.splits if split.amount > 0
+    ]
+    debited: list[Account] = [
+        split.account for split in transaction.splits if split.amount < 0
+    ]
 
     cd_accs = (credited, debited)
     # all involved accounts have the same type:
@@ -1085,8 +1089,7 @@ def estimate_balance(session: Session, user: User, end_date: date) -> int:
 
     # If the user has to pay a fee for the current month
     has_to_pay_this_month = user.has_property(
-        'membership_fee',
-        tomorrow.replace(day=last_fee.booking_end.days)
+        "membership_fee", with_min_time(tomorrow.replace(day=last_fee.booking_end.days))
     )
     if has_to_pay_this_month:
         months_to_pay += 1
@@ -1100,8 +1103,8 @@ def estimate_balance(session: Session, user: User, end_date: date) -> int:
 
     if last_month_fee_outstanding:
         had_to_pay_last_month = user.has_property(
-            'membership_fee',
-            last_month_last.replace(day=last_fee.booking_end.days)
+            "membership_fee",
+            with_min_time(last_month_last.replace(day=last_fee.booking_end.days)),
         )
         if had_to_pay_last_month:
             months_to_pay += 1
