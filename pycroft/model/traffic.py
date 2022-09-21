@@ -10,8 +10,10 @@ from sqlalchemy import Column, ForeignKey, CheckConstraint, \
     PrimaryKeyConstraint, func, or_, and_, true, literal_column, \
     select, cast, TEXT
 from sqlalchemy.orm import relationship, backref, Query
+from sqlalchemy.sql.selectable import TableValuedAlias
 from sqlalchemy.types import BigInteger, Enum, Integer
 
+from pycroft.helpers import utc
 from pycroft.model.base import ModelBase
 from pycroft.model.ddl import DDLManager, Function, Trigger, View
 from pycroft.model.types import DateTimeTz
@@ -222,12 +224,14 @@ def traffic_history(
 
 
 class TrafficHistoryEntry:
-    def __init__(self, timestamp, ingress, egress):
+    def __init__(
+        self, timestamp: utc.DateTimeTz, ingress: int | None, egress: int | None
+    ) -> None:
         self.timestamp = timestamp
         self.ingress = ingress or 0
         self.egress = egress or 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.__dict__)
 
 

@@ -27,8 +27,16 @@ ASSETS_TWITTER_FILENAME = join(ASSETS_DIRECTORY, 'twitter.png')
 ASSETS_WEB_FILENAME = join(ASSETS_DIRECTORY, 'web.png')
 ASSETS_HOUSE_FILENAME = join(ASSETS_DIRECTORY, 'house.png')
 
-def generate_user_sheet(new_user, wifi, user=None, user_id=None, plain_user_password=None,
-                        generation_purpose='', plain_wifi_password=''):
+
+def generate_user_sheet(
+    new_user,
+    wifi,
+    user=None,
+    user_id=None,
+    plain_user_password=None,
+    generation_purpose="",
+    plain_wifi_password="",
+) -> bytes:
     """Create a new datasheet for the given user.
     This usersheet can hold information about a user or about the wifi credentials of a user.
 

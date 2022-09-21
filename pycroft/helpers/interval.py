@@ -478,15 +478,15 @@ class Interval(tuple, Generic[T]):
         return diff_set[0]
 
 
-def _convert_begin(begin):
+def _convert_begin(begin: T | None) -> Bound[T]:
     return NegativeInfinity if begin is None else begin
 
 
-def _convert_end(end):
+def _convert_end(end: T | None) -> Bound[T]:
     return PositiveInfinity if end is None else end
 
 
-def closed(begin, end):
+def closed(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a closed interval.
 
@@ -500,7 +500,7 @@ def closed(begin, end):
     return Interval(Bound(begin, True), Bound(end, True))
 
 
-def closedopen(begin, end):
+def closedopen(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-closed/right-open interval.
 
@@ -514,7 +514,7 @@ def closedopen(begin, end):
     return Interval(Bound(begin, True), Bound(end, False))
 
 
-def openclosed(begin, end):
+def openclosed(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create a left-open/right-closed interval.
 
@@ -528,7 +528,7 @@ def openclosed(begin, end):
     return Interval(Bound(begin, False), Bound(end, True))
 
 
-def open(begin, end):
+def open(begin: T | None, end: T | None) -> Interval[T]:
     """
     Create an open interval.
 
@@ -542,7 +542,7 @@ def open(begin, end):
     return Interval(Bound(begin, False), Bound(end, False))
 
 
-def single(point):
+def single(point: T) -> Interval[T]:
     """
     Create an interval containing only a single point.
     """
@@ -550,7 +550,7 @@ def single(point):
     return Interval(bound, bound)
 
 
-def empty(point):
+def empty(point: T) -> Interval[T]:
     """
     Create an empty interval positioned at the given point.
 

@@ -324,8 +324,8 @@ def move_in(
     birthdate: date = None,
     host_annex: bool = False,
     begin_membership: bool = True,
-    when: datetime | None = None
-) -> User:
+    when: DateTimeTz | None = None,
+) -> User | UserTask:
     """Move in a user in a given room and do some initialization.
 
     The user is given a new Host with an interface of the given mac, a
@@ -376,7 +376,7 @@ def move_in(
                 make_member_of(user, group, processor, closed(session.utcnow(), None))
 
     if room:
-        user.room = room
+        user.room = room  # type: ignore
         user.address = room.address
 
         if mac and user.birthdate:
@@ -462,7 +462,7 @@ def move(
     processor: User,
     comment: str | None = None,
     when: DateTimeTz | None = None,
-) -> User:
+) -> User | UserTask:
     """Moves the user into another room.
 
     :param user: The user to be moved.
@@ -701,7 +701,7 @@ def has_balance_of_at_least(user: User, amount: int) -> bool:
     :return: True if and only if the user's balance is at least the given
         amount (and False otherwise).
     """
-    balance = user.account.balance if user.account else 0
+    balance = t.cast(int, user.account.balance if user.account else 0)
     return balance >= amount
 
 
@@ -793,7 +793,7 @@ def move_out(
     processor: User,
     when: DateTimeTz,
     end_membership: bool = True,
-) -> User:
+) -> User | UserTask:
     """Move out a user and may terminate relevant memberships.
 
     The user's room is set to ``None`` and all hosts are deleted.
@@ -930,15 +930,19 @@ def membership_ending_task(user: User) -> UserTask:
     :return: Next task that will end the membership of the user
     """
 
-    task = (UserTask.q
-            .filter_by(user_id=user.id,
-                       status=TaskStatus.OPEN,
-                       type=TaskType.USER_MOVE_OUT)
-            # Casting jsonb -> bool directly is only supported since PG v11
-            .filter(UserTask.parameters_json['end_membership'].cast(String).cast(Boolean) == True)
-            .order_by(UserTask.due.asc())).first()
-
-    return task
+    return t.cast(
+        UserTask,
+        UserTask.q.filter_by(
+            user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_OUT
+        )
+        # Casting jsonb -> bool directly is only supported since PG v11
+        .filter(
+            UserTask.parameters_json["end_membership"].cast(String).cast(Boolean)
+            == True
+        )
+        .order_by(UserTask.due.asc())
+        .first(),
+    )
 
 
 def membership_end_date(user: User) -> date | None:
@@ -959,14 +963,15 @@ def membership_beginning_task(user: User) -> UserTask:
     :return: Next task that will end the membership of the user
     """
 
-    task = (UserTask.q
-            .filter_by(user_id=user.id,
-                       status=TaskStatus.OPEN,
-                       type=TaskType.USER_MOVE_IN)
-            .filter(UserTask.parameters_json['begin_membership'].cast(Boolean) == True)
-            .order_by(UserTask.due.asc())).first()
-
-    return task
+    return t.cast(
+        UserTask,
+        UserTask.q.filter_by(
+            user_id=user.id, status=TaskStatus.OPEN, type=TaskType.USER_MOVE_IN
+        )
+        .filter(UserTask.parameters_json["begin_membership"].cast(Boolean) == True)
+        .order_by(UserTask.due.asc())
+        .first(),
+    )
 
 
 def membership_begin_date(user: User) -> date | None:
@@ -1302,7 +1307,9 @@ def confirm_mail_address(
 
     if mr is None and user is None:
         raise ValueError("Unknown confirmation key")
-    elif user is None:
+    # else: one of {mr, user} is not None
+
+    if user is None:
         if mr.email_confirmed:
             raise ValueError("E-Mail already confirmed")
 
@@ -1324,6 +1331,10 @@ def confirm_mail_address(
         user.email_confirmation_key = None
 
         return 'user', None
+    else:
+        raise RuntimeError(
+            "Same mail confirmation key has been given to both a PreMember and a User"
+        )
 
 
 def get_member_requests() -> list[PreMember]:
@@ -1434,7 +1445,7 @@ def get_possible_existing_users_for_pre_member(prm: PreMember) -> set[User]:
     return users
 
 
-def get_user_by_id_or_login(ident: str, email: str) -> User:
+def get_user_by_id_or_login(ident: str, email: str) -> User | None:
     re_uid1 = r"^\d{4,6}-\d{1}$"
     re_uid2 = r"^\d{4,6}-\d{2}$"
 
@@ -1457,9 +1468,7 @@ def get_user_by_id_or_login(ident: str, email: str) -> User:
     elif re.match(BaseUser.login_regex, ident):
         user = user.filter_by(login=ident)
 
-    user = user.one_or_none()
-
-    return user
+    return t.cast(User | None, user.one_or_none())
 
 
 @with_transaction

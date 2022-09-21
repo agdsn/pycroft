@@ -574,7 +574,7 @@ class PreMember(ModelBase, BaseUser):
 
     room = relationship("Room")
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         password = kwargs.pop('password', None)
         super().__init__(**kwargs)
         if password is not None:

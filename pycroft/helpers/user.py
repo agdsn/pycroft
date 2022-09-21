@@ -58,7 +58,7 @@ def verify_password(plaintext_password, hash):
         return False
 
 
-def generate_random_str(length):
+def generate_random_str(length: int) -> str:
     """
     Generates an aplhanumeric random string
 
