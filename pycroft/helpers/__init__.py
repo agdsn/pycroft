@@ -2,12 +2,9 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 """
-    pycroft.helpers
-    ~~~~~~~~~~~~~~~
+This package contains different helper modules
 
-    This package contains different helper modules
-
-    :copyright: (c) 2012 by AG DSN.
+:copyright: (c) 2022 by AG DSN.
 """
 from enum import Enum
 

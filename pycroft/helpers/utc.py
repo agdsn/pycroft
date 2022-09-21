@@ -1,3 +1,7 @@
+"""
+pycroft.helpers.utc
+~~~~~~~~~~~~~~~~~~~
+"""
 from datetime import datetime, time, timezone, date
 from typing import NewType
 

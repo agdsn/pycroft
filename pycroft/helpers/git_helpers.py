@@ -1,3 +1,7 @@
+"""
+pycroft.helpers.git_helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
 from datetime import datetime
 from logging import getLogger
 from subprocess import call

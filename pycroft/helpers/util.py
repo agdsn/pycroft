@@ -1,3 +1,7 @@
+"""
+pycroft.helpers.util
+~~~~~~~~~~~~~~~~~~~~
+"""
 def or_default(value, default):
     """
     Helps to avoid using a temporary variable in cases similiar to the following::
