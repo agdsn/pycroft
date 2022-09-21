@@ -32,7 +32,6 @@ from wtforms import BooleanField
 from pycroft import config, lib
 from pycroft.exc import PycroftException
 from pycroft.helpers.i18n import localized
-from pycroft.helpers.util import map_or_default
 from pycroft.lib import finance
 from pycroft.lib.finance import end_payment_in_default_memberships, \
     post_transactions_for_membership_fee, build_transactions_query, \
@@ -102,9 +101,11 @@ def bank_accounts_list_json():
                 btn_class='btn-primary'
             ),
             'balance': money_filter(bank_account.balance),
-            'last_imported_at': '{}'.format(
-                map_or_default(bank_account.last_imported_at, datetime.date,
-                               'nie'))
+            'last_imported_at': (
+                str(datetime.date(i))
+                if (i := bank_account.last_imported_at) is not None
+                else "nie"
+            )
         } for bank_account in BankAccount.q.all()])
 
 
@@ -146,8 +147,11 @@ def bank_accounts_errors_json():
                 title='korrigieren',
                 btn_class='btn-primary'
             ),
-            'imported_at': '{}'.format(
-                map_or_default(error.imported_at, datetime.date, 'nie'))
+            'imported_at': (
+                str(datetime.date(i))
+                if (i := error.imported_at) is not None
+                else "nie"
+            ),
         } for error in MT940Error.q.all()])
 
 
@@ -167,8 +171,11 @@ def bank_accounts_import():
 
         # set start_date, end_date
         if form.start_date.data is None:
-            form.start_date.data = map_or_default(bank_account.last_imported_at,
-                                                  datetime.date, date(2018, 1, 1))
+            form.start_date.data = (
+                datetime.date(i)
+                if (i := bank_account.last_imported_at) is not None
+                else date(2018, 1, 1)
+            )
         if form.end_date.data is None:
             form.end_date.data = date.today()
 

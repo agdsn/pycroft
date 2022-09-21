@@ -13,4 +13,3 @@ pycroft.helpers
 .. automodule:: pycroft.helpers.task
 .. automodule:: pycroft.helpers.user
 .. automodule:: pycroft.helpers.utc
-.. automodule:: pycroft.helpers.util
