@@ -29,7 +29,7 @@ def determine_building(shortname: str | None = None, id: int | None = None) -> B
     :return: The unique building
     """
     if shortname:
-        return Building.q.filter(Building.short_name == shortname).one()
+        return t.cast(Building, Building.q.filter(Building.short_name == shortname).one())
     if id:
         return Building.get(id)
     raise ValueError("Either shortname or id must be given to identify the building!")
