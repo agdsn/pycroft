@@ -4,9 +4,10 @@ pycroft.helpers.task
 """
 import logging
 import sys
+import typing as t
 
 from celery import Task
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
 
 from pycroft.model.session import set_scoped_session, session
 from scripts.connection import get_connection_string, try_create_connection
@@ -38,7 +39,9 @@ class DBTask(Task):
                                                                  logger=logging.getLogger("tasks"),
                                                                  echo=False)
 
-            set_scoped_session(scoped_session(sessionmaker(bind=self.engine)))
+            set_scoped_session(
+                t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
+            )
 
     def __del__(self):
         if self.connection is not None:

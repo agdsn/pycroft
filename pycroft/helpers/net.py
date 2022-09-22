@@ -6,6 +6,7 @@ pycroft.helpers.net
 ~~~~~~~~~~~~~~~~~~~
 """
 import re
+import typing as t
 
 import ipaddr
 # Byte represented by 2 hexadecimal digits
@@ -117,6 +118,6 @@ def reverse_pointer(ip_address):
 
 def get_interface_manufacturer(mac) -> str | None:
     try:
-        return MacLookup().lookup(mac)[:8]
+        return t.cast(str, MacLookup().lookup(mac)[:8])
     except KeyError:
-        return
+        return None

@@ -7,6 +7,7 @@ pycroft.helpers.i18n
 """
 from __future__ import annotations
 import typing
+import typing as t
 from datetime import date, datetime, time, timedelta
 from functools import partial
 
@@ -61,7 +62,12 @@ def dngettext(domain: str, singular: str, plural: str, n: int) -> str:
     return typing.cast(str, get_translations().udngettext(domain, singular, plural, n))
 
 
-T = typing.TypeVar("T", covariant=True)
+if typing.TYPE_CHECKING:
+    from _typeshed import SupportsAllComparisons
+
+    T = typing.TypeVar("T", bound=SupportsAllComparisons)
+else:
+    T = typing.TypeVar("T")
 P = typing.ParamSpec("P")
 
 
@@ -77,7 +83,8 @@ Options: typing.TypeAlias = dict[type, TypeSpecificOptions]
 
 class Formatter(typing.Protocol[T, P]):
     __option_policy__: OptionPolicy
-    __call__: typing.Callable[typing.Concatenate[T, P], Formattable]
+    # first parameter is `Self`
+    __call__: t.Callable[t.Concatenate[Formatter, T, P], Formattable]
     __name__: str
 
 
@@ -152,7 +159,7 @@ def format_none(n):
 
 
 @type_specific_options
-def format_interval(interval: Interval[T], **options: TypeSpecificOptions):
+def format_interval(interval: Interval, **options: TypeSpecificOptions):
     lower_bound = interval.lower_bound
     upper_bound = interval.upper_bound
     assert type(lower_bound) == type(upper_bound)
@@ -273,7 +280,7 @@ serialize_map: dict[type, typing.Callable] = {
 }
 
 
-def deserialize_interval(value: dict[str, typing.Any]) -> Interval[T]:
+def deserialize_interval(value: dict[str, typing.Any]) -> Interval:
     try:
         lower_value = (
             deserialize_param(u)
@@ -301,8 +308,8 @@ def deserialize_interval(value: dict[str, typing.Any]) -> Interval[T]:
             f"expected ['upper_closed'] to be bool, got {type(upper_closed)}"
         )
     return Interval(
-        lower_bound=Bound[T](lower_value, lower_closed),
-        upper_bound=Bound[T](upper_value, upper_closed),
+        lower_bound=Bound(lower_value, lower_closed),
+        upper_bound=Bound(upper_value, upper_closed),
     )
 
 

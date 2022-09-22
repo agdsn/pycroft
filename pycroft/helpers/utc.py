@@ -14,19 +14,19 @@ DateTimeNoTz = NewType('DateTimeNoTz', datetime)
 
 
 def time_min() -> TimeTz:
-    return time.min.replace(tzinfo=timezone.utc)
+    return TimeTz(time.min.replace(tzinfo=timezone.utc))
 
 
 def time_max() -> TimeTz:
-    return time.max.replace(tzinfo=timezone.utc)
+    return TimeTz(time.max.replace(tzinfo=timezone.utc))
 
 
 def datetime_min() -> DateTimeTz:
-    return datetime.min.replace(tzinfo=timezone.utc)
+    return DateTimeTz(datetime.min.replace(tzinfo=timezone.utc))
 
 
 def datetime_max() -> DateTimeTz:
-    return datetime.max.replace(tzinfo=timezone.utc)
+    return DateTimeTz(datetime.max.replace(tzinfo=timezone.utc))
 
 
 def with_min_time(d: date) -> DateTimeTz:
