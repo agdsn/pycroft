@@ -919,10 +919,16 @@ def generate_user_sheet(
     Only necessary if wifi=True:
     :param generation_purpose: Optional purpose why this usersheet was printed
     """
-    return generate_pdf(new_user, wifi, user, user_id=encode_type2_user_id(user.id),
-                        plain_user_password=plain_user_password,
-                        generation_purpose=generation_purpose,
-                        plain_wifi_password=plain_wifi_password)
+    return generate_pdf(
+        new_user=new_user,
+        wifi=wifi,
+        bank_account=config.membership_fee_bank_account,
+        user=user,
+        user_id=encode_type2_user_id(user.id),
+        plain_user_password=plain_user_password,
+        generation_purpose=generation_purpose,
+        plain_wifi_password=plain_wifi_password,
+    )
 
 
 def membership_ending_task(user: User) -> UserTask:

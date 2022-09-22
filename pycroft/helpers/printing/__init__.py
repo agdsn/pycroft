@@ -2,6 +2,7 @@
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import datetime
+import typing as t
 from io import BytesIO
 from os.path import dirname, join
 
@@ -16,10 +17,6 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_RIGHT, TA_CENTER
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
 
-from pycroft.model.finance import BankAccount
-from pycroft import config
-from pycroft.model.user import User
-
 ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
 ASSETS_EMAIL_FILENAME = join(ASSETS_DIRECTORY, 'email.png')
@@ -28,10 +25,51 @@ ASSETS_TWITTER_FILENAME = join(ASSETS_DIRECTORY, 'twitter.png')
 ASSETS_WEB_FILENAME = join(ASSETS_DIRECTORY, 'web.png')
 ASSETS_HOUSE_FILENAME = join(ASSETS_DIRECTORY, 'house.png')
 
+class BankAccount(t.Protocol):
+    bank: t.Any
+    iban: t.Any
+    bic: t.Any
+
+
+class Building(t.Protocol):
+    short_name: str
+
+
+class Address(t.Protocol):
+    def __format__(self, format_spec: str) -> str:
+        ...
+
+
+class Room(t.Protocol):
+    building: Building
+    level: int
+    number: str
+    address: Address
+
+
+class Interface(t.Protocol):
+    mac: str
+
+
+class Host(t.Protocol):
+    interfaces: t.Iterable[Interface]
+
+
+class User(t.Protocol):
+    name: str
+    login: str
+    room: Room | None
+    email_internal: str
+    email: str | None
+    address: Address
+    hosts: t.Iterable[Host]
+
 
 def generate_user_sheet(
+    *,
     new_user: bool,
     wifi: bool,
+    bank_account: BankAccount,
     user: User | None = None,
     user_id: str | None = None,
     plain_user_password: str | None = None,
@@ -43,6 +81,7 @@ def generate_user_sheet(
 
     :param new_user: Generate a page for a new created user
     :param wifi: Generate a page with the wifi credantials
+    :param bank_account: The bank account to which fees shall be transferred.
     :param generation_purpose:
 
     Necessary in every case:
@@ -139,11 +178,7 @@ def generate_user_sheet(
             HRFlowable(width="100%", thickness=3, color=black, spaceBefore=0.4 * cm,
                        spaceAfter=0.4 * cm))
 
-        macs = []
-        for user_host in user.hosts:
-            for ip in user_host.ips:
-                macs.append(ip.interface.mac)
-
+        macs = {i.mac for h in user.hosts for i in h.interfaces}
         email = user.email_internal
         email_redirect = ""
         if user.email is not None:
@@ -223,8 +258,6 @@ def generate_user_sheet(
             six monthly contributions at once.'''.format(
             contribution / 100), style['JustifyText']))
 
-        bank = config.membership_fee_bank_account
-
         recipient = 'Studierendenrat TUD - AG DSN'
 
         if user.room:
@@ -243,12 +276,12 @@ def generate_user_sheet(
 
         amount = contribution / 100
         data = [
-            ['Beneficiary:', recipient],
-            ['Bank:', bank.bank],
-            ['IBAN:', bank.iban],
-            ['BIC:', bank.bic],
-            ['Purpose/Intended use/\nDescription:', purpose],
-            ['Amount', f'{amount:1.2f}€']
+            ["Beneficiary:", recipient],
+            ["Bank:", bank_account.bank],
+            ["IBAN:", bank_account.iban],
+            ["BIC:", bank_account.bic],
+            ["Purpose/Intended use/\nDescription:", purpose],
+            ["Amount", f"{amount:1.2f}€"],
         ]
         payment_table = Table(data, colWidths=[4 * cm, 4 * cm],
                               style=[
@@ -257,7 +290,8 @@ def generate_user_sheet(
 
         qr_size = 4 * cm
         qr_code = qr.QrCodeWidget(
-            generate_epc_qr_code(bank, recipient, amount, purpose))
+            generate_epc_qr_code(bank_account, recipient, amount, purpose)
+        )
         bounds = qr_code.getBounds()
         width = bounds[2] - bounds[0]
         height = bounds[3] - bounds[1]
