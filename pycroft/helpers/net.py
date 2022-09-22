@@ -12,6 +12,8 @@ import ipaddr
 # Byte represented by 2 hexadecimal digits
 from mac_vendor_lookup import MacLookup
 
+from pycroft.model.host import SwitchPort
+
 BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
 # Pattern for the most significant byte
 # Does not allow the first bit to be set (multicast flag)
@@ -90,23 +92,21 @@ sep1, sep2, sep3
 ip_regex = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
 
-def sort_ports(ports):
+def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
     number_re = re.compile(r"[0-9]+")
     letter_re = re.compile(r"[a-z]")
 
-    def make_sort_key(port):
+    def make_sort_key(port: SwitchPort) -> int:
         number = number_re.search(port.name)
         letter = letter_re.search(port.name.lower())
 
         return (int(number.group(0) if number else -1) +
                 1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
 
-    sorted_ports = sorted(ports, key=make_sort_key)
-
-    return sorted_ports
+    return sorted(ports, key=make_sort_key)
 
 
-def reverse_pointer(ip_address):
+def reverse_pointer(ip_address: ipaddr.IPv4Address | ipaddr.IPv6Address) -> str:
     if isinstance(ip_address, ipaddr.IPv4Address):
         reversed_octets = reversed(ip_address.exploded.split('.'))
         return '.'.join(reversed_octets) + '.in-addr.arpa'
@@ -116,7 +116,7 @@ def reverse_pointer(ip_address):
     raise TypeError()
 
 
-def get_interface_manufacturer(mac) -> str | None:
+def get_interface_manufacturer(mac: str) -> str | None:
     try:
         return t.cast(str, MacLookup().lookup(mac)[:8])
     except KeyError:

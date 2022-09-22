@@ -33,7 +33,16 @@ module = [
     "pycroft.lib",
     "pycroft.lib.*",
     "pycroft.helpers",
+    "pycroft.helpers.date",
     "pycroft.helpers.errorcode",
+    "pycroft.helpers.facilities",
+    #"pycroft.helpers.i18n",
+    #"pycroft.helpers.interval",
+    "pycroft.helpers.net",
+    "pycroft.helpers.printing",
+    "pycroft.helpers.task",
+    "pycroft.helpers.user",
+    "pycroft.helpers.utc",
 ]
 disallow_untyped_defs = true
 disallow_untyped_calls = true

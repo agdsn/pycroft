@@ -7,7 +7,7 @@ pycroft.model.host
 """
 from __future__ import annotations
 from sqlalchemy import Column, ForeignKey, event, UniqueConstraint
-from sqlalchemy.orm import backref, relationship, validates
+from sqlalchemy.orm import backref, relationship, validates, Mapped
 from sqlalchemy.schema import Table
 from sqlalchemy.types import Integer, String
 
@@ -33,7 +33,9 @@ class Host(IntegerIdModel):
                                                cascade_backrefs=False))
 
     # many to one from Host to Room
-    room = relationship(Room, backref=backref("hosts", cascade_backrefs=False))
+    room: Mapped[Room] = relationship(
+        Room, backref=backref("hosts", cascade_backrefs=False)
+    )
     # We don't want to `ONDELETE CASCADE` because deleting a room
     # should not delete a host being there
     room_id = Column(Integer, ForeignKey(Room.id, ondelete="SET NULL"),
@@ -49,7 +51,9 @@ class Switch(ModelBase):
     column, the primary key is `host_id`, a foreign key on a `Host`.
     """
     host_id = Column(Integer, ForeignKey(Host.id), primary_key=True, index=True)
-    host = relationship(Host, backref=backref("switch", uselist=False, viewonly=True))
+    host: Mapped[Host] = relationship(
+        Host, backref=backref("switch", uselist=False, viewonly=True)
+    )
 
     management_ip = Column(IPAddress, nullable=False)
 

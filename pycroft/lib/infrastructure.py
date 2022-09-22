@@ -191,7 +191,7 @@ def edit_switch(
             .format(switch.host.name, str(switch.host.room), str(room))
         log_room_event(message.to_json(), processor, switch.host.room)
 
-        switch.host.room = room
+        switch.host.room = room  # type: ignore
 
     if switch.management_ip != IPAddress(management_ip):
         message = deferred_gettext("Changed management IP of switch '{}' from {} to {}.")\

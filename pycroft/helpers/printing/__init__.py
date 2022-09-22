@@ -18,6 +18,7 @@ from reportlab.graphics.shapes import Drawing
 
 from pycroft.model.finance import BankAccount
 from pycroft import config
+from pycroft.model.user import User
 
 ASSETS_DIRECTORY = join(dirname(__file__), 'assets')
 ASSETS_LOGO_FILENAME = join(ASSETS_DIRECTORY, 'logo.png')
@@ -29,31 +30,32 @@ ASSETS_HOUSE_FILENAME = join(ASSETS_DIRECTORY, 'house.png')
 
 
 def generate_user_sheet(
-    new_user,
-    wifi,
-    user=None,
-    user_id=None,
-    plain_user_password=None,
-    generation_purpose="",
-    plain_wifi_password="",
+    new_user: bool,
+    wifi: bool,
+    user: User | None = None,
+    user_id: str | None = None,
+    plain_user_password: str | None = None,
+    generation_purpose: str = "",
+    plain_wifi_password: str = "",
 ) -> bytes:
     """Create a new datasheet for the given user.
     This usersheet can hold information about a user or about the wifi credentials of a user.
 
-    :param bool new_user: Generate a page for a new created user
-    :param bool wifi: Generate a page with the wifi credantials
+    :param new_user: Generate a page for a new created user
+    :param wifi: Generate a page with the wifi credantials
+    :param generation_purpose:
 
     Necessary in every case:
-    :param User user: A pycroft user
-    :param str user_id: The user's ID.  It has to be given extra,
+    :param user: A pycroft user
+    :param user_id: The user's ID.  It has to be given extra,
         because the user_id is not appearent given the ORM object
         itself; encoding is done in the library.
 
-    Only necessary if new_user=True:
-    :param str plain_user_password: The password
+    Only necessary if ``new_user=True``.
+    :param plain_user_password: The password
 
-    Only necessary if wifi=True:
-    :param str plain_wifi_password: The password for wifi
+    Only necessary if ``wifi=True``:
+    :param plain_wifi_password: The password for wifi
     """
     # Anlegen des PDF Dokuments, Seitengröße DIN A4 Hochformat)
     buf = BytesIO()
@@ -464,7 +466,7 @@ def generate_user_sheet(
     return buf.getvalue()
 
 
-def getStyleSheet():
+def getStyleSheet() -> StyleSheet1:
     """Returns a stylesheet object"""
     stylesheet = StyleSheet1()
 
@@ -498,7 +500,10 @@ def getStyleSheet():
 
     return stylesheet
 
-def generate_epc_qr_code(bank: BankAccount, recipient, amount, purpose):
+
+def generate_epc_qr_code(
+    bank: BankAccount, recipient: str, amount: float, purpose: str
+) -> str:
     # generate content for epc-qr-code (also known as giro-code)
     EPC_FORMAT = \
         "BCD\n001\n1\nSCT\n{bic}\n{recipient}\n{iban}\nEUR{amount}\n\n\n{purpose}\n\n"
