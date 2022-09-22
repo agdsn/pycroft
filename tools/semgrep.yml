@@ -114,6 +114,24 @@ rules:
       include:
         - "**/alembic/versions"
 
+  - id: dont-use-models-in-helpers
+    patterns:
+      - pattern-either:
+        - pattern: import pycroft
+        - pattern: import pycroft.model
+        - pattern: from pycroft import $FOO
+        - pattern: from pycroft.model import $FOO
+    message: |
+      Don't use pycroft model code in the helpers!
+      The helper modules should be self-contained,
+      so they can be used by `pycroft.{model,lib}` or the web code,
+      and not the other way around.
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - "pycroft/helpers"
+
   - id: dont-commit-session-in-tests
     pattern: session.commit()
     message: |
