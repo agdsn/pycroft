@@ -18,8 +18,10 @@ if t.TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
     # TODO figure out how we can demand that T shall be a totally ordered metric space
     T = t.TypeVar("T", bound=SupportsAllComparisons)
+    U = t.TypeVar("U", bound=SupportsAllComparisons)
 else:
     T = t.TypeVar("T")
+    U = t.TypeVar("U")
 
 
 def _infinity(name):
@@ -462,6 +464,41 @@ class Interval(tuple, Generic[T]):
         assert len(diff_set) == 1
         return diff_set[0]
 
+    def map(self, f: t.Callable[[T], U]) -> Interval[U]:
+        r"""Apply a monotonic function to the interval's bounds.
+
+        For instance, the following would turn a :class:`datetime` interval into a
+        :class:`date` interval by mapping ``dt↦dt.date()``:
+
+        >>> from datetime import datetime, date
+        >>> i = closedopen(datetime.fromisoformat("2020-01-01T00:00:00Z"), None)
+        >>> i_dates = i.map(lambda dt: dt.date())
+        >>> assert i_dates == closedopen(date(2020, 1, 1), None)
+
+        .. note:: This turns :class:`Interval` into a functor from the category of
+            linearly ordered types (i.e., ``SupportsAllComparisons``) to the category of types.
+            In other words, for every map :math:`f:T→U`,
+            we get a corresponding map :math:`Ff: \mathrm{Interval}[T]→\mathrm{Interval}[U]`
+            in a way which
+
+            * preserves identity, i.e. ``i.map(lambda x: x) == i``
+            * satisfies :math:`F(f\circ g) = Ff \circ Fg`,
+              i.e. ``i.map(f).map(g) == i.map(lambda x: g(f(x))``
+
+        .. hint:: monotonicity is necessary because otherwise there is some pair of values
+            :math:`(x, y)` such that the values :math:`(f(x), f(y))` are invalid
+            as bounds for an interval.
+
+        :param f: A monotonic function (that is, a function satisfying :math:`x≤y⇒f(x)≤f(y)`
+            for all :math:`x, y: T`)
+        :return: A new interval with f applied to its bounds
+        """
+        return Interval[U](
+            t.cast(Bound[U], l) if (l := self.lower_bound).unbounded
+            else Bound[U](f(t.cast(T, l.value)), l.closed),
+            t.cast(Bound[U], u) if (u := self.lower_bound).unbounded
+            else Bound[U](f(t.cast(T, u.value)), u.closed),
+        )
 
 def _convert_begin(begin: T | None) -> TWithInfinity:
     return t.cast(TWithInfinity, NegativeInfinity) if begin is None else begin

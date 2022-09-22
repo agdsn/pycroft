@@ -29,7 +29,7 @@ from pycroft import config
 from pycroft.helpers.date import diff_month, last_day_of_month
 from pycroft.helpers.i18n import deferred_gettext, gettext
 from pycroft.helpers.interval import (
-    closed, Bound, Interval, IntervalSet, UnboundedInterval, closedopen)
+    closed, Interval, IntervalSet, UnboundedInterval, closedopen)
 from pycroft.helpers.utc import with_min_time, with_max_time, DateTimeTz
 from pycroft.lib.exc import PycroftLibException
 from pycroft.lib.logging import log_user_event, log_event
@@ -398,23 +398,8 @@ def post_transactions_for_membership_fee(
     ]
 
 
-def _to_date_interval(interval: Interval[datetime]) -> Interval[date]:
-    """This applies ``λx→x.date()`` to the interval's values."""
-    if interval.lower_bound.unbounded:
-        lower_bound = t.cast(Bound[date], interval.lower_bound)
-    else:
-        lower_bound = Bound(interval.lower_bound.value.date(),
-                            interval.lower_bound.closed)
-    if interval.upper_bound.unbounded:
-        upper_bound = t.cast(Bound[date], interval.upper_bound)
-    else:
-        upper_bound = Bound(interval.upper_bound.value.date(),
-                            interval.upper_bound.closed)
-    return Interval(lower_bound, upper_bound)
-
-
 def _to_date_intervals(intervals: t.Iterable[Interval[datetime]]) -> IntervalSet[date]:
-    return IntervalSet(_to_date_interval(i) for i in intervals)
+    return IntervalSet(i.map(operator.methodcaller("date")) for i in intervals)
 
 
 class MT940Record(NamedTuple):
