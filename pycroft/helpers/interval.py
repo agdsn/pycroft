@@ -12,12 +12,14 @@ import operator
 import typing as t
 from functools import reduce
 from itertools import tee, chain, filterfalse
-from typing import TypeVar, Generic
+from typing import Generic
 
-from _typeshed import SupportsAllComparisons
-
-# TODO figure out how we can demand that T shall be a totally ordered metric space
-T = TypeVar("T", bound=SupportsAllComparisons)
+if t.TYPE_CHECKING:
+    from _typeshed import SupportsAllComparisons
+    # TODO figure out how we can demand that T shall be a totally ordered metric space
+    T = t.TypeVar("T", bound=SupportsAllComparisons)
+else:
+    T = t.TypeVar("T")
 
 
 def _infinity(name):
