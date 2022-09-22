@@ -22,13 +22,21 @@ class DBTask(Task):
     connection = None
     engine = None
 
-    def run(self, *args, **kwargs):
+    def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         pass
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo=None):
+    def after_return(
+        self,
+        status: str,
+        retval: t.Any,
+        task_id: str,
+        args: tuple,
+        kwargs: dict,
+        einfo: t.Any = None,
+    ) -> None:
         session.close()
 
-    def __init__(self):
+    def __init__(self) -> None:
         in_celery = sys.argv and sys.argv[0].endswith("celery") and "worker" in sys.argv
         if not in_celery:
             return
@@ -48,6 +56,6 @@ class DBTask(Task):
             t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
         )
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.connection is not None:
             self.connection.close()
