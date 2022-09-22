@@ -5,7 +5,6 @@ pycroft.helpers
 
 .. automodule:: pycroft.helpers.date
 .. automodule:: pycroft.helpers.errorcode
-.. automodule:: pycroft.helpers.facilities
 .. automodule:: pycroft.helpers.i18n
 .. automodule:: pycroft.helpers.interval
 .. automodule:: pycroft.helpers.net

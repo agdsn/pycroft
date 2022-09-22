@@ -13,7 +13,7 @@ from wtforms_widgets.fields.custom import LazyLoadSelectField, static, \
     TypeaheadField
 from wtforms_widgets.fields.filters import to_uppercase, empty_to_none
 
-from pycroft.helpers.facilities import sort_buildings
+from pycroft.lib.facilities import sort_buildings
 from pycroft.model.facilities import Building
 from .address import ADDRESS_ENTITIES
 from ..helpers.form import iter_prefixed_field_names

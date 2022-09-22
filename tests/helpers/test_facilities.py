@@ -3,7 +3,7 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 import pytest
 
-from pycroft.helpers.facilities import sort_buildings
+from pycroft.lib.facilities import sort_buildings
 
 
 @pytest.fixture

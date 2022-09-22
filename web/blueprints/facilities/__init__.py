@@ -18,8 +18,8 @@ from flask_wtf import FlaskForm as Form
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.sql import and_, select, exists
 
+import pycroft.lib.facilities
 from pycroft import lib
-from pycroft.helpers import facilities
 from pycroft.helpers.i18n import gettext
 from pycroft.lib.host import sort_ports
 from pycroft.lib.address import get_or_create_address
@@ -72,14 +72,14 @@ def overview_json():
                 href=url_for("facilities.building_levels",
                              building_shortname=building.short_name),
                 title=building.street_and_number
-            ) for building in facilities.sort_buildings(site.buildings)]
+            ) for building in pycroft.lib.facilities.sort_buildings(site.buildings)]
         } for site in Site.q.order_by(Site.name).all()])
 
 
 @bp.route('/site/<int:site_id>')
 def site_show(site_id):
     site = Site.get(site_id)
-    buildings_list = facilities.sort_buildings(site.buildings)
+    buildings_list = pycroft.lib.facilities.sort_buildings(site.buildings)
     return render_template('facilities/site_show.html',
         buildings=buildings_list,
         page_title=site.name)
@@ -88,7 +88,7 @@ def site_show(site_id):
 @bp.route('/building/<int:building_id>/')
 @bp.route('/building/<building_shortname>/')
 def building_show(building_id=None, building_shortname=None):
-    building = facilities.determine_building(id=building_id, shortname=building_shortname)
+    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
         flash("Gebäude existiert nicht!", 'error')
@@ -103,7 +103,7 @@ def building_show(building_id=None, building_shortname=None):
 @bp.route('/building/<int:building_id>/levels/')
 @bp.route('/building/<building_shortname>/levels/')
 def building_levels(building_id=None, building_shortname=None):
-    building = facilities.determine_building(id=building_id, shortname=building_shortname)
+    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
         flash("Gebäude existiert nicht!", 'error')
@@ -234,7 +234,7 @@ def room_edit(room_id):
 @bp.route('/building/<int:building_id>/level/<int:level>/rooms/')
 @bp.route('/building/<building_shortname>/level/<int:level>/rooms/')
 def building_level_rooms(level, building_id=None, building_shortname=None):
-    building = facilities.determine_building(building_shortname, building_id)
+    building = pycroft.lib.facilities.determine_building(building_shortname, building_id)
 
     if building is None:
         flash("Gebäude existiert nicht!", 'error')
@@ -257,7 +257,7 @@ def building_level_rooms(level, building_id=None, building_shortname=None):
 @bp.route('/building/<int:building_id>/level/<int:level>/rooms/json')
 @bp.route('/building/<building_shortname>/level/<int:level>/rooms/json')
 def building_level_rooms_json(level, building_id=None, building_shortname=None):
-    building = facilities.determine_building(id=building_id, shortname=building_shortname)
+    building = pycroft.lib.facilities.determine_building(id=building_id, shortname=building_shortname)
 
     if building is None:
         flash("Gebäude existiert nicht!", 'error')
@@ -557,7 +557,7 @@ def json_rooms():
 def overcrowded(building_id):
     page_title = "Mehrfachbelegungen"
     if building_id:
-        building = facilities.determine_building(id=building_id)
+        building = pycroft.lib.facilities.determine_building(id=building_id)
         if building is None:
             flash("Gebäude existiert nicht!", 'error')
             abort(404)
