@@ -419,7 +419,7 @@ def migrate_user_host(host: Host, new_room: Room, processor: User) -> None:
     :return:
     """
     old_room = host.room
-    host.room = new_room  # type: ignore
+    host.room = new_room
 
     subnets_old = get_subnets_for_room(old_room)
     subnets = get_subnets_for_room(new_room)
