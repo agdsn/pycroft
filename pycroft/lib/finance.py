@@ -398,10 +398,6 @@ def post_transactions_for_membership_fee(
     ]
 
 
-def _to_date_intervals(intervals: t.Iterable[Interval[datetime]]) -> IntervalSet[date]:
-    return IntervalSet(i.map(operator.methodcaller("date")) for i in intervals)
-
-
 class MT940Record(NamedTuple):
     our_account_number: str
     posted_on: str
