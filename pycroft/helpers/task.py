@@ -3,6 +3,7 @@ pycroft.helpers.task
 ~~~~~~~~~~~~~~~~~~~~
 """
 import logging
+import os
 import sys
 import typing as t
 
@@ -28,20 +29,24 @@ class DBTask(Task):
         session.close()
 
     def __init__(self):
-        in_celery = sys.argv and sys.argv[0].endswith('celery') \
-                                   and 'worker' in sys.argv
-
-        if in_celery:
-            connection_string = get_connection_string()
-
-            self.connection, self.engine = try_create_connection(connection_string,
-                                                                 5,
-                                                                 logger=logging.getLogger("tasks"),
-                                                                 echo=False)
-
-            set_scoped_session(
-                t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
+        in_celery = sys.argv and sys.argv[0].endswith("celery") and "worker" in sys.argv
+        if not in_celery:
+            return
+        try:
+            connection_string = os.environ["PYCROFT_DB_URI"]
+        except KeyError:
+            raise RuntimeError(
+                "Environment variable PYCROFT_DB_URI must be "
+                "set to an SQLAlchemy connection string."
             )
+
+        self.connection, self.engine = try_create_connection(
+            connection_string, 5, logger=logging.getLogger("tasks"), echo=False
+        )
+
+        set_scoped_session(
+            t.cast(Session, scoped_session(sessionmaker(bind=self.engine)))
+        )
 
     def __del__(self):
         if self.connection is not None:
