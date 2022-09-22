@@ -17,12 +17,12 @@ from flask_wtf import FlaskForm as Form
 from ipaddr import IPAddress
 from sqlalchemy.orm import joinedload
 
-from pycroft.helpers import net
 from pycroft.lib.infrastructure import create_switch, \
     edit_switch, delete_switch, create_switch_port, \
     patch_switch_port_to_patch_port, PatchPortAlreadyPatchedException, \
     edit_switch_port, remove_patch_to_patch_port, delete_switch_port
 from pycroft.lib.net import get_subnets_with_usage
+from pycroft.lib.host import sort_ports
 from pycroft.model import session
 from pycroft.model.facilities import Room
 from pycroft.model.host import Switch, SwitchPort
@@ -139,7 +139,7 @@ def switch_show_json(switch_id):
     if not switch:
         abort(404)
     switch_port_list = switch.ports
-    switch_port_list = net.sort_ports(switch_port_list)
+    switch_port_list = sort_ports(switch_port_list)
     T = PortTable
     return jsonify(items=[{
             "switchport_name": port.name,

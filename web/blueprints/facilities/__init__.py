@@ -21,7 +21,7 @@ from sqlalchemy.sql import and_, select, exists
 from pycroft import lib
 from pycroft.helpers import facilities
 from pycroft.helpers.i18n import gettext
-from pycroft.helpers.net import sort_ports
+from pycroft.lib.host import sort_ports
 from pycroft.lib.address import get_or_create_address
 from pycroft.lib.facilities import get_overcrowded_rooms, create_room, \
     edit_room, \

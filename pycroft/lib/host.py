@@ -10,11 +10,12 @@ import typing as t
 import ipaddr
 
 from pycroft.helpers.i18n import deferred_gettext
+from pycroft.helpers.net import port_name_sort_key
 from pycroft.lib.logging import log_user_event
 from pycroft.lib.net import get_subnets_for_room, get_free_ip
 from pycroft.lib.user import migrate_user_host
 from pycroft.model.facilities import Room
-from pycroft.model.host import Interface, IP, Host
+from pycroft.model.host import Interface, IP, Host, SwitchPort
 from pycroft.model.session import with_transaction, session
 from pycroft.model.user import User
 
@@ -218,3 +219,10 @@ def interface_delete(interface: Interface, processor: User) -> None:
     )
 
     session.delete(interface)
+
+
+def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
+    def make_sort_key(port: SwitchPort) -> int:
+        return port_name_sort_key(port.name)
+
+    return sorted(ports, key=make_sort_key)

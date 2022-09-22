@@ -12,8 +12,6 @@ import ipaddr
 # Byte represented by 2 hexadecimal digits
 from mac_vendor_lookup import MacLookup
 
-from pycroft.model.host import SwitchPort
-
 BYTE_PATTERN = r'(?:[a-fA-F0-9]{2})'
 # Pattern for the most significant byte
 # Does not allow the first bit to be set (multicast flag)
@@ -92,18 +90,14 @@ sep1, sep2, sep3
 ip_regex = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
 
-def sort_ports(ports: t.Iterable[SwitchPort]) -> list[SwitchPort]:
-    number_re = re.compile(r"[0-9]+")
-    letter_re = re.compile(r"[a-z]")
+number_re = re.compile(r"[0-9]+")
+letter_re = re.compile(r"[a-z]")
 
-    def make_sort_key(port: SwitchPort) -> int:
-        number = number_re.search(port.name)
-        letter = letter_re.search(port.name.lower())
-
-        return (int(number.group(0) if number else -1) +
-                1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
-
-    return sorted(ports, key=make_sort_key)
+def port_name_sort_key(port_name: str) -> int:
+    number = number_re.search(port_name)
+    letter = letter_re.search(port_name.lower())
+    return (int(number.group(0) if number else -1) +
+            1024 * ord(letter.group(0) if letter else chr(ord("a") - 1)))
 
 
 def reverse_pointer(ip_address: ipaddr.IPv4Address | ipaddr.IPv6Address) -> str:

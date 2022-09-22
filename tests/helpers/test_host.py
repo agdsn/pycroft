@@ -7,7 +7,7 @@ from random import shuffle
 import ipaddr
 import pytest
 
-from pycroft.helpers.net import sort_ports
+from pycroft.helpers.net import port_name_sort_key
 from pycroft.lib.host import change_mac, generate_hostname
 from pycroft.lib.net import SubnetFullException, get_free_ip
 from pycroft.model.host import IP
@@ -20,19 +20,14 @@ def port_names():
 
 
 @pytest.fixture
-def shuffled_ports(port_names):
-    @dataclass
-    class FakePort:
-        name: str
-
-    fake_ports = [FakePort(name) for name in port_names]
-    shuffle(fake_ports)
-    return fake_ports
+def shuffled_port_names(port_names):
+    shuffled = port_names.copy()
+    shuffle(shuffled)
+    return shuffled
 
 
-def test_port_sorting(port_names, shuffled_ports):
-    resorted = [p.name for p in sort_ports(shuffled_ports)]
-    assert resorted == port_names
+def test_port_sorting(port_names, shuffled_port_names):
+    assert sorted(shuffled_port_names, key=port_name_sort_key) == port_names
 
 
 @pytest.mark.parametrize('address, expected', [
@@ -66,6 +61,7 @@ def calculate_usable_ips(net):
 
 
 def test_get_free_ip_simple(session, subnet):
+    # TODO this has nothing to do with the helpers.
     ip, subnet2 = get_free_ip((subnet,))
     assert subnet2 == subnet
     assert ip in subnet.address
