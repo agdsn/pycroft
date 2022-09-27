@@ -3,7 +3,7 @@ omit =
     */lib/python2.6/*
     */pyshared/*
     tests/*
-    migration/*
+    */alembic/versions/*
     web/*
 
 [report]
@@ -11,6 +11,6 @@ omit =
     */lib/python2.6/*
     */pyshared/*
     tests/*
-    migration/*
+    */alembic/versions/*
     web/*
 
