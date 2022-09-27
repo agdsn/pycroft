@@ -5,13 +5,12 @@ set -euo pipefail
 readonly USAGE=("[args]")
 
 readonly DESCRIPTION=(
-	"Run unit tests. Optional arguments are passed to the unittest module."
+	"Run unit tests. Optional arguments are passed to the pytest CLI."
 )
 
 run() {
 	cd /opt/pycroft/app
-	exec pytest -v -m 'not legacy' "$@"
-	exec pytest -v -m 'legacy' "$@"
+	exec pytest -v "$@"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && run "$@" || :
