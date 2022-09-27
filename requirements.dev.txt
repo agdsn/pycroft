@@ -3,6 +3,7 @@ factory-boy~=3.2.0
 pydot~=1.4.1
 pytest~=7.0.0
 pytest-timeout~=2.1.0
+pytest-cov~=3.0.0
 git+https://github.com/lukasjuhrich/sqlalchemy_schemadisplay.git@master#egg=sqlalchemy-schemadisplay
 pytest-flask~=1.2.0
 sphinx~=5.1.1
