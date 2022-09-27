@@ -115,13 +115,13 @@ jobs:
           docker-compose -f docker-compose.test.yml run --rm test-app
           test -m "not legacy"
           --junitxml=junit/test-results.xml
-          --cov=pycroft --cov=web --cov=ldap_search --cov=hades_logs --cov-append --cov-report html
+          --cov=pycroft --cov=web --cov=ldap_sync --cov=hades_logs --cov-append --cov-report html
       - name: Run legacy tests
         run: >
           docker-compose -f docker-compose.test.yml run --rm test-app
           test -m "legacy"
           --junitxml=junit/test-results-legacy.xml
-          --cov=pycroft --cov=web --cov=ldap_search --cov=hades_logs --cov-append --cov-report html
+          --cov=pycroft --cov=web --cov=ldap_sync --cov=hades_logs --cov-append --cov-report html
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
