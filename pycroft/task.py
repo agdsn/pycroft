@@ -30,7 +30,7 @@ from pycroft.lib.mail import send_mails, Mail, RetryableException, \
 from pycroft.lib.task import get_task_implementation
 from pycroft.model import session
 from pycroft.model.finance import BankAccountActivity
-from pycroft.model.session import with_transaction, session, set_scoped_session
+from pycroft.model.session import with_transaction, set_scoped_session
 from pycroft.model.swdd import swdd_vo, swdd_import, swdd_vv
 from pycroft.model.task import Task, TaskStatus
 from pycroft.model.traffic import TrafficVolume
@@ -90,7 +90,7 @@ class DBTask(CeleryTask):
         kwargs: dict,
         einfo: t.Any = None,
     ) -> None:
-        session.close()
+        session.session.close()
 
     def __init__(self) -> None:
         in_celery = sys.argv and sys.argv[0].endswith("celery") and "worker" in sys.argv
