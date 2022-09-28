@@ -20,6 +20,7 @@ Guides
     :maxdepth: 1
 
     guides/setup
+    guides/troubleshooting
 
 Reference Documentation
 -----------------------
