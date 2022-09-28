@@ -1,6 +1,8 @@
 Setting up the docker containers
 ================================
 
+.. _installed docker:
+
 Installing Docker and docker-compose
 ------------------------------------
 
@@ -22,8 +24,13 @@ by e.g. logging out and in again.
 You should now be able to run ``docker-compose config`` and see the
 current configuration.
 
+.. _docker environment:
+
 Setting environment variables
 -----------------------------
+Requires
+    * :ref:`cloned repository <cloned repository>`
+    * :ref:`installed docker <installed docker>`
 
 ``UID`` and ``GID``
 ~~~~~~~~~~~~~~~~~~~
@@ -99,14 +106,23 @@ e.g.:
 
 This will tag all generated images with the tag ``1.2.3``.
 
+.. _built images:
+
 Building the images
 -------------------
+Requires
+    * :ref:`docker environment <docker environment>`
+
 .. code:: bash
 
     docker compose build
 
+.. _running containers:
+
 Starting the containers
 -----------------------
+Requires
+    * :ref:`docker environment <docker environment>`
 
 A complete environment can be started by running
 

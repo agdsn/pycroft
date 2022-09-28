@@ -13,7 +13,7 @@ The first step should be to clone this repository via
 Contributing to dependencies
 ----------------------------
 Requires
-    * :ref:`built images`
+    * :ref:`built images <built images>`
 
 Pycroft has dependencies that are not part of the Pycroft project, but
 are maintained by the Pycroft team. Those are:
