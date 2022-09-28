@@ -13,6 +13,14 @@ Contents:
 
    self
 
+Guides
+------
+.. toctree::
+    :caption: Guides
+    :maxdepth: 1
+
+    guides/setup
+
 Reference Documentation
 -----------------------
 .. toctree::
