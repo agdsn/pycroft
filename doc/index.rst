@@ -21,6 +21,7 @@ Guides
 
     guides/setup
     guides/troubleshooting
+    guides/celery
 
 Reference Documentation
 -----------------------
