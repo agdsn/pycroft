@@ -1,0 +1,164 @@
+Setting up the docker containers
+================================
+
+Installing Docker and docker-compose
+------------------------------------
+
+Follow the guides
+`here <https://www.docker.com/community-edition#download>`__ and
+`here <https://docs.docker.com/compose/install/>`__. You will need at
+least docker engine ``17.06.0+`` and a docker compose ``1.16.0+``.
+
+Also, note that you might have to add your user to the ``docker`` group
+for running docker as a non-root:
+
+.. code:: sh
+
+   sudo usermod -aG docker $(whoami)
+
+After adding yourself to a new group, you need to obtain a new session,
+by e.g. logging out and in again.
+
+You should now be able to run ``docker-compose config`` and see the
+current configuration.
+
+Setting environment variables
+-----------------------------
+
+``UID`` and ``GID``
+~~~~~~~~~~~~~~~~~~~
+
+To set the ``UID`` and ``GID`` build arguments of the
+``agdsn/pycroft-base`` image with ``docker-compose``, use an
+``docker-compose`` ``.env`` file:
+
+.. code:: dotenv
+
+   UID=<your-uid>
+   GID=<your-gid>
+
+An ``.env`` template is included as ``example.env`` in the project root.
+Copy the example to ``.env`` and set the correct values for your user,
+``docker-compose`` will automatically pick up the contents of this file.
+The example also includes other useful environment variables, such as
+``COMPOSE_PROJECT_NAME``.
+
+You can also use environment variables from your shell to specify the
+UID/GID build arguments when invoking ``docker-compose``. The
+docker-compose files pass the ``UID`` and ``GID`` environment variables
+as build arguments to docker. Don’t be fooled by your shell however by
+executing the following command and feeling safe, if it outputs your
+UID:
+
+.. code:: bash
+
+   echo $UID
+
+Bash and zsh automatically define this variable, but do not export it:
+
+.. code:: bash
+
+   python3 -c 'import os; print(os.getenv("UID"))'
+
+You have to explicitly export the variable:
+
+.. code:: bash
+
+   export UID
+   # Bash does not set GID, zsh does, so you can omit the assignment with zsh:
+   export GID=$(id -g)
+
+You should put these lines somewhere in your shell’s startup script
+(e.g. ``.profile`` in your ``$HOME``), so that it is always defined, if
+you want to rely on these variables instead of an ``.env`` file.
+
+You could also the ``--build-arg`` option of ``docker-compose build``,
+but this is not advised as it can easily be forgotten.
+
+``COMPOSE_PROJECT_NAME``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``docker-compose`` uses the name of the directory, the compose file
+resides in, as the *project name*. This name is used as a prefix for all
+objects (containers, volumes, networks) created by ``docker-compose`` by
+default.
+
+To use a different project name, use the ``COMPOSE_PROJECT_NAME``
+environment variable.
+
+``TAG``
+~~~~~~~
+
+The tag of the images created by ``docker-compose`` can be specified
+with the ``TAG`` environment variable, which defaults to ``latest``,
+e.g.:
+
+.. code:: bash
+
+   TAG=1.2.3 docker-compose -f docker-compose.prod.yml build
+
+This will tag all generated images with the tag ``1.2.3``.
+
+Building the images
+-------------------
+.. code:: bash
+
+    docker compose build
+
+Starting the containers
+-----------------------
+
+A complete environment can be started by running
+
+.. code:: bash
+
+   docker-compose up -d
+
+This will start all *dev* environment. ``docker-compose`` will build
+necessary images if not already present, it will *not* however
+automatically rebuild the images if the ``Dockerfile``\ s or any files
+used by them are modified.
+
+If you run this command for the first time, this might take a while, as
+a series of packages and image are downloaded, so grab a cup of tea and
+relax.
+
+All services, except ``base``, which is only used to build the
+``agdsn/pycroft-base`` image, should now be marked as ``UP``, if you
+take a look at ``docker-compose ps``. There you see which port
+forwardings have been set up (remember the port ``web`` has been
+exposed!)
+
+Because you started them in detached mode, you will not see what they
+print to stdout. You can inspect the output like this:
+
+.. code:: sh
+
+   docker-compose logs # for all services
+   docker-compose logs dev-app  # for one service
+   docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
+
+The last command should tell you that the server spawned an instance at
+0.0.0.0:5000 from inside the container.
+
+**But don’t be too excited, pycroft will fail after the login – we have
+to set up the database.**
+
+To start another enviroment, run ``docker-compose`` with the\ ``-f``
+flag to specify a different compose file, e.g.:
+
+.. code:: bash
+
+   docker-compose -f docker-compose.test.yml up -d
+
+This would start the **test** environment.
+
+(Re-)building/Pulling images
+----------------------------
+
+You can (re-)build/pull a particular service/image (or all of them if no
+service is specified) by running:
+
+.. code:: bash
+
+   docker-compose build --force-rm --pull [service]
