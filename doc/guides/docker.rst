@@ -1,28 +1,27 @@
-Setting up the docker containers
-================================
+Docker
+======
 
 .. _installed docker:
 
-Installing Docker and docker-compose
+Installing Docker and Docker Compose
 ------------------------------------
+Requires
+    *nothing*
+You need to install
 
-Follow the guides
-`here <https://www.docker.com/community-edition#download>`__ and
-`here <https://docs.docker.com/compose/install/>`__. You will need at
-least docker engine ``17.06.0+`` and a docker compose ``1.16.0+``.
+* `Docker-engine <https://docs.docker.com/engine/install/>`__ ``≥17.06.0``
+* `Docker Compose <https://docs.docker.com/compose/install/>`__ ``≥1.16.0``
 
-Also, note that you might have to add your user to the ``docker`` group
-for running docker as a non-root:
+If not the case, add yourself to the ``docker`` group with
 
 .. code:: sh
 
    sudo usermod -aG docker $(whoami)
 
-After adding yourself to a new group, you need to obtain a new session,
-by e.g. logging out and in again.
+For the changes to take effect, you need to log out and log back in again.
 
-You should now be able to run ``docker-compose config`` and see the
-current configuration.
+Success
+    If ``docker-compose config`` displays the current configuration
 
 .. _docker environment:
 
