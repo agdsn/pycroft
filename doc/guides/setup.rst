@@ -39,19 +39,6 @@ To import a table from a CSV file, use:
 
 ``\copy [tablename] from 'file.csv' with delimiter ',' csv header;"``
 
-Running the test suite
-----------------------
-
-For the testing setup, there exists a separate docker-compose file:
-
-.. code:: sh
-
-   # get the stack up and running
-   docker-compose -f docker-compose.test.yml up -d
-   # run all the tests
-   docker-compose -f docker-compose.test.yml run --rm test-app test
-   # run only the frontend tests
-   docker-compose -f docker-compose.test.yml run --rm test-app test tests.frontend
 
 Making changes to the database schema
 -------------------------------------
