@@ -26,6 +26,7 @@ Guides
     guides/pycharm
     guides/tests
     guides/troubleshooting
+    guides/alembic
     guides/celery
 
 Reference Documentation
