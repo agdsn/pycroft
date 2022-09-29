@@ -6,12 +6,14 @@ Git
 Cloning the repository
 ----------------------
 Requires
-    A basic understanding of `git <https://git-scm.com/>`__
+    * A basic understanding of `git <https://git-scm.com/>`__
+    * `pre-commit <https://pre-commit.com/>`__
 
 .. code:: shell
 
     git clone --recursive https://github.com/agdsn/pycroft.git
     cd pycroft
+    pre-commit install  # to install the pre-commit hooks
 
 Contributing to dependencies
 ----------------------------
