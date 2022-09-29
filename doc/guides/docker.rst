@@ -99,9 +99,6 @@ Viewing logs
    docker-compose logs dev-app  # for one service
    docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
 
-**But don’t be too excited, pycroft will fail after the login – we have
-to set up the database.**
-
 
 (Re-)building/Pulling images
 ----------------------------
