@@ -2,42 +2,6 @@ Setting up the project
 ======================
 
 
-Setting up the Database
------------------------
-
-For this section, double check that every container is up and running
-via ``docker-compose ps``, and if necessary run ``docker-compose up -d``
-again.
-
-Pycroft needs a PostgreSQL database backend. The unit tests will
-generate the schema and data automatically, but usually you want to run
-your development instance against a recent copy of our current
-production database.
-
-The password for the ``postgres`` user is ``password``.
-
-Importing the production database into Pycroft is a three-step process:
-
-1. A regular dump is published in our `internal
-   gitlab <https://git.agdsn.de/AGDSN/pycroft-data>`__.
-
-   Clone this repository to your computer.
-
-2. Import the dump:
-
-   ``psql -h 127.0.0.1 -p 55432 -U postgres -d pycroft -f ../pycroft-data/pycroft.sql``
-
-After all that, you should be able to log in into your pycroft instance
-with the username ``agdsn`` at ``localhost:5000``. All users have the
-password ``password``.
-
-**Congratulations!**
-
-To import a table from a CSV file, use:
-
-``psql -h 127.0.0.1 -p 55432 -U postgres -d pycroft``
-
-``\copy [tablename] from 'file.csv' with delimiter ',' csv header;"``
 
 
 Making changes to the database schema

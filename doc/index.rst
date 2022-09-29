@@ -22,6 +22,7 @@ Guides
     guides/setup
     guides/git
     guides/docker
+    guides/database
     guides/pycharm
     guides/tests
     guides/troubleshooting
