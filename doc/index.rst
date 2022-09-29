@@ -22,6 +22,7 @@ Guides
     guides/setup
     guides/git
     guides/docker
+    guides/pycharm
     guides/troubleshooting
     guides/celery
 
