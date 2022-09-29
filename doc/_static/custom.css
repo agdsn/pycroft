@@ -30,6 +30,7 @@ dt.sig>.sig-prename {
 /* content hacks */
 
 #guides p.caption,
+#explanations p.caption,
 #reference-documentation p.caption,
 #indices-and-tables p.caption,
 #architecture-decision-records p.caption {
