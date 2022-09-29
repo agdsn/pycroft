@@ -5,10 +5,13 @@ Git
 
 Cloning the repository
 ----------------------
-A basic understanding of `git <https://git-scm.com/>`__ is advisable.
-The first step should be to clone this repository via
-``git clone --recursive <url>``, using what clone url shows you above
-`this very readme <https://github.com/agdsn/pycroft>`__.
+Requires
+    A basic understanding of `git <https://git-scm.com/>`__
+
+.. code:: shell
+
+    git clone --recursive https://github.com/agdsn/pycroft.git
+    cd pycroft
 
 Contributing to dependencies
 ----------------------------
