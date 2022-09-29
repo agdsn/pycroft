@@ -29,6 +29,14 @@ Guides
     guides/alembic
     guides/celery
 
+Explanations
+------------
+.. toctree::
+    :caption: Explanations
+    :maxdepth: 1
+
+    explanations/architecture
+
 Reference Documentation
 -----------------------
 .. toctree::
