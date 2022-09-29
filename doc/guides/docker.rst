@@ -41,10 +41,23 @@ This is best done using the ``.env`` file
     sed -i "s/# *GID=.*$/UID=${GID}/" .env
 
 
-``TAG``
-~~~~~~~
+.. _built images:
 
-The tag of the images created by ``docker-compose`` can be specified
+Building the dev images
+-----------------------
+Requires
+    * :ref:`docker environment <docker environment>`
+
+.. code:: bash
+
+    docker compose build
+
+Building the production images
+------------------------------
+Requires
+    * :ref:`docker environment <docker environment>`
+
+The tag of the images created by ``docker compose`` can be specified
 with the ``TAG`` environment variable, which defaults to ``latest``,
 e.g.:
 
@@ -54,16 +67,6 @@ e.g.:
 
 This will tag all generated images with the tag ``1.2.3``.
 
-.. _built images:
-
-Building the images
--------------------
-Requires
-    * :ref:`docker environment <docker environment>`
-
-.. code:: bash
-
-    docker compose build
 
 .. _running containers:
 
@@ -78,44 +81,27 @@ A complete environment can be started by running
 
    docker-compose up -d
 
-This will start all *dev* environment. ``docker-compose`` will build
-necessary images if not already present, it will *not* however
-automatically rebuild the images if the ``Dockerfile``\ s or any files
-used by them are modified.
-
 If you run this command for the first time, this might take a while, as
-a series of packages and image are downloaded, so grab a cup of tea and
-relax.
+the images have to be built (see :ref:`built images`)
 
-All services, except ``base``, which is only used to build the
-``agdsn/pycroft-base`` image, should now be marked as ``UP``, if you
-take a look at ``docker-compose ps``. There you see which port
-forwardings have been set up (remember the port ``web`` has been
-exposed!)
+Success
+    * If ``docker compose ps`` show ``dev-`` and ``test-``\ -services as ``UP``
+    * If logs show no errors (see :ref:`viewing logs`)
 
-Because you started them in detached mode, you will not see what they
-print to stdout. You can inspect the output like this:
 
+.. _viewing logs:
+
+Viewing logs
+------------
 .. code:: sh
 
    docker-compose logs # for all services
    docker-compose logs dev-app  # for one service
    docker-compose logs -f --tail=50 dev-app  # Print the last 50 entries and follow the logs
 
-The last command should tell you that the server spawned an instance at
-0.0.0.0:5000 from inside the container.
-
 **But don’t be too excited, pycroft will fail after the login – we have
 to set up the database.**
 
-To start another enviroment, run ``docker-compose`` with the\ ``-f``
-flag to specify a different compose file, e.g.:
-
-.. code:: bash
-
-   docker-compose -f docker-compose.test.yml up -d
-
-This would start the **test** environment.
 
 (Re-)building/Pulling images
 ----------------------------
