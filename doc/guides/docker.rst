@@ -32,66 +32,15 @@ Requires
     * :ref:`cloned repository <cloned repository>`
     * :ref:`installed docker <installed docker>`
 
-``UID`` and ``GID``
-~~~~~~~~~~~~~~~~~~~
+This is best done using the ``.env`` file
+(see `the compose docs <https://docs.docker.com/compose/environment-variables/>`_).
 
-To set the ``UID`` and ``GID`` build arguments of the
-``agdsn/pycroft-base`` image with ``docker-compose``, use an
-``docker-compose`` ``.env`` file:
+.. code:: sh
 
-.. code:: dotenv
+    cp example.env .env
+    sed -i "s/# *UID=.*$/UID=${UID}/" .env
+    sed -i "s/# *GID=.*$/UID=${GID}/" .env
 
-   UID=<your-uid>
-   GID=<your-gid>
-
-An ``.env`` template is included as ``example.env`` in the project root.
-Copy the example to ``.env`` and set the correct values for your user,
-``docker-compose`` will automatically pick up the contents of this file.
-The example also includes other useful environment variables, such as
-``COMPOSE_PROJECT_NAME``.
-
-You can also use environment variables from your shell to specify the
-UID/GID build arguments when invoking ``docker-compose``. The
-docker-compose files pass the ``UID`` and ``GID`` environment variables
-as build arguments to docker. Don’t be fooled by your shell however by
-executing the following command and feeling safe, if it outputs your
-UID:
-
-.. code:: bash
-
-   echo $UID
-
-Bash and zsh automatically define this variable, but do not export it:
-
-.. code:: bash
-
-   python3 -c 'import os; print(os.getenv("UID"))'
-
-You have to explicitly export the variable:
-
-.. code:: bash
-
-   export UID
-   # Bash does not set GID, zsh does, so you can omit the assignment with zsh:
-   export GID=$(id -g)
-
-You should put these lines somewhere in your shell’s startup script
-(e.g. ``.profile`` in your ``$HOME``), so that it is always defined, if
-you want to rely on these variables instead of an ``.env`` file.
-
-You could also the ``--build-arg`` option of ``docker-compose build``,
-but this is not advised as it can easily be forgotten.
-
-``COMPOSE_PROJECT_NAME``
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-``docker-compose`` uses the name of the directory, the compose file
-resides in, as the *project name*. This name is used as a prefix for all
-objects (containers, volumes, networks) created by ``docker-compose`` by
-default.
-
-To use a different project name, use the ``COMPOSE_PROJECT_NAME``
-environment variable.
 
 ``TAG``
 ~~~~~~~
