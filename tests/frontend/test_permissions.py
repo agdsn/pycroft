@@ -46,7 +46,7 @@ class TestAnonymous:
         test_client.assert_response_code('user.overview', 302)
 
 
-class Test_020_Permissions_Admin:
+class TestPermissionsAdmin:
     """Test permissions for admin usergroup.
     """
 
@@ -68,14 +68,14 @@ class Test_020_Permissions_Admin:
         with login_context(test_client, login, "password"):
             yield
 
-    def test_0010_access_buildings(self, test_client: TestClient):
+    def test_access_buildings(self, test_client: TestClient):
         test_client.assert_ok("facilities.overview")
 
-    def test_0020_access_finance(self, test_client: TestClient):
+    def test_access_finance(self, test_client: TestClient):
         test_client.assert_forbidden("finance.bank_accounts_list")
 
 
-class Test_030_Permissions_Finance:
+class TestPermissionsFinance:
     """Test permissions for finance usergroup (advanced).
     """
     @pytest.fixture(scope="class", autouse=True)
@@ -97,14 +97,14 @@ class Test_030_Permissions_Finance:
         with login_context(test_client, login, "password"):
             yield
 
-    def test_0010_access_buildings(self, test_client: TestClient):
+    def test_access_buildings(self, test_client: TestClient):
         test_client.assert_ok("facilities.overview")
 
-    def test_0020_access_finance(self, test_client: TestClient):
+    def test_access_finance(self, test_client: TestClient):
         test_client.assert_ok("finance.bank_accounts_list")
 
 
-class Test_040_Permissions_User:
+class TestPermissionsUser:
     """Test permissions as a user without any membership
     """
     @pytest.fixture(scope="class", autouse=True)
@@ -121,37 +121,37 @@ class Test_040_Permissions_User:
         with login_context(test_client, "member", "password"):
             yield
 
-    def test_0010_access_user(
+    def test_access_user(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         for url in blueprint_urls("user"):
             test_client.assert_url_forbidden(url)
 
-    def test_0020_access_finance(
+    def test_access_finance(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         for url in blueprint_urls("finance"):
             test_client.assert_url_forbidden(url)
 
-    def test_0030_access_buildings(
+    def test_access_buildings(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         for url in blueprint_urls("facilities"):
             test_client.assert_url_forbidden(url)
 
-    def test_0040_access_infrastructure(
+    def test_access_infrastructure(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         for url in blueprint_urls("infrastructure"):
             test_client.assert_url_forbidden(url)
 
-    def test_0050_access_properties(
+    def test_access_properties(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         for url in blueprint_urls("properties"):
             test_client.assert_url_forbidden(url)
 
-    def test_0060_access_login(
+    def test_access_login(
         self, test_client: TestClient, blueprint_urls: BlueprintUrls
     ):
         # Login see Test_010_Anonymous
