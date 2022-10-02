@@ -1,8 +1,11 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
+import typing as t
 
+import pytest
 from flask import url_for, current_app
+from flask.testing import FlaskClient
 from jinja2.runtime import Context
 
 from tests.factories.property import FinancePropertyGroupFactory, \
@@ -10,6 +13,7 @@ from tests.factories.property import FinancePropertyGroupFactory, \
 from tests.factories.user import UserFactory
 from tests.frontend.legacy_base import FrontendDataTestBase
 from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
+from web import PycroftFlask
 from web.template_filters import require
 
 
@@ -48,22 +52,33 @@ class PermissionsTestBase(FrontendDataTestBase, FactoryWithConfigDataTestBase):
             membership__includes_today=True,
         )
 
-class TestAnonymous(FrontendDataTestBase, FactoryDataTestBase):
+
+class TestAnonymous:
     """First test as anonymous user.
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
     """
-    def test_access_anonymous(self):
-        # Login is OK
-        self.assert_response_code(url_for('login.login'), 200)
+    @pytest.fixture(scope="class")
+    def assert_response_code(self, test_client: FlaskClient) -> t.Callable[[str, int], None]:
+        def _assert(url: str, status: int) -> None:
+            resp = test_client.get(url)
+            assert resp.status_code == status
+        return _assert
 
-        ctx = Context(self.app.jinja_env, None, "pseudo", {})
+    @pytest.fixture(scope='class')
+    def jinja_context(self, flask_app: PycroftFlask) -> Context:
+        return Context(flask_app.jinja_env, parent=None, name="pseudo", blocks={})
+
+    def test_access_anonymous(self, assert_response_code, jinja_context):
+        # Login is OK
+        assert_response_code(url_for('login.login'), 200)
+
         # Fetching static content is OK
-        self.assert_response_code(require(ctx, 'main.css'), 200)
+        assert_response_code(require(jinja_context, 'main.css'), 200)
 
         # Access to other pages/blueprints is NOT OK
-        self.assert_response_code(url_for('finance.bank_accounts_list'), 302)
-        self.assert_response_code(url_for('infrastructure.switches'), 302)
+        assert_response_code(url_for('finance.bank_accounts_list'), 302)
+        assert_response_code(url_for('infrastructure.switches'), 302)
 
 
 class Test_020_Permissions_Admin(PermissionsTestBase):
