@@ -16,6 +16,7 @@ from pycroft.model import _all
 from tests.factories import UserFactory, AdminPropertyGroupFactory, \
     MembershipFactory, ConfigFactory
 from tests.legacy_base import FactoryDataTestBase
+from web import PycroftFlask
 
 
 class FrontendDataTestBase(testing.TestCase):
@@ -72,19 +73,20 @@ class FrontendDataTestBase(testing.TestCase):
 
         return app
 
-    def blueprint_urls(self, app, blueprint_name):
+    def blueprint_urls(self, app: PycroftFlask, blueprint_name: str):
         rules = [rule for rule in app.url_map.iter_rules()
                  if rule.endpoint.startswith(blueprint_name + '.')]
         url_adapter = _request_ctx_stack.top.url_adapter
 
         return list(map(partial(self._build_rule, url_adapter), rules))
 
-    def _build_rule(self, url_adapter, rule):
+    @classmethod
+    def _build_rule(cls, url_adapter, rule):
         converters = rule._converters
         try:
             values = {
-                k: self._argument_creator_map.get(
-                    type(v), self._default_argument_creator
+                k: cls._argument_creator_map.get(
+                    type(v), cls._default_argument_creator
                 )(v) for k, v in converters.items()}
         except KeyError as e:
             raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
