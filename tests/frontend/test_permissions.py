@@ -1,20 +1,19 @@
 # Copyright (c) 2015 The Pycroft Authors. See the AUTHORS file.
 # This file is part of the Pycroft project and licensed under the terms of
 # the Apache License, Version 2.0. See the LICENSE file for details.
-import typing as t
-
 import pytest
-from flask import url_for, current_app
-from flask.testing import FlaskClient
+from flask import url_for, current_app, Response
 from jinja2.runtime import Context
 
 from tests.factories.property import FinancePropertyGroupFactory, \
     AdminPropertyGroupFactory, MembershipFactory
 from tests.factories.user import UserFactory
 from tests.frontend.legacy_base import FrontendDataTestBase
-from tests.legacy_base import FactoryDataTestBase, FactoryWithConfigDataTestBase
+from tests.legacy_base import FactoryWithConfigDataTestBase
 from web import PycroftFlask
 from web.template_filters import require
+
+from .assertions import TestClient
 
 
 class PermissionsTestBase(FrontendDataTestBase, FactoryWithConfigDataTestBase):
@@ -58,27 +57,24 @@ class TestAnonymous:
     Anonymous users should be able to access the login page and the /static/
     content, nothing else.
     """
-    @pytest.fixture(scope="class")
-    def assert_response_code(self, test_client: FlaskClient) -> t.Callable[[str, int], None]:
-        def _assert(url: str, status: int) -> None:
-            resp = test_client.get(url)
-            assert resp.status_code == status
-        return _assert
-
     @pytest.fixture(scope='class')
     def jinja_context(self, flask_app: PycroftFlask) -> Context:
         return Context(flask_app.jinja_env, parent=None, name="pseudo", blocks={})
 
-    def test_access_anonymous(self, assert_response_code, jinja_context):
-        # Login is OK
-        assert_response_code(url_for('login.login'), 200)
+    def test_login_page_visible(self, test_client: TestClient):
+        test_client.assert_ok('login.login')
 
-        # Fetching static content is OK
-        assert_response_code(require(jinja_context, 'main.css'), 200)
+    def test_static_content_can_be_fetched(self, test_client: TestClient, jinja_context: Context):
+        test_client.assert_url_ok(require(jinja_context, 'main.css'))
 
-        # Access to other pages/blueprints is NOT OK
-        assert_response_code(url_for('finance.bank_accounts_list'), 302)
-        assert_response_code(url_for('infrastructure.switches'), 302)
+    def test_finance_denied(self, test_client: TestClient):
+        test_client.assert_response_code('finance.bank_accounts_list', 302)
+
+    def test_infrastructure_denied(self, test_client: TestClient):
+        test_client.assert_response_code('infrastructure.switches', 302)
+
+    def test_user_denied(self, test_client: TestClient):
+        test_client.assert_response_code('user.overview', 302)
 
 
 class Test_020_Permissions_Admin(PermissionsTestBase):

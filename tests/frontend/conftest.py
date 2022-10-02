@@ -15,6 +15,7 @@ from web import make_app, PycroftFlask
 
 from tests.factories import UserFactory, AdminPropertyGroupFactory
 
+from .assertions import TestClient
 from ..legacy_base import setup, get_engine_and_connection, teardown
 
 
@@ -70,7 +71,8 @@ def flask_app() -> PycroftFlask:
 
 
 @pytest.fixture(scope="session")
-def test_client(flask_app: PycroftFlask) -> t.Iterator[FlaskClient]:
+def test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
+    flask_app.test_client_class = TestClient
     with flask_app.app_context(), flask_app.test_client() as c:
         yield c
 
