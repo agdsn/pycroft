@@ -7,10 +7,12 @@ Exists because it is bad practice to import from `helpers`.
 """
 
 import contextlib
+import typing as t
 
 from flask import url_for
+from werkzeug.routing import IntegerConverter, UnicodeConverter
 
-from tests.frontend.assertions import TestClient
+from .assertions import TestClient
 
 
 @contextlib.contextmanager
@@ -20,3 +22,25 @@ def login_context(test_client: TestClient, login: str, password: str):
     )
     yield
     test_client.get("/logout")
+
+
+BlueprintUrls: t.TypeAlias = t.Callable[[str], list[str]]
+_argument_creator_map = {
+    IntegerConverter: lambda c: 1,
+    UnicodeConverter: lambda c: "test",
+}
+
+
+def _default_argument_creator(_c):
+    return "default"
+
+
+def _build_rule(url_adapter, rule) -> str:
+    try:
+        values = {
+            k: _argument_creator_map.get(type(v), _default_argument_creator)(v)
+            for k, v in rule._converters.items()
+        }
+    except KeyError as e:
+        raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
+    return url_adapter.build(rule.endpoint, values, 'GET')

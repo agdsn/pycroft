@@ -1,18 +1,19 @@
-import contextlib
 import random
 import string
 import typing as t
 
 import pytest
-from flask import url_for
+from flask import _request_ctx_stack
 from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker, \
     Session
 
+from pycroft import Config
 from pycroft.model import session as pyc_session
 from pycroft.model.user import User
-from tests.factories import UserFactory, AdminPropertyGroupFactory
+from tests.factories import UserFactory, AdminPropertyGroupFactory, ConfigFactory
 from web import make_app, PycroftFlask
 from .assertions import TestClient
+from .fixture_helpers import login_context, BlueprintUrls, _build_rule
 from ..legacy_base import setup, get_engine_and_connection, teardown
 
 
@@ -74,13 +75,11 @@ def test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
         yield c
 
 
-@contextlib.contextmanager
-def login_context(test_client: TestClient, login: str, password: str):
-    test_client.post(
-        url_for("login.login"), data={"login": login, "password": password}
-    )
-    yield
-    test_client.get("/logout")
+@pytest.fixture(scope="module")
+def config(module_session: Session) -> Config:
+    config = ConfigFactory.create()
+    module_session.flush()
+    return config
 
 
 @pytest.fixture(scope="module")
@@ -99,3 +98,14 @@ def processor(module_session, test_client) -> t.Iterator[User]:
     )
     with login_context(test_client=test_client, login=login, password=password):
         yield user
+
+
+@pytest.fixture(scope="session")
+def blueprint_urls(flask_app: PycroftFlask) -> BlueprintUrls:
+    def _blueprint_urls(blueprint_name: str) -> list[str]:
+        return [
+            _build_rule(_request_ctx_stack.top.url_adapter, rule)
+            for rule in flask_app.url_map.iter_rules()
+            if rule.endpoint.startswith(f"{blueprint_name}.")
+        ]
+    return _blueprint_urls

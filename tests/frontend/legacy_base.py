@@ -6,17 +6,14 @@ import random
 import string
 import sys
 import warnings
-from functools import partial
 
 import flask_testing as testing
-from flask import url_for, _request_ctx_stack
-from werkzeug.routing import IntegerConverter, UnicodeConverter
+from flask import url_for
 
 from pycroft.model import _all
 from tests.factories import UserFactory, AdminPropertyGroupFactory, \
     MembershipFactory, ConfigFactory
 from tests.legacy_base import FactoryDataTestBase
-from web import PycroftFlask
 
 
 class FrontendDataTestBase(testing.TestCase):
@@ -32,12 +29,6 @@ class FrontendDataTestBase(testing.TestCase):
     warnings.warn('Use pytest with the `session` fixture instead', DeprecationWarning)
     login = None
     password = None
-
-    _argument_creator_map = {
-        IntegerConverter: lambda c: 1,
-        UnicodeConverter: lambda c: "test",
-    }
-    _default_argument_creator = lambda c: "default"
 
     def _login(self, login, password):
         self.client.post(url_for("login.login"),
@@ -72,25 +63,6 @@ class FrontendDataTestBase(testing.TestCase):
                                            for _ in range(20))
 
         return app
-
-    def blueprint_urls(self, app: PycroftFlask, blueprint_name: str):
-        rules = [rule for rule in app.url_map.iter_rules()
-                 if rule.endpoint.startswith(blueprint_name + '.')]
-        url_adapter = _request_ctx_stack.top.url_adapter
-
-        return list(map(partial(self._build_rule, url_adapter), rules))
-
-    @classmethod
-    def _build_rule(cls, url_adapter, rule):
-        converters = rule._converters
-        try:
-            values = {
-                k: cls._argument_creator_map.get(
-                    type(v), cls._default_argument_creator
-                )(v) for k, v in converters.items()}
-        except KeyError as e:
-            raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
-        return url_adapter.build(rule.endpoint, values, 'GET')
 
     def assert_template_get_request(self, endpoint, template):
         response = self.client.get(endpoint)

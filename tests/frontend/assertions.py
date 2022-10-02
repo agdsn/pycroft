@@ -49,6 +49,16 @@ class TestClient(flask.testing.FlaskClient):
             return
         assert resp.location == expected_location
 
+    def assert_url_forbidden(self, url: str):
+        resp = self.get(url)
+        status = resp.status_code
+        assert (
+            status == 403
+        ), f"Access to {url} expected to be forbidden, got status {status}"
+
+    def assert_forbidden(self, endpoint: str):
+        self.assert_url_forbidden(url_for(endpoint))
+
     @contextlib.contextmanager
     def renders_template(self, template: str, allow_others: bool = False):
         app = self.application
