@@ -1,184 +1,239 @@
-from flask import url_for
+import contextlib
 
-from pycroft import config
+import pytest
+from flask import url_for
+from sqlalchemy.orm import Session
+
+from pycroft import Config
 from pycroft.model import session
+from pycroft.model.facilities import Room
 from pycroft.model.user import User
 from pycroft.model.webstorage import WebStorage
-from tests.factories import MembershipFactory, UserFactory, RoomFactory, SubnetFactory, \
-    PatchPortFactory
-from ..legacy_base import FrontendWithAdminTestBase
+from tests.factories import (
+    UserFactory,
+    RoomFactory,
+    AdminPropertyGroupFactory,
+)
+from ..assertions import TestClient
+from ..fixture_helpers import login_context
 from ...factories.address import AddressFactory
 
 
-class UserFrontendTestBase(FrontendWithAdminTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.room = RoomFactory()
-        self.subnet = SubnetFactory()
-        self.patch_port = PatchPortFactory(room=self.room, patched=True,
-                                           switch_port__switch__host__owner=self.admin)
-        # 2. A pool of default vlans so an IP can be found
-        self.patch_port.switch_port.default_vlans.append(self.subnet.vlan)
+@pytest.fixture(scope="module")
+def admin(module_session: Session, config: Config) -> User:
+    admin = UserFactory.create(
+        login="testadmin2",
+        with_membership=True,
+        membership__group=AdminPropertyGroupFactory.create(),
+        membership__includes_today=True,
+    )
+    module_session.flush()
+    return admin
 
 
-class UserViewingPagesTestCase(UserFrontendTestBase):
-    def test_user_overview_access(self):
-        self.assert200(self.client.get(url_for('user.overview')))
-
-    def test_user_viewing_himself(self):
-        user_id = self.admin.id
-        self.assert200(self.client.get(url_for('user.user_show', user_id=user_id)))
-
-    def test_user_search_access(self):
-        self.assert200(self.client.get(url_for('user.search')))
+@pytest.fixture(scope="module", autouse=True)
+def admin_logged_in(admin: User, test_client: TestClient) -> None:
+    with login_context(test_client, "testadmin2", "password"):
+        yield
 
 
-class UserBlockingTestCase(UserFrontendTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.test_user = UserFactory.create(with_host=True)
-        MembershipFactory.create(user=self.test_user, group=self.config.member_group)
-        self.test_user_id = self.test_user.id
-
-    def test_blocking_and_unblocking_works(self):
-        user_show_endpoint = url_for("user.user_show", user_id=self.test_user_id)
-        response = self.client.get(user_show_endpoint)
-        self.assert200(response)
-
-        response = self.client.post(url_for("user.block", user_id=self.test_user_id),
-                                    data={'ends_at-unlimited': 'y',
-                                          'reason': 'Ist doof'})
-        self.assertRedirects(response, user_show_endpoint)
-        self.assert_message_flashed("Nutzer gesperrt.", 'success')
-
-        response = self.client.post(url_for("user.unblock", user_id=self.test_user_id))
-        self.assertRedirects(response, user_show_endpoint)
-        self.assert_message_flashed("Nutzer entsperrt.", 'success')
+@pytest.fixture(scope="module")
+def room(module_session: Session) -> Room:
+    room = RoomFactory.create(patched_with_subnet=True)
+    module_session.add(room)
+    module_session.flush()
+    return room
 
 
-class UserMovingOutTestCase(UserFrontendTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.user = UserFactory.create(with_host=True)
-        MembershipFactory.create(user=self.user, group=self.config.member_group)
-        self.test_user_id = self.user.id
+class TestUserViewingPages:
+    def test_user_overview_access(self, test_client: TestClient):
+        test_client.assert_ok("user.overview")
 
-    def test_user_cannot_be_moved_back_in(self):
+    def test_user_viewing_himself(self, test_client: TestClient, admin):
+        test_client.assert_url_ok(url_for("user.user_show", user_id=admin.id))
+
+    def test_user_search_access(self, test_client: TestClient):
+        test_client.assert_ok("user.search")
+
+
+class TestInhabitingUser:
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session, config: Config) -> User:
+        user = UserFactory.create(
+            with_host=True,
+            with_membership=True,
+            membership__includes_today=True,
+            membership__group=config.member_group,
+        )
+        class_session.flush()
+        return user
+
+    def test_blocking_and_unblocking_works(self, test_client: TestClient, user: User):
+        user_show_endpoint = url_for("user.user_show", user_id=user.id)
+        test_client.assert_url_ok(user_show_endpoint)
+
+        with test_client.flashes_message("Nutzer gesperrt", "success"):
+            test_client.assert_url_redirects(
+                url_for("user.block", user_id=user.id),
+                expected_location=user_show_endpoint,
+                method="post",
+                data={"ends_at-unlimited": "y", "reason": "Ist doof"},
+            )
+
+        with test_client.flashes_message("Nutzer entsperrt", "success"):
+            test_client.assert_url_redirects(
+                url_for("user.unblock", user_id=user.id),
+                expected_location=user_show_endpoint,
+                method="post",
+            )
+
+    def test_user_cannot_be_moved_back_in(self, test_client: TestClient, user: User):
         # attempt to move the user back in
-        endpoint = url_for('user.move_in', user_id=self.user.id)
-        response = self.client.post(endpoint, data={
-            # Will be serialized to str implicitly
-            'building': self.user.room.building.id,
-            'level': self.user.room.level,
-            'room_number': self.user.room.number,
-            'mac': "00:de:ad:be:ef:00",
-            'birthday': "1990-01-01",
-            'when': session.utcnow().date()
-        })
-        self.assert_404(response)
-        self.assert_message_flashed(f"Nutzer {self.user.id} ist nicht ausgezogen!",
-                                    category='error')
+        with test_client.flashes_message(
+            f"Nutzer {user.id} ist nicht ausgezogen!", category="error"
+        ):
+            test_client.assert_url_response_code(
+                url_for("user.move_in", user_id=user.id),
+                code=404,
+                method="post",
+                data={
+                    # Will be serialized to str implicitly
+                    "building": user.room.building.id,
+                    "level": user.room.level,
+                    "room_number": user.room.number,
+                    "mac": "00:de:ad:be:ef:00",
+                    "birthday": "1990-01-01",
+                    "when": session.utcnow().date(),
+                },
+            )
 
-    def test_user_moved_out_correctly(self):
-        endpoint = url_for('user.move_out', user_id=self.user.id)
-        response = self.client.post(endpoint, data={
-            # Will be serialized to str implicitly
-            'comment': "Test Comment",
-            'end_membership': True,
-            'now': False,
-            'when': session.utcnow().date()
-        })
-        self.assert_redirects(response, url_for('user.user_show', user_id=self.user.id))
-        self.assertMessageFlashed("Benutzer ausgezogen.", 'success')
+    def test_user_moved_out_correctly(self, test_client: TestClient, user: User):
+        with test_client.flashes_message("Benutzer ausgezogen.", "success"):
+            test_client.assert_url_redirects(
+                url_for("user.move_out", user_id=user.id),
+                method="post",
+                data={
+                    # Will be serialized to str implicitly
+                    "comment": "Test Comment",
+                    "end_membership": True,
+                    "now": False,
+                    "when": session.utcnow().date(),
+                },
+                expected_location=url_for("user.user_show", user_id=user.id),
+            )
         # TODO: Test whether everything has been done on the library side!
 
 
-class UserMovedOutTestCase(UserFrontendTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.user = UserFactory(room=None, address=AddressFactory())
+class TestUserMovedOut:
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session) -> User:
+        user = UserFactory.create(room=None, address=AddressFactory())
+        class_session.flush()
+        return user
 
-    def test_user_cannot_be_moved_out(self):
-        self.user.room = None
-        endpoint = url_for('user.move_out', user_id=self.user.id)
-        response = self.client.post(endpoint, data={'now': True, 'comment': "Ist doof"})
-        self.assert_404(response)
-        self.assert_message_flashed(f"Nutzer {self.user.id} ist aktuell nirgends eingezogen!",
-                                    category='error')
+    def test_user_cannot_be_moved_out(self, test_client: TestClient, user: User):
+        # user.room = None  # ???
+        with test_client.flashes_message(
+            f"Nutzer {user.id} ist aktuell nirgends eingezogen!", category="error"
+        ):
+            test_client.assert_url_response_code(
+                url_for("user.move_out", user_id=user.id),
+                method="post",
+                data={"now": True, "comment": "Ist doof"},
+                code=404,
+            )
 
-    def test_static_datasheet(self):
-        endpoint = url_for('user.static_datasheet', user_id=self.user.id)
-        response = self.client.get(endpoint)
+    def test_static_datasheet(self, test_client: TestClient, user: User):
+        response = test_client.assert_url_ok(
+            url_for("user.static_datasheet", user_id=user.id)
+        )
         assert response.data.startswith(b"%PDF")
-        self.assert200(response)
         headers = response.headers
-        assert headers.get('Content-Type') == "application/pdf"
-        assert headers.get('Content-Disposition') \
-               == f"inline; filename=user_sheet_plain_{self.user.id}.pdf"
+        assert headers.get("Content-Type") == "application/pdf"
+        assert (
+            headers.get("Content-Disposition")
+            == f"inline; filename=user_sheet_plain_{user.id}.pdf"
+        )
 
-    def test_password_reset(self):
-        endpoint = url_for('user.reset_password', user_id=self.user.id)
-        response = self.client.post(endpoint)
-        self.assert_message_substr_flashed("Passwort erfolgreich zurückgesetzt.",
-                                           category='success')
+    def test_password_reset(self, test_client: TestClient, user: User):
+        with test_client.flashes_message(
+            "Passwort erfolgreich zurückgesetzt.", category="success"
+        ):
+            test_client.post(url_for("user.reset_password", user_id=user.id))
+
         # access user_sheet
-        response = self.client.get(url_for('user.user_sheet'))
+        response = test_client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
-        self.assert200(response)
         assert response.headers.get('Content-Type') == "application/pdf"
         assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
         assert response.data.startswith(b"%PDF")
 
 
-class NewUserDatasheetTest(UserFrontendTestBase):
-    def assert_user_moved_in(self, response):
-        newest_user = User.q.order_by(User.id.desc()).first()
-        self.assertRedirects(response, url_for('user.user_show', user_id=newest_user.id))
-        self.assert_message_substr_flashed("Benutzer angelegt.", category='success')
+class TestNewUserDatasheet:
+    @contextlib.contextmanager
+    def assert_create_confirmed(self, test_client: TestClient):
+        with test_client.flashes_message("Benutzer angelegt.", category="success"):
+            yield
 
-    def test_user_create_data_sheet(self):
-        response = self.client.post(url_for('user.create'), data={
-            'now': True,
-            'name': "Test User",
-            'building': self.room.building.id,
-            'level': self.room.level,
-            'room_number': self.room.number,
-            'login': "testuser",
-            'mac': "70:de:ad:be:ef:07",
-            'birthdate': "1990-01-01",
-            'email': "",
-            'property_group': config.member_group.id
-        })
-        self.assert_user_moved_in(response)
-        response = self.client.get(url_for('user.user_sheet'))
+    def test_user_create_data_sheet(
+        self, test_client: TestClient, room: Room, config: Config
+    ):
+        with self.assert_create_confirmed(test_client):
+            test_client.assert_redirects(
+                "user.create",
+                method="post",
+                data={
+                    "now": True,
+                    "name": "Test User",
+                    "building": room.building.id,
+                    "level": room.level,
+                    "room_number": room.number,
+                    "login": "testuser",
+                    "mac": "70:de:ad:be:ef:07",
+                    "birthdate": "1990-01-01",
+                    "email": "",
+                    "property_group": config.member_group.id,
+                },
+            )
+        response = test_client.assert_ok("user.user_sheet")
         assert WebStorage.q.count() == 1
-        self.assert200(response)
         assert response.headers.get('Content-Type') == "application/pdf"
         assert response.headers.get('Content-Disposition') == "inline; filename=user_sheet.pdf"
         assert response.data.startswith(b"%PDF")
 
-    def test_user_host_annexation(self):
-        mac = "00:de:ad:be:ef:00"
+    @pytest.fixture(scope="session")
+    def mac(self) -> str:
+        return "00:de:ad:be:ef:00"
+
+    @pytest.fixture(scope="class")
+    def other_user(self, class_session, mac) -> User:
         other_user = UserFactory(with_host=True, host__interface__mac=mac)
-        session.session.commit()
-        assert len(other_user.hosts) == 1
+        class_session.flush()
+        # assert len(other_user.hosts) == 1
+        return other_user
 
+    def test_user_host_annexation(
+        self, test_client: TestClient, room: Room, other_user: User, mac, config: Config
+    ):
         move_in_formdata = {
-            'now': True,
-            'name': "Test User",
-            'building': str(self.room.building.id),
-            'level': str(self.room.level),
-            'room_number': self.room.number,
-            'login': "testuser",
-            'mac': mac,
-            'email': "",
-            'birthdate': "1990-01-01",
-            'property_group': config.member_group.id
+            "now": True,
+            "name": "Test User",
+            "building": str(room.building.id),
+            "level": str(room.level),
+            "room_number": room.number,
+            "login": "testuser",
+            "mac": mac,
+            "email": "",
+            "birthdate": "1990-01-01",
+            "property_group": config.member_group.id,
         }
-        response = self.client.post(url_for('user.create'), data=move_in_formdata)
-        self.assertStatus(response, 400)
+        response = test_client.assert_response_code(
+            "user.create", method="post", data=move_in_formdata, code=400
+        )
         assert response.location is None
 
         move_in_formdata.update(annex="y")
-        response = self.client.post(url_for('user.create'), data=move_in_formdata)
-        self.assert_user_moved_in(response)
+        with self.assert_create_confirmed(test_client):
+            test_client.assert_redirects(
+                "user.create", method="post", data=move_in_formdata
+            )
