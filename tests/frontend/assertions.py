@@ -3,6 +3,7 @@
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import contextlib
 import typing as t
+from urllib.parse import urlparse, urljoin
 
 import flask.testing
 import jinja2 as j
@@ -37,6 +38,14 @@ class TestClient(flask.testing.FlaskClient):
     def assert_ok(self, endpoint: str, **kw) -> Response:
         return self.assert_response_code(endpoint, code=200, **kw)
 
+    def fully_qualify_location(self, location: str) -> str:
+        # inspired by `flask_testing.utils`
+        if urlparse(location).netloc:
+            return location
+
+        server_name = self.application.config.get('SERVER_NAME') or 'localhost'
+        return urljoin(f"http://{server_name}", location)
+
     def assert_url_redirects(
         self, url: str, expected_location: str | None = None, method: str = "GET", **kw
     ) -> Response:
@@ -44,7 +53,7 @@ class TestClient(flask.testing.FlaskClient):
         assert 300 <= resp.status_code < 400, \
             f"Expected {url!r} to redirect, got status {resp.status}"
         if expected_location is not None:
-            assert resp.location == expected_location
+            assert resp.location == self.fully_qualify_location(expected_location)
         return resp
 
     def assert_redirects(
@@ -58,7 +67,7 @@ class TestClient(flask.testing.FlaskClient):
         assert 300 <= resp.status_code < 400, \
             f"Expected endpoint {endpoint} to redirect, got status {resp.status}"
         if expected_location is not None:
-            assert resp.location == expected_location
+            assert resp.location == self.fully_qualify_location(expected_location)
         return resp
 
     def assert_url_forbidden(self, url: str, method: str = "GET", **kw) -> Response:
