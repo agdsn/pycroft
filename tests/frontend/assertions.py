@@ -2,13 +2,14 @@
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
 import contextlib
+import re
 import typing as t
 from urllib.parse import urlparse, urljoin
 
 import flask.testing
 import jinja2 as j
 import pytest
-from flask import url_for, template_rendered, Response
+from flask import url_for, template_rendered, Response, message_flashed
 
 
 class TestClient(flask.testing.FlaskClient):
@@ -106,4 +107,30 @@ class TestClient(flask.testing.FlaskClient):
             assert template_names == [template], \
                 f"Expected template {template} to be rendered (exclusively), got {template_names!r}"
 
+    @contextlib.contextmanager
+    def flashes_message(self, match: str, category: str):
+        app = self.application
+        recorded: list = []
 
+        def record(sender, message, category, **extra):
+            recorded.append((message, category))
+
+        message_flashed.connect(record, app)
+
+        try:
+            yield
+        finally:
+            template_rendered.disconnect(record, app)
+
+        if not recorded:
+            pytest.fail("No messages flashed")
+
+        if not any(
+            (
+                cat == category and re.search(match, message) is not None
+                for message, cat in recorded
+            )
+        ):
+            pytest.fail(
+                f"No message matching pattern {match!r} was flashed in category {category}."
+            )
