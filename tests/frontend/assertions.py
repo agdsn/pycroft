@@ -1,11 +1,13 @@
 #  Copyright (c) 2022. The Pycroft Authors. See the AUTHORS file.
 #  This file is part of the Pycroft project and licensed under the terms of
 #  the Apache License, Version 2.0. See the LICENSE file for details
-
+import contextlib
 import typing as t
 
 import flask.testing
-from flask import url_for
+import jinja2 as j
+import pytest
+from flask import url_for, template_rendered
 
 
 class TestClient(flask.testing.FlaskClient):
@@ -18,7 +20,8 @@ class TestClient(flask.testing.FlaskClient):
 
     def assert_url_response_code(self, url: str, status: int) -> None:
         resp = self.get(url)
-        assert resp.status_code == status
+        assert resp.status_code == status, \
+            f"Expected url {url} to return {status}, got {resp.status_code}"
 
     def assert_response_code(self, endpoint: str, status: int) -> None:
         self.assert_url_response_code(url_for(endpoint), status)
@@ -45,3 +48,30 @@ class TestClient(flask.testing.FlaskClient):
         if expected_location is None:
             return
         assert resp.location == expected_location
+
+    @contextlib.contextmanager
+    def renders_template(self, template: str, allow_others: bool = False):
+        app = self.application
+        recorded: list[tuple[j.Template, t.Any]] = []
+
+        def record(sender, template, context, **extra):
+            recorded.append((template, context))
+
+        template_rendered.connect(record, app)
+        try:
+            yield
+        finally:
+            template_rendered.disconnect(record, app)
+
+        if not recorded:
+            pytest.fail(f"No template has been rendered (expected {template} to be used)")
+
+        template_names = [template.name for template, ctx in recorded]
+        if allow_others:
+            assert template in template_names, \
+                f"Expected template {template} to be rendered, got {template_names!r}"
+        else:
+            assert template_names == [template], \
+                f"Expected template {template} to be rendered (exclusively), got {template_names!r}"
+
+

@@ -3,18 +3,15 @@ import random
 import string
 import typing as t
 
-import jinja2 as j
 import pytest
-from flask import template_rendered, url_for
-from flask.testing import FlaskClient
-from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker, Session
+from flask import url_for
+from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker, \
+    Session
 
 from pycroft.model import session as pyc_session
 from pycroft.model.user import User
-from web import make_app, PycroftFlask
-
 from tests.factories import UserFactory, AdminPropertyGroupFactory
-
+from web import make_app, PycroftFlask
 from .assertions import TestClient
 from ..legacy_base import setup, get_engine_and_connection, teardown
 
@@ -77,29 +74,8 @@ def test_client(flask_app: PycroftFlask) -> t.Iterator[TestClient]:
         yield c
 
 
-@pytest.fixture
-def rendered_templates(
-    flask_app: PycroftFlask,
-) -> t.Iterator[list[tuple[j.Template, t.Any]]]:
-    """A list of templates that gets appended whenever a template is rendered.
-
-    It is important that this fixture remains function scoped, as this list
-    will never be truncated.
-    """
-    recorded: list[tuple[j.Template, t.Any]] = []
-
-    def record(sender, template, context, **extra):
-        recorded.append((template, context))
-
-    template_rendered.connect(record, flask_app)
-    try:
-        yield recorded
-    finally:
-        template_rendered.disconnect(record, flask_app)
-
-
 @contextlib.contextmanager
-def login_context(test_client: FlaskClient, login: str, password: str):
+def login_context(test_client: TestClient, login: str, password: str):
     test_client.post(
         url_for("login.login"), data={"login": login, "password": password}
     )

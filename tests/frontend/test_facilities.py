@@ -3,98 +3,57 @@
 # the Apache License, Version 2.0. See the LICENSE file for details.
 
 import pytest
-from flask.testing import FlaskClient
+from sqlalchemy.orm import Session
 
+from pycroft.model.facilities import Building, Room
 from tests.factories import RoomFactory
+from .assertions import TestClient
 
 
 class TestBuilding:
     @pytest.fixture(scope="class")
-    def room(self, class_session):
+    def room(self, class_session: Session) -> Room:
         room = RoomFactory()
         class_session.flush()
         return room
 
     @pytest.fixture(scope="class")
-    def building(self, class_session, room):
+    def building(self, class_session: Session, room: Room) -> Building:
         return room.building
 
     @pytest.fixture(scope="class", autouse=True)
-    def login(self, processor):
+    def login(self, processor) -> None:
         pass
 
-    @staticmethod
-    def assert_template_used(rendered_templates, template_name: str) -> None:
-        rendered_template_names = [t.name for (t, _ctx) in rendered_templates]
-        assert (
-            rendered_template_names == [template_name]
-        ), f"template {template_name!r} was not rendered"
+    def test_list_buildings(self, test_client: TestClient):
+        with test_client.renders_template("facilities/site_overview.html"):
+            test_client.assert_url_ok("/facilities/sites/")
 
-    def assert_template_get_request(
-        self, client: FlaskClient, rendered_templates, endpoint: str, template: str
-    ):
-        response = client.get(endpoint)
-        assert response.status_code == 200
-        if template:
-            self.assert_template_used(rendered_templates, template)
-        return response
+    def test_show_building(self, test_client: TestClient, building: Building):
+        with test_client.renders_template("facilities/building_show.html"):
+            test_client.assert_url_ok(f"/facilities/building/{building.id}/")
 
-    def test_list_buildings(self, test_client, rendered_templates):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            "/facilities/sites/",
-            "facilities/site_overview.html",
-        )
+    def test_show_room(self, test_client: TestClient, room: Room):
+        with test_client.renders_template("facilities/room_show.html"):
+            test_client.assert_url_ok(f"/facilities/room/{room.id}")
 
-    def test_show_building(self, test_client, rendered_templates, building):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            f"/facilities/building/{building.id}/",
-            "facilities/building_show.html",
-        )
-
-    def test_show_room(self, test_client, rendered_templates, room):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            f"/facilities/room/{room.id}",
-            "facilities/room_show.html",
-        )
-
-    def test_building_levels(self, test_client, rendered_templates, building):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            f"/facilities/building/{building.id}/levels/",
-            "facilities/levels.html",
-        )
+    def test_building_levels(self, test_client: TestClient, building: Building):
+        with test_client.renders_template("facilities/levels.html"):
+            test_client.assert_url_ok(f"/facilities/building/{building.id}/levels/")
 
     def test_building_level_rooms(
-        self, test_client, rendered_templates, building, room
+        self, test_client: TestClient, building: Building, room: Room
     ):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            f"/facilities/building/{building.id}/level/{room.level}/rooms/",
-            "facilities/rooms.html",
-        )
+        with test_client.renders_template("facilities/rooms.html"):
+            test_client.assert_url_ok(
+                f"/facilities/building/{building.id}/level/{room.level}/rooms/")
 
-    def test_overcrowded_rooms(self, test_client, rendered_templates, building):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            "/facilities/overcrowded",
-            "facilities/room_overcrowded.html",
-        )
+    def test_overcrowded_rooms(self, test_client: TestClient, building: Building):
+        with test_client.renders_template("facilities/room_overcrowded.html"):
+            test_client.assert_url_ok("/facilities/overcrowded")
 
     def test_per_building_overcrowded_rooms(
-        self, test_client, rendered_templates, building
+        self, test_client: TestClient, building: Building
     ):
-        self.assert_template_get_request(
-            test_client,
-            rendered_templates,
-            f"/facilities/overcrowded/{building.id}",
-            "facilities/room_overcrowded.html",
-        )
+        with test_client.renders_template("facilities/room_overcrowded.html"):
+            test_client.assert_url_ok(f"/facilities/overcrowded/{building.id}")
