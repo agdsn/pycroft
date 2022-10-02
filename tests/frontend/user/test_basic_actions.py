@@ -4,9 +4,21 @@ from pycroft import config
 from pycroft.model import session
 from pycroft.model.user import User
 from pycroft.model.webstorage import WebStorage
-from tests.factories import MembershipFactory, UserFactory
-from . import UserFrontendTestBase
+from tests.factories import MembershipFactory, UserFactory, RoomFactory, SubnetFactory, \
+    PatchPortFactory
+from ..legacy_base import FrontendWithAdminTestBase
 from ...factories.address import AddressFactory
+
+
+class UserFrontendTestBase(FrontendWithAdminTestBase):
+    def create_factories(self):
+        super().create_factories()
+        self.room = RoomFactory()
+        self.subnet = SubnetFactory()
+        self.patch_port = PatchPortFactory(room=self.room, patched=True,
+                                           switch_port__switch__host__owner=self.admin)
+        # 2. A pool of default vlans so an IP can be found
+        self.patch_port.switch_port.default_vlans.append(self.subnet.vlan)
 
 
 class UserViewingPagesTestCase(UserFrontendTestBase):
