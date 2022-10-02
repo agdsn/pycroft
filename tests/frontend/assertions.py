@@ -11,6 +11,8 @@ from flask import url_for, template_rendered
 
 
 class TestClient(flask.testing.FlaskClient):
+    __test__ = False
+
     if t.TYPE_CHECKING:
         def get(self, *a, **kw) -> flask.Response: ...
 
