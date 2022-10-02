@@ -10,8 +10,6 @@ from pycroft.model.user import PropertyGroup
 from tests.factories.property import FinancePropertyGroupFactory, \
     AdminPropertyGroupFactory, MembershipFactory
 from tests.factories.user import UserFactory
-from tests.frontend.legacy_base import FrontendDataTestBase
-from tests.legacy_base import FactoryWithConfigDataTestBase
 from web import PycroftFlask
 from web.template_filters import require
 from .assertions import TestClient
@@ -21,42 +19,6 @@ from .fixture_helpers import login_context, BlueprintUrls
 @pytest.fixture(scope="module")
 def admin_group(module_session: Session):
     return AdminPropertyGroupFactory.create()
-
-
-class PermissionsTestBase(FrontendDataTestBase, FactoryWithConfigDataTestBase):
-    password = 'password'
-    admin_login = 'testadmin2'
-    finance_login = 'finanzer'
-    member_login = 'regular'
-
-    def create_factories(self):
-        super().create_factories()
-        self.admin_group = AdminPropertyGroupFactory.create()
-        self.admin = UserFactory.create(
-            login=self.admin_login,
-            password=self.password,
-            with_membership=True,
-            membership__group=self.admin_group,
-            membership__includes_today=True,
-        )
-        self.finance_group = FinancePropertyGroupFactory.create()
-        self.head_of_finance = UserFactory.create(
-            login=self.finance_login,
-            password=self.password,
-            with_membership=True,
-            membership__group=self.finance_group,
-            membership__includes_today=True,
-        )
-        # finanzer is also an admin
-        MembershipFactory.create(group=self.admin_group, user=self.head_of_finance,
-                                 includes_today=True)
-        self.member = UserFactory.create(
-            login=self.member_login,
-            password=self.password,
-            with_membership=True,
-            membership__group=self.config.member_group,
-            membership__includes_today=True,
-        )
 
 
 class TestAnonymous:
