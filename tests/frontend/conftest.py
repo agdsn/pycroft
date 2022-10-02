@@ -46,11 +46,13 @@ def session(connection, request) -> Session:
 
 @pytest.fixture(scope='session')
 def app():
+    """A minimal app for when you just need an app context"""
     return make_app()
 
 
 @pytest.fixture(scope="session")
 def flask_app() -> PycroftFlask:
+    """A fully configured flask app for frontend tests"""
     from web import make_app
 
     app = make_app()
