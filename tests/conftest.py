@@ -12,7 +12,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, Session
 from sqlalchemy.pool import SingletonThreadPool
 
 from pycroft.model import drop_db_model, create_db_model
-from pycroft.model.session import set_scoped_session, Session
+from pycroft.model.session import set_scoped_session, Session as PycSessionProxy
 
 
 @pytest.fixture(scope='session')
@@ -66,7 +66,10 @@ def module_session(connection, module_transaction) -> Session:
     Rolled back after use
     """
     nested = module_transaction
-    s = scoped_session(sessionmaker(bind=connection, future=True))
+    class NoCommitSession(Session):
+        def commit(self):
+            self.flush()
+    s = scoped_session(sessionmaker(bind=connection, future=True, class_=NoCommitSession))
     set_scoped_session(s)
     session = cast(Session, s())
 
@@ -81,7 +84,7 @@ def module_session(connection, module_transaction) -> Session:
 
     # close_all_sessions()
     session.rollback()
-    Session.remove()
+    PycSessionProxy.remove()
 
 
 def _maybe_rollback_transaction(session):
