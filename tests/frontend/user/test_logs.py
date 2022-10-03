@@ -1,8 +1,17 @@
+import re
+import typing as t
+
+import pytest
 from flask import url_for
 
 from hades_logs import HadesLogs
+from pycroft.model.session import Session
+from pycroft.model.user import User
 from tests.factories import UserFactory, RoomLogEntryFactory, \
     UserLogEntryFactory
+from web import make_app, PycroftFlask
+from ..assertions import TestClient
+from ..fixture_helpers import prepare_app_for_testing, login_context
 from ..legacy_base import InvalidateHadesLogsMixin, FrontendWithAdminTestBase
 from ...hades_logs import get_hades_logs_config
 
@@ -32,17 +41,76 @@ class UserLogTestBase(FrontendWithAdminTestBase):
         return json['items']
 
 
-class AppWithoutHadesLogsTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
-    def test_only_warning_log_returned(self):
-        # Multiple assertions in one method to avoid useless
-        # setup/teardown which leads to 5s for this class
-        hades_items = self.get_logs(logtype='hades')
-        assert len(hades_items) == 1
-        assert "logs cannot be displayed" in hades_items[0]['message'].lower()
+def get_logs(user_id: int, client: TestClient, **kw) -> list[t.Any]:
+    """Request a user's logs, assert validity, and pass on the returned log entries.
 
-        assert not self.get_logs(logtype='user')
-        assert not self.get_logs(logtype='room')
-        assert len(self.get_logs()) == 1
+    By default, the logs are fetched for the user logging in.
+
+    The following assertions are made:
+      * The response code is 200
+      * The response content_type contains ``"json"``
+      * The response's JSON contains an ``"items"`` key
+
+    :returns: ``response.json['items']``
+    """
+    response = client.assert_url_ok(
+        url_for("user.user_show_logs_json", user_id=user_id, **kw)
+    )
+    assert "json" in response.content_type.lower()
+    json = response.json
+    assert json.get("items") is not None
+    return json["items"]
+
+
+GetLogs: t.TypeAlias = t.Callable[..., list[t.Any]]
+
+
+class TestAppWithoutHadesLogs:
+    @pytest.fixture(scope="class")
+    def flask_app(self) -> PycroftFlask:
+        return prepare_app_for_testing(make_app(hades_logs=False))
+
+    @pytest.fixture(scope="class")
+    def client(self, class_test_client: TestClient) -> TestClient:
+        return class_test_client
+
+    @pytest.fixture(scope="class", autouse=True)
+    def admin_logged_in(self, admin: User, client: TestClient):
+        with login_context(client, admin.login, "password"):
+            yield
+
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session):
+        user = UserFactory.create(with_host=True, patched=True)
+        class_session.flush()
+        return user
+
+    @pytest.fixture(scope="class")
+    def logs(self, user: User, client: TestClient) -> GetLogs:
+        def _logs(**kwargs) -> list[t.Any]:
+            return get_logs(user.id, client, **kwargs)
+
+        return _logs
+
+    @staticmethod
+    def assert_hades_message(message: str):
+        assert re.search(
+            r"hadeslogs.*not configured.*logs cannot be displayed", message.lower()
+        )
+
+    def test_warning_log_tab_hades(self, logs: GetLogs):
+        assert len(hades_items := logs(logtype="hades")) == 1
+        self.assert_hades_message(hades_items[0]["message"])
+
+    def test_warning_log_tab_user(self, logs: GetLogs):
+        assert not logs(logtype="user")
+
+    def test_warning_log_tab_room(self, logs: GetLogs):
+        assert not logs(logtype="room")
+
+    def test_warning_log_tab_all(self, logs: GetLogs):
+        assert len(logs := logs()) == 1
+        self.assert_hades_message(logs[0]["message"])
 
 
 class RoomAndUserLogTestCase(UserLogTestBase):

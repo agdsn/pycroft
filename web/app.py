@@ -73,7 +73,7 @@ class PycroftFlask(Flask):
                 self.logger.debug("Config key %s successfuly read from environment", key)
 
 
-def make_app(debug=False):
+def make_app(debug=False, hades_logs=True):
     """  Create and configure the main? Flask app object
 
     :return: The fully configured app object
@@ -97,11 +97,14 @@ def make_app(debug=False):
     template_tests.register_checks(app)
 
     babel = Babel(app)
-    try:
-        HadesLogs(app)
-    except KeyError as e:
-        app.logger.info("HadesLogs configuration incomplete, skipping.")
-        app.logger.info("Original error: %s", str(e))
+    if hades_logs:
+        try:
+            HadesLogs(app)
+        except KeyError as e:
+            app.logger.info("HadesLogs configuration incomplete, skipping.")
+            app.logger.info("Original error: %s", str(e))
+    else:
+        app.logger.info("HadesLogs configuration disabled. Skipping.")
 
     page_resources.init_app(app)
 
