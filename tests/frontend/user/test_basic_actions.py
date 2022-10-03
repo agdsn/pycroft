@@ -45,6 +45,7 @@ def room(module_session: Session) -> Room:
     return room
 
 
+@pytest.mark.usefixtures("session")
 class TestUserViewingPages:
     def test_user_overview_access(self, test_client: TestClient):
         test_client.assert_ok("user.overview")
@@ -56,6 +57,7 @@ class TestUserViewingPages:
         test_client.assert_ok("user.search")
 
 
+@pytest.mark.usefixtures("session")
 class TestInhabitingUser:
     @pytest.fixture(scope="class")
     def user(self, class_session: Session, config: Config) -> User:
@@ -124,6 +126,7 @@ class TestInhabitingUser:
         # TODO: Test whether everything has been done on the library side!
 
 
+@pytest.mark.usefixtures("session")
 class TestUserMovedOut:
     @pytest.fixture(scope="class")
     def user(self, class_session: Session) -> User:
@@ -169,6 +172,7 @@ class TestUserMovedOut:
         assert response.data.startswith(b"%PDF")
 
 
+@pytest.mark.usefixtures("session")
 class TestNewUserDatasheet:
     @contextlib.contextmanager
     def assert_create_confirmed(self, test_client: TestClient):
