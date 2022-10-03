@@ -64,13 +64,6 @@ class FrontendDataTestBase(testing.TestCase):
 
         return app
 
-    def assert_template_get_request(self, endpoint, template):
-        response = self.client.get(endpoint)
-        self.assert200(response)
-        if template:
-            self.assertTemplateUsed(name=template)
-        return response
-
     def assert_response_code(self, endpoint, code, method='get', **kwargs):
         callback_map = {
             'get': self.client.get,
@@ -95,22 +88,6 @@ class FrontendDataTestBase(testing.TestCase):
             raise self.failureException(exception).with_traceback(sys.exc_info()[2])
 
         return response
-
-    def assert_access_allowed(self, endpoint):
-        return self.assert_response_code(endpoint, 200)
-
-    def assert_access_forbidden(self, endpoint):
-        return self.assert_response_code(endpoint, 403)
-
-    def assert_message_substr_flashed(self, substring, category='message'):
-        for message, _category in self.flashed_messages:
-            if substring in message and category == _category:
-                return message
-
-        raise AssertionError(
-            f"No message with substring '{substring}' in category '{category}' has been flashed."
-            f"Instead, we got:\n{self.flashed_messages}"
-        )
 
     @property
     def user_id(self):
