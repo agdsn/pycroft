@@ -12,29 +12,12 @@ from pycroft.model.webstorage import WebStorage
 from tests.factories import (
     UserFactory,
     RoomFactory,
-    AdminPropertyGroupFactory,
 )
 from ..assertions import TestClient
-from ..fixture_helpers import login_context
 from ...factories.address import AddressFactory
 
 
-@pytest.fixture(scope="module")
-def admin(module_session: Session, config: Config) -> User:
-    admin = UserFactory.create(
-        login="testadmin2",
-        with_membership=True,
-        membership__group=AdminPropertyGroupFactory.create(),
-        membership__includes_today=True,
-    )
-    module_session.flush()
-    return admin
-
-
-@pytest.fixture(scope="module", autouse=True)
-def admin_logged_in(admin: User, test_client: TestClient) -> None:
-    with login_context(test_client, "testadmin2", "password"):
-        yield
+pytestmark = pytest.mark.usefixtures("admin_logged_in")
 
 
 @pytest.fixture(scope="module")

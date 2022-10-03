@@ -6,7 +6,7 @@ from jinja2.runtime import Context
 from sqlalchemy.orm import Session
 
 from pycroft.model.config import Config
-from pycroft.model.user import PropertyGroup
+from pycroft.model.user import PropertyGroup, User
 from tests.factories.property import FinancePropertyGroupFactory, \
     AdminPropertyGroupFactory, MembershipFactory
 from tests.factories.user import UserFactory
@@ -49,23 +49,9 @@ class TestAnonymous:
 class TestPermissionsAdmin:
     """Test permissions for admin usergroup.
     """
-
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(
-        self,
-        class_session: Session,
-        admin_group: PropertyGroup,
-        test_client: TestClient,
-    ) -> None:
-        login = "testadmin2"
-        UserFactory.create(
-            login=login,
-            with_membership=True,
-            membership__group=admin_group,
-            membership__includes_today=True,
-        )
-        class_session.flush()
-        with login_context(test_client, login, "password"):
+    def admin_logged_in(self, admin: User, test_client: TestClient):
+        with login_context(test_client, admin.login, "password"):
             yield
 
     def test_access_buildings(self, test_client: TestClient):
@@ -79,22 +65,12 @@ class TestPermissionsFinance:
     """Test permissions for finance usergroup (advanced).
     """
     @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(
+    def treasurer_logged_in(
         self,
-        class_session: Session,
-        admin_group: PropertyGroup,
+        treasurer: User,
         test_client: TestClient,
     ) -> None:
-        login = "treasurer"
-        treasurer = UserFactory.create(
-            login=login,
-            with_membership=True,
-            membership__group=FinancePropertyGroupFactory.create(),
-            membership__includes_today=True,
-        )
-        MembershipFactory.create(user=treasurer, group=admin_group, includes_today=True)
-        class_session.flush()
-        with login_context(test_client, login, "password"):
+        with login_context(test_client, treasurer.login, "password"):
             yield
 
     def test_access_buildings(self, test_client: TestClient):

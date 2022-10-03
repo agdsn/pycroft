@@ -2,25 +2,11 @@ import pytest
 from flask import url_for
 
 from pycroft.model._all import PropertyGroup
-from ..factories import UserFactory, AdminPropertyGroupFactory
 from .assertions import TestClient
-from .fixture_helpers import login_context
 
 
+@pytest.mark.usefixtures("admin_logged_in")
 class TestPropertiesFrontend:
-    @pytest.fixture(scope="class", autouse=True)
-    def admin_logged_in(self, class_session, test_client: TestClient):
-        login = "testadmin2"
-        UserFactory.create(
-            login=login,
-            with_membership=True,
-            membership__group=AdminPropertyGroupFactory.create(),
-            membership__includes_today=True,
-        )
-        class_session.flush()
-        with login_context(test_client=test_client, login=login, password="password"):
-            yield
-
     def test_property_gets_added(self, test_client: TestClient):
         group_name = "This is my first property group"
         # first time: a redirect

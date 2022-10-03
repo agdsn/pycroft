@@ -5,11 +5,12 @@ from flask import _request_ctx_stack
 from sqlalchemy.orm import Session
 
 from pycroft import Config
-from pycroft.model.user import User
+from pycroft.model.user import User, PropertyGroup
 from tests.factories import UserFactory, AdminPropertyGroupFactory, ConfigFactory
 from web import make_app, PycroftFlask
 from .assertions import TestClient
 from .fixture_helpers import login_context, BlueprintUrls, _build_rule, prepare_app_for_testing
+from ..factories.property import FinancePropertyGroupFactory, MembershipFactory
 
 
 @pytest.fixture(scope='session')
@@ -39,24 +40,6 @@ def config(module_session: Session) -> Config:
     return config
 
 
-@pytest.fixture(scope="module")
-def processor(module_session, test_client) -> t.Iterator[User]:
-    """A user (member of the admin group) who has been logged in.
-
-    Module-scoped, i.e. every module with a test using this fixture will have this user logged in!
-    """
-    login = "shoot-the-root"
-    password = "password"
-    user = UserFactory(
-        login=login,
-        # password=password,  # hash already defaults to `password`
-        with_membership=True,
-        membership__group=AdminPropertyGroupFactory.create(),
-    )
-    with login_context(test_client=test_client, login=login, password=password):
-        yield user
-
-
 @pytest.fixture(scope="session")
 def blueprint_urls(flask_app: PycroftFlask) -> BlueprintUrls:
     def _blueprint_urls(blueprint_name: str) -> list[str]:
@@ -66,3 +49,39 @@ def blueprint_urls(flask_app: PycroftFlask) -> BlueprintUrls:
             if rule.endpoint.startswith(f"{blueprint_name}.")
         ]
     return _blueprint_urls
+
+
+@pytest.fixture(scope="module")
+def admin_group(module_session) -> PropertyGroup:
+    return AdminPropertyGroupFactory.create()
+
+
+@pytest.fixture(scope="module")
+def admin(module_session: Session, admin_group, config: Config) -> User:
+    admin = UserFactory.create(
+        login="testadmin2",
+        with_membership=True,
+        membership__group=AdminPropertyGroupFactory.create(),
+        membership__includes_today=True,
+    )
+    module_session.flush()
+    return admin
+
+
+@pytest.fixture(scope="module")
+def treasurer(module_session: Session, admin_group: PropertyGroup) -> User:
+    treasurer = UserFactory.create(
+        login="treasurer",
+        with_membership=True,
+        membership__group=FinancePropertyGroupFactory.create(),
+        membership__includes_today=True,
+    )
+    MembershipFactory.create(user=treasurer, group=admin_group, includes_today=True)
+    module_session.flush()
+    return treasurer
+
+
+@pytest.fixture(scope="module")
+def admin_logged_in(admin: User, test_client: TestClient) -> None:
+    with login_context(test_client, admin.login, "password"):
+        yield

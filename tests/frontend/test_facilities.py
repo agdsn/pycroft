@@ -10,6 +10,7 @@ from tests.factories import RoomFactory
 from .assertions import TestClient
 
 
+@pytest.mark.usefixtures("admin_logged_in")
 class TestBuilding:
     @pytest.fixture(scope="class")
     def room(self, class_session: Session) -> Room:
@@ -20,10 +21,6 @@ class TestBuilding:
     @pytest.fixture(scope="class")
     def building(self, class_session: Session, room: Room) -> Building:
         return room.building
-
-    @pytest.fixture(scope="class", autouse=True)
-    def login(self, processor) -> None:
-        pass
 
     def test_list_buildings(self, test_client: TestClient):
         with test_client.renders_template("facilities/site_overview.html"):
