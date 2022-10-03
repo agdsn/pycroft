@@ -1,18 +1,15 @@
-import random
-import string
 import typing as t
 
 import pytest
 from flask import _request_ctx_stack
-from sqlalchemy.orm import close_all_sessions, scoped_session, sessionmaker, \
-    Session
+from sqlalchemy.orm import Session
 
 from pycroft import Config
 from pycroft.model.user import User
 from tests.factories import UserFactory, AdminPropertyGroupFactory, ConfigFactory
 from web import make_app, PycroftFlask
 from .assertions import TestClient
-from .fixture_helpers import login_context, BlueprintUrls, _build_rule
+from .fixture_helpers import login_context, BlueprintUrls, _build_rule, prepare_app_for_testing
 
 
 @pytest.fixture(scope='session')
@@ -25,20 +22,7 @@ def app():
 def flask_app() -> PycroftFlask:
     """A fully configured flask app for frontend tests"""
     from web import make_app
-
-    app = make_app()
-
-    app.testing = True
-    app.debug = True
-
-    # Disable the CSRF in testing mode
-    app.config["WTF_CSRF_ENABLED"] = False
-    app.config["SECRET_KEY"] = "".join(
-        random.choice(string.ascii_letters) for _ in range(20)
-    )
-    app.config["SERVER_NAME"] = "localhost"
-
-    return app
+    return prepare_app_for_testing(make_app())
 
 
 @pytest.fixture(scope="session")

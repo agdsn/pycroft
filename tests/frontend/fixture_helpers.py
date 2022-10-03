@@ -7,6 +7,8 @@ Exists because it is bad practice to import from `helpers`.
 """
 
 import contextlib
+import random
+import string
 import typing as t
 
 from flask import url_for
@@ -44,3 +46,22 @@ def _build_rule(url_adapter, rule) -> str:
     except KeyError as e:
         raise AssertionError(f"Cannot create mock argument for {e.args[0]}")
     return url_adapter.build(rule.endpoint, values, 'GET')
+
+
+def prepare_app_for_testing(app):
+    """Set setting which are relevant for testing.
+
+    * testing / debug mode
+    * disable CSRF for WTForms
+    * set a random secret key
+    * set the server name to `localhost`
+    """
+    app.testing = True
+    app.debug = True
+    # Disable the CSRF in testing mode
+    app.config["WTF_CSRF_ENABLED"] = False
+    app.config["SECRET_KEY"] = "".join(
+        random.choice(string.ascii_letters) for _ in range(20)
+    )
+    app.config["SERVER_NAME"] = "localhost"
+    return app
