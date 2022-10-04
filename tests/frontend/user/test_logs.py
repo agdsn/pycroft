@@ -5,6 +5,7 @@ import pytest
 from flask import url_for
 
 from hades_logs import HadesLogs
+from pycroft.model.logging import UserLogEntry, RoomLogEntry
 from pycroft.model.session import Session
 from pycroft.model.user import User
 from tests.factories import UserFactory, RoomLogEntryFactory, \
@@ -113,29 +114,53 @@ class TestAppWithoutHadesLogs:
         self.assert_hades_message(logs[0]["message"])
 
 
-class RoomAndUserLogTestCase(UserLogTestBase):
-    def create_factories(self):
-        super().create_factories()
-        self.relevant_user = UserFactory.create()
-        self.room_log_entry = RoomLogEntryFactory(author=self.admin, room=self.relevant_user.room)
-        self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)
+@pytest.mark.usefixtures("admin")
+class TestRoomAndUserLogDisplay:
+    @pytest.fixture(scope="class", autouse=True)
+    def admin_logged_in(self, admin, class_test_client: TestClient):
+        with login_context(class_test_client, admin.login, "password"):
+            yield
 
-    def assert_one_log(self, got_logs, expected_entry):
+    @pytest.fixture(scope="class")
+    def user(self, class_session: Session) -> User:
+        return UserFactory.create()
+
+    @pytest.fixture(scope="class", autouse=True)
+    def room_log_entry(
+        self, admin: User, class_session: Session, user: User
+    ) -> RoomLogEntry:
+        return RoomLogEntryFactory(author=admin, room=user.room)
+
+    @pytest.fixture(scope="class", autouse=True)
+    def user_log_entry(
+        self, admin: User, class_session: Session, user: User
+    ) -> UserLogEntry:
+        return UserLogEntryFactory(author=admin, user=user)
+
+    @pytest.fixture(scope="class")
+    def logs(self, user, class_test_client: TestClient) -> GetLogs:
+        def _logs(**kwargs) -> list[t.Any]:
+            return get_logs(user.id, class_test_client, **kwargs)
+
+        return _logs
+
+    @staticmethod
+    def assert_one_log(got_logs, expected_entry):
         assert len(got_logs) == 1
         item = got_logs[0]
         assert item['message'] == expected_entry.message
         assert item['user']['title'] == expected_entry.author.name
 
-    def test_room_log_exists(self):
-        items = self.get_logs(user_id=self.relevant_user.id, logtype='room')
-        self.assert_one_log(items, self.room_log_entry)
+    def test_room_log_exists(self, logs: GetLogs, room_log_entry: RoomLogEntry):
+        items = logs(logtype="room")
+        self.assert_one_log(items, room_log_entry)
 
-    def test_user_log_exists(self):
-        items = self.get_logs(user_id=self.relevant_user.id, logtype='user')
-        self.assert_one_log(items, self.user_log_entry)
+    def test_user_log_exists(self, logs: GetLogs, user_log_entry: UserLogEntry):
+        items = logs(logtype="user")
+        self.assert_one_log(items, user_log_entry)
 
-    def test_no_hades_log_exists(self):
-        items = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
+    def test_no_hades_log_exists(self, logs: GetLogs):
+        items = logs(logtype="hades")
         assert len(items) == 1
         item = items[0]
         assert " cannot be displayed" in item['message'].lower()
