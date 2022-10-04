@@ -167,36 +167,54 @@ class TestRoomAndUserLogDisplay:
         assert " connected room" in item['message'].lower()
 
 
-class IntegrationTestCase(InvalidateHadesLogsMixin, UserLogTestBase):
+class TestDummyHadesLogs:
     """Frontend Tests for the endpoints utilizing live Hades Logs
     """
-    def create_factories(self):
-        super().create_factories()
-        self.relevant_user = UserFactory(with_host=True, patched=True)
-        self.other_user = UserFactory.create()
-        self.room_log_entry = RoomLogEntryFactory(author=self.admin, room=self.relevant_user.room)
-        self.user_log_entry = UserLogEntryFactory(author=self.admin, user=self.relevant_user)
+    @pytest.fixture(scope="class", autouse=True)
+    def user(self, class_session):
+        return UserFactory.create(with_host=True, patched=True)
 
-    def create_app(self):
-        app = super().create_app()
+    @pytest.fixture(scope="class")
+    def other_user(self, class_session):
+        return UserFactory.create()
 
-        # Setup dummy_tasks hades logs
-        app.config.update(get_hades_logs_config())
+    @pytest.fixture(scope="class", autouse=True)
+    def user_and_log_entries(self, class_session: Session, admin: User, user: User) -> None:
+        RoomLogEntryFactory.create(author=admin, room=user.room)
+        UserLogEntryFactory.create(author=admin, user=user)
+        class_session.flush()
+
+    @pytest.fixture(scope="class")
+    def flask_app(self) -> PycroftFlask:
+        """Overridden flask app with `HadesLogs` pointing at stub RPC instance"""
+        app = prepare_app_for_testing(make_app(hades_logs=False))
+        dummy_config = get_hades_logs_config()
+        app.config.update(dummy_config)
         HadesLogs(app)
-
         return app
 
-    def test_hades_logs_are_returned(self):
-        logs = self.get_logs(user_id=self.relevant_user.id, logtype='hades')
-        assert len(logs) == 4
+    @pytest.fixture(scope="class", autouse=True)
+    def admin_logged_in(self, admin: User, class_test_client: TestClient):
+        with login_context(class_test_client, admin.login, "password"):
+            yield
+
+    @pytest.fixture(scope="class")
+    def logs(self, user: User, class_test_client: TestClient) -> GetLogs:
+        def _logs(**kwargs) -> list[t.Any]:
+            user_id = kwargs.pop("user_id", None) or user.id
+            return get_logs(user_id, class_test_client, **kwargs)
+
+        return _logs
+
+    def test_hades_logs_are_returned(self, logs: GetLogs):
+        assert len(logs := logs(logtype="hades")) == 4
         for log in logs:
             if "rejected" in log['message'].lower():
                 continue
             assert "– groups: " in log['message'].lower()
             assert "tagged)" in log['message'].lower()
 
-    def test_disconnected_user_emits_warning(self):
-        logs = self.get_logs(self.other_user.id, logtype='hades')
-        assert len(logs) == 1
+    def test_disconnected_user_emits_warning(self, logs: GetLogs, other_user: User):
+        assert len(logs := logs(user_id=other_user.id, logtype="hades")) == 1
         assert "are in a connected room" in logs[0]['message'].lower()
         assert "logs cannot be displayed" in logs[0]['message'].lower()
