@@ -13,33 +13,7 @@ from tests.factories import UserFactory, RoomLogEntryFactory, \
 from web import make_app, PycroftFlask
 from ..assertions import TestClient
 from ..fixture_helpers import prepare_app_for_testing, login_context
-from ..legacy_base import InvalidateHadesLogsMixin, FrontendWithAdminTestBase
 from ...hades_logs import get_hades_logs_config
-
-
-class UserLogTestBase(FrontendWithAdminTestBase):
-    def get_logs(self, user_id=None, **kw):
-        """Request the logs, assert validity, and return the response.
-
-        By default, the logs are fetched for the user logging in.
-
-        The following assertions are made:
-          * The response code is 200
-          * The response content_type contains ``"json"``
-          * The response's JSON contains an ``"items"`` key
-
-        :returns: ``response.json['items']``
-        """
-        if user_id is None:
-            user_id = self.user_id
-        log_endpoint = url_for('user.user_show_logs_json',
-                               user_id=user_id,
-                               **kw)
-        response = self.assert_response_code(log_endpoint, code=200)
-        assert "json" in response.content_type.lower()
-        json = response.json
-        assert json.get('items') is not None
-        return json['items']
 
 
 def get_logs(user_id: int, client: TestClient, **kw) -> list[t.Any]:
